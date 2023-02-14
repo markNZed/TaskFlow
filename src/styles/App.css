@@ -1,0 +1,317 @@
+@import url("https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@100;300;400;500;700;800;900&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Alegreya Sans", sans-serif;
+}
+
+body {
+  background: #474E68/* #343541 */;
+}
+
+.App{
+  text-align: center;
+  display: flex;
+  color: white;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.sidemenu{
+  width: 260px;
+  padding: 10px;
+  background-color: #404258  /* #202123 #367E18*/;
+}
+
+.side-menu-button{
+  border: 1px solid white;
+  border-radius: 5px;
+  padding: 7px;
+  text-align: left;
+  transition: 0.25s all;
+}
+
+.side-menu-button:hover{
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.side-menu-button span{
+  padding-left: 4px;
+  padding-right: 11px;
+  font-size: 25px;
+}
+
+.chatbox{
+  flex: 1;
+  background-color:#474E68  ;/* 83BD75 #B4E197 #343541 */;
+  position: relative;
+  max-width: 80%;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  background: #474E68;/* #343541; */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#chat-container {
+  flex: 1;
+  width: 100%;
+  /*   height: 95vh;  */ 
+  height: 85%; 
+  /* padding: 24px; */
+
+  overflow-y: scroll;
+  /* s */
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  /* padding-bottom: 20px; */
+  scroll-behavior: smooth;
+  text-align: left;
+
+}
+
+/* hides scrollbar */
+#chat-container::-webkit-scrollbar {
+  display: none;
+}
+
+.wrapper {
+  width: 100%;
+  padding: 15px;
+}
+
+.ai {
+  background: #6B728E /* #444654 */;
+  
+}
+
+.chat {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#chat-room-title{
+  color: white;
+  margin-left: auto; 
+  margin-right: auto;
+  margin-top: 5px;
+  font-size: 1.6rem;
+}
+
+.profile {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+
+  background: #ADA2FF/* #5436DA */;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ai .profile {
+  background: #10a37f;
+}
+
+.profile img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+.message {
+  flex: 1;
+
+  color: #dcdcdc;
+  font-size: 20px;
+
+  max-width: 100%;
+  overflow-x: scroll;
+
+  /*
+   * white space refers to any spaces, tabs, or newline characters that are used to format the CSS code
+   * specifies how white space within an element should be handled. It is similar to the "pre" value, which tells the browser to treat all white space as significant and to preserve it exactly as it appears in the source code.
+   * The pre-wrap value allows the browser to wrap long lines of text onto multiple lines if necessary.
+   * The default value for the white-space property in CSS is "normal". This tells the browser to collapse multiple white space characters into a single space, and to wrap text onto multiple lines as needed to fit within its container.
+  */
+  white-space: pre-wrap; 
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* hides scrollbar */
+.message::-webkit-scrollbar {
+  display: none;
+}
+
+.msg-form {
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  /* padding: 12px; */
+  /* background: #40414F; */
+  position: absolute;
+  bottom: 0; 
+  left:0; 
+  right: 0;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  /* border-radius: 5px; */
+  margin-bottom: .5em;
+  /* box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25); */
+
+
+  /* display: flex;
+  flex-direction: row;
+  gap: 10px; */
+
+  /* top:89.9%;
+  position: relative; */
+}
+
+textarea {
+  width: 90%;
+  color: #fff;
+  font-size: 1.25em;
+  border-radius: 5px;
+
+  padding: 24px;
+  /* background: transparent; */
+  background: #40414F;
+  
+  border: none;
+  outline: none;
+}
+
+.send-button {
+  outline: 0;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  /* border: solid 1px white; */
+  margin-left: 5px;
+  border-radius: 5px;
+  width: 35px;
+  height: 30px;  
+}
+
+.send-button.ready :hover {
+  background: black;
+  border-radius: 5px;
+}
+
+.send-button.not-ready :hover {
+  cursor:default;
+}
+
+.send-ready {
+  /* rotate: 90deg; */
+  width: 75%;
+  margin-bottom: 15px;
+  transition: 0.25s all; 
+}
+
+.send-not-ready {
+  rotate: 90deg;
+  width: 75%;
+  margin-bottom: 15px;
+  transition: 0.25s all;
+}
+
+
+form img {
+  width: 30px;
+  height: 30px;
+}
+
+#model-selector{
+  color: white;
+  /* margin: auto; */
+}
+
+#selector-label{
+  color:white;
+}
+
+#selector-form{
+  margin-top: 15px;
+}
+
+.slider-box{
+  margin-top: 15px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+
+
+
+
+/**
+ * ==============================================
+ * Dot Typing
+ * ==============================================
+ */
+ .dot-typing {
+  position: relative;
+  left: -9999px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #9880ff;
+  color: #9880ff;
+  box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  animation: dot-typing 1.5s infinite linear;
+  margin-left: 20px;
+  margin-top: 20px;
+  
+}
+
+@keyframes dot-typing {
+  0% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+  16.667% {
+    box-shadow: 9984px -10px 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+  33.333% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+  50% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px -10px 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+  66.667% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+  83.333% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px -10px 0 0 #9880ff;
+  }
+  100% {
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  }
+}
