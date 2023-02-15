@@ -27,9 +27,6 @@ const ChatArea = () => {
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer}>
-        <div id="chat-room-title"> 
-          Chatbot Demo for Onlea
-        </div>
 
         {msgs && msgs.map((msg, index) => {
           return (

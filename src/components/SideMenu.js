@@ -12,7 +12,6 @@ import SliderBox from "./SliderBox"
 import SelectBox from "./SelectBox"
 
 // assets
-import onlea from '../assets/onlea.png';
 
 
 // mui
@@ -117,17 +116,7 @@ const SideMenu = () => {
             }}
           />
 
-          <img 
-            src={onlea} 
-            alt="onlea" 
-            style={{
-              width:"100px",
-              position: "absolute",
-              bottom:"0",
-              left:"0",
-              marginLeft:"25px",
-              marginBottom:"25px",
-          }} />
+         
 
           <Snackbar
           open={openToast}
