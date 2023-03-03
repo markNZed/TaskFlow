@@ -1,10 +1,12 @@
 export const fetchGptRes = async ({ queryKey }) => {
+  const sessionId = "abc";
   const [k, newMsg, model, url] = queryKey;
   console.log('fetching backend...', k, newMsg, model, url);
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'x-session-id': sessionId, 
     },
     body: JSON.stringify({
       ...model,

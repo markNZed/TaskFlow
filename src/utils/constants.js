@@ -1,7 +1,6 @@
 export const AVAILABLE_MODELS = [
-  'text-davinci-003',
-  'code-davinci-002',
-];
+  'gpt-3.5-turbo',
+ ];
 
 export const IMPERSONATE_LIST = [
   "(None)",

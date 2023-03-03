@@ -13,7 +13,7 @@ export function useModelChange(){
 
 export function ModelProvider({ children }) { 
   const [model, setModel] = useState({
-    langModel:"text-davinci-003",
+    langModel:"gpt-3.5-turbo",
     temperature: 0,
     maxTokens: 3000,
     impersonation: "",
