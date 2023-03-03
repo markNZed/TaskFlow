@@ -7,11 +7,14 @@
     "server": "nodemon server"
   },
   "dependencies": {
+    "chatgpt": "^5.0.5",
+    "config": "^3.3.9",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-ws": "^5.0.2",
     "node-cache": "^5.1.2",
-    "nodemon": "^2.0.20",
-    "openai": "^3.1.0"
+    "nodemon": "^2.0.21",
+    "ws": "^8.12.1"
   }
 }
