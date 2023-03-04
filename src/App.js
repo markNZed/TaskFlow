@@ -12,6 +12,8 @@ const queryClient = new QueryClient()
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
 const socketUrl = socketProtocol + '//' + window.location.hostname + ':5000/'
+const socketRoot = window.location.protocol + '//' + window.location.hostname + ':5000/'
+const socketImgUrl = socketRoot + '1x1.png'
 let sessionId = ""
 
 function App() {
@@ -34,8 +36,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-
       <ModelProvider>
+        <img src={`${socketImgUrl}`} alt="Protocol check" onError={() => alert(`Invalid HTTPS certificate visit ${socketRoot}`)} />
         <div className="App">
           <SideMenu/>
           <ChatArea/>
