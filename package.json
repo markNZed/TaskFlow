@@ -7,6 +7,7 @@
     "server": "nodemon server"
   },
   "dependencies": {
+    "beaver-logger": "^4.0.34",
     "chatgpt": "^5.0.5",
     "config": "^3.3.9",
     "cors": "^2.8.5",

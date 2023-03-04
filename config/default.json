@@ -1,5 +1,6 @@
 {
     "Options": {
         "use_cache": 0
+        "use_logger": 0
     }
 }
