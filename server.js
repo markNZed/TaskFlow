@@ -10,6 +10,9 @@ import http from 'http'
 import fs from 'fs'
 //  If the module is exporting a named export, use curly braces to destructure the named export. If the module is exporting a default export, import it directly without using curly braces. 
 import { TextDecoder } from 'util'
+import bodyParser from 'body-parser'
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // OPENAI_API_KEY
 // port
@@ -27,10 +30,11 @@ const serverOptions = {
 }
 
 const app = express();
-//const server = https.createServer(serverOptions, app)
 
+app.use(bodyParser.json());
 
-const server = http.createServer(app)
+const server = https.createServer(serverOptions, app)
+//const server = http.createServer(app)
 
 const websocketServer = new WebSocketServer({ server });
 
@@ -126,6 +130,11 @@ wsServer.on('connection', socket => {
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the public directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, 'public')));
 
 const myCache = new NodeCache( { 
   stdTTL: 3600, // standard time to live in sec's
