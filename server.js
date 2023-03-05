@@ -22,8 +22,15 @@ dotenv.config()
 const use_cache = config.get('Options.use_cache');
 const use_logger = config.get('Options.use_logger');
 
+// automatically handle appending the previous messages to the prompt and attempt to optimize for the available tokens (which defaults to 4096).
 const api = new ChatGPTAPI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
+  completionParams: {
+    model: 'gpt-3.5-turbo-0301',
+    temperature: 0.0,
+    top_p: 1.0
+  },
+  //debug: true
 })
 
 const serverOptions = {
@@ -64,20 +71,20 @@ websocketServer.on('connection', (ws) => {
   ws.send('{ "connection" : "ok", "sessionId" : "' + sessionId + '"}');
   
   //when a message is received
-  ws.on('message', (message) => {
+  ws.on('message', async (message) => {
 
     const j = JSON.parse(message)
     if (j?.sessionId) {
       console.log("sessionId: ", j.sessionId)
     }
+    const clientData = clients.get(ws);
 
-    if (j?.newMsg) {
-      // Need to fix this!!
-      //const {prompt, langModel, temperature, maxTokens, impersonation} = req.body;
-      //const msg = impersonation?
-      //            `pretend you are ${impersonation}, ${prompt}`:
-      //            prompt;
-      //console.log("msg", msg);
+    if (j?.prompt) {
+      const { langModel, temperature, maxTokens, impersonation } = j;
+      const prompt = impersonation?
+                  `pretend you are ${impersonation}, ${j.prompt}`:
+                  j.prompt;
+      console.log("prompt ",prompt);
 
       let botMsg = ""
   
@@ -95,23 +102,39 @@ websocketServer.on('connection', (ws) => {
   
       if (!botMsg) {
 
+        // This is a hack to get parameters into the API
+        // We should be able to change this on the fly, I requested a feature 
+        // https://github.com/transitive-bullshit/chatgpt-api/issues/434
+        const api = new ChatGPTAPI({
+          apiKey: process.env.OPENAI_API_KEY,
+          completionParams: {
+            model: langModel, //'gpt-3.5-turbo-0301',
+            temperature: temperature,
+            top_p: 1.0,
+          },
+          maxResponseTokens: maxTokens,
+          //debug: true
+        })
+
         function logIncrementalOutput(partialResponse, ws) {
           const incr = JSON.stringify(partialResponse.delta)
           ws.send(`{"stream" : ${incr}}`)
         }
   
-        const response = api.sendMessage(j.newMsg, {
+        const response = await api.sendMessage(prompt, {
           // print the partial response as the AI is "typing"
-          onProgress: (partialResponse) => logIncrementalOutput(partialResponse, ws)
-        })
-
+          onProgress: (partialResponse) => logIncrementalOutput(partialResponse, ws),
+          parentMessageId: clientData?.parentMessageId 
+        });
+        
+        //console.log("response ",response.detail.choices)
+        clientData.parentMessageId = response.id
         botMsg = response.text
       }
   
       if (use_cache) {
         const cacheSetSuccess = myCache.set( cacheKey, botMsg);
         console.log("cacheSetSuccess: ", cacheSetSuccess);
-
         ws.send(`{"stream" : ${botMsg}}`)
       }
 
