@@ -14,8 +14,6 @@ import {fetchGptRes} from '../utils/utils'
 import useWebSocket from 'react-use-websocket'
 import { socketUrl, sessionId } from '../App';
 
-var temp = ""
-
 const MsgBox = ({ msgs, setMsgs}) => {
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
@@ -30,21 +28,13 @@ const MsgBox = ({ msgs, setMsgs}) => {
       //console.log('Stream from server:', e.data)
       const j = JSON.parse(e.data)
       if (j?.stream) {
-        temp += j.stream
-        //setTextareaValue(textareaValue + j.stream)
-        const newMsgs = [...msgs.slice(0,- 1), { 
-          sender: model.impersonation 
-                  ? model.impersonation : 'bot', 
-          text: temp, 
-          isLoading: false,  
-        }]
-        setMsgs(newMsgs)
-
+        const lastElement = msgs[msgs.length - 1];
+        lastElement.text += j.stream
         //console.log(j.stream)
-      }
-      if (j?.end_of_stream) {
-        //setTextareaValue(j.end_of_stream)
-        temp = ""
+        // This allows the text to be displayed
+        lastElement.isLoading = false 
+        const newMsgs = [...msgs.slice(0,-1), lastElement]
+        setMsgs(newMsgs)
       }
       if (j?.message) {
         console.log(j.message)
@@ -129,14 +119,15 @@ const MsgBox = ({ msgs, setMsgs}) => {
           isLoading: true, }]
   
       setMsgs([...msgs, ...newMsgs]);
-      temp = ""
       sendJsonMessage({
         sessionId: sessionId,
-        newMsg: newMsg
+        prompt: newMsg,
+        ...model,
       });
+      // Clear the textbox for our next prompt
       setNewMsg("");
-      setPending(false);
-    },[data, model.impersonation, msgs, newMsg, setNewMsg, setMsgs, sendJsonMessage]);
+      setPending(true);
+    },[data, msgs, newMsg, setNewMsg, setMsgs, sendJsonMessage, model]);
 
 
   return (
