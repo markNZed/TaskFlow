@@ -75,7 +75,7 @@ const SideMenu = () => {
 
           <SliderBox
             toolTipDesc={"Maximum number of Words the model can generate"}
-            title="Max response tokens" 
+            title="Max tokens" 
             value={model.maxTokens}
             onChange={(e)=>{
               setModel({...model, 

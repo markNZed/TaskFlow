@@ -1,6 +1,7 @@
 // libs
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {useQuery} from 'react-query';
+import { ReadyState } from 'react-use-websocket';
 
 // assets
 import send from '../assets/send.svg';
@@ -17,13 +18,34 @@ import { socketUrl, sessionId } from '../App';
 const MsgBox = ({ msgs, setMsgs}) => {
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
+  const [messageHistory, setMessageHistory] = useState([]);
   const model = useModel();
   //console.log(model);
 
+  if (! Array.isArray(messageHistory)) {
+    console.log("Problme ", messageHistory)
+  }
+
   // An examples of receiving a message;
-  const { sendJsonMessage } = useWebSocket(socketUrl, {
+  const { sendJsonMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
     share: true,
+    shouldReconnect: (closeEvent) => {
+      // custom reconnect logic here
+      return true; // reconnect by default
+    },
     filter: () => false,
+    onError: (err) => {
+      console.error('WebSocket error:', err); 
+      // update the last msg with the error msg
+      const newMsgs = [...msgs.slice(0,- 1), { 
+        sender: model.impersonation ? 
+                model.impersonation : 'bot', 
+        text: "err!: " + err, 
+        isLoading: false,  
+      }]
+      setMsgs(newMsgs)
+      setPending(false);
+      },
     onMessage: (e) => {
       //console.log('Stream from server:', e.data)
       const j = JSON.parse(e.data)
@@ -35,6 +57,7 @@ const MsgBox = ({ msgs, setMsgs}) => {
         lastElement.isLoading = false 
         const newMsgs = [...msgs.slice(0,-1), lastElement]
         setMsgs(newMsgs)
+        setPending(false);
       }
       if (j?.message) {
         console.log(j.message)
@@ -42,92 +65,39 @@ const MsgBox = ({ msgs, setMsgs}) => {
     }
   });
 
-  const onSuccess = useCallback((data) => {
-    console.log("fetching successful");
+  const connectionStatus = {
+    [ReadyState.CONNECTING]: 'Connecting', 
+    [ReadyState.OPEN]: 'Open',
+    [ReadyState.CLOSING]: 'Closing',
+    [ReadyState.CLOSED]: 'Closed',
+    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
+  }[readyState];
 
-    // update the last msg with the fetched data
-    const newMsgs = [...msgs.slice(0,- 1), { 
-      sender: model.impersonation 
-              ? model.impersonation : 'bot', 
-      text: data, 
-      isLoading: false,  
-    }]
-    setMsgs(newMsgs)
-  },[model.impersonation, msgs, setMsgs]);
-
-
-  const onError = useCallback((err) => {
-    console.log("fetching failed", err);
-
-    // update the last msg with the error msg
-    const newMsgs = [...msgs.slice(0,- 1), { 
-      sender: model.impersonation ? 
-              model.impersonation : 'bot', 
-      text: "err!: " + err, 
-      isLoading: false,  
-    }]
-    setMsgs(newMsgs)
-  },[model.impersonation, msgs, setMsgs])
-
-
-  const { data } = useQuery(
-    ['newMsg', 
-      newMsg, 
-      model, 
-      window.location.protocol + "//" + window.location.hostname + ":5000", // "http://localhost:5000/", //https://chatgpt-clone-yl1.onrender.com/, //"http://chatbotbeanstalk-env.eba-xn42mmzq.us-west-2.elasticbeanstalk.com/", //
-    ], 
-    fetchGptRes,
-    {
-      onSuccess,
-      onError,
-      enabled: false,
+  const handleSubmit = useCallback(async (e) => {
+    if (e){
+      e.preventDefault();
+    }
+    if (!newMsg){
+      return
+    }
+    setPending(true);
+    const newMsgs = [
+      { sender: 'user', text: newMsg,  isLoading: false,}, 
+      { sender: model.impersonation ? 
+                model.impersonation : 'bot', 
+        text: "", 
+        isLoading: true, }]
+    setMsgs([...msgs, ...newMsgs]);
+    console.log("Sending")
+    setMessageHistory((prev) => [...prev, newMsg]);
+    sendJsonMessage({
+      sessionId: sessionId,
+      prompt: newMsg,
+      ...model,
     });
-
-    const handleSubmit = useCallback(async (e) => {
-      
-      if (e){
-        e.preventDefault();
-      }
-      
-      if (!newMsg){
-        return
-      }
-  
-      setPending(true);
-  
-      // check if the data is already in cache
-      if (data){
-        console.log("data found in cache, no need to fetch.")
-        const cachedMsgs = [
-          { sender: 'user', text: newMsg,  isLoading: false,}, 
-          { sender: model.impersonation ? 
-                    model.impersonation : 'bot', 
-            text: data, 
-            isLoading: false, }]
-        setNewMsg("");    
-        setMsgs([...msgs, ...cachedMsgs]);
-        setPending(false);
-        return 
-      }
-  
-      // not found in cache
-      const newMsgs = [
-        { sender: 'user', text: newMsg,  isLoading: false,}, 
-        { sender: model.impersonation ? 
-                  model.impersonation : 'bot', 
-          text: "", 
-          isLoading: true, }]
-  
-      setMsgs([...msgs, ...newMsgs]);
-      sendJsonMessage({
-        sessionId: sessionId,
-        prompt: newMsg,
-        ...model,
-      });
-      // Clear the textbox for our next prompt
-      setNewMsg("");
-      setPending(true);
-    },[data, msgs, newMsg, setNewMsg, setMsgs, sendJsonMessage, model]);
+    // Clear the textbox for our next prompt
+    setNewMsg("");
+  },[msgs, newMsg, setNewMsg, setMsgs, sendJsonMessage, model]);
 
 
   return (
@@ -147,9 +117,16 @@ const MsgBox = ({ msgs, setMsgs}) => {
           handleSubmit();
         }
       }} />
-      <button type="submit" disabled={pending}  className={pending ? "send-button not-ready" : "send-button ready"}>
+      <button type="submit"disabled={pending}  className={pending ? "send-button not-ready" : "send-button ready"}>
         <img src={send} alt="Send" className={pending ? "send-not-ready" : "send-ready"}/>
       </button>
+      <div>The WebSocket is currently {connectionStatus}</div>
+      {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
+      <ul>
+        {messageHistory?.map((message, idx) => (
+          <span key={idx}>{message ? message.data : null}</span>
+        ))}
+      </ul>
     </form>
   );
 }
