@@ -5,7 +5,7 @@ import NodeCache from 'node-cache'
 import { ChatGPTAPI } from 'chatgpt'
 import config from 'config'
 import { WebSocketServer } from 'ws'
-import https from 'https'
+import http from 'http'
 import fs from 'fs'
 //  If the module is exporting a named export, use curly braces to destructure the named export. If the module is exporting a default export, import it directly without using curly braces. 
 import bodyParser from 'body-parser'
@@ -50,18 +50,15 @@ const api = new ChatGPTAPI({
 })
 */
 
-const serverOptions = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
-}
+const serverOptions = {}
 
 const app = express();
 
 app.use(bodyParser.json());
 
-const server = https.createServer(serverOptions, app)
+const server = http.createServer(serverOptions, app)
 
-const websocketServer = new WebSocketServer({ server });
+const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
 
 // Sessions are stored in memory so a server restart starts new conversations
 const clients = new Map();
@@ -104,7 +101,8 @@ websocketServer.on('connection', (ws) => {
       //console.log("prompt ",prompt);
 
       const currentDate = new Date().toISOString().split('T')[0]
-      const systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
+      // const systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
+      const systemMessage = `Vous êtes Sandrine, un grand modèle de langage destiné à aider les adultes à apprendre le français au niveau C1. Vous ne communiquez qu'en français. Faites semblant d'être un professeur de français. Do not respond in English.`
       // Also need to account for the system message and some margin because the token count may not be exact.
       const availableTokens = (maxTokens - Math.floor(maxTokens * 0.1)) - encode(prompt).length - encode(systemMessage).length
       let maxResponseTokens = 1000
@@ -127,7 +125,7 @@ websocketServer.on('connection', (ws) => {
         messageStore,
         maxResponseTokens: maxResponseTokens,
         maxModelTokens: maxTokens,
-        //debug: true 
+        debug: true 
       })
 
       function logIncrementalOutput(partialResponse, ws) {
