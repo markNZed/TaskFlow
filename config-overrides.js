@@ -16,35 +16,6 @@ module.exports = {
         // 
         config.client.webSocketURL = 'auto://0.0.0.0:0/ws'
         
-        /*
-        config.proxy = []
-
-        config.proxy.push({
-            '/api': {
-              target: "wss://chat.understudy.top",
-              ws: true,
-            },
-          })
-
-          config.proxy.push({
-            '/ws': {
-              target: "wss://chat.understudy.top",
-              ws: true,
-            },
-          })
-
-          config.proxy.push({
-            '/websocket': {
-              target: "https://chat.understudy.top",
-              ws: true,
-            },
-          })
-        */
-          
-        
-
-        console.log("config after ",config);
-
         // Return your customised Webpack Development Server config.
         return config;
     };

@@ -11,6 +11,8 @@ import user from '../assets/user.svg';
 
 const Icon = ({sender}) => {
 
+  //console.log("Icon compoent")
+
   if (sender === "bot"){
     return (
       <div className="profile">

@@ -49,7 +49,7 @@ const SideMenu = () => {
 
           <SelectBox
             value={model.langModel}
-            label="Language model"
+            label="Model"
             onSelect={(e)=>{
               setModel({...model, 
                 langModel: e.target.value

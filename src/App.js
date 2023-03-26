@@ -11,9 +11,14 @@ import useWebSocket from 'react-use-websocket'
 const queryClient = new QueryClient()
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const socketUrl = socketProtocol + '//' + window.location.hostname + ':5000/'
-const socketRoot = window.location.protocol + '//' + window.location.hostname + ':5000/'
-const socketImgUrl = socketRoot + '1x1.png'
+
+var socketHost = window.location.hostname
+var socketPort = 5000
+if (window.location.hostname !== "localhost") {
+  socketPort = process.env.REACT_APP_WS_PORT || 5000
+  socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
+}
+const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
 let sessionId = ""
 
 function App() {
@@ -37,7 +42,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ModelProvider>
-        <img src={`${socketImgUrl}`} alt="Protocol check" onError={() => alert(`Invalid HTTPS certificate visit ${socketRoot}`)} />
         <div className="App">
           <SideMenu/>
           <ChatArea/>

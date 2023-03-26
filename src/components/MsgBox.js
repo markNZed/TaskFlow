@@ -1,6 +1,5 @@
 // libs
-import React, { useCallback, useState, useEffect } from 'react';
-import {useQuery} from 'react-query';
+import React, { useCallback, useState } from 'react';
 import { ReadyState } from 'react-use-websocket';
 
 // assets
@@ -8,9 +7,6 @@ import send from '../assets/send.svg';
 
 // contexts
 import { useModel } from '../contexts/ModelContext';
-
-// utils
-import {fetchGptRes} from '../utils/utils'
 
 import useWebSocket from 'react-use-websocket'
 import { socketUrl, sessionId } from '../App';
@@ -20,11 +16,8 @@ const MsgBox = ({ msgs, setMsgs}) => {
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
   const model = useModel();
-  //console.log(model);
 
-  if (! Array.isArray(messageHistory)) {
-    console.log("Problme ", messageHistory)
-  }
+  //console.log("MSGBox component")
 
   // An examples of receiving a message;
   const { sendJsonMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
@@ -118,7 +111,8 @@ const MsgBox = ({ msgs, setMsgs}) => {
         }
       }} />
       <button type="submit"disabled={pending}  className={pending ? "send-button not-ready" : "send-button ready"}>
-        <img src={send} alt="Send" className={pending ? "send-not-ready" : "send-ready"}/>
+        {/* The key stops React double loading the image when both img and message are updated */}
+        <img key={send} src={send} alt="Send" className={pending ? "send-not-ready" : "send-ready"}/>
       </button>
       <div>The WebSocket is currently {connectionStatus}</div>
       {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}

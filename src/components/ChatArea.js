@@ -7,22 +7,33 @@ import Icon from "./Icon"
 const ChatArea = () => {
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
+  const welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
+  //const welcomeMessage = "Welcome! how may I help you today?"
+  const hasScrolledRef = useRef(false);
+  const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState([
-    { sender: 'bot', text: "Welcome! how may I help you today?",  isLoading: true}]);
+    { sender: 'bot', text: welcomeMessage,  isLoading: true}
+  ]);
+
+  //console.log("ChatArea component")
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (!isMountedRef.current) {
+      setTimeout(()=>{
+        setMsgs([
+          { sender: 'bot', text: welcomeMessage,  isLoading: false}
+        ])
+      }, 2000);
+      isMountedRef.current = true
+    } else {
+      if (messagesEndRef.current && !hasScrolledRef.current) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        hasScrolledRef.current = true;
+      } else {
+        hasScrolledRef.current = false;
+      }
+    }
   }, [msgs]);
-
-  useEffect(()=>{
-    setTimeout(()=>{
-      setMsgs([
-        { sender: 'bot', text: "Welcome! how may I help you today?",  isLoading: false}])
-    }, 2000)
-    
-  },
-  []);
-
 
   return (
     <section className='chatbox'>
@@ -31,7 +42,7 @@ const ChatArea = () => {
         {msgs && msgs.map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
-              <div className="chat">
+              <div className="chat"> 
                 <Icon sender={msg.sender}/>
                 {msg.isLoading ? 
                   <div key={index} className="dot-typing"></div> : 
@@ -40,13 +51,12 @@ const ChatArea = () => {
               </div>
             </div>
           )
-        })
-      }
+        })}
 
       <div ref={messagesEndRef} style={{height:"5px"}}/>
       
-    </div>
-    <MsgBox msgs={msgs} setMsgs={setMsgs} />
+      </div>
+      <MsgBox msgs={msgs} setMsgs={setMsgs} />
     </section> 
     )
   }
