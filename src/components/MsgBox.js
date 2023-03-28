@@ -24,6 +24,7 @@ const MsgBox = ({ msgs, setMsgs}) => {
     share: true,
     shouldReconnect: (closeEvent) => {
       // custom reconnect logic here
+      alert('Reconnecting to Server');
       return true; // reconnect by default
     },
     filter: () => false,
@@ -40,7 +41,7 @@ const MsgBox = ({ msgs, setMsgs}) => {
       setPending(false);
       },
     onMessage: (e) => {
-      //console.log('Stream from server:', e.data)
+      console.log('Stream from server error:', e.data)
       const j = JSON.parse(e.data)
       if (j?.stream) {
         const lastElement = msgs[msgs.length - 1];
@@ -114,6 +115,7 @@ const MsgBox = ({ msgs, setMsgs}) => {
         {/* The key stops React double loading the image when both img and message are updated */}
         <img key={send} src={send} alt="Send" className={pending ? "send-not-ready" : "send-ready"}/>
       </button>
+      { /* This can cause continuous reloading when it alternates opeņ/close ? */ }
       <div>The WebSocket is currently {connectionStatus}</div>
       {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
       <ul>

@@ -13,20 +13,16 @@ import SelectBox from "./SelectBox"
 
 // assets
 
-
 // mui
 import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
-
-
-
-
 
 const SideMenu = () => {
   const setModel = useModelChange();
   const [openToast, setOpenToast] = useState(false);
   const model = useModel();
   const [impersonateList, setImpersonateList] = useState(IMPERSONATE_LIST);
+  const hideSideMenu = process.env.REACT_APP_SIMPLE || false;
 
   const handleToastClick = useCallback(
     ()=> setOpenToast(true), [setOpenToast]); 
@@ -41,7 +37,7 @@ const SideMenu = () => {
 
 
   return (
-    <aside className='sidemenu'>
+    <aside className={`sidemenu ${hideSideMenu ? 'hide' : ''}`}>
           {/* <div className='side-menu-button'>
             <span>+</span>
             New chat

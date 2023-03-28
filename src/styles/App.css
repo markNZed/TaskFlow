@@ -22,6 +22,10 @@ body {
   right: 0;
 }
 
+.hide{
+  display: none;
+}
+
 .sidemenu{
   width: 260px;
   padding: 10px;

@@ -19,6 +19,7 @@ if (window.location.hostname !== "localhost") {
   socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
 }
 const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
+const socketImg = window.location.protocol + `//${socketHost}:${socketPort}/1x1.png`
 let sessionId = ""
 
 function App() {
@@ -32,26 +33,31 @@ function App() {
     onMessage: (e) => {
       //console.log('Message from server:', e.data)
       const j = JSON.parse(e.data)
-      if (j?.sessionId) {
+      if (j?.sessionId && sessionId === "") {
         sessionId = j.sessionId
         console.log("j.sessionId ", j.sessionId)
       }
-    }
+    },
+    onClose: (event) => {
+      console.log(`WebSocket closed with code ${event.code} and reason '${event.reason}'`);
+    },
   });
 
   return (
     <QueryClientProvider client={queryClient}>
       <ModelProvider>
+        <img src={ socketImg } alt="1 pixel"/>
         <div className="App">
           <SideMenu/>
           <ChatArea/>
         </div>
       </ModelProvider>
 
-      <ReactQueryDevtools 
+      { <ReactQueryDevtools 
       initialIsOpen={false}
       position='top-right'
       />
+      }
 
    </QueryClientProvider>
     
