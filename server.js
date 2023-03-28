@@ -82,16 +82,21 @@ websocketServer.on('connection', (ws) => {
 
     const j = JSON.parse(message)
     if (j?.sessionId) {
-      //console.log("sessionId: ", j.sessionId)
+      console.log("sessionId: ", j.sessionId)
       sessionId = j.sessionId
     } 
     
     if (!clients.has(sessionId)) {
-      //console.log("Creating ", sessionId)
-      clients.set(sessionId, {});
+      console.log("Creating ", sessionId)
+      clients.set(sessionId, new Map());
     }
 
     const clientData = clients.get(sessionId);
+
+    if (!clientData.has('conversationId')) {
+      clientData.set('conversationId', uuidv4());
+      clientData.set('parentMessageId', undefined);
+    }
 
     if (j?.prompt) {
       const { langModel, temperature, maxTokens, impersonation } = j;
@@ -101,9 +106,8 @@ websocketServer.on('connection', (ws) => {
       //console.log("prompt ",prompt);
 
       const currentDate = new Date().toISOString().split('T')[0]
-      // const systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
-      const systemMessage = `Vous êtes Sandrine, un grand modèle de langage destiné à aider les adultes à apprendre le français au niveau C1. Vous ne communiquez qu'en français. Faites semblant d'être un professeur de français. Do not respond in English.`
-      // Also need to account for the system message and some margin because the token count may not be exact.
+      const systemMessage = process.env.REACT_APP_SYSTEM_MESSAGE || `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
+      // Need to account for the system message and some margin because the token count may not be exact.
       const availableTokens = (maxTokens - Math.floor(maxTokens * 0.1)) - encode(prompt).length - encode(systemMessage).length
       let maxResponseTokens = 1000
       maxResponseTokens = availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens
@@ -136,19 +140,22 @@ websocketServer.on('connection', (ws) => {
       const response = await api.sendMessage(prompt, {
         // print the partial response as the AI is "typing"
         onProgress: (partialResponse) => logIncrementalOutput(partialResponse, ws),
-        parentMessageId: clientData?.parentMessageId 
+        conversationId: clientData.get('conversationId'),
+        parentMessageId: clientData.get('parentMessageId')
       });
       
-      //console.log("response ", response.text, response.id)
-      clientData.parentMessageId = response.id
-  
+      clientData.set('parentMessageId', response.id);
+
+      console.log("parentMessageId", clientData.get('parentMessageId'))
+
     }
 
   });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
-    clients.delete(sessionId); 
+  ws.on('close', function(code, reason) {
+    console.log('ws is closed with code: ' + code + ' reason: '+ reason);
+    // Don't delete because the socket might drop
+    //clients.delete(sessionId); 
   });
 
 });
@@ -156,12 +163,9 @@ websocketServer.on('connection', (ws) => {
 app.use(cors());
 app.use(express.json());
 
+// Serve a transparent pixel so we can get the authorization working with Cloudflare without
+// visiting the website explicitly
 app.use(express.static(path.join(__dirname, 'public')));
-
-const myCache = new NodeCache( { 
-  stdTTL: 3600, // standard time to live in sec's
-  checkperiod: 120 
-} );
 
 app.get('/', async (req, res) => {
   res.status(200).send({
