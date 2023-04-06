@@ -14,7 +14,7 @@ const exercises = {
                     exercise: true,
                     conversation: true,
                     id: '1.1.1',
-                    agent: 'chatGPT',
+                    agent: 'chatgpt',
                 },        
             ]
         },
