@@ -1,3 +1,7 @@
 node_modules
 .env
 database.sqlite
+cache.json
+config.dev
+config.prod
+db/*
