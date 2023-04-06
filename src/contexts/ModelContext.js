@@ -15,7 +15,7 @@ export function ModelProvider({ children }) {
   const [model, setModel] = useState({
     langModel:"gpt-3.5-turbo",
     temperature: 0,
-    maxTokens: 999,
+    maxTokens: 4000,
     impersonation: "",
   }
   )

@@ -19,8 +19,6 @@ const SelectBox = ({
   textFieldRef,
 }) => {
 
-
-
   return (
         <FormControl fullWidth id="selector-form">
           <InputLabel id="selector-label">{label}</InputLabel>

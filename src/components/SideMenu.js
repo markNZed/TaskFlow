@@ -5,11 +5,12 @@ import React, {  useCallback, useState } from 'react';
 import { useModelChange, useModel } from '../contexts/ModelContext';
 
 // utils
-import {AVAILABLE_MODELS, IMPERSONATE_LIST} from "../utils/constants"
+import {AVAILABLE_MODELS} from "../utils/constants"
 
 // components
 import SliderBox from "./SliderBox"
 import SelectBox from "./SelectBox"
+import ExerciseTree from "./ExerciseTree"
 
 // assets
 
@@ -17,15 +18,10 @@ import SelectBox from "./SelectBox"
 import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 
-const SideMenu = () => {
+const SideMenu = (props) => {
   const setModel = useModelChange();
   const [openToast, setOpenToast] = useState(false);
   const model = useModel();
-  const [impersonateList, setImpersonateList] = useState(IMPERSONATE_LIST);
-  const hideSideMenu = process.env.REACT_APP_SIMPLE || false;
-
-  const handleToastClick = useCallback(
-    ()=> setOpenToast(true), [setOpenToast]); 
   
   const handleToastClose = useCallback(
     (event, reason) => {
@@ -35,13 +31,12 @@ const SideMenu = () => {
       setOpenToast(false);
     }, [setOpenToast])
 
+  console.log("interface: " + props.user?.interface)
 
   return (
-    <aside className={`sidemenu ${hideSideMenu ? 'hide' : ''}`}>
-          {/* <div className='side-menu-button'>
-            <span>+</span>
-            New chat
-          </div> */}
+    <aside>
+      
+        <div className={`${props.user?.interface === 'simple' ? 'hide' : ''}`}>
 
           <SelectBox
             value={model.langModel}
@@ -53,7 +48,6 @@ const SideMenu = () => {
             }}
             selectItems={AVAILABLE_MODELS} 
           />
-
 
           <SliderBox
             toolTipDesc={"Higher value, the more creative of the model"}
@@ -84,37 +78,6 @@ const SideMenu = () => {
             step={100}
           />
 
-
-          <SelectBox
-            value={model.impersonation}
-            label="Impersonate"
-            onSelect={(e)=>{
-              const selectedName = e.target.value === "(None)"? "" : e.target.value;
-              setModel({...model, 
-                impersonation: selectedName
-              });
-            }}
-            selectItems={impersonateList} 
-            textFieldLabel={"Add impersonation"}
-            // textFieldRef = {nameFieldRef}
-            textFieldOnKeyPress={(ev) => {
-              if (ev.key === 'Enter') {
-                ev.preventDefault();
-                if (ev.target.value){
-                  setImpersonateList(prevList =>[...prevList, ev.target.value]);
-                  setModel({...model, 
-                    impersonation: ev.target.value
-                  });
-                  ev.target.value = "";
-                  handleToastClick();
-                }
-                
-              }
-            }}
-          />
-
-         
-
           <Snackbar
           open={openToast}
           autoHideDuration={5000}
@@ -123,9 +86,12 @@ const SideMenu = () => {
           action={action(handleToastClose)}
           anchorOrigin={{ horizontal:"right", vertical:"bottom" }}
          />
-            
+        
+      </div>
+      
+      <ExerciseTree onSelectExercise={props.onSelectExercise}/>
+
     
-     
     </aside>
     )
   }

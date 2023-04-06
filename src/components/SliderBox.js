@@ -6,10 +6,7 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import { Box } from '@mui/system';
 
-
-
 const SliderBox = ({toolTipDesc, title, value, onChange, min, max, step}) => {
-
 
   return (          
           <Box className="slider-box">
@@ -37,8 +34,6 @@ const SliderBox = ({toolTipDesc, title, value, onChange, min, max, step}) => {
               sx={{color:"lightgrey"}}
               />
           </Box>
-
-
     )
   }
 
