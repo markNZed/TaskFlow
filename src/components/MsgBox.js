@@ -95,8 +95,7 @@ const MsgBox = (props) => {
     setPending(true);
     const newMsgArray = [
       { sender: 'user', text: newMsg,  isLoading: false,}, 
-      { sender: model.impersonation ? 
-                model.impersonation : 'bot', 
+      { sender: 'bot', 
         text: "", 
         isLoading: true, 
       }];
@@ -183,7 +182,3 @@ const MsgBox = (props) => {
 }
 
 export default React.memo(MsgBox);
-
-
-
-

@@ -28,7 +28,6 @@ function Workflow(props) {
   const [activeStep, setActiveStep] = useState('start');
   const [prevStep, setPrevStep] = useState(null);
   const [steps, setSteps] = useState({});
-  const [sortedSteps, setSortedSteps] = useState([]);
   const [visitedSteps, setVisitedSteps] = useState([]);
   const [leaving, setLeaving] = useState(null);
 
@@ -66,7 +65,6 @@ function Workflow(props) {
   useEffect(() => {
     if (props.selectedExercise?.steps) {
       setSteps(props.selectedExercise?.steps)
-      setSortedSteps(sortStepsByNext(props.selectedExercise?.steps));
       setVisitedSteps(['start'])
     }
   }, [props.selectedExercise]); 
