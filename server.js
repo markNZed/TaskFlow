@@ -186,12 +186,12 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
       use_cache = exercise.use_cache
       console.log("Exercise set cache " + use_cache)
     }
+    prompt = agent?.prepend_prompt + prompt
+    prompt += agent?.append_prompt
+
   }
 
-  let conversationId = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'conversationId');
-  //console.log("sessionId + selectedExerciseId + agent.name + conversationId " + sessionId + " " + selectedExerciseId + " " + conversationId)
-
-  if (step && exercise?.steps[step]) {
+   if (step && exercise?.steps[step]) {
     if (typeof exercise.steps[step]?.use_cache !== "undefined") {
       use_cache = exercise.steps[step].use_cache
       console.log("Step set cache " + use_cache)
@@ -206,7 +206,11 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     }
   }
 
+  let conversationId = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'conversationId');
+  console.log("sessionId + selectedExerciseId + agent.name + conversationId " + sessionId + " " + selectedExerciseId + " " + agent.name  + " " + conversationId)
+
   if (initializing || conversationId === undefined) {
+    initializing = true
     // Unique conversation per exercise type
     conversationId = uuidv4() + exercise?.id;
     await sessionsStore_async.set(sessionId + selectedExerciseId + agent.name + 'conversationId', conversationId);
@@ -224,10 +228,12 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
      console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
    }
 
+   console.log("step " + step)
+
    if (step && exercise?.steps[step]) {
     if (exercise.steps[step]?.messages) {
       lastMessageId = await utils.processMessages_async(exercise.steps[step].messages, messageStore_async, lastMessageId)
-      console.log("Messages extended from step " + step)
+      console.log("Messages extended from step " + step + " lastMessageId " + lastMessageId)
     }
   }
  
@@ -242,7 +248,8 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     let userId = await sessionsStore_async.get(sessionId + 'userId')
     if (students[userId] && exercise && exercise?.dyad && initializing) {
       let student = students[userId];
-       systemMessage += ` Vous etes en dyad avec votre student qui s'appelle ${student.name}. ${student.profile}`;
+      console.log("Dyad in progress between " + agent.name + " and " + student.name)
+      systemMessage += ` Vous etes en dyad avec votre student qui s'appelle ${student.name}. ${student.profile}`;
     }
   }
 
@@ -253,7 +260,7 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
   const availableTokens = (maxTokens - Math.floor(maxTokens * 0.1)) - encode(prompt).length - encode(systemMessage).length
   let maxResponseTokens = 1000 // Leave room for conversation history
   maxResponseTokens = availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens
-  //console.log("Tokens maxTokens " + maxTokens + " maxResponseTokens " + maxResponseTokens)
+  console.log("Tokens maxTokens " + maxTokens + " maxResponseTokens " + maxResponseTokens)
   
   // This is a hack to get parameters into the API
   // We should be able to change this on the fly, I requested a feature 
@@ -263,10 +270,10 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     completionParams: {
       top_p: 1.0,
     },
-    messageStore_async,
+    messageStore: messageStore_async,
     maxResponseTokens: maxResponseTokens,
     maxModelTokens: maxTokens,
-    debug: true 
+    debug: true
   })
 
   function logIncrementalOutput(partialResponse, ws) {
@@ -302,7 +309,8 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
   let cachedValue = '';
   let cacheKey = '';
   if (use_cache) {
-    const conversation = await utils.conversationText_async(messageStore_async, messageParams.parentMessageId)
+    const conversation = await utils.conversationText_async(messageStore_async, lastMessageId)
+    //console.log("conversation " + conversation + " lastMessageId " + lastMessageId)
     const cacheKeyText = [
       messageParams.systemMessage,  
       JSON.stringify(messageParams.completionParams), 
@@ -469,7 +477,7 @@ app.post('/api/input', async (req, res) => {
       const [exercise_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
       let selectedExerciseId = await sessionsStore_async.get(sessionId + 'selectedExerciseId');
       let exercise = await sessionsStore_async.get(sessionId + selectedExerciseId + 'exercise');
-      if (exercise.steps[stepKey].input !== input) {
+      if (exercise.steps[stepKey]?.input !== input) {
         exercise.steps[stepKey].input = input
         exercise.steps[stepKey].last_change = Date.now()
       }

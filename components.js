@@ -17,13 +17,19 @@ components.TaskFromAgent_async = async function(sessionsStore, sessionId, exerci
 
   let prompt = ""
   if (current_step?.assemble_prompt) {
-    //console.log("Step summarize: " + JSON.stringify(exercise.steps['summarize']))
     prompt += current_step.assemble_prompt.reduce(function(acc, curr) {
       // Currently this assumes the parts are from the same exercise, could extend this
       const regex = /(^.+)\.(.+$)/;
       const matches = regex.exec(curr);
       if (matches) {
         // console.log("matches step " + matches[1] + " " + matches[2])
+        if (exercise.steps[matches[1]] === undefined) {
+          console.log("exercise.steps " + matches[1] +" does not exist")
+        }
+        if (exercise.steps[matches[1]][matches[2]] === undefined) {
+          console.log("exercise.steps " + matches[1] + " " + matches[2] + " does not exist")
+        }
+        // Will crash server if not present
         return acc + exercise.steps[matches[1]][matches[2]]
       } else {
         return acc + curr
@@ -31,11 +37,12 @@ components.TaskFromAgent_async = async function(sessionsStore, sessionId, exerci
     });
     console.log("Prompt " + prompt)
   } else {
-    prompt += exercise.steps[stepKey].prompt
+    prompt += exercise.steps[stepKey]?.prompt
   }
 
   if (current_step?.messages_template) {
-    current_step.messages = JSON.parse(JSON.stringify(current_step.messages_template));
+    console.log("Found messages_template")
+    current_step.messages = JSON.parse(JSON.stringify(current_step.messages_template)); // deep copy
     // assemble
     current_step.messages.forEach(message => {
       if (Array.isArray(message['content'])) {

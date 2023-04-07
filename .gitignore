@@ -6,3 +6,4 @@ config.dev
 config.prod
 db/*
 !db/.gitignore
+temp.txt

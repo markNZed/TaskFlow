@@ -6,9 +6,9 @@ const utils = {};
 utils.load_data_async = async function(config_dir, name) {
     let result = {}
     try {
-      result = (await import(config_dir + name + ".js"))[name];
+      result = (await import(config_dir + name + ".mjs"))[name];
     } catch (error) {
-      console.log("No " + name + "s");
+      console.log("No " + name + " at " + config_dir + name + ".mjs " + error);
     }
     return result
 }
@@ -52,9 +52,11 @@ utils.processMessages_async = async function(messages, messageStore_async, initi
       if (message.role === "system") {
         error("Not expecting system message here");
       } else {
-        await messageStore_async.set(id, chatMessage);
+        console.log ("id " + id);
+        console.log ("chatMessage " + chatMessage.text)
+        await messageStore_async.set(id, chatMessage)
       }
-  
+      
       lastMessageId = id;
     }
     return lastMessageId;
@@ -65,7 +67,7 @@ utils.conversationText_async = async function(messageStore_async, LastMessageId)
     let text = ''
     let message
     while (message = await messageStore_async.get(id)) {
-      text += message.text
+      text = message.text + text // prepend
       id = message.parentMessageId
     }
     return text
@@ -106,7 +108,7 @@ utils.ignoreByRegexList = function(obj, userId, regexList) {
       });
     }
     return Object.entries(obj).reduce((acc, [key, value]) => {
-      if (key === "userId" && !value.includes(userId)) {
+      if (key === "users" && !value.includes(userId)) {
         return null;
       } else if (!regexList.some(regex => regex.test(key))) {
         if (typeof value === "object" && value !== null) {
