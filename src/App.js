@@ -29,7 +29,7 @@ function App() {
   // Here we fetch the sessionId if we don't already have one
   const { sendMessage, sendJsonMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
     reconnectAttempts: 10,
-    reconnectInterval: 5000,
+    reconnectInterval: 500,
     shouldReconnect: (closeEvent) => {
       return true;
     },
@@ -38,12 +38,12 @@ function App() {
       setWebSocket(getWebSocket())
     },
     onMessage: (e) => {
-      webSocketEventEmitter.emit('message', e);
       const j = JSON.parse(e.data)
       if (j?.sessionId && sessionId === "") {
         setSessionId(j.sessionId)
         console.log("j.sessionId ", j.sessionId)
       }
+      webSocketEventEmitter.emit('message', e);
     },
     onClose: (event) => {
       console.log(`App webSocket closed with code ${event.code} and reason '${event.reason}'`);

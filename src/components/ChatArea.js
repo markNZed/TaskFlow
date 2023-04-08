@@ -8,7 +8,7 @@ const ChatArea = (props) => {
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
   // Should set this from server exercise
-  const welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
+  let welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
   const hasScrolledRef = useRef(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState({});
@@ -16,6 +16,7 @@ const ChatArea = (props) => {
   //console.log("ChatArea component")
 
   useEffect(() => {
+    welcomeMessage = props.selectedExercise?.welcome_message || welcomeMessage
     if (!isMountedRef.current) {
       // waiting for props.selectedExercise.id ?
       setMsgs(
