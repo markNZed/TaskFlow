@@ -30,7 +30,7 @@ const workflows = {
                     steps: {
                         start : {
                             text: "Hello",
-                            component: 'TaskShowText',
+                            component: 'TaskShowResponse',
                             next: 'summarize'
                         },
                         summarize: {

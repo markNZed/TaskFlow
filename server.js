@@ -2,6 +2,7 @@
 -------
 Multiple language support 'i18next-http-middleware for server and react-i18next for client
 Change model context with session in client
+Support a pre_input and post_input for surrounding prompt.
 -------
 */
 
@@ -339,6 +340,7 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
         cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
       }
+      // Don't add ... when response is fully displayed
       console.log("Response from API: " + text.slice(0, 20) + " ...")
       return text
     })
@@ -453,11 +455,14 @@ app.get('/api/step', async (req, res) => {
         case 'TaskFromAgent':
           response = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
           break;
-        case 'TaskShowText':
-          response = await tasks.TaskShowText_async(sessionsStore_async, sessionId, workflow, stepKey)
+        case 'TaskShowResponse':
+          response = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
+          break;         
+        case 'TaskChoose':
+           response = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
           break;         
         default:
-          response = "ERROR: unknown component:" + component
+          response = "ERROR: server unknown component:" + component
       }
       // A function for each component? In a library.
       res.send({response});
