@@ -24,6 +24,7 @@ import { encode } from 'gpt-3-encoder';
 import { v4 as uuidv4 } from 'uuid'
 import { components } from './components.js';
 import { utils } from './utils.js';
+import { error } from 'console'
 dotenv.config()
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
@@ -75,14 +76,14 @@ const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
 
 websocketServer.on('connection', (ws) => {
 
-  console.log("websocketServer.on 'connection'")
-
   let sessionId = uuidv4();
 
   //send feedback to the incoming connection
   ws.send('{ "connection" : "ok", "sessionId" : "' + sessionId + '"}');
 
   connections.set(sessionId, ws);
+
+  console.log("websocketServer.on 'connection' sessionId " + sessionId)
 
   //when a message is received
   ws.on('message', async (message) => {
@@ -92,7 +93,7 @@ websocketServer.on('connection', (ws) => {
     if (j?.sessionId) {
       console.log("sessionId from client: ", j.sessionId)
       sessionId = j.sessionId
-      connections.set(sessionId, this);
+      connections.set(sessionId, ws);
     } 
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
@@ -117,7 +118,7 @@ websocketServer.on('connection', (ws) => {
 
     if (j?.prompt) {
       let { langModel, temperature, maxTokens, prompt } = j;
-      prompt_response_async(sessionId, prompt, ws, true, null, langModel, temperature, maxTokens)
+      prompt_response_async(sessionId, prompt, ws, null, langModel, temperature, maxTokens)
     }
 
   });
@@ -131,9 +132,14 @@ websocketServer.on('connection', (ws) => {
 
 });
 
-async function prompt_response_async(sessionId, prompt, ws, send, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
+function logIncrementalOutput(partialResponse, conversationId, ws) {
+  const incr = JSON.stringify(partialResponse.delta)
+  if (incr) {
+     ws.send(`{"conversationId" : "${conversationId}", "stream" : ${incr}}`)
+  }
+}
 
-  send = true
+async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
 
   const currentDate = new Date().toISOString().split('T')[0]
   let systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
@@ -219,8 +225,6 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     // Unique conversation per exercise type
     conversationId = uuidv4() + exercise?.id;
     await sessionsStore_async.set(sessionId + selectedExerciseId + agent.name + 'conversationId', conversationId);
-    // Don't need/use ths?
-    if (send) {ws.send(`{"conversationId" : "${conversationId}"}`)}
     console.log("Initializing conversation " + conversationId)
    } else if (conversationId) {
      console.log("Continuing conversation " + conversationId)
@@ -281,19 +285,12 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     debug: true
   })
 
-  function logIncrementalOutput(partialResponse, ws) {
-    const incr = JSON.stringify(partialResponse.delta)
-    if (incr) {
-       if (send) {ws.send(`{"conversationId" : "${conversationId}", "stream" : ${incr}}`)}
-    }
-  }
-
   const messageParams = {
     completionParams: {
       model: langModel,
       temperature: temperature,
     },
-    onProgress: (partialResponse) => logIncrementalOutput(partialResponse, ws),
+    onProgress: (partialResponse) => logIncrementalOutput(partialResponse, conversationId, ws),
     parentMessageId: lastMessageId,
   };
 
@@ -331,7 +328,7 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', cachedValue.id)
     let text = cachedValue.text;
     console.log("Response from cache: " + text.slice(0, 20) + " ...");
-    if (send) {ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)}
+    ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
@@ -339,7 +336,7 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
     .then(response => {
       sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', response.id)
       let text = response.text;
-      if (send) {ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)}
+      ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)
       if (CACHE === "enable") {
         cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
@@ -447,7 +444,13 @@ app.get('/api/step', async (req, res) => {
         await sessionsStore_async.set(sessionId + exercise_id + 'exercise', exercise) 
       }
       await sessionsStore_async.set(sessionId + 'selectedExerciseId', exercise_id);
-      let ws = connections.get(sessionId);
+      const ws = connections.get(sessionId);
+      if (!ws) {
+        // If the server has restarted the conenction is lost
+        error("Could not find ws for sessionId " + sessionId)
+        console.log(connections.keys())
+        console.log("Has key " + connections.has(sessionId))
+      }
       switch (component) {
         case 'TaskFromAgent':
           response = await components.TaskFromAgent_async(sessionsStore_async, sessionId, exercise, stepKey, prev_stepKey, prompt_response_async, ws)

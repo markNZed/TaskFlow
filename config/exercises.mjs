@@ -15,6 +15,7 @@ const exercises = {
                     conversation: true,
                     id: '1.1.1',
                     agent: 'chatgpt',
+                    //default: true
                 },        
                 {
                     name: "example",

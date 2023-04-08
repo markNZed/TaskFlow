@@ -1,6 +1,10 @@
 var components = components || {};
 
 components.TaskFromAgent_async = async function(sessionsStore, sessionId, exercise, stepKey, prev_stepKey, prompt_response_callback_async, ws) {
+
+  if (!ws) {
+    console.log("ws is not defined for sessionId " + sessionId)
+  }
   const current_step = exercise.steps[stepKey]
   const prev_step = exercise.steps[prev_stepKey]
 
@@ -68,7 +72,7 @@ components.TaskFromAgent_async = async function(sessionsStore, sessionId, exerci
     await sessionsStore.set(sessionId + exercise.id + 'exercise', exercise)
   }
 
-  let response_text = await prompt_response_callback_async(sessionId, prompt, ws, false, stepKey)
+  let response_text = await prompt_response_callback_async(sessionId, prompt, ws, stepKey)
   exercise.steps[stepKey].response = response_text
   exercise.steps[stepKey].last_change = Date.now()
   await sessionsStore.set(sessionId + exercise.id + 'exercise', exercise)
