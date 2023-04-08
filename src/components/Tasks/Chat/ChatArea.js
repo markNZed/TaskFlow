@@ -7,7 +7,7 @@ import Icon from "./Icon"
 const ChatArea = (props) => {
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
-  // Should set this from server exercise
+  // Should set this from server workflow
   let welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
   const hasScrolledRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -16,12 +16,12 @@ const ChatArea = (props) => {
   //console.log("ChatArea component")
 
   useEffect(() => {
-    welcomeMessage = props.selectedExercise?.welcome_message || welcomeMessage
+    welcomeMessage = props.selectedworkflow?.welcome_message || welcomeMessage
     if (!isMountedRef.current) {
-      // waiting for props.selectedExercise.id ?
+      // waiting for props.selectedworkflow.id ?
       setMsgs(
         {
-          [props.selectedExercise.id] : [
+          [props.selectedworkflow.id] : [
             { sender: 'bot', text: welcomeMessage,  isLoading: true}
           ]
         }
@@ -29,16 +29,16 @@ const ChatArea = (props) => {
       setTimeout(()=>{
           setMsgs(
             {
-              [props.selectedExercise.id] : [
+              [props.selectedworkflow.id] : [
                 { sender: 'bot', text: welcomeMessage,  isLoading: false}
               ]
             }
           );
       }, 1000);
       isMountedRef.current = true
-    } else if ( !(props.selectedExercise.id in msgs) ) {
+    } else if ( !(props.selectedworkflow.id in msgs) ) {
       let newMsgs =  JSON.parse(JSON.stringify(msgs)); // need deep copy for setMesgs to see change
-      newMsgs[props.selectedExercise.id] = [{ sender: 'bot', text: welcomeMessage,  isLoading: false}]
+      newMsgs[props.selectedworkflow.id] = [{ sender: 'bot', text: welcomeMessage,  isLoading: false}]
       setMsgs(newMsgs)
    } else {
       if (messagesEndRef.current && !hasScrolledRef.current) {
@@ -48,13 +48,13 @@ const ChatArea = (props) => {
         hasScrolledRef.current = false;
       }
     }
-   }, [msgs, props.selectedExercise]);
+   }, [msgs, props.selectedworkflow]);
 
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer}>
 
-        {msgs[props.selectedExercise.id] && msgs[props.selectedExercise.id].map((msg, index) => {
+        {msgs[props.selectedworkflow.id] && msgs[props.selectedworkflow.id].map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
               <div className="chat"> 
@@ -71,7 +71,7 @@ const ChatArea = (props) => {
       <div ref={messagesEndRef} style={{height:"5px"}}/>
       
       </div>
-      <MsgBox msgs={msgs} setMsgs={setMsgs} user={props.user} selectedExercise={props.selectedExercise}/>
+      <MsgBox msgs={msgs} setMsgs={setMsgs} user={props.user} selectedworkflow={props.selectedworkflow}/>
     </section> 
     )
   }

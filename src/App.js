@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
-import Exercises from "./components/Exercises"
+import Workflows from "./components/Workflows"
 import { WebSocketContext, WebSocketEventEmitter } from './contexts/WebSocketContext';
 import useWebSocket from 'react-use-websocket'
 
@@ -55,8 +55,8 @@ function App() {
     <WebSocketContext.Provider value={{ webSocket, webSocketEventEmitter, sendJsonMessage }}>
       <Router>
         <Routes>
-          <Route exact path="/" element={<Exercises/>} />
-          <Route path="/authenticated" element={<Exercises/>} />
+          <Route exact path="/" element={<Workflows/>} />
+          <Route path="/authenticated" element={<Workflows/>} />
         </Routes>
       </Router>
     </WebSocketContext.Provider>

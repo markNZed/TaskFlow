@@ -3,20 +3,20 @@ import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools'
 import '../styles/App.css';
 import '../styles/normal.css';
-import ChatArea from "./ChatArea"
+import ChatArea from "./Tasks/Chat/ChatArea"
 import SideMenu from "./SideMenu"
 import ObjectDisplay from "./ObjectDisplay"
 import { ModelProvider } from '../contexts/ModelContext'
 import Stack from '@mui/material/Stack';
-import Workflow from "./Workflow"
+import WorkflowStepper from "./WorkflowStepper"
 import { serverUrl } from '../App';
 
 const queryClient = new QueryClient()
 
-function Exercises() {
+function Workflows() {
 
   const [user, setUser] = useState([]);
-  const [selectedExercise, setSelectedExercise] = useState({});
+  const [selectedworkflow, setSelectedworkflow] = useState({});
   
   useEffect(() => {
     fetch(`${serverUrl}api/user`, {
@@ -32,8 +32,8 @@ function Exercises() {
     });
   }, []);
 
-  function onSelectExercise(exercise) {
-    setSelectedExercise(exercise);
+  function onSelectworkflow(workflow) {
+    setSelectedworkflow(workflow);
   }
   
   useEffect(() => {
@@ -47,11 +47,11 @@ function Exercises() {
       <ModelProvider>
         <div className="App">
           <Stack direction="row" spacing={3} sx={{ width: '100%', marginRight: '24px' }}>
-            <SideMenu user={user} onSelectExercise={onSelectExercise} selectedExercise={selectedExercise}/>
-            {selectedExercise?.conversation ?
-              <ChatArea user={user} selectedExercise={selectedExercise}/>
+            <SideMenu user={user} onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
+            {selectedworkflow?.conversation ?
+              <ChatArea user={user} selectedworkflow={selectedworkflow}/>
               :
-              <Workflow user={user} selectedExercise={selectedExercise}/>
+              <WorkflowStepper user={user} selectedworkflow={selectedworkflow}/>
             }
             <div className={`${user?.interface !== 'debug' ? 'hide' : ''}`}>
               <ObjectDisplay data={user} />
@@ -71,4 +71,4 @@ function Exercises() {
   );
 }
 
-export default Exercises;
+export default Workflows;

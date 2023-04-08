@@ -4,8 +4,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { serverUrl } from '../App';
 
-function ExerciseTree(props) {
-    const [exercises, setExercises] = useState(null);
+function WorkflowTree(props) {
+    const [workflows, setworkflows] = useState(null);
     const [expanded, setExpanded] = useState([]);
     let tempNodeIds = []
 
@@ -14,22 +14,22 @@ function ExerciseTree(props) {
     };
 
     useEffect(() => {
-      fetch(serverUrl + 'api/exercises', {
+      fetch(serverUrl + 'api/workflows', {
         credentials: 'include'
       })
         .then(response => response.json())
         .then(data => {
-            setExercises(data);
+            setworkflows(data);
             // We can't set the default node during rendering because it impacts the state of a parent
             // So here we call renderTree only to set the default state. There must be a better way
             // to do this as we are calling renderTree too many times.
             renderTree(data, handleSelectNode, true);
             setExpanded(tempNodeIds)
         })
-        .catch(error => console.error('Error fetching exercises:', error));
+        .catch(error => console.error('Error fetching workflows:', error));
     }, []); //handleSelectNode, renderTree, tempNodeIds
   
-    // It would be better to move the renderTree function outside of the ExerciseTreeView component and define it as a separate utility function that can be used in other components as well.
+    // It would be better to move the renderTree function outside of the workflowTreeView component and define it as a separate utility function that can be used in other components as well.
     function renderTree(node, handleSelectNode, propagateDefault = false) {
         if (!node) {return ""}
 
@@ -44,7 +44,7 @@ function ExerciseTree(props) {
                 {children.map((child) => renderTree(child, handleSelectNode, propagateDefault))}
             </TreeItem>
             );
-        } else if (node?.exercise) {
+        } else if (node?.workflow) {
             if (propagateDefault && node?.default) {
                 handleSelectNode(node)
             }
@@ -61,31 +61,31 @@ function ExerciseTree(props) {
 
     function handleSelectNode(node) {
         // props are read only
-        props.onSelectExercise(node);
+        props.onSelectworkflow(node);
     }
 
-    if (!exercises) {
+    if (!workflows) {
       return <div>Loading...</div>;
     }
   
     return (
-      <div className="exerciseTree">
+      <div className="workflowTree">
         <TreeView
-          aria-label="exercises"
+          aria-label="workflows"
           defaultCollapseIcon={<ExpandMoreIcon />}
           defaultExpandIcon={<ChevronRightIcon />}
           expanded={expanded}
           onNodeToggle={handleToggle}
         >
-          {renderTree(exercises, handleSelectNode)}
+          {renderTree(workflows, handleSelectNode)}
         </TreeView>
-        {props.selectedExercise?.name && (
+        {props.selectedworkflow?.name && (
           <div>
-            Selected Exercise: {props.selectedExercise.name}
+            Selected workflow: {props.selectedworkflow.name}
           </div>
         )}
       </div>
     );
 }
 
-export default React.memo(ExerciseTree);
+export default React.memo(WorkflowTree);

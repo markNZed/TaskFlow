@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TaskFromAgent from "./steps/TaskFromAgent"
-import TaskShowText from "./steps/TaskShowText"
+import TaskFromAgent from "./Tasks/TaskFromAgent"
+import TaskShowText from "./Tasks/TaskShowText"
 
 function sortStepsByNext(steps) {
   const orderedKeys = [];
@@ -24,7 +24,7 @@ function sortStepsByNext(steps) {
   return orderedKeys.map((key) => [key, steps[key]]);
 }
 
-function Workflow(props) {
+function WorkflowStepper(props) {
   const [activeStep, setActiveStep] = useState('start');
   const [prevStep, setPrevStep] = useState(null);
   const [steps, setSteps] = useState({});
@@ -63,15 +63,15 @@ function Workflow(props) {
   }
 
   useEffect(() => {
-    if (props.selectedExercise?.steps) {
-      setSteps(props.selectedExercise?.steps)
+    if (props.selectedworkflow?.steps) {
+      setSteps(props.selectedworkflow?.steps)
       setVisitedSteps(['start'])
     }
-  }, [props.selectedExercise]); 
+  }, [props.selectedworkflow]); 
 
   useEffect(() => {
     setActiveStep('start');
-  }, [props.selectedExercise]);
+  }, [props.selectedworkflow]);
 
   return (
     <div>
@@ -91,9 +91,9 @@ function Workflow(props) {
               {(() => {
                 switch (steps[stepKey].component) {
                   case 'TaskFromAgent':
-                    return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedExercise?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
+                    return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
                   case 'TaskShowText':
-                    return <TaskShowText  stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedExercise?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
+                    return <TaskShowText  stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
                   default:
                     return <div> No task found for {steps[stepKey].component}</div>
                 }
@@ -118,4 +118,4 @@ function Workflow(props) {
   );
 }
 
-export default Workflow;
+export default WorkflowStepper;

@@ -280,11 +280,11 @@ form img {
   margin-right: 10px;
 }
 
-.exerciseTree{
+.workflowTree{
   text-align: left
 }
 
-.exerciseTree .MuiTreeItem-label::first-letter {
+.workflowTree .MuiTreeItem-label::first-letter {
   text-transform: uppercase;
 }
 

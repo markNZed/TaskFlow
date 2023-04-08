@@ -4,8 +4,8 @@ import React from 'react';
 import Avatar from '@mui/material/Avatar';
 
 // assets
-import bot from '../assets/bot.svg';
-import user from '../assets/user.svg';
+import bot from '../../../assets/bot.svg';
+import user from '../../../assets/user.svg';
 
 
 

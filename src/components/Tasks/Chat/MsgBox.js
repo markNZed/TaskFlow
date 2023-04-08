@@ -1,20 +1,20 @@
 // libs
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import Dropdown from './Dropdown';
+import PromptDropdown from './PromptDropdown';
 
 // assets
-import send from '../assets/send.svg';
+import send from '../../../assets/send.svg';
 
 // contexts
-import { useModel } from '../contexts/ModelContext';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useModel } from '../../../contexts/ModelContext';
+import { useWebSocket } from '../../../contexts/WebSocketContext';
 
-import { sessionId } from '../App';
+import { sessionId } from '../../../App';
 
 const MsgBox = (props) => {
   const { webSocket, webSocketEventEmitter, sendJsonMessage } = useWebSocket();
   const [lastMessage, setLastMessage] = useState(null);
-  const [selectedExerciseId, setSelectedExerciseId] = useState(null);
+  const [selectedworkflowId, setSelectedworkflowId] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
@@ -34,21 +34,21 @@ const MsgBox = (props) => {
         setConversationId(j.conversationId)
         if (j?.stream) {
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
+          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
           lastElement.text += j.stream
           // This allows the text to be displayed
           lastElement.isLoading = false 
-          newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
+          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
           setPending(false);
         }
         if (j?.final) {
           // This fixs any missing messages over the websocket in the incremental mode
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
+          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
           lastElement.text = j.final
           lastElement.isLoading = false 
-          newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
+          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
           setPending(false);
           console.log(j.final)
@@ -64,7 +64,7 @@ const MsgBox = (props) => {
     return () => {
       webSocketEventEmitter.removeListener('message', handleMessage);
     };
-  }, [webSocketEventEmitter, props.msgs, props.selectedExercise.id]);
+  }, [webSocketEventEmitter, props.msgs, props.selectedworkflow.id]);
 
   const connectionStatus = webSocket
   ? {
@@ -88,13 +88,13 @@ const MsgBox = (props) => {
         isLoading: true, 
       }];
     let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-    newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id], ...newMsgArray]
+    newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id], ...newMsgArray]
     props.setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
     sendJsonMessage({
       sessionId: sessionId,
       userId: props.user.userId,
-      selectedExerciseId: props.selectedExercise.id,
+      selectedworkflowId: props.selectedworkflow.id,
       conversationId: conversationId,
       prompt: newMsg,
       ...model,
@@ -102,7 +102,7 @@ const MsgBox = (props) => {
     console.log("conversationId sent " + conversationId)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessage, model, props.user, props.selectedExercise.id]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessage, model, props.user, props.selectedworkflow.id]);
 
   useEffect(() => {
    // Access the form element using the ref
@@ -118,10 +118,10 @@ const MsgBox = (props) => {
 
   return (
     <form onSubmit={handleSubmit} className="msg-form">
-        {props?.selectedExercise?.suggested_prompts ?
+        {props?.selectedworkflow?.suggested_prompts ?
           <div style={{textAlign: 'left'}}>
-            <Dropdown 
-              prompts={props.selectedExercise.suggested_prompts} 
+            <PromptDropdown 
+              prompts={props.selectedworkflow.suggested_prompts} 
               onSelect={handleDropdownSelect} 
             />
           </div>

@@ -49,7 +49,7 @@ const TaskFromAgent = (props) => {
         if (props.id === fetchedId) {return}
         setFetchedId(props.id)
         // Fetch the text
-        // From the step we can find the exercise?
+        // From the step we can find the workflow?
         fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskFromAgent&step_id=${props.id}&prev_step=${props.prevStep}`, {
             credentials: 'include'
         })

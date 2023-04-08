@@ -15,7 +15,7 @@ const TaskShowText = (props) => {
     // Note the we don't really need to fetch as the text is in the exrecise definition
     useEffect(() => {
         // Fetch the text
-        // From the step we can find the exercise?
+        // From the step we can find the workflow?
         fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskShowText&step_id=${props?.id}`, {
             credentials: 'include'
         })

@@ -10,7 +10,7 @@ import {AVAILABLE_MODELS} from "../utils/constants"
 // components
 import SliderBox from "./SliderBox"
 import SelectBox from "./SelectBox"
-import ExerciseTree from "./ExerciseTree"
+import WorkflowTree from "./WorkflowTree"
 
 // assets
 
@@ -30,8 +30,6 @@ const SideMenu = (props) => {
       }
       setOpenToast(false);
     }, [setOpenToast])
-
-  console.log("interface: " + props.user?.interface)
 
   return (
     <aside>
@@ -89,7 +87,7 @@ const SideMenu = (props) => {
         
       </div>
       
-      <ExerciseTree onSelectExercise={props.onSelectExercise}/>
+      <WorkflowTree onSelectworkflow={props.onSelectworkflow}/>
 
     
     </aside>

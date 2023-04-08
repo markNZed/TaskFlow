@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-const Dropdown = ({ prompts, onSelect }) => {
+const PromptDropdown = ({ prompts, onSelect }) => {
   const [selectedPrompt, setSelectedPrompt] = useState('');
 
   const handleChange = (event) => {
@@ -37,4 +37,4 @@ return (
   );
 };
 
-export default Dropdown;
+export default PromptDropdown;
