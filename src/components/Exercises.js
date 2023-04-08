@@ -7,10 +7,9 @@ import ChatArea from "./ChatArea"
 import SideMenu from "./SideMenu"
 import ObjectDisplay from "./ObjectDisplay"
 import { ModelProvider } from '../contexts/ModelContext'
-import useWebSocket from 'react-use-websocket'
 import Stack from '@mui/material/Stack';
 import Workflow from "./Workflow"
-import { socketUrl, serverUrl, sessionId, setSessionId } from '../App';
+import { serverUrl } from '../App';
 
 const queryClient = new QueryClient()
 
@@ -19,30 +18,6 @@ function Exercises() {
   const [user, setUser] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState({});
   
-  // Here we fetch the sessionId if we don't already have one
-  useWebSocket(socketUrl, {
-    reconnectAttempts: 10,
-    reconnectInterval: 5000,
-    shouldReconnect: (closeEvent) => {
-      // OK if this closes after getting sessionId
-      return false;
-    },
-    onOpen: () => {
-      console.log('App webSocket connection established.');
-    },
-    onMessage: (e) => {
-      console.log('Message from server:', e.data)
-      const j = JSON.parse(e.data)
-      if (j?.sessionId && sessionId === "") {
-        setSessionId(j.sessionId)
-        console.log("j.sessionId ", j.sessionId)
-      }
-    },
-    onClose: (event) => {
-      console.log(`App webSocket closed with code ${event.code} and reason '${event.reason}'`);
-    },
-  });
-
   useEffect(() => {
     fetch(`${serverUrl}api/user`, {
       credentials: 'include'

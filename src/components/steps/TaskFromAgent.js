@@ -3,9 +3,12 @@ import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
 import { serverUrl, sessionId } from '../../App';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 const TaskFromAgent = (props) => {
     
+    const { websocket, webSocketEventEmitter, sendJsonMessage } = useWebSocket();
+
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState("");
     const [summary, setSummary] = useState("");
@@ -16,6 +19,21 @@ const TaskFromAgent = (props) => {
     const [myStepKey, setMyStepKey] = useState("");
     const [myStep, setMyStep] = useState("");
 
+    useEffect(() => {
+        const handleMessage = (e) => {
+            const j = JSON.parse(e.data)
+            if (j?.stream) {
+                setResponse((prevResponse) => prevResponse + j.stream);
+            }
+        };
+
+        webSocketEventEmitter.on('message', handleMessage);
+
+        return () => {
+            webSocketEventEmitter.removeListener('message', handleMessage);
+        };
+    }, [webSocketEventEmitter]);
+        
     useEffect(() => {
         setMyStepKey(props.stepKey)
         setMyStep(props.step)

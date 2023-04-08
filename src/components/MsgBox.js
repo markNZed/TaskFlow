@@ -1,6 +1,5 @@
 // libs
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
 import Dropdown from './Dropdown';
 
 // assets
@@ -8,10 +7,14 @@ import send from '../assets/send.svg';
 
 // contexts
 import { useModel } from '../contexts/ModelContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
-import { socketUrl, sessionId } from '../App';
+import { sessionId } from '../App';
 
 const MsgBox = (props) => {
+  const { webSocket, webSocketEventEmitter, sendJsonMessage } = useWebSocket();
+  const [lastMessage, setLastMessage] = useState(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
@@ -21,71 +24,56 @@ const MsgBox = (props) => {
 
   //console.log("MSGBox component")
 
-  const { sendJsonMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
-    reconnectAttempts: 10,
-    reconnectInterval: 5000,
-    //share: true,
-    onOpen: () => {
-      console.log('MsgBox webSocket connection established.');
-    },
-    shouldReconnect: (closeEvent) => {
-      // custom reconnect logic here
-      const currentDate = new Date();
-      console.log('MsgBox shouldReconnect true.' + currentDate);
-      return true; // reconnect by default
-    },
-    filter: () => false,
-    onError: (err) => {
-      console.error('WebSocket error:', err); 
-    },
-    onMessage: (e) => {
-      //console.log(e.data)
+  useEffect(() => {
+    if (!webSocketEventEmitter) {return}
+
+    const handleMessage = (e) => {
       const j = JSON.parse(e.data)
       if (j?.conversationId) {
-        if (conversationId === 'initialize') {
-          setConversationId(j.conversationId)
-          console.log("conversationId from server: " + j.conversationId)
+        //setLastMessage(j);
+        setConversationId(j.conversationId)
+        if (j?.stream) {
+          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
+          const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
+          lastElement.text += j.stream
+          // This allows the text to be displayed
+          lastElement.isLoading = false 
+          newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
+          props.setMsgs(newMsgs);
+          setPending(false);
         }
-        if (j.conversationId === conversationId) {
-          if (j?.stream) {
-            let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-            const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
-            lastElement.text += j.stream
-            //console.log(j.stream)
-            // This allows the text to be displayed
-            lastElement.isLoading = false 
-            newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
-            props.setMsgs(newMsgs);
-            setPending(false);
-          }
-          if (j?.final) {
-            // This fixs any missing messages over the websocket in the incremental mode
-            let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-            const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
-            lastElement.text = j.final
-            lastElement.isLoading = false 
-            newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
-            props.setMsgs(newMsgs);
-            setPending(false);
-          }
-          if (j?.message) {
-            console.log("Message: " + j.message)
-          }
+        if (j?.final) {
+          // This fixs any missing messages over the websocket in the incremental mode
+          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
+          const lastElement = newMsgs[props.selectedExercise.id][newMsgs[props.selectedExercise.id].length - 1];
+          lastElement.text = j.final
+          lastElement.isLoading = false 
+          newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id].slice(0,-1), lastElement]
+          props.setMsgs(newMsgs);
+          setPending(false);
+          console.log(j.final)
+        }
+        if (j?.message) {
+          console.log("Message: " + j.message)
         }
       }
-    },
-    onClose: (event) => {
-      console.log(`MsgBox webSocket closed with code ${event.code} and reason '${event.reason}'`);
-    },
-  });
+    };
 
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting', 
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-  }[readyState];
+    webSocketEventEmitter.on('message', handleMessage);
+
+    return () => {
+      webSocketEventEmitter.removeListener('message', handleMessage);
+    };
+  }, [webSocketEventEmitter, props.msgs, props.selectedExercise.id]);
+
+  const connectionStatus = webSocket
+  ? {
+      [WebSocket.CONNECTING]: 'Connecting',
+      [WebSocket.OPEN]: 'Open',
+      [WebSocket.CLOSING]: 'Closing',
+      [WebSocket.CLOSED]: 'Closed',
+    }[webSocket.readyState]
+  : 'Uninstantiated';
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
@@ -102,7 +90,6 @@ const MsgBox = (props) => {
     let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
     newMsgs[props.selectedExercise.id] = [...newMsgs[props.selectedExercise.id], ...newMsgArray]
     props.setMsgs(newMsgs);
-    console.log("Sending " + props.user.userId + " " + props.selectedExercise.id)
     setMessageHistory((prev) => [...prev, newMsg]);
     sendJsonMessage({
       sessionId: sessionId,
@@ -115,7 +102,7 @@ const MsgBox = (props) => {
     console.log("conversationId sent " + conversationId)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessage, model, props.user]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessage, model, props.user, props.selectedExercise.id]);
 
   useEffect(() => {
    // Access the form element using the ref
@@ -125,15 +112,9 @@ const MsgBox = (props) => {
     textarea.placeholder="Écrivez votre prompt ici.";
   }, [newMsg]);
 
-
   const handleDropdownSelect = (selectedPrompt) => {
     setNewMsg(newMsg + selectedPrompt)
   };
-
-  useEffect(() => {
-    // filter removes empty entry
-    console.log("Loading with conversationID " + conversationId)
-}, []);
 
   return (
     <form onSubmit={handleSubmit} className="msg-form">

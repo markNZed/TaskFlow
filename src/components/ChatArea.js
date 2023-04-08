@@ -17,21 +17,22 @@ const ChatArea = (props) => {
 
   useEffect(() => {
     if (!isMountedRef.current) {
-    setMsgs(
-      {
-        [props.selectedExercise.id] : [
-          { sender: 'bot', text: welcomeMessage,  isLoading: true}
-        ]
-      }
-    );
-    setTimeout(()=>{
-        setMsgs(
-          {
-            [props.selectedExercise.id] : [
-              { sender: 'bot', text: welcomeMessage,  isLoading: false}
-            ]
-          }
-        );
+      // waiting for props.selectedExercise.id ?
+      setMsgs(
+        {
+          [props.selectedExercise.id] : [
+            { sender: 'bot', text: welcomeMessage,  isLoading: true}
+          ]
+        }
+      );
+      setTimeout(()=>{
+          setMsgs(
+            {
+              [props.selectedExercise.id] : [
+                { sender: 'bot', text: welcomeMessage,  isLoading: false}
+              ]
+            }
+          );
       }, 1000);
       isMountedRef.current = true
     } else if ( !(props.selectedExercise.id in msgs) ) {
