@@ -1,3 +1,0 @@
-const students = {
-}
-export { students };

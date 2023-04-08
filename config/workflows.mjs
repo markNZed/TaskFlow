@@ -1,7 +1,7 @@
 // Maybe multiple steps to build a prompt instead of one step
-// May want to specify token limits in the exercise steps
+// May want to specify token limits in the workflow steps
 
-const exercises = {
+const workflows = {
     name: 'exercices',
     id: '1',
     children: [
@@ -11,16 +11,22 @@ const exercises = {
             children: [
                 {
                     name: "chatGPT",
-                    exercise: true,
+                    workflow: true,
                     conversation: true,
                     id: '1.1.1',
                     agent: 'chatgpt',
-                    //default: true
+                    //default: false
+                    //one_session : false
+                    //use_cache: true
+
                 },        
                 {
                     name: "example",
-                    exercise: true,
+                    workflow: true,
                     id: '1.1.2',
+                    // system_message: "something",
+                    // model: "gpt-4"
+                    // suggested_prompts: ["an example"]
                     steps: {
                         start : {
                             text: "Hello",
@@ -29,12 +35,13 @@ const exercises = {
                         },
                         summarize: {
                             agent: "chatgpt",
+                            instruction: "Tell the user what to do",
                             initialize: true, // Because the start has no prompt so does not initialize things in server
                             prompt: "Tell me a story about something random.",
                             component: 'TaskFromAgent',
                             input: '',
                             input_label: "Respond here.",
-                            response: '',
+                            response: '', // From the agent
                             next: 'structure'
                         },
                         structure: {
@@ -53,6 +60,7 @@ const exercises = {
                                     content: "OK. Thank you. What would you like me to do?"
                                 }
                             ],
+                            //messages: []
                             next: 'stop',
                         },
                     }
@@ -62,4 +70,4 @@ const exercises = {
     ]
 }
 
-export { exercises };
+export { workflows };

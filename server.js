@@ -1,8 +1,6 @@
 /* ToDo
 -------
-// Should set this in client ChatArea.js from server exercise
-const welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
-Multiple language support
+Multiple language support 'i18next-http-middleware for server and react-i18next for client
 Change model context with session in client
 -------
 */
@@ -22,7 +20,7 @@ import Keyv from 'keyv'
 import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
 import { encode } from 'gpt-3-encoder';
 import { v4 as uuidv4 } from 'uuid'
-import { components } from './components.js';
+import { tasks } from './tasks.js';
 import { utils } from './utils.js';
 import { error } from 'console'
 dotenv.config()
@@ -31,8 +29,8 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
 // For now we use JS data structures instead of a DB
 const CONFIG_DIR = process.env.CONFIG_DIR || "./config/";
-var students = await utils.load_data_async(CONFIG_DIR, 'students')
-var exercises = await utils.load_data_async(CONFIG_DIR, 'exercises')
+var users = await utils.load_data_async(CONFIG_DIR, 'users')
+var workflows = await utils.load_data_async(CONFIG_DIR, 'workflows')
 var agents = await utils.load_data_async(CONFIG_DIR, 'agents')
 
 // Cache should use SQLite too?
@@ -102,18 +100,18 @@ websocketServer.on('connection', (ws) => {
       await sessionsStore_async.set(sessionId + 'userId', userId);
     }
 
-    if (j?.selectedExerciseId) {
-      let selectedExerciseId = j.selectedExerciseId
-      await sessionsStore_async.set(sessionId + 'selectedExerciseId', selectedExerciseId);
+    if (j?.selectedworkflowId) {
+      let selectedworkflowId = j.selectedworkflowId
+      await sessionsStore_async.set(sessionId + 'selectedworkflowId', selectedworkflowId);
       // Initialize at step 'start'
-      //await sessionsStore_async.set(sessionId + selectedExercise + 'selectedStep', 'start');
-      console.log("sessionId + 'selectedExerciseId' " + selectedExerciseId)
+      //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', 'start');
+      console.log("sessionId + 'selectedworkflowId' " + selectedworkflowId)
     }
 
     if (j?.selectedStep) {
       let selectedStep = j.selectedStep
-      let selectedExercise = j.selectedExercise
-      await sessionsStore_async.set(sessionId + selectedExercise + 'selectedStep', selectedStep);
+      let selectedworkflow = j.selectedworkflow
+      await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', selectedStep);
     }
 
     if (j?.prompt) {
@@ -144,7 +142,7 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
   const currentDate = new Date().toISOString().split('T')[0]
   let systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
 
-  var exercise = {};
+  var workflow = {};
   var agent = {
     name: 'default',
     systemMessage: systemMessage,
@@ -153,22 +151,22 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
   let initializing = false;
   let use_cache = CACHE === "enable"
 
-  let selectedExerciseId = await sessionsStore_async.get(sessionId + 'selectedExerciseId');
-  if (selectedExerciseId) { 
-    exercise = await sessionsStore_async.get(sessionId + selectedExerciseId + 'exercise');
-    if (exercise) {
-      console.log("Exercise from selectedExerciseId")
+  let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
+  if (selectedworkflowId) { 
+    workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
+    if (workflow) {
+      console.log("workflow from selectedworkflowId")
     } else {
-      exercise = utils.findSubObjectWithKeyValue(exercises, 'id', selectedExerciseId);
-      await sessionsStore_async.set(sessionId + selectedExerciseId + 'exercise', exercise);
-      console.log("Found exercise " + exercise.id)
+      workflow = utils.findSubObjectWithKeyValue(workflows, 'id', selectedworkflowId);
+      await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+      console.log("Found workflow " + workflow.id)
     }
   }
 
-  if (exercise) {
-    systemMessage = exercise?.system_message || systemMessage;
-    langModel = exercise?.model || langModel
-    if (exercise?.one_session) {
+  if (workflow) {
+    systemMessage = workflow?.system_message || systemMessage;
+    langModel = workflow?.model || langModel
+    if (workflow?.one_session) {
       let userId = await sessionsStore_async.get(sessionId + 'userId');
       if (sessionId !== userId) {
         sessionId = userId
@@ -176,10 +174,10 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
         if (!old_session) {
           console.log("Creating one sesssion")
           await sessionsStore_async.set(sessionId + 'userId', userId);
-          await sessionsStore_async.set(sessionId + selectedExerciseId + 'exercise', exercise);
+          await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
         } else {
           console.log("Restoring one sesssion")
-          await sessionsStore_async.set(sessionId + selectedExerciseId + 'exercise', exercise);
+          await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
         }
       } else {
         console.log("Continuing one sesssion")
@@ -187,34 +185,34 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
     }
   }
 
-  // Do we not allow multiple instances of an exercise in the same session
-  // Will need to include agent id to allow for multiple agent conversations in an exercise
+  // Do we not allow multiple instances of an workflow in the same session
+  // Will need to include agent id to allow for multiple agent conversations in an workflow
 
-  if (exercise?.agent && agents) {
-    agent = agents[exercise.agent]
-    console.log("Exercise set agent " + agent.name)
-    if (typeof exercise?.use_cache !== "undefined") {
-      use_cache = exercise.use_cache
-      console.log("Exercise set cache " + use_cache)
+  if (workflow?.agent && agents) {
+    agent = agents[workflow.agent]
+    console.log("workflow set agent " + agent.name)
+    if (typeof workflow?.use_cache !== "undefined") {
+      use_cache = workflow.use_cache
+      console.log("workflow set cache " + use_cache)
     }
     prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
     prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
 
   }
 
-  let conversationId = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'conversationId');
-  console.log("sessionId + selectedExerciseId + agent.name + conversationId " + sessionId + " " + selectedExerciseId + " " + agent.name  + " " + conversationId)
+  let conversationId = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'conversationId');
+  console.log("sessionId + selectedworkflowId + agent.name + conversationId " + sessionId + " " + selectedworkflowId + " " + agent.name  + " " + conversationId)
 
-  if (step && exercise?.steps[step]) {
-    if (typeof exercise.steps[step]?.use_cache !== "undefined") {
-      use_cache = exercise.steps[step].use_cache
+  if (step && workflow?.steps[step]) {
+    if (typeof workflow.steps[step]?.use_cache !== "undefined") {
+      use_cache = workflow.steps[step].use_cache
       console.log("Step set cache " + use_cache)
     }
     if (agents) {
-      agent = agents[exercise.steps[step]?.agent] || agent
+      agent = agents[workflow.steps[step]?.agent] || agent
       console.log("Step set agent " + agent.name)
     }
-    if (exercise.steps[step]?.initialize || step === 'start') {
+    if (workflow.steps[step]?.initialize || step === 'start') {
       initializing = true
       console.log("Step agent initializing")
     }
@@ -222,9 +220,9 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
 
   if (initializing || conversationId === undefined) {
     initializing = true
-    // Unique conversation per exercise type
-    conversationId = uuidv4() + exercise?.id;
-    await sessionsStore_async.set(sessionId + selectedExerciseId + agent.name + 'conversationId', conversationId);
+    // Unique conversation per workflow type
+    conversationId = uuidv4() + workflow?.id;
+    await sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'conversationId', conversationId);
     console.log("Initializing conversation " + conversationId)
    } else if (conversationId) {
      console.log("Continuing conversation " + conversationId)
@@ -239,9 +237,9 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
 
    console.log("step " + step)
 
-   if (step && exercise?.steps[step]) {
-    if (exercise.steps[step]?.messages) {
-      lastMessageId = await utils.processMessages_async(exercise.steps[step].messages, messageStore_async, lastMessageId)
+   if (step && workflow?.steps[step]) {
+    if (workflow.steps[step]?.messages) {
+      lastMessageId = await utils.processMessages_async(workflow.steps[step].messages, messageStore_async, lastMessageId)
       console.log("Messages extended from step " + step + " lastMessageId " + lastMessageId)
     }
   }
@@ -255,10 +253,10 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
   
   if (await sessionsStore_async.has(sessionId + 'userId')) {
     let userId = await sessionsStore_async.get(sessionId + 'userId')
-    if (students[userId] && exercise && exercise?.dyad && initializing) {
-      let student = students[userId];
-      console.log("Dyad in progress between " + agent.name + " and " + student.name)
-      systemMessage += ` Vous etes en dyad avec votre student qui s'appelle ${student.name}. ${student.profile}`;
+    if (users[userId] && workflow && workflow?.dyad && initializing) {
+      let user = users[userId];
+      console.log("Dyad in progress between " + agent.name + " and " + user.name)
+      systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user.name}. ${user.profile}`;
     }
   }
 
@@ -294,19 +292,19 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
     parentMessageId: lastMessageId,
   };
 
-  // steps in exercise could add messages
+  // steps in workflow could add messages
 
   // May not need + agent.name for systemMessage if 
   
   // We need to keep the systemMessage as an explicit message to avoid it being truncated when conversation grows
   // Not sure we need this now
-  if (await sessionsStore_async.has(sessionId + selectedExerciseId + agent.name + 'systemMessage')) {
-    messageParams.systemMessage = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'systemMessage')
+  if (await sessionsStore_async.has(sessionId + selectedworkflowId + agent.name + 'systemMessage')) {
+    messageParams.systemMessage = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'systemMessage')
   } else {
     messageParams.systemMessage = systemMessage;
   }
 
-  sessionsStore_async.set(sessionId + selectedExerciseId + agent.name + 'systemMessage', messageParams.systemMessage)
+  sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'systemMessage', messageParams.systemMessage)
 
   let cachedValue = '';
   let cacheKey = '';
@@ -415,7 +413,7 @@ app.get('/api/user', async (req, res) => {
     if (username) {
       res.send({
         userId: username,
-        interface: students[username]?.interface,
+        interface: users[username]?.interface,
       });
     } else {
       res.send({userId: ''});
@@ -437,13 +435,13 @@ app.get('/api/step', async (req, res) => {
       const sessionId = req.query.sessionId;
       let response = '';
       // Need to check for errors
-      const [exercise_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
-      let exercise = await sessionsStore_async.get(sessionId + exercise_id + 'exercise') 
-      if (exercise === undefined || stepKey === 'start') {
-        exercise = utils.findObjectById(exercises, exercise_id)
-        await sessionsStore_async.set(sessionId + exercise_id + 'exercise', exercise) 
+      const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+      let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
+      if (workflow === undefined || stepKey === 'start') {
+        workflow = utils.findObjectById(workflows, workflow_id)
+        await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
       }
-      await sessionsStore_async.set(sessionId + 'selectedExerciseId', exercise_id);
+      await sessionsStore_async.set(sessionId + 'selectedworkflowId', workflow_id);
       const ws = connections.get(sessionId);
       if (!ws) {
         // If the server has restarted the conenction is lost
@@ -453,10 +451,10 @@ app.get('/api/step', async (req, res) => {
       }
       switch (component) {
         case 'TaskFromAgent':
-          response = await components.TaskFromAgent_async(sessionsStore_async, sessionId, exercise, stepKey, prev_stepKey, prompt_response_async, ws)
+          response = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
           break;
         case 'TaskShowText':
-          response = await components.TaskShowText_async(sessionsStore_async, sessionId, exercise, stepKey)
+          response = await tasks.TaskShowText_async(sessionsStore_async, sessionId, workflow, stepKey)
           break;         
         default:
           response = "ERROR: unknown component:" + component
@@ -481,16 +479,16 @@ app.post('/api/input', async (req, res) => {
       const step_id = req.body.step_id;
       const input = req.body.input;
 
-      // Update the session exercise with the information
+      // Update the session workflow with the information
       // Then next step will use that
-      const [exercise_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
-      let selectedExerciseId = await sessionsStore_async.get(sessionId + 'selectedExerciseId');
-      let exercise = await sessionsStore_async.get(sessionId + selectedExerciseId + 'exercise');
-      if (exercise.steps[stepKey]?.input !== input) {
-        exercise.steps[stepKey].input = input
-        exercise.steps[stepKey].last_change = Date.now()
+      const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+      let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
+      let workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
+      if (workflow.steps[stepKey]?.input !== input) {
+        workflow.steps[stepKey].input = input
+        workflow.steps[stepKey].last_change = Date.now()
       }
-      await sessionsStore_async.set(sessionId + selectedExerciseId + 'exercise', exercise);
+      await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
       res.status(200).json({ success: true });
     } else {
       res.status(200).json({ error: "No user" });
@@ -500,20 +498,20 @@ app.post('/api/input', async (req, res) => {
   }
 });
 
-app.get('/api/exercises', async (req, res) => {
-  let stripped_exercises = {}
+app.get('/api/workflows', async (req, res) => {
+  let stripped_workflows = {}
   if (process.env.AUTHENTICATION == "cloudflare") {
     const userId = req.headers['cf-access-authenticated-user-email'];
     if (userId) {
       // Extended to ignore by user if a user is specified
       // This is a hack unti lwe have a notin of group
-      stripped_exercises = utils.ignoreByRegexList(
-        exercises, userId,
+      stripped_workflows = utils.ignoreByRegexList(
+        workflows, userId,
         [/^agents$/]
       )
     }
   }
-  res.send(stripped_exercises);
+  res.send(stripped_workflows);
 });
 
 const port = 5000;
