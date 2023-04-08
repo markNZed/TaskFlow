@@ -3,6 +3,7 @@
 // Should set this in client ChatArea.js from server exercise
 const welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 Multiple language support
+Change model context with session in client
 -------
 */
 
@@ -68,13 +69,11 @@ app.use(bodyParser.json());
 
 const server = http.createServer(serverOptions, app)
 
+var connections = new Map(); // Stores WebSocket instances with unique session IDs
+
 const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
 
-var wsObject;
-
 websocketServer.on('connection', (ws) => {
-
-  wsObject = ws;
 
   console.log("websocketServer.on 'connection'")
 
@@ -82,6 +81,8 @@ websocketServer.on('connection', (ws) => {
 
   //send feedback to the incoming connection
   ws.send('{ "connection" : "ok", "sessionId" : "' + sessionId + '"}');
+
+  connections.set(sessionId, ws);
 
   //when a message is received
   ws.on('message', async (message) => {
@@ -91,6 +92,7 @@ websocketServer.on('connection', (ws) => {
     if (j?.sessionId) {
       console.log("sessionId from client: ", j.sessionId)
       sessionId = j.sessionId
+      connections.set(sessionId, this);
     } 
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
@@ -124,11 +126,14 @@ websocketServer.on('connection', (ws) => {
     console.log('ws is closed with code: ' + code + ' reason: '+ reason);
     // Don't delete sessions because the socket might drop
     // Also useful to restart the server without loosng session
+    connections.delete(sessionId);
   });
 
 });
 
 async function prompt_response_async(sessionId, prompt, ws, send, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
+
+  send = true
 
   const currentDate = new Date().toISOString().split('T')[0]
   let systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
@@ -186,12 +191,15 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
       use_cache = exercise.use_cache
       console.log("Exercise set cache " + use_cache)
     }
-    prompt = agent?.prepend_prompt + prompt
-    prompt += agent?.append_prompt
+    prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
+    prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
 
   }
 
-   if (step && exercise?.steps[step]) {
+  let conversationId = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'conversationId');
+  console.log("sessionId + selectedExerciseId + agent.name + conversationId " + sessionId + " " + selectedExerciseId + " " + agent.name  + " " + conversationId)
+
+  if (step && exercise?.steps[step]) {
     if (typeof exercise.steps[step]?.use_cache !== "undefined") {
       use_cache = exercise.steps[step].use_cache
       console.log("Step set cache " + use_cache)
@@ -205,9 +213,6 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
       console.log("Step agent initializing")
     }
   }
-
-  let conversationId = await sessionsStore_async.get(sessionId + selectedExerciseId + agent.name + 'conversationId');
-  console.log("sessionId + selectedExerciseId + agent.name + conversationId " + sessionId + " " + selectedExerciseId + " " + agent.name  + " " + conversationId)
 
   if (initializing || conversationId === undefined) {
     initializing = true
@@ -324,8 +329,8 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
   let response_text_promise = Promise.resolve("");
   if (cachedValue && cachedValue !== undefined) {
     sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', cachedValue.id)
-    let text = cachedValue;
-    console.log("Response from cache")  // + text)
+    let text = cachedValue.text;
+    console.log("Response from cache: " + text.slice(0, 20) + " ...");
     if (send) {ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)}
     response_text_promise = Promise.resolve(text);
   } else {
@@ -336,10 +341,10 @@ async function prompt_response_async(sessionId, prompt, ws, send, step, langMode
       let text = response.text;
       if (send) {ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)}
       if (CACHE === "enable") {
-        cache_async.set(cacheKey, text);
+        cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
       }
-      console.log("Response from API") // + text)
+      console.log("Response from API: " + text.slice(0, 20) + " ...")
       return text
     })
     .catch(error => {
@@ -442,9 +447,10 @@ app.get('/api/step', async (req, res) => {
         await sessionsStore_async.set(sessionId + exercise_id + 'exercise', exercise) 
       }
       await sessionsStore_async.set(sessionId + 'selectedExerciseId', exercise_id);
+      let ws = connections.get(sessionId);
       switch (component) {
         case 'TaskFromAgent':
-          response = await components.TaskFromAgent_async(sessionsStore_async, sessionId, exercise, stepKey, prev_stepKey, prompt_response_async, wsObject)
+          response = await components.TaskFromAgent_async(sessionsStore_async, sessionId, exercise, stepKey, prev_stepKey, prompt_response_async, ws)
           break;
         case 'TaskShowText':
           response = await components.TaskShowText_async(sessionsStore_async, sessionId, exercise, stepKey)
