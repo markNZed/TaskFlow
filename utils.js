@@ -108,7 +108,9 @@ utils.ignoreByRegexList = function(obj, userId, regexList) {
       });
     }
     return Object.entries(obj).reduce((acc, [key, value]) => {
-      if (key === "users" && !value.includes(userId)) {
+      if (acc === null) {
+        return null
+      } else if (key === "users" && !value.includes(userId)) {
         return null;
       } else if (!regexList.some(regex => regex.test(key))) {
         if (typeof value === "object" && value !== null) {
