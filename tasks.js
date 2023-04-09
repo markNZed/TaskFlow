@@ -10,7 +10,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async, ws) {
+tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
 
   const current_step = workflow.steps[stepKey]
   const prev_step = workflow.steps[prev_stepKey]
@@ -79,7 +79,7 @@ tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, s
     await sessionsStore.set(sessionId + workflow.id + 'workflow', workflow)
   }
 
-  let response_text = await prompt_response_callback_async(sessionId, prompt, ws, stepKey)
+  let response_text = await prompt_response_callback_async(sessionId, prompt, stepKey)
   workflow.steps[stepKey].response = response_text
   workflow.steps[stepKey].last_change = Date.now()
   await sessionsStore.set(sessionId + workflow.id + 'workflow', workflow)
@@ -88,16 +88,16 @@ tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, s
   return response_text
 };
 
-tasks.TaskShowResponse_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async, ws) {
+tasks.TaskShowResponse_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
   const response = workflow.steps[stepKey].response
   console.log("Returning from tasks.TaskShowResponse")
   return response
 };
 
-tasks.TaskChoose_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async, ws) {
+tasks.TaskChoose_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
   // First we get the response
 
-  let response_text = await tasks.TaskFromAgent_async(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async, ws) 
+  let response_text = await tasks.TaskFromAgent_async(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) 
 
   const current_step = workflow.steps[stepKey]
   //current_step.next_template: { true: 'stop', false: 'stop' },

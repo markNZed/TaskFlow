@@ -3,6 +3,16 @@
 Multiple language support 'i18next-http-middleware for server and react-i18next for client
 Change model context with session in client
 Support a pre_input and post_input for surrounding prompt.
+Could also srteam corrections to the text so far every X parts insted of just final
+Default agent for user (perhaps have user state e.g. last active conversation)
+Components repository so can be shared between server and client
+Code the workflowId in the step
+workflowhierarchy.mjs
+These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens
+  Perhaps the UI update the workflow? 
+  Perhaps defaults ? 
+  Use a different route
+  Side -menu to collapse on mobile phone
 -------
 */
 
@@ -35,8 +45,8 @@ var workflows = await utils.load_data_async(CONFIG_DIR, 'workflows')
 var agents = await utils.load_data_async(CONFIG_DIR, 'agents')
 
 // Cache should use SQLite too?
-const CACHE = process.env.CACHE || "disable";
-console.log("CACHE " + CACHE)
+const CACHE_ENABLE = process.env.CACHE_ENABLE || 'false'; // 'true' to enable 
+console.log("CACHE_ENABLE " + CACHE_ENABLE)
 
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);
@@ -61,30 +71,28 @@ const cache_async = new Keyv({
   }),
 });
 
-const serverOptions = {}
-
 const app = express();
-
 app.use(bodyParser.json());
 
+const serverOptions = {}
 const server = http.createServer(serverOptions, app)
+const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 
-const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
+function wsSendObject(ws, message = {}) {
+  message['sessionId'] = ws.data['sessionId']
+  ws.send(JSON.stringify(message));
+}
 
 websocketServer.on('connection', (ws) => {
 
   let sessionId = uuidv4();
-
-  //send feedback to the incoming connection
-  ws.send('{ "connection" : "ok", "sessionId" : "' + sessionId + '"}');
-
+  ws.data = {'sessionId': sessionId}
+  wsSendObject(ws) // send the sessionID to client
   connections.set(sessionId, ws);
-
   console.log("websocketServer.on 'connection' sessionId " + sessionId)
 
-  //when a message is received
   ws.on('message', async (message) => {
 
     const j = JSON.parse(message)
@@ -93,16 +101,17 @@ websocketServer.on('connection', (ws) => {
       console.log("sessionId from client: ", j.sessionId)
       sessionId = j.sessionId
       connections.set(sessionId, ws);
-    } 
+      ws.data['sessionId'] = sessionId
+    }
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
-      let userId = j.userId
+      const userId = j.userId
       console.log("Creating userId", userId);
       await sessionsStore_async.set(sessionId + 'userId', userId);
     }
 
     if (j?.selectedworkflowId) {
-      let selectedworkflowId = j.selectedworkflowId
+      const selectedworkflowId = j.selectedworkflowId
       await sessionsStore_async.set(sessionId + 'selectedworkflowId', selectedworkflowId);
       // Initialize at step 'start'
       //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', 'start');
@@ -110,14 +119,14 @@ websocketServer.on('connection', (ws) => {
     }
 
     if (j?.selectedStep) {
-      let selectedStep = j.selectedStep
-      let selectedworkflow = j.selectedworkflow
+      const selectedStep = j.selectedStep
+      const selectedworkflow = j.selectedworkflow
       await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', selectedStep);
     }
 
     if (j?.prompt) {
-      let { langModel, temperature, maxTokens, prompt } = j;
-      prompt_response_async(sessionId, prompt, ws, null, langModel, temperature, maxTokens)
+      const { langModel, temperature, maxTokens, prompt } = j;
+      prompt_response_async(sessionId, prompt, null, langModel, temperature, maxTokens)
     }
 
   });
@@ -125,32 +134,30 @@ websocketServer.on('connection', (ws) => {
   ws.on('close', function(code, reason) {
     console.log('ws is closed with code: ' + code + ' reason: '+ reason);
     // Don't delete sessions because the socket might drop
-    // Also useful to restart the server without loosng session
+    // Also useful during dev to restart the server without loosing session
+    // Prod would require cleaning up old sessions
     connections.delete(sessionId);
   });
 
 });
 
-function logIncrementalOutput(partialResponse, conversationId, ws) {
+function SendIncrementalOutput(partialResponse, conversationId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
   if (incr) {
-     ws.send(`{"conversationId" : "${conversationId}", "stream" : ${incr}}`)
+    const message = {'conversationId' : conversationId, 'stream' : partialResponse.delta}
+    wsSendObject(ws, message)
   }
 }
 
-async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
+async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
 
-  const currentDate = new Date().toISOString().split('T')[0]
-  let systemMessage = `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`
-
-  var workflow = {};
-  var agent = {
-    name: 'default',
-    systemMessage: systemMessage,
-  };
+  let ws = connections.get(sessionId);
+  let systemMessage = ''
+  let workflow = {};
+  let agent = {};
   let lastMessageId = null;
   let initializing = false;
-  let use_cache = CACHE === "enable"
+  let use_cache = CACHE_ENABLE === 'true'
 
   let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
   if (selectedworkflowId) { 
@@ -198,11 +205,7 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
     }
     prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
     prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
-
   }
-
-  let conversationId = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'conversationId');
-  console.log("sessionId + selectedworkflowId + agent.name + conversationId " + sessionId + " " + selectedworkflowId + " " + agent.name  + " " + conversationId)
 
   if (step && workflow?.steps[step]) {
     if (typeof workflow.steps[step]?.use_cache !== "undefined") {
@@ -218,6 +221,10 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
       console.log("Step agent initializing")
     }
   }
+
+  // Need to do this after the agent stabilizes
+  let conversationId = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'conversationId');
+  console.log("sessionId + selectedworkflowId + agent.name + conversationId " + sessionId + " " + selectedworkflowId + " " + agent.name  + " " + conversationId)
 
   if (initializing || conversationId === undefined) {
     initializing = true
@@ -289,7 +296,7 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
       model: langModel,
       temperature: temperature,
     },
-    onProgress: (partialResponse) => logIncrementalOutput(partialResponse, conversationId, ws),
+    onProgress: (partialResponse) => SendIncrementalOutput(partialResponse, conversationId, ws),
     parentMessageId: lastMessageId,
   };
 
@@ -327,7 +334,11 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
     sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', cachedValue.id)
     let text = cachedValue.text;
     console.log("Response from cache: " + text.slice(0, 20) + " ...");
-    ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)
+    const message = {
+      'conversationId' : conversationId,
+      'final' : text
+    }
+    wsSendObject(ws, message)
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
@@ -335,8 +346,12 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
     .then(response => {
       sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', response.id)
       let text = response.text;
-      ws.send(`{"conversationId" : "${conversationId}", "final" : ${JSON.stringify(text)}}`)
-      if (CACHE === "enable") {
+      const message = {
+        'conversationId' : conversationId,
+        'final' : text
+      }
+      wsSendObject(ws, message)
+      if (use_cache) {
         cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
       }
@@ -345,8 +360,14 @@ async function prompt_response_async(sessionId, prompt, ws, step, langModel = 'g
       return text
     })
     .catch(error => {
-      console.log("ERROR " + error)
-      return "ERROR TRY AGAIN"
+      let text = "ERROR " + error
+      console.log(text)
+      const message = {
+        'conversationId' : conversationId,
+        'final' : text
+      }
+      wsSendObject(ws, message)
+      return text
     })
   }
   return response_text_promise
@@ -453,13 +474,13 @@ app.get('/api/step', async (req, res) => {
       }
       switch (component) {
         case 'TaskFromAgent':
-          response = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
+          response = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
           break;
         case 'TaskShowResponse':
-          response = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
+          response = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
           break;         
         case 'TaskChoose':
-           response = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async, ws)
+           response = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
           break;         
         default:
           response = "ERROR: server unknown component:" + component
