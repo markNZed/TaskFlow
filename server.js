@@ -13,6 +13,9 @@ These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0,
   Perhaps defaults ? 
   Use a different route
   Side -menu to collapse on mobile phone
+Support dev version, another URL etc chat-dev
+//Alpine doesn't contain ld-linux-x86-64.so.2 by default, which is required by tfjs-node, since Alpine primarily uses musl instead of glibc.
+//Might move to: FROM node:buster-slim
 -------
 */
 
@@ -143,10 +146,14 @@ websocketServer.on('connection', (ws) => {
 
 function SendIncrementalOutput(partialResponse, conversationId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
-  if (incr) {
-    const message = {'conversationId' : conversationId, 'stream' : partialResponse.delta}
+  if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
+    const message = {'conversationId' : conversationId, 'text' : partialResponse.text}
+    wsSendObject(ws, message)
+  } else if (incr) {
+    const message = {'conversationId' : conversationId, 'delta' : partialResponse.delta}
     wsSendObject(ws, message)
   }
+  ws.data['delta_count'] += 1
 }
 
 async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
@@ -342,6 +349,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
+    ws.data['delta_count'] = 0
     response_text_promise = api.sendMessage(prompt, messageParams)
     .then(response => {
       sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', response.id)
@@ -373,8 +381,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
   return response_text_promise
 }
 
-//app.use(cors());
-const allowedOrigins = ['https://chat.understudy.top'];
+const allowedOrigins = [CLIENT_URL];
 
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
@@ -416,7 +423,7 @@ app.get('/', async (req, res) => {
 // Needed to add this to workaround for Cloudflare Zero Trust
 // We need to visit this server from the browser to get cookies etc
 app.get('/authenticate', async (req, res) => {
-  let authenticated_url = CLIENT_URL + 'authenticated'
+  let authenticated_url = CLIENT_URL + '/authenticated'
   if (process.env.AUTHENTICATION == "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
