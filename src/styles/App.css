@@ -207,7 +207,7 @@ msg-textarea-button {
 }
 
 textarea {
-  width: 90%;
+  width: 80%; /* leaves space for the send icon on a small screen */
   color: #fff;
   font-size: 1.25em;
   border-radius: 5px;

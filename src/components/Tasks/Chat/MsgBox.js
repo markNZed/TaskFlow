@@ -32,11 +32,21 @@ const MsgBox = (props) => {
       if (j?.conversationId) {
         //setLastMessage(j);
         setConversationId(j.conversationId)
-        if (j?.stream) {
+        if (j?.delta) {
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
           const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
-          lastElement.text += j.stream
+          lastElement.text += j.delta
           // This allows the text to be displayed
+          lastElement.isLoading = false 
+          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
+          props.setMsgs(newMsgs);
+          setPending(false);
+        }
+        if (j?.text) {
+          // This fixs any missing messages over the websocket in the incremental mode
+          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
+          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
+          lastElement.text = j.text
           lastElement.isLoading = false 
           newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
@@ -51,7 +61,6 @@ const MsgBox = (props) => {
           newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
           setPending(false);
-          console.log(j.final)
         }
         if (j?.message) {
           console.log("Message: " + j.message)
@@ -150,8 +159,7 @@ const MsgBox = (props) => {
             <img key={send} src={send} alt="Send" className={pending ? "send-not-ready" : "send-ready"} />
           </button>
         </div>
-        {/* This can cause continuous reloading when it alternates opeņ/close ? */}
-        <div>The WebSocket is currently {connectionStatus}</div>
+        {/* <div>The WebSocket is currently {connectionStatus}</div> */}
         {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
         <ul>
           {messageHistory?.map((message, idx) => (

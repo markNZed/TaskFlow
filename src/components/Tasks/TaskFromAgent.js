@@ -22,8 +22,11 @@ const TaskFromAgent = (props) => {
     useEffect(() => {
         const handleMessage = (e) => {
             const j = JSON.parse(e.data)
-            if (j?.stream) {
-                setResponse((prevResponse) => prevResponse + j.stream);
+            if (j?.delta) {
+                setResponse((prevResponse) => prevResponse + j.delta);
+            }
+            if (j?.text) {
+                setResponse(j.text);
             }
         };
 

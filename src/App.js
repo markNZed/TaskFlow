@@ -14,13 +14,9 @@ if (window.location.hostname !== "localhost") {
   socketPort = process.env.REACT_APP_WS_PORT || socketPort
   socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
 }
+var sessionId = ""
 const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
 const serverUrl = window.location.protocol + `//${socketHost}:${socketPort}/`
-var sessionId = ""
-
-function setSessionId(Id) {
-  sessionId = Id
-}
 
 function App() {
   const [webSocket, setWebSocket] = useState(null);
@@ -40,7 +36,7 @@ function App() {
     onMessage: (e) => {
       const j = JSON.parse(e.data)
       if (j?.sessionId && sessionId === "") {
-        setSessionId(j.sessionId)
+        sessionId = j.sessionId
         console.log("j.sessionId ", j.sessionId)
       }
       webSocketEventEmitter.emit('message', e);

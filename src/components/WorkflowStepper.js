@@ -3,26 +3,8 @@ import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TaskFromAgent from "./Tasks/TaskFromAgent"
-import TaskShowText from "./Tasks/TaskShowText"
-
-function sortStepsByNext(steps) {
-  const orderedKeys = [];
-  let currentKey = 'start';
-  const visitedKeys = new Set();
-  
-  if (steps[currentKey]) {
-    while (currentKey && steps[currentKey]) {
-      if (visitedKeys.has(currentKey)) {
-        console.error('Circular reference detected in steps:', currentKey);
-        break;
-      }
-      visitedKeys.add(currentKey);
-      orderedKeys.push(currentKey);
-      currentKey = steps[currentKey]?.next;
-    }
-  }
-  return orderedKeys.map((key) => [key, steps[key]]);
-}
+import TaskShowResponse from "./Tasks/TaskShowResponse"
+import TaskChoose from "./Tasks/TaskChoose"
 
 function WorkflowStepper(props) {
   const [activeStep, setActiveStep] = useState('start');
@@ -92,8 +74,10 @@ function WorkflowStepper(props) {
                 switch (steps[stepKey].component) {
                   case 'TaskFromAgent':
                     return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
-                  case 'TaskShowText':
-                    return <TaskShowText  stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
+                  case 'TaskShowResponse':
+                    return <TaskShowResponse  stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
+                  case 'TaskChoose':
+                    return <TaskChoose stepKey={stepKey} step={steps[stepKey]} prevStep={prevStep} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone}/>;
                   default:
                     return <div> No task found for {steps[stepKey].component}</div>
                 }

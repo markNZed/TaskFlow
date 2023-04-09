@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 
 import { serverUrl, sessionId } from '../../App';
 
-const TaskShowText = (props) => {
+const TaskShowResponse = (props) => {
     const [response, setResponse] = useState('');
     const [myStepKey, setMyStepKey] = useState("");
 
@@ -16,7 +16,7 @@ const TaskShowText = (props) => {
     useEffect(() => {
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskShowText&step_id=${props?.id}`, {
+        fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskShowResponse&step_id=${props?.id}`, {
             credentials: 'include'
         })
         .then((response) => response.json())
@@ -54,4 +54,4 @@ const TaskShowText = (props) => {
 
 }
 
-export default React.memo(TaskShowText);
+export default React.memo(TaskShowResponse);
