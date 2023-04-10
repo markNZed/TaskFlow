@@ -53,12 +53,14 @@ const TaskFromAgent = (props) => {
         setFetchedId(props.id)
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskFromAgent&step_id=${props.id}&prev_step=${props.prevStep}`, {
+        fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${props.id}`, {
             credentials: 'include'
         })
         .then((response) => response.json())
         .then((data) => {
-            if (data?.response) {
+            if (data?.error) {
+                setResponse("ERROR " + data?.error);
+            } else if (data?.response) {
                 const text = data.response
                 const words = text.trim().split(/\s+/).filter(Boolean)
                 setTextWordCount(words.length)
@@ -68,29 +70,34 @@ const TaskFromAgent = (props) => {
         .catch((err) => {
             console.log(err.message);
         });
-    }, [props.id, fetchedId, props.prevStep]);
+    }, [props.id, fetchedId]);
 
     useEffect(() => {
         if ((props.leaving.direction === 'next') && props.leaving.step === myStepKey) {
 
-            const requestOptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                  sessionId: sessionId,
-                  component: 'TaskFromAgent',
-                  step_id: fetchedId,
-                  prev_step: props.prev_step,
-                  input: summary,
-                })
-            };
+            console.log("props.leaving.direction " + props.leaving.direction + " props.leaving.step " + props.leaving.step)
+
+            async function fetchData() { 
+
+                const requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                    sessionId: sessionId,
+                    component: 'TaskFromAgent',
+                    step_id: fetchedId,
+                    prev_step: props.prev_step,
+                    input: summary,
+                    })
+                };
               
-            fetch(`${serverUrl}api/input`, requestOptions)
-                .then(response => response.json())
-                .then(result => props.taskDone(props.leaving.step))
-                .catch(error => console.log(error));     
-            
+                await fetch(`${serverUrl}api/input`, requestOptions)
+                    .catch(error => console.log("ERROR " + error.message));
+                props.taskDone(props.leaving.step)
+            }
+
+            fetchData()           
         }
         //
     }, [ props.leaving])

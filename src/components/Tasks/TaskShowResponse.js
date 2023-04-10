@@ -5,6 +5,7 @@ import Paper from '@mui/material/Paper';
 import { serverUrl, sessionId } from '../../App';
 
 const TaskShowResponse = (props) => {
+    const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState('');
     const [myStepKey, setMyStepKey] = useState("");
 
@@ -14,21 +15,25 @@ const TaskShowResponse = (props) => {
     
     // Note the we don't really need to fetch as the text is in the exrecise definition
     useEffect(() => {
+        if (props.id === fetchedId) {return}
+        setFetchedId(props.id)
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${sessionId}&component=TaskShowResponse&step_id=${props?.id}`, {
+        fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${props?.id}`, {
             credentials: 'include'
         })
         .then((response) => response.json())
         .then((data) => {
-            if (data?.response) {
+            if (data?.error) {
+                setResponse("ERROR " + data?.error);
+            } else if (data?.response) {
                 setResponse(data?.response);
             }
         })
         .catch((err) => {
             console.log(err.message);
         });
-    }, []);
+    }, [props.id, fetchedId]);
 
     useEffect(() => {
         if (props.leaving?.step === myStepKey) {

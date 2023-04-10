@@ -32,31 +32,19 @@ const MsgBox = (props) => {
       if (j?.conversationId) {
         //setLastMessage(j);
         setConversationId(j.conversationId)
-        if (j?.delta) {
+        if (j?.delta || j?.text || j?.final) {
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
           const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
-          lastElement.text += j.delta
+          if (j?.delta) {
+            lastElement.text += j.delta
+          }
+          if (j?.text) {
+            lastElement.text = j.text
+          }
+          if (j?.final) {
+            lastElement.text = j.final
+          }
           // This allows the text to be displayed
-          lastElement.isLoading = false 
-          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
-          props.setMsgs(newMsgs);
-          setPending(false);
-        }
-        if (j?.text) {
-          // This fixs any missing messages over the websocket in the incremental mode
-          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
-          lastElement.text = j.text
-          lastElement.isLoading = false 
-          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
-          props.setMsgs(newMsgs);
-          setPending(false);
-        }
-        if (j?.final) {
-          // This fixs any missing messages over the websocket in the incremental mode
-          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
-          lastElement.text = j.final
           lastElement.isLoading = false 
           newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
