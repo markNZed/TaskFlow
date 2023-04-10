@@ -15,7 +15,24 @@ These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0,
   Side -menu to collapse on mobile phone
 Support dev version, another URL etc chat-dev
 //Alpine doesn't contain ld-linux-x86-64.so.2 by default, which is required by tfjs-node, since Alpine primarily uses musl instead of glibc.
-//Might move to: FROM node:buster-slim
+//Might move to: FROM node:buster-slim (have done this for the dev version)
+For one_session prefix the response with the date/time. Can we add location for user ?
+Hierarchy of configuration:
+  App
+    User (Route)
+      Session
+        Workflow (Route)
+          User
+            Session
+              Task 
+                User
+                  Session
+Server side tasks, if the server chnages the step then the client needs to catch up too
+Instead of embedding use an agent in a serverside step
+Back is not working with conditional
+Should error if agent not found - no default
+The stream/send needs to have a step ID. Also don't stream server side steps.
+Allow the user to specify the system prompt.
 -------
 */
 
@@ -84,8 +101,13 @@ const websocketServer = new WebSocketServer({ server: server, path: '/ws' });
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 
 function wsSendObject(ws, message = {}) {
-  message['sessionId'] = ws.data['sessionId']
-  ws.send(JSON.stringify(message));
+  // We need to check if ws is still active?
+  if (!ws) {
+    console.log("Lost websocket for wsSendObject")
+  } else {
+    message['sessionId'] = ws.data['sessionId']
+    ws.send(JSON.stringify(message));
+  }
 }
 
 websocketServer.on('connection', (ws) => {
@@ -146,14 +168,16 @@ websocketServer.on('connection', (ws) => {
 
 function SendIncrementalOutput(partialResponse, conversationId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
-  if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
-    const message = {'conversationId' : conversationId, 'text' : partialResponse.text}
-    wsSendObject(ws, message)
-  } else if (incr) {
-    const message = {'conversationId' : conversationId, 'delta' : partialResponse.delta}
-    wsSendObject(ws, message)
+  if (ws) {
+    if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
+      const message = {'conversationId' : conversationId, 'text' : partialResponse.text}
+      wsSendObject(ws, message)
+    } else if (incr) {
+      const message = {'conversationId' : conversationId, 'delta' : partialResponse.delta}
+      wsSendObject(ws, message)
+    }
+    ws.data['delta_count'] += 1
   }
-  ws.data['delta_count'] += 1
 }
 
 async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
@@ -210,8 +234,6 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
       use_cache = workflow.use_cache
       console.log("workflow set cache " + use_cache)
     }
-    prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
-    prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
   }
 
   if (step && workflow?.steps[step]) {
@@ -222,11 +244,17 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     if (agents) {
       agent = agents[workflow.steps[step]?.agent] || agent
       console.log("Step set agent " + agent.name)
+      prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
+      if (agent?.prepend_prompt) {console.log("Prepend agent prompt " + agent.prepend_prompt)}
+      prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
+      if (agent?.append_prompt) {console.log("Append agent prompt " + agent.append_prompt)}
     }
     if (workflow.steps[step]?.initialize || step === 'start') {
       initializing = true
       console.log("Step agent initializing")
     }
+    langModel = workflow.steps[step]?.model || langModel
+    if (workflow.steps[step]?.model) {console.log("Step set model " + langModel)}
   }
 
   // Need to do this after the agent stabilizes
@@ -349,7 +377,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
-    ws.data['delta_count'] = 0
+    if (ws) {ws.data['delta_count'] = 0}
     response_text_promise = api.sendMessage(prompt, messageParams)
     .then(response => {
       sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', response.id)
@@ -453,6 +481,38 @@ app.get('/api/user', async (req, res) => {
   }
 });
 
+async function do_step_async(sessionId, workflow_id, stepKey) {
+  let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
+  if (workflow === undefined || stepKey === 'start') {
+    workflow = utils.findObjectById(workflows, workflow_id)
+    await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
+  }
+  await sessionsStore_async.set(sessionId + 'selectedworkflowId', workflow_id);
+  const ws = connections.get(sessionId);
+  if (!ws) {
+    // If the server has restarted the conenction is lost
+    error("Could not find ws for sessionId " + sessionId)
+    console.log(connections.keys())
+    console.log("Has key " + connections.has(sessionId))
+  }
+  let updated_step = {}
+  const component = workflow.steps[stepKey].component
+  switch (component) {
+    case 'TaskFromAgent':
+      updated_step = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      break;
+    case 'TaskShowResponse':
+      updated_step = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      break;         
+    case 'TaskChoose':
+      updated_step = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      break;         
+    default:
+      updated_step = "ERROR: server unknown component:" + component
+  }
+  return updated_step
+}
+
 app.get('/api/step', async (req, res) => {
   console.log("/step")
   if (process.env.AUTHENTICATION == "cloudflare") {
@@ -460,40 +520,22 @@ app.get('/api/step', async (req, res) => {
     if (username) {
       //console.log("req.query " + JSON.stringify(req.query))
       const step_id = req.query.step_id;
-      const prev_stepKey = req.query?.prev_step;
-      const component = req.query.component;
       const sessionId = req.query.sessionId;
-      let response = '';
       // Need to check for errors
-      const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
-      let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
-      if (workflow === undefined || stepKey === 'start') {
-        workflow = utils.findObjectById(workflows, workflow_id)
-        await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
+      let [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+
+      let updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+
+      while (updated_step?.run_on_server) {
+        // Check if the next step is server-side
+        // Serverside component? That is what choose is
+        stepKey = updated_step.next
+        console.log("Next step is server side stepKey " + stepKey)
+        updated_step = await do_step_async(sessionId, workflow_id, stepKey)
       }
-      await sessionsStore_async.set(sessionId + 'selectedworkflowId', workflow_id);
-      const ws = connections.get(sessionId);
-      if (!ws) {
-        // If the server has restarted the conenction is lost
-        error("Could not find ws for sessionId " + sessionId)
-        console.log(connections.keys())
-        console.log("Has key " + connections.has(sessionId))
-      }
-      switch (component) {
-        case 'TaskFromAgent':
-          response = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
-          break;
-        case 'TaskShowResponse':
-          response = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
-          break;         
-        case 'TaskChoose':
-           response = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prev_stepKey, prompt_response_async)
-          break;         
-        default:
-          response = "ERROR: server unknown component:" + component
-      }
+
       // A function for each component? In a library.
-      res.send({response});
+      res.send(JSON.stringify(updated_step));
     } else {
       res.send({userId: ''});
     }

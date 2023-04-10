@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs-node';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
 
 var tasks = tasks || {};
@@ -10,21 +10,11 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
+tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
+
+  console.log("TaskFromAgent stepKey " + stepKey)
 
   const current_step = workflow.steps[stepKey]
-  const prev_step = workflow.steps[prev_stepKey]
-
-  if (current_step?.last_change && prev_step?.last_change) {
-    if (prev_step.last_change > current_step.last_change) {
-      current_step.response = ''
-    }
-  }
-
-  if (current_step?.response && current_step.response !== undefined) {
-    console.log("tasks.TaskFromAgent already has response")
-    return current_step?.response
-  }
 
   let prompt = ""
   if (current_step?.assemble_prompt) {
@@ -76,28 +66,59 @@ tasks.TaskFromAgent_async = async function(sessionsStore, sessionId, workflow, s
         });
       }
     });
-    await sessionsStore.set(sessionId + workflow.id + 'workflow', workflow)
+    await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   }
 
   let response_text = await prompt_response_callback_async(sessionId, prompt, stepKey)
   workflow.steps[stepKey].response = response_text
   workflow.steps[stepKey].last_change = Date.now()
-  await sessionsStore.set(sessionId + workflow.id + 'workflow', workflow)
+  sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   console.log("Returning from tasks.TaskFromAgent " + response_text)
-
-  return response_text
+  return workflow.steps[stepKey]
 };
 
-tasks.TaskShowResponse_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
-  const response = workflow.steps[stepKey].response
+tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
+
+  console.log("TaskShowResponse stepKey " + stepKey)
+
+  const current_step = workflow.steps[stepKey]
+
+  let response = ''
+  if (current_step?.assemble_response) {
+    response += current_step.assemble_response.reduce(function(acc, curr) {
+      // Currently this assumes the parts are from the same workflow, could extend this
+      const regex = /(^.+)\.(.+$)/;
+      const matches = regex.exec(curr);
+      if (matches) {
+        // console.log("matches step " + matches[1] + " " + matches[2])
+        if (workflow.steps[matches[1]] === undefined) {
+          console.log("workflow.steps " + matches[1] +" does not exist")
+        }
+        if (workflow.steps[matches[1]][matches[2]] === undefined) {
+          console.log("workflow.steps " + matches[1] + " " + matches[2] + " does not exist")
+        }
+        // Will crash server if not present
+        return acc + workflow.steps[matches[1]][matches[2]]
+      } else {
+        return acc + curr
+      }
+    });
+    console.log("Assembled response " + prompt)
+  } else {
+    response = workflow.steps[stepKey].response
+  }
   console.log("Returning from tasks.TaskShowResponse")
-  return response
-};
+  workflow.steps[stepKey].response = response
+  sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
+  return workflow.steps[stepKey]
+}
 
-tasks.TaskChoose_async = async function(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) {
+tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
   // First we get the response
+  console.log("TaskChoose stepKey " + stepKey)
 
-  let response_text = await tasks.TaskFromAgent_async(sessionsStore, sessionId, workflow, stepKey, prev_stepKey, prompt_response_callback_async) 
+  workflow.steps[stepKey].response = null // Avoid using previously stored response
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) 
 
   const current_step = workflow.steps[stepKey]
   //current_step.next_template: { true: 'stop', false: 'stop' },
@@ -105,37 +126,46 @@ tasks.TaskChoose_async = async function(sessionsStore, sessionId, workflow, step
   const next_responses = Object.keys(current_step.next_template)
   const next_states = Object.values(current_step.next_template)
   
-  const phrases = [response_text, ...next_responses];
-
-  console.log("phrases " + JSON.stringify(phrases))
+  const phrases = [subtask.response, ...next_responses];
   
-  const embeddingsData = await model.embed(phrases);
+  try {
+    const embeddingsData = await model.embed(phrases);
+    const next_embeddings = tf.split(embeddingsData, phrases.length, 0);
+    // Do something with next_embeddings
+    const response_embedding = next_embeddings[0]; // The first embedding corresponds to response_text.
 
-  const next_embeddings = tf.split(embeddingsData, phrases.length, 0);
+    const similarities = [];
+  
+    for (let i = 1; i < next_embeddings.length; i++) {
+      const similarity = cosineSimilarity(response_embedding, next_embeddings[i]);
+      similarities.push(similarity);
+    }
+  
+    console.log('Similarities:', similarities);
+  
+    const maxSimilarity = Math.max(...similarities);
+    const maxIndex = similarities.indexOf(maxSimilarity);
+  
+    console.log('Max similarity:', maxSimilarity);
+    console.log('Index of max similarity:', maxIndex);
+  
+    console.log('response is' + next_states[maxIndex])
+  
+    // Remember to clean up tensors to prevent memory leaks
+    embeddingsData.dispose();
+  
+    // Need to go to next state, can stay on server side
+    workflow.steps[stepKey].next = next_states[maxIndex]
 
-  const response_embedding = next_embeddings[0]; // The first embedding corresponds to response_text.
+    sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
 
-  const similarities = [];
-
-  for (let i = 1; i < next_embeddings.length; i++) {
-    const similarity = cosineSimilarity(response_embedding, next_embeddings[i]);
-    similarities.push(similarity);
+  } catch (error) {
+    // Handle the error here
+    console.error('An error occurred:', error);
+    workflow.steps[stepKey].error = error.message
   }
-
-  console.log('Similarities:', similarities);
-
-  const maxSimilarity = Math.max(...similarities);
-  const maxIndex = similarities.indexOf(maxSimilarity);
-
-  console.log('Max similarity:', maxSimilarity);
-  console.log('Index of max similarity:', maxIndex);
-
-  console.log('response is' + next_states[maxIndex])
-
-  // Remember to clean up tensors to prevent memory leaks
-  embeddingsData.dispose();
-
-  return next_states[maxIndex]
+  
+  return workflow.steps[stepKey]
 
 }
 
