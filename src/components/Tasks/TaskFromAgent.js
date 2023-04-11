@@ -28,10 +28,11 @@ const TaskFromAgent = (props) => {
             if (j?.text) {
                 setResponse(j.text);
             }
+            if (j?.final) {
+                setResponse(j.final);
+            }
         };
-
         webSocketEventEmitter.on('message', handleMessage);
-
         return () => {
             webSocketEventEmitter.removeListener('message', handleMessage);
         };

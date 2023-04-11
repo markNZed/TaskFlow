@@ -10,6 +10,7 @@ const ChatArea = (props) => {
   // Should set this from server workflow
   let welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
   const hasScrolledRef = useRef(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState({});
 
@@ -41,18 +42,33 @@ const ChatArea = (props) => {
       newMsgs[props.selectedworkflow.id] = [{ sender: 'bot', text: welcomeMessage,  isLoading: false}]
       setMsgs(newMsgs)
    } else {
-      if (messagesEndRef.current && !hasScrolledRef.current) {
+      if (messagesEndRef.current && !hasScrolledRef.current && !hasScrolled) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
         hasScrolledRef.current = true;
       } else {
         hasScrolledRef.current = false;
       }
     }
-   }, [msgs, props.selectedworkflow]);
+   }, [msgs, props.selectedworkflow, hasScrolled]);
+
+   const handleScroll = () => {
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 20 ) {
+      setHasScrolled(false);
+    } else {
+      setHasScrolled(true);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+    };
+  },[]);
 
   return (
     <section className='chatbox'>
-      <div id="chat-container" ref={chatContainer}>
+      <div id="chat-container" ref={chatContainer} >
 
         {msgs[props.selectedworkflow.id] && msgs[props.selectedworkflow.id].map((msg, index) => {
           return (
@@ -69,8 +85,9 @@ const ChatArea = (props) => {
         })}
 
       <div ref={messagesEndRef} style={{height:"5px"}}/>
+
       
-      </div>
+      </div>s
       <MsgBox msgs={msgs} setMsgs={setMsgs} user={props.user} selectedworkflow={props.selectedworkflow}/>
     </section> 
     )

@@ -12,9 +12,8 @@ import { useWebSocket } from '../../../contexts/WebSocketContext';
 import { sessionId } from '../../../App';
 
 const MsgBox = (props) => {
-  const { webSocket, webSocketEventEmitter, sendJsonMessage } = useWebSocket();
+  const { webSocket, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocket();
   const [lastMessage, setLastMessage] = useState(null);
-  const [selectedworkflowId, setSelectedworkflowId] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
@@ -88,7 +87,7 @@ const MsgBox = (props) => {
     newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id], ...newMsgArray]
     props.setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
-    sendJsonMessage({
+    sendJsonMessagePlus({
       sessionId: sessionId,
       userId: props.user.userId,
       selectedworkflowId: props.selectedworkflow.id,
@@ -99,7 +98,7 @@ const MsgBox = (props) => {
     console.log("conversationId sent " + conversationId)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessage, model, props.user, props.selectedworkflow.id]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, model, props.user, props.selectedworkflow.id]);
 
   useEffect(() => {
    // Access the form element using the ref

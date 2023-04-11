@@ -21,6 +21,47 @@ const serverUrl = window.location.protocol + `//${socketHost}:${socketPort}/`
 function App() {
   const [webSocket, setWebSocket] = useState(null);
   const webSocketEventEmitter = new WebSocketEventEmitter();
+  const [location, setLocation] = useState(null);
+  const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+
+          const reverse_lookup = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
+
+          async function fetchData(reverse_lookup) { 
+            let result = await fetch(reverse_lookup)
+            .then((response) => response.json())
+            .catch((err) => {
+                console.log(err.message);
+            });
+            if (result.display_name) {
+              return result.display_name
+            } else {
+              return ''
+            }
+          }
+
+          fetchData(reverse_lookup).then((address) => {
+            setAddress(address)
+            console.log("Address set " + address)
+          })
+          
+        },
+        error => {
+          console.error(error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  }, []);
 
   // Here we fetch the sessionId if we don't already have one
   const { sendMessage, sendJsonMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
@@ -47,8 +88,13 @@ function App() {
 
   });
 
+  const sendJsonMessagePlus = function(m) {
+    m.address = address
+    sendJsonMessage(m)
+  }
+
   return (
-    <WebSocketContext.Provider value={{ webSocket, webSocketEventEmitter, sendJsonMessage }}>
+    <WebSocketContext.Provider value={{ webSocket, webSocketEventEmitter, sendJsonMessagePlus }}>
       <Router>
         <Routes>
           <Route exact path="/" element={<Workflows/>} />

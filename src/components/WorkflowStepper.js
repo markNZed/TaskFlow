@@ -70,20 +70,18 @@ function WorkflowStepper(props) {
     if (steps[activeStep] && steps[activeStep].next === serverStep) {
       async function fetchData() { 
         let id = props.selectedworkflow?.id + '.' + serverStep
-        let newStep = await fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${id}`, {
+        let updatedStep = await fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${id}`, {
           credentials: 'include'
         })
         .then((response) => response.json())
         .catch((err) => {
             console.log(err.message);
         });
-        let [workflow_id, nextStepKey] = newStep.id.match(/^(.*)\.(.*)/).slice(1);
-        let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
-        tmpSteps[nextStepKey] = newStep
-        setSteps(tmpSteps)
-        setActiveStep(nextStepKey)
-        setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, nextStepKey]);
         setServerStep(null)
+        updateStep(updatedStep)
+        setActiveStep(updatedStep.next)
+        console.log("Client step after server step " + updatedStep.next)
+        setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, updatedStep.next]);
       }
       fetchData()
     }
