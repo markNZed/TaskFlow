@@ -1,22 +1,15 @@
 /* ToDo
 -------
-Multiple language support 'i18next-http-middleware for server and react-i18next for client
 Change model context with session in client
-Support a pre_input and post_input for surrounding prompt.
-Could also srteam corrections to the text so far every X parts insted of just final
 Default agent for user (perhaps have user state e.g. last active conversation)
 Components repository so can be shared between server and client
 Code the workflowId in the step
-workflowhierarchy.mjs
+workflowhierarchy.mjs instead of hierarchical data structure
+Workflows in separate files
 These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens
   Perhaps the UI update the workflow? 
   Perhaps defaults ? 
   Use a different route
-  Side -menu to collapse on mobile phone
-Support dev version, another URL etc chat-dev
-//Alpine doesn't contain ld-linux-x86-64.so.2 by default, which is required by tfjs-node, since Alpine primarily uses musl instead of glibc.
-//Might move to: FROM node:buster-slim (have done this for the dev version)
-For one_session prefix the response with the date/time. Can we add location for user ?
 Hierarchy of configuration:
   App
     User (Route)
@@ -27,12 +20,15 @@ Hierarchy of configuration:
               Task 
                 User
                   Session
-Server side tasks, if the server chnages the step then the client needs to catch up too
-Instead of embedding use an agent in a serverside step
-Back is not working with conditional
 Should error if agent not found - no default
-The stream/send needs to have a step ID. Also don't stream server side steps.
+The stream/send could have a step ID.
 Allow the user to specify the system prompt.
+We are responding to the client with the step so prompts etc are visible
+  How to split this information?
+Could include docker in git
+-------
+Future
+  Multiple language support 'i18next-http-middleware for server and react-i18next for client
 -------
 */
 
@@ -149,6 +145,11 @@ websocketServer.on('connection', (ws) => {
       await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', selectedStep);
     }
 
+    if (j?.address && j?.userId) {
+      await sessionsStore_async.set(j.userId + 'location', j.address);
+      console.log("Address: " + j.address)
+    }
+
     if (j?.prompt) {
       const { langModel, temperature, maxTokens, prompt } = j;
       prompt_response_async(sessionId, prompt, null, langModel, temperature, maxTokens)
@@ -189,6 +190,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
   let lastMessageId = null;
   let initializing = false;
   let use_cache = CACHE_ENABLE === 'true'
+  let server_step = false;
 
   let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
   if (selectedworkflowId) { 
@@ -203,7 +205,6 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
   }
 
   if (workflow) {
-    systemMessage = workflow?.system_message || systemMessage;
     langModel = workflow?.model || langModel
     if (workflow?.one_session) {
       let userId = await sessionsStore_async.get(sessionId + 'userId');
@@ -221,6 +222,15 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
       } else {
         console.log("Continuing one sesssion")
       }
+      // Prefix with location
+      const address = await sessionsStore_async.get(userId + 'location');
+      if (address) {
+        prompt = "Location: " + address + "\n" + prompt
+      }
+      // Prefix prompt with date/time
+      const currentDate = new Date();
+      prompt = 'Time: ' + utils.formatDateAndTime(currentDate) + "\n" + prompt
+      // Can we add location for user ?
     }
   }
 
@@ -255,6 +265,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     }
     langModel = workflow.steps[step]?.model || langModel
     if (workflow.steps[step]?.model) {console.log("Step set model " + langModel)}
+    server_step = workflow.steps[step]?.run_on_server || server_step
   }
 
   // Need to do this after the agent stabilizes
@@ -291,6 +302,12 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     systemMessage = agent.system_message;
     console.log("Sytem message from agent " + agent.name)
   }
+
+  // This might be an idea for the future
+  //let address = await sessionsStore_async.get(userId + 'location')
+  //if (address) {
+  //  systemMessage.replace(/ADDRESS/, address);
+  //}
 
   // Could have messages instead of prompt in a step
   
@@ -331,9 +348,12 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
       model: langModel,
       temperature: temperature,
     },
-    onProgress: (partialResponse) => SendIncrementalOutput(partialResponse, conversationId, ws),
     parentMessageId: lastMessageId,
   };
+
+  if (!server_step) {
+    messageParams['onProgress'] = (partialResponse) => SendIncrementalOutput(partialResponse, conversationId, ws)
+  }
 
   // steps in workflow could add messages
 
@@ -373,7 +393,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
       'conversationId' : conversationId,
       'final' : text
     }
-    wsSendObject(ws, message)
+    if (!server_step) { wsSendObject(ws, message) }
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
@@ -386,7 +406,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
         'conversationId' : conversationId,
         'final' : text
       }
-      wsSendObject(ws, message)
+      if (!server_step) { wsSendObject(ws, message) }
       if (use_cache) {
         cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
@@ -402,7 +422,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
         'conversationId' : conversationId,
         'final' : text
       }
-      wsSendObject(ws, message)
+      if (!server_step) { wsSendObject(ws, message) }
       return text
     })
   }
@@ -481,13 +501,18 @@ app.get('/api/user', async (req, res) => {
   }
 });
 
-async function do_step_async(sessionId, workflow_id, stepKey) {
+async function workflow_from_id_async(sessionId, workflow_id, stepKey) {
   let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
   if (workflow === undefined || stepKey === 'start') {
     workflow = utils.findObjectById(workflows, workflow_id)
     await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
   }
   await sessionsStore_async.set(sessionId + 'selectedworkflowId', workflow_id);
+  return workflow
+}
+
+async function do_step_async(sessionId, workflow_id, stepKey) {
+  let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
   const ws = connections.get(sessionId);
   if (!ws) {
     // If the server has restarted the conenction is lost
@@ -514,7 +539,7 @@ async function do_step_async(sessionId, workflow_id, stepKey) {
 }
 
 app.get('/api/step', async (req, res) => {
-  console.log("/step")
+  console.log("/step " + req.query?.step_id)
   if (process.env.AUTHENTICATION == "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
@@ -528,10 +553,14 @@ app.get('/api/step', async (req, res) => {
 
       while (updated_step?.run_on_server) {
         // Check if the next step is server-side
-        // Serverside component? That is what choose is
         stepKey = updated_step.next
-        console.log("Next step is server side stepKey " + stepKey)
-        updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+        let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
+        if (workflow.steps[stepKey]?.run_on_server) {
+          console.log("Next step is server side stepKey " + stepKey)
+          updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+        } else {
+          break
+        }
       }
 
       // A function for each component? In a library.

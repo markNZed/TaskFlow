@@ -3,6 +3,18 @@ import { v4 as uuidv4 } from 'uuid'
 
 const utils = {};
 
+utils.formatDateAndTime = function(date) {
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
+  return new Intl.DateTimeFormat('fr-FR', options).format(date);
+}
+
 utils.load_data_async = async function(config_dir, name) {
     let result = {}
     try {
@@ -52,8 +64,6 @@ utils.processMessages_async = async function(messages, messageStore_async, initi
       if (message.role === "system") {
         error("Not expecting system message here");
       } else {
-        console.log ("id " + id);
-        console.log ("chatMessage " + chatMessage.text)
         await messageStore_async.set(id, chatMessage)
       }
       
