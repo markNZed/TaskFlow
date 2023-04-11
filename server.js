@@ -455,17 +455,16 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', async (req, res) => {
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const username = req.headers['cf-access-authenticated-user-email'];
-    if (username) {
-      res.send(`Hello, ${username}!`);
-    } else {
-      res.status(401).send('Unauthorized');
-    }
+  let userId = 'test@testing.com'
+  console.log(userId)
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  console.log(userId)
+  if (userId) {
+    res.send(`Hello, ${userId}!`);
   } else {
-    res.status(200).send({
-      message: 'Welcome to the chatbot server side!'
-    });
+    res.status(401).send('Unauthorized');
   }
 });
 
@@ -473,13 +472,12 @@ app.get('/', async (req, res) => {
 // We need to visit this server from the browser to get cookies etc
 app.get('/authenticate', async (req, res) => {
   let authenticated_url = CLIENT_URL + '/authenticated'
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const username = req.headers['cf-access-authenticated-user-email'];
-    if (username) {
-      res.redirect(authenticated_url);
-    } else {
-      res.redirect(authenticated_url);
-    }
+  let userId = 'test@testing.com'
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (userId) {
+    res.redirect(authenticated_url);
   } else {
     res.redirect(authenticated_url);
   }
@@ -487,16 +485,15 @@ app.get('/authenticate', async (req, res) => {
 
 app.get('/api/user', async (req, res) => {
   console.log("/user")
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const username = req.headers['cf-access-authenticated-user-email'];
-    if (username) {
-      res.send({
-        userId: username,
-        interface: users[username]?.interface,
-      });
-    } else {
-      res.send({userId: ''});
-    }
+  let userId = 'test@testing.com'
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (userId) {
+    res.send({
+      userId: userId,
+      interface: users[userId]?.interface,
+    });
   } else {
     res.send({userId: ''});
   }
@@ -541,34 +538,33 @@ async function do_step_async(sessionId, workflow_id, stepKey) {
 
 app.get('/api/step', async (req, res) => {
   console.log("/step " + req.query?.step_id)
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const username = req.headers['cf-access-authenticated-user-email'];
-    if (username) {
-      //console.log("req.query " + JSON.stringify(req.query))
-      const step_id = req.query.step_id;
-      const sessionId = req.query.sessionId;
-      // Need to check for errors
-      let [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+  let userId = 'test@testing.com'
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (userId) {
+    //console.log("req.query " + JSON.stringify(req.query))
+    const step_id = req.query.step_id;
+    const sessionId = req.query.sessionId;
+    // Need to check for errors
+    let [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
 
-      let updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+    let updated_step = await do_step_async(sessionId, workflow_id, stepKey)
 
-      while (updated_step?.run_on_server) {
-        // Check if the next step is server-side
-        stepKey = updated_step.next
-        let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
-        if (workflow.steps[stepKey]?.run_on_server) {
-          console.log("Next step is server side stepKey " + stepKey)
-          updated_step = await do_step_async(sessionId, workflow_id, stepKey)
-        } else {
-          break
-        }
+    while (updated_step?.run_on_server) {
+      // Check if the next step is server-side
+      stepKey = updated_step.next
+      let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
+      if (workflow.steps[stepKey]?.run_on_server) {
+        console.log("Next step is server side stepKey " + stepKey)
+        updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+      } else {
+        break
       }
-
-      // A function for each component? In a library.
-      res.send(JSON.stringify(updated_step));
-    } else {
-      res.send({userId: ''});
     }
+
+    // A function for each component? In a library.
+    res.send(JSON.stringify(updated_step));
   } else {
     res.send({userId: ''});
   }
@@ -576,48 +572,48 @@ app.get('/api/step', async (req, res) => {
 
 app.post('/api/input', async (req, res) => {
   console.log("/input")
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const username = req.headers['cf-access-authenticated-user-email'];
-    if (username) {
-      const sessionId = req.body.sessionId;
-      const component = req.body.component;
-      const step_id = req.body.step_id;
-      const input = req.body.input;
+  let userId = 'test@testing.com'
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (userId) {
+    const sessionId = req.body.sessionId;
+    const component = req.body.component;
+    const step_id = req.body.step_id;
+    const input = req.body.input;
 
-      // Update the session workflow with the information
-      // Then next step will use that
-      const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
-      let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
-      let workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
-      if (workflow.steps[stepKey]?.input !== input) {
-        workflow.steps[stepKey].input = input
-        workflow.steps[stepKey].last_change = Date.now()
-      }
-      await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
-      res.status(200).json({ success: true });
-    } else {
-      res.status(200).json({ error: "No user" });
+    // Update the session workflow with the information
+    // Then next step will use that
+    const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+    let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
+    let workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
+    if (workflow.steps[stepKey]?.input !== input) {
+      workflow.steps[stepKey].input = input
+      workflow.steps[stepKey].last_change = Date.now()
     }
+    await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+    res.status(200).json({ success: true });
   } else {
-    res.status(401).json({ error: "No authentication" });
+    res.status(200).json({ error: "No user" });
   }
 });
 
 app.get('/api/workflows', async (req, res) => {
   let stripped_workflows = {}
-  if (process.env.AUTHENTICATION == "cloudflare") {
-    const userId = req.headers['cf-access-authenticated-user-email'];
-    if (userId) {
-      // Extended to ignore by user if a user is specified
-      // This is a hack unti lwe have a notin of group
-      stripped_workflows = utils.ignoreByRegexList(
-        workflows, userId,
-        [/^agents$/]
-      )
-    }
+  let userId = 'test@testing.com'
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (userId) {
+    // Extended to ignore by user if a user is specified
+    // This is a hack unti lwe have a notin of group
+    stripped_workflows = utils.ignoreByRegexList(
+      workflows, userId,
+      [/^agents$/]
+    )
   }
   res.send(stripped_workflows);
 });
 
-const port = 5000;
+const port = process.env.PORT || 5000;
 server.listen(port, () => console.log('AI server started'));
