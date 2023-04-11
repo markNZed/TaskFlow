@@ -26,7 +26,6 @@ Allow the user to specify the system prompt.
 We are responding to the client with the step so prompts etc are visible
   How to split this information?
 Could include docker in git
-Back step in summary is not working
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
@@ -455,7 +454,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', async (req, res) => {
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
       res.send(`Hello, ${username}!`);
@@ -473,7 +472,7 @@ app.get('/', async (req, res) => {
 // We need to visit this server from the browser to get cookies etc
 app.get('/authenticate', async (req, res) => {
   let authenticated_url = CLIENT_URL + '/authenticated'
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
       res.redirect(authenticated_url);
@@ -487,7 +486,7 @@ app.get('/authenticate', async (req, res) => {
 
 app.get('/api/user', async (req, res) => {
   console.log("/user")
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
       res.send({
@@ -541,7 +540,7 @@ async function do_step_async(sessionId, workflow_id, stepKey) {
 
 app.get('/api/step', async (req, res) => {
   console.log("/step " + req.query?.step_id)
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
       //console.log("req.query " + JSON.stringify(req.query))
@@ -576,7 +575,7 @@ app.get('/api/step', async (req, res) => {
 
 app.post('/api/input', async (req, res) => {
   console.log("/input")
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const username = req.headers['cf-access-authenticated-user-email'];
     if (username) {
       const sessionId = req.body.sessionId;
@@ -605,7 +604,7 @@ app.post('/api/input', async (req, res) => {
 
 app.get('/api/workflows', async (req, res) => {
   let stripped_workflows = {}
-  if (process.env.AUTHENTICATION == "cloudflare") {
+  if (process.env.AUTHENTICATION === "cloudflare") {
     const userId = req.headers['cf-access-authenticated-user-email'];
     if (userId) {
       // Extended to ignore by user if a user is specified
