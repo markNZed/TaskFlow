@@ -41,7 +41,7 @@ function App() {
             .catch((err) => {
                 console.log(err.message);
             });
-            if (result.display_name) {
+            if (result?.display_name) {
               return result.display_name
             } else {
               return ''

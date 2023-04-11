@@ -20,6 +20,7 @@ const TaskFromAgent = (props) => {
     const [myStep, setMyStep] = useState("");
 
     useEffect(() => {
+        if (props.id === fetchedId) {return}
         const handleMessage = (e) => {
             const j = JSON.parse(e.data)
             if (j?.delta) {
@@ -124,21 +125,28 @@ const TaskFromAgent = (props) => {
                 </Paper>
             : ''
             }
-            <Paper elevation={3} 
-                    style={{
-                        overflow: "auto",
-                        maxHeight: `calc(100vh - ${textareaHeight}px)`,
-                        textAlign: 'justify',
-                        padding: "16px",
-                    }}
-                >
-                {response.split("\\n").map((line, index) => (
-                    <Typography style={{ marginTop: "16px" }} key={index}>{line}</Typography>
-                ))}
-            </Paper>
-            <p style={{ fontSize: "12px", color: "gray", margin: "4px 0 0 0", textAlign: "left" }}>
-              {textWordCount} words
-            </p>
+            {response ?
+                <>
+                    <Paper elevation={3} 
+                            style={{
+                                overflow: "auto",
+                                maxHeight: `calc(100vh - ${textareaHeight}px)`,
+                                textAlign: 'justify',
+                                padding: "16px",
+                            }}
+                        >
+                        { response.split("\\n").map((line, index) => (
+                            <Typography style={{ marginTop: "16px" }} key={index}>{line}</Typography>
+                        ))}
+                    </Paper>
+
+                    <p style={{ fontSize: "12px", color: "gray", margin: "4px 0 0 0", textAlign: "left" }}>
+                    {textWordCount} words
+                    </p>
+                </>
+            :
+              ''
+            }
             {myStep?.input !== undefined?
                 <div>
                     <TextareaAutosize

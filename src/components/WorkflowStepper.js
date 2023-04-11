@@ -10,10 +10,12 @@ import { serverUrl, sessionId } from '../App';
 
 function WorkflowStepper(props) {
   const [activeStep, setActiveStep] = useState('start');
+  const [prevActiveStep, setPrevActiveStep] = useState('start');
   const [serverStep, setServerStep] = useState(null);
   const [steps, setSteps] = useState({});
   const [visitedSteps, setVisitedSteps] = useState([]);
   const [leaving, setLeaving] = useState(null);
+  const [expanded, setExpanded] = useState(['start']);
 
   function handleStepNavigation(currentStep, action) {
     const currentStepData = steps[currentStep];
@@ -78,7 +80,10 @@ function WorkflowStepper(props) {
             console.log(err.message);
         });
         setServerStep(null)
-        updateStep(updatedStep)
+        //updateStep(updatedStep)
+        let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
+        tmpSteps[serverStep] = updatedStep
+        setSteps(tmpSteps)
         setActiveStep(updatedStep.next)
         console.log("Client step after server step " + updatedStep.next)
         setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, updatedStep.next]);
@@ -87,11 +92,19 @@ function WorkflowStepper(props) {
     }
   }, [steps, setSteps, serverStep, activeStep, setActiveStep]);     
 
-  /*
+  
   useEffect(() => {
-    console.log("activeStep " + JSON.stringify(steps[activeStep]))
-  }, [activeStep]); 
-  */
+  if (activeStep !== prevActiveStep) {
+    console.log("activeStep " + activeStep)
+    setExpanded((prevExpanded) => [...prevExpanded, activeStep]);
+    if (prevActiveStep) {
+      console.log("prevActiveStep " + prevActiveStep)
+      setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevActiveStep));
+    }
+    setPrevActiveStep(activeStep)
+  }
+  }, [activeStep, prevActiveStep, setPrevActiveStep]); 
+  
 
   function updateStep(step) {
     let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
@@ -106,9 +119,15 @@ function WorkflowStepper(props) {
     }
   }, [props.selectedworkflow]); 
 
-  useEffect(() => {
-    setActiveStep('start');
-  }, [props.selectedworkflow]);
+  const handleChange = (panel) => (event, newExpanded) => {
+    if (newExpanded) {
+      setExpanded((prevExpanded) => [...prevExpanded, panel]);
+    } else {
+      setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== panel));
+    }
+  };
+
+  const isExpanded = (panel) => expanded.includes(panel);
 
   return (
     <div>
@@ -120,12 +139,12 @@ function WorkflowStepper(props) {
         ))}
       </Stepper>
       {visitedSteps.map((stepKey) => (
-          <Accordion key={stepKey} expanded={activeStep === stepKey}>
+          <Accordion key={stepKey} expanded={isExpanded(stepKey)} onChange={handleChange(stepKey)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{steps[stepKey].label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { /* stepKey */}
+              { /* stepKey */ }
               {(() => {
                 switch (steps[stepKey].component) {
                   case 'TaskFromAgent':
@@ -143,12 +162,12 @@ function WorkflowStepper(props) {
               })()}   
             </AccordionDetails>
             <div>
-              {activeStep !== 'start' && (
+              {activeStep !== 'start' && activeStep === stepKey && (
                 <Button onClick={() => handleStepNavigation(activeStep, 'back')} variant="contained" color="primary">
                   Back
                 </Button>
               )}
-              {!/^stop/.test(steps[activeStep].next) && (
+              {!/^stop/.test(steps[activeStep].next) && activeStep === stepKey && (
                 <Button onClick={() => handleStepNavigation(activeStep, 'next')} variant="contained" color="primary">
                   Next
                 </Button>
