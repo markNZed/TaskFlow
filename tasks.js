@@ -69,7 +69,10 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
     await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   }
 
-  let response_text = await prompt_response_callback_async(sessionId, prompt, stepKey)
+  let response_text = ''
+  if (prompt) {
+    response_text = await prompt_response_callback_async(sessionId, prompt, stepKey)
+  }
   workflow.steps[stepKey].response = response_text
   workflow.steps[stepKey].last_change = Date.now()
   sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
