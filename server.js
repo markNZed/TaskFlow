@@ -614,5 +614,5 @@ app.get('/api/workflows', async (req, res) => {
   res.send(stripped_workflows);
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.WS_PORT || 5000;
 server.listen(port, () => console.log('AI server started'));
