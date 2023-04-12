@@ -3,7 +3,7 @@
 
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
-const workflows = {
+const workflows_hierarchy = {
     name: 'exercices',
     id: '1',
     children: [
@@ -62,4 +62,4 @@ const workflows = {
     ]
 }
 
-export { workflows };
+export { workflows_hierarchy };

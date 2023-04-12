@@ -625,6 +625,7 @@ app.post('/api/input', async (req, res) => {
 });
 
 app.get('/api/workflows', async (req, res) => {
+  console.log("/api/workflows")
   let stripped_workflows = {}
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
