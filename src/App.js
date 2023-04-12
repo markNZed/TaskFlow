@@ -9,7 +9,7 @@ import useWebSocket from 'react-use-websocket'
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
 
 var socketHost = window.location.hostname
-var socketPort = 5000
+var socketPort = process.env.REACT_APP_WS_LOCALHOST_PORT || 5000
 if (window.location.hostname !== "localhost") {
   socketPort = process.env.REACT_APP_WS_PORT || socketPort
   socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
