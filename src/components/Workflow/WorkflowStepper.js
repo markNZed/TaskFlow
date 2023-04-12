@@ -8,6 +8,7 @@ import TaskShowResponse from "./Tasks/TaskShowResponse"
 import { serverUrl, sessionId } from '../../App';
 
 function WorkflowStepper(props) {
+  const { selectedworkflow } = props;
   const [activeStep, setActiveStep] = useState('start');
   const [prevActiveStep, setPrevActiveStep] = useState('start');
   const [serverStep, setServerStep] = useState(null);
@@ -15,6 +16,7 @@ function WorkflowStepper(props) {
   const [visitedSteps, setVisitedSteps] = useState([]);
   const [leaving, setLeaving] = useState(null);
   const [expanded, setExpanded] = useState(['start']);
+  const [myStepKey, setMyStepKey] = useState("");
 
   function handleStepNavigation(currentStep, action) {
     const currentStepData = steps[currentStep];
@@ -57,7 +59,7 @@ function WorkflowStepper(props) {
   useEffect(() => {
     if (steps[activeStep] && steps[activeStep].next === serverStep) {
       async function fetchData() { 
-        let id = props.selectedworkflow?.id + '.' + serverStep
+        let id = selectedworkflow?.id + '.' + serverStep
         let updatedStep = await fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${id}`, {
           credentials: 'include'
         })
@@ -76,7 +78,7 @@ function WorkflowStepper(props) {
       }
       fetchData()
     }
-  }, [steps, setSteps, serverStep, activeStep, setActiveStep, props.selectedworkflow]);     
+  }, [steps, setSteps, serverStep, activeStep, setActiveStep, selectedworkflow]);     
 
   
   useEffect(() => {

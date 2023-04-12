@@ -41,7 +41,7 @@ const TaskShowResponse = (props) => {
         if (leaving?.step === myStepKey) {
             taskDone(leaving.step)
         }
-    }, [ taskDone, leaving, myStepKey ])
+    }, [ leaving ])
 
     return (
         <div style={{ display: "flex", flexDirection: "column"}}>

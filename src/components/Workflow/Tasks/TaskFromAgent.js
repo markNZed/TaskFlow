@@ -105,7 +105,7 @@ const TaskFromAgent = (props) => {
             fetchData()           
         }
         //
-    }, [ leaving, myStepKey, fetchedId, summary, prev_step, taskDone ])
+    }, [ leaving ])
 
     useEffect(() => {
         // filter removes empty entry
