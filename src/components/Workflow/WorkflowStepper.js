@@ -4,9 +4,8 @@ import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TaskFromAgent from "./Tasks/TaskFromAgent"
 import TaskShowResponse from "./Tasks/TaskShowResponse"
-import TaskChoose from "./Tasks/TaskChoose"
 
-import { serverUrl, sessionId } from '../App';
+import { serverUrl, sessionId } from '../../App';
 
 function WorkflowStepper(props) {
   const [activeStep, setActiveStep] = useState('start');
@@ -36,25 +35,12 @@ function WorkflowStepper(props) {
     }
   }
 
-  async function fetchStep(nextStepKey) {
-    console.log("fetchStep(nextStepKey)")
-    let id = props.selectedworkflow?.id + '.' + nextStepKey
-    let response = await fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${id}`, {
-      credentials: 'include'
-    })
-    .then((response) => response.json())
-    .catch((err) => {
-        console.log(err.message);
-    });
-    return response
-  }
-
   function taskDone(currentStep) {
     const currentStepData = steps[currentStep];
     var nextStepKey = currentStepData.next
     // Check if the next step is defined and update the active step accordingly
     if (currentStepData) {
-      if (steps[nextStepKey]?.run_on_server) {
+      if (steps[nextStepKey]?.server_step) {
         console.log("Server step " + nextStepKey)
         setServerStep(nextStepKey);
       } else {
@@ -90,19 +76,19 @@ function WorkflowStepper(props) {
       }
       fetchData()
     }
-  }, [steps, setSteps, serverStep, activeStep, setActiveStep]);     
+  }, [steps, setSteps, serverStep, activeStep, setActiveStep, props.selectedworkflow]);     
 
   
   useEffect(() => {
-  if (activeStep !== prevActiveStep) {
-    console.log("activeStep " + activeStep)
-    setExpanded((prevExpanded) => [...prevExpanded, activeStep]);
-    if (prevActiveStep) {
-      console.log("prevActiveStep " + prevActiveStep)
-      setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevActiveStep));
+    if (activeStep !== prevActiveStep) {
+      console.log("activeStep " + activeStep)
+      setExpanded((prevExpanded) => [...prevExpanded, activeStep]);
+      if (prevActiveStep) {
+        console.log("prevActiveStep " + prevActiveStep)
+        setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevActiveStep));
+      }
+      setPrevActiveStep(activeStep)
     }
-    setPrevActiveStep(activeStep)
-  }
   }, [activeStep, prevActiveStep, setPrevActiveStep]); 
   
 
@@ -153,7 +139,6 @@ function WorkflowStepper(props) {
                     return <TaskShowResponse  stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep}/>;
                   case 'TaskChoose':
                     return '' // ServerSide
-                    return <TaskChoose stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep}/>;
                   case 'ServerSide':
                     return ''
                   default:

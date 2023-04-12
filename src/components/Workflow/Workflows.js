@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import { QueryClientProvider, QueryClient } from 'react-query'; 
 import { ReactQueryDevtools } from 'react-query/devtools'
-import '../styles/App.css';
-import '../styles/normal.css';
+import '../../styles/App.css';
+import '../../styles/normal.css';
 import ChatArea from "./Tasks/Chat/ChatArea"
-import SideMenu from "./SideMenu"
-import ObjectDisplay from "./ObjectDisplay"
-import { ModelProvider } from '../contexts/ModelContext'
+import SideMenu from "../SideMenu/SideMenu"
+import ObjectDisplay from "../Generic/ObjectDisplay"
+import { ModelProvider } from '../../contexts/ModelContext'
 import Stack from '@mui/material/Stack';
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -16,7 +16,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import WorkflowStepper from "./WorkflowStepper"
-import { serverUrl } from '../App';
+import { serverUrl } from '../../App';
 
 const queryClient = new QueryClient()
 

@@ -1,4 +1,7 @@
 /* config-overrides.js */
+
+const path = require('path');
+
 module.exports = {
   // The function to use to create a webpack dev server configuration when running the development
   // server with 'npm run start' or 'yarn start'.
@@ -19,5 +22,11 @@ module.exports = {
         // Return your customised Webpack Development Server config.
         return config;
     };
-  }
+  },
+
+  webpack: function (config, env) {
+    config.resolve.modules = [path.resolve(__dirname, 'src')].concat(config.resolve.modules);
+    return config;
+  },
+
 }

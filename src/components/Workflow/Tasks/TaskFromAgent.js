@@ -2,12 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl, sessionId } from '../../App';
-import { useWebSocket } from '../../contexts/WebSocketContext';
+import { serverUrl, sessionId } from '../../../App';
+import { useWebSocket } from '../../../contexts/WebSocketContext';
 
 const TaskFromAgent = (props) => {
     
-    const { websocket, webSocketEventEmitter, sendJsonMessage } = useWebSocket();
+    const { id, leaving, prev_step, taskDone } = props;
+
+    const { webSocketEventEmitter } = useWebSocket();
 
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState("");
@@ -20,7 +22,7 @@ const TaskFromAgent = (props) => {
     const [myStep, setMyStep] = useState("");
 
     useEffect(() => {
-        if (props.id === fetchedId) {return}
+        if (id === fetchedId) {return}
         const handleMessage = (e) => {
             const j = JSON.parse(e.data)
             if (j?.delta) {
@@ -37,11 +39,12 @@ const TaskFromAgent = (props) => {
         return () => {
             webSocketEventEmitter.removeListener('message', handleMessage);
         };
-    }, [webSocketEventEmitter]);
+    }, [webSocketEventEmitter, fetchedId, id]);
         
     useEffect(() => {
         setMyStepKey(props.stepKey)
         setMyStep(props.step)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -75,9 +78,9 @@ const TaskFromAgent = (props) => {
     }, [props.id, fetchedId]);
 
     useEffect(() => {
-        if ((props.leaving.direction === 'next') && props.leaving.step === myStepKey) {
+        if ((leaving.direction === 'next') && leaving.step === myStepKey) {
 
-            console.log("props.leaving.direction " + props.leaving.direction + " props.leaving.step " + props.leaving.step)
+            console.log("props.leaving.direction " + leaving.direction + " props.leaving.step " + leaving.step)
 
             async function fetchData() { 
 
@@ -89,20 +92,20 @@ const TaskFromAgent = (props) => {
                     sessionId: sessionId,
                     component: 'TaskFromAgent',
                     step_id: fetchedId,
-                    prev_step: props.prev_step,
+                    prev_step: prev_step,
                     input: summary,
                     })
                 };
               
                 await fetch(`${serverUrl}api/input`, requestOptions)
                     .catch(error => console.log("ERROR " + error.message));
-                props.taskDone(props.leaving.step)
+                taskDone(leaving.step)
             }
 
             fetchData()           
         }
         //
-    }, [ props.leaving])
+    }, [ leaving, myStepKey, fetchedId, summary, prev_step, taskDone ])
 
     useEffect(() => {
         // filter removes empty entry

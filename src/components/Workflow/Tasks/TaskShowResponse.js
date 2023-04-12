@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl, sessionId } from '../../App';
+import { serverUrl, sessionId } from '../../../App';
 
 const TaskShowResponse = (props) => {
+    const { taskDone, leaving } = props;
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState('');
     const [myStepKey, setMyStepKey] = useState("");
 
     useEffect(() => {
         setMyStepKey(props.stepKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
     // Note the we don't really need to fetch as the text is in the exrecise definition
@@ -36,10 +38,10 @@ const TaskShowResponse = (props) => {
     }, [props.id, fetchedId]);
 
     useEffect(() => {
-        if (props.leaving?.step === myStepKey) {
-            props.taskDone(props.leaving.step)
+        if (leaving?.step === myStepKey) {
+            taskDone(leaving.step)
         }
-    }, [ props.leaving])
+    }, [ taskDone, leaving, myStepKey ])
 
     return (
         <div style={{ display: "flex", flexDirection: "column"}}>

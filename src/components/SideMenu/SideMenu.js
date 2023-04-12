@@ -2,10 +2,10 @@
 import React, {  useCallback, useState } from 'react';
 
 // contexts
-import { useModelChange, useModel } from '../contexts/ModelContext';
+import { useModelChange, useModel } from '../../contexts/ModelContext';
 
 // utils
-import {AVAILABLE_MODELS} from "../utils/constants"
+import {AVAILABLE_MODELS} from "../../utils/constants"
 
 // components
 import SliderBox from "./SliderBox"

@@ -3,13 +3,13 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import PromptDropdown from './PromptDropdown';
 
 // assets
-import send from '../../../assets/send.svg';
+import send from '../../../../assets/send.svg';
 
 // contexts
-import { useModel } from '../../../contexts/ModelContext';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useModel } from '../../../../contexts/ModelContext';
+import { useWebSocket } from '../../../../contexts/WebSocketContext';
 
-import { sessionId } from '../../../App';
+import { sessionId } from '../../../../App';
 
 const MsgBox = (props) => {
   const { webSocket, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocket();
@@ -20,14 +20,21 @@ const MsgBox = (props) => {
   const model = useModel();
   const [conversationId, setConversationId] = useState('initialize');
   const textareaRef = useRef(null);
+  const [mySelectedworkflow, setMySelectedworkflow] = useState(null);
 
   //console.log("MSGBox component")
 
   useEffect(() => {
+    setMySelectedworkflow(props.selectedworkflow)
+  },[]);
+
+  useEffect(() => {
     if (!webSocketEventEmitter) {return}
+    if (mySelectedworkflow !== props.selectedworkflow) {return}
 
     const handleMessage = (e) => {
       const j = JSON.parse(e.data)
+      // props.selectedworkflow
       if (j?.conversationId) {
         //setLastMessage(j);
         setConversationId(j.conversationId)

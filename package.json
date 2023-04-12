@@ -29,7 +29,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "start": "PORT=3000 HTTPS=false react-app-rewired start",
+    "start": "PORT=3000 HTTPS=false PUBLIC_URL=/ react-app-rewired start",
     "build": "react-app-rewired build",
     "build:dev": "react-app-rewired build --debug  --devtool source-map",
     "test": "react-app-rewired test",

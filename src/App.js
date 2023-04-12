@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
-import Workflows from "./components/Workflows"
+import Workflows from "./components/Workflow/Workflows"
 import { WebSocketContext, WebSocketEventEmitter } from './contexts/WebSocketContext';
 import useWebSocket from 'react-use-websocket'
 

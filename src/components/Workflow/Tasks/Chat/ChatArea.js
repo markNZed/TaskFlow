@@ -86,8 +86,7 @@ const ChatArea = (props) => {
 
       <div ref={messagesEndRef} style={{height:"5px"}}/>
 
-      
-      </div>s
+      </div>
       <MsgBox msgs={msgs} setMsgs={setMsgs} user={props.user} selectedworkflow={props.selectedworkflow}/>
     </section> 
     )
