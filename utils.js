@@ -18,9 +18,9 @@ utils.formatDateAndTime = function(date) {
 utils.load_data_async = async function(config_dir, name) {
     let result = {}
     try {
-      result = (await import(config_dir + name + ".mjs"))[name];
+      result = (await import(config_dir + '/' + name + ".mjs"))[name];
     } catch (error) {
-      console.log("No " + name + " at " + config_dir + name + ".mjs " + error);
+      console.log("No " + name + " at " + config_dir + '/' + name + ".mjs " + error);
     }
     return result
 }

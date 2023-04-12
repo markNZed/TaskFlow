@@ -11,24 +11,25 @@ These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0,
   Perhaps defaults ? 
   Use a different route
 Hierarchy of configuration:
-  App
+  Defaults
     User (Route)
       Session
         Workflow (Route)
-          User
-            Session
+          User Workflow
+            Session Workflow
               Task 
-                User
-                  Session
+                User Task
+                  Session Task
 Should error if agent not found - no default
 The stream/send could have a step ID.
-Allow the user to specify the system prompt.
-We are responding to the client with the step so prompts etc are visible
-  How to split this information?
 Could include docker in git
+Don't use socket from client to server
+Client should send address only if it changes
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
+  Workflow features:
+    Allow the user to specify the system prompt.
 -------
 */
 
@@ -53,15 +54,17 @@ import { error } from 'console'
 dotenv.config()
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+const DEFAULT_USER = 'test@testing.com'
 
 // For now we use JS data structures instead of a DB
 const CONFIG_DIR = process.env.CONFIG_DIR || "./config/";
 var users = await utils.load_data_async(CONFIG_DIR, 'users')
 var workflows = await utils.load_data_async(CONFIG_DIR, 'workflows')
 var agents = await utils.load_data_async(CONFIG_DIR, 'agents')
+var defaults = await utils.load_data_async(CONFIG_DIR, 'defaults')
 
 // Cache should use SQLite too?
-const CACHE_ENABLE = process.env.CACHE_ENABLE || 'false'; // 'true' to enable 
+const CACHE_ENABLE = process.env.CACHE_ENABLE === 'true' || false;
 console.log("CACHE_ENABLE " + CACHE_ENABLE)
 
 // Serve static files from the public directory
@@ -151,8 +154,13 @@ websocketServer.on('connection', (ws) => {
     }
 
     if (j?.prompt) {
-      const { langModel, temperature, maxTokens, prompt } = j;
-      prompt_response_async(sessionId, prompt, null, langModel, temperature, maxTokens)
+       const step = {
+        'langModel' : j?.langModel,
+        'temperature' : j?.temperature,
+        'maxTokens' : j?.maxTokens,
+        'prompt' : j.prompt,
+      }
+      prompt_response_async(sessionId, step)
     }
 
   });
@@ -167,7 +175,7 @@ websocketServer.on('connection', (ws) => {
 
 });
 
-function SendIncrementalOutput(partialResponse, conversationId, ws) {
+function SendIncrementalWs(partialResponse, conversationId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
   if (ws) {
     if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
@@ -181,7 +189,10 @@ function SendIncrementalOutput(partialResponse, conversationId, ws) {
   }
 }
 
-async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens = 4000) {
+async function prompt_response_async(sessionId, step) {
+
+  let prompt = step.prompt
+  let stepKey = step?.name // We should require this later
 
   let ws = connections.get(sessionId);
   let systemMessage = ''
@@ -189,8 +200,11 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
   let agent = {};
   let lastMessageId = null;
   let initializing = false;
-  let use_cache = CACHE_ENABLE === 'true'
+  let use_cache = CACHE_ENABLE
   let server_step = false;
+  let langModel = defaults.langModel
+  let temperature = defaults.temperature
+  let maxTokens = defaults.maxTokens
 
   let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
   if (selectedworkflowId) { 
@@ -246,26 +260,26 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
     }
   }
 
-  if (step && workflow?.steps[step]) {
-    if (typeof workflow.steps[step]?.use_cache !== "undefined") {
-      use_cache = workflow.steps[step].use_cache
+  if (stepKey && workflow?.steps[stepKey]) {
+    if (typeof workflow.steps[stepKey]?.use_cache !== "undefined") {
+      use_cache = workflow.steps[stepKey].use_cache
       console.log("Step set cache " + use_cache)
     }
     if (agents) {
-      agent = agents[workflow.steps[step]?.agent] || agent
+      agent = agents[workflow.steps[stepKey]?.agent] || agent
       console.log("Step set agent " + agent.name)
       prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
       if (agent?.prepend_prompt) {console.log("Prepend agent prompt " + agent.prepend_prompt)}
       prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
       if (agent?.append_prompt) {console.log("Append agent prompt " + agent.append_prompt)}
     }
-    if (workflow.steps[step]?.initialize || step === 'start') {
+    if (workflow.steps[stepKey]?.initialize || stepKey === 'start') {
       initializing = true
       console.log("Step agent initializing")
     }
-    langModel = workflow.steps[step]?.model || langModel
-    if (workflow.steps[step]?.model) {console.log("Step set model " + langModel)}
-    server_step = workflow.steps[step]?.run_on_server || server_step
+    langModel = workflow.steps[stepKey]?.model || langModel
+    if (workflow.steps[stepKey]?.model) {console.log("Step set model " + langModel)}
+    server_step = workflow.steps[stepKey]?.server_step || server_step
   }
 
   // Need to do this after the agent stabilizes
@@ -289,12 +303,12 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
      console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
    }
 
-   console.log("step " + step)
+   console.log("stepKey " + stepKey)
 
-   if (step && workflow?.steps[step]) {
-    if (workflow.steps[step]?.messages) {
-      lastMessageId = await utils.processMessages_async(workflow.steps[step].messages, messageStore_async, lastMessageId)
-      console.log("Messages extended from step " + step + " lastMessageId " + lastMessageId)
+   if (stepKey && workflow?.steps[stepKey]) {
+    if (workflow.steps[stepKey]?.messages) {
+      lastMessageId = await utils.processMessages_async(workflow.steps[stepKey].messages, messageStore_async, lastMessageId)
+      console.log("Messages extended from stepKey " + stepKey + " lastMessageId " + lastMessageId)
     }
   }
  
@@ -352,7 +366,7 @@ async function prompt_response_async(sessionId, prompt, step, langModel = 'gpt-3
   };
 
   if (!server_step) {
-    messageParams['onProgress'] = (partialResponse) => SendIncrementalOutput(partialResponse, conversationId, ws)
+    messageParams['onProgress'] = (partialResponse) => SendIncrementalWs(partialResponse, conversationId, ws)
   }
 
   // steps in workflow could add messages
@@ -454,12 +468,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', async (req, res) => {
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   console.log(userId)
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
-  console.log(userId)
   if (userId) {
     res.send(`Hello, ${userId}!`);
   } else {
@@ -471,7 +484,7 @@ app.get('/', async (req, res) => {
 // We need to visit this server from the browser to get cookies etc
 app.get('/authenticate', async (req, res) => {
   let authenticated_url = CLIENT_URL + '/authenticated'
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
@@ -484,7 +497,7 @@ app.get('/authenticate', async (req, res) => {
 
 app.get('/api/user', async (req, res) => {
   console.log("/user")
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
@@ -535,9 +548,19 @@ async function do_step_async(sessionId, workflow_id, stepKey) {
   return updated_step
 }
 
+function extract_client_info(step, filter_list) {
+  const stepCopy = { ...step }; // or const objCopy = Object.assign({}, obj);
+  for (const key in stepCopy) {
+    if (!filter_list.includes(key)) {
+      delete stepCopy[key];
+    }
+  }
+  return stepCopy
+}
+
 app.get('/api/step', async (req, res) => {
   console.log("/step " + req.query?.step_id)
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
@@ -550,11 +573,11 @@ app.get('/api/step', async (req, res) => {
 
     let updated_step = await do_step_async(sessionId, workflow_id, stepKey)
 
-    while (updated_step?.run_on_server) {
+    while (updated_step?.server_step) {
       // Check if the next step is server-side
       stepKey = updated_step.next
       let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
-      if (workflow.steps[stepKey]?.run_on_server) {
+      if (workflow.steps[stepKey]?.server_step) {
         console.log("Next step is server side stepKey " + stepKey)
         updated_step = await do_step_async(sessionId, workflow_id, stepKey)
       } else {
@@ -562,8 +585,12 @@ app.get('/api/step', async (req, res) => {
       }
     }
 
+    let updated_client_step = extract_client_info(
+      updated_step, 
+      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize']
+    );
     // A function for each component? In a library.
-    res.send(JSON.stringify(updated_step));
+    res.send(JSON.stringify(updated_client_step));
   } else {
     res.send({userId: ''});
   }
@@ -571,7 +598,7 @@ app.get('/api/step', async (req, res) => {
 
 app.post('/api/input', async (req, res) => {
   console.log("/input")
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
@@ -599,7 +626,7 @@ app.post('/api/input', async (req, res) => {
 
 app.get('/api/workflows', async (req, res) => {
   let stripped_workflows = {}
-  let userId = 'test@testing.com'
+  let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
