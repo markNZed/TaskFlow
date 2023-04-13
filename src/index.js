@@ -24,4 +24,5 @@ function Root() {
     )
 }
 
-ReactDOM.render(<Root />, document.getElementById('root'));
+const rootElement = document.getElementById('root');
+ReactDOM.createRoot(rootElement).render(<Root />);
