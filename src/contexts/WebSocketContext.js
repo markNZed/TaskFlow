@@ -49,8 +49,8 @@ export function WebSocketProvider({ children, socketUrl}) {
     const sendJsonMessagePlus = function(m) {
         // Only send the address when it changes
         if (globalState?.address && lastAddress != globalState.address) {
-            m.address = address
-            setLastAddress(address)
+            m.address = globalState.address
+            setLastAddress(globalState.address)
         }
         if (globalState.sessionId) {
             m.sessionId = globalState.sessionId
