@@ -1,17 +1,10 @@
 /* ToDo
 -------
-Change model context with global state context
-  MobX uses reactive programming principles and focuses on simplicity and automatic updates.
-  Not worth learning MObX, should refactor first.
-  Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
-Create an API context
+Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
+Lodash should help for merging the step
 Components repository so can be shared between server and client
 Code the workflowId in the step
 workflowhierarchy.mjs instead of hierarchical data structure
-These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens
-  Perhaps the UI update the workflow? 
-  Perhaps defaults ? 
-  Use a different route
 Hierarchy of configuration:
   Defaults
     User (Route)
@@ -24,8 +17,8 @@ Hierarchy of configuration:
                   Session Task
 Should error if agent not found - no default
 The stream/send could have a step ID.
-Could include docker in git
-Don't use socket from client to server
+Include docker in git
+Don't use socket from client to server (replace with API)
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
