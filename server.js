@@ -236,9 +236,11 @@ async function prompt_response_async(sessionId, step) {
         console.log("Continuing one sesssion")
       }
       // Prefix with location
-      const address = await sessionsStore_async.get(userId + 'location');
-      if (address) {
-        prompt = "Location: " + address + "\n" + prompt
+      const location = await sessionsStore_async.get(userId + 'location');
+      const old_location = await sessionsStore_async.get(userId + 'old_location');
+      if (location && location !== old_location) {
+        await sessionsStore_async.set(userId + 'old_location', location);
+        prompt = "Location: " + location + "\n" + prompt
       }
       // Prefix prompt with date/time
       const currentDate = new Date();
