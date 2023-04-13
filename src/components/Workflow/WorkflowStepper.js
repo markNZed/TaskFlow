@@ -4,11 +4,12 @@ import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TaskFromAgent from "./Tasks/TaskFromAgent"
 import TaskShowResponse from "./Tasks/TaskShowResponse"
+import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 
 import { serverUrl } from '../../config';
-import { sessionId } from '../../App';
 
 function WorkflowStepper(props) {
+  const { globalState, updateGlobalState } = useGlobalStateContext();
   const { selectedworkflow } = props;
   const [activeStep, setActiveStep] = useState('start');
   const [prevActiveStep, setPrevActiveStep] = useState('start');
@@ -61,7 +62,7 @@ function WorkflowStepper(props) {
     if (steps[activeStep] && steps[activeStep].next === serverStep) {
       async function fetchData() { 
         let id = selectedworkflow?.id + '.' + serverStep
-        let updatedStep = await fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${id}`, {
+        let updatedStep = await fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${id}`, {
           credentials: 'include'
         })
         .then((response) => response.json())

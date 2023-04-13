@@ -21,7 +21,7 @@ import Snackbar from '@mui/material/Snackbar';
 const SideMenu = (props) => {
 
   const [openToast, setOpenToast] = useState(false);
-  const { globalState, changeGlobalState } = useGlobalStateContext();
+  const { globalState, updateGlobalState } = useGlobalStateContext();
   
   const handleToastClose = useCallback(
     (event, reason) => {
@@ -40,7 +40,7 @@ const SideMenu = (props) => {
             value={globalState.langModel}
             label="Model"
             onSelect={(e)=>{
-              changeGlobalState({...globalState, 
+              updateGlobalState({
                 langModel: e.target.value
               });
             }}
@@ -55,7 +55,7 @@ const SideMenu = (props) => {
             max={1}
             step={0.1}
             onChange={(e)=>{
-              changeGlobalState({...globalState, 
+              updateGlobalState({
                 temperature: e.target.value
               })
             }}
@@ -66,7 +66,7 @@ const SideMenu = (props) => {
             title="Max tokens" 
             value={globalState.maxTokens}
             onChange={(e)=>{
-              changeGlobalState({...globalState, 
+              updateGlobalState({
                 maxTokens: e.target.value
               })
             }}

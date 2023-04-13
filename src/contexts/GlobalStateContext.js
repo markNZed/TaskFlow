@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react' 
+import { merge } from 'lodash';
 
 const GlobalStateContext = React.createContext() 
 
@@ -13,16 +14,16 @@ export function GlobalStateProvider({ children }) {
       langModel:"gpt-3.5-turbo",
       temperature: 0,
       maxTokens: 4000,
-      impersonation: "",
+      sessionId: '',
     }
   )
 
-  function changeGlobalState(m) { 
-    setGlobalState(m) 
-  }
+  const updateGlobalState = (newState) => {
+    setGlobalState((prevState) => merge({}, prevState, newState));
+  };
 
   return ( 
-    <GlobalStateContext.Provider  value={{ globalState, changeGlobalState }}>
+    <GlobalStateContext.Provider  value={{ globalState, updateGlobalState }}>
       {children} 
     </GlobalStateContext.Provider> 
   )

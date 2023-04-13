@@ -9,15 +9,13 @@ import send from '../../../../assets/send.svg';
 import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
 import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
 
-import { sessionId } from '../../../../App';
-
 const MsgBox = (props) => {
+  const { globalState, updateGlobalState } = useGlobalStateContext();
   const { connectionStatus, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocketContext();
   const [lastMessage, setLastMessage] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
-  const globalState = useGlobalStateContext();
   const [conversationId, setConversationId] = useState('initialize');
   const textareaRef = useRef(null);
   const [mySelectedworkflow, setMySelectedworkflow] = useState(null);
@@ -86,7 +84,7 @@ const MsgBox = (props) => {
     props.setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
     sendJsonMessagePlus({
-      sessionId: sessionId,
+      sessionId: globalState.sessionId,
       userId: props.user.userId,
       selectedworkflowId: props.selectedworkflow.id,
       conversationId: conversationId,

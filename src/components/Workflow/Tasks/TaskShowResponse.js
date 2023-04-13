@@ -3,9 +3,10 @@ import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
 import { serverUrl } from '../../../config';
-import { sessionId } from '../../../App';
+import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
 
 const TaskShowResponse = (props) => {
+    const { globalState, updateGlobalState } = useGlobalStateContext();
     const { taskDone, leaving } = props;
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState('');
@@ -22,7 +23,7 @@ const TaskShowResponse = (props) => {
         setFetchedId(props.id)
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${props?.id}`, {
+        fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${props?.id}`, {
             credentials: 'include'
         })
         .then((response) => response.json())

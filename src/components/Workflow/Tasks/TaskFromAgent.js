@@ -2,12 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { sessionId } from '../../../App';
 import { serverUrl } from '../../../config';
 import { useWebSocketContext } from '../../../contexts/WebSocketContext';
+import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
 
 const TaskFromAgent = (props) => {
-    
+    const { globalState, updateGlobalState } = useGlobalStateContext();
+  
     const { id, leaving, prev_step, taskDone } = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
@@ -59,7 +60,7 @@ const TaskFromAgent = (props) => {
         setFetchedId(props.id)
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${sessionId}&step_id=${props.id}`, {
+        fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${props.id}`, {
             credentials: 'include'
         })
         .then((response) => response.json())
@@ -90,7 +91,7 @@ const TaskFromAgent = (props) => {
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
-                    sessionId: sessionId,
+                    sessionId: globalState.sessionId,
                     component: 'TaskFromAgent',
                     step_id: fetchedId,
                     prev_step: prev_step,

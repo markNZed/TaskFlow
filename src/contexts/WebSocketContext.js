@@ -1,6 +1,7 @@
 import React,{ useContext, useState } from 'react';
 import { EventEmitter } from 'events';
 import useWebSocket from 'react-use-websocket'
+import { useGlobalStateContext } from './GlobalStateContext';
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -10,10 +11,11 @@ export function useWebSocketContext() {
     return useContext(WebSocketContext);
 }
 
-export function WebSocketProvider({ children, socketUrl, sessionId, address }) {
+export function WebSocketProvider({ children, socketUrl, address }) {
     const [webSocket, setWebSocket] = useState(null);
     const webSocketEventEmitter = new WebSocketEventEmitter();
-
+    const { globalState, updateGlobalState } = useGlobalStateContext();
+    
     // This needs to move to API
     const [lastAddress, setLastAddress] = useState('');
 
@@ -30,8 +32,10 @@ export function WebSocketProvider({ children, socketUrl, sessionId, address }) {
         },
         onMessage: (e) => {
         const j = JSON.parse(e.data)
-        if (j?.sessionId && sessionId === "") {
-            sessionId = j.sessionId
+        if (j?.sessionId && globalState.sessionId === '') {
+            updateGlobalState({
+                sessionId : j.sessionId
+            })
             console.log("Init sessionId ", j.sessionId)
         }
         webSocketEventEmitter.emit('message', e);
@@ -45,10 +49,11 @@ export function WebSocketProvider({ children, socketUrl, sessionId, address }) {
     const sendJsonMessagePlus = function(m) {
         // Only send the address when it changes
         if (lastAddress != address && address) {
-        m.address = address
+            m.address = address
+            setLastAddress(address)
         }
-        if (sessionId) {
-        m.sessionId = sessionId
+        if (globalState.sessionId) {
+            m.sessionId = globalState.sessionId
         }
         sendJsonMessage(m)
     }
@@ -62,7 +67,6 @@ export function WebSocketProvider({ children, socketUrl, sessionId, address }) {
       }[webSocket.readyState]
     : 'Uninstantiated';
   
-
     return (
       <WebSocketContext.Provider value={{connectionStatus, webSocketEventEmitter, sendJsonMessagePlus}}>
         {children}
