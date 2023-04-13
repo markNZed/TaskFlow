@@ -5,7 +5,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TaskFromAgent from "./Tasks/TaskFromAgent"
 import TaskShowResponse from "./Tasks/TaskShowResponse"
 
-import { serverUrl, sessionId } from '../../App';
+import { serverUrl } from '../../config';
+import { sessionId } from '../../App';
 
 function WorkflowStepper(props) {
   const { selectedworkflow } = props;

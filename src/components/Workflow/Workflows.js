@@ -16,7 +16,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import WorkflowStepper from "./WorkflowStepper"
-import { serverUrl } from '../../App';
+import { serverUrl } from '../../config';
 
 const queryClient = new QueryClient()
 

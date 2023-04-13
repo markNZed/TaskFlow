@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl, sessionId } from '../../../App';
+import { serverUrl } from '../../../config';
+import { sessionId } from '../../../App';
 
 const TaskShowResponse = (props) => {
     const { taskDone, leaving } = props;

@@ -3,19 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
 import Workflows from "./components/Workflow/Workflows"
-import { WebSocketProvider, WebSocketEventEmitter } from './contexts/WebSocketContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
+import { socketUrl } from './config';
 
-const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-
-var socketHost = window.location.hostname
-var socketPort = process.env.REACT_APP_WS_LOCALHOST_PORT || 5000
-if (window.location.hostname !== "localhost") {
-  socketPort = process.env.REACT_APP_WS_PORT || socketPort
-  socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
-}
 var sessionId = null
-const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
-const serverUrl = window.location.protocol + `//${socketHost}:${socketPort}/`
 
 function App() {
   const [location, setLocation] = useState(null);
@@ -74,4 +65,4 @@ function App() {
 }
 
 export default App;
-export { socketUrl, serverUrl, sessionId };
+export { sessionId };

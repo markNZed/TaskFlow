@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl, sessionId } from '../../../App';
+import { sessionId } from '../../../App';
+import { serverUrl } from '../../../config';
 import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 
 const TaskFromAgent = (props) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TreeView, TreeItem } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { serverUrl } from '../../App';
+import { serverUrl } from '../../config';
 
 function WorkflowTree(props) {
     const [workflows, setworkflows] = useState(null);
