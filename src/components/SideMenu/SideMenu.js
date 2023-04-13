@@ -2,7 +2,7 @@
 import React, {  useCallback, useState } from 'react';
 
 // contexts
-import { useModelChange, useModel } from '../../contexts/ModelContext';
+import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 
 // utils
 import {AVAILABLE_MODELS} from "../../utils/constants"
@@ -19,9 +19,9 @@ import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 
 const SideMenu = (props) => {
-  const setModel = useModelChange();
+
   const [openToast, setOpenToast] = useState(false);
-  const model = useModel();
+  const { globalState, changeGlobalState } = useGlobalStateContext();
   
   const handleToastClose = useCallback(
     (event, reason) => {
@@ -37,10 +37,10 @@ const SideMenu = (props) => {
         <div className={`${props.user?.interface === 'simple' ? 'hide' : ''}`}>
 
           <SelectBox
-            value={model.langModel}
+            value={globalState.langModel}
             label="Model"
             onSelect={(e)=>{
-              setModel({...model, 
+              changeGlobalState({...globalState, 
                 langModel: e.target.value
               });
             }}
@@ -50,12 +50,12 @@ const SideMenu = (props) => {
           <SliderBox
             toolTipDesc={"Higher value, the more creative of the model"}
             title="Creativity" 
-            value={model.temperature}
+            value={globalState.temperature}
             min={0}
             max={1}
             step={0.1}
             onChange={(e)=>{
-              setModel({...model, 
+              changeGlobalState({...globalState, 
                 temperature: e.target.value
               })
             }}
@@ -64,14 +64,14 @@ const SideMenu = (props) => {
           <SliderBox
             toolTipDesc={"Maximum number of Words the model can generate"}
             title="Max tokens" 
-            value={model.maxTokens}
+            value={globalState.maxTokens}
             onChange={(e)=>{
-              setModel({...model, 
+              changeGlobalState({...globalState, 
                 maxTokens: e.target.value
               })
             }}
             min={10}
-            /*max={model.langModel === "text-davinci-003" ? 4000 : 8000}*/
+            /*max={globalState.langModel === "text-davinci-003" ? 4000 : 8000}*/
             max={4096}
             step={100}
           />

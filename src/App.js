@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
 import Workflows from "./components/Workflow/Workflows"
-import { WebSocketContext, WebSocketEventEmitter } from './contexts/WebSocketContext';
-import useWebSocket from 'react-use-websocket'
+import { WebSocketProvider, WebSocketEventEmitter } from './contexts/WebSocketContext';
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
 
@@ -14,13 +13,11 @@ if (window.location.hostname !== "localhost") {
   socketPort = process.env.REACT_APP_WS_PORT || socketPort
   socketHost = process.env.REACT_APP_WS_HOST || 'localhost'
 }
-var sessionId = ""
+var sessionId = null
 const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
 const serverUrl = window.location.protocol + `//${socketHost}:${socketPort}/`
 
 function App() {
-  const [webSocket, setWebSocket] = useState(null);
-  const webSocketEventEmitter = new WebSocketEventEmitter();
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState('');
 
@@ -64,45 +61,15 @@ function App() {
     }
   }, [location]);
 
-  // Here we fetch the sessionId if we don't already have one
-  const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
-    reconnectAttempts: 10,
-    reconnectInterval: 500,
-    shouldReconnect: (closeEvent) => {
-      return true;
-    },
-    onOpen: (each) => {
-      console.log('App webSocket connection established.');
-      setWebSocket(getWebSocket())
-    },
-    onMessage: (e) => {
-      const j = JSON.parse(e.data)
-      if (j?.sessionId && sessionId === "") {
-        sessionId = j.sessionId
-        console.log("j.sessionId ", j.sessionId)
-      }
-      webSocketEventEmitter.emit('message', e);
-    },
-    onClose: (event) => {
-      console.log(`App webSocket closed with code ${event.code} and reason '${event.reason}'`);
-    },
-
-  });
-
-  const sendJsonMessagePlus = function(m) {
-    m.address = address
-    sendJsonMessage(m)
-  }
-
   return (
-    <WebSocketContext.Provider value={{ webSocket, webSocketEventEmitter, sendJsonMessagePlus }}>
+    <WebSocketProvider socketUrl={socketUrl} sessionId={sessionId} address={address}>
       <Router>
         <Routes>
           <Route exact path="/" element={<Workflows/>} />
           <Route path="/authenticated" element={<Workflows/>} />
         </Routes>
       </Router>
-    </WebSocketContext.Provider>
+    </WebSocketProvider>
   );
 }
 

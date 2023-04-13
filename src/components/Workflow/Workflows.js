@@ -6,7 +6,7 @@ import '../../styles/normal.css';
 import ChatArea from "./Tasks/Chat/ChatArea"
 import SideMenu from "../SideMenu/SideMenu"
 import ObjectDisplay from "../Generic/ObjectDisplay"
-import { ModelProvider } from '../../contexts/ModelContext'
+import { GlobalStateProvider } from '../../contexts/GlobalStateContext'
 import Stack from '@mui/material/Stack';
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -58,7 +58,7 @@ function Workflows() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ModelProvider>
+      <GlobalStateProvider>
         <div className="App">
 
           <AppBar
@@ -143,7 +143,7 @@ function Workflows() {
 
           </Stack>
         </div>
-      </ModelProvider>
+      </GlobalStateProvider>
 
       <div className={`${user?.interface === 'simple' ? 'hide' : ''}`}>
         { <ReactQueryDevtools 

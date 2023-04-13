@@ -6,18 +6,18 @@ import PromptDropdown from './PromptDropdown';
 import send from '../../../../assets/send.svg';
 
 // contexts
-import { useModel } from '../../../../contexts/ModelContext';
-import { useWebSocket } from '../../../../contexts/WebSocketContext';
+import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
+import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
 
 import { sessionId } from '../../../../App';
 
 const MsgBox = (props) => {
-  const { webSocket, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocket();
+  const { connectionStatus, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocketContext();
   const [lastMessage, setLastMessage] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
-  const model = useModel();
+  const globalState = useGlobalStateContext();
   const [conversationId, setConversationId] = useState('initialize');
   const textareaRef = useRef(null);
   const [mySelectedworkflow, setMySelectedworkflow] = useState(null);
@@ -69,15 +69,6 @@ const MsgBox = (props) => {
     };
   }, [webSocketEventEmitter, props.msgs, props.selectedworkflow.id]);
 
-  const connectionStatus = webSocket
-  ? {
-      [WebSocket.CONNECTING]: 'Connecting',
-      [WebSocket.OPEN]: 'Open',
-      [WebSocket.CLOSING]: 'Closing',
-      [WebSocket.CLOSED]: 'Closed',
-    }[webSocket.readyState]
-  : 'Uninstantiated';
-
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
     if (!newMsg){
@@ -100,12 +91,12 @@ const MsgBox = (props) => {
       selectedworkflowId: props.selectedworkflow.id,
       conversationId: conversationId,
       prompt: newMsg,
-      ...model,
+      ...globalState,
     });
     console.log("conversationId sent " + conversationId)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, model, props.user, props.selectedworkflow.id]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, props.user, props.selectedworkflow.id]);
 
   useEffect(() => {
    // Access the form element using the ref

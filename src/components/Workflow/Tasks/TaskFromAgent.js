@@ -3,13 +3,13 @@ import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
 import { serverUrl, sessionId } from '../../../App';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 
 const TaskFromAgent = (props) => {
     
     const { id, leaving, prev_step, taskDone } = props;
 
-    const { webSocketEventEmitter } = useWebSocket();
+    const { webSocketEventEmitter } = useWebSocketContext();
 
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState("");
