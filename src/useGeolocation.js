@@ -48,6 +48,5 @@ export function useGeolocation() {
     }
   }, [location]);
 
-
   return { address, error };
 }
