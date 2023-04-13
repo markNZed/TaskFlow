@@ -1,11 +1,13 @@
 /* ToDo
 -------
-Change model context with session in client
-Default agent for user (perhaps have user state e.g. last active conversation)
+Change model context with global state context
+  MobX uses reactive programming principles and focuses on simplicity and automatic updates.
+  Not worth learning MObX, should refactor first.
+  Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
+Create an API context
 Components repository so can be shared between server and client
 Code the workflowId in the step
 workflowhierarchy.mjs instead of hierarchical data structure
-Workflows in separate files
 These should be from the workflow: langModel = 'gpt-3.5-turbo', temperature = 0, maxTokens
   Perhaps the UI update the workflow? 
   Perhaps defaults ? 
@@ -24,12 +26,13 @@ Should error if agent not found - no default
 The stream/send could have a step ID.
 Could include docker in git
 Don't use socket from client to server
-Client should send address only if it changes
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
   Workflow features:
     Allow the user to specify the system prompt.
+    Default agent for user (perhaps have user state e.g. last active conversation)
+    Use a different route for configuring: user, session, workflow, task
 -------
 */
 
@@ -208,15 +211,11 @@ async function prompt_response_async(sessionId, step) {
 
   let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
   if (selectedworkflowId) { 
-    workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
-    if (workflow) {
-      console.log("workflow from selectedworkflowId")
-    } else {
-      workflow = utils.findSubObjectWithKeyValue(workflows, 'id', selectedworkflowId);
-      await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
-      console.log("Found workflow " + workflow.id)
-    }
-  }
+    // Don;t save workflow so we can see updates
+    workflow = utils.findSubObjectWithKeyValue(workflows, 'id', selectedworkflowId);
+    await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+    console.log("Found workflow " + workflow.id)
+}
 
   if (workflow) {
     langModel = workflow?.model || langModel
@@ -363,6 +362,7 @@ async function prompt_response_async(sessionId, step) {
       temperature: temperature,
     },
     parentMessageId: lastMessageId,
+    systemMessage: systemMessage,
   };
 
   if (!server_step) {
@@ -370,16 +370,6 @@ async function prompt_response_async(sessionId, step) {
   }
 
   // steps in workflow could add messages
-
-  // May not need + agent.name for systemMessage if 
-  
-  // We need to keep the systemMessage as an explicit message to avoid it being truncated when conversation grows
-  // Not sure we need this now
-  if (await sessionsStore_async.has(sessionId + selectedworkflowId + agent.name + 'systemMessage')) {
-    messageParams.systemMessage = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'systemMessage')
-  } else {
-    messageParams.systemMessage = systemMessage;
-  }
 
   sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'systemMessage', messageParams.systemMessage)
 
