@@ -5,19 +5,17 @@ import App from './App';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { GlobalStateProvider } from './contexts/GlobalStateContext'
 import { socketUrl } from './config';
-import { useGeolocation } from './useGeolocation';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // const root = ReactDOM.createRoot(document.getElementById('root'));
 //root.render(
     
 function Root() {
-    const { address } = useGeolocation();
  
     // <React.StrictMode> was causing issues with double loading
     return (
         <GlobalStateProvider>
-            <WebSocketProvider socketUrl={socketUrl} address={address}>
+            <WebSocketProvider socketUrl={socketUrl}>
                 <Router>
                     <App/>
                 </Router>

@@ -11,11 +11,11 @@ export function useWebSocketContext() {
     return useContext(WebSocketContext);
 }
 
-export function WebSocketProvider({ children, socketUrl, address }) {
+export function WebSocketProvider({ children, socketUrl}) {
     const [webSocket, setWebSocket] = useState(null);
     const webSocketEventEmitter = new WebSocketEventEmitter();
     const { globalState, updateGlobalState } = useGlobalStateContext();
-    
+
     // This needs to move to API
     const [lastAddress, setLastAddress] = useState('');
 
@@ -48,7 +48,7 @@ export function WebSocketProvider({ children, socketUrl, address }) {
 
     const sendJsonMessagePlus = function(m) {
         // Only send the address when it changes
-        if (lastAddress != address && address) {
+        if (globalState?.address && lastAddress != globalState.address) {
             m.address = address
             setLastAddress(address)
         }
