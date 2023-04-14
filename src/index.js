@@ -1,14 +1,11 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './App';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { GlobalStateProvider } from './contexts/GlobalStateContext'
 import { socketUrl } from './config';
 import { BrowserRouter as Router } from 'react-router-dom';
-
-// const root = ReactDOM.createRoot(document.getElementById('root'));
-//root.render(
     
 function Root() {
  

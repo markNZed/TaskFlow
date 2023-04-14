@@ -18,7 +18,6 @@ function WorkflowStepper(props) {
   const [visitedSteps, setVisitedSteps] = useState([]);
   const [leaving, setLeaving] = useState(null);
   const [expanded, setExpanded] = useState(['start']);
-  const [myStepKey, setMyStepKey] = useState("");
 
   function handleStepNavigation(currentStep, action) {
     const currentStepData = steps[currentStep];
@@ -33,6 +32,7 @@ function WorkflowStepper(props) {
       // Check if the previous step is defined and update the active step accordingly
       if (currentStepData) { 
         const prev = visitedSteps[visitedSteps.length - 2];
+        setLeaving({direction: 'prev', step: currentStep});
         setActiveStep(prev);
         setVisitedSteps((prevVisitedSteps) => prevVisitedSteps.slice(0, -1));
       }
@@ -47,6 +47,7 @@ function WorkflowStepper(props) {
       if (steps[nextStepKey]?.server_step) {
         console.log("Server step " + nextStepKey)
         setServerStep(nextStepKey);
+        // Perhaps setActiveStep(null) to deal with returning to an task after server side
       } else {
         setActiveStep(nextStepKey);
         console.log("Client step " + nextStepKey)
@@ -60,17 +61,27 @@ function WorkflowStepper(props) {
 
   useEffect(() => {
     if (steps[activeStep] && steps[activeStep].next === serverStep) {
+
+       // Note this is using steps[serverStep] may be an argument
       async function fetchData() { 
-        let id = selectedworkflow?.id + '.' + serverStep
-        let updatedStep = await fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${id}`, {
-          credentials: 'include'
-        })
-        .then((response) => response.json())
-        .catch((err) => {
-            console.log(err.message);
-        });
+
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+            sessionId: globalState.sessionId,
+            step: steps[serverStep],
+            })
+        };
+      
+        let updatedStep = await fetch(`${serverUrl}api/step_post`, requestOptions)
+            .then((response) => response.json())
+            .catch((err) => {
+                console.log(err.message);
+            });
+
         setServerStep(null)
-        //updateStep(updatedStep)
         let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
         tmpSteps[serverStep] = updatedStep
         setSteps(tmpSteps)
@@ -78,6 +89,7 @@ function WorkflowStepper(props) {
         console.log("Client step after server step " + updatedStep.next)
         setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, updatedStep.next]);
       }
+
       fetchData()
     }
   }, [steps, setSteps, serverStep, activeStep, setActiveStep, selectedworkflow]);     
@@ -138,9 +150,9 @@ function WorkflowStepper(props) {
               {(() => {
                 switch (steps[stepKey].component) {
                   case 'TaskFromAgent':
-                    return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep}/>;
+                    return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep} activeStep={activeStep}/>;
                   case 'TaskShowResponse':
-                    return <TaskShowResponse  stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep}/>;
+                    return <TaskShowResponse  stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep} activeStep={activeStep}/>;
                   case 'TaskChoose':
                     return '' // ServerSide
                   case 'ServerSide':

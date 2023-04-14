@@ -7,13 +7,14 @@ class WebSocketEventEmitter extends EventEmitter {}
 
 const WebSocketContext = React.createContext();
 
+export const webSocketEventEmitter = new WebSocketEventEmitter();
+
 export function useWebSocketContext() {
     return useContext(WebSocketContext);
 }
 
 export function WebSocketProvider({ children, socketUrl}) {
     const [webSocket, setWebSocket] = useState(null);
-    const webSocketEventEmitter = new WebSocketEventEmitter();
     const { globalState, updateGlobalState } = useGlobalStateContext();
 
     // This needs to move to API
@@ -26,22 +27,37 @@ export function WebSocketProvider({ children, socketUrl}) {
         shouldReconnect: (closeEvent) => {
         return true;
         },
-        onOpen: (each) => {
-        console.log('App webSocket connection established.');
-        setWebSocket(getWebSocket())
+        onOpen: (e) => {
+            console.log('App webSocket connection established.');
+            let ws = getWebSocket()
+            setWebSocket(ws)
+            const intervalId = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                  ws.send(`{"ping" : "ok"}`);
+                } else {
+                  // WebSocket is not open, clear the interval
+                  clearInterval(intervalId);
+                }
+            }, 30 * 1000); // 30 seconds
+            ws.pingIntervalId = intervalId;
         },
         onMessage: (e) => {
-        const j = JSON.parse(e.data)
-        if (j?.sessionId && globalState.sessionId === '') {
-            updateGlobalState({
-                sessionId : j.sessionId
-            })
-            console.log("Init sessionId ", j.sessionId)
-        }
-        webSocketEventEmitter.emit('message', e);
+            const j = JSON.parse(e.data)
+            if (j?.sessionId && globalState.sessionId === '') {
+                updateGlobalState({
+                    sessionId : j.sessionId
+                })
+                console.log("Init sessionId ", j.sessionId)
+            }
+            webSocketEventEmitter.emit('message', e);
+            //console.log(e)
         },
-        onClose: (event) => {
-        console.log(`App webSocket closed with code ${event.code} and reason '${event.reason}'`);
+        onClose: (e) => {
+            console.log(`App webSocket closed with code ${e.code} and reason '${e.reason}'`);
+            let ws = getWebSocket()
+            if (ws.pingIntervalId) {
+                clearInterval(ws.pingIntervalId);
+            }
         },
 
     });
@@ -74,4 +90,3 @@ export function WebSocketProvider({ children, socketUrl}) {
     );
 }
 
-export {WebSocketEventEmitter};

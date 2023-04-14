@@ -11,33 +11,50 @@ const TaskShowResponse = (props) => {
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState('');
     const [myStepKey, setMyStepKey] = useState("");
+    const [myStep, setMyStep] = useState('');
 
     useEffect(() => {
         setMyStepKey(props.stepKey)
+        setMyStep(props.step)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
     // Note the we don't really need to fetch as the text is in the exrecise definition
     useEffect(() => {
-        if (props.id === fetchedId) {return}
+        if (!myStep) {return}
         setFetchedId(props.id)
+        //console.log(props)
         // Fetch the text
         // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${props?.id}`, {
-            credentials: 'include'
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data?.error) {
-                setResponse("ERROR " + data?.error);
-            } else if (data?.response) {
-                setResponse(data?.response);
-            }
-        })
-        .catch((err) => {
-            console.log(err.message);
-        });
-    }, [props.id, fetchedId]);
+
+        async function fetchData() { 
+
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                sessionId: globalState.sessionId,
+                step: myStep,
+                })
+            };
+          
+            fetch(`${serverUrl}api/step_post`, requestOptions)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data?.error) {
+                        setResponse("ERROR " + data?.error);
+                    } else if (data?.response) {
+                        const text = data.response
+                        setResponse(text);
+                    }
+                })
+                .catch(error => console.log("ERROR " + error.message));
+        }
+
+        fetchData()           
+
+    }, [myStep]);
 
     useEffect(() => {
         if (leaving?.step === myStepKey) {

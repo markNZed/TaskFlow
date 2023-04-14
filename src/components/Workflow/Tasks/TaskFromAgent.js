@@ -9,113 +9,236 @@ import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
 const TaskFromAgent = (props) => {
     const { globalState, updateGlobalState } = useGlobalStateContext();
   
-    const { id, leaving, prev_step, taskDone } = props;
+    const { id, leaving, taskDone, stepKey, step, updateStep, activeStep } = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
-    const [fetchedId, setFetchedId] = useState('');
-    const [response, setResponse] = useState("");
-    const [summary, setSummary] = useState("");
-    const [wordCount, setWordCount] = useState(0);
-    const [textWordCount, setTextWordCount] = useState(0);
-    const textareaRef = useRef(null);
-    const [textareaHeight, setTextareaHeight] = useState(0);
-    const [myStepKey, setMyStepKey] = useState("");
-    const [myStep, setMyStep] = useState("");
+    const [fetched, setFetched] = useState('');
+    const [fetchNow, setFetchNow] = useState('');
+    const [fetchResponse, setfetchResponse] = useState('');
+    const [responseText, setResponseText] = useState('');
+    const [userInput, setUserInput] = useState('');
+    const [showUserInput, setShowUserInput] = useState(false);
+    const [userInputWordCount, setUserInputWordCount] = useState(0);
+    const [responseTextWordCount, setResponseTextWordCount] = useState(0);
+    const userInputRef = useRef(null);
+    const [userInputHeight, setUserInputHeight] = useState(0);
+    const [myStepKey, setMyStepKey] = useState('');
+    const [myStep, setMyStep] = useState('');
+    const [mySubStep, setMySubStep] = useState('');
+    const [lastMySubStep, setLastMySubStep] = useState('');
 
+    // Should be a utility function
+    const updateMyStep = (key, value) => {
+        setMyStep((prevStep) => ({
+          ...prevStep,
+          [key]: value,
+        }));
+        // Need to use updateStep to share with workflow
+        //console.log("updateMyStep = (key, value)" + key + " " + value)
+    };
+
+    // Stream to the response field (should rename e.g. response_text)
+    // Need to stream the ID
     useEffect(() => {
-        if (id === fetchedId) {return}
+        if (myStepKey !== activeStep) {return}
         const handleMessage = (e) => {
+            //console.log(e)
             const j = JSON.parse(e.data)
             if (j?.delta) {
-                setResponse((prevResponse) => prevResponse + j.delta);
+                setResponseText((prevResponse) => prevResponse + j.delta);
             }
             if (j?.text) {
-                setResponse(j.text);
+                setResponseText(j.text);
             }
             if (j?.final) {
-                setResponse(j.final);
+                setResponseText(j.final);
             }
         };
         webSocketEventEmitter.on('message', handleMessage);
         return () => {
             webSocketEventEmitter.removeListener('message', handleMessage);
         };
-    }, [webSocketEventEmitter, fetchedId, id]);
+    }, []);
         
+    // myStepKey is useful as it changes once and can indicate initialization
     useEffect(() => {
-        setMyStepKey(props.stepKey)
-        setMyStep(props.step)
+        setMyStepKey(stepKey) // Should use props.step.name
+        setMyStep(step)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Initialize sub_step
+    // activeStep allows us to detect when we move back into this task
     useEffect(() => {
-        if (textareaRef.current) {
-            setTextareaHeight(textareaRef.current.scrollHeight + 300);
-        }
-    }, [summary]);
-
-    useEffect(() => {
-        if (props.id === fetchedId) {return}
-        setFetchedId(props.id)
-        // Fetch the text
-        // From the step we can find the workflow?
-        fetch(`${serverUrl}api/step?sessionId=${globalState.sessionId}&step_id=${props.id}`, {
-            credentials: 'include'
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data?.error) {
-                setResponse("ERROR " + data?.error);
-            } else if (data?.response) {
-                const text = data.response
-                const words = text.trim().split(/\s+/).filter(Boolean)
-                setTextWordCount(words.length)
-                setResponse(text);
+        if (myStepKey === activeStep) {
+            //console.log("Initialize sub_step for " + myStepKey)
+            if (!myStep?.sub_steps) {
+                // Default sequence is to just get response based on prompt text
+                updateMyStep('sub_steps', {'start' : 'response', 'response' : 'stop'})
             }
-        })
-        .catch((err) => {
-            console.log(err.message);
-        });
-    }, [props.id, fetchedId]);
+            setMySubStep('start')
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myStepKey, activeStep]); // stepCount removed
 
+    // Sub_step state machine
+    // Unique for each component that requires sub_steps
+    // Split into next_state and action - no
     useEffect(() => {
-        if ((leaving.direction === 'next') && leaving.step === myStepKey) {
+        if (mySubStep) {
+            // leaving now always true
+            const leaving_now = ((leaving.direction === 'next') && leaving.step === myStepKey)
+            const next_sub_Step = myStep.sub_steps[mySubStep]
+            console.log("myStepKey " + myStepKey + " sub_step state machine mySubStep " + mySubStep + " next_sub_Step " + next_sub_Step + " fetched " + fetched + " leaving_now " + leaving_now)
+            switch (mySubStep) {
+                case 'start':
+                    // Next state
+                    setMySubStep(next_sub_Step) 
+                    // Actions
+                    break;
+                case 'response':
+                    function response_action(text) {
+                        const words = text.trim().split(/\s+/).filter(Boolean)
+                        setResponseTextWordCount(words.length)
+                        setResponseText(text)
+                        if (next_sub_Step === 'input') {
+                            setShowUserInput(true)
+                        }
+                    }
+                    // We cache the response client side
+                    if (myStep?.response) {
+                        console.log('Response cached client side')
+                        // Next state
+                        setMySubStep(next_sub_Step)
+                        // Actions
+                        response_action(myStep.response)
+                    } else {
+                        if (fetched === mySubStep) { 
+                            setMySubStep(next_sub_Step) 
+                            setFetched(null)
+                        }
+                        // Actions
+                        // send prompt to get response from agent
+                        setFetchNow(mySubStep)
+                        // show the response
+                        if (fetched === mySubStep) {
+                            const text = fetchResponse.response
+                            updateMyStep('response', text)
+                            response_action(text) 
+                        }
+                    }
+                    break;
+                case 'input':
+                    // Next state
+                    if (fetched === mySubStep) {
+                        setMySubStep(next_sub_Step) 
+                        setFetched(null)
+                    }
+                    // Actions
+                    if (leaving_now) {
+                        // Send the userInput input
+                        setFetchNow(mySubStep)
+                        console.log("setFetchNow " + mySubStep)
+                    }
+                    break;
+                case 'stop':
+                    // Next state
+                    // Actions
+                    // Should defensively avoid calling taskDone twice?
+                    if (leaving_now) {
+                        taskDone(myStepKey)
+                    }
+                    break;
+                default:
+                    console.log('ERROR unknown sub_step : ' + mySubStep);
+            }
+            updateMyStep('sub_step', mySubStep)
+            setLastMySubStep(mySubStep) // Useful if we want an action only performed once in a state
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [leaving, fetched, mySubStep]);
 
-            console.log("props.leaving.direction " + leaving.direction + " props.leaving.step " + leaving.step)
+    // Align step data with userInput input
+    useEffect(() => {
+        updateMyStep('input', userInput)
+    }, [userInput]);
 
-            async function fetchData() { 
+    // Adjust userInput input area size when input grows
+    useEffect(() => {
+        if (userInputRef.current) {
+            setUserInputHeight(userInputRef.current.scrollHeight + 300);
+        }
+        // filter removes empty entry
+        const words = userInput.trim().split(/\s+/).filter(Boolean)
+        setUserInputWordCount(words.length);
+    }, [userInput]);
+
+    // This is generic
+    useEffect(() => {
+
+        if (fetchNow) {
+
+            console.log("Fetching TaskFromAgent myStepKey " + myStepKey + " mySubStep " + mySubStep)
+
+            async function fetchStep() { 
 
                 const requestOptions = {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
-                    sessionId: globalState.sessionId,
-                    component: 'TaskFromAgent',
-                    step_id: fetchedId,
-                    prev_step: prev_step,
-                    input: summary,
+                        sessionId: globalState.sessionId,
+                        step: myStep,
                     })
                 };
               
-                await fetch(`${serverUrl}api/input`, requestOptions)
-                    .catch(error => console.log("ERROR " + error.message));
-                taskDone(leaving.step)
+                fetch(`${serverUrl}api/step_post`, requestOptions)
+                    .then((response) => response.json()) // .json() returns a promise
+                    .then((data) => {
+                        if (data?.error) {
+                            console.log("ERROR " + data.error.message)
+                        } 
+                        setfetchResponse(data)
+                        //setMyStep(data) // Cannot do this yet
+                        //console.log("data " + data)
+                    })
+                    .then((e) => {
+                        setFetched(mySubStep)
+                        //console.log("setFetched " + mySubStep)
+                    })
+                    .catch(error => {
+                        console.log("ERROR " + error.message)
+                        setFetched(mySubStep)
+                    });
             }
 
-            fetchData()           
+            fetchStep()
         }
-        //
-    }, [ leaving ])
+    }, [fetchNow]);
+
+    /* Debug
 
     useEffect(() => {
-        // filter removes empty entry
-        const words = summary.trim().split(/\s+/).filter(Boolean)
-        setWordCount(words.length);
-    }, [summary]);
+        console.log("myStep : " + myStep?.name)
+    }, [myStep]);
+
+    useEffect(() => {
+        console.log("fetchNow : " + fetchNow)
+    }, [fetchNow]);
+
+    useEffect(() => {
+        console.log("stepCount : " + stepCount)
+    }, [stepCount]);
+
+    useEffect(() => {
+        console.log("fetched : " + fetched)
+    }, [fetched]);
+
+    */
 
     return (
+
         <div style={{ display: "flex", flexDirection: "column"}}>
             {props.step?.instruction ?
                 <Paper elevation={3} 
@@ -130,39 +253,39 @@ const TaskFromAgent = (props) => {
                 </Paper>
             : ''
             }
-            {response ?
+            {responseText ?
                 <>
                     <Paper elevation={3} 
                             style={{
                                 overflow: "auto",
-                                maxHeight: `calc(100vh - ${textareaHeight}px)`,
+                                maxHeight: `calc(100vh - ${userInputHeight}px)`,
                                 textAlign: 'justify',
                                 padding: "16px",
                             }}
                         >
-                        { response.split("\\n").map((line, index) => (
+                        { responseText.split("\\n").map((line, index) => (
                             <Typography style={{ marginTop: "16px" }} key={index}>{line}</Typography>
                         ))}
                     </Paper>
 
                     <p style={{ fontSize: "12px", color: "gray", margin: "4px 0 0 0", textAlign: "left" }}>
-                    {textWordCount} words
+                    {responseTextWordCount} words
                     </p>
                 </>
             :
               ''
             }
-            {myStep?.input !== undefined?
+            {showUserInput ?
                 <div>
                     <TextareaAutosize
                         placeholder={props.step?.input_label}
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
                         style={{ marginTop: "16px" }}
-                        ref={textareaRef}
+                        ref={userInputRef}
                     />
                     <p style={{ fontSize: "12px", color: "gray", margin: "4px 0 0 0", textAlign: "left" }}>
-                    {wordCount} words
+                    {userInputWordCount} words
                     </p>
                 </div>
             : ''
