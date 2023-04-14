@@ -1,24 +1,23 @@
 /* ToDo
 -------
-Replaced GET with POST, replaced send with send_post, replaced input with send_post, 
+Replace send_post with send 
 API context
 Process workflow to add name, flatten first
-Workflow > Task > Step (currently sub_step)
 Don't use socket from client to server (replace with API)
   Only used in MsgBox for sending user's prompt
   Could use the /api/input end point?
   Maybe stp and input should be merged
   Should break the TaskFromAgent into two steps
-    Like we have a server side step that does not update WorkflowStepper we could have the same thing on the client side?
-      Sub-step ? Basically another state machine within a task
+    Like we have a server side task that does not update WorkflowStepper we could have the same thing on the client side?
+      Steps ? Basically another state machine within a task
       1) generate text
       2) get user input
-      The sub-step could be advanced by the client - when some aspect of the step is complete thn it advances
+      The steps could be advanced by the client - when some aspect of the task is complete then it advances
 Replace sendJsonMessagePlus
   First create a new api/send_chat, then remove sendJsonMessagePlus, then merge into send_post ?
-Lodash should help for merging the step
+Lodash should help for merging the task
 Components repository so can be shared between server and client
-Code the workflowId in the step
+Code the workflowId in the task
 workflowhierarchy.mjs instead of hierarchical data structure
 Hierarchy of configuration:
   Defaults
@@ -31,7 +30,7 @@ Hierarchy of configuration:
                 User Task
                   Session Task
 Should error if agent not found - no default
-The stream/send could have a step ID.
+The stream/send could have a task ID.
 Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
 Include docker in git
 Defensive programming + logging
@@ -118,6 +117,7 @@ function wsSendObject(ws, message = {}) {
   } else {
     message['sessionId'] = ws.data['sessionId']
     ws.send(JSON.stringify(message));
+    console.log("wsSendObject sent")
   }
 }
 
@@ -153,15 +153,15 @@ websocketServer.on('connection', (ws) => {
     if (j?.selectedworkflowId) {
       const selectedworkflowId = j.selectedworkflowId
       await sessionsStore_async.set(sessionId + 'selectedworkflowId', selectedworkflowId);
-      // Initialize at step 'start'
-      //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', 'start');
+      // Initialize at task 'start'
+      //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedTask', 'start');
       console.log("sessionId + 'selectedworkflowId' " + selectedworkflowId)
     }
 
-    if (j?.selectedStep) {
-      const selectedStep = j.selectedStep
+    if (j?.selectedTask) {
+      const selectedTask = j.selectedTask
       const selectedworkflow = j.selectedworkflow
-      await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedStep', selectedStep);
+      await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedTask', selectedTask);
     }
 
     if (j?.address && j?.userId) {
@@ -170,13 +170,13 @@ websocketServer.on('connection', (ws) => {
     }
 
     if (j?.prompt) {
-       const step = {
+       const task = {
         'langModel' : j?.langModel,
         'temperature' : j?.temperature,
         'maxTokens' : j?.maxTokens,
         'prompt' : j.prompt,
       }
-      prompt_response_async(sessionId, step)
+      prompt_response_async(sessionId, task)
     }
 
   });
@@ -208,10 +208,10 @@ function SendIncrementalWs(partialResponse, conversationId, ws) {
   }
 }
 
-async function prompt_response_async(sessionId, step) {
+async function prompt_response_async(sessionId, task) {
 
-  let prompt = step.prompt
-  let stepKey = step?.name // We should require this later
+  let prompt = task.prompt
+  let taskName = task?.name // We should require this later
 
   let ws = connections.get(sessionId);
   let systemMessage = ''
@@ -220,7 +220,7 @@ async function prompt_response_async(sessionId, step) {
   let lastMessageId = null;
   let initializing = false;
   let use_cache = CACHE_ENABLE
-  let server_step = false;
+  let server_task = false;
   let langModel = defaults.langModel
   let temperature = defaults.temperature
   let maxTokens = defaults.maxTokens
@@ -279,26 +279,26 @@ async function prompt_response_async(sessionId, step) {
     }
   }
 
-  if (stepKey && workflow?.steps[stepKey]) {
-    if (typeof workflow.steps[stepKey]?.use_cache !== "undefined") {
-      use_cache = workflow.steps[stepKey].use_cache
-      console.log("Step set cache " + use_cache)
+  if (taskName && workflow?.tasks[taskName]) {
+    if (typeof workflow.tasks[taskName]?.use_cache !== "undefined") {
+      use_cache = workflow.tasks[taskName].use_cache
+      console.log("Task set cache " + use_cache)
     }
     if (agents) {
-      agent = agents[workflow.steps[stepKey]?.agent] || agent
-      console.log("Step set agent " + agent.name)
+      agent = agents[workflow.tasks[taskName]?.agent] || agent
+      console.log("Task set agent " + agent.name)
       prompt = agent?.prepend_prompt ? (agent?.prepend_prompt + prompt) : prompt
       if (agent?.prepend_prompt) {console.log("Prepend agent prompt " + agent.prepend_prompt)}
       prompt = agent?.append_prompt ? (prompt + agent.append_prompt) : prompt
       if (agent?.append_prompt) {console.log("Append agent prompt " + agent.append_prompt)}
     }
-    if (workflow.steps[stepKey]?.initialize || stepKey === 'start') {
+    if (workflow.tasks[taskName]?.initialize || taskName === 'start') {
       initializing = true
-      console.log("Step agent initializing")
+      console.log("Task agent initializing")
     }
-    langModel = workflow.steps[stepKey]?.model || langModel
-    if (workflow.steps[stepKey]?.model) {console.log("Step set model " + langModel)}
-    server_step = workflow.steps[stepKey]?.server_step || server_step
+    langModel = workflow.tasks[taskName]?.model || langModel
+    if (workflow.tasks[taskName]?.model) {console.log("Task set model " + langModel)}
+    server_task = workflow.tasks[taskName]?.server_task || server_task
   }
 
   // Need to do this after the agent stabilizes
@@ -322,13 +322,13 @@ async function prompt_response_async(sessionId, step) {
      console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
    }
 
-   console.log("stepKey " + stepKey)
+   console.log("taskName " + taskName)
 
-   if (stepKey && workflow?.steps[stepKey]) {
-    // console.log("workflow OK " + JSON.stringify(workflow.steps[stepKey].messages))
-    if (workflow.steps[stepKey]?.messages) {
-      lastMessageId = await utils.processMessages_async(workflow.steps[stepKey].messages, messageStore_async, lastMessageId)
-      console.log("Messages extended from stepKey " + stepKey + " lastMessageId " + lastMessageId)
+   if (taskName && workflow?.tasks[taskName]) {
+    // console.log("workflow OK " + JSON.stringify(workflow.tasks[taskName].messages))
+    if (workflow.tasks[taskName]?.messages) {
+      lastMessageId = await utils.processMessages_async(workflow.tasks[taskName].messages, messageStore_async, lastMessageId)
+      console.log("Messages extended from taskName " + taskName + " lastMessageId " + lastMessageId)
     }
   }
  
@@ -343,7 +343,7 @@ async function prompt_response_async(sessionId, step) {
   //  systemMessage.replace(/ADDRESS/, address);
   //}
 
-  // Could have messages instead of prompt in a step
+  // Could have messages instead of prompt in a task
   
   if (await sessionsStore_async.has(sessionId + 'userId')) {
     let userId = await sessionsStore_async.get(sessionId + 'userId')
@@ -386,11 +386,11 @@ async function prompt_response_async(sessionId, step) {
     systemMessage: systemMessage,
   };
 
-  if (!server_step) {
+  if (!server_task) {
     messageParams['onProgress'] = (partialResponse) => SendIncrementalWs(partialResponse, conversationId, ws)
   }
 
-  // steps in workflow could add messages
+  // tasks in workflow could add messages
 
   sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'systemMessage', messageParams.systemMessage)
 
@@ -418,7 +418,7 @@ async function prompt_response_async(sessionId, step) {
       'conversationId' : conversationId,
       'final' : text
     }
-    if (!server_step) { wsSendObject(ws, message) }
+    if (!server_task) { wsSendObject(ws, message) }
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
@@ -431,7 +431,7 @@ async function prompt_response_async(sessionId, step) {
         'conversationId' : conversationId,
         'final' : text
       }
-      if (!server_step) { wsSendObject(ws, message) }
+      if (!server_task) { wsSendObject(ws, message) }
       if (use_cache) {
         cache_async.set(cacheKey, response);
         console.log("cache stored key ", cacheKey);
@@ -447,7 +447,7 @@ async function prompt_response_async(sessionId, step) {
         'conversationId' : conversationId,
         'final' : text
       }
-      if (!server_step) { wsSendObject(ws, message) }
+      if (!server_task) { wsSendObject(ws, message) }
       return text
     })
   }
@@ -522,9 +522,9 @@ app.get('/api/user', async (req, res) => {
   }
 });
 
-async function workflow_from_id_async(sessionId, workflow_id, stepKey) {
+async function workflow_from_id_async(sessionId, workflow_id, taskName) {
   let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
-  if (workflow === undefined || stepKey === 'start') {
+  if (workflow === undefined || taskName === 'start') {
     workflow = utils.findObjectById(workflows, workflow_id)
     await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
   }
@@ -532,8 +532,8 @@ async function workflow_from_id_async(sessionId, workflow_id, stepKey) {
   return workflow
 }
 
-async function do_step_async(sessionId, workflow_id, stepKey, step) {
-  let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
+async function do_task_async(sessionId, workflow_id, taskName, task) {
+  let workflow = await workflow_from_id_async(sessionId, workflow_id, taskName)
   const ws = connections.get(sessionId);
   if (!ws) {
     // If the server has restarted the conenction is lost
@@ -541,36 +541,36 @@ async function do_step_async(sessionId, workflow_id, stepKey, step) {
     console.log(connections.keys())
     console.log("Has key " + connections.has(sessionId))
   }
-  let updated_step = {}
-  const component = workflow.steps[stepKey].component
+  let updated_task = {}
+  const component = workflow.tasks[taskName].component
   switch (component) {
     case 'TaskFromAgent':
-      updated_step = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
+      updated_task = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
       break;
     case 'TaskShowResponse':
-      updated_step = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
+      updated_task = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
       break;         
     case 'TaskChoose':
-      updated_step = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
+      updated_task = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
       break;         
     default:
-      updated_step = "ERROR: server unknown component:" + component
+      updated_task = "ERROR: server unknown component:" + component
   }
-  return updated_step
+  return updated_task
 }
 
-function extract_client_info(step, filter_list) {
-  const stepCopy = { ...step }; // or const objCopy = Object.assign({}, obj);
-  for (const key in stepCopy) {
+function extract_client_info(task, filter_list) {
+  const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
+  for (const key in taskCopy) {
     if (!filter_list.includes(key)) {
-      delete stepCopy[key];
+      delete taskCopy[key];
     }
   }
-  return stepCopy
+  return taskCopy
 }
 
-app.post('/api/step_post', async (req, res) => {
-  console.log("/api/step_post")
+app.post('/api/task_post', async (req, res) => {
+  console.log("/api/task_post")
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
@@ -578,32 +578,32 @@ app.post('/api/step_post', async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     const sessionId = req.body.sessionId;
-    const step = req.body.step;
-    const step_id = step.id;
+    const task = req.body.task;
+    const task_id = task.id;
 
     // Need to check for errors
-    let [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
+    let [workflow_id, taskName] = task_id.match(/^(.*)\.(.*)/).slice(1);
 
-    let updated_step = await do_step_async(sessionId, workflow_id, stepKey, step)
+    let updated_task = await do_task_async(sessionId, workflow_id, taskName, task)
 
-    while (updated_step?.server_step) {
-      // Check if the next step is server-side
-      stepKey = updated_step.next
-      let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
-      if (workflow.steps[stepKey]?.server_step) {
-        console.log("Next step is server side stepKey " + stepKey)
-        updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+    while (updated_task?.server_task) {
+      // Check if the next task is server-side
+      taskName = updated_task.next
+      let workflow = await workflow_from_id_async(sessionId, workflow_id, taskName)
+      if (workflow.tasks[taskName]?.server_task) {
+        console.log("Next task is server side taskName " + taskName)
+        updated_task = await do_task_async(sessionId, workflow_id, taskName)
       } else {
         break
       }
     }
 
-    let updated_client_step = extract_client_info(
-      updated_step, 
-      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_step', 'name']
+    let updated_client_task = extract_client_info(
+      updated_task, 
+      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_task', 'name']
     );
     // A function for each component? In a library.
-    res.send(JSON.stringify(updated_client_step));
+    res.send(JSON.stringify(updated_client_task));
   } else {
     res.status(200).json({ error: "No user" });
   }

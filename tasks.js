@@ -10,65 +10,65 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
+tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
 
-  const current_step = workflow.steps[stepKey]
+  const current_task = workflow.tasks[taskName]
 
-  console.log("TaskFromAgent stepKey " + stepKey + " sub_step " + step?.sub_step)
+  console.log("TaskFromAgent taskName " + taskName + " step " + task?.step)
 
-  // We have two potential sub_steps: ['response', 'input']
-  // We want to receive the step object from the client and from the server
-  if (step?.sub_step === 'input') {
-    if (current_step.input !== step.input) {
-      current_step.input = step.input
-      current_step.last_change = Date.now()
+  // We have two potential steps: ['response', 'input']
+  // We want to receive the task object from the client and from the server
+  if (task?.step === 'input') {
+    if (current_task.input !== task.input) {
+      current_task.input = task.input
+      current_task.last_change = Date.now()
       await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow);
     }
-    console.log('returning current_step')
-    return current_step
+    console.log('returning current_task')
+    return current_task
   }
 
-  // Here we assume we are dealing with response sub-step
+  // Here we assume we are dealing with response step
 
   let prompt = ""
-  if (current_step?.assemble_prompt) {
-    prompt += current_step.assemble_prompt.reduce(function(acc, curr) {
+  if (current_task?.assemble_prompt) {
+    prompt += current_task.assemble_prompt.reduce(function(acc, curr) {
       // Currently this assumes the parts are from the same workflow, could extend this
       const regex = /(^.+)\.(.+$)/;
       const matches = regex.exec(curr);
       if (matches) {
-        // console.log("matches step " + matches[1] + " " + matches[2])
-        if (workflow.steps[matches[1]] === undefined) {
-          console.log("workflow.steps " + matches[1] +" does not exist")
+        // console.log("matches task " + matches[1] + " " + matches[2])
+        if (workflow.tasks[matches[1]] === undefined) {
+          console.log("workflow.tasks " + matches[1] +" does not exist")
         }
-        if (workflow.steps[matches[1]][matches[2]] === undefined) {
-          console.log("workflow.steps " + matches[1] + " " + matches[2] + " does not exist")
+        if (workflow.tasks[matches[1]][matches[2]] === undefined) {
+          console.log("workflow.tasks " + matches[1] + " " + matches[2] + " does not exist")
         }
         // Will crash server if not present
-        return acc + workflow.steps[matches[1]][matches[2]]
+        return acc + workflow.tasks[matches[1]][matches[2]]
       } else {
         return acc + curr
       }
     });
     console.log("Prompt " + prompt)
   } else {
-    if (workflow.steps[stepKey]?.prompt) {
-      prompt += workflow.steps[stepKey]?.prompt
+    if (workflow.tasks[taskName]?.prompt) {
+      prompt += workflow.tasks[taskName]?.prompt
     }
   }
 
-  if (current_step?.messages_template) {
+  if (current_task?.messages_template) {
     console.log("Found messages_template")
-    current_step.messages = JSON.parse(JSON.stringify(current_step.messages_template)); // deep copy
+    current_task.messages = JSON.parse(JSON.stringify(current_task.messages_template)); // deep copy
     // assemble
-    current_step.messages.forEach(message => {
+    current_task.messages.forEach(message => {
       if (Array.isArray(message['content'])) {
         message['content'] = message['content'].reduce(function(acc, curr) {
-          // Currently this assumes the steps are from the same workflow, could extend this
+          // Currently this assumes the tasks are from the same workflow, could extend this
           const regex = /(^.+)\.(.+$)/;
           const matches = regex.exec(curr);
           if (matches) {
-            let substituted = workflow.steps[matches[1]][matches[2]]
+            let substituted = workflow.tasks[matches[1]][matches[2]]
             return acc + substituted
           } else {
             if (typeof curr === 'string') {
@@ -80,70 +80,70 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
         });
       }
     });
-    // console.log("current_step.messages " + JSON.stringify(workflow.steps[stepKey]))
+    // console.log("current_task.messages " + JSON.stringify(workflow.tasks[taskName]))
     await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   }
 
   let response_text = ''
   if (prompt) {
-    workflow.steps[stepKey].prompt = prompt
-    response_text = await prompt_response_callback_async(sessionId, workflow.steps[stepKey])
+    workflow.tasks[taskName].prompt = prompt
+    response_text = await prompt_response_callback_async(sessionId, workflow.tasks[taskName])
   }
-  workflow.steps[stepKey].response = response_text
-  workflow.steps[stepKey].last_change = Date.now()
+  workflow.tasks[taskName].response = response_text
+  workflow.tasks[taskName].last_change = Date.now()
   await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   console.log("Returning from tasks.TaskFromAgent ") // + response_text)
-  return workflow.steps[stepKey]
+  return workflow.tasks[taskName]
 };
 
-tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
+tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
 
-  console.log("TaskShowResponse stepKey " + stepKey)
+  console.log("TaskShowResponse taskName " + taskName)
 
-  const current_step = workflow.steps[stepKey]
+  const current_task = workflow.tasks[taskName]
 
   let response = ''
-  if (current_step?.assemble_response) {
-    response += current_step.assemble_response.reduce(function(acc, curr) {
+  if (current_task?.assemble_response) {
+    response += current_task.assemble_response.reduce(function(acc, curr) {
       // Currently this assumes the parts are from the same workflow, could extend this
       const regex = /(^.+)\.(.+$)/;
       const matches = regex.exec(curr);
       if (matches) {
-        // console.log("matches step " + matches[1] + " " + matches[2])
-        if (workflow.steps[matches[1]] === undefined) {
-          console.log("workflow.steps " + matches[1] +" does not exist")
+        // console.log("matches task " + matches[1] + " " + matches[2])
+        if (workflow.tasks[matches[1]] === undefined) {
+          console.log("workflow.tasks " + matches[1] +" does not exist")
         }
-        if (workflow.steps[matches[1]][matches[2]] === undefined) {
-          console.log("workflow.steps " + matches[1] + " " + matches[2] + " does not exist")
+        if (workflow.tasks[matches[1]][matches[2]] === undefined) {
+          console.log("workflow.tasks " + matches[1] + " " + matches[2] + " does not exist")
         }
         // Will crash server if not present
-        return acc + workflow.steps[matches[1]][matches[2]]
+        return acc + workflow.tasks[matches[1]][matches[2]]
       } else {
         return acc + curr
       }
     });
     console.log("Assembled response " + prompt)
   } else {
-    response = workflow.steps[stepKey].response
+    response = workflow.tasks[taskName].response
   }
   console.log("Returning from tasks.TaskShowResponse")
-  workflow.steps[stepKey].response = response
+  workflow.tasks[taskName].response = response
   sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
-  return workflow.steps[stepKey]
+  return workflow.tasks[taskName]
 }
 
-tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
+tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
   // First we get the response
-  console.log("TaskChoose stepKey " + stepKey)
+  console.log("TaskChoose taskName " + taskName)
 
-  workflow.steps[stepKey].response = null // Avoid using previously stored response
-  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) 
+  workflow.tasks[taskName].response = null // Avoid using previously stored response
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) 
 
-  const current_step = workflow.steps[stepKey]
-  //current_step.next_template: { true: 'stop', false: 'stop' },
+  const current_task = workflow.tasks[taskName]
+  //current_task.next_template: { true: 'stop', false: 'stop' },
 
-  const next_responses = Object.keys(current_step.next_template)
-  const next_states = Object.values(current_step.next_template)
+  const next_responses = Object.keys(current_task.next_template)
+  const next_states = Object.values(current_task.next_template)
   
   const phrases = [subtask.response, ...next_responses];
   
@@ -174,17 +174,17 @@ tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow
     embeddingsData.dispose();
   
     // Need to go to next state, can stay on server side
-    workflow.steps[stepKey].next = next_states[maxIndex]
+    workflow.tasks[taskName].next = next_states[maxIndex]
 
     sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
 
   } catch (error) {
     // Handle the error here
     console.error('An error occurred:', error);
-    workflow.steps[stepKey].error = error.message
+    workflow.tasks[taskName].error = error.message
   }
   
-  return workflow.steps[stepKey]
+  return workflow.tasks[taskName]
 
 }
 

@@ -1,5 +1,5 @@
-// Maybe multiple steps to build a prompt instead of one step
-// May want to specify token limits in the workflow steps
+// Maybe multiple tasks to build a prompt instead of one task
+// May want to specify token limits in the workflow tasks
 
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
@@ -19,8 +19,8 @@ const workflows_hierarchy = {
                     // system_message: "something",
                     // model: "gpt-4"
                     // suggested_prompts: ["an example"]
-                    steps: {
-                        start : {
+                    tasks: {
+                        start: {
                             text: "Hello",
                             component: 'TaskShowResponse',
                             next: 'summarize'
