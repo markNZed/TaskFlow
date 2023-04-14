@@ -10,11 +10,25 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
-
-  console.log("TaskFromAgent stepKey " + stepKey)
+tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
 
   const current_step = workflow.steps[stepKey]
+
+  console.log("TaskFromAgent stepKey " + stepKey + " sub_step " + step?.sub_step)
+
+  // We have two potential sub_steps: ['response', 'input']
+  // We want to receive the step object from the client and from the server
+  if (step?.sub_step === 'input') {
+    if (current_step.input !== step.input) {
+      current_step.input = step.input
+      current_step.last_change = Date.now()
+      await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow);
+    }
+    console.log('returning current_step')
+    return current_step
+  }
+
+  // Here we assume we are dealing with response sub-step
 
   let prompt = ""
   if (current_step?.assemble_prompt) {
@@ -66,6 +80,7 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
         });
       }
     });
+    // console.log("current_step.messages " + JSON.stringify(workflow.steps[stepKey]))
     await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   }
 
@@ -76,12 +91,12 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
   }
   workflow.steps[stepKey].response = response_text
   workflow.steps[stepKey].last_change = Date.now()
-  sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
-  console.log("Returning from tasks.TaskFromAgent " + response_text)
+  await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
+  console.log("Returning from tasks.TaskFromAgent ") // + response_text)
   return workflow.steps[stepKey]
 };
 
-tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
+tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
 
   console.log("TaskShowResponse stepKey " + stepKey)
 
@@ -117,12 +132,12 @@ tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, wo
   return workflow.steps[stepKey]
 }
 
-tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) {
+tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) {
   // First we get the response
   console.log("TaskChoose stepKey " + stepKey)
 
   workflow.steps[stepKey].response = null // Avoid using previously stored response
-  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async) 
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_callback_async, step) 
 
   const current_step = workflow.steps[stepKey]
   //current_step.next_template: { true: 'stop', false: 'stop' },

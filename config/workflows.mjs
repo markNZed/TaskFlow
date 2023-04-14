@@ -22,11 +22,13 @@ const workflows = {
                     steps: {
                         start : {
                             text: "Hello",
+                            name: 'start',
                             component: 'TaskShowResponse',
                             next: 'summarize'
                         },
                         summarize: {
                             agent: "chatgpt",
+                            name: 'summarize',
                             instruction: "Tell the user what to do",
                             initialize: true, // Because the start has no prompt so does not initialize things in server
                             prompt: "Tell me a story about something random.",
@@ -38,6 +40,7 @@ const workflows = {
                         },
                         structure: {
                             agent: "chatgpt",
+                            name: 'structure',
                             component: 'TaskFromAgent',
                             initialize: true,
                             instruction: "This is what I think of your response",

@@ -1,6 +1,21 @@
 /* ToDo
 -------
-Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
+Replaced GET with POST, replaced send with send_post, replaced input with send_post, 
+API context
+Process workflow to add name, flatten first
+Workflow > Task > Step (currently sub_step)
+Don't use socket from client to server (replace with API)
+  Only used in MsgBox for sending user's prompt
+  Could use the /api/input end point?
+  Maybe stp and input should be merged
+  Should break the TaskFromAgent into two steps
+    Like we have a server side step that does not update WorkflowStepper we could have the same thing on the client side?
+      Sub-step ? Basically another state machine within a task
+      1) generate text
+      2) get user input
+      The sub-step could be advanced by the client - when some aspect of the step is complete thn it advances
+Replace sendJsonMessagePlus
+  First create a new api/send_chat, then remove sendJsonMessagePlus, then merge into send_post ?
 Lodash should help for merging the step
 Components repository so can be shared between server and client
 Code the workflowId in the step
@@ -17,8 +32,9 @@ Hierarchy of configuration:
                   Session Task
 Should error if agent not found - no default
 The stream/send could have a step ID.
+Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
 Include docker in git
-Don't use socket from client to server (replace with API)
+Defensive programming + logging
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
@@ -98,7 +114,7 @@ var connections = new Map(); // Stores WebSocket instances with unique session I
 function wsSendObject(ws, message = {}) {
   // We need to check if ws is still active?
   if (!ws) {
-    console.log("Lost websocket for wsSendObject")
+    console.log("Lost websocket for wsSendObject " + JSON.stringify(ws))
   } else {
     message['sessionId'] = ws.data['sessionId']
     ws.send(JSON.stringify(message));
@@ -122,6 +138,10 @@ websocketServer.on('connection', (ws) => {
       sessionId = j.sessionId
       connections.set(sessionId, ws);
       ws.data['sessionId'] = sessionId
+    }
+
+    if (j?.ping) {
+      wsSendObject(ws, {"pong" : "ok"})
     }
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
@@ -182,6 +202,9 @@ function SendIncrementalWs(partialResponse, conversationId, ws) {
       wsSendObject(ws, message)
     }
     ws.data['delta_count'] += 1
+    //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
+  } else {
+    console.log("Lost websocket in SendIncrementalWs ")
   }
 }
 
@@ -203,8 +226,10 @@ async function prompt_response_async(sessionId, step) {
   let maxTokens = defaults.maxTokens
 
   let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
-  if (selectedworkflowId) { 
-    // Don;t save workflow so we can see updates
+  // Need to get workflow from session because data is stored there
+  workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
+
+  if (selectedworkflowId && !workflow) { 
     workflow = utils.findSubObjectWithKeyValue(workflows, 'id', selectedworkflowId);
     await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
     console.log("Found workflow " + workflow.id)
@@ -300,6 +325,7 @@ async function prompt_response_async(sessionId, step) {
    console.log("stepKey " + stepKey)
 
    if (stepKey && workflow?.steps[stepKey]) {
+    // console.log("workflow OK " + JSON.stringify(workflow.steps[stepKey].messages))
     if (workflow.steps[stepKey]?.messages) {
       lastMessageId = await utils.processMessages_async(workflow.steps[stepKey].messages, messageStore_async, lastMessageId)
       console.log("Messages extended from stepKey " + stepKey + " lastMessageId " + lastMessageId)
@@ -481,7 +507,7 @@ app.get('/authenticate', async (req, res) => {
 });
 
 app.get('/api/user', async (req, res) => {
-  console.log("/user")
+  console.log("/api/user")
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
@@ -506,7 +532,7 @@ async function workflow_from_id_async(sessionId, workflow_id, stepKey) {
   return workflow
 }
 
-async function do_step_async(sessionId, workflow_id, stepKey) {
+async function do_step_async(sessionId, workflow_id, stepKey, step) {
   let workflow = await workflow_from_id_async(sessionId, workflow_id, stepKey)
   const ws = connections.get(sessionId);
   if (!ws) {
@@ -519,13 +545,13 @@ async function do_step_async(sessionId, workflow_id, stepKey) {
   const component = workflow.steps[stepKey].component
   switch (component) {
     case 'TaskFromAgent':
-      updated_step = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      updated_step = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
       break;
     case 'TaskShowResponse':
-      updated_step = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      updated_step = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
       break;         
     case 'TaskChoose':
-      updated_step = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async)
+      updated_step = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, stepKey, prompt_response_async, step)
       break;         
     default:
       updated_step = "ERROR: server unknown component:" + component
@@ -543,20 +569,22 @@ function extract_client_info(step, filter_list) {
   return stepCopy
 }
 
-app.get('/api/step', async (req, res) => {
-  console.log("/step " + req.query?.step_id)
+app.post('/api/step_post', async (req, res) => {
+  console.log("/api/step_post")
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
   if (userId) {
-    //console.log("req.query " + JSON.stringify(req.query))
-    const step_id = req.query.step_id;
-    const sessionId = req.query.sessionId;
+    //console.log("req.body " + JSON.stringify(req.body))
+    const sessionId = req.body.sessionId;
+    const step = req.body.step;
+    const step_id = step.id;
+
     // Need to check for errors
     let [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
 
-    let updated_step = await do_step_async(sessionId, workflow_id, stepKey)
+    let updated_step = await do_step_async(sessionId, workflow_id, stepKey, step)
 
     while (updated_step?.server_step) {
       // Check if the next step is server-side
@@ -572,38 +600,10 @@ app.get('/api/step', async (req, res) => {
 
     let updated_client_step = extract_client_info(
       updated_step, 
-      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize']
+      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_step', 'name']
     );
     // A function for each component? In a library.
     res.send(JSON.stringify(updated_client_step));
-  } else {
-    res.send({userId: ''});
-  }
-});
-
-app.post('/api/input', async (req, res) => {
-  console.log("/input")
-  let userId = DEFAULT_USER
-  if (process.env.AUTHENTICATION === "cloudflare") {
-    userId = req.headers['cf-access-authenticated-user-email'];
-  }
-  if (userId) {
-    const sessionId = req.body.sessionId;
-    const component = req.body.component;
-    const step_id = req.body.step_id;
-    const input = req.body.input;
-
-    // Update the session workflow with the information
-    // Then next step will use that
-    const [workflow_id, stepKey] = step_id.match(/^(.*)\.(.*)/).slice(1);
-    let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
-    let workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
-    if (workflow.steps[stepKey]?.input !== input) {
-      workflow.steps[stepKey].input = input
-      workflow.steps[stepKey].last_change = Date.now()
-    }
-    await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
-    res.status(200).json({ success: true });
   } else {
     res.status(200).json({ error: "No user" });
   }
@@ -618,7 +618,7 @@ app.get('/api/workflows', async (req, res) => {
   }
   if (userId) {
     // Extended to ignore by user if a user is specified
-    // This is a hack unti lwe have a notin of group
+    // This is a hack until we have a notion of group
     stripped_workflows = utils.ignoreByRegexList(
       workflows, userId,
       [/^agents$/]
