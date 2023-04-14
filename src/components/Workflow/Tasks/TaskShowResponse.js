@@ -10,22 +10,22 @@ const TaskShowResponse = (props) => {
     const { taskDone, leaving } = props;
     const [fetchedId, setFetchedId] = useState('');
     const [response, setResponse] = useState('');
-    const [myStepKey, setMyStepKey] = useState("");
-    const [myStep, setMyStep] = useState('');
+    const [myTaskName, setMyTaskName] = useState("");
+    const [myTask, setMyTask] = useState('');
 
     useEffect(() => {
-        setMyStepKey(props.stepKey)
-        setMyStep(props.step)
+        setMyTaskName(props.taskName)
+        setMyTask(props.task)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
     // Note the we don't really need to fetch as the text is in the exrecise definition
     useEffect(() => {
-        if (!myStep) {return}
+        if (!myTask) {return}
         setFetchedId(props.id)
         //console.log(props)
         // Fetch the text
-        // From the step we can find the workflow?
+        // From the task we can find the workflow?
 
         async function fetchData() { 
 
@@ -35,11 +35,11 @@ const TaskShowResponse = (props) => {
                 credentials: 'include',
                 body: JSON.stringify({
                 sessionId: globalState.sessionId,
-                step: myStep,
+                task: myTask,
                 })
             };
           
-            fetch(`${serverUrl}api/step_post`, requestOptions)
+            fetch(`${serverUrl}api/task_post`, requestOptions)
                 .then((response) => response.json())
                 .then((data) => {
                     if (data?.error) {
@@ -54,11 +54,11 @@ const TaskShowResponse = (props) => {
 
         fetchData()           
 
-    }, [myStep]);
+    }, [myTask]);
 
     useEffect(() => {
-        if (leaving?.step === myStepKey) {
-            taskDone(leaving.step)
+        if (leaving?.task === myTaskName) {
+            taskDone(leaving.task)
         }
     }, [ leaving ])
 

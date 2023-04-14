@@ -9,60 +9,60 @@ import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 import { serverUrl } from '../../config';
 
 function WorkflowStepper(props) {
-  const { globalState, updateGlobalState } = useGlobalStateContext();
+  const { globalState } = useGlobalStateContext();
   const { selectedworkflow } = props;
-  const [activeStep, setActiveStep] = useState('start');
-  const [prevActiveStep, setPrevActiveStep] = useState('start');
-  const [serverStep, setServerStep] = useState(null);
-  const [steps, setSteps] = useState({});
-  const [visitedSteps, setVisitedSteps] = useState([]);
+  const [activeTask, setActiveTask] = useState('start');
+  const [prevActiveTask, setPrevActiveTask] = useState('start');
+  const [serverTask, setServerTask] = useState(null);
+  const [tasks, setTasks] = useState({});
+  const [visitedStepperSteps, setVisitedTasks] = useState([]);
   const [leaving, setLeaving] = useState(null);
   const [expanded, setExpanded] = useState(['start']);
 
-  function handleStepNavigation(currentStep, action) {
-    const currentStepData = steps[currentStep];
+  function handleStepperNavigation(currentTask, action) {
+    const currentTaskData = tasks[currentTask];
   
     if (action === 'next') {
-      // Check if the next step is defined and update the active step accordingly
-      if (currentStepData && currentStepData.next) {
-        setLeaving({direction: 'next', step: currentStep});
+      // Check if the next task is defined and update the active task accordingly
+      if (currentTaskData && currentTaskData.next) {
+        setLeaving({direction: 'next', task: currentTask});
         // Expect taskDone to be called from Task, rename leaving to taskLeave
       }
     } else if (action === 'back') {
-      // Check if the previous step is defined and update the active step accordingly
-      if (currentStepData) { 
-        const prev = visitedSteps[visitedSteps.length - 2];
-        setLeaving({direction: 'prev', step: currentStep});
-        setActiveStep(prev);
-        setVisitedSteps((prevVisitedSteps) => prevVisitedSteps.slice(0, -1));
+      // Check if the previous task is defined and update the active task accordingly
+      if (currentTaskData) { 
+        const prev = visitedStepperSteps[visitedStepperSteps.length - 2];
+        setLeaving({direction: 'prev', task: currentTask});
+        setActiveTask(prev);
+        setVisitedTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
       }
     }
   }
 
-  function taskDone(currentStep) {
-    const currentStepData = steps[currentStep];
-    var nextStepKey = currentStepData.next
-    // Check if the next step is defined and update the active step accordingly
-    if (currentStepData) {
-      if (steps[nextStepKey]?.server_step) {
-        console.log("Server step " + nextStepKey)
-        setServerStep(nextStepKey);
-        // Perhaps setActiveStep(null) to deal with returning to an task after server side
+  function taskDone(currentTask) {
+    const currentTaskData = tasks[currentTask];
+    var nextTaskName = currentTaskData.next
+    // Check if the next task is defined and update the active task accordingly
+    if (currentTaskData) {
+      if (tasks[nextTaskName]?.server_task) {
+        console.log("Server task " + nextTaskName)
+        setServerTask(nextTaskName);
+        // Perhaps setActiveTask(null) to deal with returning to an task after server side
       } else {
-        setActiveStep(nextStepKey);
-        console.log("Client step " + nextStepKey)
-          // Add the next step to the visited steps list
-        setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, nextStepKey]);
+        setActiveTask(nextTaskName);
+        console.log("Client task " + nextTaskName)
+          // Add the next task to the visited tasks list
+        setVisitedTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTaskName]);
       }
     } else {
-      console.log("Unexpected no next step in " + currentStep)
+      console.log("Unexpected no next task in " + currentTask)
     }
   }
 
   useEffect(() => {
-    if (steps[activeStep] && steps[activeStep].next === serverStep) {
+    if (tasks[activeTask] && tasks[activeTask].next === serverTask) {
 
-       // Note this is using steps[serverStep] may be an argument
+       // Note this is using tasks[serverTask] may be an argument
       async function fetchData() { 
 
         const requestOptions = {
@@ -71,53 +71,53 @@ function WorkflowStepper(props) {
             credentials: 'include',
             body: JSON.stringify({
             sessionId: globalState.sessionId,
-            step: steps[serverStep],
+            task: tasks[serverTask],
             })
         };
       
-        let updatedStep = await fetch(`${serverUrl}api/step_post`, requestOptions)
+        let updatedTask = await fetch(`${serverUrl}api/task_post`, requestOptions)
             .then((response) => response.json())
             .catch((err) => {
                 console.log(err.message);
             });
 
-        setServerStep(null)
-        let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
-        tmpSteps[serverStep] = updatedStep
-        setSteps(tmpSteps)
-        setActiveStep(updatedStep.next)
-        console.log("Client step after server step " + updatedStep.next)
-        setVisitedSteps((prevVisitedSteps) => [...prevVisitedSteps, updatedStep.next]);
+        setServerTask(null)
+        let tmpTasks = JSON.parse(JSON.stringify(tasks)); // deep copy 
+        tmpTasks[serverTask] = updatedTask
+        setTasks(tmpTasks)
+        setActiveTask(updatedTask.next)
+        console.log("Client task after server task " + updatedTask.next)
+        setVisitedTasks((prevVisitedTasks) => [...prevVisitedTasks, updatedTask.next]);
       }
 
       fetchData()
     }
-  }, [steps, setSteps, serverStep, activeStep, setActiveStep, selectedworkflow]);     
+  }, [tasks, setTasks, serverTask, activeTask, setActiveTask, selectedworkflow]);     
 
   
   useEffect(() => {
-    if (activeStep !== prevActiveStep) {
-      console.log("activeStep " + activeStep)
-      setExpanded((prevExpanded) => [...prevExpanded, activeStep]);
-      if (prevActiveStep) {
-        console.log("prevActiveStep " + prevActiveStep)
-        setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevActiveStep));
+    if (activeTask !== prevActiveTask) {
+      console.log("activeTask " + activeTask)
+      setExpanded((prevExpanded) => [...prevExpanded, activeTask]);
+      if (prevActiveTask) {
+        console.log("prevActiveTask " + prevActiveTask)
+        setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevActiveTask));
       }
-      setPrevActiveStep(activeStep)
+      setPrevActiveTask(activeTask)
     }
-  }, [activeStep, prevActiveStep, setPrevActiveStep]); 
+  }, [activeTask, prevActiveTask, setPrevActiveTask]); 
   
 
-  function updateStep(step) {
-    let tmpSteps = JSON.parse(JSON.stringify(steps)); // deep copy 
-    tmpSteps[activeStep] = step
-    setSteps(tmpSteps)
+  function updateTask(task) {
+    let tmpTasks = JSON.parse(JSON.stringify(tasks)); // deep copy 
+    tmpTasks[activeTask] = task
+    setTasks(tmpTasks)
   }
 
   useEffect(() => {
-    if (props.selectedworkflow?.steps) {
-      setSteps(props.selectedworkflow?.steps)
-      setVisitedSteps(['start'])
+    if (props.selectedworkflow?.tasks) {
+      setTasks(props.selectedworkflow?.tasks)
+      setVisitedTasks(['start'])
     }
   }, [props.selectedworkflow]); 
 
@@ -133,43 +133,43 @@ function WorkflowStepper(props) {
 
   return (
     <div>
-      <Stepper activeStep={visitedSteps.indexOf(activeStep)}>
-        {visitedSteps.map((stepKey) => (
-          <Step key={`step-${stepKey}`}>
-            <StepLabel>{steps[stepKey].label}</StepLabel>
+      <Stepper activeStep={visitedStepperSteps.indexOf(activeTask)}>
+        {visitedStepperSteps.map((taskName) => (
+          <Step key={`task-${taskName}`}>
+            <StepLabel>{tasks[taskName].label}</StepLabel>
           </Step>
         ))}
       </Stepper>
-      {visitedSteps.map((stepKey) => (
-          <Accordion key={stepKey} expanded={isExpanded(stepKey)} onChange={handleChange(stepKey)}>
+      {visitedStepperSteps.map((taskName) => (
+          <Accordion key={taskName} expanded={isExpanded(taskName)} onChange={handleChange(taskName)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography>{steps[stepKey].label}</Typography>
+              <Typography>{tasks[taskName].label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { /* stepKey */ }
+              { /* taskName */ }
               {(() => {
-                switch (steps[stepKey].component) {
+                switch (tasks[taskName].component) {
                   case 'TaskFromAgent':
-                    return <TaskFromAgent stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep} activeStep={activeStep}/>;
+                    return <TaskFromAgent taskName={taskName} task={tasks[taskName]} id={props.selectedworkflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
                   case 'TaskShowResponse':
-                    return <TaskShowResponse  stepKey={stepKey} step={steps[stepKey]} id={props.selectedworkflow?.id + '.' + stepKey} leaving={leaving} taskDone={taskDone} updateStep={updateStep} activeStep={activeStep}/>;
+                    return <TaskShowResponse  taskName={taskName} task={tasks[taskName]} id={props.selectedworkflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
                   case 'TaskChoose':
                     return '' // ServerSide
                   case 'ServerSide':
                     return ''
                   default:
-                    return <div> No task found for {stepKey} {steps[stepKey].component}</div>
+                    return <div> No task found for {taskName} {tasks[taskName].component}</div>
                 }
               })()}   
             </AccordionDetails>
             <div>
-              {activeStep !== 'start' && activeStep === stepKey && (
-                <Button onClick={() => handleStepNavigation(activeStep, 'back')} variant="contained" color="primary">
+              {activeTask !== 'start' && activeTask === taskName && (
+                <Button onClick={() => handleStepperNavigation(activeTask, 'back')} variant="contained" color="primary">
                   Back
                 </Button>
               )}
-              {!/^stop/.test(steps[activeStep].next) && activeStep === stepKey && (
-                <Button onClick={() => handleStepNavigation(activeStep, 'next')} variant="contained" color="primary">
+              {!/^stop/.test(tasks[activeTask].next) && activeTask === taskName && (
+                <Button onClick={() => handleStepperNavigation(activeTask, 'next')} variant="contained" color="primary">
                   Next
                 </Button>
               )}
