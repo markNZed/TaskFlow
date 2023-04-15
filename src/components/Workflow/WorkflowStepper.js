@@ -21,17 +21,16 @@ function WorkflowStepper(props) {
 
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = tasks[currentTask];
-  
     if (action === 'next') {
-      // Check if the next task is defined and update the active task accordingly
       if (currentTaskData && currentTaskData.next) {
+        // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({direction: 'next', task: currentTask});
         // Expect taskDone to be called from Task, rename leaving to taskLeave
       }
     } else if (action === 'back') {
-      // Check if the previous task is defined and update the active task accordingly
       if (currentTaskData) { 
         const prev = visitedStepperSteps[visitedStepperSteps.length - 2];
+        // By updating leeacing this ensure there is an event if next is activated
         setLeaving({direction: 'prev', task: currentTask});
         setActiveTask(prev);
         setVisitedTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
@@ -75,7 +74,7 @@ function WorkflowStepper(props) {
             })
         };
       
-        let updatedTask = await fetch(`${serverUrl}api/task_post`, requestOptions)
+        let updatedTask = await fetch(`${serverUrl}api/task`, requestOptions)
             .then((response) => response.json())
             .catch((err) => {
                 console.log(err.message);
