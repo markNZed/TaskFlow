@@ -1,6 +1,8 @@
 /* ToDo
 -------
 Combine git repos into chat2flow
+Switching from chat to workflow loses the chat messages - I guess need to store these at app level
+Workflow object is intended to change quite ab it so maybe not in workflow - that can be at Workflow level. JUst use a selected workflow id at global?
 Only fetch address if workflow requests is
 API context
 Process workflow to add name, flatten first
@@ -142,7 +144,7 @@ websocketServer.on('connection', (ws) => {
 
     if (j?.ping) {
       wsSendObject(ws, {"pong" : "ok"})
-      console.log("Pong")
+      //console.log("Pong ", j)
     }
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
@@ -233,7 +235,7 @@ async function prompt_response_async(sessionId, task) {
   if (workflowId && !workflow) { 
     workflow = utils.findSubObjectWithKeyValue(workflows, 'id', workflowId);
     await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
-    console.log("Found workflow " + workflow.id)
+    console.log("Session workflow " + workflow.id)
   }
 
   if (workflow) {
@@ -278,8 +280,6 @@ async function prompt_response_async(sessionId, task) {
       use_cache = workflow.use_cache
       console.log("workflow set cache " + use_cache)
     }
-  } else {
-    console.log("workflow ", workflow)
   }
 
   if (taskName && workflow?.tasks[taskName]) {
