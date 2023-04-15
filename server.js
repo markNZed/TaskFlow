@@ -1,7 +1,6 @@
 /* ToDo
 -------
 Combine git repos into chat2flow
-Instead of api/user in App.js should it be api/session ? Currently sessionId set in websocket
 Only fetch address if workflow requests is
 API context
 Process workflow to add name, flatten first
@@ -117,7 +116,7 @@ function wsSendObject(ws, message = {}) {
   if (!ws) {
     console.log("Lost websocket for wsSendObject " + JSON.stringify(ws))
   } else {
-    message['sessionId'] = ws.data['sessionId']
+    if (ws.data['sessionId']) { message['sessionId'] = ws.data['sessionId'] }
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject sent")
   }
@@ -125,11 +124,10 @@ function wsSendObject(ws, message = {}) {
 
 websocketServer.on('connection', (ws) => {
 
-  let sessionId = uuidv4();
-  ws.data = {'sessionId': sessionId}
-  wsSendObject(ws) // send the sessionID to client
-  connections.set(sessionId, ws);
-  console.log("websocketServer.on 'connection' sessionId " + sessionId)
+  console.log("websocketServer.on")
+
+  let sessionId = undefined
+  ws.data = { 'sessionId': sessionId } 
 
   ws.on('message', async (message) => {
 
@@ -501,16 +499,20 @@ app.get('/authenticate', async (req, res) => {
   }
 });
 
-app.get('/api/user', async (req, res) => {
-  console.log("/api/user")
+app.get('/api/session', async (req, res) => {
+  console.log("/api/session")
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
+  let sessionId = uuidv4();
   if (userId) {
     res.send({
-      userId: userId,
-      interface: users[userId]?.interface,
+      user: {
+        userId: userId,
+        interface: users[userId]?.interface,
+      },
+      sessionId: sessionId,
     });
   } else {
     res.send({userId: ''});
