@@ -10,7 +10,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
+tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) {
 
   const current_task = workflow.tasks[taskName]
 
@@ -54,11 +54,10 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
   } else {
     if (workflow.tasks[taskName]?.prompt) {
       prompt += workflow.tasks[taskName].prompt
-      console.log("Server prompt " + prompt)
-    }
-    if (task?.prompt) {
+      //console.log("Server prompt " + prompt)
+    } else if (task?.prompt) { // The case with chat where client sets prompt
       prompt += task.prompt
-      console.log("Client prompt " + prompt)
+      //console.log("Client prompt " + prompt)
     }
     
   }
@@ -93,7 +92,7 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
   let response_text = ''
   if (prompt) {
     workflow.tasks[taskName].prompt = prompt
-    response_text = await prompt_response_callback_async(sessionId, workflow.tasks[taskName])
+    response_text = await prompt_response_callback_async(sessionId, workflowId, workflow.tasks[taskName])
   }
   workflow.tasks[taskName].response = response_text
   workflow.tasks[taskName].last_change = Date.now()
@@ -102,7 +101,7 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
   return workflow.tasks[taskName]
 };
 
-tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
+tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) {
 
   console.log("TaskShowResponse taskName " + taskName)
 
@@ -138,12 +137,12 @@ tasks.TaskShowResponse_async = async function(sessionsStore_async, sessionId, wo
   return workflow.tasks[taskName]
 }
 
-tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
+tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) {
   // First we get the response
   console.log("TaskChoose taskName " + taskName)
 
   workflow.tasks[taskName].response = null // Avoid using previously stored response
-  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) 
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) 
 
   const current_task = workflow.tasks[taskName]
 
@@ -193,12 +192,12 @@ tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow
 
 }
 
-tasks.TaskChat_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
+tasks.TaskChat_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) {
 
   console.log("TaskChat taskName " + taskName)
 
   workflow.tasks[taskName].response = null // Avoid using previously stored response
-  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) 
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task, workflowId) 
 
   return subtask
 

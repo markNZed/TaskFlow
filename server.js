@@ -1,13 +1,14 @@
 /* ToDo
 -------
-Combine git repos into chat2flow
-Switching from chat to workflow loses the chat messages - I guess need to store these at app level
+WorkflowStepper & MsgBox can use the hook for fetch as per Tasks?
+Do we need sessionId + 'workflowId' because we always set workflowID from API, just pass it in
+tasks.js into directory with separate files
+Address should be passed with API calls not stream
+Switching between chat and workflow loses the chat messages - I guess need to store these at app level
 This is true for workflow switch too. But if chat becomes workflow this goes away.
 Workflow object is intended to change quite a bit so maybe not in global - that can be at Workflow level. Just use a selected workflow id at global?
-API context
 Process workflow to add name, flatten first
-Lodash should help for merging the task
-Components repository so can be shared between server and client
+  Lodash should help for merging the task
 workflowhierarchy.mjs instead of hierarchical data structure
 Hierarchy of configuration:
   Defaults
@@ -22,8 +23,10 @@ Hierarchy of configuration:
 Should error if agent not found - no default
 The stream/send could have a task ID. (has workflowId)
 Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
+
+Combine git repos into chat2flow
 Include docker in git
-Defensive programming + logging
+Components repository so can be shared between server and client
 -------
 Future
   Multiple language support 'i18next-http-middleware for server and react-i18next for client
@@ -31,6 +34,8 @@ Future
     Allow the user to specify the system prompt.
     Default agent for user (perhaps have user state e.g. last active conversation)
     Use a different route for configuring: user, session, workflow, task
+  Defensive programming + logging
+
 -------
 */
 
@@ -49,7 +54,7 @@ import Keyv from 'keyv'
 import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
 import { encode } from 'gpt-3-encoder';
 import { v4 as uuidv4 } from 'uuid'
-import { tasks } from './tasks.js';
+import { tasks } from './tasks/tasks.js';
 import { utils } from './utils.js';
 import { error } from 'console'
 dotenv.config()
@@ -133,40 +138,10 @@ websocketServer.on('connection', (ws) => {
       wsSendObject(ws, {"pong" : "ok"})
       //console.log("Pong ", j)
     }
-    
-    if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
-      const userId = j.userId
-      console.log("Creating userId", userId);
-      await sessionsStore_async.set(sessionId + 'userId', userId);
-    }
-
-    if (j?.workflowId) {
-      const workflowId = j.workflowId
-      await sessionsStore_async.set(sessionId + 'workflowId', workflowId);
-      // Initialize at task 'start'
-      //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedTask', 'start');
-      console.log("sessionId + 'workflowId' " + workflowId)
-    }
-
-    if (j?.selectedTask) {
-      const selectedTask = j.selectedTask
-      const selectedworkflow = j.selectedworkflow
-      await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedTask', selectedTask);
-    }
 
     if (j?.address && j?.userId) {
       await sessionsStore_async.set(j.userId + 'location', j.address);
       console.log("Address: " + j.address)
-    }
-
-    if (j?.prompt) {
-       const task = {
-        'langModel' : j?.langModel,
-        'temperature' : j?.temperature,
-        'maxTokens' : j?.maxTokens,
-        'prompt' : j.prompt,
-      }
-      prompt_response_async(sessionId, task)
     }
 
   });
@@ -198,7 +173,7 @@ function SendIncrementalWs(partialResponse, workflowId, ws) {
   }
 }
 
-async function prompt_response_async(sessionId, task) {
+async function prompt_response_async(sessionId, workflowId, task) {
 
   let prompt = task.prompt
   let taskName = task?.name // We should require this later (chat not providing it yet)
@@ -215,46 +190,44 @@ async function prompt_response_async(sessionId, task) {
   let temperature = defaults.temperature
   let maxTokens = defaults.maxTokens
 
-  let workflowId = await sessionsStore_async.get(sessionId + 'workflowId');
+  //let workflowId = await sessionsStore_async.get(sessionId + 'workflowId');
   // Need to get workflow from session because data is stored there
   workflow = await sessionsStore_async.get(sessionId + workflowId + 'workflow');
 
-  if (workflowId && !workflow) { 
+  if (!workflow) { 
     workflow = utils.findSubObjectWithKeyValue(workflows, 'id', workflowId);
     await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
-    console.log("Session workflow " + workflow.id)
+    console.log("Session workflowId " + workflowId + " workflow " + workflow)
   }
 
-  if (workflow) {
-    langModel = workflow?.model || langModel
-    if (workflow?.one_session) {
-      let userId = await sessionsStore_async.get(sessionId + 'userId');
-      if (sessionId !== userId) {
-        sessionId = userId
-        let old_session = await sessionsStore_async.get(sessionId + 'userId');
-        if (!old_session) {
-          console.log("Creating one sesssion")
-          await sessionsStore_async.set(sessionId + 'userId', userId);
-          await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
-        } else {
-          console.log("Restoring one sesssion")
-          await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
-        }
+  langModel = workflow?.model || langModel
+  if (workflow?.one_session) {
+    let userId = await sessionsStore_async.get(sessionId + 'userId');
+    if (sessionId !== userId) {
+      sessionId = userId
+      let old_session = await sessionsStore_async.get(sessionId + 'userId');
+      if (!old_session) {
+        console.log("Creating one sesssion")
+        await sessionsStore_async.set(sessionId + 'userId', userId);
+        await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
       } else {
-        console.log("Continuing one sesssion")
+        console.log("Restoring one sesssion")
+        await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
       }
-      // Prefix with location
-      const location = await sessionsStore_async.get(userId + 'location');
-      const old_location = await sessionsStore_async.get(userId + 'old_location');
-      if (location && location !== old_location) {
-        await sessionsStore_async.set(userId + 'old_location', location);
-        prompt = "Location: " + location + "\n" + prompt
-      }
-      // Prefix prompt with date/time
-      const currentDate = new Date();
-      prompt = 'Time: ' + utils.formatDateAndTime(currentDate) + "\n" + prompt
-      // Can we add location for user ?
+    } else {
+      console.log("Continuing one sesssion")
     }
+    // Prefix with location
+    const location = await sessionsStore_async.get(userId + 'location');
+    const old_location = await sessionsStore_async.get(userId + 'old_location');
+    if (location && location !== old_location) {
+      await sessionsStore_async.set(userId + 'old_location', location);
+      prompt = "Location: " + location + "\n" + prompt
+    }
+    // Prefix prompt with date/time
+    const currentDate = new Date();
+    prompt = 'Time: ' + utils.formatDateAndTime(currentDate) + "\n" + prompt
+    // Can we add location for user ?
   }
 
   // Do we not allow multiple instances of an workflow in the same session
@@ -316,6 +289,7 @@ async function prompt_response_async(sessionId, task) {
       systemMessage = agent.system_message;
       console.log("Sytem message from agent " + agent.name)
     }
+
   }
 
   // This might be an idea for the future
@@ -493,14 +467,16 @@ app.get('/api/session', async (req, res) => {
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
-  let sessionId = uuidv4();
+  const sessionId = uuidv4();
   // Extended to ignore by user if a user is specified
-    // This is a hack until we have a notion of group
-  let stripped_workflows = utils.ignoreByRegexList(
+  // This is a hack until we have a notion of group
+  const stripped_workflows = utils.ignoreByRegexList(
     workflows, userId,
     [/^agents$/]
   );
   if (userId) {
+    console.log("Creating session for ", userId);
+    sessionsStore_async.set(sessionId + 'userId', userId);
     res.send({
       user: {
         userId: userId,
@@ -530,23 +506,21 @@ async function do_task_async(sessionId, workflowId, taskName, task) {
   if (!ws) {
     // If the server has restarted the conenction is lost
     error("Could not find ws for sessionId " + sessionId)
-    console.log(connections.keys())
-    console.log("Has key " + connections.has(sessionId))
   }
   let updated_task = {}
   const component = workflow.tasks[taskName].component
   switch (component) {
     case 'TaskFromAgent':
-      updated_task = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
+      updated_task = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task, workflowId)
       break;
     case 'TaskShowResponse':
-      updated_task = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
+      updated_task = await tasks.TaskShowResponse_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task, workflowId)
       break;         
     case 'TaskChoose':
-      updated_task = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
+      updated_task = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task, workflowId)
       break;         
     case 'TaskChat':
-      updated_task = await tasks.TaskChat_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
+      updated_task = await tasks.TaskChat_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task, workflowId)
       break;         
     default:
       updated_task = "ERROR: server unknown component:" + component
@@ -592,7 +566,8 @@ app.post('/api/task', async (req, res) => {
       let workflow = await workflow_from_id_async(sessionId, workflowId, taskName)
       if (workflow.tasks[taskName]?.server_task) {
         console.log("Next task is server side taskName " + taskName)
-        updated_task = await do_task_async(sessionId, workflowId, taskName)
+        let next_task = workflow.tasks[taskName]
+        updated_task = await do_task_async(sessionId, workflowId, taskName, next_task)
       } else {
         break
       }
