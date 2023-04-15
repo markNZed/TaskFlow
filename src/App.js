@@ -6,7 +6,6 @@ import Workflows from "./components/Workflow/Workflows"
 import { useGeolocation } from './useGeolocation';
 import { useGlobalStateContext } from './contexts/GlobalStateContext';
 
-
 function App() {
   const { address } = useGeolocation();
   const { updateGlobalState } = useGlobalStateContext();

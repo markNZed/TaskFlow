@@ -5,6 +5,7 @@ import Paper from '@mui/material/Paper';
 import { serverUrl } from '../../../config';
 import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
+import useFetchTask from '../../../hooks/useFetchTask';
 
 const TaskFromAgent = (props) => {
     const { globalState, updateGlobalState } = useGlobalStateContext();
@@ -13,9 +14,7 @@ const TaskFromAgent = (props) => {
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
-    const [fetched, setFetched] = useState('');
     const [fetchNow, setFetchNow] = useState('');
-    const [fetchResponse, setfetchResponse] = useState('');
     const [responseText, setResponseText] = useState('');
     const [userInput, setUserInput] = useState('');
     const [showUserInput, setShowUserInput] = useState(false);
@@ -27,6 +26,8 @@ const TaskFromAgent = (props) => {
     const [myTask, setMyTask] = useState('');
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
+
+    const { fetchResponse, fetched } = useFetchTask(fetchNow, myTask, myStep, globalState, serverUrl);
 
     // Should be a utility function
     const updateMyTask = (key, value) => {
@@ -87,7 +88,7 @@ const TaskFromAgent = (props) => {
     useEffect(() => {
         if (myStep) {
             // leaving now always true
-            const leaving_now = ((leaving.direction === 'next') && leaving.task === myTaskName)
+            const leaving_now = ((leaving?.direction === 'next') && leaving?.task === myTaskName)
             const next_step = myTask.steps[myStep]
             console.log("myTaskName " + myTaskName + " step state machine myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
             switch (myStep) {
@@ -145,7 +146,7 @@ const TaskFromAgent = (props) => {
                     // Next state
                     // Actions
                     // Should defensively avoid calling taskDone twice?
-                    // setFetched(null) // unsure about this, should be OK
+                    //setFetched(null) // This also breaks things, even clearFetch state does not work
                     if (leaving_now) {
                         taskDone(myTaskName)
                     }
@@ -173,70 +174,7 @@ const TaskFromAgent = (props) => {
         const words = userInput.trim().split(/\s+/).filter(Boolean)
         setUserInputWordCount(words.length);
     }, [userInput]);
-
-    // This is generic
-    useEffect(() => {
-
-        if (fetchNow) {
-
-            console.log("Fetching TaskFromAgent myTaskName " + myTaskName + " myStep " + myStep)
-
-            async function fetchTask() { 
-
-                const requestOptions = {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        sessionId: globalState.sessionId,
-                        task: myTask,
-                    })
-                };
-              
-                fetch(`${serverUrl}api/task_post`, requestOptions)
-                    .then((response) => response.json()) // .json() returns a promise
-                    .then((data) => {
-                        if (data?.error) {
-                            console.log("ERROR " + data.error.message)
-                        } 
-                        setfetchResponse(data)
-                        //setMyTask(data) // Cannot do this yet
-                        //console.log("data " + data)
-                    })
-                    .then((e) => {
-                        setFetched(myStep)
-                        //console.log("setFetched " + myStep)
-                    })
-                    .catch(error => {
-                        console.log("ERROR " + error.message)
-                        setFetched(myStep)
-                    });
-            }
-
-            fetchTask()
-        }
-    }, [fetchNow]);
-
-    /* Debug
-
-    useEffect(() => {
-        console.log("myTask : " + myTask?.name)
-    }, [myTask]);
-
-    useEffect(() => {
-        console.log("fetchNow : " + fetchNow)
-    }, [fetchNow]);
-
-    useEffect(() => {
-        console.log("taskCount : " + taskCount)
-    }, [taskCount]);
-
-    useEffect(() => {
-        console.log("fetched : " + fetched)
-    }, [fetched]);
-
-    */
-
+  
     return (
 
         <div style={{ display: "flex", flexDirection: "column"}}>

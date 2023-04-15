@@ -126,7 +126,8 @@ function Workflows() {
               
               <Toolbar />
 
-              {selectedworkflow?.conversation ?
+              {/* We default to the WorkflowStepper to run the Workflow*/}
+              {selectedworkflow?.kernel === 'chat' ?
                 <ChatArea user={user} selectedworkflow={selectedworkflow}/>
                 :
                 <WorkflowStepper user={user} selectedworkflow={selectedworkflow}/>
