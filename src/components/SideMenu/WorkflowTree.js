@@ -2,35 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { TreeView, TreeItem } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { serverUrl } from '../../config';
+import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 
 function WorkflowTree(props) {
-    const [workflows, setworkflows] = useState(null);
+
+    const { globalState } = useGlobalStateContext();
+
     const [expanded, setExpanded] = useState([]);
+    const [expandedAll, setExpandedAll] = useState(false);
+
+    console.log('WorkflowTree rendered at:', Date.now());
+
+
+    useEffect(() => {
+      setTimeout(() => {
+        // Your code here will run after rendering has finished
+        if (tempNodeIds.length > 0 && !expandedAll) {
+          setExpandedAll(true)
+          setExpanded(tempNodeIds)
+          console.log("Expanding ", tempNodeIds)
+        } else {
+          console.log("tempNodeIds ", tempNodeIds.length, tempNodeIds)
+        }
+      }, 0);
+    }); // Effect runs after every render but will set expanded only once
+
     let tempNodeIds = []
 
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
     };
 
-    useEffect(() => {
-      fetch(serverUrl + 'api/workflows', {
-        credentials: 'include'
-      })
-        .then(response => response.json())
-        .then(data => {
-            setworkflows(data);
-            // We can't set the default node during rendering because it impacts the state of a parent
-            // So here we call renderTree only to set the default state. There must be a better way
-            // to do this as we are calling renderTree too many times.
-            renderTree(data, handleSelectNode, true);
-            setExpanded(tempNodeIds)
-        })
-        .catch(error => console.error('Error fetching workflows:', error));
-    }, []); //handleSelectNode, renderTree, tempNodeIds
-  
     // It would be better to move the renderTree function outside of the workflowTreeView component and define it as a separate utility function that can be used in other components as well.
-    function renderTree(node, handleSelectNode, propagateDefault = false) {
+    function renderTree(node, handleSelectNode, propagateDefault) {
         if (!node) {return ""}
 
         const { id, name, children } = node;
@@ -64,7 +68,7 @@ function WorkflowTree(props) {
         props.onSelectworkflow(node);
     }
 
-    if (!workflows) {
+    if (!globalState.workflows) {
       return <div>Loading...</div>;
     }
   
@@ -77,13 +81,8 @@ function WorkflowTree(props) {
           expanded={expanded}
           onNodeToggle={handleToggle}
         >
-          {renderTree(workflows, handleSelectNode)}
+          {renderTree(globalState.workflows, handleSelectNode, true)}
         </TreeView>
-        {props.selectedworkflow?.name && (
-          <div>
-            Selected workflow: {props.selectedworkflow.name}
-          </div>
-        )}
       </div>
     );
 }

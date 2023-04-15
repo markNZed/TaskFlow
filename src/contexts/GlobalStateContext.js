@@ -20,6 +20,7 @@ export function GlobalStateProvider({ children }) {
 
   const updateGlobalState = (newState) => {
     setGlobalState((prevState) => merge({}, prevState, newState));
+    console.log("updateGlobalState" )
   };
 
   return ( 

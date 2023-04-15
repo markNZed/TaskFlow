@@ -1,5 +1,5 @@
 // libs
-import React, {  useCallback, useState } from 'react';
+import React, {  useCallback, useState, useEffect } from 'react';
 
 // contexts
 import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
@@ -23,18 +23,26 @@ const SideMenu = (props) => {
   const [openToast, setOpenToast] = useState(false);
   const { globalState, updateGlobalState } = useGlobalStateContext();
   
+  const action = (handleClose) => (
+    <React.Fragment>
+      <Button size="small" onClick={handleClose}>
+        Close
+      </Button>
+    </React.Fragment>
+  );
+
   const handleToastClose = useCallback(
     (event, reason) => {
       if (reason === 'clickaway') {
         return;
       }
       setOpenToast(false);
-    }, [setOpenToast])
+  }, [setOpenToast])
 
   return (
     <aside>
       
-        <div className={`${globalState.user?.interface === 'simple' ? 'hide' : ''}`}>
+        <div className={`${globalState.user?.interface === 'full' ? '' : 'hide'}`}>
 
           <SelectBox
             value={globalState.langModel}
@@ -88,7 +96,6 @@ const SideMenu = (props) => {
       </div>
       
       <WorkflowTree onSelectworkflow={props.onSelectworkflow}/>
-
     
     </aside>
     )
@@ -96,10 +103,3 @@ const SideMenu = (props) => {
 
   export default React.memo(SideMenu);
 
-  const action = (handleClose) => (
-    <React.Fragment>
-      <Button size="small" onClick={handleClose}>
-        Close
-      </Button>
-    </React.Fragment>
-  );

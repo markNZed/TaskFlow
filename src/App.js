@@ -12,12 +12,13 @@ function App() {
   const { globalState, updateGlobalState } = useGlobalStateContext();
   const [user, setUser] = useState();
   const [sessionId, setSessionId] = useState();
+  const [workflows, setWorkflows] = useState();
 
   useEffect(() => {
     if (address) {
       updateGlobalState({ address });
     }
-  }, [address, updateGlobalState]);
+  }, [address]);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -31,6 +32,9 @@ function App() {
           setSessionId(data.sessionId);
           console.log("Set sessionId ", data.sessionId);
         }
+        if (data?.workflows) {
+          setWorkflows(data.workflows)
+        }
       } catch (err) {
         console.log(err.message);
       }
@@ -42,13 +46,19 @@ function App() {
     if (user) {
       updateGlobalState({ user });
     }
-  }, [user, updateGlobalState]);
+  }, [user]);
+
+  useEffect(() => {
+    if (workflows) {
+      updateGlobalState({ workflows });
+    }
+  }, [workflows]);
 
   useEffect(() => {
     if (sessionId) {
       updateGlobalState({ sessionId });
     }
-  }, [sessionId, updateGlobalState]);
+  }, [sessionId]);
 
   return (
     <Routes>
