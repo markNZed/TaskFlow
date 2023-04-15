@@ -6,21 +6,8 @@ This is true for workflow switch too. But if chat becomes workflow this goes awa
 Workflow object is intended to change quite a bit so maybe not in global - that can be at Workflow level. Just use a selected workflow id at global?
 API context
 Process workflow to add name, flatten first
-Don't use socket from client to server (replace with API)
-  Only used in MsgBox for sending user's prompt
-  Could use the /api/input end point?
-  Maybe stp and input should be merged
-  Should break the TaskFromAgent into two steps
-    Like we have a server side task that does not update WorkflowStepper we could have the same thing on the client side?
-      Steps ? Basically another state machine within a task
-      1) generate text
-      2) get user input
-      The steps could be advanced by the client - when some aspect of the task is complete then it advances
-Replace sendJsonMessagePlus
-  First create a new api/send_chat, then remove sendJsonMessagePlus, then merge into send_post ?
 Lodash should help for merging the task
 Components repository so can be shared between server and client
-Code the workflowId in the task
 workflowhierarchy.mjs instead of hierarchical data structure
 Hierarchy of configuration:
   Defaults
@@ -33,7 +20,7 @@ Hierarchy of configuration:
                 User Task
                   Session Task
 Should error if agent not found - no default
-The stream/send could have a task ID.
+The stream/send could have a task ID. (has workflowId)
 Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
 Include docker in git
 Defensive programming + logging
@@ -136,7 +123,7 @@ websocketServer.on('connection', (ws) => {
     const j = JSON.parse(message)
 
     if (j?.sessionId) {
-      console.log("sessionId from client: ", j.sessionId)
+      //console.log("sessionId from client: ", j.sessionId)
       sessionId = j.sessionId
       connections.set(sessionId, ws);
       ws.data['sessionId'] = sessionId
@@ -214,7 +201,7 @@ function SendIncrementalWs(partialResponse, workflowId, ws) {
 async function prompt_response_async(sessionId, task) {
 
   let prompt = task.prompt
-  let taskName = task?.name // We should require this later
+  let taskName = task?.name // We should require this later (chat not providing it yet)
 
   let ws = connections.get(sessionId);
   let systemMessage = ''
@@ -558,6 +545,9 @@ async function do_task_async(sessionId, workflowId, taskName, task) {
     case 'TaskChoose':
       updated_task = await tasks.TaskChoose_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
       break;         
+    case 'TaskChat':
+      updated_task = await tasks.TaskChat_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_async, task)
+      break;         
     default:
       updated_task = "ERROR: server unknown component:" + component
   }
@@ -588,6 +578,11 @@ app.post('/api/task', async (req, res) => {
 
     // Need to check for errors
     let [workflowId, taskName] = task_id.match(/^(.*)\.(.*)/).slice(1);
+
+    // May be starting the workflow 
+    if (!await sessionsStore_async.has(sessionId + 'workflowId', workflowId)) {
+      await sessionsStore_async.set(sessionId + 'workflowId', workflowId);
+    }
 
     let updated_task = await do_task_async(sessionId, workflowId, taskName, task)
 

@@ -53,8 +53,14 @@ tasks.TaskFromAgent_async = async function(sessionsStore_async, sessionId, workf
     console.log("Prompt " + prompt)
   } else {
     if (workflow.tasks[taskName]?.prompt) {
-      prompt += workflow.tasks[taskName]?.prompt
+      prompt += workflow.tasks[taskName].prompt
+      console.log("Server prompt " + prompt)
     }
+    if (task?.prompt) {
+      prompt += task.prompt
+      console.log("Client prompt " + prompt)
+    }
+    
   }
 
   if (current_task?.messages_template) {
@@ -140,7 +146,6 @@ tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow
   let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) 
 
   const current_task = workflow.tasks[taskName]
-  //current_task.next_template: { true: 'stop', false: 'stop' },
 
   const next_responses = Object.keys(current_task.next_template)
   const next_states = Object.values(current_task.next_template)
@@ -185,6 +190,17 @@ tasks.TaskChoose_async = async function(sessionsStore_async, sessionId, workflow
   }
   
   return workflow.tasks[taskName]
+
+}
+
+tasks.TaskChat_async = async function(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) {
+
+  console.log("TaskChat taskName " + taskName)
+
+  workflow.tasks[taskName].response = null // Avoid using previously stored response
+  let subtask = await tasks.TaskFromAgent_async(sessionsStore_async, sessionId, workflow, taskName, prompt_response_callback_async, task) 
+
+  return subtask
 
 }
 
