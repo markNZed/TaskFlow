@@ -15,7 +15,7 @@ export function useWebSocketContext() {
 
 export function WebSocketProvider({ children, socketUrl}) {
     const [webSocket, setWebSocket] = useState(null);
-    const { globalState, updateGlobalState } = useGlobalStateContext();
+    const { globalState } = useGlobalStateContext();
 
     // This needs to move to API
     const [lastAddress, setLastAddress] = useState('');

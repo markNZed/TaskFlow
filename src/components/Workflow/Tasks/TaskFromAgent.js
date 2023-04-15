@@ -8,7 +8,7 @@ import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
 import useFetchTask from '../../../hooks/useFetchTask';
 
 const TaskFromAgent = (props) => {
-    const { globalState, updateGlobalState } = useGlobalStateContext();
+    const { globalState, mergeGlobalState } = useGlobalStateContext();
   
     const { id, leaving, taskDone, taskName, task, updateTask, activeTask } = props;
 

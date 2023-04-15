@@ -10,7 +10,7 @@ import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
 import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
 
 const MsgBox = (props) => {
-  const { globalState, updateGlobalState } = useGlobalStateContext();
+  const { globalState } = useGlobalStateContext();
   const { connectionStatus, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocketContext();
   const [lastMessage, setLastMessage] = useState(null);
   const [newMsg, setNewMsg] = useState("");
@@ -18,26 +18,26 @@ const MsgBox = (props) => {
   const [messageHistory, setMessageHistory] = useState([]);
   const [workflowId, setWorkflowId] = useState('initialize');
   const textareaRef = useRef(null);
-  const [mySelectedworkflow, setMySelectedworkflow] = useState(null);
+  const [myWorkflow, setMyWorkflow] = useState(null);
 
   //console.log("MSGBox component")
 
   useEffect(() => {
-    setMySelectedworkflow(props.selectedworkflow)
-  },[]);
+    if (globalState.workflow !== myWorkflow) {
+      setMyWorkflow(globalState.workflow)
+    }
+  });
 
   useEffect(() => {
     if (!webSocketEventEmitter) {return}
-    //if (mySelectedworkflow !== props.selectedworkflow) {return}
 
     const handleMessage = (e) => {
       const j = JSON.parse(e.data)
-      // props.selectedworkflow
-      if (j?.workflowId === mySelectedworkflow.id) {
+      if (j?.workflowId === myWorkflow.id) {
         //setLastMessage(j);
         if (j?.delta || j?.text || j?.final) {
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
+          const lastElement = newMsgs[globalState.workflow.id][newMsgs[globalState.workflow.id].length - 1];
           if (j?.delta) {
             lastElement.text += j.delta
           }
@@ -49,7 +49,7 @@ const MsgBox = (props) => {
           }
           // This allows the text to be displayed
           lastElement.isLoading = false 
-          newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id].slice(0,-1), lastElement]
+          newMsgs[globalState.workflow.id] = [...newMsgs[globalState.workflow.id].slice(0,-1), lastElement]
           props.setMsgs(newMsgs);
           setPending(false);
         }
@@ -64,7 +64,7 @@ const MsgBox = (props) => {
     return () => {
       webSocketEventEmitter.removeListener('message', handleMessage);
     };
-  }, [webSocketEventEmitter, props.msgs, props.selectedworkflow.id]);
+  }, [webSocketEventEmitter, props.msgs, globalState.workflow.id]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
@@ -79,19 +79,19 @@ const MsgBox = (props) => {
         isLoading: true, 
       }];
     let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-    newMsgs[props.selectedworkflow.id] = [...newMsgs[props.selectedworkflow.id], ...newMsgArray]
+    newMsgs[globalState.workflow.id] = [...newMsgs[globalState.workflow.id], ...newMsgArray]
     props.setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
     sendJsonMessagePlus({
       sessionId: globalState.sessionId,
       userId: globalState.user.userId,
-      workflowId: mySelectedworkflow.id,
+      workflowId: myWorkflow.id,
       prompt: newMsg,
       ...globalState,
     });
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, props.selectedworkflow.id]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, globalState.workflow.id]);
 
   useEffect(() => {
    // Access the form element using the ref
@@ -107,14 +107,15 @@ const MsgBox = (props) => {
 
   return (
     <form onSubmit={handleSubmit} className="msg-form">
-        {props?.selectedworkflow?.suggested_prompts ?
+        {myWorkflow?.suggested_prompts ?
           <div style={{textAlign: 'left'}}>
             <PromptDropdown 
-              prompts={props.selectedworkflow.suggested_prompts} 
+              prompts={myWorkflow?.suggested_prompts} 
               onSelect={handleDropdownSelect} 
             />
           </div>
-          : ''
+          : 
+          ''
         }
         <div className="msg-textarea-button">
           <textarea

@@ -4,11 +4,16 @@ import React, { useRef, useState, useEffect } from 'react';
 import MsgBox from "./MsgBox"
 import Icon from "./Icon"
 
+import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
+
 const ChatArea = (props) => {
+
+  const { globalState } = useGlobalStateContext();
+
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
   // Should set this from server workflow
-  let welcomeMessage = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
+  let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
   const hasScrolledRef = useRef(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
@@ -17,12 +22,11 @@ const ChatArea = (props) => {
   //console.log("ChatArea component")
 
   useEffect(() => {
-    welcomeMessage = props.selectedworkflow?.welcome_message || welcomeMessage
+    let welcomeMessage = globalState.workflow?.welcome_message || welcomeMessage_default
     if (!isMountedRef.current) {
-      // waiting for props.selectedworkflow.id ?
       setMsgs(
         {
-          [props.selectedworkflow.id] : [
+          [globalState.workflow.id] : [
             { sender: 'bot', text: welcomeMessage,  isLoading: true}
           ]
         }
@@ -30,17 +34,20 @@ const ChatArea = (props) => {
       setTimeout(()=>{
           setMsgs(
             {
-              [props.selectedworkflow.id] : [
+              [globalState.workflow.id] : [
                 { sender: 'bot', text: welcomeMessage,  isLoading: false}
               ]
             }
           );
       }, 1000);
       isMountedRef.current = true
-    } else if ( !(props.selectedworkflow.id in msgs) ) {
-      let newMsgs =  JSON.parse(JSON.stringify(msgs)); // need deep copy for setMesgs to see change
-      newMsgs[props.selectedworkflow.id] = [{ sender: 'bot', text: welcomeMessage,  isLoading: false}]
-      setMsgs(newMsgs)
+    } else if ( !(globalState.workflow.id in msgs) ) {
+      setMsgs({
+        ...msgs,
+        [globalState.workflow.id]: [
+          { sender: 'bot', text: welcomeMessage, isLoading: false }
+        ],
+      });
    } else {
       if (messagesEndRef.current && !hasScrolledRef.current && !hasScrolled) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -49,7 +56,7 @@ const ChatArea = (props) => {
         hasScrolledRef.current = false;
       }
     }
-   }, [msgs, props.selectedworkflow, hasScrolled]);
+   }, [msgs, globalState, hasScrolled]);
 
    const handleScroll = () => {
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 20 ) {
@@ -62,15 +69,14 @@ const ChatArea = (props) => {
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => {
-        window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   },[]);
 
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer} >
-
-        {msgs[props.selectedworkflow.id] && msgs[props.selectedworkflow.id].map((msg, index) => {
+        {msgs[globalState.workflow.id] && msgs[globalState.workflow.id].map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
               <div className="chat"> 
@@ -87,7 +93,7 @@ const ChatArea = (props) => {
       <div ref={messagesEndRef} style={{height:"5px"}}/>
 
       </div>
-      <MsgBox msgs={msgs} setMsgs={setMsgs} selectedworkflow={props.selectedworkflow}/>
+      <MsgBox msgs={msgs} setMsgs={setMsgs} />
     </section> 
     )
   }

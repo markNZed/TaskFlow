@@ -4,15 +4,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 
-function WorkflowTree(props) {
+function WorkflowTree() {
 
-    const { globalState } = useGlobalStateContext();
+    const { globalState, replaceGlobalState } = useGlobalStateContext();
 
     const [expanded, setExpanded] = useState([]);
     const [expandedAll, setExpandedAll] = useState(false);
-
-    console.log('WorkflowTree rendered at:', Date.now());
-
 
     useEffect(() => {
       setTimeout(() => {
@@ -20,9 +17,6 @@ function WorkflowTree(props) {
         if (tempNodeIds.length > 0 && !expandedAll) {
           setExpandedAll(true)
           setExpanded(tempNodeIds)
-          console.log("Expanding ", tempNodeIds)
-        } else {
-          console.log("tempNodeIds ", tempNodeIds.length, tempNodeIds)
         }
       }, 0);
     }); // Effect runs after every render but will set expanded only once
@@ -32,6 +26,10 @@ function WorkflowTree(props) {
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
     };
+
+    function handleSelectNode(node) {
+      replaceGlobalState('workflow', node);
+    }
 
     // It would be better to move the renderTree function outside of the workflowTreeView component and define it as a separate utility function that can be used in other components as well.
     function renderTree(node, handleSelectNode, propagateDefault) {
@@ -61,11 +59,6 @@ function WorkflowTree(props) {
             />
             );
         }
-    }
-
-    function handleSelectNode(node) {
-        // props are read only
-        props.onSelectworkflow(node);
     }
 
     if (!globalState.workflows) {

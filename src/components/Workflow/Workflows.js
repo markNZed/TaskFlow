@@ -25,16 +25,11 @@ function Workflows() {
 
   const { globalState } = useGlobalStateContext();
 
-  const [selectedworkflow, setSelectedworkflow] = useState({});
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
   };
-
-  function onSelectworkflow(workflow) {
-    setSelectedworkflow(workflow);
-  }
   
   useEffect(() => {
     if (!window.location.href.includes('authenticated')) {
@@ -92,7 +87,7 @@ function Workflows() {
                   },
                 }}
               >
-                <SideMenu onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
+                <SideMenu/>
               </Drawer>
 
               <Drawer
@@ -106,7 +101,7 @@ function Workflows() {
                 }}
                 open
               >
-                <SideMenu onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
+                <SideMenu />
               </Drawer>
 
             </Box>
@@ -116,10 +111,10 @@ function Workflows() {
               <Toolbar />
 
               {/* We default to the WorkflowStepper to run the Workflow*/}
-              {selectedworkflow?.kernel === 'chat' ?
-                <ChatArea selectedworkflow={selectedworkflow}/>
+              {globalState.workflow?.kernel === 'chat' ?
+                <ChatArea />
                 :
-                <WorkflowStepper selectedworkflow={selectedworkflow}/>
+                <WorkflowStepper />
               }
 
             </Box>
@@ -131,7 +126,7 @@ function Workflows() {
           </Stack>
         </div>
 
-      <div className={`${globalState?.interface === 'simple' ? 'hide' : ''}`}>
+      <div className={`${globalState?.interface !== 'debug' ? 'hide' : ''}`}>
         { <ReactQueryDevtools 
         initialIsOpen={false}
         position='top-right'

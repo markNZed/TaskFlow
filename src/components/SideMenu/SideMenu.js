@@ -21,7 +21,7 @@ import Snackbar from '@mui/material/Snackbar';
 const SideMenu = (props) => {
 
   const [openToast, setOpenToast] = useState(false);
-  const { globalState, updateGlobalState } = useGlobalStateContext();
+  const { globalState, mergeGlobalState } = useGlobalStateContext();
   
   const action = (handleClose) => (
     <React.Fragment>
@@ -48,7 +48,7 @@ const SideMenu = (props) => {
             value={globalState.langModel}
             label="Model"
             onSelect={(e)=>{
-              updateGlobalState({
+              mergeGlobalState({
                 langModel: e.target.value
               });
             }}
@@ -63,7 +63,7 @@ const SideMenu = (props) => {
             max={1}
             step={0.1}
             onChange={(e)=>{
-              updateGlobalState({
+              mergeGlobalState({
                 temperature: e.target.value
               })
             }}
@@ -74,7 +74,7 @@ const SideMenu = (props) => {
             title="Max tokens" 
             value={globalState.maxTokens}
             onChange={(e)=>{
-              updateGlobalState({
+              mergeGlobalState({
                 maxTokens: e.target.value
               })
             }}

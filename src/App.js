@@ -9,14 +9,14 @@ import { serverUrl } from './config';
 
 function App() {
   const { address } = useGeolocation();
-  const { globalState, updateGlobalState } = useGlobalStateContext();
+  const { globalState, mergeGlobalState } = useGlobalStateContext();
   const [user, setUser] = useState();
   const [sessionId, setSessionId] = useState();
   const [workflows, setWorkflows] = useState();
 
   useEffect(() => {
     if (address) {
-      updateGlobalState({ address });
+      mergeGlobalState({ address });
     }
   }, [address]);
 
@@ -44,19 +44,19 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      updateGlobalState({ user });
+      mergeGlobalState({ user });
     }
   }, [user]);
 
   useEffect(() => {
     if (workflows) {
-      updateGlobalState({ workflows });
+      mergeGlobalState({ workflows });
     }
   }, [workflows]);
 
   useEffect(() => {
     if (sessionId) {
-      updateGlobalState({ sessionId });
+      mergeGlobalState({ sessionId });
     }
   }, [sessionId]);
 

@@ -10,7 +10,7 @@ import { serverUrl } from '../../config';
 
 function WorkflowStepper(props) {
   const { globalState } = useGlobalStateContext();
-  const { selectedworkflow } = props;
+  const { workflow } = props;
   const [activeTask, setActiveTask] = useState('start');
   const [prevActiveTask, setPrevActiveTask] = useState('start');
   const [serverTask, setServerTask] = useState(null);
@@ -91,7 +91,7 @@ function WorkflowStepper(props) {
 
       fetchData()
     }
-  }, [tasks, setTasks, serverTask, activeTask, setActiveTask, selectedworkflow]);     
+  }, [tasks, setTasks, serverTask, activeTask, setActiveTask, workflow]);     
 
   
   useEffect(() => {
@@ -114,11 +114,11 @@ function WorkflowStepper(props) {
   }
 
   useEffect(() => {
-    if (props.selectedworkflow?.tasks) {
-      setTasks(props.selectedworkflow?.tasks)
+    if (globalState.workflow?.tasks) {
+      setTasks(globalState.workflow?.tasks)
       setVisitedTasks(['start'])
     }
-  }, [props.selectedworkflow]); 
+  }, [globalState.workflow]); 
 
   const handleChange = (panel) => (event, newExpanded) => {
     if (newExpanded) {
@@ -149,9 +149,9 @@ function WorkflowStepper(props) {
               {(() => {
                 switch (tasks[taskName].component) {
                   case 'TaskFromAgent':
-                    return <TaskFromAgent taskName={taskName} task={tasks[taskName]} id={props.selectedworkflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
+                    return <TaskFromAgent taskName={taskName} task={tasks[taskName]} id={globalState.workflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
                   case 'TaskShowResponse':
-                    return <TaskShowResponse  taskName={taskName} task={tasks[taskName]} id={props.selectedworkflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
+                    return <TaskShowResponse  taskName={taskName} task={tasks[taskName]} id={globalState.workflow?.id + '.' + taskName} leaving={leaving} taskDone={taskDone} updateTask={updateTask} activeTask={activeTask}/>;
                   case 'TaskChoose':
                     return '' // ServerSide
                   case 'ServerSide':

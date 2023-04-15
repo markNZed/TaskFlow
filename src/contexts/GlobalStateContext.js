@@ -18,13 +18,21 @@ export function GlobalStateProvider({ children }) {
     }
   )
 
-  const updateGlobalState = (newState) => {
+  const mergeGlobalState = (newState) => {
     setGlobalState((prevState) => merge({}, prevState, newState));
-    console.log("updateGlobalState" )
+    //console.log("mergeGlobalState" )
+  };
+
+  const replaceGlobalState = (key, value) => {
+    setGlobalState((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
+    //console.log("replaceGlobalState" )
   };
 
   return ( 
-    <GlobalStateContext.Provider  value={{ globalState, updateGlobalState }}>
+    <GlobalStateContext.Provider  value={{ globalState, mergeGlobalState, replaceGlobalState }}>
       {children} 
     </GlobalStateContext.Provider> 
   )

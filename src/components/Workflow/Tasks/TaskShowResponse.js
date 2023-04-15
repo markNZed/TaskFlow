@@ -9,7 +9,7 @@ import useFetchTask from '../../../hooks/useFetchTask';
 const TaskShowResponse = (props) => {
 
     const { id, leaving, taskDone, taskName, task, updateTask, activeTask } = props;
-    const { globalState, updateGlobalState } = useGlobalStateContext();
+    const { globalState, mergeGlobalState } = useGlobalStateContext();
 
     const [fetchNow, setFetchNow] = useState('');
     const [responseText, setResponseText] = useState('');
