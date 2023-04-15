@@ -1,9 +1,9 @@
 const workflow_chatGPT = {
     name: "chatGPT",
-    workflow: true,
     kernel: 'chat',
     id: '1.1.1',
     agent: 'chatgpt',
+    tasks: {},
     //default: false
     //one_session : false
     //use_cache: true

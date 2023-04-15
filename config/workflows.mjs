@@ -14,7 +14,6 @@ const workflows = {
                 workflow_chatGPT,
                 {
                     name: "example",
-                    workflow: true,
                     id: '1.1.2',
                     // system_message: "something",
                     // model: "gpt-4"

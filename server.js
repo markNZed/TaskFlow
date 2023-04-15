@@ -1,7 +1,7 @@
 /* ToDo
 -------
 Combine git repos into chat2flow
-Set user at App level not inworkflow - add to global
+Instead of api/user in App.js should it be api/session ? Currently sessionId set in websocket
 Only fetch address if workflow requests is
 API context
 Process workflow to add name, flatten first
@@ -152,12 +152,12 @@ websocketServer.on('connection', (ws) => {
       await sessionsStore_async.set(sessionId + 'userId', userId);
     }
 
-    if (j?.selectedworkflowId) {
-      const selectedworkflowId = j.selectedworkflowId
-      await sessionsStore_async.set(sessionId + 'selectedworkflowId', selectedworkflowId);
+    if (j?.workflowId) {
+      const workflowId = j.workflowId
+      await sessionsStore_async.set(sessionId + 'workflowId', workflowId);
       // Initialize at task 'start'
       //await sessionsStore_async.set(sessionId + selectedworkflow + 'selectedTask', 'start');
-      console.log("sessionId + 'selectedworkflowId' " + selectedworkflowId)
+      console.log("sessionId + 'workflowId' " + workflowId)
     }
 
     if (j?.selectedTask) {
@@ -193,14 +193,14 @@ websocketServer.on('connection', (ws) => {
 
 });
 
-function SendIncrementalWs(partialResponse, conversationId, ws) {
+function SendIncrementalWs(partialResponse, workflowId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
   if (ws) {
     if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
-      const message = {'conversationId' : conversationId, 'text' : partialResponse.text}
+      const message = {'workflowId' : workflowId, 'text' : partialResponse.text}
       wsSendObject(ws, message)
     } else if (incr) {
-      const message = {'conversationId' : conversationId, 'delta' : partialResponse.delta}
+      const message = {'workflowId' : workflowId, 'delta' : partialResponse.delta}
       wsSendObject(ws, message)
     }
     ws.data['delta_count'] += 1
@@ -227,15 +227,15 @@ async function prompt_response_async(sessionId, task) {
   let temperature = defaults.temperature
   let maxTokens = defaults.maxTokens
 
-  let selectedworkflowId = await sessionsStore_async.get(sessionId + 'selectedworkflowId');
+  let workflowId = await sessionsStore_async.get(sessionId + 'workflowId');
   // Need to get workflow from session because data is stored there
-  workflow = await sessionsStore_async.get(sessionId + selectedworkflowId + 'workflow');
+  workflow = await sessionsStore_async.get(sessionId + workflowId + 'workflow');
 
-  if (selectedworkflowId && !workflow) { 
-    workflow = utils.findSubObjectWithKeyValue(workflows, 'id', selectedworkflowId);
-    await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+  if (workflowId && !workflow) { 
+    workflow = utils.findSubObjectWithKeyValue(workflows, 'id', workflowId);
+    await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
     console.log("Found workflow " + workflow.id)
-}
+  }
 
   if (workflow) {
     langModel = workflow?.model || langModel
@@ -247,10 +247,10 @@ async function prompt_response_async(sessionId, task) {
         if (!old_session) {
           console.log("Creating one sesssion")
           await sessionsStore_async.set(sessionId + 'userId', userId);
-          await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+          await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
         } else {
           console.log("Restoring one sesssion")
-          await sessionsStore_async.set(sessionId + selectedworkflowId + 'workflow', workflow);
+          await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow);
         }
       } else {
         console.log("Continuing one sesssion")
@@ -303,40 +303,33 @@ async function prompt_response_async(sessionId, task) {
     server_task = workflow.tasks[taskName]?.server_task || server_task
   }
 
-  // Need to do this after the agent stabilizes
-  let conversationId = await sessionsStore_async.get(sessionId + selectedworkflowId + agent.name + 'conversationId');
-  console.log("sessionId + selectedworkflowId + agent.name + conversationId " + sessionId + " " + selectedworkflowId + " " + agent.name  + " " + conversationId)
-
-  if (initializing || conversationId === undefined) {
-    initializing = true
+  if (initializing) {
     // Unique conversation per workflow type
-    conversationId = uuidv4() + workflow?.id;
-    await sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'conversationId', conversationId);
-    console.log("Initializing conversation " + conversationId)
-   } else if (conversationId) {
-     console.log("Continuing conversation " + conversationId)
-     lastMessageId = await sessionsStore_async.get(sessionId + conversationId + agent.name + 'parentMessageId')
-   }
- 
-   if (initializing && agent?.messages) {
-     // Initializing conversation
-     lastMessageId = await utils.processMessages_async(agent.messages, messageStore_async, lastMessageId)
-     console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
-   }
-
-   console.log("taskName " + taskName)
-
-   if (taskName && workflow?.tasks[taskName]) {
-    // console.log("workflow OK " + JSON.stringify(workflow.tasks[taskName].messages))
-    if (workflow.tasks[taskName]?.messages) {
-      lastMessageId = await utils.processMessages_async(workflow.tasks[taskName].messages, messageStore_async, lastMessageId)
-      console.log("Messages extended from taskName " + taskName + " lastMessageId " + lastMessageId)
+    const parentMessageId = await sessionsStore_async.get(sessionId + workflowId + agent.name + 'parentMessageId')
+    if (parentMessageId) {
+      lastMessageId = parentMessageId
     }
-  }
- 
-   if (agent?.system_message) {
-    systemMessage = agent.system_message;
-    console.log("Sytem message from agent " + agent.name)
+
+    if (initializing && agent?.messages) {
+      // Initializing conversation
+      lastMessageId = await utils.processMessages_async(agent.messages, messageStore_async, lastMessageId)
+      console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
+    }
+
+    console.log("taskName " + taskName)
+
+    if (taskName && workflow?.tasks[taskName]) {
+      // console.log("workflow OK " + JSON.stringify(workflow.tasks[taskName].messages))
+      if (workflow.tasks[taskName]?.messages) {
+        lastMessageId = await utils.processMessages_async(workflow.tasks[taskName].messages, messageStore_async, lastMessageId)
+        console.log("Messages extended from taskName " + taskName + " lastMessageId " + lastMessageId)
+      }
+    }
+  
+    if (agent?.system_message) {
+      systemMessage = agent.system_message;
+      console.log("Sytem message from agent " + agent.name)
+    }
   }
 
   // This might be an idea for the future
@@ -389,12 +382,12 @@ async function prompt_response_async(sessionId, task) {
   };
 
   if (!server_task) {
-    messageParams['onProgress'] = (partialResponse) => SendIncrementalWs(partialResponse, conversationId, ws)
+    messageParams['onProgress'] = (partialResponse) => SendIncrementalWs(partialResponse, workflowId, ws)
   }
 
   // tasks in workflow could add messages
 
-  sessionsStore_async.set(sessionId + selectedworkflowId + agent.name + 'systemMessage', messageParams.systemMessage)
+  sessionsStore_async.set(sessionId + workflowId + agent.name + 'systemMessage', messageParams.systemMessage)
 
   let cachedValue = '';
   let cacheKey = '';
@@ -413,11 +406,11 @@ async function prompt_response_async(sessionId, task) {
   }
   let response_text_promise = Promise.resolve("");
   if (cachedValue && cachedValue !== undefined) {
-    sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', cachedValue.id)
+    sessionsStore_async.set(sessionId + workflowId + agent.name + 'parentMessageId', cachedValue.id)
     let text = cachedValue.text;
     console.log("Response from cache: " + text.slice(0, 20) + " ...");
     const message = {
-      'conversationId' : conversationId,
+      'workflowId' : workflowId,
       'final' : text
     }
     if (!server_task) { wsSendObject(ws, message) }
@@ -427,10 +420,10 @@ async function prompt_response_async(sessionId, task) {
     if (ws) {ws.data['delta_count'] = 0}
     response_text_promise = api.sendMessage(prompt, messageParams)
     .then(response => {
-      sessionsStore_async.set(sessionId + conversationId + agent.name + 'parentMessageId', response.id)
+      sessionsStore_async.set(sessionId + workflowId + agent.name + 'parentMessageId', response.id)
       let text = response.text;
       const message = {
-        'conversationId' : conversationId,
+        'workflowId' : workflowId,
         'final' : text
       }
       if (!server_task) { wsSendObject(ws, message) }
@@ -446,7 +439,7 @@ async function prompt_response_async(sessionId, task) {
       let text = "ERROR " + error
       console.log(text)
       const message = {
-        'conversationId' : conversationId,
+        'workflowId' : workflowId,
         'final' : text
       }
       if (!server_task) { wsSendObject(ws, message) }
@@ -524,18 +517,18 @@ app.get('/api/user', async (req, res) => {
   }
 });
 
-async function workflow_from_id_async(sessionId, workflow_id, taskName) {
-  let workflow = await sessionsStore_async.get(sessionId + workflow_id + 'workflow') 
+async function workflow_from_id_async(sessionId, workflowId, taskName) {
+  let workflow = await sessionsStore_async.get(sessionId + workflowId + 'workflow') 
   if (workflow === undefined || taskName === 'start') {
-    workflow = utils.findObjectById(workflows, workflow_id)
-    await sessionsStore_async.set(sessionId + workflow_id + 'workflow', workflow) 
+    workflow = utils.findObjectById(workflows, workflowId)
+    await sessionsStore_async.set(sessionId + workflowId + 'workflow', workflow) 
   }
-  await sessionsStore_async.set(sessionId + 'selectedworkflowId', workflow_id);
+  await sessionsStore_async.set(sessionId + 'workflowId', workflowId);
   return workflow
 }
 
-async function do_task_async(sessionId, workflow_id, taskName, task) {
-  let workflow = await workflow_from_id_async(sessionId, workflow_id, taskName)
+async function do_task_async(sessionId, workflowId, taskName, task) {
+  let workflow = await workflow_from_id_async(sessionId, workflowId, taskName)
   const ws = connections.get(sessionId);
   if (!ws) {
     // If the server has restarted the conenction is lost
@@ -584,17 +577,17 @@ app.post('/api/task', async (req, res) => {
     const task_id = task.id;
 
     // Need to check for errors
-    let [workflow_id, taskName] = task_id.match(/^(.*)\.(.*)/).slice(1);
+    let [workflowId, taskName] = task_id.match(/^(.*)\.(.*)/).slice(1);
 
-    let updated_task = await do_task_async(sessionId, workflow_id, taskName, task)
+    let updated_task = await do_task_async(sessionId, workflowId, taskName, task)
 
     while (updated_task?.server_task) {
       // Check if the next task is server-side
       taskName = updated_task.next
-      let workflow = await workflow_from_id_async(sessionId, workflow_id, taskName)
+      let workflow = await workflow_from_id_async(sessionId, workflowId, taskName)
       if (workflow.tasks[taskName]?.server_task) {
         console.log("Next task is server side taskName " + taskName)
-        updated_task = await do_task_async(sessionId, workflow_id, taskName)
+        updated_task = await do_task_async(sessionId, workflowId, taskName)
       } else {
         break
       }
@@ -602,7 +595,7 @@ app.post('/api/task', async (req, res) => {
 
     let updated_client_task = extract_client_info(
       updated_task, 
-      ['id', 'workflow_id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_task', 'name']
+      ['id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_task', 'name']
     );
     // A function for each component? In a library.
     res.send(JSON.stringify(updated_client_task));
@@ -630,4 +623,4 @@ app.get('/api/workflows', async (req, res) => {
 });
 
 const port = process.env.WS_PORT || 5000;
-server.listen(port, () => console.log('AI server started'));
+server.listen(port, () => console.log('AI server started'))
