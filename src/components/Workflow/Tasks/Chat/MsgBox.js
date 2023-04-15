@@ -8,6 +8,7 @@ import send from '../../../../assets/send.svg';
 // contexts
 import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
 import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
+import { serverUrl } from '../../../../config';
 
 const MsgBox = (props) => {
   const { globalState } = useGlobalStateContext();
@@ -66,6 +67,26 @@ const MsgBox = (props) => {
     };
   }, [webSocketEventEmitter, props.msgs, globalState.workflow.id]);
 
+
+  async function postPrompt(newMsg) {
+
+    let myTask = { ...myWorkflow.tasks['chat'] };
+    myTask['prompt'] = newMsg
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        sessionId: globalState.sessionId,
+        task: myTask,
+      }),
+    };
+    const response = await fetch(`${serverUrl}api/task`, requestOptions);
+    const data = await response.json();
+    //console.log(data)
+  }
+
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
     if (!newMsg){
@@ -82,12 +103,7 @@ const MsgBox = (props) => {
     newMsgs[globalState.workflow.id] = [...newMsgs[globalState.workflow.id], ...newMsgArray]
     props.setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
-    sendJsonMessagePlus({
-      sessionId: globalState.sessionId,
-      userId: globalState.user.userId,
-      workflowId: myWorkflow.id,
-      prompt: newMsg,
-    });
+    postPrompt(newMsg)
     // Clear the textbox for our next prompt
     setNewMsg("");
   },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, globalState.workflow.id]);
