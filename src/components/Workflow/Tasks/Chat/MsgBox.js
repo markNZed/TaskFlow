@@ -16,7 +16,7 @@ const MsgBox = (props) => {
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
-  const [conversationId, setConversationId] = useState('initialize');
+  const [workflowId, setWorkflowId] = useState('initialize');
   const textareaRef = useRef(null);
   const [mySelectedworkflow, setMySelectedworkflow] = useState(null);
 
@@ -28,14 +28,13 @@ const MsgBox = (props) => {
 
   useEffect(() => {
     if (!webSocketEventEmitter) {return}
-    if (mySelectedworkflow !== props.selectedworkflow) {return}
+    //if (mySelectedworkflow !== props.selectedworkflow) {return}
 
     const handleMessage = (e) => {
       const j = JSON.parse(e.data)
       // props.selectedworkflow
-      if (j?.conversationId) {
+      if (j?.workflowId === mySelectedworkflow.id) {
         //setLastMessage(j);
-        setConversationId(j.conversationId)
         if (j?.delta || j?.text || j?.final) {
           let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
           const lastElement = newMsgs[props.selectedworkflow.id][newMsgs[props.selectedworkflow.id].length - 1];
@@ -85,16 +84,14 @@ const MsgBox = (props) => {
     setMessageHistory((prev) => [...prev, newMsg]);
     sendJsonMessagePlus({
       sessionId: globalState.sessionId,
-      userId: props.user.userId,
-      selectedworkflowId: props.selectedworkflow.id,
-      conversationId: conversationId,
+      userId: globalState.user.userId,
+      workflowId: mySelectedworkflow.id,
       prompt: newMsg,
       ...globalState,
     });
-    console.log("conversationId sent " + conversationId)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, props.user, props.selectedworkflow.id]);
+  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, props.selectedworkflow.id]);
 
   useEffect(() => {
    // Access the form element using the ref

@@ -16,32 +16,21 @@ import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import WorkflowStepper from "./WorkflowStepper"
 import { serverUrl } from '../../config';
+import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
+
 
 const queryClient = new QueryClient()
 
 function Workflows() {
 
-  const [user, setUser] = useState([]);
+  const { globalState } = useGlobalStateContext();
+
   const [selectedworkflow, setSelectedworkflow] = useState({});
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
   };
-  
-  useEffect(() => {
-    fetch(`${serverUrl}api/user`, {
-      credentials: 'include'
-    })
-    .then((response) => response.json())
-    .then((data) => {
-      setUser(data);
-      console.log("Set user: " + JSON.stringify(data));
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
-  }, []);
 
   function onSelectworkflow(workflow) {
     setSelectedworkflow(workflow);
@@ -103,7 +92,7 @@ function Workflows() {
                   },
                 }}
               >
-                <SideMenu user={user} onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
+                <SideMenu onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
               </Drawer>
 
               <Drawer
@@ -117,7 +106,7 @@ function Workflows() {
                 }}
                 open
               >
-                <SideMenu user={user} onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
+                <SideMenu onSelectworkflow={onSelectworkflow} selectedworkflow={selectedworkflow}/>
               </Drawer>
 
             </Box>
@@ -128,21 +117,21 @@ function Workflows() {
 
               {/* We default to the WorkflowStepper to run the Workflow*/}
               {selectedworkflow?.kernel === 'chat' ?
-                <ChatArea user={user} selectedworkflow={selectedworkflow}/>
+                <ChatArea selectedworkflow={selectedworkflow}/>
                 :
-                <WorkflowStepper user={user} selectedworkflow={selectedworkflow}/>
+                <WorkflowStepper selectedworkflow={selectedworkflow}/>
               }
 
             </Box>
 
-            <div className={`${user?.interface !== 'debug' ? 'hide' : ''}`}>
-              <ObjectDisplay data={user} />
+            <div className={`${globalState?.interface !== 'debug' ? 'hide' : ''}`}>
+              <ObjectDisplay data={globalState.user} />
             </div>   
 
           </Stack>
         </div>
 
-      <div className={`${user?.interface === 'simple' ? 'hide' : ''}`}>
+      <div className={`${globalState?.interface === 'simple' ? 'hide' : ''}`}>
         { <ReactQueryDevtools 
         initialIsOpen={false}
         position='top-right'

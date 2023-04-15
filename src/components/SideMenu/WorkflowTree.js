@@ -44,7 +44,7 @@ function WorkflowTree(props) {
                 {children.map((child) => renderTree(child, handleSelectNode, propagateDefault))}
             </TreeItem>
             );
-        } else if (node?.workflow) {
+        } else if (node?.tasks) {
             if (propagateDefault && node?.default) {
                 handleSelectNode(node)
             }

@@ -34,7 +34,7 @@ const SideMenu = (props) => {
   return (
     <aside>
       
-        <div className={`${props.user?.interface === 'simple' ? 'hide' : ''}`}>
+        <div className={`${globalState.user?.interface === 'simple' ? 'hide' : ''}`}>
 
           <SelectBox
             value={globalState.langModel}
