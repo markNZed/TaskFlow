@@ -42,7 +42,6 @@ export function WebSocketProvider({ children, socketUrl}) {
             ws.pingIntervalId = intervalId;
         },
         onMessage: (e) => {
-            const j = JSON.parse(e.data)
             webSocketEventEmitter.emit('message', e);
             //console.log(e)
         },

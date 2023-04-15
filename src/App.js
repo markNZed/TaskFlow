@@ -8,9 +8,17 @@ import { useGlobalStateContext } from './contexts/GlobalStateContext';
 import { serverUrl } from './config';
 
 function App() {
-  const { address } = useGeolocation();
+  const [enableGeolocation, setEnableGeolocation] = useState(false);
+  const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState } = useGlobalStateContext();
   
+  useEffect(() => {
+    if (globalState?.workflow?.use_address && !enableGeolocation) {
+      setEnableGeolocation(true)
+      console.log("Enabling use of address")
+    }
+  }, [globalState]);
+
   useEffect(() => {
     if (address) {
       mergeGlobalState({ address });
