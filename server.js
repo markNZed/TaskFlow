@@ -1,7 +1,5 @@
 /* ToDo
 -------
-/api/workflows requested twice? Should fetch workflows from App (there are two Drawers)
-Selecting the workflow should be a global ? Avoids passing props, could have a global ui (e.g. simple etc)
 Combine git repos into chat2flow
 Only fetch address if workflow requests is
 API context
@@ -144,6 +142,7 @@ websocketServer.on('connection', (ws) => {
 
     if (j?.ping) {
       wsSendObject(ws, {"pong" : "ok"})
+      console.log("Pong")
     }
     
     if (!await sessionsStore_async.has(sessionId + 'userId') && j?.userId) {
@@ -279,6 +278,8 @@ async function prompt_response_async(sessionId, task) {
       use_cache = workflow.use_cache
       console.log("workflow set cache " + use_cache)
     }
+  } else {
+    console.log("workflow ", workflow)
   }
 
   if (taskName && workflow?.tasks[taskName]) {
@@ -303,15 +304,13 @@ async function prompt_response_async(sessionId, task) {
     server_task = workflow.tasks[taskName]?.server_task || server_task
   }
 
-  if (initializing) {
-    // Unique conversation per workflow type
-    const parentMessageId = await sessionsStore_async.get(sessionId + workflowId + agent.name + 'parentMessageId')
-    if (parentMessageId) {
-      lastMessageId = parentMessageId
-    }
+  if (!initializing) {
+    lastMessageId = await sessionsStore_async.get(sessionId + workflowId + agent.name + 'parentMessageId')
+  }
 
-    if (initializing && agent?.messages) {
-      // Initializing conversation
+  if (!lastMessageId || initializing) {
+
+    if (agent?.messages) {
       lastMessageId = await utils.processMessages_async(agent.messages, messageStore_async, lastMessageId)
       console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
     }
@@ -613,24 +612,6 @@ app.post('/api/task', async (req, res) => {
   } else {
     res.status(200).json({ error: "No user" });
   }
-});
-
-app.get('/api/workflows', async (req, res) => {
-  console.log("/api/workflows")
-  let stripped_workflows = {}
-  let userId = DEFAULT_USER
-  if (process.env.AUTHENTICATION === "cloudflare") {
-    userId = req.headers['cf-access-authenticated-user-email'];
-  }
-  if (userId) {
-    // Extended to ignore by user if a user is specified
-    // This is a hack until we have a notion of group
-    stripped_workflows = utils.ignoreByRegexList(
-      workflows, userId,
-      [/^agents$/]
-    )
-  }
-  res.send(stripped_workflows);
 });
 
 const port = process.env.WS_PORT || 5000;
