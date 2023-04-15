@@ -20,7 +20,6 @@ export function WebSocketProvider({ children, socketUrl}) {
     // This needs to move to API
     const [lastAddress, setLastAddress] = useState('');
 
-    // Here we fetch the sessionId if we don't already have one
     const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
         reconnectAttempts: 10,
         reconnectInterval: 500,
@@ -43,12 +42,6 @@ export function WebSocketProvider({ children, socketUrl}) {
         },
         onMessage: (e) => {
             const j = JSON.parse(e.data)
-            if (j?.sessionId && globalState.sessionId === '') {
-                updateGlobalState({
-                    sessionId : j.sessionId
-                })
-                console.log("Init sessionId ", j.sessionId)
-            }
             webSocketEventEmitter.emit('message', e);
             //console.log(e)
         },
@@ -68,7 +61,7 @@ export function WebSocketProvider({ children, socketUrl}) {
             m.address = globalState.address
             setLastAddress(globalState.address)
         }
-        if (globalState.sessionId) {
+        if (globalState?.sessionId) {
             m.sessionId = globalState.sessionId
         }
         sendJsonMessage(m)

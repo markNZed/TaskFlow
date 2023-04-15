@@ -9,40 +9,46 @@ import { serverUrl } from './config';
 
 function App() {
   const { address } = useGeolocation();
-  const { updateGlobalState } = useGlobalStateContext();
-  const [user, setUser] = useState([]);
+  const { globalState, updateGlobalState } = useGlobalStateContext();
+  const [user, setUser] = useState();
+  const [sessionId, setSessionId] = useState();
 
   useEffect(() => {
     if (address) {
-      updateGlobalState({
-        address: address,
-      })
+      updateGlobalState({ address });
     }
   }, [address, updateGlobalState]);
 
   useEffect(() => {
-    fetch(`${serverUrl}api/user`, {
-      credentials: 'include'
-    })
-    .then((response) => response.json())
-    .then((data) => {
-      setUser(data);
-      console.log("Set user: " + JSON.stringify(data));
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
+    const fetchSession = async () => {
+      try {
+        const response = await fetch(`${serverUrl}api/session`, { credentials: 'include' });
+        const data = await response.json();
+
+        setUser(data.user);
+        console.log("Set user: " + JSON.stringify(data.user));
+        if (!globalState?.sessionId) {
+          setSessionId(data.sessionId);
+          console.log("Set sessionId ", data.sessionId);
+        }
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+    fetchSession();
   }, []);
 
   useEffect(() => {
-    if (address) {
-      updateGlobalState({
-        user: user,
-      })
+    if (user) {
+      updateGlobalState({ user });
     }
   }, [user, updateGlobalState]);
 
-
+  useEffect(() => {
+    if (sessionId) {
+      updateGlobalState({ sessionId });
+    }
+  }, [sessionId, updateGlobalState]);
 
   return (
     <Routes>
