@@ -2,8 +2,8 @@
 -------
 Combine git repos into chat2flow
 Switching from chat to workflow loses the chat messages - I guess need to store these at app level
-Workflow object is intended to change quite ab it so maybe not in workflow - that can be at Workflow level. JUst use a selected workflow id at global?
-Only fetch address if workflow requests is
+This is true for workflow switch too. But if chat becomes workflow this goes away.
+Workflow object is intended to change quite a bit so maybe not in global - that can be at Workflow level. Just use a selected workflow id at global?
 API context
 Process workflow to add name, flatten first
 Don't use socket from client to server (replace with API)
