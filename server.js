@@ -1,5 +1,7 @@
 /* ToDo
 -------
+/api/workflows requested twice? Should fetch workflows from App (there are two Drawers)
+Selecting the workflow should be a global ? Avoids passing props, could have a global ui (e.g. simple etc)
 Combine git repos into chat2flow
 Only fetch address if workflow requests is
 API context
@@ -506,6 +508,12 @@ app.get('/api/session', async (req, res) => {
     userId = req.headers['cf-access-authenticated-user-email'];
   }
   let sessionId = uuidv4();
+  // Extended to ignore by user if a user is specified
+    // This is a hack until we have a notion of group
+  let stripped_workflows = utils.ignoreByRegexList(
+    workflows, userId,
+    [/^agents$/]
+  );
   if (userId) {
     res.send({
       user: {
@@ -513,6 +521,7 @@ app.get('/api/session', async (req, res) => {
         interface: users[userId]?.interface,
       },
       sessionId: sessionId,
+      workflows: stripped_workflows,
     });
   } else {
     res.send({userId: ''});

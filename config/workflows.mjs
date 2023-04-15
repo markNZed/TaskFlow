@@ -20,7 +20,7 @@ const workflows = {
                     // suggested_prompts: ["an example"]
                     tasks: {
                         start : {
-                            text: "Hello",
+                            response: "Hello",
                             name: 'start',
                             component: 'TaskShowResponse',
                             next: 'summarize'
