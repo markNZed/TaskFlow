@@ -1,6 +1,8 @@
 /* ToDo
 -------
-Replace send_post with send 
+Combine git repos into chat2flow
+Set user at App level not inworkflow - add to global
+Only fetch address if workflow requests is
 API context
 Process workflow to add name, flatten first
 Don't use socket from client to server (replace with API)
@@ -117,7 +119,7 @@ function wsSendObject(ws, message = {}) {
   } else {
     message['sessionId'] = ws.data['sessionId']
     ws.send(JSON.stringify(message));
-    console.log("wsSendObject sent")
+    //console.log("wsSendObject sent")
   }
 }
 
@@ -397,13 +399,13 @@ async function prompt_response_async(sessionId, task) {
   let cachedValue = '';
   let cacheKey = '';
   if (use_cache) {
-    const conversation = await utils.conversationText_async(messageStore_async, lastMessageId)
-    //console.log("conversation " + conversation + " lastMessageId " + lastMessageId)
+    const messagesText = await utils.messagesText_async(messageStore_async, lastMessageId)
+    //console.log("messagesText " + messagesText + " lastMessageId " + lastMessageId)
     const cacheKeyText = [
       messageParams.systemMessage,  
       JSON.stringify(messageParams.completionParams), 
       prompt, 
-      conversation
+      messagesText
     ].join('-').replace(/\s+/g, '-')
     cacheKey = utils.djb2Hash(cacheKeyText);
     console.log("cacheKey " + cacheKey)
@@ -569,8 +571,8 @@ function extract_client_info(task, filter_list) {
   return taskCopy
 }
 
-app.post('/api/task_post', async (req, res) => {
-  console.log("/api/task_post")
+app.post('/api/task', async (req, res) => {
+  console.log("/api/task")
   let userId = DEFAULT_USER
   if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers['cf-access-authenticated-user-email'];

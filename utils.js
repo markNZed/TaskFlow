@@ -72,7 +72,7 @@ utils.processMessages_async = async function(messages, messageStore_async, initi
     return lastMessageId;
 }
   
-utils.conversationText_async = async function(messageStore_async, LastMessageId) {
+utils.messagesText_async = async function(messageStore_async, LastMessageId) {
     let id = LastMessageId;
     let text = ''
     let message
