@@ -30,9 +30,10 @@ export function WebSocketProvider({ children, socketUrl}) {
             console.log('App webSocket connection established.');
             let ws = getWebSocket()
             setWebSocket(ws)
+            sendJsonMessagePlus({ping : "ok"});
             const intervalId = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
-                  ws.send(`{"ping" : "ok"}`);
+                    sendJsonMessagePlus({ping : "ok"});
                 } else {
                   // WebSocket is not open, clear the interval
                   clearInterval(intervalId);

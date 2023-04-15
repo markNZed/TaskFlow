@@ -87,7 +87,6 @@ const MsgBox = (props) => {
       userId: globalState.user.userId,
       workflowId: myWorkflow.id,
       prompt: newMsg,
-      ...globalState,
     });
     // Clear the textbox for our next prompt
     setNewMsg("");

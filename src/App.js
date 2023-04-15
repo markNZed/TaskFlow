@@ -10,10 +10,7 @@ import { serverUrl } from './config';
 function App() {
   const { address } = useGeolocation();
   const { globalState, mergeGlobalState } = useGlobalStateContext();
-  const [user, setUser] = useState();
-  const [sessionId, setSessionId] = useState();
-  const [workflows, setWorkflows] = useState();
-
+  
   useEffect(() => {
     if (address) {
       mergeGlobalState({ address });
@@ -25,15 +22,17 @@ function App() {
       try {
         const response = await fetch(`${serverUrl}api/session`, { credentials: 'include' });
         const data = await response.json();
-
-        setUser(data.user);
-        console.log("Set user: " + JSON.stringify(data.user));
+        const user = data.user
+        mergeGlobalState({ user });
+        console.log("Set user: ", user);
         if (!globalState?.sessionId) {
-          setSessionId(data.sessionId);
-          console.log("Set sessionId ", data.sessionId);
+          const sessionId = data.sessionId
+          mergeGlobalState({ sessionId });
+          console.log("Set sessionId ", sessionId);
         }
         if (data?.workflows) {
-          setWorkflows(data.workflows)
+          const workflows = data.workflows
+          mergeGlobalState({ workflows });
         }
       } catch (err) {
         console.log(err.message);
@@ -43,22 +42,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      mergeGlobalState({ user });
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (workflows) {
-      mergeGlobalState({ workflows });
-    }
-  }, [workflows]);
-
-  useEffect(() => {
-    if (sessionId) {
-      mergeGlobalState({ sessionId });
-    }
-  }, [sessionId]);
+    console.log("globalState ", globalState)
+  }, [globalState]);
 
   return (
     <Routes>
