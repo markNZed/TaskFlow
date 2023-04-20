@@ -1,12 +1,7 @@
 /* ToDo
 -------
-The stepper should be a Tasks
-  Should tasks have the option of starting other tasks?
-
 Maybe switching to stepper should revert to start, so history is built on the fly
 When we go to prv instance what do we do with the child instances ? Maybe they should be deleted ? But not the same to jump back as active or to view.
-
-Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
 
 Meta-level is like a stack of tasks
   Needs to sit on server ?
@@ -14,8 +9,12 @@ Meta-level is like a stack of tasks
     Evaluate current task in each level of stack
 
 Server:
-  Split the API into files using routes
-  Move chat function into file
+  Stop using globals across modules
+  How to split up functionality in server:
+    Config
+    Storage
+    Websocket API
+    HTTP API
 
 -------
 Future
@@ -24,12 +23,13 @@ Future
     Allow the user to specify the system prompt.
     Default agent for user (perhaps have user state e.g. last active conversation)
     Use a different route for configuring: user, session, workflow, task
+    Should tasks have the option of starting other tasks?
   Defensive programming + logging
   Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
-  Chatbot in workflow
   Websocket for tasks (so server can drive) just send incremental info for the task
-  Cache on client side for task fetching would require /api/task_get (so we know it is intended to just fetch)
+  Cache on client side for task fetching might require /api/task_get (so we know it is intended to just fetch)
   Switching between chat and workflow loses the chat messages - store at app level could resolve that
+  Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
   Hierarchy of configuration:
   Defaults
     User (Route)
@@ -62,10 +62,7 @@ import http from 'http'
 import bodyParser from 'body-parser'
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Keyv from 'keyv'
-import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
 import { utils } from './utils.mjs';
-import { error } from 'console'
 dotenv.config()
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
@@ -179,41 +176,31 @@ console.log("CACHE_ENABLE " + CACHE_ENABLE)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// The keyV could be in a single sqlite DB
-
+// Each keyv store is in a different table
 const DB_URI = 'sqlite://db/main.sqlite'
-
-function newKeyV(uri, table) {
-  return new Keyv({
-    store: new KeyvBetterSqlite3({
-      uri: uri,
-      table: table,
-    }),
-  });
-}
 
 // We could have one keyv store and use prefix for different tables
 
 // Schema: See ChatGPTAPI
 // For now this is a dedicated store but eventually it
 // should be an interface to the threads + instances
-const messagesStore_async = newKeyV(DB_URI, 'messages')
+const messagesStore_async = utils.newKeyV(DB_URI, 'messages')
 // Schema:
 //   Key: sessionId || sessionId + 'userId'
 //   Value: object
-const sessionsStore_async = newKeyV(DB_URI, 'sessions')
+const sessionsStore_async = utils.newKeyV(DB_URI, 'sessions')
 // Schema:
 //   Key: hash
 //   Value: object
-const cache_async = newKeyV(DB_URI, 'cache')
+const cache_async = utils.newKeyV(DB_URI, 'cache')
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const instancesStore_async = newKeyV(DB_URI, 'instances')
+const instancesStore_async = utils.newKeyV(DB_URI, 'instances')
 // Schema:
 //   Key: threadId || taskId + userId || taskId + sessionId || taskId + groupId
 //   Value: array of instanceId
-const threadsStore_async = newKeyV(DB_URI, 'threads')
+const threadsStore_async = utils.newKeyV(DB_URI, 'threads')
 
 const app = express();
 app.use(bodyParser.json());
@@ -303,10 +290,10 @@ websocketServer.on('connection', (ws) => {
 
 });
 
-const allowedOrigins = [CLIENT_URL];
-
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
+
+const allowedOrigins = [CLIENT_URL];
 
 app.use(cors({
   credentials: true,
@@ -324,10 +311,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, 'public')));
-
-// How to put the API into separate files
 
 app.use('/api/session', sessionRoutes);
 app.use('/api/task', taskRoutes);
@@ -361,4 +345,4 @@ app.get('/authenticate', async (req, res) => {
 });
 
 const port = process.env.WS_PORT || 5000;
-server.listen(port, () => console.log('AI server started'))
+server.listen(port, () => console.log('Chat2Flow server started'))

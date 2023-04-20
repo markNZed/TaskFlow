@@ -1,8 +1,19 @@
 'use strict';
 import { v4 as uuidv4 } from 'uuid'
 import forEach from 'lodash';
+import Keyv from 'keyv'
+import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
 
 const utils = {};
+
+utils.newKeyV = function(uri, table) {
+  return new Keyv({
+    store: new KeyvBetterSqlite3({
+      uri: uri,
+      table: table,
+    }),
+  });
+}
 
 utils.fail = function(msg) {
   console.error(msg)
