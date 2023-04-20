@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TaskFromAgent from "./Tasks/TaskFromAgent"
-import TaskShowResponse from "./Tasks/TaskShowResponse"
+import TaskFromAgent from "./TaskFromAgent"
+import TaskShowResponse from "./TaskShowResponse"
 import useFetchTask from '../../hooks/useFetchTask';
 
-function WorkflowStepper(props) {
+function TaskStepper(props) {
 
   const { startTask } = props;
   const [activeTask, setActiveTask] = useState();
@@ -151,4 +151,4 @@ function WorkflowStepper(props) {
   );
 }
 
-export default WorkflowStepper;
+export default TaskStepper;

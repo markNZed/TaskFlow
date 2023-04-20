@@ -3,11 +3,11 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import PromptDropdown from './PromptDropdown';
 
 // assets
-import send from '../../../../assets/send.svg';
+import send from '../../../assets/send.svg';
 
 // contexts
-import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
-import useFetchTask from '../../../../hooks/useFetchTask';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
+import useFetchTask from '../../../hooks/useFetchTask';
 
 
 const MsgBox = (props) => {

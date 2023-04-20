@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
-import Workflows from "./components/Workflow/Workflows"
+import Workflows from "./components/Taskflows"
 import { useGeolocation } from './useGeolocation';
 import { useGlobalStateContext } from './contexts/GlobalStateContext';
 import { serverUrl } from './config';

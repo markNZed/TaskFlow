@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import { QueryClientProvider, QueryClient } from 'react-query'; 
 import { ReactQueryDevtools } from 'react-query/devtools'
-import '../../styles/App.css';
-import '../../styles/normal.css';
+import '../styles/App.css';
+import '../styles/normal.css';
 import ChatArea from "./Tasks/Chat/ChatArea"
-import SideMenu from "../SideMenu/SideMenu"
-import ObjectDisplay from "../Generic/ObjectDisplay"
+import SideMenu from "./SideMenu/SideMenu"
+import ObjectDisplay from "./Generic/ObjectDisplay"
 import Stack from '@mui/material/Stack';
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -14,9 +14,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
-import WorkflowStepper from "./WorkflowStepper"
-import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
-import { serverUrl } from '../../config';
+import TaskStepper from "./Tasks/TaskStepper"
+import { useGlobalStateContext } from '../contexts/GlobalStateContext';
+import { serverUrl } from '../config';
 
 const queryClient = new QueryClient()
 
@@ -144,13 +144,13 @@ function Workflows() {
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               
               <Toolbar />
-              {/* We default to the WorkflowStepper to run the Workflow*/}
+              {/* We default to the TaskStepper to run the Workflow*/}
               {(() => { //immediately invoked function expression (IIFE) required for inline switch
                 switch (myStartTask?.component) {
                 case 'TaskChat':
                   return <ChatArea startTask={myStartTask} />;
                 default:
-                  return <WorkflowStepper  startTask={myStartTask} />;
+                  return <TaskStepper  startTask={myStartTask} />;
                 }
               })()}
   
@@ -161,10 +161,10 @@ function Workflows() {
               </div>
               */}
 
-              {/* without div around classname does not have effect on WorkflowStepper */}
+              {/* without div around classname does not have effect on TaskStepper */}
               {/*
               <div className={`${globalState?.task?.presentation_type === 'stepper' ? 'hide' : ''}`}>
-                <WorkflowStepper />
+                <TaskStepper />
               </div>
               */}
 

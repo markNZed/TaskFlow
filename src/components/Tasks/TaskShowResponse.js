@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import useFetchStep from '../../../hooks/useFetchStep';
+import useFetchStep from '../../hooks/useFetchStep';
 
 const TaskShowResponse = (props) => {
 

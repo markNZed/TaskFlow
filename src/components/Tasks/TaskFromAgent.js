@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { useWebSocketContext } from '../../../contexts/WebSocketContext';
-import useFetchStep from '../../../hooks/useFetchStep';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import useFetchStep from '../../hooks/useFetchStep';
 
 const TaskFromAgent = (props) => {
   
