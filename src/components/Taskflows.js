@@ -51,7 +51,7 @@ function Workflows() {
             })
         };
       
-        let updatedTask = await fetch(`${serverUrl}api/start`, requestOptions)
+        let updatedTask = await fetch(`${serverUrl}api/task/start`, requestOptions)
             .then((response) => response.json())
             .catch((err) => {
                 console.log(err.message);

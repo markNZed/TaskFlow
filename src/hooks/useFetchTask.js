@@ -32,7 +32,7 @@ const useFetchTask = (fetchNow) => {
           }),
         };
 
-        const response = await fetch(`${serverUrl}api/task`, requestOptions);
+        const response = await fetch(`${serverUrl}api/task/update`, requestOptions);
         const data = await response.json();
         console.log("Response from fetchTask ", data)
 

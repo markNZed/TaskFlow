@@ -30,7 +30,7 @@ const useFetchStep = (fetchNow, myTask, myStep) => {
           }),
         };
 
-        const response = await fetch(`${serverUrl}api/task`, requestOptions);
+        const response = await fetch(`${serverUrl}api/task/update`, requestOptions);
         const data = await response.json();
 
         if (isMounted.current) {
