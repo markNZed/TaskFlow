@@ -2,63 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl } from '../../../config';
-import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
-import useFetchTask from '../../../hooks/useFetchTask';
+import useFetchStep from '../../../hooks/useFetchStep';
 
 const TaskShowResponse = (props) => {
 
-    const { id, leaving, taskDone, taskName, task, updateTask, activeTask } = props;
-    const { globalState, mergeGlobalState } = useGlobalStateContext();
+    const { leaving, task, setTask } = props;
 
     const [fetchNow, setFetchNow] = useState('');
     const [responseText, setResponseText] = useState('');
-    const [myTaskName, setMyTaskName] = useState("");
-    const [myTask, setMyTask] = useState('');
+    const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    const { fetchResponse, fetched } = useFetchTask(fetchNow, myTask, myStep, globalState, serverUrl);
+    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, myStep);
 
-    // Should be a utility function
-    const updateMyTask = (key, value) => {
-        setMyTask((prevTask) => ({
-          ...prevTask,
-          [key]: value,
-        }));
-        // Need to use updateTask to share with workflow
-        //console.log("updateMyTask = (key, value)" + key + " " + value)
-    };
-
+    // Reset the task once
     useEffect(() => {
-        setMyTaskName(props.taskName)
-        setMyTask(props.task)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Initialize step
-    // activeTask allows us to detect when we move back into this task
-    useEffect(() => {
-        if (myTaskName === activeTask) {
-            //console.log("Initialize step for " + myTaskName)
-            if (!myTask?.steps) {
+        if (task && !myTaskId && task.component === 'TaskShowResponse') {
+            console.log("RESETTING TaskShowResponse")
+            //setMyStep('start') // I guess this triggers the state machine
+            setMyTaskId(task.id)
+            setResponseText('')
+            if (!task?.steps) {
                 // Default sequence is to just get response
-                updateMyTask('steps', {'start' : 'response', 'response' : 'stop'})
+                setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
             }
             setMyStep('start')
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myTaskName, activeTask]); // taskCount removed
+    }, [task]);
 
-   // Sub_task state machine
+    // Sub_task state machine
     // Unique for each component that requires steps
     // Split into next_state and action - no
     useEffect(() => {
-        if (myStep) {
-            // leaving now always true
-            const leaving_now = ((leaving?.direction === 'next') && leaving?.task === myTaskName)
-            const next_step = myTask.steps[myStep]
-            console.log("myTaskName " + myTaskName + " step state machine myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
+        if (myTaskId && myTaskId === task.id) {
+            // leaving should use id not name
+            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
+            const next_step = task.steps[myStep]
+            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -70,12 +51,12 @@ const TaskShowResponse = (props) => {
                         setResponseText(text);
                     }
                     // We cache the response client side
-                    if (myTask?.response) {
+                    if (task?.response) {
                         console.log('Response cached client side')
                         // Next state
                         setMyStep(next_step)
                         // Actions
-                        response_action(myTask.response)
+                        response_action(task.response)
                     } else {
                         if (fetched === myStep) { 
                             setMyStep(next_step) 
@@ -87,7 +68,7 @@ const TaskShowResponse = (props) => {
                         // show the response
                         if (fetched === myStep) {
                             const response_text = fetchResponse.response
-                            updateMyTask('response', response_text)
+                            setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         }
                     }
@@ -98,13 +79,13 @@ const TaskShowResponse = (props) => {
                     // Should defensively avoid calling taskDone twice?
                     //setFetched(null) // This also breaks things, even clearFetch state does not work
                     if (leaving_now) {
-                        taskDone(myTaskName)
+                        setTask((p) => {return {...p, done: true}});
                     }
                     break;
                 default:
                     console.log('ERROR unknown step : ' + myStep);
             }
-            updateMyTask('step', myStep)
+            setTask((p) => {return {...p, step: myStep}});
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

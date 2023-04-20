@@ -26,6 +26,11 @@ body {
   display: none;
 }
 
+.flex-grow {
+  flex-grow: 1;
+  display: flex;
+}
+
 .sidemenu{
   width: 260px;
   padding: 10px;

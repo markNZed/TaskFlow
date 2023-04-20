@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { serverUrl } from '../config';
 
-const useFetchTask = (fetchNow) => {
+const useFetchStep = (fetchNow, myTask, myStep) => {
   const { globalState } = useGlobalStateContext();
   const [fetchResponse, setFetchResponse] = useState('');
   const [fetched, setFetched] = useState('');
@@ -16,8 +16,7 @@ const useFetchTask = (fetchNow) => {
 
   useEffect(() => {
     if (fetchNow) {
-
-      console.log("useFetchTask ", fetchNow)
+      console.log("useFetchStep ", myTask)
 
       async function fetchTask() {
 
@@ -27,28 +26,26 @@ const useFetchTask = (fetchNow) => {
           credentials: 'include',
           body: JSON.stringify({
             sessionId: globalState.sessionId,
-            task: fetchNow,
-            address: globalState?.address
+            task: myTask,
           }),
         };
 
         const response = await fetch(`${serverUrl}api/task`, requestOptions);
         const data = await response.json();
-        console.log("Response from fetchTask ", data)
 
         if (isMounted.current) {
           if (data?.error) {
             console.log("ERROR " + data.error.message);
           }
           setFetchResponse(data);
-          setFetched(data.id);
+          setFetched(myStep);
         }
       }
 
       fetchTask().catch((error) => {
         console.log("ERROR " + error.message);
         if (isMounted.current) {
-          setFetched(false);
+          setFetched(myStep);
         }
       });
     }
@@ -57,4 +54,4 @@ const useFetchTask = (fetchNow) => {
   return { fetchResponse, fetched };
 };
 
-export default useFetchTask;
+export default useFetchStep;

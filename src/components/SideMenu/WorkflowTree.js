@@ -28,32 +28,39 @@ function WorkflowTree() {
     };
 
     function handleSelectNode(node) {
-      replaceGlobalState('workflow', node);
+      replaceGlobalState('selectedTaskId', node.id + '.start');
     }
 
     // It would be better to move the renderTree function outside of the workflowTreeView component and define it as a separate utility function that can be used in other components as well.
-    function renderTree(node, handleSelectNode, propagateDefault) {
-        if (!node) {return ""}
-
-        const { id, name, children } = node;
+    function renderTree(nodes, id, handleSelectNode, propagateDefault) {
+        if (!nodes) {return ''}
+        
+        const node = nodes[id]
+        if (!node) {
+          // May not exist because of permissions
+          // Would be better to strip from children also
+          return ''
+        }
+        const { label, children } = node;
+        //console.log(label, children)
         if (propagateDefault) {
             tempNodeIds = [...tempNodeIds, id];
         }
         
         if (children && children.length > 0) {
             return (
-            <TreeItem key={id} nodeId={id} label={name}>
-                {children.map((child) => renderTree(child, handleSelectNode, propagateDefault))}
+            <TreeItem key={id} nodeId={id} label={label}>
+                {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
             </TreeItem>
             );
-        } else if (node?.tasks) {
+        } else {
             if (propagateDefault && node?.default) {
                 handleSelectNode(node)
             }
             return (
             <TreeItem
                 key={id}
-                label={name}
+                label={label}
                 nodeId={id}
                 onClick={() => handleSelectNode(node)}
             />
@@ -61,7 +68,7 @@ function WorkflowTree() {
         }
     }
 
-    if (!globalState.workflows) {
+    if (!globalState.workflowsTree) {
       return <div>Loading...</div>;
     }
   
@@ -74,7 +81,7 @@ function WorkflowTree() {
           expanded={expanded}
           onNodeToggle={handleToggle}
         >
-          {renderTree(globalState.workflows, handleSelectNode, true)}
+          {renderTree(globalState.workflowsTree, 'root', handleSelectNode, true)}
         </TreeView>
       </div>
     );

@@ -15,27 +15,62 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import WorkflowStepper from "./WorkflowStepper"
-import { serverUrl } from '../../config';
 import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
-
+import { serverUrl } from '../../config';
 
 const queryClient = new QueryClient()
 
-function Workflows() {
+// Move to taskStack ?
+// Presentation task ?
+// 
 
+// Ultimately there could be multiple Workflows instantiated to allow for parallel workflows
+// Here we can assume there is a single active workflow with a single active task
+// We want to use a prop not a global for the task (so multiple Workflows can be supported)
+
+function Workflows() {
   const { globalState } = useGlobalStateContext();
 
+  const [myStartTask, setMyStartTask] = useState();
+
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
+
+  useEffect(() => {
+    if (globalState.selectedTaskId) {
+
+      async function fetchData() { 
+
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+            sessionId: globalState.sessionId,
+            startId: globalState.selectedTaskId,
+            address: globalState?.address,
+            })
+        };
+      
+        let updatedTask = await fetch(`${serverUrl}api/start`, requestOptions)
+            .then((response) => response.json())
+            .catch((err) => {
+                console.log(err.message);
+            });
+
+        setMyStartTask(updatedTask)
+
+        console.log("Workflows created new task " + updatedTask.id)
+
+      }
+
+      fetchData()
+    }
+  }, [globalState]);
+
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
   };
-  
-  useEffect(() => {
-    if (!window.location.href.includes('authenticated')) {
-      window.location.replace(serverUrl + 'authenticate');
-    }
-  }, []);
 
   const drawWidth = 220;
 
@@ -60,7 +95,7 @@ function Workflows() {
                 <MenuIcon />
               </IconButton>
               <Typography variant="h6">
-                UnderStudy
+                Chat2Flow
               </Typography>
             </Toolbar>
           </AppBar>
@@ -109,13 +144,29 @@ function Workflows() {
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               
               <Toolbar />
-
               {/* We default to the WorkflowStepper to run the Workflow*/}
-              {globalState.workflow?.kernel === 'chat' ?
+              {(() => { //immediately invoked function expression (IIFE) required for inline switch
+                switch (myStartTask?.component) {
+                case 'TaskChat':
+                  return <ChatArea startTask={myStartTask} />;
+                default:
+                  return <WorkflowStepper  startTask={myStartTask} />;
+                }
+              })()}
+  
+              {/* div around ChatArea pushes prompt input to the top of window */}
+              {/*
+              <div className={`${globalState?.task?.presentation_type === 'chat' ? 'flex-grow' : 'hide'}`} >
                 <ChatArea />
-                :
+              </div>
+              */}
+
+              {/* without div around classname does not have effect on WorkflowStepper */}
+              {/*
+              <div className={`${globalState?.task?.presentation_type === 'stepper' ? 'hide' : ''}`}>
                 <WorkflowStepper />
-              }
+              </div>
+              */}
 
             </Box>
 

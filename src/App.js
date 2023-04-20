@@ -10,20 +10,29 @@ import { serverUrl } from './config';
 function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
-  const { globalState, mergeGlobalState } = useGlobalStateContext();
+  const { globalState, mergeGlobalState, replaceGlobalState } = useGlobalStateContext();
   
+  // Address is sent via useFetchTask (could also be sent in the start request of Workflow.js)
   useEffect(() => {
-    if (globalState?.workflow?.use_address && !enableGeolocation) {
+    if (globalState?.use_address && !enableGeolocation) {
       setEnableGeolocation(true)
       console.log("Enabling use of address")
     }
-  }, [globalState]);
+
+  }, [globalState, enableGeolocation]);
 
   useEffect(() => {
-    if (address) {
-      mergeGlobalState({ address });
+    if (enableGeolocation && address && globalState?.address !== address) {
+      replaceGlobalState('address', address );
     }
   }, [address]);
+
+  // This is a hack for CloudFlare to ping the websocket server with a normal HTTP request to setup cookies etc
+  useEffect(() => {
+    if (!window.location.href.includes('authenticated')) {
+      window.location.replace(serverUrl + 'authenticate');
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -38,9 +47,10 @@ function App() {
           mergeGlobalState({ sessionId });
           console.log("Set sessionId ", sessionId);
         }
-        if (data?.workflows) {
-          const workflows = data.workflows
-          mergeGlobalState({ workflows });
+        // Should have a separate API
+        if (data?.workflowsTree) {
+          const workflowsTree = data.workflowsTree
+          mergeGlobalState({ workflowsTree });
         }
       } catch (err) {
         console.log(err.message);

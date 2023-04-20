@@ -95,7 +95,7 @@ const SideMenu = (props) => {
         
       </div>
       
-      <WorkflowTree onSelectworkflow={props.onSelectworkflow}/>
+      <WorkflowTree />
     
     </aside>
     )

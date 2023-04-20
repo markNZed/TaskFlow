@@ -17,9 +17,6 @@ export function WebSocketProvider({ children, socketUrl}) {
     const [webSocket, setWebSocket] = useState(null);
     const { globalState } = useGlobalStateContext();
 
-    // This needs to move to API
-    const [lastAddress, setLastAddress] = useState('');
-
     const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
         reconnectAttempts: 10,
         reconnectInterval: 500,
@@ -56,11 +53,6 @@ export function WebSocketProvider({ children, socketUrl}) {
     });
 
     const sendJsonMessagePlus = function(m) {
-        // Only send the address when it changes
-        if (globalState?.address && lastAddress !== globalState.address) {
-            m.address = globalState.address
-            setLastAddress(globalState.address)
-        }
         if (globalState?.sessionId) {
             m.sessionId = globalState.sessionId
         }

@@ -2,19 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { serverUrl } from '../../../config';
 import { useWebSocketContext } from '../../../contexts/WebSocketContext';
-import { useGlobalStateContext } from '../../../contexts/GlobalStateContext';
-import useFetchTask from '../../../hooks/useFetchTask';
+import useFetchStep from '../../../hooks/useFetchStep';
 
 const TaskFromAgent = (props) => {
-    const { globalState, mergeGlobalState } = useGlobalStateContext();
   
-    const { id, leaving, taskDone, taskName, task, updateTask, activeTask } = props;
+    const { leaving, task, setTask} = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
-    const [fetchNow, setFetchNow] = useState('');
+    const [fetchNow, setFetchNow] = useState();
     const [responseText, setResponseText] = useState('');
     const [userInput, setUserInput] = useState('');
     const [showUserInput, setShowUserInput] = useState(false);
@@ -22,37 +19,45 @@ const TaskFromAgent = (props) => {
     const [responseTextWordCount, setResponseTextWordCount] = useState(0);
     const userInputRef = useRef(null);
     const [userInputHeight, setUserInputHeight] = useState(0);
-    const [myTaskName, setMyTaskName] = useState('');
-    const [myTask, setMyTask] = useState('');
+    const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    const { fetchResponse, fetched } = useFetchTask(fetchNow, myTask, myStep, globalState, serverUrl);
+    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, myStep);
 
-    // Should be a utility function
-    const updateMyTask = (key, value) => {
-        setMyTask((prevTask) => ({
-          ...prevTask,
-          [key]: value,
-        }));
-        // Need to use updateTask to share with workflow
-        //console.log("updateMyTask = (key, value)" + key + " " + value)
-    };
+    // Reset the task, seems a big extreme to access global for this (should be a prop)
+    useEffect(() => {
+        if (task && !myTaskId && task.component === 'TaskFromAgent') {
+            console.log("RESETING TaskFromAgent")
+            setMyTaskId(task.id)
+            setResponseText('')
+            setUserInput('')
+            setUserInputWordCount(0)
+            setResponseTextWordCount(0)
+            if (!task?.steps) {
+                // Default sequence is to just get response based on prompt text
+                setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
+            }
+            setMyStep('start')
+        }
+    }, [task]);
 
     // Stream to the response field (should rename e.g. response_text)
     // Need to stream the ID
     useEffect(() => {
        const handleMessage = (e) => {
-            //console.log(e)
-            const j = JSON.parse(e.data)
-            if (j?.delta) {
-                setResponseText((prevResponse) => prevResponse + j.delta);
-            }
-            if (j?.text) {
-                setResponseText(j.text);
-            }
-            if (j?.final) {
-                setResponseText(j.final);
+            if (task?.instanceId && e?.instanceId === task.instanceId) {
+                //console.log(e)
+                const j = JSON.parse(e.data)
+                if (j?.delta) {
+                    setResponseText((prevResponse) => prevResponse + j.delta);
+                }
+                if (j?.text) {
+                    setResponseText(j.text);
+                }
+                if (j?.final) {
+                    setResponseText(j.final);
+                }
             }
         };
         webSocketEventEmitter.on('message', handleMessage);
@@ -60,37 +65,16 @@ const TaskFromAgent = (props) => {
             webSocketEventEmitter.removeListener('message', handleMessage);
         };
     }, []);
-        
-    // myTaskName is useful as it changes once and can indicate initialization
-    useEffect(() => {
-        setMyTaskName(taskName) // Should use props.task.name
-        setMyTask(task)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Initialize step
-    // activeTask allows us to detect when we move back into this task
-    useEffect(() => {
-        if (myTaskName === activeTask) {
-            //console.log("Initialize step for " + myTaskName)
-            if (!myTask?.steps) {
-                // Default sequence is to just get response based on prompt text
-                updateMyTask('steps', {'start' : 'response', 'response' : 'stop'})
-            }
-            setMyStep('start')
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myTaskName, activeTask]); // taskCount removed
 
     // Sub_task state machine
     // Unique for each component that requires steps
     // Split into next_state and action - no
     useEffect(() => {
-        if (myStep) {
+        if (myTaskId && myTaskId === task.id) {
             // leaving now always true
-            const leaving_now = ((leaving?.direction === 'next') && leaving?.task === myTaskName)
-            const next_step = myTask.steps[myStep]
-            console.log("myTaskName " + myTaskName + " step state machine myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
+            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
+            const next_step = task.steps[myStep]
+            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -99,20 +83,24 @@ const TaskFromAgent = (props) => {
                     break;
                 case 'response':
                     function response_action(text) {
-                        const words = text.trim().split(/\s+/).filter(Boolean)
-                        setResponseTextWordCount(words.length)
-                        setResponseText(text)
-                        if (next_step === 'input') {
-                            setShowUserInput(true)
+                        if (text) {
+                            const words = text.trim().split(/\s+/).filter(Boolean)
+                            setResponseTextWordCount(words.length)
+                            setResponseText(text)
+                            if (next_step === 'input') {
+                                setShowUserInput(true)
+                            }
+                        } else {
+                            console.log("No text for response_action in TaskFromAgent")
                         }
                     }
                     // We cache the response client side
-                    if (myTask?.response) {
+                    if (task?.response) {
                         console.log('Response cached client side')
                         // Next state
                         setMyStep(next_step)
                         // Actions
-                        response_action(myTask.response)
+                        response_action(task.response)
                     } else {
                         if (fetched === myStep) { 
                             setMyStep(next_step) 
@@ -124,7 +112,7 @@ const TaskFromAgent = (props) => {
                         // show the response
                         if (fetched === myStep) {
                             const response_text = fetchResponse.response
-                            updateMyTask('response', response_text)
+                            setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         }
                     }
@@ -138,6 +126,7 @@ const TaskFromAgent = (props) => {
                     // Actions
                     if (leaving_now) {
                         // Send the userInput input
+                        // Upon fetched we should update task ? So we need MyTask?
                         setFetchNow(myStep)
                         console.log("setFetchNow " + myStep)
                     }
@@ -148,13 +137,13 @@ const TaskFromAgent = (props) => {
                     // Should defensively avoid calling taskDone twice?
                     //setFetched(null) // This also breaks things, even clearFetch state does not work
                     if (leaving_now) {
-                        taskDone(myTaskName)
+                        setTask((p) => {return {...p, done: true}});
                     }
                     break;
                 default:
                     console.log('ERROR unknown step : ' + myStep);
             }
-            updateMyTask('step', myStep)
+            setTask((p) => {return {...p, step: myStep}});
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +151,10 @@ const TaskFromAgent = (props) => {
 
     // Align task data with userInput input
     useEffect(() => {
-        updateMyTask('input', userInput)
+        if (userInput) {
+            setTask((p) => {return {...p, input: userInput}});
+            console.log("Updating input " + userInput)
+        }
     }, [userInput]);
 
     // Adjust userInput input area size when input grows

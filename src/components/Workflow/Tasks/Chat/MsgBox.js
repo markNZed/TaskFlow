@@ -6,26 +6,30 @@ import PromptDropdown from './PromptDropdown';
 import send from '../../../../assets/send.svg';
 
 // contexts
-import { useGlobalStateContext } from '../../../../contexts/GlobalStateContext';
 import { useWebSocketContext } from '../../../../contexts/WebSocketContext';
-import { serverUrl } from '../../../../config';
+import useFetchTask from '../../../../hooks/useFetchTask';
+
 
 const MsgBox = (props) => {
-  const { globalState } = useGlobalStateContext();
+
+  const { task, msgs, setMsgs } = props
+  
+  const [fetchNow, setFetchNow] = useState();
+  const { fetchResponse, fetched } = useFetchTask(fetchNow);
   const { connectionStatus, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocketContext();
   const [lastMessage, setLastMessage] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
   const [messageHistory, setMessageHistory] = useState([]);
-  const [workflowId, setWorkflowId] = useState('initialize');
   const textareaRef = useRef(null);
-  const [myWorkflow, setMyWorkflow] = useState(null);
+  const [myTask, setMyTask] = useState(null);
 
   //console.log("MSGBox component")
 
+  // This should be a prop ?
   useEffect(() => {
-    if (globalState.workflow !== myWorkflow) {
-      setMyWorkflow(globalState.workflow)
+    if (task && task.id !== myTask?.id && task?.component === 'TaskChat') {
+      setMyTask(task)
     }
   });
 
@@ -34,11 +38,11 @@ const MsgBox = (props) => {
 
     const handleMessage = (e) => {
       const j = JSON.parse(e.data)
-      if (j?.workflowId === myWorkflow.id) {
+      if (myTask?.instanceId && j?.instanceId === myTask.instanceId) {
         //setLastMessage(j);
         if (j?.delta || j?.text || j?.final) {
-          let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-          const lastElement = newMsgs[globalState.workflow.id][newMsgs[globalState.workflow.id].length - 1];
+          let newMsgs =  JSON.parse(JSON.stringify(msgs)); // deep copy
+          const lastElement = newMsgs[task.threadId][newMsgs[task.threadId].length - 1];
           if (j?.delta) {
             lastElement.text += j.delta
           }
@@ -50,8 +54,8 @@ const MsgBox = (props) => {
           }
           // This allows the text to be displayed
           lastElement.isLoading = false 
-          newMsgs[globalState.workflow.id] = [...newMsgs[globalState.workflow.id].slice(0,-1), lastElement]
-          props.setMsgs(newMsgs);
+          newMsgs[task.threadId] = [...newMsgs[task.threadId].slice(0,-1), lastElement]
+          setMsgs(newMsgs);
           setPending(false);
         }
         if (j?.message) {
@@ -65,27 +69,7 @@ const MsgBox = (props) => {
     return () => {
       webSocketEventEmitter.removeListener('message', handleMessage);
     };
-  }, [webSocketEventEmitter, props.msgs, globalState.workflow.id]);
-
-
-  async function postPrompt(newMsg) {
-
-    let myTask = { ...myWorkflow.tasks['chat'] };
-    myTask['prompt'] = newMsg
-
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        sessionId: globalState.sessionId,
-        task: myTask,
-      }),
-    };
-    const response = await fetch(`${serverUrl}api/task`, requestOptions);
-    const data = await response.json();
-    //console.log(data)
-  }
+  }, [webSocketEventEmitter, msgs, task]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
@@ -99,14 +83,17 @@ const MsgBox = (props) => {
         text: "", 
         isLoading: true, 
       }];
-    let newMsgs =  JSON.parse(JSON.stringify(props.msgs)); // deep copy
-    newMsgs[globalState.workflow.id] = [...newMsgs[globalState.workflow.id], ...newMsgArray]
-    props.setMsgs(newMsgs);
+    let newMsgs =  JSON.parse(JSON.stringify(msgs)); // deep copy
+    newMsgs[task.threadId] = [...newMsgs[task.threadId], ...newMsgArray]
+    setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
-    postPrompt(newMsg)
+    // Update a copy to have immedaite effect so we can set fetchNow
+    let myTaskCopy = { ...myTask };
+    myTaskCopy['client_prompt'] = newMsg
+    setFetchNow(myTaskCopy)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[props.msgs, props.setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, globalState, globalState.workflow.id]);
+  },[msgs, setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, task]);
 
   useEffect(() => {
    // Access the form element using the ref
@@ -122,10 +109,10 @@ const MsgBox = (props) => {
 
   return (
     <form onSubmit={handleSubmit} className="msg-form">
-        {myWorkflow?.suggested_prompts ?
+        {myTask?.suggested_prompts ?
           <div style={{textAlign: 'left'}}>
             <PromptDropdown 
-              prompts={myWorkflow?.suggested_prompts} 
+              prompts={myTask?.suggested_prompts} 
               onSelect={handleDropdownSelect} 
             />
           </div>
