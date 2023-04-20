@@ -14,9 +14,6 @@ import { utils } from './utils.mjs';
 // connections
 // CACHE_ENABLE
 // wsSendObject function
-const initChatGlobals = (config) => {
-  Object.assign(global, config);
-}
 
 function SendIncrementalWs(partialResponse, instanceId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
@@ -275,4 +272,4 @@ async function ChatGPTAPI_request(params) {
   return response_text_promise
 }
 
-export { chat_async, initChatGlobals };
+export { chat_async };
