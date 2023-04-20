@@ -248,7 +248,7 @@ websocketServer.on('connection', (ws) => {
     const j = JSON.parse(message)
 
     if (j?.sessionId) {
-      console.log("sessionId from client: ", j.sessionId)
+      //console.log("sessionId from client: ", j.sessionId)
       sessionId = j.sessionId
       connections.set(sessionId, ws);
       ws.data['sessionId'] = sessionId
@@ -256,7 +256,7 @@ websocketServer.on('connection', (ws) => {
 
     if (j?.ping) {
       wsSendObject(ws, {"pong" : "ok"})
-      console.log("Pong ", j)
+      //console.log("Pong ", j)
     }
 
   });
