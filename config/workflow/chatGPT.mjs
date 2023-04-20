@@ -1,20 +1,17 @@
 const workflow_chatGPT = {
-    name: "chatGPT",
-    kernel: 'chat',
-    id: '1.1.1',
+    name: "chatgpt",
+    label: "chatGPT",
+    parent: 'conversation',
     agent: 'chatgpt',
     tasks: {
-        chat : {
-            name: 'chat',
-            id: '1.1.1.chat',
+        start : {
             component: 'TaskChat',
-            next: 'chat'
+            next: 'start'
         },
     },
-    //default: false
-    //one_session : false
-    //use_cache: true
-
+    //default: false,
+    //one_thread : false,
+    //use_cache: true,
 }     
 
 export default workflow_chatGPT;
