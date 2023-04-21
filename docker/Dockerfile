@@ -11,6 +11,13 @@ RUN git clone https://github.com/markNZed/chat2flow.git
 RUN cd chat2flow/server && npm install
 RUN cd chat2flow/client && npm install
 
+ARG CACHEBUSTER
+RUN echo "Cache buster: $CACHEBUSTER" && \
+    cd chat2flow && git pull
+
+RUN cd chat2flow/server && npm install
+RUN cd chat2flow/client && npm install
+
 EXPOSE 3000
 EXPOSE 5000
 

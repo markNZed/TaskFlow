@@ -1,7 +1,11 @@
 version: "3.9"
 services:
   chat2flow:
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        CACHEBUSTER: ${CACHEBUSTER}
     image: chat2flow:latest
     environment:
-      - PORT=3000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
