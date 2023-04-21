@@ -2,7 +2,7 @@ chat2flow is a task centric collaborative web application leveraging AI.
 
 To run with docker:
 <br> `cd docker`
-<br> Add your OPENAI_API_KEY to docker-compose.yml fiel or set that environment variable
+<br> Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable
 <br> `docker-compose build`
 <br> `docker-compose up`
 <br> Access the client at http://localhost:3000 
