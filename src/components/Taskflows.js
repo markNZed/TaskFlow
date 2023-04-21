@@ -3,7 +3,7 @@ import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools'
 import '../styles/App.css';
 import '../styles/normal.css';
-import ChatArea from "./Tasks/Chat/ChatArea"
+import TaskConversation from "./Tasks/TaskConversation"
 import SideMenu from "./SideMenu/SideMenu"
 import ObjectDisplay from "./Generic/ObjectDisplay"
 import Stack from '@mui/material/Stack';
@@ -16,7 +16,7 @@ import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import TaskStepper from "./Tasks/TaskStepper"
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
-import { serverUrl } from '../config';
+import useFetchStart from '../hooks/useFetchStart';
 
 const queryClient = new QueryClient()
 
@@ -28,45 +28,27 @@ const queryClient = new QueryClient()
 // Here we can assume there is a single active workflow with a single active task
 // We want to use a prop not a global for the task (so multiple Workflows can be supported)
 
-function Workflows() {
+function Taskflows() {
   const { globalState } = useGlobalStateContext();
 
   const [myStartTask, setMyStartTask] = useState();
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
+  const [fetchNow, setFetchNow] = useState();
+  const { fetchResponse, fetched } = useFetchStart(fetchNow);
+
   useEffect(() => {
-    if (globalState.selectedTaskId) {
-
-      async function fetchData() { 
-
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-            sessionId: globalState.sessionId,
-            startId: globalState.selectedTaskId,
-            address: globalState?.address,
-            })
-        };
-      
-        let updatedTask = await fetch(`${serverUrl}api/task/start`, requestOptions)
-            .then((response) => response.json())
-            .catch((err) => {
-                console.log(err.message);
-            });
-
-        setMyStartTask(updatedTask)
-
-        console.log("Workflows created new task " + updatedTask.id)
-
-      }
-
-      fetchData()
+    if (globalState.selectedTaskId && globalState.selectedTaskId !== myStartTask?.id) {
+      setFetchNow(globalState.selectedTaskId)
     }
   }, [globalState]);
 
+  useEffect(() => {
+    if (fetchResponse) {
+      setMyStartTask(fetchResponse)
+    }
+  }, [fetchResponse]);
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
@@ -122,7 +104,7 @@ function Workflows() {
                   },
                 }}
               >
-                <SideMenu/>
+                <SideMenu />
               </Drawer>
 
               <Drawer
@@ -146,27 +128,15 @@ function Workflows() {
               <Toolbar />
               {/* We default to the TaskStepper to run the Workflow*/}
               {(() => { //immediately invoked function expression (IIFE) required for inline switch
-                switch (myStartTask?.component) {
-                case 'TaskChat':
-                  return <ChatArea startTask={myStartTask} />;
+                switch (myStartTask?.ui_task) {
+                case 'TaskConversation':
+                  return <TaskConversation startTask={myStartTask} setStartTask={setMyStartTask} />;
+                case 'TaskStepper':
+                  return <TaskStepper startTask={myStartTask} setStartTask={setMyStartTask} />;
                 default:
-                  return <TaskStepper  startTask={myStartTask} />;
+                  return ''
                 }
               })()}
-  
-              {/* div around ChatArea pushes prompt input to the top of window */}
-              {/*
-              <div className={`${globalState?.task?.presentation_type === 'chat' ? 'flex-grow' : 'hide'}`} >
-                <ChatArea />
-              </div>
-              */}
-
-              {/* without div around classname does not have effect on TaskStepper */}
-              {/*
-              <div className={`${globalState?.task?.presentation_type === 'stepper' ? 'hide' : ''}`}>
-                <TaskStepper />
-              </div>
-              */}
 
             </Box>
 
@@ -188,4 +158,4 @@ function Workflows() {
   );
 }
 
-export default Workflows;
+export default Taskflows;

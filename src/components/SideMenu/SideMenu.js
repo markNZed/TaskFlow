@@ -1,13 +1,7 @@
 // libs
 import React, {  useCallback, useState, useEffect } from 'react';
-
-// contexts
 import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
-
-// utils
 import {AVAILABLE_MODELS} from "../../utils/constants"
-
-// components
 import SliderBox from "./SliderBox"
 import SelectBox from "./SelectBox"
 import WorkflowTree from "./WorkflowTree"
@@ -18,7 +12,7 @@ import WorkflowTree from "./WorkflowTree"
 import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 
-const SideMenu = (props) => {
+const SideMenu = () => {
 
   const [openToast, setOpenToast] = useState(false);
   const { globalState, mergeGlobalState } = useGlobalStateContext();
@@ -95,7 +89,7 @@ const SideMenu = (props) => {
         
       </div>
       
-      <WorkflowTree />
+      <WorkflowTree/>
     
     </aside>
     )

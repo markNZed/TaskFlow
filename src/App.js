@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import './styles/normal.css';
-import Workflows from "./components/Taskflows"
+import Taskflows from "./components/Taskflows"
 import { useGeolocation } from './useGeolocation';
 import { useGlobalStateContext } from './contexts/GlobalStateContext';
 import { serverUrl } from './config';
@@ -65,8 +65,8 @@ function App() {
 
   return (
     <Routes>
-      <Route exact path="/" element={<Workflows/>} />
-      <Route path="/authenticated" element={<Workflows/>} />
+      <Route exact path="/" element={<Taskflows/>} />
+      <Route path="/authenticated" element={<Taskflows/>} />
     </Routes>
   );
 }

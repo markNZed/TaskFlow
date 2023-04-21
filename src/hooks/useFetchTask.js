@@ -17,7 +17,7 @@ const useFetchTask = (fetchNow) => {
   useEffect(() => {
     if (fetchNow) {
 
-      console.log("useFetchTask ", fetchNow)
+      console.log("useFetchTask ", fetchNow.id)
 
       async function fetchTask() {
 

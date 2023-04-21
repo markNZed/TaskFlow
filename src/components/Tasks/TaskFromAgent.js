@@ -46,9 +46,9 @@ const TaskFromAgent = (props) => {
     // Need to stream the ID
     useEffect(() => {
        const handleMessage = (e) => {
-            if (task?.instanceId && e?.instanceId === task.instanceId) {
-                //console.log(e)
-                const j = JSON.parse(e.data)
+            const j = JSON.parse(e.data)
+            if (task?.instanceId && j?.instanceId === task.instanceId) {
+                
                 if (j?.delta) {
                     setResponseText((prevResponse) => prevResponse + j.delta);
                 }

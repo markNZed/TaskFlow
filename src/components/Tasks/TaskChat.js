@@ -1,16 +1,16 @@
 // libs
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import PromptDropdown from './PromptDropdown';
+import PromptDropdown from './TaskChat/PromptDropdown';
 
 // assets
-import send from '../../../assets/send.svg';
+import send from '../../assets/send.svg';
 
 // contexts
-import { useWebSocketContext } from '../../../contexts/WebSocketContext';
-import useFetchTask from '../../../hooks/useFetchTask';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import useFetchTask from '../../hooks/useFetchTask';
 
 
-const MsgBox = (props) => {
+const TaskChat = (props) => {
 
   const { task, msgs, setMsgs } = props
   
@@ -24,7 +24,7 @@ const MsgBox = (props) => {
   const textareaRef = useRef(null);
   const [myTask, setMyTask] = useState(null);
 
-  //console.log("MSGBox component")
+  //console.log("TaskChat component")
 
   // This should be a prop ?
   useEffect(() => {
@@ -153,4 +153,4 @@ const MsgBox = (props) => {
   );
 }
 
-export default React.memo(MsgBox);
+export default React.memo(TaskChat);

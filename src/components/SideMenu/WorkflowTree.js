@@ -31,7 +31,6 @@ function WorkflowTree() {
       replaceGlobalState('selectedTaskId', node.id + '.start');
     }
 
-    // It would be better to move the renderTree function outside of the workflowTreeView component and define it as a separate utility function that can be used in other components as well.
     function renderTree(nodes, id, handleSelectNode, propagateDefault) {
         if (!nodes) {return ''}
         
@@ -41,19 +40,24 @@ function WorkflowTree() {
           // Would be better to strip from children also
           return ''
         }
-        const { label, children } = node;
-        //console.log(label, children)
+        const { label, children, menu } = node;
+        //console.log(id)
         if (propagateDefault) {
             tempNodeIds = [...tempNodeIds, id];
         }
         
         if (children && children.length > 0) {
-            return (
-            <TreeItem key={id} nodeId={id} label={label}>
-                {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
-            </TreeItem>
-            );
+            if (menu) {
+              return (
+                <TreeItem key={id} nodeId={id} label={label} >
+                  {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
+                </TreeItem>
+              );
+            } else {
+              return children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))
+            }
         } else {
+            if (!menu) {return ''}
             if (propagateDefault && node?.default) {
                 handleSelectNode(node)
             }

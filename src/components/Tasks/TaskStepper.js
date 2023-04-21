@@ -5,10 +5,14 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TaskFromAgent from "./TaskFromAgent"
 import TaskShowResponse from "./TaskShowResponse"
 import useFetchTask from '../../hooks/useFetchTask';
+import useFetchStart from '../../hooks/useFetchStart';
 
+// Typically this Task gets created at the start of a taskflow
+// The startTask is the task that caused the creation of this task
+// Here we start a taskflow for the TaskStepper by starting myTask
 function TaskStepper(props) {
 
-  const { startTask } = props;
+  const { startTask, setStartTask} = props;
   const [activeTask, setActiveTask] = useState();
   const [prevActiveTask, setPrevActiveTask] = useState();
   const [visitedStepperTasks, setVisitedStepperTasks] = useState([]);
@@ -16,6 +20,21 @@ function TaskStepper(props) {
   const [fetchNow, setFetchNow] = useState();
   const [expanded, setExpanded] = useState(['start']);
   const { fetchResponse, fetched } = useFetchTask(fetchNow);
+  const [fetchStart, setFetchStart] = useState();
+  const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
+  const [myTask, setMyTask] = useState();
+
+  useEffect(() => {
+    if (!myTask) {
+      setFetchStart('root.ui.TaskStepper.start', startTask.threadId)
+    }
+  }, []);
+
+  useEffect(() => {
+    if (fetchResponseStart) {
+      setMyTask(fetchResponseStart)
+    }
+  }, [fetchResponseStart]);
 
   // When task is done then fetch next task
   // Detecting changes of the workflow
@@ -104,13 +123,13 @@ function TaskStepper(props) {
   return (
     <div>
       <Stepper activeStep={visitedStepperTasks.indexOf(activeTask)}>
-        {visitedStepperTasks.map(({ id, name, label, component, next }) => (
+        {visitedStepperTasks.map(({ name, label }) => (
           <Step key={`task-${name}`}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
-      {visitedStepperTasks.map(({ id, name, label, component, next }) => (
+      {visitedStepperTasks.map(({ name, label, component, next }) => (
           <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
@@ -120,15 +139,15 @@ function TaskStepper(props) {
               {(() => {
                 switch (component) {
                   case 'TaskFromAgent':
-                    return <TaskFromAgent task={activeTask} setTask={setActiveTask} leaving={leaving} />;
+                    return <TaskFromAgent task={activeTask} setTask={setActiveTask} leaving={leaving} parentTask={myTask} />;
                   case 'TaskShowResponse':
-                    return <TaskShowResponse task={activeTask} setTask={setActiveTask} leaving={leaving} />;
+                    return <TaskShowResponse task={activeTask} setTask={setActiveTask} leaving={leaving}  parentTask={myTask} />;
                   case 'TaskChoose':
                     return '' // ServerSide
                   case 'ServerSide':
                     return ''
                   default:
-                    return <div> No task found for {name} {activeTask.component}</div>
+                    return <div> No task found for {name} {component}</div>
                 }
               })()}   
             </AccordionDetails>

@@ -1,13 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
+import useFetchStart from '../../hooks/useFetchStart';
+import TaskChat from "./TaskChat"
+import Icon from "./TaskConversation/Icon"
 
-// components
-import MsgBox from "./MsgBox"
-import Icon from "./Icon"
-
-const ChatArea = (props) => {
-
-  const { startTask } = props
-
+const TaskConversation = (props) => {
+  const [fetchStart, setFetchStart] = useState();
+  const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
+  const [myTask, setMyTask] = useState();
+  const { startTask, setStartTask } = props
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
@@ -16,7 +16,26 @@ const ChatArea = (props) => {
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState({});
 
-  //console.log("ChatArea component")
+  //console.log("TaskConversation component")
+
+  useEffect(() => {
+    if (!myTask) {
+      setFetchStart('root.ui.TaskConversation.start')
+    }
+  }, []);
+
+  useEffect(() => {
+    if (fetchResponseStart) {
+      setMyTask(fetchResponseStart)
+    }
+  }, [fetchResponseStart]);
+
+  // Intercept updates to the startTask
+  // Can detect when input is being sent and update UI ?
+  // COuld avoid Msgs passing ?
+  function interceptSetStartTask(args) {
+    setStartTask(args)
+  }
 
   useEffect(() => {
     if (startTask) {
@@ -98,9 +117,9 @@ const ChatArea = (props) => {
 
       </div>
 
-      <MsgBox msgs={msgs} setMsgs={setMsgs} task={startTask} />
+      <TaskChat msgs={msgs} setMsgs={setMsgs} task={startTask} setTask={interceptSetStartTask} parentTask={myTask} />
     </section> 
     )
   }
 
-  export default React.memo(ChatArea);
+  export default React.memo(TaskConversation);
