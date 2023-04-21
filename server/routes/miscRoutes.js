@@ -1,5 +1,5 @@
 import express from 'express';
-import { DEFAULT_USER } from '../config.mjs';
+import { DEFAULT_USER, CLIENT_URL } from '../config.mjs';
 import * as dotenv from 'dotenv'
 dotenv.config()
 

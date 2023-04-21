@@ -94,23 +94,21 @@ function flattenWorkflows(workflows) {
       if (parentWorkflow.hasOwnProperty(key)) {
         if (!workflow.hasOwnProperty(key)) {
           workflow[key] = parentWorkflow[key]
-          //console.log("Added parent " + key + " to workflow " + id )
         }
-        //console.log("Keys: ", Object.keys(workflow))
         if (workflow.hasOwnProperty('PREPEND_' + key)) {
           if (Array.isArray(workflow['PREPEND_' + key])) {
             workflow[key] = workflow['PREPEND_' + key].concat(parentWorkflow[key]);
           } else {
             workflow[key] = workflow['PREPEND_' + key] + parentWorkflow[key]
           }
-          console.log("Workflow " + workflow.id + " PREPEND_ ", workflow['PREPEND_' + key], " to " + key)
+          //console.log("Workflow " + workflow.id + " PREPEND_ ", workflow['PREPEND_' + key], " to " + key)
         } else if (workflow.hasOwnProperty('APPEND_' + key)) {
           if (Array.isArray(workflow['APPEND_' + key])) {
             workflow[key] = parentWorkflow[key].concat(workflow['APPEND_' + key]);
           } else {
             workflow[key] =  parentWorkflow[key] + workflow['APPEND_' + key]
           }
-          console.log("Workflow " + workflow.id + " APPEND_ ", workflow['APPEND_' + key], " to " + key)
+          //console.log("Workflow " + workflow.id + " APPEND_ ", workflow['APPEND_' + key], " to " + key)
         }
       }
     }

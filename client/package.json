@@ -1,6 +1,6 @@
 {
-  "homepage": "https://YaokunLin.github.io/chatbot-react-client",
-  "name": "chat-gpt-client",
+  "homepage": "https://github.com/markNZed/chat2flow",
+  "name": "chat2flow-client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -30,7 +30,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "start": "PORT=3000 HTTPS=false PUBLIC_URL=/ react-app-rewired start",
+    "start": "HTTPS=false PUBLIC_URL=/ react-app-rewired start",
     "build": "react-app-rewired build",
     "build:dev": "react-app-rewired build --debug  --devtool source-map",
     "test": "react-app-rewired test",

@@ -1,8 +1,8 @@
 # Client
 
-This is the frontend / client side of chat2flow
+This is the frontend/client side of chat2flow
 1. written in React JS and Google Material Design (MUI)
-2. client-side caching by React-query, reducing the number of requests that need to be sent to the server.
+2. client-side caching by React-query
 
 To install the node packages:
 `npm install` 

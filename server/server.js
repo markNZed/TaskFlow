@@ -2,6 +2,8 @@
 -------
 Testing of Stepper
 Review/simplification of code
+React-query what is this ?
+The suggested prompts are broken
 
 Backlog
 -------
@@ -54,7 +56,6 @@ Notes
 
   Infra
   -----
-  Combine git repos into chat2flow
   Include docker in git
   Components repository so can be shared between server and client
   Run prod version instead of dev

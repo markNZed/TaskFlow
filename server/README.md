@@ -1,8 +1,8 @@
-# server
-This is the backend / server side of chat2flow
+# Server
+This is the backend/server side of chat2flow
 1. written in Node JS run-time, Express framework
-3. source msg data is powered by OpenAi API's
-4. feteched data is cached by SQLite
+3. chat responses powered by OpenAi API's
+4. fetched data is cached by SQLite
 
 To install the node packages:
 `npm install` 

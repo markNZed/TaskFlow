@@ -25,7 +25,7 @@ function App() {
     if (enableGeolocation && address && globalState?.address !== address) {
       replaceGlobalState('address', address );
     }
-  }, [address]);
+  }, [address, enableGeolocation]);
 
   // This is a hack for CloudFlare to ping the websocket server with a normal HTTP request to setup cookies etc
   useEffect(() => {
