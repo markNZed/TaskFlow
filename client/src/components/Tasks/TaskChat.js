@@ -16,7 +16,7 @@ const TaskChat = (props) => {
   
   const [fetchNow, setFetchNow] = useState();
   const { fetchResponse, fetched } = useFetchTask(fetchNow);
-  const { connectionStatus, webSocketEventEmitter, sendJsonMessagePlus } = useWebSocketContext();
+  const { webSocketEventEmitter } = useWebSocketContext();
   const [lastMessage, setLastMessage] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [pending, setPending] = useState(false);
@@ -93,7 +93,7 @@ const TaskChat = (props) => {
     setFetchNow(myTaskCopy)
     // Clear the textbox for our next prompt
     setNewMsg("");
-  },[msgs, setMsgs, newMsg, setNewMsg, sendJsonMessagePlus, task]);
+  },[msgs, setMsgs, newMsg, setNewMsg, task]);
 
   useEffect(() => {
    // Access the form element using the ref

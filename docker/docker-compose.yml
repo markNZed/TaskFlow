@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      args:
-        CACHEBUSTER: ${CACHEBUSTER}
     image: chat2flow:latest
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}

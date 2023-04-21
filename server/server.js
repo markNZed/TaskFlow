@@ -5,6 +5,8 @@ Review/simplification of code
 React-query what is this ?
 The suggested prompts are broken
 
+Firefox is not supporting websocket on ws://localhost:5000
+
 Backlog
 -------
 

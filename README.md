@@ -5,7 +5,8 @@ To run with docker:
 Add your OPENAI_API_KEY to docker-compose.yml or set that environment variable
 `docker-compose build`
 `docker-compose up`
-Access the client at http://localhost:3000
+Access the client at http://localhost:3000 
+There have been issues with Firefox and websocket on localhost, if Firefox does not work, restart or try Chrome.
 
 To learn more about the server see [README.md](server/README.md)
 
