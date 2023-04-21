@@ -1,4 +1,4 @@
-chat2flow is a task centric collaborative web application leveraging AI.
+chat2flow is a task centric collaborative web application leveraging AI that is under development.
 
 To run with docker:
 <br> `cd docker`
