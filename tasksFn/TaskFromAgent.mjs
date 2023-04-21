@@ -104,7 +104,7 @@ const TaskFromAgent_async = async function(threadsStore_async, instancesStore_as
     task.response = response_text
     task.last_change = Date.now()
     //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
-    console.log("Returning from tasks.TaskFromAgent ") // + response_text)
+    console.log("Returning from tasks.TaskFromAgent ")// + response_text)
     return task
 }
 

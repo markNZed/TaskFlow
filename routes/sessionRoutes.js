@@ -1,6 +1,11 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'
-import { utils } from '../utils.mjs';
+import { utils } from '../src/utils.mjs';
+import { users, groups, workflows } from './../src/configdata.mjs';
+import { sessionsStore_async } from './../src/storage.mjs'
+import { DEFAULT_USER } from './../config.mjs';
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const router = express.Router();
 
@@ -27,7 +32,7 @@ router.get('/', async (req, res) => {
     let workflowsTree = {}
     for (const key in authorised_workflows) {
       let wf = authorised_workflows[key]
-      workflowsTree[key] = utils.extract_client_info(wf, workflows[wf.id].filter_for_client)
+      workflowsTree[key] = utils.filter_in(wf, ['id', 'label', 'children', 'menu'])
     }
     //console.log("workflowsTree ", workflowsTree)
     if (userId) {

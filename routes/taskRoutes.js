@@ -1,8 +1,13 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'
-import { utils } from '../utils.mjs';
+import { utils } from '../src/utils.mjs';
 import { tasksFn } from '../tasksFn/tasksFn.mjs';
-import { chat_async } from '../chat.mjs';
+import { chat_async } from '../src/chat.mjs';
+import { groups, tasks } from './../src/configdata.mjs';
+import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
+import { DEFAULT_USER } from './../config.mjs';
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const router = express.Router();
 
@@ -38,9 +43,8 @@ async function do_task_async(task) {
     return updated_task
 }
   
-async function newTask_async(id, sessionId, parentTask = null) {
+async function newTask_async(id, sessionId, threadId = null, parentTask = null) {
     let parentInstanceId
-    let threadId
     if (parentTask) {
       parentInstanceId = parentTask.instanceId
       threadId = parentTask.threadId
@@ -95,11 +99,11 @@ router.post('/update', async (req, res) => {
       if (sessionId) { task['sessionId'] = sessionId } else {console.log("Warning: sessionId missing")}
       if (address) { task['address'] = address }
   
-      // Risk that client writes over server fields so extract_client_info before merge
+      // Risk that client writes over server fields so filter_out before merge
       let instanceId = task.instanceId
       const server_side_task = await instancesStore_async.get(instanceId)
-      // extract_client_info could also do some data cleaning
-      let clean_client_task = utils.extract_client_info(task, tasks[task.id].filter_for_client)
+      // filter_out could also do some data cleaning
+      let clean_client_task = utils.filter_out(tasks, task)
       let updated_task = Object.assign({}, server_side_task, clean_client_task)
   
       /*
@@ -113,7 +117,7 @@ router.post('/update', async (req, res) => {
         console.log("Client side task done " + updated_task.id)
         updated_task.done = false
         await instancesStore_async.set(instanceId, updated_task)
-        updated_task = await newTask_async(updated_task.next, sessionId, updated_task)
+        updated_task = await newTask_async(updated_task.next, sessionId, null, updated_task)
       } else {
         updated_task = await do_task_async(updated_task)
       }
@@ -130,7 +134,7 @@ router.post('/update', async (req, res) => {
           console.log("Server side task done " + updated_task.id)
           updated_task.done = false
           await instancesStore_async.set(updated_task.instanceId, updated_task)
-          updated_task = await newTask_async(updated_task.next, sessionId, updated_task)
+          updated_task = await newTask_async(updated_task.next, sessionId, null, updated_task)
         }
         if (updated_task?.server_task) {
           updated_task = await do_task_async(updated_task)
@@ -139,7 +143,7 @@ router.post('/update', async (req, res) => {
         }
       }
   
-      let updated_client_task = utils.extract_client_info(updated_task, tasks[updated_task.id].filter_for_client)
+      let updated_client_task = utils.filter_out(tasks, updated_task)
       res.send(JSON.stringify(updated_client_task));
     } else {
       res.status(200).json({ error: "No user" });
@@ -156,6 +160,7 @@ router.post('/start', async (req, res) => {
       //console.log("req.body " + JSON.stringify(req.body))
       const sessionId = req.body.sessionId;
       const startId = req.body.startId;
+      const threadId = req.body?.threadId;
       let groupId = req.body.groupId;
       let address = req.body.address;
   
@@ -170,7 +175,7 @@ router.post('/start', async (req, res) => {
   
         // default is to start a new thread
         // Instances key: no recorded in DB
-        let task = await newTask_async(startId, sessionId)
+        let task = await newTask_async(startId, sessionId, threadId)
         task['userId'] = userId
         if (sessionId) { task['sessionId'] = sessionId }  else {console.log("Warning: sessionId missing")}
         if (address) { task['address'] = address }
@@ -222,7 +227,7 @@ router.post('/start', async (req, res) => {
   
         await instancesStore_async.set(task.instanceId, task)
     
-        let updated_client_task = utils.extract_client_info(task, tasks[task.id].filter_for_client)
+        let updated_client_task = utils.filter_out(tasks, task)
         res.send(JSON.stringify(updated_client_task));
       }
     } else {

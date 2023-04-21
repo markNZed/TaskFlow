@@ -1,6 +1,12 @@
 import { encode } from 'gpt-3-encoder';
 import { ChatGPTAPI } from 'chatgpt'
 import { utils } from './utils.mjs';
+import { DUMMY_OPENAI, CACHE_ENABLE } from './../config.mjs';
+import { users, agents, defaults } from './configdata.mjs';
+import { messagesStore_async, cache_async, connections } from './storage.mjs'
+import { wsSendObject } from './websocket.js';
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 //Using process.env.OPENAI_API_KEY
 
@@ -34,7 +40,7 @@ function SendIncrementalWs(partialResponse, instanceId, ws) {
 
 async function chat_async(task) {
   const params = await chat_prepare(task)
-  ChatGPTAPI_request(params)
+  return await ChatGPTAPI_request(params)
 }
   
 // Prepare the paramters for the chat API request
@@ -59,6 +65,9 @@ async function chat_prepare(task) {
 
   let prompt = task?.prompt
   let agent = agents[task.agent]
+  if (!agent) {
+    console.log("No agent for ", task)
+  }
 
   if (task?.one_thread) {
     // Prefix with location when it has changed

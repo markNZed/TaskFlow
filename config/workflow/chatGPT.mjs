@@ -6,6 +6,7 @@ const workflow_chatGPT = {
     tasks: {
         start : {
             component: 'TaskChat',
+            ui_task: 'TaskConversation',
             next: 'start'
         },
     },

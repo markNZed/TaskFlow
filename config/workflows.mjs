@@ -1,23 +1,26 @@
-// Maybe multiple tasks to build a prompt instead of one task
-// May want to specify token limits in the workflow tasks
-
+import workflow_tasks from './tasks.mjs';
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
-const workflows = [
+const workflows_array = [
+    {
+        name: 'root',
+        // Should append to this from components
+        filter_for_client: ['id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_task', 'name', 'label', 'instanceId', 'threadId', 'welcome_message', 'children', 'client_prompt', 'done', 'steps', 'step', 'instruction', 'menu', 'ui_task', 'ui'],
+        menu: false,
+    },
     {
         name: 'exercices',
         parent: 'root',
+        menu: true,
     },
     {    
         name: 'conversation',
         parent: 'exercices',
-        presentation_type: 'chat',
     },
     workflow_chatGPT,
     {    
         name: 'workflow',
         parent: 'exercices',
-        presentation_type: 'stepper',
     },
     {
         name: "example",
@@ -30,6 +33,7 @@ const workflows = [
             start : {
                 response: "Hello",
                 component: 'TaskShowResponse',
+                ui_task: 'TaskStepper',
                 next: 'summarize'
             },
             summarize: {
@@ -65,5 +69,8 @@ const workflows = [
         }
     }, 
 ]
+
+// Importing arrays of workflows
+const workflows = [...workflows_array, ...workflow_tasks];
 
 export { workflows };
