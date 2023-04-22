@@ -12,6 +12,7 @@ import TaskFromAgent from "./TaskFromAgent"
 import TaskShowResponse from "./TaskShowResponse"
 import useFetchTask from '../../hooks/useFetchTask';
 import useFetchStart from '../../hooks/useFetchStart';
+import DynamicComponent from "./../Generic/DynamicComponent";
 
 // Typically this Task gets created at the start of a taskflow
 // The startTask is the task that caused the creation of this task
@@ -141,21 +142,9 @@ function TaskStepper(props) {
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { /* name */ }
-              {(() => {
-                switch (component) {
-                  case 'TaskFromAgent':
-                    return <TaskFromAgent task={activeTask} setTask={setActiveTask} leaving={leaving} parentTask={myTask} />;
-                  case 'TaskShowResponse':
-                    return <TaskShowResponse task={activeTask} setTask={setActiveTask} leaving={leaving}  parentTask={myTask} />;
-                  case 'TaskChoose':
-                    return '' // ServerSide
-                  case 'ServerSide':
-                    return ''
-                  default:
-                    return <div> No task found for {name} {component}</div>
-                }
-              })()}   
+              { component && (
+                  <DynamicComponent is={component} task={activeTask} setTask={setActiveTask} leaving={leaving} parentTask={myTask} />
+              )}
             </AccordionDetails>
             <div>
               {activeTask.name !== 'start' && activeTask.name === name && (

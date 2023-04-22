@@ -21,6 +21,7 @@ import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import useFetchStart from '../hooks/useFetchStart';
+import DynamicComponent from "./Generic/DynamicComponent";
 
 const queryClient = new QueryClient()
 
@@ -42,8 +43,6 @@ function Taskflows() {
   const [fetchNow, setFetchNow] = useState();
   const { fetchResponse, fetched } = useFetchStart(fetchNow);
 
-  const [DynamicComponent, setDynamicComponent] = useState(null);
-
   useEffect(() => {
     if (globalState.selectedTaskId && globalState.selectedTaskId !== myStartTask?.id) {
       setFetchNow(globalState.selectedTaskId)
@@ -55,25 +54,6 @@ function Taskflows() {
       setMyStartTask(fetchResponse)
     }
   }, [fetchResponse]);
-
-  useEffect(() => {
-    if (myStartTask?.ui_task && myStartTask.ui_task !== DynamicComponent?.name) {
-      const loadComponent = async () => {
-        try {
-          // Assuming components are in the same folder
-          const componentModule = await import(`./Tasks/${myStartTask.ui_task}`);
-          setDynamicComponent(() => componentModule.default);
-        } catch (error) {
-          console.error(`Error loading component: ${myStartTask.ui_task}`, error);
-          setDynamicComponent(null);
-        }
-        console.log("Loaded component ", DynamicComponent)
-      };
-
-      loadComponent();
-    }
-  }, [myStartTask]);
-
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
@@ -152,11 +132,9 @@ function Taskflows() {
               
               <Toolbar />
 
-              {DynamicComponent ? (
-                <DynamicComponent startTask={myStartTask} setStartTask={setMyStartTask} />
-              ) : 
-              ''
-              }
+              { myStartTask?.ui_task && (
+                  <DynamicComponent is={myStartTask.ui_task} startTask={myStartTask} setStartTask={setMyStartTask} />
+              )}
 
             </Box>
 

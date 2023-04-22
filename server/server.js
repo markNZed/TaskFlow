@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 /* ToDo
 -------
-Testing of Stepper
+Testing of Stepper - cannot go back and update input
 Review/simplification of code
 React-query neccesary ?
 WorkflowTree can be a Task?
