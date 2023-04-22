@@ -1,6 +1,6 @@
 chat2flow is a task centric collaborative web application leveraging AI that is under development.
 
-This project is licensed under Mozilla Public License Version 2.0 see [LICENSE.txt](LICENSE.txt) The project is open to contributions, an [ICLA](ICLA.txt) is provided for pull requests and managed automatically by https://cla-assistant.io/ An important aspect of the ICLA is that it allows the Project Owner to change the project license in the future. If the license is changed in the future, the source code at that time would still always be available under the MPL 2.0 e.g. anyone could fork the project and continue development under MPL 2.0
+This project is licensed under Mozilla Public License Version 2.0 see [LICENSE.txt](LICENSE.txt) The project is open to contributions, an [ICLA](ICLA.txt) is provided for pull requests and managed automatically by https://cla-assistant.io/ An important aspect of the ICLA is that it allows the Project Owner to change the project license in the future. If the license is changed in the future, the source code prior to the change would still be available under the MPL 2.0 i.e., anyone could fork the MPL 2.0 project and continue development.
 
 To run chat2flow with docker see [README.md](docker/README.md) in docker directory.
 
