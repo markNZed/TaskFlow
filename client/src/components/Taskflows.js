@@ -9,7 +9,6 @@ import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools'
 import '../styles/App.css';
 import '../styles/normal.css';
-import TaskConversation from "./Tasks/TaskConversation"
 import SideMenu from "./SideMenu/SideMenu"
 import ObjectDisplay from "./Generic/ObjectDisplay"
 import Stack from '@mui/material/Stack';
@@ -20,7 +19,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
-import TaskStepper from "./Tasks/TaskStepper"
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import useFetchStart from '../hooks/useFetchStart';
 
@@ -44,6 +42,8 @@ function Taskflows() {
   const [fetchNow, setFetchNow] = useState();
   const { fetchResponse, fetched } = useFetchStart(fetchNow);
 
+  const [DynamicComponent, setDynamicComponent] = useState(null);
+
   useEffect(() => {
     if (globalState.selectedTaskId && globalState.selectedTaskId !== myStartTask?.id) {
       setFetchNow(globalState.selectedTaskId)
@@ -55,6 +55,25 @@ function Taskflows() {
       setMyStartTask(fetchResponse)
     }
   }, [fetchResponse]);
+
+  useEffect(() => {
+    if (myStartTask?.ui_task && myStartTask.ui_task !== DynamicComponent?.name) {
+      const loadComponent = async () => {
+        try {
+          // Assuming components are in the same folder
+          const componentModule = await import(`./Tasks/${myStartTask.ui_task}`);
+          setDynamicComponent(() => componentModule.default);
+        } catch (error) {
+          console.error(`Error loading component: ${myStartTask.ui_task}`, error);
+          setDynamicComponent(null);
+        }
+        console.log("Loaded component ", DynamicComponent)
+      };
+
+      loadComponent();
+    }
+  }, [myStartTask]);
+
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
@@ -132,17 +151,12 @@ function Taskflows() {
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               
               <Toolbar />
-              {/* We default to the TaskStepper to run the Workflow*/}
-              {(() => { //immediately invoked function expression (IIFE) required for inline switch
-                switch (myStartTask?.ui_task) {
-                case 'TaskConversation':
-                  return <TaskConversation startTask={myStartTask} setStartTask={setMyStartTask} />;
-                case 'TaskStepper':
-                  return <TaskStepper startTask={myStartTask} setStartTask={setMyStartTask} />;
-                default:
-                  return ''
-                }
-              })()}
+
+              {DynamicComponent ? (
+                <DynamicComponent startTask={myStartTask} setStartTask={setMyStartTask} />
+              ) : 
+              ''
+              }
 
             </Box>
 

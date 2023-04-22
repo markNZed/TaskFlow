@@ -8,13 +8,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -------
 Testing of Stepper
 Review/simplification of code
-React-query what is this ?
-The suggested prompts are broken
-Contributor license? https://github.com/cla-assistant/cla-assistant + derivative of Apache ICLA/CCLA
+React-query neccesary ?
 WorkflowTree can be a Task?
-Create TASK component names on the fly 
-
-Firefox is not supporting websocket on ws://localhost:5000
 
 Backlog
 -------
@@ -23,10 +18,11 @@ Backlog
   -----
   When we go to prev instance in stepper what do we do with the child instances ? 
     Maybe they should be deleted ? But not the same to jump back as active or to view.
+  Scrolling to view suggested_prompts in TaskChat
 
   Features
   --------
-    Priority High
+    High Priority
     -------------
     Workflow features:
       Replace globalState with Redux
@@ -37,7 +33,7 @@ Backlog
       Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
         TaskChat should be receiving Msgs ? Ideally not. Try with interceptSetStartTask in TaskConversation
 
-    Priority Low
+    Low Priority
     ------------
     Multiple language support 'i18next-http-middleware for server and react-i18next for client
     Defensive programming + logging
@@ -62,7 +58,7 @@ Notes
 
   Architecture
   ------------
-    How to manage multiple interfaces for a Task: directory with sub-components and choose e.g. display option
+    How to manage multiple interfaces for a Task: directory with sub-components and choose e.g. display option, basically a style or theme
     Create separate common repo for Tasks: config + component + taskFn
 
   Infra

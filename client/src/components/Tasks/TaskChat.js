@@ -36,6 +36,7 @@ const TaskChat = (props) => {
   useEffect(() => {
     if (task && task.id !== myTask?.id && task?.component === 'TaskChat') {
       setMyTask(task)
+      console.log("Set TaskChat myTask ", myTask)
     }
   });
 
@@ -93,7 +94,7 @@ const TaskChat = (props) => {
     newMsgs[task.threadId] = [...newMsgs[task.threadId], ...newMsgArray]
     setMsgs(newMsgs);
     setMessageHistory((prev) => [...prev, newMsg]);
-    // Update a copy to have immedaite effect so we can set fetchNow
+    // Update a copy to have immediate effect so we can set fetchNow
     let myTaskCopy = { ...myTask };
     myTaskCopy['client_prompt'] = newMsg
     setFetchNow(myTaskCopy)

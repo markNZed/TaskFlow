@@ -9,7 +9,7 @@ const workflow_tasks = [
         name: 'TaskChat',
         parent: 'ui',
         menu: false,
-        APPEND_filter_for_client: ['client_prompt'],
+        APPEND_filter_for_client: ['client_prompt', 'suggested_prompts'],
         tasks: {
             start : {
                 next: 'stop',
@@ -67,5 +67,4 @@ const workflow_tasks = [
         parent: 'logic',
     },
 ]
-
-export default workflow_tasks
+export default workflow_tasks;
