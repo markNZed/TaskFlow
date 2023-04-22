@@ -9,7 +9,7 @@ RUN apt-get update && \
 EXPOSE 3000
 EXPOSE 5000
 
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
