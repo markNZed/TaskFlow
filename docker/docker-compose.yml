@@ -2,11 +2,13 @@ version: "3.9"
 services:
   chat2flow:
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: ./docker/Dockerfile
     image: chat2flow:latest
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes: 
+      - ..:/app/chat2flow
     ports:
       - "127.0.0.1:3000:3000"
       - "127.0.0.1:5000:5000"
