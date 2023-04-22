@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim
+    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget
 
 EXPOSE 3000
 EXPOSE 5000

@@ -1,3 +1,9 @@
+/*
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 import { encode } from 'gpt-3-encoder';
 import { ChatGPTAPI } from 'chatgpt'
 import { utils } from './utils.mjs';

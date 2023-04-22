@@ -1,5 +1,7 @@
 chat2flow is a task centric collaborative web application leveraging AI that is under development.
 
+This project is licensed under Mozilla Public License Version 2.0 see [LICENSE.txt](LICENSE.txt)
+
 To run with docker see [README.md](docker/README.md) in docker directory.
 
 To learn more about the server see [README.md](server/README.md) in server directory.

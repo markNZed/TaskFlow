@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Typography, TextareaAutosize } from "@mui/material";
+/*
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 import Paper from '@mui/material/Paper';
 
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
