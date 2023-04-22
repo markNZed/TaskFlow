@@ -1,6 +1,5 @@
 'use strict';
 import { v4 as uuidv4 } from 'uuid'
-import forEach from 'lodash';
 import Keyv from 'keyv'
 import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
 import {  } from './../config.mjs';

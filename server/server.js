@@ -4,6 +4,9 @@ Testing of Stepper
 Review/simplification of code
 React-query what is this ?
 The suggested prompts are broken
+License ?
+WorkflowTree can be a Task?
+Create TASK component names on the fly 
 
 Firefox is not supporting websocket on ws://localhost:5000
 
