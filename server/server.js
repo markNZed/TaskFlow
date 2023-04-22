@@ -10,7 +10,6 @@ Testing of Stepper
 Review/simplification of code
 React-query what is this ?
 The suggested prompts are broken
-License ? Mozilla Public License 2.0 (MPL 2.0) 
 Contributor license? https://github.com/cla-assistant/cla-assistant + derivative of Apache ICLA/CCLA
 WorkflowTree can be a Task?
 Create TASK component names on the fly 
