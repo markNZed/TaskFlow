@@ -9,7 +9,7 @@ import React from "react";
  * }
  */
 const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
-  console.log("DynamicComponent " + " is " + is + " useDefaultPath " + useDefaultPath + " " + `./../Tasks//${is}.js`)
+  //console.log("DynamicComponent " + " is " + is + " useDefaultPath " + useDefaultPath + " " + `./../Tasks//${is}.js`)
   return React.createElement(
     useDefaultPath ? require(`./../Tasks/${is}.js`).default : is,
     {

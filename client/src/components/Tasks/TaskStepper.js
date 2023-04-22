@@ -8,8 +8,6 @@ import React, { useState, useEffect } from "react";
 import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TaskFromAgent from "./TaskFromAgent"
-import TaskShowResponse from "./TaskShowResponse"
 import useFetchTask from '../../hooks/useFetchTask';
 import useFetchStart from '../../hooks/useFetchStart';
 import DynamicComponent from "./../Generic/DynamicComponent";
@@ -28,7 +26,7 @@ function TaskStepper(props) {
   const [expanded, setExpanded] = useState(['start']);
   const { fetchResponse, fetched } = useFetchTask(fetchNow);
   const [fetchStart, setFetchStart] = useState();
-  const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
+  const { fetchResponse: fetchResponseStart } = useFetchStart(fetchStart);
   const [myTask, setMyTask] = useState();
 
   useEffect(() => {
@@ -61,7 +59,7 @@ function TaskStepper(props) {
 
   // Detect when a new task has been fetched
   useEffect(() => {
-    if (fetched) {
+    if (fetchResponse) {
       setFetchNow(null)
       setActiveTask(fetchResponse);
       // Cannot immediately use activeTask
@@ -74,8 +72,14 @@ function TaskStepper(props) {
         setVisitedStepperTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
       }
     }
-  }, [fetched]); 
- 
+  }, [fetchResponse]); // Can't use fetched here as going back in stepper does not update fetched (id)
+
+  useEffect(() => {
+    console.log("fetchNow ", fetchNow)
+    console.log("fetched ", fetched)
+    console.log("fetchResponse ", fetchResponse)
+  }, [fetchNow, fetched, fetchResponse]); 
+
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = activeTask // tasks[currentTask];
     if (action === 'next') {
