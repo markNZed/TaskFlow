@@ -9,7 +9,7 @@ const workflow_components = [
         name: 'TaskChat',
         parent: 'ui',
         menu: false,
-        APPEND_filter_for_client: ['client_prompt', 'suggested_prompts'],
+        APPEND_filter_for_client: ['client_prompt', 'suggested_prompts', 'response'],
         tasks: {
             start : {
                 next: 'stop',
