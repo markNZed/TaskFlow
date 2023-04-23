@@ -5,15 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React from 'react';
-
-// mui
 import Avatar from '@mui/material/Avatar';
-
-// assets
 import bot from '../../../assets/bot.svg';
 import user from '../../../assets/user.svg';
-
-
 
 const Icon = ({sender}) => {
 

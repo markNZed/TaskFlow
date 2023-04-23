@@ -5,8 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, {useState, useEffect} from 'react';
-import { QueryClientProvider, QueryClient } from 'react-query'; 
-import { ReactQueryDevtools } from 'react-query/devtools'
 import '../styles/App.css';
 import '../styles/normal.css';
 import SideMenu from "./SideMenu/SideMenu"
@@ -22,8 +20,6 @@ import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import useFetchStart from '../hooks/useFetchStart';
 import DynamicComponent from "./Generic/DynamicComponent";
-
-const queryClient = new QueryClient()
 
 // Move to taskStack ?
 // Presentation task ?
@@ -62,7 +58,6 @@ function Taskflows() {
   const drawWidth = 220;
 
   return (
-    <QueryClientProvider client={queryClient}>
         <div className="App">
           <AppBar
             position="fixed"
@@ -145,14 +140,6 @@ function Taskflows() {
           </Stack>
         </div>
 
-      <div className={`${globalState?.interface !== 'debug' ? 'hide' : ''}`}>
-        { <ReactQueryDevtools 
-        initialIsOpen={false}
-        position='top-right'
-        /> }
-      </div>
-
-    </QueryClientProvider>
   );
 }
 

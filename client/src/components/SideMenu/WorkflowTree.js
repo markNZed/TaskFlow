@@ -38,44 +38,44 @@ function WorkflowTree() {
     }
 
     function renderTree(nodes, id, handleSelectNode, propagateDefault) {
-        if (!nodes) {return ''}
-        
-        const node = nodes[id]
-        if (!node) {
-          // May not exist because of permissions
-          // Would be better to strip from children also
-          return ''
-        }
-        const { label, children, menu } = node;
-        //console.log(id)
-        if (propagateDefault) {
-            tempNodeIds = [...tempNodeIds, id];
-        }
-        
-        if (children && children.length > 0) {
-            if (menu) {
-              return (
-                <TreeItem key={id} nodeId={id} label={label} >
-                  {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
-                </TreeItem>
-              );
-            } else {
-              return children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))
-            }
-        } else {
-            if (!menu) {return ''}
-            if (propagateDefault && node?.default) {
-                handleSelectNode(node)
-            }
+      if (!nodes) {return ''}
+      
+      const node = nodes[id]
+      if (!node) {
+        // May not exist because of permissions
+        // Would be better to strip from children also
+        return ''
+      }
+      const { label, children, menu } = node;
+      //console.log(id)
+      if (propagateDefault) {
+          tempNodeIds = [...tempNodeIds, id];
+      }
+      
+      if (children && children.length > 0) {
+          if (menu) {
             return (
-            <TreeItem
-                key={id}
-                label={label}
-                nodeId={id}
-                onClick={() => handleSelectNode(node)}
-            />
+              <TreeItem key={id} nodeId={id} label={label} >
+                {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
+              </TreeItem>
             );
-        }
+          } else {
+            return children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))
+          }
+      } else {
+          if (!menu) {return ''}
+          if (propagateDefault && node?.default) {
+              handleSelectNode(node)
+          }
+          return (
+          <TreeItem
+              key={id}
+              label={label}
+              nodeId={id}
+              onClick={() => handleSelectNode(node)}
+          />
+          );
+      }
     }
 
     if (!globalState.workflowsTree) {
@@ -97,4 +97,4 @@ function WorkflowTree() {
     );
 }
 
-export default React.memo(WorkflowTree);
+export default React.memo(WorkflowTree)

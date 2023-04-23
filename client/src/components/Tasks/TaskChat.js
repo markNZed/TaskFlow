@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// libs
 import React, { useCallback, useState, useRef, useEffect } from 'react';
 import PromptDropdown from './TaskChat/PromptDropdown';
 
@@ -40,6 +39,27 @@ const TaskChat = (props) => {
     }
   });
 
+  function updateMsgs(mode, text) {
+      let newMsgs =  JSON.parse(JSON.stringify(msgs)); // deep copy
+      const lastElement = newMsgs[task.threadId][newMsgs[task.threadId].length - 1];
+      switch (mode) {
+        case 'delta':
+          lastElement.text += text;
+          break;
+        case 'text':
+          lastElement.text = text;
+          break;
+        case 'final':
+          lastElement.text = text;
+          break;
+      }
+      // This allows the text to be displayed
+      lastElement.isLoading = false 
+      newMsgs[task.threadId] = [...newMsgs[task.threadId].slice(0,-1), lastElement]
+      setMsgs(newMsgs);
+      setPending(false);
+  }
+
   useEffect(() => {
     if (!webSocketEventEmitter) {return}
 
@@ -48,22 +68,9 @@ const TaskChat = (props) => {
       if (myTask?.instanceId && j?.instanceId === myTask.instanceId) {
         //setLastMessage(j);
         if (j?.delta || j?.text || j?.final) {
-          let newMsgs =  JSON.parse(JSON.stringify(msgs)); // deep copy
-          const lastElement = newMsgs[task.threadId][newMsgs[task.threadId].length - 1];
-          if (j?.delta) {
-            lastElement.text += j.delta
-          }
-          if (j?.text) {
-            lastElement.text = j.text
-          }
-          if (j?.final) {
-            lastElement.text = j.final
-          }
-          // This allows the text to be displayed
-          lastElement.isLoading = false 
-          newMsgs[task.threadId] = [...newMsgs[task.threadId].slice(0,-1), lastElement]
-          setMsgs(newMsgs);
-          setPending(false);
+          const mode = j.delta ? 'delta' : j.text ? 'text' : j.final ? 'final' : null;
+          const text = j.delta ? j.delta : j.text ? j.text : j.final ? j.final : null;
+          updateMsgs(mode, text)
         }
         if (j?.message) {
           console.log("Message: " + j.message)
@@ -77,6 +84,15 @@ const TaskChat = (props) => {
       webSocketEventEmitter.removeListener('message', handleMessage);
     };
   }, [webSocketEventEmitter, msgs, task]);
+
+  // THe websocket should make these updates but if that has failed we fall back to the HTTP resposnse
+  useEffect(() => {
+    if (fetchResponse) {
+      console.log("TaskChat response", fetchResponse)
+      setFetchNow(null)
+      updateMsgs('final', fetchResponse.response)
+    }
+  }, [fetchResponse]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
@@ -103,7 +119,7 @@ const TaskChat = (props) => {
   },[msgs, setMsgs, newMsg, setNewMsg, task]);
 
   useEffect(() => {
-   // Access the form element using the ref
+    // Access the form element using the ref
     const textarea = textareaRef.current;
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';

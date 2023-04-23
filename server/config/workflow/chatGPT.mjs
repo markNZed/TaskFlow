@@ -10,9 +10,6 @@ const workflow_chatGPT = {
             next: 'start'
         },
     },
-    //default: false,
-    //one_thread : false,
-    //use_cache: true,
 }     
 
 export default workflow_chatGPT;

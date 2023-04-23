@@ -1,12 +1,15 @@
-import workflow_tasks from './tasks.mjs';
+import workflow_components from './tasks.mjs';
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
 const workflows_array = [
     {
         name: 'root',
         // Should append to this from components
-        filter_for_client: ['id', 'component', 'response', 'next', 'input', 'input_label', 'initialize', 'server_task', 'name', 'label', 'instanceId', 'threadId', 'welcome_message', 'children', 'client_prompt', 'done', 'steps', 'step', 'instruction', 'menu', 'ui_task', 'ui'],
+        filter_for_client: ['id', 'component', 'response', 'next', 'input', 'input_label', 'forget', 'server_only', 'name', 'label', 'instanceId', 'threadId', 'welcome_message', 'children', 'client_prompt', 'done', 'steps', 'step', 'instruction', 'menu', 'ui_task', 'ui'],
         menu: false,
+        //default: false,
+        //one_thread : false,
+        //use_cache: true,
     },
     {
         name: 'exercices',
@@ -39,7 +42,7 @@ const workflows_array = [
             summarize: {
                 agent: "chatgpt",
                 instruction: "Tell the user what to do",
-                initialize: true, // Because the start has no prompt so does not initialize things in server
+                forget: true, // Because the start has no prompt so does not forget things in server
                 prompt: "Tell me a story about something random.",
                 component: 'TaskFromAgent',
                 input: '',
@@ -50,7 +53,7 @@ const workflows_array = [
             structure: {
                 agent: "chatgpt",
                 component: 'TaskFromAgent',
-                initialize: true,
+                forget: true,
                 instruction: "This is what I think of your response",
                 assemble_prompt:  ["Provide feedback on this prompt, is it a good prompt? ", "\"", 'summarize.input', "\""],
                 messages_template: [
@@ -71,6 +74,6 @@ const workflows_array = [
 ]
 
 // Importing arrays of workflows
-const workflows = [...workflows_array, ...workflow_tasks];
+const workflows = [...workflows_array, ...workflow_components];
 
 export { workflows };

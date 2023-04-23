@@ -63,7 +63,7 @@ async function chat_prepare(task) {
   let lastMessageId = null;
   let initializing = false;
   let use_cache = CACHE_ENABLE
-  let server_task = false;
+  let server_only = false;
 
   let langModel = task?.model || defaults.langModel
   let temperature = task?.temperature || defaults.temperature
@@ -101,14 +101,14 @@ async function chat_prepare(task) {
     console.log("Append agent prompt " + agent.append_prompt)
   }
 
-  if (typeof task.initialize !== 'undefined') {
-    initializing = task.initialize
-    console.log("Task initializing")
+  if (typeof task.server_only !== 'undefined') {
+    server_only = task.server_only
+    console.log("Task server_only")
   }
 
-  if (typeof task.server_task !== 'undefined') {
-    server_task = task.server_task
-    console.log("Task server_task")
+  if (typeof task.forget !== 'undefined') {
+    initializing = task.forget
+    console.log("Task forget previous messages")
   }
 
   if (!initializing) {
@@ -148,7 +148,7 @@ async function chat_prepare(task) {
   return {
     systemMessage,
     lastMessageId,
-    server_task,
+    server_only,
     prompt,
     use_cache,
     langModel,
@@ -171,7 +171,7 @@ async function ChatGPTAPI_request(params) {
   const {
     systemMessage,
     lastMessageId,
-    server_task,
+    server_only,
     prompt,
     use_cache,
     langModel,
@@ -215,7 +215,7 @@ async function ChatGPTAPI_request(params) {
     systemMessage: systemMessage,
   };
 
-  if (!server_task) {
+  if (!server_only) {
     messageParams['onProgress'] = (partialResponse) => SendIncrementalWs(partialResponse, instanceId, ws)
   }
 
@@ -237,7 +237,7 @@ async function ChatGPTAPI_request(params) {
   }
 
   // Message can be sent from one of multiple sources
-  function message_from(source, text, server_task, ws, instanceId) {
+  function message_from(source, text, server_only, ws, instanceId) {
       // Don't add ... when response is fully displayed
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const message = {
@@ -246,7 +246,7 @@ async function ChatGPTAPI_request(params) {
     }
     if (ws) {
       ws.data['delta_count'] = 0
-      if (!server_task) { wsSendObject(ws, message) }
+      if (!server_only) { wsSendObject(ws, message) }
     } else {
       console.log("Lost ws in message_from")
     }
@@ -257,20 +257,20 @@ async function ChatGPTAPI_request(params) {
   if (cachedValue && cachedValue !== undefined) {
     messagesStore_async.set(threadId + agentId + 'parentMessageId', cachedValue.id)
     let text = cachedValue.text;
-    message_from('cache', text, server_task, ws, instanceId)
+    message_from('cache', text, server_only, ws, instanceId)
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
     if (DUMMY_OPENAI) {
       const text = "Dummy text"
-      message_from('Dummy API', text, server_task, ws, instanceId)
+      message_from('Dummy API', text, server_only, ws, instanceId)
       response_text_promise = Promise.resolve(text);
     } else {
       response_text_promise = api.sendMessage(prompt, messageParams)
       .then(response => {
         messagesStore_async.set(threadId + agentId + 'parentMessageId', response.id)
         let text = response.text;
-        message_from('API', text, server_task, ws, instanceId)    
+        message_from('API', text, server_only, ws, instanceId)    
         if (use_cache) {
           cache_async.set(cacheKey, response);
           console.log("cache stored key ", cacheKey);
@@ -279,7 +279,7 @@ async function ChatGPTAPI_request(params) {
       })
       .catch(error => {
         let text = "ERROR " + error.message
-        message_from('API', text, server_task, ws)    
+        message_from('API', text, server_only, ws)    
         return text
       })
     } 

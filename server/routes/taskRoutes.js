@@ -7,8 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'
 import { utils } from '../src/utils.mjs';
-import { tasksFn } from '../tasksFn/tasksFn.mjs';
-import { chat_async } from '../src/chat.mjs';
+import { taskFunctions} from '../taskFunctions/taskFunctions.mjs';
 import { groups, tasks } from './../src/configdata.mjs';
 import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
 import { DEFAULT_USER } from './../config.mjs';
@@ -17,31 +16,15 @@ dotenv.config()
 
 const router = express.Router();
 
-// Globals:
-// instancesStore_async
-// tasks
-// threadsStore_async
-
 async function do_task_async(task) {
     let updated_task = {}
-    switch (task.component) {
-        case 'TaskFromAgent':
-        updated_task = await tasksFn.TaskFromAgent_async(threadsStore_async, instancesStore_async, chat_async, task)
-        break;
-        case 'TaskShowResponse':
-        updated_task = await tasksFn.TaskShowResponse_async(threadsStore_async, instancesStore_async, chat_async, task)
-        break;         
-        case 'TaskChoose':
-        updated_task = await tasksFn.TaskChoose_async(threadsStore_async, instancesStore_async, chat_async, task)
-        break;         
-        case 'TaskChat':
-        updated_task = await tasksFn.TaskChat_async(threadsStore_async, instancesStore_async, chat_async, task)
-        break;         
-        default:
-        updated_task = task
-        const msg = "ERROR: server unknown component:" + task.component
-        updated_task.error = msg
-        console.log(msg)
+    if (taskFunctions.hasOwnProperty(`${task.component}_async`)) {
+      updated_task = await taskFunctions[`${task.component}_async`](task);
+    } else {
+      updated_task = task;
+      const msg = "ERROR: server unknown component: " + task.component;
+      updated_task.error = msg;
+      console.log(msg, taskFunctions);
     }
     await instancesStore_async.set(task.instanceId, updated_task)
     console.log("instancesStore_async set " + task.instanceId )
@@ -129,11 +112,11 @@ router.post('/update', async (req, res) => {
       }
   
       let i = 0
-      while (updated_task?.server_task) {
+      while (updated_task?.server_only) {
         // A sanity check to avoid erroneuos infinite loops
         i = i + 1
         if (i > 10) {
-          console.log("Unexpected looping on server_task " + updated_task.id)
+          console.log("Unexpected looping on server_only " + updated_task.id)
           exit
         }
         if (updated_task?.done) {
@@ -142,7 +125,7 @@ router.post('/update', async (req, res) => {
           await instancesStore_async.set(updated_task.instanceId, updated_task)
           updated_task = await newTask_async(updated_task.next, sessionId, null, updated_task)
         }
-        if (updated_task?.server_task) {
+        if (updated_task?.server_only) {
           updated_task = await do_task_async(updated_task)
         } else {
           break

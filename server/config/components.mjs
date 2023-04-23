@@ -1,4 +1,4 @@
-const workflow_tasks = [
+const workflow_components = [
     {
         name: 'ui',
         parent: 'root',
@@ -67,4 +67,4 @@ const workflow_tasks = [
         parent: 'logic',
     },
 ]
-export default workflow_tasks;
+export default workflow_components

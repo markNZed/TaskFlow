@@ -1,10 +1,12 @@
+import { chat_async } from '../src/chat.mjs';
+import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
 /*
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-const TaskFromAgent_async = async function(threadsStore_async, instancesStore_async, chat_callback_async, task) {
+const TaskFromAgent_async = async function(task) {
   
     console.log("TaskFromAgent task.name " + task.name + " step " + task?.step)
   
@@ -105,7 +107,7 @@ const TaskFromAgent_async = async function(threadsStore_async, instancesStore_as
     if (prompt) {
       //workflow.tasks[taskName].prompt = prompt
       task.prompt = prompt
-      response_text = await chat_callback_async(task)
+      response_text = await chat_async(task)
     }
     task.response = response_text
     task.last_change = Date.now()

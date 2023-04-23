@@ -74,12 +74,6 @@ function TaskStepper(props) {
     }
   }, [fetchResponse]); // Can't use fetched here as going back in stepper does not update fetched (id)
 
-  useEffect(() => {
-    console.log("fetchNow ", fetchNow)
-    console.log("fetched ", fetched)
-    console.log("fetchResponse ", fetchResponse)
-  }, [fetchNow, fetched, fetchResponse]); 
-
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = activeTask // tasks[currentTask];
     if (action === 'next') {
@@ -140,7 +134,7 @@ function TaskStepper(props) {
           </Step>
         ))}
       </Stepper>
-      {visitedStepperTasks.map(({ name, label, component, next }) => (
+      { visitedStepperTasks.map(({ name, label, component, next }) => (
           <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>

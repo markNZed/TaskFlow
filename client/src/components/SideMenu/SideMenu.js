@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// libs
 import React, {  useCallback, useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../../contexts/GlobalStateContext';
 import {AVAILABLE_MODELS} from "../../utils/constants"
@@ -12,9 +11,6 @@ import SliderBox from "./SliderBox"
 import SelectBox from "./SelectBox"
 import WorkflowTree from "./WorkflowTree"
 
-// assets
-
-// mui
 import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 

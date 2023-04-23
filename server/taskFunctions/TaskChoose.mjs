@@ -15,12 +15,12 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-const TaskChoose_async = async function(threadsStore_async, instancesStore_async, chat_callback_async, task) {
+const TaskChoose_async = async function(task) {
     // First we get the response
     console.log("TaskChoose task.name " + task.name)
   
     task.response = null // Avoid using previously stored response
-    let subtask = await TaskFromAgent_async(threadsStore_async, instancesStore_async, chat_callback_async, task) 
+    let subtask = await TaskFromAgent_async(task) 
   
     const next_responses = Object.keys(task.next_template)
     const next_states = Object.values(task.next_template)

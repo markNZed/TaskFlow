@@ -15,12 +15,6 @@ dotenv.config()
 
 const router = express.Router();
 
-// Globals:
-// DEFAULT_USER,
-// workflows,
-// groups,
-// sessionsStore_async,
-
 router.get('/', async (req, res) => {
     console.log("/api/session")
     let userId = DEFAULT_USER
