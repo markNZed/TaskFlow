@@ -7,6 +7,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 /* ToDo
 -------
 Review/simplification of code
+  Up to client/src/components/Tasks/TaskChat.js
+Compare with similar systems
+  LangChain is a framework for developing applications powered by language models.
+    An abstraction above JS and Python
+    Standard interface to models (could reuse this)
+    Model output parsing sytem (could reuse this from TaskFunction)
+    Provides stores for custom data e.g. text splitter
 
 Backlog
 -------
@@ -41,7 +48,7 @@ Backlog
     Cache on client side for task fetching might require /api/task_get (so we know it is intended to just fetch)
     Allow task to start another task on server side (needs functional interface to api/task/start )
 
-Notes
+Notes/Idea
 -----
   Possible hierarchy of configuration:
   Defaults
@@ -55,12 +62,18 @@ Notes
                   Session Task
   Meta-level is like a stack of tasks
     Could be a task that observes another thread on the server side, can also have a UI
+  Asking the model to output in a format that would pass a test might be a good way of constraining
+    e.g. provide Python/JS code that the output should pass (e.g. a single word)
 
   Architecture
   ------------
     How to manage multiple interfaces for a Task: directory with sub-components and choose e.g. display option, basically a style or theme
     Create separate common repo for Tasks: config + component + taskFn
     User defaults, workflow defaults etc can be tasks
+    Could have something like middleware that tasks can use to modify input/output
+      Cuurrently that would just be in the TaskFunction but should be easy to factor out when that makes sense
+    How does a task monitor other tasks ? Callback to mointor a thread or a task (middleware catch updates to instance store)
+    Should the geolocation be a task? It could still update the globalState on the client side
 
   Infra
   -----

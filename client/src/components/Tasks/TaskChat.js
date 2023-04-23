@@ -88,7 +88,6 @@ const TaskChat = (props) => {
   // THe websocket should make these updates but if that has failed we fall back to the HTTP resposnse
   useEffect(() => {
     if (fetchResponse) {
-      console.log("TaskChat response", fetchResponse)
       setFetchNow(null)
       updateMsgs('final', fetchResponse.response)
     }
