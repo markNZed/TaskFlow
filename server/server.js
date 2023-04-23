@@ -14,7 +14,9 @@ Compare with similar systems
     Standard interface to models (could reuse this)
     Model output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
-    THe workflow in chat2flow is like an Agent in LangChain
+    The workflow in chat2flow is like an Agent in LangChain
+  GPT-Index
+    Should leverage this
 
 Backlog
 -------
@@ -75,6 +77,8 @@ Notes/Idea
       Cuurrently that would just be in the TaskFunction but should be easy to factor out when that makes sense
     How does a task monitor other tasks ? Callback to mointor a thread or a task (middleware catch updates to instance store)
     Should the geolocation be a task? It could still update the globalState on the client side
+    How to call out to Python from the Task function
+      How to manage launching processes from Task function
 
   Infra
   -----
