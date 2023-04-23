@@ -9,13 +9,12 @@ import React from "react";
  * }
  */
 const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
-  //console.log("DynamicComponent " + " is " + is + " useDefaultPath " + useDefaultPath + " " + `./../Tasks//${is}.js`)
-  return React.createElement(
-    useDefaultPath ? require(`./../Tasks/${is}.js`).default : is,
-    {
-      ...rest,
-    }
-  );
+  //console.log("DynamicComponent " + " is " + is + " useDefaultPath " + useDefaultPath + " " + `./../Tasks/${is}`)
+  const Component = useDefaultPath
+    ? require(`./../Tasks/${is}`).default
+    : is;
+
+  return <Component {...rest} />;
 };
 
 export default DynamicComponent;

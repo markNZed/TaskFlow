@@ -17,6 +17,8 @@ Compare with similar systems
     The workflow in chat2flow is like an Agent in LangChain
   GPT-Index
     Should leverage this
+  Open-AI Plugins
+    This is LLM centric but allows for much the same thing
 
 Backlog
 -------
@@ -79,6 +81,8 @@ Notes/Idea
     Should the geolocation be a task? It could still update the globalState on the client side
     How to call out to Python from the Task function
       How to manage launching processes from Task function
+    Meld library for logging/debug
+      React: A higher-order component is a function that takes in a component and returns a new component.
 
   Infra
   -----
