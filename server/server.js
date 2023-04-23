@@ -14,6 +14,7 @@ Compare with similar systems
     Standard interface to models (could reuse this)
     Model output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
+    THe workflow in chat2flow is like an Agent in LangChain
 
 Backlog
 -------
