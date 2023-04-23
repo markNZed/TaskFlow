@@ -1,4 +1,4 @@
-chat2flow is a Task centric collaborative web application leveraging AI that is under development.
+chat2flow is a Task centric collaborative web application framework leveraging AI that is under development.
 
 chat2flow is intended to support activities that combine software and AI models with human interaction. The originality of chat2flow is its Task centric approach. While the user will tend to think in workflows (a sequence of tasks) chat2flow manages Tasks. Tasks can be chained into workflows but the concept of a workflow is not central to chat2flow, the developer builds Tasks, some tasks may manage sets of Tasks, a set of Tasks may be a workflow. 
 
