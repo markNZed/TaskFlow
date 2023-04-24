@@ -1,11 +1,27 @@
-import workflow_components from './tasks.mjs';
+import workflow_components from './components.mjs';
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
 const workflows_array = [
     {
         name: 'root',
-        // Should append to this from components
-        filter_for_client: ['id', 'component', 'response', 'next', 'input', 'input_label', 'forget', 'server_only', 'name', 'label', 'instanceId', 'threadId', 'welcome_message', 'children', 'client_prompt', 'done', 'steps', 'step', 'instruction', 'menu', 'ui_task', 'ui'],
+        filter_for_client: [ // parameter names that will not be stripped from the Task when sent from the server to the client
+            'id', 
+            'component', 
+            'next', 
+            'forget', 
+            'name', 
+            'label', 
+            'instanceId', 
+            'threadId', 
+            'children', 
+            'done', 
+            'steps', 
+            'step', 
+            'menu', 
+            'ui_task', 
+            'ui',
+            'update_count',
+        ],
         menu: false,
         //default: false,
         //one_thread : false,
