@@ -15,3 +15,5 @@ if (window.location.hostname !== "localhost") {
 
 export const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`
 export const serverUrl = window.location.protocol + `//${socketHost}:${socketPort}/`
+export const appName = "chat2flow"
+export const appAbbrev = "c2f"

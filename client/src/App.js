@@ -11,12 +11,18 @@ import './styles/normal.css';
 import Taskflows from "./components/Taskflows"
 import { useGeolocation } from './useGeolocation';
 import { useGlobalStateContext } from './contexts/GlobalStateContext';
-import { serverUrl } from './config';
+import { serverUrl, appAbbrev } from './config';
+import debug from 'debug';
 
 function App() {
+
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } = useGlobalStateContext();
+
+  // This gives us a central place to control debug
+  // We can enable per component
+  debug.enable(`${appAbbrev}:TaskChat*`);
   
   // Address is sent via useFetchTask (could also be sent in the start request of Workflow.js)
   useEffect(() => {

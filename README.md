@@ -1,19 +1,19 @@
 chat2flow is a Task centric collaborative web application framework leveraging AI that is under development.
 
-chat2flow is intended to support activities that combine software and AI models with human interaction. The originality of chat2flow is its Task centric approach. While the user will tend to think in workflows (a sequence of tasks) chat2flow manages Tasks. Tasks can be chained into workflows but the concept of a workflow is not central to chat2flow, the developer builds Tasks, some tasks may manage sets of Tasks, a set of Tasks may be a workflow. 
+chat2flow supports activities combining software and AI models with human interaction. The originality of chat2flow is its Task centric approach. While the user will tend to think in workflows (a sequence of Tasks) chat2flow manages Tasks. Tasks can be chained into workflows but the concept of a workflow is not central to chat2flow, the developer build a Task, a Task may manage a set of Tasks, a set of Tasks may be a workflow. 
 
 The developer of chat2flow designs Tasks that consist of:
-* a textual specification (in Javascript syntax) of the inputs and outputs the task may use
-* an optional client side component that interacts with a user and updates the task
-* a server side function that updates the task
+* a textual specification (in Javascript syntax) of the inputs and outputs the Task may use
+* an optional client side component that interacts with a user and updates the Task
+* a server side function that updates the Task
 
-For example, a chat application is a very simple Task (receive user input return language model response) and the management of the conversation history (e.g. displaying or deleting previous messages) is another Task (or sequence of tasks). Unlike a chat interface chat2flow can provide any web based interface depending on the client side implementation of a Task. Unlike a workflow application chat2flow uses Tasks to build a user interface (UI) rather than providing a UI to build a workflow.
+For example, a chat application is a very simple Task (receive user input return language model response) and the management of the conversation history (e.g. displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface chat2flow can provide any web based interface depending on the client side implementation of a Task. Unlike a workflow application chat2flow uses Tasks to build a user interface (UI) rather than providing a UI to build a workflow.
 
 On the server side chat2flow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the server without user interaction. Tasks may use software or AI agents to decide on the next Task to run. The server uses Node Javascript with the Express framework.  
 
 On the client side chat2flow provides Tasks with storage, server communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to run. The client runs in a web browser and builds on the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real time interaction) or REST style HTTP API.
 
-chat2flow provides a light flexible infrastructure for Human Computer Interaction. The configuration of workflows and tasks is not part of chat2flow (except for a simple demonstration). This allows for the functionality of Tasks (both client interface and functionality) to be shared without sharing proprietary/private information such as the sequencing of tasks and the content of prompts
+chat2flow provides a light flexible infrastructure for Human Computer Interaction. The configuration of workflows and Tasks is not part of chat2flow (except for a simple demonstration). This allows for the functionality of Tasks (both client interface and functionality) to be shared without sharing proprietary/private information such as the sequencing of Tasks and the content of prompts
 
 chat2flow should play nicely with:
 * [LangChain](https://langchain.com/) (e.g, use LangChain features from within a Task function on the sever).

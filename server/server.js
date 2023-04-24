@@ -18,7 +18,7 @@ Compare with similar systems
   GPT-Index
     Should leverage this
   Open-AI Plugins
-    This is LLM centric but allows for much the same thing
+    This is LLM centric and will allow something similar
 
 Backlog
 -------
@@ -81,8 +81,13 @@ Notes/Idea
     Should the geolocation be a task? It could still update the globalState on the client side
     How to call out to Python from the Task function
       How to manage launching processes from Task function
-    Meld library for logging/debug
-      React: A higher-order component is a function that takes in a component and returns a new component.
+        "child process execution" with child_process library
+        RabbitMQ for message passing good for a local model but do we need high speed, probably not.
+        REST API would allow for remote etc, maybe better
+    HOC in React. higher-order component is a function that takes in a component and returns a new component.
+      Cross-cutting concerns
+      Manage the task state (available as a prop), setTask that would sync with server
+    React Compound component could be used by a task that is composed of other tasks, allows shared context. 
 
   Infra
   -----

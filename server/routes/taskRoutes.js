@@ -80,13 +80,13 @@ router.post('/update', async (req, res) => {
     }
     if (userId) {
       //console.log("req.body " + JSON.stringify(req.body))
-      const sessionId = req.body.sessionId;
-      let task = req.body.task;
-      let address = req.body.address;
-      
-      task.sessionId = sessionId
+      const sessionId = req.body.sessionId
+      let task = req.body.task
+      let address = req.body.address
+
       if (sessionId) { task['sessionId'] = sessionId } else {console.log("Warning: sessionId missing")}
       if (address) { task['address'] = address }
+      if (task?.update_count) {task.update_count += 1} else {task['update_count'] = 1}
   
       // Risk that client writes over server fields so filter_out before merge
       let instanceId = task.instanceId

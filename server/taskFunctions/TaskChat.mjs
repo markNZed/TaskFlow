@@ -12,6 +12,17 @@ const TaskChat_async = async function(task) {
   
     task.response = null // Avoid using previously stored response
     let subtask = await TaskFromAgent_async(task) 
+
+    if (subtask?.step && subtask?.next_step) {
+        subtask.step = subtask.next_step
+    }
+
+    if (subtask?.step && subtask.step === 'sending') {
+        // Should get next user input
+        // The websocket will have already switched the Task to this step if it is connected
+        subtask.step = 'input'
+    }
+
   
     console.log("Returning from tasks.TaskChat_async")
     return subtask

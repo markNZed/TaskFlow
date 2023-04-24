@@ -9,32 +9,19 @@ import { ChatGPTAPI } from 'chatgpt'
 import { utils } from './utils.mjs';
 import { DUMMY_OPENAI, CACHE_ENABLE } from './../config.mjs';
 import { users, agents, defaults } from './configdata.mjs';
-import { messagesStore_async, cache_async, connections } from './storage.mjs'
+import { messagesStore_async, cacheStore_async, connections } from './storage.mjs'
 import { wsSendObject } from './websocket.js';
 import * as dotenv from 'dotenv'
 dotenv.config()
-
-//Using process.env.OPENAI_API_KEY
-
-// Gobals:
-// defaults
-// agents
-// messagesStore_async
-// users
-// cache_async
-// DUMMY_OPENAI
-// connections
-// CACHE_ENABLE
-// wsSendObject function
 
 function SendIncrementalWs(partialResponse, instanceId, ws) {
   const incr = JSON.stringify(partialResponse.delta)
   if (ws) {
     if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
-      const message = {'instanceId' : instanceId, 'text' : partialResponse.text}
+      const message = {'instanceId' : instanceId, 'mode' : "partial", 'text' : partialResponse.text, 'partial' : partialResponse.text}
       wsSendObject(ws, message)
     } else if (incr) {
-      const message = {'instanceId' : instanceId, 'delta' : partialResponse.delta}
+      const message = {'instanceId' : instanceId, 'mode' : "delta", 'text' : partialResponse.delta, 'delta' : partialResponse.delta}
       wsSendObject(ws, message)
     }
     ws.data['delta_count'] += 1
@@ -165,7 +152,7 @@ async function chat_prepare(task) {
 // Build the parameters that are specific to ChatGPTAPI
 // Manage cache
 // Return response by websocket and return value
-// Also using process.env.OPENAI_API_KEY, messagesStore_async, cache_async, DUMMY_OPENAI
+// Also using process.env.OPENAI_API_KEY, messagesStore_async, cacheStore_async, DUMMY_OPENAI
 async function ChatGPTAPI_request(params) {
   
   const {
@@ -233,7 +220,7 @@ async function ChatGPTAPI_request(params) {
     ].join('-').replace(/\s+/g, '-')
     cacheKey = utils.djb2Hash(cacheKeyText);
     console.log("cacheKey " + cacheKey)
-    cachedValue = await cache_async.get(cacheKey);
+    cachedValue = await cacheStore_async.get(cacheKey);
   }
 
   // Message can be sent from one of multiple sources
@@ -242,7 +229,9 @@ async function ChatGPTAPI_request(params) {
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const message = {
       'instanceId' : instanceId,
-      'final' : text
+      'mode' : "final",
+      'text' : text,
+      'final' : text,
     }
     if (ws) {
       ws.data['delta_count'] = 0
@@ -272,7 +261,7 @@ async function ChatGPTAPI_request(params) {
         let text = response.text;
         message_from('API', text, server_only, ws, instanceId)    
         if (use_cache) {
-          cache_async.set(cacheKey, response);
+          cacheStore_async.set(cacheKey, response);
           console.log("cache stored key ", cacheKey);
         }
         return text

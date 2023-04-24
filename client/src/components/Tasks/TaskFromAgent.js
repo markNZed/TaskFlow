@@ -6,6 +6,8 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
+// HOC fetchStep
+
 import Paper from '@mui/material/Paper';
 
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
@@ -29,7 +31,7 @@ const TaskFromAgent = (props) => {
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, myStep);
+    const { fetchResponse, fetched } = useFetchStep(fetchNow, task);
 
     // Reset the task, seems a big extreme to access global for this (should be a prop)
     useEffect(() => {

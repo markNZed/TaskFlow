@@ -20,7 +20,7 @@ const TaskShowResponse = (props) => {
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, myStep);
+    const { fetchResponse, fetched } = useFetchStep(fetchNow, task);
 
     // Reset the task once
     useEffect(() => {

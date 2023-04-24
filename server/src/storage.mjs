@@ -27,7 +27,7 @@ const sessionsStore_async = utils.newKeyV(DB_URI, 'sessions')
 // Schema:
 //   Key: hash
 //   Value: object
-const cache_async = utils.newKeyV(DB_URI, 'cache')
+const cacheStore_async = utils.newKeyV(DB_URI, 'cache')
 // Schema:
 //   Key: instanceId
 //   Value: task object
@@ -37,4 +37,4 @@ const instancesStore_async = utils.newKeyV(DB_URI, 'instances')
 //   Value: array of instanceId
 const threadsStore_async = utils.newKeyV(DB_URI, 'threads')
 
-export {messagesStore_async, sessionsStore_async, cache_async, instancesStore_async, threadsStore_async, connections}
+export {messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections}

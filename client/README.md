@@ -5,9 +5,27 @@ This is the frontend/client side of chat2flow written in React JS and Google Mat
 To install the node packages:
 `npm install` 
 
-To run it locally:
+To run locally:
  `npm start`
 
+Coding preferences:
+* ES6 Javascript
+* React functional component style (not class component style)
+* Wrap components withDebug and use the log function passed in as a prop
+* Configure which log messages are displayed in App.js using debug.enable
+* Hooks deal with cross-cutting concerns in the React functional style
+
+## Task Conventions
+* If the component receives a task then assume the parent manages the task state
+* This implies the parent will have an array of Tasks if it instantiates multiple Task components
+* Standard approach to [debug logging](#Debug) 
+
+### Debug
+* `import withDebug from '../../utils/withDebug'`
+* For MyNewComponent `export default withDebug(MyNewComponent)`
+* Enable debug from App.js and leave useful regex for debug commented
+
+# Notes
 Be careful of cloudflare caching.
 
 The compression via cloudflare is br which is different from the gzip used by the React server, so file sizes can differ

@@ -119,6 +119,9 @@ utils.filter_in = function(task, filter_list) {
 
 utils.filter_out = function(tasks, task) {
   let component
+  if (!task?.id) {
+    console.log("ERROR Task has no id ", task)
+  }
   if (task.id.startsWith("root.ui.")) {
     component = task.id
   } else {

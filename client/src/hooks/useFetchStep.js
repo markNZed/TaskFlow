@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { serverUrl } from '../config';
 
-const useFetchStep = (fetchNow, myTask, myStep) => {
+const useFetchStep = (fetchNow, myTask) => {
   const { globalState } = useGlobalStateContext();
   const [fetchResponse, setFetchResponse] = useState('');
   const [fetched, setFetched] = useState('');
@@ -29,6 +29,8 @@ const useFetchStep = (fetchNow, myTask, myStep) => {
           }),
         };
 
+        console.log("requestOptions ", requestOptions)
+
         const response = await fetch(`${serverUrl}api/task/update`, requestOptions);
         const data = await response.json();
 
@@ -36,13 +38,13 @@ const useFetchStep = (fetchNow, myTask, myStep) => {
           console.log("ERROR " + data.error.message);
         }
         setFetchResponse(data);
-        setFetched(myStep);
+        setFetched(data.step);
 
       }
 
       fetchTask().catch((error) => {
         console.log("ERROR " + error.message);
-        setFetched(myStep);
+        setFetched(null);
       });
     }
   }, [fetchNow]);

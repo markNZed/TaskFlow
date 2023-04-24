@@ -14,7 +14,9 @@ import DynamicComponent from "./../Generic/DynamicComponent";
 
 // Typically this Task gets created at the start of a taskflow
 // The startTask is the task that caused the creation of this task
-// Here we start a taskflow for the TaskStepper by starting myTask
+// Here we start a taskflow for the TaskStepper by starting myTask\
+// useState([]) in parent for Tasks seems a good approach but will require changes for Stepper
+
 function TaskStepper(props) {
 
   const { startTask, setStartTask} = props;
