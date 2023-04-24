@@ -5,12 +5,20 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useRef, useState, useEffect } from 'react';
+import { delta, withDebug, withTask } from '../../utils';
+
 import useFetchStart from '../../hooks/useFetchStart';
 import TaskChat from "./TaskChat"
 import Icon from "./TaskConversation/Icon"
 
-// HOC could provide startTask
-// Conversation could make a text area available for response
+/*
+Task Process
+
+Task Steps
+  
+ToDo:
+  
+*/
 
 const TaskConversation = (props) => {
   const [fetchStart, setFetchStart] = useState();
@@ -181,4 +189,4 @@ const TaskConversation = (props) => {
 
 }
 
-export default React.memo(TaskConversation)
+export default React.memo(withTask(withDebug(TaskConversation)))

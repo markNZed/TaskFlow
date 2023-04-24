@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 /* ToDo
 -------
 Review/simplification of code
-  Up to client/src/components/Tasks/TaskChat.js
+  Up to client/src/components/Tasks/TaskConversation
 Compare with similar systems
   LangChain is a framework for developing applications powered by language models.
     An abstraction above JS and Python
@@ -19,6 +19,9 @@ Compare with similar systems
     Should leverage this
   Open-AI Plugins
     This is LLM centric and will allow something similar
+  Auto-GPT
+    https://github.com/Significant-Gravitas/Auto-GPT
+    This might be the close but the focus on autonomy is quite different
 
 Backlog
 -------

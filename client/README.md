@@ -21,8 +21,7 @@ Coding preferences:
 * Standard approach to [debug logging](#Debug) 
 
 ### Debug
-* `import withDebug from '../../utils/withDebug'`
-* For MyNewComponent `export default withDebug(MyNewComponent)`
+* Wrap Task components using HOC withDebug
 * Enable debug from App.js and leave useful regex for debug commented
 
 # Notes

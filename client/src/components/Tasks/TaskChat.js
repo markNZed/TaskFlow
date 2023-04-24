@@ -5,10 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useCallback, useState, useRef, useEffect } from 'react'
+import { delta, withDebug, withTask } from '../../utils';
+
 import PromptDropdown from './TaskChat/PromptDropdown'
-import { delta } from '../../utils/utils'
-import withDebug from '../../utils/withDebug'
-import withTask from '../../utils/withTask'
 
 // assets
 import send from '../../assets/send.svg';
@@ -35,19 +34,17 @@ ToDo:
     To allow this we need to append dom elements. 
     In chatGPT they have the same problem inside the active <p> 
     but once rendered hte <p></p> can be copied
-  Macros ?
+  Should taskLoading be part of the task object?
 */
 
 const TaskChat = (props) => {
 
-  const { log, webSocketEventEmitter, updateTask, updateStep, taskLoading, task, setTask } = props
+  const { log, useTaskWebSocket, updateTask, updateStep, taskLoading, task, setTask } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
   const textareaRef = useRef(null);
   const formRef = useRef(null);
-
-  // When task.update is set true then it will send task to the server and update
 
   function updateResponse(mode, text) {
     switch (mode) {
@@ -67,25 +64,15 @@ const TaskChat = (props) => {
       setResponsePending(false);
   }
 
-  useEffect(() => {
-    if (!webSocketEventEmitter) {return}
-    const handleMessage = (e) => {
-      const j = JSON.parse(e.data)
-      if (task?.instanceId && j?.instanceId === task.instanceId) {
-        if (j?.mode && j?.text) {
-          updateResponse(j.mode, j.text)
-        }
-      }
-    };
-    webSocketEventEmitter.on('message', handleMessage);
-    return () => {
-      webSocketEventEmitter.removeListener('message', handleMessage);
-    };
-  }, [webSocketEventEmitter]);
+  useTaskWebSocket((message) => {
+    if (message?.mode && message?.text) {
+      updateResponse(message.mode, message.text);
+    }
+  });
 
-  // The websocket should make updates but if that has failed we fall back to the HTTP response
+  // The websocket returns the response but if that fails we use the HTTP response here
   useEffect(() => {
-    if (taskLoading) {
+    if (taskLoading) { // Should this be part of the task object
       if (task.step === 'sending') {
         // Start receiving
         updateStep('receiving')
@@ -93,6 +80,7 @@ const TaskChat = (props) => {
     } else if (task?.step === 'receiving') {
       // Finished receiving
       updateResponse('final', task.response)
+      // Let the update to task.response take effect before step=input
       delta(() => {updateStep('input')})
     }
   }, [taskLoading]);

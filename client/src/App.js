@@ -22,7 +22,8 @@ function App() {
 
   // This gives us a central place to control debug
   // We can enable per component
-  debug.enable(`${appAbbrev}:TaskChat*`);
+  //debug.enable(`${appAbbrev}:TaskChat*`);
+  debug.enable(`${appAbbrev}:TaskConversation*`);
   
   // Address is sent via useFetchTask (could also be sent in the start request of Workflow.js)
   useEffect(() => {

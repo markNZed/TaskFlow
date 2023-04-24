@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { delta } from './utils'
 import useTaskUpdate from '../hooks/useTaskUpdate';
 import { useWebSocketContext } from '../contexts/WebSocketContext';
+import useFilteredWebSocket from '../hooks/useFilteredWebSocket';
+
 
 function withTask(Component) {
 
@@ -41,7 +43,9 @@ function withTask(Component) {
       props.setTask(newTask);
     };
 
-    //replace props.setTask with a function that also copies task to prevTask
+    function useTaskWebSocket(callback) {
+      useFilteredWebSocket(webSocketEventEmitter, props.task, callback)
+    }
 
     const componentProps = {
         ...props,
@@ -52,6 +56,7 @@ function withTask(Component) {
         updateTask,
         updateStep, // add log as a prop
         webSocketEventEmitter,
+        useTaskWebSocket,
     };
 
     return <Component {...componentProps} />;
