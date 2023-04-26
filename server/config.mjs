@@ -18,5 +18,7 @@ if (process.env.OPENAI_API_KEY === '') {
     DUMMY_OPENAI = true
 }
 
+const MAP_USER = {}
+
 export { CLIENT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER }
 
