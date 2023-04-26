@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { delta } from './utils'
+import { delta } from '../utils/utils'
 import useUpdateTask from '../hooks/useUpdateTask';
 import useStartTask from '../hooks/useStartTask';
 import useNextTask from '../hooks/useNextTask';
 import { useWebSocketContext } from '../contexts/WebSocketContext';
 import useFilteredWebSocket from '../hooks/useFilteredWebSocket';
+import withDebug from './withDebug'
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -96,7 +97,7 @@ function withTask(Component) {
   }
 
   TaskComponent.displayName = componentName;
-  return TaskComponent;
+  return withDebug(TaskComponent);
 }
 
 export default withTask

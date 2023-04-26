@@ -1,3 +1,3 @@
 export { delta } from './utils';
-export { default as withDebug } from './withDebug';
-export { default as withTask } from './withTask';
+export { default as withDebug } from '../hoc/withDebug';
+export { default as withTask } from '../hoc/withTask';

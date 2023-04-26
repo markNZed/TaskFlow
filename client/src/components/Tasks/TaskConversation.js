@@ -228,4 +228,4 @@ const TaskConversation = (props) => {
 
 }
 
-export default React.memo(withTask(withDebug(TaskConversation)))
+export default React.memo(withTask(TaskConversation))

@@ -154,4 +154,4 @@ const TaskChat = (props) => {
 }
 
 // withDebug expects to be the first HOC wrapping the component
-export default React.memo(withTask(withDebug(TaskChat)));
+export default React.memo(withTask(TaskChat));

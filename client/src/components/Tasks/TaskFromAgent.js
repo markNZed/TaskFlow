@@ -237,4 +237,4 @@ const TaskFromAgent = (props) => {
 
 }
 
-export default React.memo(withTask(withDebug(TaskFromAgent)));
+export default React.memo(withTask(TaskFromAgent));

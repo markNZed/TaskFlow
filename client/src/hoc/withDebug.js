@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import debug from 'debug';
-import { appAbbrev } from './../config';
+import { appAbbrev } from '../config';
 import _ from 'lodash';
 
 function withDebug(Component) {

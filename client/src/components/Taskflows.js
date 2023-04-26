@@ -167,4 +167,4 @@ function Taskflows(props) {
   );
 }
 
-export default withTask(withDebug(Taskflows));
+export default withTask(Taskflows);

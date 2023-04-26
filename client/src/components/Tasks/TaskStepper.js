@@ -250,4 +250,4 @@ function TaskStepper(props) {
   );
 }
 
-export default withTask(withDebug(TaskStepper));
+export default withTask(TaskStepper);

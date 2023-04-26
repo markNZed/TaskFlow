@@ -18,7 +18,8 @@ Coding preferences:
 ## Task Conventions
 * If the component receives a task then assume the parent manages the task state
 * This implies the parent will have an array of Tasks if it instantiates multiple Task components
-* Standard approach to [debug logging](#Debug) 
+* Standard approach to [debug logging](#Debug)
+* Use the higher-order-components withTask
 
 ### Debug
 * Wrap Task components using HOC withDebug
