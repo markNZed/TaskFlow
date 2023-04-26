@@ -56,15 +56,18 @@ const TaskFromAgent = (props) => {
        const handleMessage = (e) => {
             const j = JSON.parse(e.data)
             if (task?.instanceId && j?.instanceId === task.instanceId) {
-                
-                if (j?.delta) {
-                    setResponseText((prevResponse) => prevResponse + j.delta);
-                }
-                if (j?.text) {
-                    setResponseText(j.text);
-                }
-                if (j?.final) {
-                    setResponseText(j.final);
+                switch (j.mode) {
+                    case 'delta':
+                        setResponseText((prevResponse) => prevResponse + j.delta);
+                        break;
+                    case 'text':
+                        setResponseText(j.text);
+                        break;
+                    case 'final':
+                        setResponseText(j.final);
+                        break;
+                    default:
+                        break;
                 }
             }
         };
