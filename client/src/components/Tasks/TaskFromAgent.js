@@ -53,7 +53,6 @@ const TaskFromAgent = (props) => {
        const handleMessage = (e) => {
             const j = JSON.parse(e.data)
             if (task?.instanceId && j?.instanceId === task.instanceId) {
-                
                 switch (j.mode) {
                     case 'delta':
                         setResponseText((prevResponse) => prevResponse + j.delta);
