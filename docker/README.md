@@ -1,5 +1,7 @@
 The following is for development where the server and client directories are mounted into the Docker container.
 
+<br> git clone https://github.com/markNZed/chat2flow.git
+<br> cd chat2flow/docker
 <br> Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable
 <br> `docker-compose build`
 <br> `docker-compose up`

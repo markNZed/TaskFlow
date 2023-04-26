@@ -29,8 +29,9 @@ Compare with similar systems
   https://gradio.app/
     It would ideally be easy to use a Gradio component
     Embed in an iFrame
-  
+  Algovera
 
+  
 Backlog
 -------
 
@@ -40,7 +41,6 @@ Backlog
     Maybe they should be deleted ? But not the same to jump back as active or to view.
   Scrolling to view suggested_prompts in TaskChat
   // This assumes the components are expanded - need to do this in dataconfig
-
 
   Features
   --------
@@ -54,8 +54,6 @@ Backlog
       Use a different route for configuring: user, session, workflow, task
       Create a new route for the Client side defaults. Manage that in a global state. Send on all requests.
     Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
-      TaskChat should be receiving Msgs ? Ideally not. Try with interceptSetStartTask in TaskConversation
-      https://tanstack.com/query/latest ? maybe Redux is a better choice
     If a Task has properties that are not declared then error (so we can catch things being filtered).
       Add properties list to Task Components
 
