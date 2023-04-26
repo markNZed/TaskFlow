@@ -13,18 +13,29 @@ import Icon from "./TaskConversation/Icon"
 
 /*
 Task Process
+  Present a conversation
+  Launch a chat task that collects messages from human and bot
+  Currently this task does very little, in theory it could manage the conversation history
+  task has single component so we create that and pass down
+
+  Maybe pass the taskId into the component and then it looks after it
+  How does the chatTask communicate with Conversation ? 
 
 Task Steps
   
 ToDo:
-  
+  // 
 */
 
 const TaskConversation = (props) => {
+
+  const { task, setTask, component_depth } = props
+
   const [fetchStart, setFetchStart] = useState();
   const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
   const [myTask, setMyTask] = useState();
-  const { startTask, setStartTask } = props
+  const [childTask, setChildTask] = useState();
+  
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
   const hasScrolledRef = useRef(false);
@@ -34,83 +45,85 @@ const TaskConversation = (props) => {
 
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 
-  //console.log("TaskConversation component")
-
   useEffect(() => {
-    if (!myTask) {
-      setFetchStart('root.ui.TaskConversation.start')
-    }
+    setFetchStart(task.id)
   }, []);
 
   useEffect(() => {
-    if (startTask) {
-      if (startTask?.step === 'receiving' && msgs) {
-        const lastElement = { ...msgs[startTask.threadId][msgs[startTask.threadId].length - 1]} // shallow copy
-        lastElement.text = startTask.response;
-        lastElement.isLoading = false 
-        setMsgs((p) => ({
-          ...p,
-          [startTask.threadId]: [
-            ...p[startTask.threadId].slice(0,-1), 
-            lastElement
-          ]
-        }));
-      } else if (startTask?.step === 'sending' && startTask.last_step !== 'sending') {
-        // here we need to create a new slot for the next message
-        // Note we need to add the input to for the user
-        //console.log("Creating new entry for next chat", startTask)
-        const newMsgArray = [
-          { sender: 'user', text: startTask.client_prompt,  isLoading: false,}, 
-          { sender: 'bot', 
-            text: "", 
-            isLoading: true, 
-          }];
-        setMsgs((p) => ({
-            ...p,
-            [startTask.threadId]: [
-              ...p[startTask.threadId], 
-              ...newMsgArray
-            ]
-          }));
-        // This is replaced upon return of task from server
-        //setStartTask((p) => {return { ...p, step : 'receiving' }});
-      } else if (startTask?.step === 'input' && startTask.last_step !== 'input') {
-        const lastElement = { ...msgs[startTask.threadId][msgs[startTask.threadId].length - 1]} // shallow copy
-        lastElement.text = startTask.response;
-        lastElement.isLoading = false 
-        setMsgs((p) => ({
-          ...p,
-          [startTask.threadId]: [
-            ...p[startTask.threadId].slice(0,-1), 
-            lastElement
-          ]
-        }));
-      } else if (startTask?.step === 'input') {
-        //console.log("Step input")
-      }
+    if (fetchResponseStart) {
+      setChildTask(fetchResponseStart)
     }
-  }, [startTask, setStartTask]);
+  }, [fetchResponseStart]);
+
+  /*
+  // Upon loading this component fetches its own Task and passes the props.task on to the chat
+  useEffect(() => {
+    if (!myTask) {
+      setFetchStart('root.components.TaskConversation.start')
+    }
+  }, []);
 
   useEffect(() => {
     if (fetchResponseStart) {
       setMyTask(fetchResponseStart)
     }
   }, [fetchResponseStart]);
-
-  // Intercept updates to the startTask
-  // Can detect when input is being sent and update UI ?
-  // Could avoid Msgs passing ?
-  function interceptSetStartTask(args) {
-    setStartTask(args)
-  }
+  */
 
   useEffect(() => {
-    if (startTask) {
-      let welcomeMessage = startTask?.welcome_message || welcomeMessage_default
+    if (childTask) {
+      if (childTask?.step === 'receiving' && msgs) {
+        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
+        lastElement.text = childTask.response;
+        lastElement.isLoading = false 
+        setMsgs((p) => ({
+          ...p,
+          [task.threadId]: [
+            ...p[task.threadId].slice(0,-1), 
+            lastElement
+          ]
+        }));
+      } else if (childTask?.step === 'sending' && childTask.last_step !== 'sending') {
+        // here we need to create a new slot for the next message
+        // Note we need to add the input to for the user
+        //console.log("Creating new entry for next chat", task)
+        const newMsgArray = [
+          { sender: 'user', text: childTask.client_prompt,  isLoading: false,}, 
+          { sender: 'bot', 
+            text: "", 
+            isLoading: true, 
+          }];
+        setMsgs((p) => ({
+            ...p,
+            [task.threadId]: [
+              ...p[task.threadId], 
+              ...newMsgArray
+            ]
+          }));
+      } else if (childTask?.step === 'input' && childTask.last_step !== 'input') {
+        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
+        lastElement.text = childTask.response;
+        lastElement.isLoading = false 
+        setMsgs((p) => ({
+          ...p,
+          [task.threadId]: [
+            ...p[task.threadId].slice(0,-1), 
+            lastElement
+          ]
+        }));
+      } else if (task?.step === 'input') {
+        //console.log("Step input")
+      }
+    }
+  }, [childTask]);
+
+  useEffect(() => {
+    if (task) {
+      let welcomeMessage = task?.welcome_message || welcomeMessage_default
       if (!isMountedRef.current) {
         setMsgs(
           {
-            [startTask.threadId] : [
+            [task.threadId] : [
               { sender: 'bot', text: welcomeMessage,  isLoading: true}
             ]
           }
@@ -118,26 +131,26 @@ const TaskConversation = (props) => {
         setTimeout(()=>{
             setMsgs(
               {
-                [startTask.threadId] : [
+                [task.threadId] : [
                   { sender: 'bot', text: welcomeMessage,  isLoading: false}
                 ]
               }
             );
         }, 1000);
         isMountedRef.current = true
-      } else if ( !(startTask.threadId in msgs) ) {
+      } else if ( !(task.threadId in msgs) ) {
         // Why do we need this? Should use (p) => style
-        //console.log("HERE " + startTask.threadId + " ", msgs)
+        //console.log("HERE " + task.threadId + " ", msgs)
         setMsgs({
           ...msgs,
-          [startTask.threadId]: [
+          [task.threadId]: [
             { sender: 'bot', text: welcomeMessage, isLoading: false }
           ],
         });
         //console.log("HERE2 ", msgs)
       }
     }
-  }, [msgs, startTask]);
+  }, [msgs, task]);
 
   useEffect(() => {
     if (isMountedRef.current) {
@@ -168,7 +181,7 @@ const TaskConversation = (props) => {
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer} >
-        {startTask && msgs[startTask.threadId] && msgs[startTask.threadId].map((msg, index) => {
+        {task && msgs[task.threadId] && msgs[task.threadId].map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
               <div className="chat"> 
@@ -183,7 +196,14 @@ const TaskConversation = (props) => {
         })}
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
-      <TaskChat task={startTask} setTask={interceptSetStartTask} parentTask={myTask} />
+
+      {/*
+      {selectedTask?.spawn_tasks && selectedTask.spawn_tasks.map(task => {
+        return <DynamicComponent key={selectedTask.id} is={task} task={selectedTask} setTask={setSelectedTask} />
+      })}
+      */}
+
+      <TaskChat task={childTask} setTask={setChildTask} parentTask={myTask} component_depth={component_depth}/>
     </section> 
   )
 

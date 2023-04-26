@@ -61,6 +61,7 @@ async function chat_prepare(task) {
   if (!agent) {
     console.log("No agent for ", task)
   }
+  //console.log("Agent ", agent)
 
   if (task?.one_thread) {
     // Prefix with location when it has changed
@@ -115,17 +116,17 @@ async function chat_prepare(task) {
       console.log("Messages extended from task.name " + task.name + " lastMessageId " + lastMessageId)
     }
   
-    if (agent?.system_message) {
-      systemMessage = agent.system_message;
-      console.log("Sytem message from agent " + agent.name)
-    }
+  }
 
-    if (users[task.userId] && task.dyad) {
-      let user = users[task.userId];
-      systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
-      console.log("Dyad in progress between " + agent.name + " and " + user?.name)
-    }
+  if (agent?.system_message) {
+    systemMessage = agent.system_message;
+    console.log("Sytem message from agent " + agent.name)
+  }
 
+  if (users[task.userId] && task.dyad) {
+    let user = users[task.userId];
+    systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
+    console.log("Dyad in progress between " + agent.name + " and " + user?.name)
   }
 
   const threadId = task.threadId

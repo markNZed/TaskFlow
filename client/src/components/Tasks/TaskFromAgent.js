@@ -12,10 +12,11 @@ import Paper from '@mui/material/Paper';
 
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import useFetchStep from '../../hooks/useFetchStep';
+import { delta, withDebug, withTask } from '../../utils';
 
 const TaskFromAgent = (props) => {
   
-    const { leaving, task, setTask} = props;
+    const { leaving, task, setTask, component_depth} = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
@@ -31,11 +32,11 @@ const TaskFromAgent = (props) => {
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    const { fetchResponse, fetched } = useFetchStep(fetchNow, task);
+    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, component_depth);
 
     // Reset the task, seems a big extreme to access global for this (should be a prop)
     useEffect(() => {
-        if (task && !myTaskId && task.component === 'TaskFromAgent') {
+        if (task && !myTaskId) {
             console.log("RESETING TaskFromAgent")
             setMyTaskId(task.id)
             setResponseText('')
@@ -57,14 +58,18 @@ const TaskFromAgent = (props) => {
             const j = JSON.parse(e.data)
             if (task?.instanceId && j?.instanceId === task.instanceId) {
                 
-                if (j?.delta) {
-                    setResponseText((prevResponse) => prevResponse + j.delta);
-                }
-                if (j?.text) {
-                    setResponseText(j.text);
-                }
-                if (j?.final) {
-                    setResponseText(j.final);
+                switch (j.mode) {
+                    case 'delta':
+                        setResponseText((prevResponse) => prevResponse + j.delta);
+                        break;
+                    case 'text':
+                        setResponseText(j.text);
+                        break;
+                    case 'final':
+                        setResponseText(j.final);
+                        break;
+                    default:
+                        break;
                 }
             }
         };
@@ -233,4 +238,4 @@ const TaskFromAgent = (props) => {
 
 }
 
-export default React.memo(TaskFromAgent);
+export default React.memo(withTask(withDebug(TaskFromAgent)));

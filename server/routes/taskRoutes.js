@@ -18,11 +18,16 @@ const router = express.Router();
 
 async function do_task_async(task) {
     let updated_task = {}
-    if (taskFunctions.hasOwnProperty(`${task.component}_async`)) {
-      updated_task = await taskFunctions[`${task.component}_async`](task);
+    let depth = 0
+    if (task?.component_depth) {
+      console.log("Component ",task.component, depth)
+      depth = task.component_depth - 1
+    }
+    if (taskFunctions.hasOwnProperty(`${task.component[depth]}_async`)) {
+      updated_task = await taskFunctions[`${task.component[depth]}_async`](task);
     } else {
       updated_task = task;
-      const msg = "ERROR: server unknown component: " + task.component;
+      const msg = "ERROR: server unknown component at depth " + depth + " : " + task.component;
       updated_task.error = msg;
       console.log(msg, taskFunctions);
     }
@@ -32,25 +37,31 @@ async function do_task_async(task) {
     return updated_task
 }
   
-async function newTask_async(id, sessionId, threadId = null, parentTask = null) {
-    let parentInstanceId
-    if (parentTask) {
-      parentInstanceId = parentTask.instanceId
-      threadId = parentTask.threadId
+async function newTask_async(id, sessionId, threadId = null, sublingTask = null) {
+    let siblingInstanceId
+    if (sublingTask) {
+      siblingInstanceId = sublingTask.instanceId
+      threadId = sublingTask.threadId
     }
     let taskCopy = { ...tasks[id] };
     taskCopy['sessionId'] = sessionId
     let instanceId = uuidv4();
     taskCopy['instanceId'] = instanceId
-    if (parentInstanceId) {
-      taskCopy['parentInstanceId'] = parentInstanceId
-      let parent = await instancesStore_async.get(parentInstanceId)
+    if (siblingInstanceId) {
+      // Should reanme to sibling?
+      taskCopy['parentInstanceId'] = siblingInstanceId
+      let parent = await instancesStore_async.get(siblingInstanceId)
       if (parent?.address) { taskCopy['address'] = parent.address }
       if (!threadId) {
         threadId = parent.threadId
       }
+      if (parent?.component_depth) {
+        taskCopy['component_depth'] = parent.component_depth
+      }
       parent.childInstance = instanceId
-      await instancesStore_async.set(parentInstanceId, parent)
+      await instancesStore_async.set(siblingInstanceId, parent)
+    } else if (taskCopy?.component) {
+      taskCopy['component_depth'] = taskCopy.component.length
     }
     if (threadId) {
       taskCopy['threadId'] = threadId
@@ -68,7 +79,8 @@ async function newTask_async(id, sessionId, threadId = null, parentTask = null) 
     const now = new Date();
     taskCopy['created'] = now
     await instancesStore_async.set(instanceId, taskCopy)
-    console.log("New task " + id)
+    //console.log("New task ", taskCopy)
+    console.log("New task id " + taskCopy.id + " component_depth " + taskCopy.component_depth)
     return taskCopy
 }
   
@@ -84,23 +96,29 @@ router.post('/update', async (req, res) => {
       let task = req.body.task
       let address = req.body.address
 
-      if (sessionId) { task['sessionId'] = sessionId } else {console.log("Warning: sessionId missing")}
-      if (address) { task['address'] = address }
-      if (task?.update_count) {task.update_count += 1} else {task['update_count'] = 1}
+      if (task) {
+        if (sessionId) { task['sessionId'] = sessionId } else {console.log("Warning: sessionId missing")}
+        if (address) { task['address'] = address }
+        if (task?.update_count) {task.update_count += 1} else {task['update_count'] = 1}
+      } else {
+        const msg = "ERROR did not receive task"
+        console.log(msg)
+        res.status(404).json({ error: msg });
+        return
+      }
   
       // Risk that client writes over server fields so filter_out before merge
       let instanceId = task.instanceId
       const server_side_task = await instancesStore_async.get(instanceId)
       // filter_out could also do some data cleaning
-      let clean_client_task = utils.filter_out(tasks, task)
+      let clean_client_task = utils.filter_in(tasks, task)
       let updated_task = Object.assign({}, server_side_task, clean_client_task)
   
-      /*
-      console.log("task ", task)
-      console.log("clean_client_task ", clean_client_task)
-      console.log("server_side_task ", server_side_task)
-      console.log("Merged task: ",updated_task)
-      */
+      //console.log("task ", task)
+      //console.log("clean_client_task ", clean_client_task)
+      //console.log("server_side_task ", server_side_task)
+      //console.log("Merged task: ",updated_task)
+
   
       if (updated_task?.done) {
         console.log("Client side task done " + updated_task.id)
@@ -116,7 +134,7 @@ router.post('/update', async (req, res) => {
         // A sanity check to avoid erroneuos infinite loops
         i = i + 1
         if (i > 10) {
-          console.log("Unexpected looping on server_only " + updated_task.id)
+          console.log("Unexpected looping on server_only ", updated_task)
           exit
         }
         if (updated_task?.done) {
@@ -132,7 +150,7 @@ router.post('/update', async (req, res) => {
         }
       }
   
-      let updated_client_task = utils.filter_out(tasks, updated_task)
+      let updated_client_task = utils.filter_in(tasks, updated_task)
       res.send(JSON.stringify(updated_client_task));
     } else {
       res.status(200).json({ error: "No user" });
@@ -168,6 +186,10 @@ router.post('/start', async (req, res) => {
         task['userId'] = userId
         if (sessionId) { task['sessionId'] = sessionId }  else {console.log("Warning: sessionId missing")}
         if (address) { task['address'] = address }
+        // We start with the deepest component in the stack
+        if (task?.component) {
+          task.component_depth = task?.component.length - 1
+        }
   
         //console.log(task)
   
@@ -216,7 +238,7 @@ router.post('/start', async (req, res) => {
   
         await instancesStore_async.set(task.instanceId, task)
     
-        let updated_client_task = utils.filter_out(tasks, task)
+        let updated_client_task = utils.filter_in(tasks, task)
         res.send(JSON.stringify(updated_client_task));
       }
     } else {

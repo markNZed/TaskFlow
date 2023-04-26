@@ -9,12 +9,24 @@ import React from "react";
  * }
  */
 const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
-  //console.log("DynamicComponent " + " is " + is + " useDefaultPath " + useDefaultPath + " " + `./../Tasks/${is}`)
-  const Component = useDefaultPath
-    ? require(`./../Tasks/${is}`).default
-    : is;
+
+  let Component;
+
+  if (!is) {
+    console.log("Warning: DynamicComponent ", is)
+  }
+
+  try {
+    Component = useDefaultPath
+      ? require(`./../Tasks/${is}`).default
+      : is;
+  } catch (error) {
+    console.warn(`Failed to load component ${is}:`, error)
+    return "";
+  }
 
   return <Component {...rest} />;
+
 };
 
 export default DynamicComponent;

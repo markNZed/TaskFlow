@@ -22,6 +22,14 @@ Compare with similar systems
   Auto-GPT
     https://github.com/Significant-Gravitas/Auto-GPT
     This might be the close but the focus on autonomy is quite different
+  https://github.com/modal-labs/quillman
+    A complete chat app that transcribes audio in real-time, streams back a response
+    from a language model, and synthesizes this response as natural-sounding speech.
+    This repo is meant to serve as a starting point for your own language model-based apps
+  https://gradio.app/
+    It would ideally be easy to use a Gradio component
+    Embed in an iFrame
+  
 
 Backlog
 -------
@@ -31,11 +39,14 @@ Backlog
   When we go to prev instance in stepper what do we do with the child instances ? 
     Maybe they should be deleted ? But not the same to jump back as active or to view.
   Scrolling to view suggested_prompts in TaskChat
+  // This assumes the components are expanded - need to do this in dataconfig
+
 
   Features
   --------
     High Priority
     -------------
+    Components should be separate from Workflow
     Workflow features:
       Replace globalState with Redux
         Switching between chat and workflow loses the chat messages - store at app level could resolve that
@@ -94,9 +105,9 @@ Notes/Idea
 
   Infra
   -----
-  Include docker in git
   Components repository so can be shared between server and client
   Run prod version instead of dev
+  https://modal.com/
 
 -------
 */

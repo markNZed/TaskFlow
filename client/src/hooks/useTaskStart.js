@@ -16,21 +16,21 @@ import { fetchData } from '../utils/fetchData'
 const useTaskStart = (setTask, startId, threadId = null) => {
 
   const { globalState } = useGlobalStateContext();
-  const [taskLoading, setTaskLoading] = useState(true);
-  const [taskError, setTaskError] = useState(null);
+  const [startTaskLoading, setStartTaskLoading] = useState(true);
+  const [startTaskError, setTaskStartError] = useState(null);
 
   useEffect(() => {
     if (!startId) {return} 
     const fetchTaskFromAPI = async () => {
       try {
-        setTaskLoading(true);
+        setStartTaskLoading(true);
         const result = await fetchData(globalState, { startId: startId, threadId: threadId});
         setTask(result);
       } catch (error) {
-        setTaskError(error.message);
+        setTaskStartError(error.message);
         setTask(null);
       } finally {
-        setTaskLoading(false);
+        setStartTaskLoading(false);
       }
     };
 
@@ -38,7 +38,7 @@ const useTaskStart = (setTask, startId, threadId = null) => {
 
   }, [startId]);
 
-  return { taskLoading, taskError };
+  return { startTaskLoading, startTaskError };
 
 };
 

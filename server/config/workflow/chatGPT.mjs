@@ -5,8 +5,7 @@ const workflow_chatGPT = {
     agent: 'chatgpt',
     tasks: {
         start : {
-            component: 'TaskChat',
-            ui_task: 'TaskConversation',
+            APPEND_component: ['TaskChat'],
             next: 'start'
         },
     },

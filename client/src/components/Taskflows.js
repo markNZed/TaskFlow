@@ -20,6 +20,8 @@ import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import useFetchStart from '../hooks/useFetchStart';
 import DynamicComponent from "./Generic/DynamicComponent";
+import { delta, withDebug, withTask } from '../utils';
+
 
 // Move to taskStack ?
 // Presentation task ?
@@ -29,10 +31,13 @@ import DynamicComponent from "./Generic/DynamicComponent";
 // Here we can assume there is a single active workflow with a single active task
 // We want to use a prop not a global for the task (so multiple Workflows can be supported)
 
+// We assume that the task globalState.selectedTaskId has a spawn_tasks property and it is this task that is
+// passed to the next component after setting the spawn_tasks in selectedTask to globalState.selectedTaskId
 function Taskflows() {
   const { globalState } = useGlobalStateContext();
 
-  const [myStartTask, setMyStartTask] = useState();
+  const [selectedTask, setSelectedTask] = useState();
+  const [componentName, setComponentName] = useState();
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
@@ -40,16 +45,28 @@ function Taskflows() {
   const { fetchResponse, fetched } = useFetchStart(fetchNow);
 
   useEffect(() => {
-    if (globalState.selectedTaskId && globalState.selectedTaskId !== myStartTask?.id) {
+    if (globalState.selectedTaskId && globalState.selectedTaskId !== selectedTask?.id) {
+      setComponentName(null)
       setFetchNow(globalState.selectedTaskId)
     }
   }, [globalState]);
 
   useEffect(() => {
     if (fetchResponse) {
-      setMyStartTask(fetchResponse)
+      setSelectedTask(fetchResponse)
     }
   }, [fetchResponse]);
+
+  useEffect(() => {
+    if (selectedTask && !componentName) {
+      //console.log(selectedTask)
+      let stack = selectedTask.component
+      setComponentName(stack[0])
+      //stack.shift()
+      //setSelectedTask(p => { return {...p, component : stack}})
+    }
+  }, [selectedTask]);
+  
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
@@ -127,8 +144,10 @@ function Taskflows() {
               
               <Toolbar />
 
-              { myStartTask?.ui_task && (
-                  <DynamicComponent is={myStartTask.ui_task} startTask={myStartTask} setStartTask={setMyStartTask} />
+              {componentName && (
+                // Key could be parent instance
+                <DynamicComponent is={componentName} task={selectedTask} setTask={setSelectedTask} parentTask={null} component_depth={0} />
+                //return <DynamicComponent key={selectedTask.id} is={componentName} startTask={selectedTask} setStartTask={setSelectedTask} />
               )}
 
             </Box>
@@ -143,4 +162,4 @@ function Taskflows() {
   );
 }
 
-export default Taskflows;
+export default withDebug(Taskflows);

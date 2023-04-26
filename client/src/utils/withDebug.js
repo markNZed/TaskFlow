@@ -37,7 +37,7 @@ function withDebug(Component) {
           }
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          log("Task changes:", diff)
+          log("Task " + props.task.id + " changes:", diff)
         }
       }
     }, [props.task]);
@@ -49,7 +49,13 @@ function withDebug(Component) {
       if (callerName.indexOf('/')) { callerName = ':unknown' } // File path probably 
       const log = debug(`${appAbbrev}:${componentName}${callerName}`);
       log(...message);
-    };    
+    };
+
+    function useTrace(variableName, variableValue) {
+      useEffect(() => {
+        console.log(`Tracing ${variableName}:`, variableValue);
+      }, [variableName, variableValue]);
+    }
 
     const componentProps = {
         ...props,

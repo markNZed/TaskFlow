@@ -98,7 +98,7 @@ function flattenWorkflows(workflows) {
     const parentWorkflow = workflowLookup[workflow['parentId']]
     for (const key in parentWorkflow) {
       if (parentWorkflow.hasOwnProperty(key)) {
-        if (!workflow.hasOwnProperty(key)) {
+        if (!workflow.hasOwnProperty(key) && !key.startsWith("APPEND_") && !key.startsWith("PREPEND_")) {
           workflow[key] = parentWorkflow[key]
         }
         if (workflow.hasOwnProperty('PREPEND_' + key)) {
@@ -108,7 +108,8 @@ function flattenWorkflows(workflows) {
             workflow[key] = workflow['PREPEND_' + key] + parentWorkflow[key]
           }
           //console.log("Workflow " + workflow.id + " PREPEND_ ", workflow['PREPEND_' + key], " to " + key)
-        } else if (workflow.hasOwnProperty('APPEND_' + key)) {
+        } 
+        if (workflow.hasOwnProperty('APPEND_' + key)) {
           if (Array.isArray(workflow['APPEND_' + key])) {
             workflow[key] = parentWorkflow[key].concat(workflow['APPEND_' + key]);
           } else {
@@ -124,7 +125,11 @@ function flattenWorkflows(workflows) {
         if (workflow.tasks.hasOwnProperty(taskkey)) {
           for (const workflowkey in workflow) {
             if (workflow.hasOwnProperty(workflowkey)) {
-              if (!workflow.tasks[taskkey].hasOwnProperty(workflowkey) && workflowkey !== 'tasks') {
+              if (!workflow.tasks[taskkey].hasOwnProperty(workflowkey) 
+                  && workflowkey !== 'tasks' 
+                  &&!workflowkey.startsWith("APPEND_") 
+                  && !workflowkey.startsWith("PREPEND_"))
+              {
                 workflow.tasks[taskkey][workflowkey] = workflow[workflowkey]
                 if (workflow.tasks[taskkey].hasOwnProperty('PREPEND_' + workflowkey)) {
                   if (Array.isArray(workflow.tasks[taskkey]['PREPEND_' + workflowkey])) {

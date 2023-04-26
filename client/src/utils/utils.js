@@ -2,4 +2,5 @@ export function updateState(setState, update) {
     setState(prevState => ({ ...prevState, ...update }));
 }
 
-export const delta = (callback) => setTimeout(callback, 0);
+// e.g. delta(() => {updateStep('input')})
+export const delta = (callback, delay=0) => setTimeout(callback, delay);

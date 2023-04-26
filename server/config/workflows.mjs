@@ -6,7 +6,8 @@ const workflows_array = [
         name: 'root',
         filter_for_client: [ // parameter names that will not be stripped from the Task when sent from the server to the client
             'id', 
-            'component', 
+            'component',
+            'component_depth',
             'next', 
             'forget', 
             'name', 
@@ -18,11 +19,10 @@ const workflows_array = [
             'steps', 
             'step', 
             'menu', 
-            'ui_task', 
-            'ui',
             'update_count',
         ],
         menu: false,
+        component: [] // Need this so APPEND will work in lower workflows
         //default: false,
         //one_thread : false,
         //use_cache: true,
@@ -35,11 +35,13 @@ const workflows_array = [
     {    
         name: 'conversation',
         parent: 'exercices',
+        APPEND_component: ['TaskConversation'],
     },
     workflow_chatGPT,
     {    
         name: 'workflow',
         parent: 'exercices',
+        APPEND_component: ['TaskStepper'],
     },
     {
         name: "example",
@@ -51,8 +53,7 @@ const workflows_array = [
         tasks: {
             start : {
                 response: "Hello",
-                component: 'TaskShowResponse',
-                ui_task: 'TaskStepper',
+                APPEND_component: ['TaskShowResponse'],
                 next: 'summarize'
             },
             summarize: {
@@ -60,7 +61,7 @@ const workflows_array = [
                 instruction: "Tell the user what to do",
                 forget: true, // Because the start has no prompt so does not forget things in server
                 prompt: "Tell me a story about something random.",
-                component: 'TaskFromAgent',
+                APPEND_component: ['TaskFromAgent'],
                 input: '',
                 input_label: "Respond here.",
                 response: '', // From the agent
@@ -68,7 +69,7 @@ const workflows_array = [
             },
             structure: {
                 agent: "chatgpt",
-                component: 'TaskFromAgent',
+                APPEND_component: ['TaskFromAgent'],
                 forget: true,
                 instruction: "This is what I think of your response",
                 assemble_prompt:  ["Provide feedback on this prompt, is it a good prompt? ", "\"", 'summarize.input', "\""],

@@ -11,29 +11,54 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import useFetchTask from '../../hooks/useFetchTask';
 import useFetchStart from '../../hooks/useFetchStart';
 import DynamicComponent from "./../Generic/DynamicComponent";
+import { delta, withDebug, withTask } from '../../utils';
 
 // Typically this Task gets created at the start of a taskflow
-// The startTask is the task that caused the creation of this task
+// The task is the task that caused the creation of this task
 // Here we start a taskflow for the TaskStepper by starting myTask\
 // useState([]) in parent for Tasks seems a good approach but will require changes for Stepper
 
+// Get two requests with step=response
+// The first task is being updates with the content of the second task. setVisitedStepperTasks
+
+// Why does the task for TaskShowResponse disappear when using back ?
+
 function TaskStepper(props) {
 
-  const { startTask, setStartTask} = props;
-  const [activeTask, setActiveTask] = useState();
+  const { log, task, setTask, component_depth } = props;
+  const [activeTask, setActiveTaskAfter] = useState();
+  const [activeTaskIdx, setActiveTaskIdx] = useState(0);
   const [prevActiveTask, setPrevActiveTask] = useState();
-  const [visitedStepperTasks, setVisitedStepperTasks] = useState([]);
+  const [visitedStepperTasks, setVisitedStepperTasksWrapped] = useState([]);
   const [leaving, setLeaving] = useState();
   const [fetchNow, setFetchNow] = useState();
   const [expanded, setExpanded] = useState(['start']);
-  const { fetchResponse, fetched } = useFetchTask(fetchNow);
+  // Here we component_depth + 1 but should be in the code ? fetch_depth state
+  const { fetchResponse, fetched } = useFetchTask(fetchNow, component_depth + 1);
   const [fetchStart, setFetchStart] = useState();
   const { fetchResponse: fetchResponseStart } = useFetchStart(fetchStart);
   const [myTask, setMyTask] = useState();
+  const [childTask, setChildTask] = useState();
 
   useEffect(() => {
+    setFetchStart(task.id)
+  }, []);
+
+  useEffect(() => {
+    if (fetchResponseStart) {
+      setChildTask(fetchResponseStart)
+      setActiveTask(fetchResponseStart)
+      setVisitedStepperTasks([fetchResponseStart])
+      //setActiveTaskIdx(0)
+
+    }
+  }, [fetchResponseStart]);
+
+  /*
+  // Not using myTask
+  useEffect(() => {
     if (!myTask) {
-      setFetchStart('root.ui.TaskStepper.start', startTask.threadId)
+      setFetchStart('root.components.TaskStepper.start', task.threadId)
     }
   }, []);
 
@@ -42,6 +67,7 @@ function TaskStepper(props) {
       setMyTask(fetchResponseStart)
     }
   }, [fetchResponseStart]);
+  */
 
   // When task is done then fetch next task
   // Detecting changes of the workflow
@@ -63,16 +89,19 @@ function TaskStepper(props) {
   useEffect(() => {
     if (fetchResponse) {
       setFetchNow(null)
-      setActiveTask(fetchResponse);
+      // We need to remove a level of the component stack from the activeComponent
+      // setActiveTask(fetchResponse);
       // Cannot immediately use activeTask
       console.log("Fetched task " + fetchResponse.name)
+      // Do we need this condition ?
       if (!leaving || leaving.direction === 'next') { // !leaving when starting
+        setActiveTaskIdx(visitedStepperTasks.length)
         setVisitedStepperTasks((prevVisitedTasks) => [...prevVisitedTasks, fetchResponse ]);
+        
       } else {
         // This does not look right if we are going to prev then should not be fetching
-        console.log("SHOULD NOT BE HERE?")
-        setVisitedStepperTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
-      }
+        console.error("SHOULD NOT BE HERE?")
+       }
     }
   }, [fetchResponse]); // Can't use fetched here as going back in stepper does not update fetched (id)
 
@@ -91,7 +120,8 @@ function TaskStepper(props) {
         setLeaving({direction: 'prev', task: currentTask});
         // Could cause problem if currently fetching, can this be a function call?
         //setFetchNow(prev)
-        setActiveTask(prev);
+        //setActiveTask(prev);
+        setActiveTaskIdx(visitedStepperTasks.length - 2)
         setVisitedStepperTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
       }
     }
@@ -110,12 +140,20 @@ function TaskStepper(props) {
     }
   }, [activeTask]); 
 
+  /*
   useEffect(() => {
-    if (startTask) {
-      setActiveTask(startTask)
-      setVisitedStepperTasks([startTask])
+    if (task) {
+      setActiveTask(task)
+      setVisitedStepperTasks([task])
+      setActiveTaskIdx(0)
     }
-  }, [startTask]); 
+  },[]);
+  */
+
+  function setVisitedStepperTasks(t) {
+    console.log("setVisitedStepperTasks " + activeTaskIdx)
+    setVisitedStepperTasksWrapped(t)
+  }
 
   const handleChange = (panel) => (event, newExpanded) => {
     if (newExpanded) {
@@ -127,6 +165,34 @@ function TaskStepper(props) {
 
   const isExpanded = (panel) => expanded.includes(panel);
 
+  function setTaskWrapper(t) {
+    console.log("setTaskWrapper " + activeTaskIdx)
+    // log the activeTaskIdx it must be misaligned
+    setVisitedStepperTasks((prevVisitedTasks) => {
+      const updatedTasks = [...prevVisitedTasks]; // create a copy of the previous state array
+      const updatedTask = typeof t === 'function' ? t(updatedTasks[activeTaskIdx]) : t;
+      updatedTasks[activeTaskIdx] = updatedTask;
+      return updatedTasks; // return the updated array
+    });
+  }
+
+  useEffect(() => {
+    setActiveTaskAfter(visitedStepperTasks[activeTaskIdx])
+  },[visitedStepperTasks, activeTaskIdx]);
+
+  function setActiveTask(t) {
+    setTaskWrapper(t)
+  }
+
+  // Tracing
+  useEffect(() => {
+    console.log("activeTaskIdx " + activeTaskIdx)
+  }, [activeTaskIdx]); 
+  
+  useEffect(() => {
+    console.log("visitedStepperTasks ", visitedStepperTasks)
+  }, [visitedStepperTasks]); 
+
   return (
     <div>
       <Stepper activeStep={visitedStepperTasks.indexOf(activeTask)}>
@@ -136,23 +202,24 @@ function TaskStepper(props) {
           </Step>
         ))}
       </Stepper>
-      { visitedStepperTasks.map(({ name, label, component, next }) => (
+      { visitedStepperTasks.map(({ name, label, component, next }, idx) => (
           <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
+              { /* Could pass in a key to DynamicComponent */}
               { component && (
-                  <DynamicComponent is={component} task={activeTask} setTask={setActiveTask} leaving={leaving} parentTask={myTask} />
+                <DynamicComponent is={component[component_depth]} task={visitedStepperTasks[idx]} setTask={setTaskWrapper} leaving={leaving} parentTask={myTask} component_depth={component_depth} />
               )}
             </AccordionDetails>
             <div>
-              {activeTask.name !== 'start' && activeTask.name === name && (
+              {activeTask && activeTask.name !== 'start' && activeTask.name === name && (
                 <Button onClick={() => handleStepperNavigation(activeTask, 'back')} variant="contained" color="primary">
                   Back
                 </Button>
               )}
-              {!/\.stop$/.test(next) && activeTask.name === name && (
+              {!/\.stop$/.test(next) && activeTask && activeTask.name === name && (
                 <Button onClick={() => handleStepperNavigation(activeTask, 'next')} variant="contained" color="primary">
                   Next
                 </Button>
@@ -165,4 +232,4 @@ function TaskStepper(props) {
   );
 }
 
-export default TaskStepper;
+export default withTask(withDebug(TaskStepper));

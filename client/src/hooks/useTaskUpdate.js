@@ -13,25 +13,26 @@ import { fetchData } from '../utils/fetchData'
 //          Task with task
 // We should combine these
 
-const useTaskUpdate = (task, setTask) => {
+const useTaskUpdate = (task, setTask, depth) => {
   
   const { globalState } = useGlobalStateContext();
-  const [taskLoading, setTaskLoading] = useState(true);
-  const [taskError, setTaskError] = useState(null);
+  const [updateTaskLoading, setUpdateTaskLoading] = useState(true);
+  const [updateTaskError, setUpdateTaskError] = useState(null);
 
   useEffect(() => {
     if (task?.update) {
+      console.log("useTaskUpdate", task)
       const fetchTaskFromAPI = async () => {
         try {
-          setTaskLoading(true);
-          const result = await fetchData(globalState, { task: task});
+          setUpdateTaskLoading(true);
+          const result = await fetchData(globalState, { task: { ...task, component_depth: depth } });
           setTask((p) => { return {...p, ...result}})
           //setTask(result);
         } catch (error) {
-          setTaskError(error.message);
+          setUpdateTaskError(error.message);
           setTask(null);
         } finally {
-          setTaskLoading(false);
+          setUpdateTaskLoading(false);
         }
       };
       fetchTaskFromAPI();
@@ -39,7 +40,7 @@ const useTaskUpdate = (task, setTask) => {
     }
   }, [task, setTask]);
 
-  return { taskLoading, taskError };
+  return { updateTaskLoading, updateTaskError };
 };
 
 export default useTaskUpdate

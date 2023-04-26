@@ -9,10 +9,11 @@ import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
 import useFetchStep from '../../hooks/useFetchStep';
+import { delta, withDebug, withTask } from '../../utils';
 
 const TaskShowResponse = (props) => {
 
-    const { leaving, task, setTask } = props;
+    const { leaving, task, setTask, parentTask} = props;
 
     const [fetchNow, setFetchNow] = useState('');
     const [responseText, setResponseText] = useState('');
@@ -22,19 +23,27 @@ const TaskShowResponse = (props) => {
 
     const { fetchResponse, fetched } = useFetchStep(fetchNow, task);
 
-    // Reset the task once
+    // Reset the task once, we wil not need to do this if not reused
     useEffect(() => {
-        if (task && !myTaskId && task.component === 'TaskShowResponse') {
+        //console.log("task ", task)
+        if (task && !myTaskId) {
             console.log("RESETTING TaskShowResponse")
             //setMyStep('start') // I guess this triggers the state machine
             setMyTaskId(task.id)
             setResponseText('')
             if (!task?.steps) {
                 // Default sequence is to just get response
-                setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
+                console.log("steps: {'start' : 'response', 'response' : 'stop'}")
+                setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
+            } else {
+                console.log("steps " + task.steps)
             }
             setMyStep('start')
         }
+    }, [task]);
+
+    useEffect(() => {
+        //console.log("task ", task)
     }, [task]);
 
     // Sub_task state machine
@@ -115,4 +124,4 @@ const TaskShowResponse = (props) => {
 
 }
 
-export default React.memo(TaskShowResponse);
+export default React.memo(withTask(withDebug(TaskShowResponse)));

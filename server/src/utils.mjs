@@ -107,7 +107,7 @@ utils.messagesText_async = async function(messageStore_async, LastMessageId) {
     return text
 }
 
-utils.filter_in = function(task, filter_list) {
+utils.filter_in_list = function(task, filter_list) {
   const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
   for (const key in taskCopy) {
     if (!filter_list.includes(key)) {
@@ -117,18 +117,22 @@ utils.filter_in = function(task, filter_list) {
   return taskCopy
 }
 
-utils.filter_out = function(tasks, task) {
-  let component
+utils.filter_in = function(tasks, task) {
+
   if (!task?.id) {
     console.log("ERROR Task has no id ", task)
   }
-  if (task.id.startsWith("root.ui.")) {
-    component = task.id
-  } else {
-    component = "root.ui." + task.component + ".start"
+  //console.log("BEFORE ", task)
+  let filter_list = [];
+  // This assumes the components are not expanded - need to do this in dataconfig
+  for (const c of task.component) {
+    filter_list = filter_list.concat(tasks['root.components.' + c + '.start'].filter_for_client)
   }
-  const filter_list = tasks[component].filter_for_client
-  if (!filter_list) {
+  if (task?.filter_for_client) {
+    filter_list = filter_list.concat(task.filter_for_client)
+  }
+  filter_list = Array.from(new Set(filter_list)) // uniquify
+  if (filter_list.length < 1) {
     console.log("Warning: the task ", task,  " is missing filter")
   }
   const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
@@ -137,6 +141,7 @@ utils.filter_out = function(tasks, task) {
       delete taskCopy[key];
     }
   }
+  //console.log("AFTER ", filter_list, taskCopy)
   return taskCopy
 }
 

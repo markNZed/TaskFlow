@@ -15,13 +15,13 @@ import send from '../../assets/send.svg';
 /*
 Task Process
   Present textarea and dropdown for user to enter a prompt
-  When prompt is submitted send the task to server step=sending
+  When prompt is submitted send the task to server with step=sending
   Server sends incemental text responses by websocket updating task.response
   Server sends final text and terminates HTTP request with step=input
   Parent component is expected to:
     Display updates to task.response while step=input
     Detect step=sending and display/store user's prompt and set step=receiving ** should not be setting step in parent?
-  If server request returns (!taskLoading) and step=receiving the websocket did not start/finish
+  If server request returns (!updateTaskLoading) and step=receiving the websocket did not start/finish
     Update with the HTTP response so step=input
 
 Task Steps
@@ -34,12 +34,12 @@ ToDo:
     To allow this we need to append dom elements. 
     In chatGPT they have the same problem inside the active <p> 
     but once rendered hte <p></p> can be copied
-  Should taskLoading be part of the task object?
+  Should updateTaskLoading be part of the task object?
 */
 
 const TaskChat = (props) => {
 
-  const { log, useTaskWebSocket, updateTask, updateStep, taskLoading, task, setTask } = props
+  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask, component_depth } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
@@ -72,7 +72,8 @@ const TaskChat = (props) => {
 
   // The websocket returns the response but if that fails we use the HTTP response here
   useEffect(() => {
-    if (taskLoading) { // Should this be part of the task object
+    if (!task) {return}
+    if (updateTaskLoading) { // Should this be part of the task object
       if (task.step === 'sending') {
         // Start receiving
         updateStep('receiving')
@@ -83,7 +84,7 @@ const TaskChat = (props) => {
       // Let the update to task.response take effect before step=input
       delta(() => {updateStep('input')})
     }
-  }, [taskLoading]);
+  }, [updateTaskLoading]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 

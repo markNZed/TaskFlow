@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { serverUrl } from '../config';
 
-const useFetchStep = (fetchNow, myTask) => {
+const useFetchStep = (fetchNow, myTask, depth) => {
   const { globalState } = useGlobalStateContext();
   const [fetchResponse, setFetchResponse] = useState('');
   const [fetched, setFetched] = useState('');
@@ -25,7 +25,7 @@ const useFetchStep = (fetchNow, myTask) => {
           credentials: 'include',
           body: JSON.stringify({
             sessionId: globalState.sessionId,
-            task: myTask,
+            task: { ...myTask, component_depth: depth },
           }),
         };
 
