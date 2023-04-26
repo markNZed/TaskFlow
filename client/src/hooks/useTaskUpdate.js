@@ -25,7 +25,7 @@ const useTaskUpdate = (task, setTask, depth) => {
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true);
-          const result = await fetchData(globalState, { task: { ...task, component_depth: depth } });
+          const result = await fetchData(globalState, 'task/update', { task: { ...task, component_depth: depth } });
           setTask((p) => { return {...p, ...result}})
           //setTask(result);
         } catch (error) {

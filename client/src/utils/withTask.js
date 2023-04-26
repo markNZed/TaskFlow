@@ -15,13 +15,15 @@ function withTask(Component) {
   function TaskComponent(props) {
 
     const [prevTask, setPrevTask] = useState();
+    const [startTaskId, setStartTaskId] = useState();
+    const [startTaskThreadId, setStartTaskThreadId] = useState();
     const local_component_depth = props.component_depth + 1
     // By passing the depth we know whihc layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing condif from an earlier component
     const { updateTaskLoading, updateTaskError } = useTaskUpdate(props.task, props.setTask, local_component_depth);
     const { webSocketEventEmitter } = useWebSocketContext();
-    //const { startTaskLoading, startTaskError } = useTaskStart(props.task, props.setTask); // setTask, startId, threadId
+    const { startTask, startTaskLoading, startTaskError } = useTaskStart(startTaskId, startTaskThreadId); // setTask, startId, threadId const useFetchStart = (fetchNow, threadId = null ) 
 
     function updateStep(step) {
       props.setTask(p => ({ ...p, step: step, last_step: p.step}))
@@ -42,7 +44,6 @@ function withTask(Component) {
         setPrevTask(props.task);
       }
     }, [props.task]);
-
 
     function updateTask(update) {
       props.setTask(prevState => ({ ...prevState, ...update }));
@@ -65,15 +66,17 @@ function withTask(Component) {
       //console.log("local_component_depth " + local_component_depth)
       //props.setTask(p => ({ ...p, component_depth : local_component_depth }))
     }, []);
-    
-
+  
     const componentProps = {
         ...props,
         setTask: setTaskWithPrev,
         updateTaskLoading, 
         updateTaskError,
-        //startTaskLoading,
-        //startTaskError,
+        startTaskLoading,
+        startTaskError,
+        startTask,
+        setStartTaskId,
+        setStartTaskThreadId,
         prevTask,
         updateTask,
         updateStep, // add log as a prop

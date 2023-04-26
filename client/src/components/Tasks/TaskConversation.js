@@ -29,7 +29,16 @@ ToDo:
 
 const TaskConversation = (props) => {
 
-  const { task, setTask, component_depth } = props
+  const { 
+    task, 
+    setTask, 
+    component_depth, 
+    startTaskLoading,
+    startTaskError,
+    startTask,
+    setStartTaskId,
+    setStartTaskThreadId,
+  } = props
 
   const [fetchStart, setFetchStart] = useState();
   const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
@@ -46,14 +55,24 @@ const TaskConversation = (props) => {
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 
   useEffect(() => {
-    setFetchStart(task.id)
+    console.log("HERE ", task)
+    setStartTaskId(task.id)
   }, []);
 
+  useEffect(() => {
+    if (startTask) {
+      setChildTask(startTask)
+    }
+  }, [startTask]);
+
+
+  /*
   useEffect(() => {
     if (fetchResponseStart) {
       setChildTask(fetchResponseStart)
     }
   }, [fetchResponseStart]);
+  */
 
   /*
   // Upon loading this component fetches its own Task and passes the props.task on to the chat
@@ -177,6 +196,11 @@ const TaskConversation = (props) => {
       window.removeEventListener('scroll', handleScroll);
     };
   },[]);
+
+  // Tracing
+  useEffect(() => {
+    console.log("Tracing childTask ", childTask)
+  }, [childTask]); 
 
   return (
     <section className='chatbox'>

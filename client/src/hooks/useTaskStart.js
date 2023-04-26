@@ -13,22 +13,24 @@ import { fetchData } from '../utils/fetchData'
 //          Task with task
 // We should combine these
 
-const useTaskStart = (setTask, startId, threadId = null) => {
+const useTaskStart = (startId, threadId = null) => {
 
   const { globalState } = useGlobalStateContext();
+  const [startTask, setStartTask] = useState();
   const [startTaskLoading, setStartTaskLoading] = useState(true);
-  const [startTaskError, setTaskStartError] = useState(null);
+  const [startTaskError, setTaskStartError] = useState();
 
   useEffect(() => {
     if (!startId) {return} 
     const fetchTaskFromAPI = async () => {
       try {
         setStartTaskLoading(true);
-        const result = await fetchData(globalState, { startId: startId, threadId: threadId});
-        setTask(result);
+        const result = await fetchData(globalState, 'task/start', { startId: startId, threadId: threadId});
+        console.log("setStartTask result ", result)
+        setStartTask(result);
       } catch (error) {
         setTaskStartError(error.message);
-        setTask(null);
+        setStartTask(null);
       } finally {
         setStartTaskLoading(false);
       }
@@ -38,7 +40,7 @@ const useTaskStart = (setTask, startId, threadId = null) => {
 
   }, [startId]);
 
-  return { startTaskLoading, startTaskError };
+  return { startTask, startTaskLoading, startTaskError };
 
 };
 

@@ -102,6 +102,9 @@ Notes/Idea
       Cross-cutting concerns
       Manage the task state (available as a prop), setTask that would sync with server
     React Compound component could be used by a task that is composed of other tasks, allows shared context. 
+    Try updating the task only from level 0, instead of updating from any level
+      First need to harmonise on useTaskStart and useTaskUpdate
+        Add useTaskStart to withTask and use in TaskConversation
 
   Infra
   -----

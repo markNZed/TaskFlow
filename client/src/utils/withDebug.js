@@ -39,6 +39,9 @@ function withDebug(Component) {
         if (show_diff && Object.keys(diff).length > 0) {
           log("Task " + props.task.id + " changes:", diff)
         }
+        if (!props.task.id) {
+          console.log("Weird ", props.task)
+        }
       }
     }, [props.task]);
 
