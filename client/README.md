@@ -18,12 +18,31 @@ Coding preferences:
 ## Task Conventions
 * If the component receives a task then assume the parent manages the task state
 * This implies the parent will have an array of Tasks if it instantiates multiple Task components
-* Standard approach to [debug logging](#Debug)
-* Use the higher-order-components withTask
+* Use the higher-order-components withTask which provides Task specific features
+  * Standard approach to [debug logging](#Debug)
+  * Tracing of the task object (logged to console is debugging enabled)
+  * Props for starting a new Task (set setStartTaskId and optional setStartTaskThreadId then get startTask back)
+    * startTaskLoading
+    * startTaskError
+    * startTask
+    * setStartTaskId
+    * setStartTaskThreadId
+  * Props for getting the next Task (use setDoneTask to pass in the task and get nextTask back)
+    * nextTaskLoading,
+    * nextTaskError
+    * nextTask
+    * setDoneTask
+  * Prop updateTask for updating members of the task  
+    * `updateTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
+  * Prop to update the step in a task
+    * `updateStep('input')` is equivalent to `setTask(p => { return {...p, step : 'input'} })`
+  * Websocket event that is filtered so only events for the task.id arrive
+  * Prop component_depth that presents where in the component stack this component is (starts at 1)
 
 ### Debug
-* Wrap Task components using HOC withDebug
-* Enable debug from App.js and leave useful regex for debug commented
+* The HOC withTask wraps components with the HOC withDebug
+* Enable debug from App.js and leave useful regex for debug commented in the file
+* The HOC provides the log function
 
 # Notes
 Be careful of cloudflare caching.
