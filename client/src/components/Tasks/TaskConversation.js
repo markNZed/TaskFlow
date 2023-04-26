@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useRef, useState, useEffect } from 'react';
 import { delta, withDebug, withTask } from '../../utils';
 
-import useFetchStart from '../../hooks/useFetchStart';
 import TaskChat from "./TaskChat"
 import Icon from "./TaskConversation/Icon"
 
@@ -40,8 +39,6 @@ const TaskConversation = (props) => {
     setStartTaskThreadId,
   } = props
 
-  const [fetchStart, setFetchStart] = useState();
-  const { fetchResponse: fetchResponseStart, fetched: fetchedStart } = useFetchStart(fetchStart);
   const [myTask, setMyTask] = useState();
   const [childTask, setChildTask] = useState();
   
@@ -55,7 +52,6 @@ const TaskConversation = (props) => {
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 
   useEffect(() => {
-    console.log("HERE ", task)
     setStartTaskId(task.id)
   }, []);
 
@@ -159,7 +155,6 @@ const TaskConversation = (props) => {
         isMountedRef.current = true
       } else if ( !(task.threadId in msgs) ) {
         // Why do we need this? Should use (p) => style
-        //console.log("HERE " + task.threadId + " ", msgs)
         setMsgs({
           ...msgs,
           [task.threadId]: [
@@ -199,7 +194,7 @@ const TaskConversation = (props) => {
 
   // Tracing
   useEffect(() => {
-    console.log("Tracing childTask ", childTask)
+    //console.log("Tracing childTask ", childTask)
   }, [childTask]); 
 
   return (

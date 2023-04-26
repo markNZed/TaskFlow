@@ -18,7 +18,6 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
-import useFetchStart from '../hooks/useFetchStart';
 import DynamicComponent from "./Generic/DynamicComponent";
 import { delta, withDebug, withTask } from '../utils';
 
@@ -33,7 +32,16 @@ import { delta, withDebug, withTask } from '../utils';
 
 // We assume that the task globalState.selectedTaskId has a spawn_tasks property and it is this task that is
 // passed to the next component after setting the spawn_tasks in selectedTask to globalState.selectedTaskId
-function Taskflows() {
+function Taskflows(props) {
+
+  const { 
+    startTaskLoading,
+    startTaskError,
+    startTask,
+    setStartTaskId,
+  } = props
+
+
   const { globalState } = useGlobalStateContext();
 
   const [selectedTask, setSelectedTask] = useState();
@@ -41,21 +49,18 @@ function Taskflows() {
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
-  const [fetchNow, setFetchNow] = useState();
-  const { fetchResponse, fetched } = useFetchStart(fetchNow);
-
   useEffect(() => {
     if (globalState.selectedTaskId && globalState.selectedTaskId !== selectedTask?.id) {
       setComponentName(null)
-      setFetchNow(globalState.selectedTaskId)
+      setStartTaskId(globalState.selectedTaskId)
     }
   }, [globalState]);
 
   useEffect(() => {
-    if (fetchResponse) {
-      setSelectedTask(fetchResponse)
+    if (startTask) {
+      setSelectedTask(startTask)
     }
-  }, [fetchResponse]);
+  }, [startTask]);
 
   useEffect(() => {
     if (selectedTask && !componentName) {
@@ -162,4 +167,4 @@ function Taskflows() {
   );
 }
 
-export default withDebug(Taskflows);
+export default withTask(withDebug(Taskflows));

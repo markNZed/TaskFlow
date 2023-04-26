@@ -21,7 +21,7 @@ const useTaskUpdate = (task, setTask, depth) => {
 
   useEffect(() => {
     if (task?.update) {
-      console.log("useTaskUpdate", task)
+      //console.log("useTaskUpdate", task)
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true);

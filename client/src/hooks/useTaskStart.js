@@ -26,7 +26,7 @@ const useTaskStart = (startId, threadId = null) => {
       try {
         setStartTaskLoading(true);
         const result = await fetchData(globalState, 'task/start', { startId: startId, threadId: threadId});
-        console.log("setStartTask result ", result)
+        //console.log("setStartTask result ", result)
         setStartTask(result);
       } catch (error) {
         setTaskStartError(error.message);

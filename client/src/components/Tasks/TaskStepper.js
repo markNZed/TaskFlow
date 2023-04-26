@@ -9,7 +9,6 @@ import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import useFetchTask from '../../hooks/useFetchTask';
-import useFetchStart from '../../hooks/useFetchStart';
 import DynamicComponent from "./../Generic/DynamicComponent";
 import { delta, withDebug, withTask } from '../../utils';
 
@@ -25,7 +24,17 @@ import { delta, withDebug, withTask } from '../../utils';
 
 function TaskStepper(props) {
 
-  const { log, task, setTask, component_depth } = props;
+  const {
+    log,
+    task, 
+    setTask, 
+    component_depth,
+    startTaskLoading,
+    startTaskError,
+    startTask,
+    setStartTaskId,
+  } = props
+
   const [activeTask, setActiveTaskAfter] = useState();
   const [activeTaskIdx, setActiveTaskIdx] = useState(0);
   const [prevActiveTask, setPrevActiveTask] = useState();
@@ -35,24 +44,19 @@ function TaskStepper(props) {
   const [expanded, setExpanded] = useState(['start']);
   // Here we component_depth + 1 but should be in the code ? fetch_depth state
   const { fetchResponse, fetched } = useFetchTask(fetchNow, component_depth + 1);
-  const [fetchStart, setFetchStart] = useState();
-  const { fetchResponse: fetchResponseStart } = useFetchStart(fetchStart);
   const [myTask, setMyTask] = useState();
   const [childTask, setChildTask] = useState();
 
   useEffect(() => {
-    setFetchStart(task.id)
+    setStartTaskId(task.id)
   }, []);
 
   useEffect(() => {
-    if (fetchResponseStart) {
-      setChildTask(fetchResponseStart)
-      setActiveTask(fetchResponseStart)
-      setVisitedStepperTasks([fetchResponseStart])
-      //setActiveTaskIdx(0)
-
+    if (startTask) {
+      setChildTask(startTask)
+      setVisitedStepperTasks([startTask])
     }
-  }, [fetchResponseStart]);
+  }, [startTask]);
 
   /*
   // Not using myTask
@@ -100,7 +104,7 @@ function TaskStepper(props) {
         
       } else {
         // This does not look right if we are going to prev then should not be fetching
-        console.error("SHOULD NOT BE HERE?")
+        console.error("SHOULD NOT BE HERE")
        }
     }
   }, [fetchResponse]); // Can't use fetched here as going back in stepper does not update fetched (id)
