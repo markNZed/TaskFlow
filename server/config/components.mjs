@@ -1,13 +1,12 @@
 const workflow_components = [
     {
-        name: 'ui',
+        name: 'components',
         parent: 'root',
         menu: false,
-        ui: true,
     },
     {
         name: 'TaskChat',
-        parent: 'ui',
+        parent: 'components',
         menu: false,
         APPEND_filter_for_client: ['client_prompt', 'suggested_prompts', 'response'],
         tasks: {
@@ -18,7 +17,7 @@ const workflow_components = [
     },
     {
         name: 'TaskConversation',
-        parent: 'ui',
+        parent: 'components',
         APPEND_filter_for_client: ['welcome_message'],
         menu: false,
         tasks: {
@@ -29,7 +28,7 @@ const workflow_components = [
     },
     {
         name: 'TaskStepper',
-        parent: 'ui',
+        parent: 'components',
         tasks: {
             start : {
                 next: 'stop',
@@ -38,7 +37,7 @@ const workflow_components = [
     },
     {
         name: 'TaskFromAgent',
-        parent: 'ui',
+        parent: 'components',
         APPEND_filter_for_client: ['response', 'input', 'input_label', 'instruction'],
         tasks: {
             start : {
@@ -48,7 +47,7 @@ const workflow_components = [
     },
     {
         name: 'TaskShowResponse',
-        parent: 'ui',
+        parent: 'components',
         APPEND_filter_for_client: ['response'],
         tasks: {
             start : {
@@ -57,14 +56,8 @@ const workflow_components = [
         },
     },
     {
-        name: 'logic',
-        parent: 'root',
-        menu: false,
-        ui: false,
-    },
-    {
         name: 'TaskChoose',
-        parent: 'logic',
+        parent: 'components',
     },
 ]
 export default workflow_components

@@ -8,20 +8,18 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import useFetchStep from '../../hooks/useFetchStep';
-import { delta, withDebug, withTask } from '../../utils';
+import { withDebug, withTask } from '../../utils';
+
+// This component is complete overkill for what it is doing but it was useful during early dev
 
 const TaskShowResponse = (props) => {
 
-    const { leaving, task, setTask, parentTask} = props;
+    const { leaving, task, setTask, parentTask, updateTask, updateStep, updateTaskLoading, } = props;
 
-    const [fetchNow, setFetchNow] = useState('');
     const [responseText, setResponseText] = useState('');
     const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
-
-    const { fetchResponse, fetched } = useFetchStep(fetchNow, task);
 
     // Reset the task once, we wil not need to do this if not reused
     useEffect(() => {
@@ -33,11 +31,9 @@ const TaskShowResponse = (props) => {
             setResponseText('')
             if (!task?.steps) {
                 // Default sequence is to just get response
-                console.log("steps: {'start' : 'response', 'response' : 'stop'}")
                 setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
-            } else {
-                console.log("steps " + task.steps)
             }
+            //setTask((p) => {return { ...p, step: 'start' }});
             setMyStep('start')
         }
     }, [task]);
@@ -50,11 +46,11 @@ const TaskShowResponse = (props) => {
     // Unique for each component that requires steps
     // Split into next_state and action - no
     useEffect(() => {
-        if (myTaskId && myTaskId === task.id) {
+        if (myTaskId && myTaskId === task.id) { // remove myTaskId rename last_step delta step
             // leaving should use id not name
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.steps[myStep]
-            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
+            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -73,18 +69,15 @@ const TaskShowResponse = (props) => {
                         // Actions
                         response_action(task.response)
                     } else {
-                        if (fetched === myStep) { 
+                        // This effectively waits for the update
+                        if (task.updated) { 
                             setMyStep(next_step) 
                             //setFetched(null)
-                        }
-                        // Actions
-                        // send prompt to get response from agent
-                        setFetchNow(myStep)
-                        // show the response
-                        if (fetched === myStep) {
-                            const response_text = fetchResponse.response
+                            const response_text = task.response
                             setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
+                        } else {
+                            updateTask({update: true}) 
                         }
                     }
                     break;
@@ -104,7 +97,7 @@ const TaskShowResponse = (props) => {
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [leaving, fetched, myStep]);
+    }, [leaving, myStep, task?.updated]);
 
     return (
         <div style={{ display: "flex", flexDirection: "column"}}>

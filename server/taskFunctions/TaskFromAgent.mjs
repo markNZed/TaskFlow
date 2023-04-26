@@ -37,7 +37,7 @@ const TaskFromAgent_async = async function(task) {
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
         threadTasks[tmp.id] = tmp;
-        console.log("tmp " + tmp.instanceId + " input " + tmp.input)
+        //console.log("tmp " + tmp.instanceId + " input " + tmp.input)
       }
     }
 

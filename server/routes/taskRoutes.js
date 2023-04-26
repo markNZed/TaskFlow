@@ -37,11 +37,11 @@ async function do_task_async(task) {
     return updated_task
 }
   
-async function newTask_async(id, sessionId, threadId = null, sublingTask = null) {
+async function newTask_async(id, sessionId, threadId = null, siblingTask = null) {
     let siblingInstanceId
-    if (sublingTask) {
-      siblingInstanceId = sublingTask.instanceId
-      threadId = sublingTask.threadId
+    if (siblingTask) {
+      siblingInstanceId = siblingTask.instanceId
+      threadId = siblingTask.threadId
     }
     let taskCopy = { ...tasks[id] };
     taskCopy['sessionId'] = sessionId
@@ -56,11 +56,13 @@ async function newTask_async(id, sessionId, threadId = null, sublingTask = null)
         threadId = parent.threadId
       }
       if (parent?.component_depth) {
+        // Note component_depth may be modified in api/task/start
         taskCopy['component_depth'] = parent.component_depth
       }
       parent.childInstance = instanceId
       await instancesStore_async.set(siblingInstanceId, parent)
     } else if (taskCopy?.component) {
+      // Note component_depth may be modified in api/task/start
       taskCopy['component_depth'] = taskCopy.component.length
     }
     if (threadId) {
@@ -80,7 +82,7 @@ async function newTask_async(id, sessionId, threadId = null, sublingTask = null)
     taskCopy['created'] = now
     await instancesStore_async.set(instanceId, taskCopy)
     //console.log("New task ", taskCopy)
-    console.log("New task id " + taskCopy.id + " component_depth " + taskCopy.component_depth)
+    console.log("New task id " + taskCopy.id)
     return taskCopy
 }
   
@@ -168,6 +170,7 @@ router.post('/start', async (req, res) => {
       const sessionId = req.body.sessionId;
       const startId = req.body.startId;
       const threadId = req.body?.threadId;
+      const component_depth = req.body?.component_depth;
       let groupId = req.body.groupId;
       let address = req.body.address;
   
@@ -187,7 +190,10 @@ router.post('/start', async (req, res) => {
         if (sessionId) { task['sessionId'] = sessionId }  else {console.log("Warning: sessionId missing")}
         if (address) { task['address'] = address }
         // We start with the deepest component in the stack
-        if (task?.component) {
+        if (typeof component_depth === "number") {
+          console.log("Setting component_depth", component_depth)
+          task.component_depth = component_depth
+        } else if (task?.component) {
           task.component_depth = task?.component.length - 1
         }
   

@@ -11,16 +11,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import Paper from '@mui/material/Paper';
 
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import useFetchStep from '../../hooks/useFetchStep';
 import { delta, withDebug, withTask } from '../../utils';
 
 const TaskFromAgent = (props) => {
   
-    const { leaving, task, setTask, component_depth} = props;
+    const { leaving, task, setTask, component_depth, updateTask, updateStep, updateTaskLoading,} = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
-    const [fetchNow, setFetchNow] = useState();
     const [responseText, setResponseText] = useState('');
     const [userInput, setUserInput] = useState('');
     const [showUserInput, setShowUserInput] = useState(false);
@@ -31,8 +29,6 @@ const TaskFromAgent = (props) => {
     const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
-
-    const { fetchResponse, fetched } = useFetchStep(fetchNow, task, component_depth);
 
     // Reset the task, seems a big extreme to access global for this (should be a prop)
     useEffect(() => {
@@ -87,7 +83,7 @@ const TaskFromAgent = (props) => {
             // leaving now always true
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.steps[myStep]
-            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " fetched " + fetched + " leaving_now " + leaving_now)
+            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -115,16 +111,18 @@ const TaskFromAgent = (props) => {
                         // Actions
                         response_action(task.response)
                     } else {
-                        if (fetched === myStep) { 
+                        if (task.updated) { 
                             setMyStep(next_step) 
                             //setFetched(null)
                         }
                         // Actions
                         // send prompt to get response from agent
-                        setFetchNow(myStep)
+                        updateTask({update: true})
+                        updateStep(myStep)
+                        //setFetchNow(myStep)
                         // show the response
-                        if (fetched === myStep) {
-                            const response_text = fetchResponse.response
+                        if (task.updated) {
+                            const response_text = task.response
                             setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         }
@@ -132,7 +130,7 @@ const TaskFromAgent = (props) => {
                     break;
                 case 'input':
                     // Next state
-                    if (fetched === myStep) {
+                    if (task.updated) {
                         setMyStep(next_step) 
                         //setFetched(null)  // It seems this or the other ssignmen to null causes problems - race with the setFetched in the fetch function
                     }
@@ -140,8 +138,10 @@ const TaskFromAgent = (props) => {
                     if (leaving_now) {
                         // Send the userInput input
                         // Upon fetched we should update task ? So we need MyTask?
-                        setFetchNow(myStep)
-                        console.log("setFetchNow " + myStep)
+                        updateStep(myStep)
+                        updateTask({update: true})
+                        //setFetchNow(myStep)
+                        //console.log("setFetchNow " + myStep)
                     }
                     break;
                 case 'stop':
@@ -160,7 +160,7 @@ const TaskFromAgent = (props) => {
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [leaving, fetched, myStep]);
+    }, [leaving, myStep, task.updated]);
 
     // Align task data with userInput input
     useEffect(() => {
