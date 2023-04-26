@@ -8,9 +8,20 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { v4 as uuidv4 } from 'uuid'
 import Keyv from 'keyv'
 import KeyvBetterSqlite3 from 'keyv-better-sqlite3';
-import {  } from './../config.mjs';
+import { MAP_USER, DEFAULT_USER } from './../config.mjs';
 
 const utils = {};
+
+utils.getUserId = function(req) {
+  let userId = DEFAULT_USER
+  if (process.env.AUTHENTICATION === "cloudflare") {
+    userId = req.headers['cf-access-authenticated-user-email'];
+  }
+  if (MAP_USER && MAP_USER[userId]) {
+    userId = MAP_USER[userId]
+  }
+  return userId
+}
 
 utils.newKeyV = function(uri, table) {
   return new Keyv({

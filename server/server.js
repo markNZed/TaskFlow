@@ -41,6 +41,7 @@ Backlog
     Maybe they should be deleted ? But not the same to jump back as active or to view.
   Scrolling to view suggested_prompts in TaskChat
   // This assumes the components are expanded - need to do this in dataconfig
+  Switching between assistants
 
   Features
   --------
@@ -56,6 +57,7 @@ Backlog
     Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
     If a Task has properties that are not declared then error (so we can catch things being filtered).
       Add properties list to Task Components
+    Map a usr to anoher user for testing
 
     Low Priority
     ------------

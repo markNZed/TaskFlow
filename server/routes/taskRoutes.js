@@ -88,10 +88,7 @@ async function newTask_async(id, sessionId, threadId = null, siblingTask = null)
   
 router.post('/update', async (req, res) => {
     console.log("/api/task/update")
-    let userId = DEFAULT_USER
-    if (process.env.AUTHENTICATION === "cloudflare") {
-      userId = req.headers['cf-access-authenticated-user-email'];
-    }
+    let userId = utils.getUserId(req)
     if (userId) {
       //console.log("req.body " + JSON.stringify(req.body))
       const sessionId = req.body.sessionId
@@ -161,10 +158,7 @@ router.post('/update', async (req, res) => {
   
 router.post('/start', async (req, res) => {
     console.log("/api/task/start")
-    let userId = DEFAULT_USER
-    if (process.env.AUTHENTICATION === "cloudflare") {
-      userId = req.headers['cf-access-authenticated-user-email'];
-    }
+    let userId = utils.getUserId(req)
     if (userId) {
       //console.log("req.body " + JSON.stringify(req.body))
       const sessionId = req.body.sessionId;
@@ -201,7 +195,7 @@ router.post('/start', async (req, res) => {
   
         // Check if the user has permissions
         if (!utils.authenticatedTask(task, userId, groups)) {
-          console.log(task, userId, groups)
+          console.log("Task authentication failed", task.id, userId)
           res.status(400).json({ error: "Task authentication failed" });
           return
         }

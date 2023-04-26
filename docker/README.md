@@ -10,3 +10,10 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker-compose -f docker-compose-prod.yml up
+
+npm run build
+npm install -g serve
+cd build
+serve -s -l 3000
+
+screen

@@ -5,18 +5,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from 'express';
-import { DEFAULT_USER, CLIENT_URL } from '../config.mjs';
+import { CLIENT_URL } from '../config.mjs';
 import * as dotenv from 'dotenv'
 dotenv.config()
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  let userId = DEFAULT_USER
-  console.log(userId)
-  if (process.env.AUTHENTICATION === "cloudflare") {
-    userId = req.headers['cf-access-authenticated-user-email'];
-  }
+  let userId = utils.getUserId(req)
   if (userId) {
     res.send(`Hello, ${userId}!`);
   } else {
@@ -28,10 +24,7 @@ router.get('/', async (req, res) => {
 // We need to visit this server from the browser to get cookies etc
 router.get('/authenticate', async (req, res) => {
   let authenticated_url = CLIENT_URL + '/authenticated'
-  let userId = DEFAULT_USER
-  if (process.env.AUTHENTICATION === "cloudflare") {
-    userId = req.headers['cf-access-authenticated-user-email'];
-  }
+  let userId = utils.getUserId(req)
   if (userId) {
     res.redirect(authenticated_url);
   } else {

@@ -17,10 +17,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     console.log("/api/session")
-    let userId = DEFAULT_USER
-    if (process.env.AUTHENTICATION === "cloudflare") {
-      userId = req.headers['cf-access-authenticated-user-email'];
-    }
+    let userId = utils.getUserId(req)
     const sessionId = uuidv4();
     let authorised_workflows = {}
     for (const key in workflows) {
