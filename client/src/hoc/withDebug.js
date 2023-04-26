@@ -47,9 +47,17 @@ function withDebug(Component) {
 
     const log = (...message) => {
       const stackTrace = new Error().stack.split('\n');
-      const match = stackTrace[1].match(/^(.*)@/);
-      let callerName = ':' + match ? match[1] : ':unknown';
-      if (callerName.indexOf('/')) { callerName = ':unknown' } // File path probably 
+      let callerName = ':unknown';
+      // Find caller name for both Chrome and Firefox
+      for (const line of stackTrace) {
+        const chromeMatch = line.match(/at (.*)\s\(/);
+        const firefoxMatch = line.match(/^(.*)@/);
+        if (chromeMatch || firefoxMatch) {
+          callerName = ':' + (chromeMatch ? chromeMatch[1] : firefoxMatch[1]);
+          break;
+        }
+      }
+      if (callerName.indexOf('/') !== -1) { callerName = ':unknown' } // File path probably 
       const log = debug(`${appAbbrev}:${componentName}${callerName}`);
       log(...message);
     };
