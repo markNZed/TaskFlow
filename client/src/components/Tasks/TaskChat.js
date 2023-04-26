@@ -5,7 +5,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useCallback, useState, useRef, useEffect } from 'react'
-import { delta, withDebug, withTask } from '../../utils';
+import { delta } from '../../utils';
+import withTask from '../../hoc/withTask'
 
 import PromptDropdown from './TaskChat/PromptDropdown'
 
@@ -39,7 +40,7 @@ ToDo:
 
 const TaskChat = (props) => {
 
-  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask, component_depth } = props
+  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
@@ -153,5 +154,4 @@ const TaskChat = (props) => {
   );
 }
 
-// withDebug expects to be the first HOC wrapping the component
 export default React.memo(withTask(TaskChat));

@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@mui/material";
 import Paper from '@mui/material/Paper';
 
-import { withDebug, withTask } from '../../utils';
+import withTask from '../../hoc/withTask';
 
 // This component is complete overkill for what it is doing but it was useful during early dev
 

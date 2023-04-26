@@ -19,7 +19,7 @@ import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import DynamicComponent from "./Generic/DynamicComponent";
-import { delta, withDebug, withTask } from '../utils';
+import withTask from '../hoc/withTask';
 
 
 // Move to taskStack ?

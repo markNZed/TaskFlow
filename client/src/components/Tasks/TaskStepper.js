@@ -9,7 +9,7 @@ import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
-import { delta, withDebug, withTask } from '../../utils';
+import withTask from '../../hoc/withTask';
 
 // Typically this Task gets created at the start of a taskflow
 // The task is the task that caused the creation of this task

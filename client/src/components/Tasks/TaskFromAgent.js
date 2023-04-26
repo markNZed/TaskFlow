@@ -11,7 +11,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import Paper from '@mui/material/Paper';
 
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import { delta, withDebug, withTask } from '../../utils';
+import withTask from '../../hoc/withTask';
 
 const TaskFromAgent = (props) => {
   
