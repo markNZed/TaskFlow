@@ -218,7 +218,7 @@ const TaskConversation = (props) => {
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
       { task && (  
-        <DynamicComponent is={task.component[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
+        <DynamicComponent key={task.id} is={task.component[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
       )}
       { /* <TaskChat task={task} setTask={setTask} parentTask={myTask} /> */ }
     </section> 

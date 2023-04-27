@@ -20,6 +20,7 @@ import Drawer from "@mui/material/Drawer";
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from '../hoc/withTask';
+import { setArrayState } from '../utils/utils';
 
 
 // Move to taskStack ?
@@ -45,41 +46,47 @@ function Taskflows(props) {
     component_depth
   } = props
 
-
   const { globalState } = useGlobalStateContext();
 
   const [selectedTask, setSelectedTask] = useState();
   const [componentName, setComponentName] = useState();
+  const [tasks, setTasks] = useState([]);
+  const [tasksIds, setTasksIds] = useState([]);
+  const [tasksIdx, setTasksIdx] = useState(0);
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
-    if (globalState.selectedTaskId && globalState.selectedTaskId !== selectedTask?.id) {
-      setComponentName(null)
-      startTaskFn(globalState.selectedTaskId, null, component_depth + 1)
+    if (globalState.selectedTaskId) {
+      const index = tasksIds.indexOf(globalState.selectedTaskId)
+      if (index === -1) {
+        startTaskFn(globalState.selectedTaskId, null, component_depth + 1)
+      } else {
+        setTasksIdx(index)
+      }
     }
   }, [globalState]);
 
   useEffect(() => {
     if (startTask) {
-      setSelectedTask(startTask)
+      console.log(tasks, startTask)
+      setTasksIdx(tasks.length)
+      setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask ])
+      setTasksIds((p) => [...p, startTask.id ])
     }
   }, [startTask]);
-
-  useEffect(() => {
-    if (selectedTask && !componentName) {
-      //console.log(selectedTask)
-      let stack = selectedTask.component
-      setComponentName(stack[0])
-      //stack.shift()
-      //setSelectedTask(p => { return {...p, component : stack}})
-    }
-  }, [selectedTask]);
-  
   
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);
   };
+
+  function setTasksTask(t) {
+    setArrayState(setTasks, tasksIdx, t)
+  }
+
+  useEffect(() => {
+    console.log(tasksIdx)
+  }, [tasksIdx]);
 
   const drawWidth = 220;
 
@@ -153,12 +160,21 @@ function Taskflows(props) {
               
               <Toolbar />
 
-              {componentName && (
-                // Do we need to pass component_depth ?
-                <DynamicComponent is={componentName} task={selectedTask} setTask={setSelectedTask} parentTask={null} component_depth={0} />
-                //return <DynamicComponent key={selectedTask.id} is={componentName} startTask={selectedTask} setStartTask={setSelectedTask} />
-              )}
-
+              {tasks.map(({ component, instanceId }, idx) => (
+                component && (
+                  <div className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
+                    <DynamicComponent
+                      key={instanceId}
+                      is={component[0]}
+                      task={tasks[idx]}
+                      setTask={setTasksTask}
+                      parentTask={null}
+                      component_depth={component_depth}
+                    />
+                  </div>
+                )
+              ))}
+              
             </Box>
 
             <div className={`${globalState?.interface !== 'debug' ? 'hide' : ''}`}>

@@ -37,3 +37,13 @@ export const logWithComponent = (componentName, ...message) => {
     const log = debug(`${appAbbrev}:${componentName}${callerName}`)
     log(...message)
 }
+  
+// Set a task in an array, could have helper function for this in utils (pass in array, index, update)
+export function setArrayState(setArray, idx, t) {
+    setArray((prevElements) => {
+      const updatedElements = [...prevElements]; // create a copy of the previous state array
+      const changedElement = typeof t === 'function' ? t(updatedElements[idx]) : t;
+      updatedElements[idx] = changedElement;
+      return updatedElements; // return the updated array
+    });
+}
