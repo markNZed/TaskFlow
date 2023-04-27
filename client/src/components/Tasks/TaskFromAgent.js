@@ -15,7 +15,7 @@ import withTask from '../../hoc/withTask';
 
 const TaskFromAgent = (props) => {
   
-    const { leaving, task, setTask, updateTask, updateStep, updateTaskLoading,} = props;
+    const { leaving, task, setTask, updateTask, updateStep, component_depth } = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 
@@ -29,6 +29,12 @@ const TaskFromAgent = (props) => {
     const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
+
+    // This is the level where we are gogn to use the task so set the component_depth
+    useEffect(() => {
+        updateTask({component_depth : component_depth})
+      }, []);
+    
 
     // Reset the task, seems a big extreme to access global for this (should be a prop)
     useEffect(() => {
@@ -82,7 +88,7 @@ const TaskFromAgent = (props) => {
             // leaving now always true
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.steps[myStep]
-            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+            //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state

@@ -47,12 +47,11 @@ function TaskStepper(props) {
   const [leaving, setLeaving] = useState();
   const [expanded, setExpanded] = useState(['start']);
   const [myTask, setMyTask] = useTaskState(null, 'myTask');
-  const [childTask, setChildTask] = useState();
 
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, null, component_depth)
+    //startTaskFn(task.id, null, component_depth)
   }, []);
 
   useEffect(() => {
@@ -63,7 +62,6 @@ function TaskStepper(props) {
 
   // The first step is the task that was passed in
   useEffect(() => {
-      setChildTask(task)
       setVisitedStepperTasks([task])
   }, []);
 
@@ -235,7 +233,7 @@ function TaskStepper(props) {
             <AccordionDetails>
               { /* Could pass in a key to DynamicComponent */}
               { component && (
-                <DynamicComponent is={component[component_depth]} task={visitedStepperTasks[idx]} setTask={setTaskWrapper} leaving={leaving} parentTask={myTask}  component_depth={props.component_depth} />
+                <DynamicComponent is={component[component_depth]} task={visitedStepperTasks[idx]} setTask={setTaskWrapper} leaving={leaving} parentTask={myTask}  component_depth={component_depth} />
               )}
             </AccordionDetails>
             <div>

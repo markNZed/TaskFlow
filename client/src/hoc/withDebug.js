@@ -26,10 +26,13 @@ function withDebug(Component) {
         let show_diff = true
         if (hasOnlyResponseKey(diff)) {
           if (!props.prevTask.response) {
-            diff.response = "..."
+            diff.response = " ..."
           } else {
             show_diff = false
           }
+        }
+        if (diff?.response) {
+          diff.response = diff.response.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {
           if ( props.task.component_depth === props.component_depth) {

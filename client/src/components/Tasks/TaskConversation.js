@@ -66,7 +66,6 @@ const TaskConversation = (props) => {
 
   // We pass the task down so increment component_depth
   useEffect(() => {
-    console.log("updateTask({component_depth : component_depth + 1})", component_depth + 1)
     updateTask({component_depth : component_depth + 1})
   }, []);
 
