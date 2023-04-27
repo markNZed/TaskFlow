@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useRef, useState, useEffect } from 'react';
 import withTask from '../../hoc/withTask';
 
-import TaskChat from "./TaskChat"
+import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon"
 
 /*
@@ -31,12 +31,12 @@ const TaskConversation = (props) => {
   const { 
     task, 
     setTask, 
-    component_depth, 
     startTaskLoading,
     startTaskError,
     startTask,
-    setStartTaskId,
-    setStartTaskThreadId,
+    startTaskFn,
+    component_depth,
+    useTaskState,
   } = props
 
   const [myTask, setMyTask] = useState();
@@ -52,7 +52,7 @@ const TaskConversation = (props) => {
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 
   useEffect(() => {
-    setStartTaskId(task.id)
+    startTaskFn(task.id, task.threadId, component_depth + 1)
   }, []);
 
   useEffect(() => {
@@ -215,14 +215,10 @@ const TaskConversation = (props) => {
         })}
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
-
-      {/*
-      {selectedTask?.spawn_tasks && selectedTask.spawn_tasks.map(task => {
-        return <DynamicComponent key={selectedTask.id} is={task} task={selectedTask} setTask={setSelectedTask} />
-      })}
-      */}
-
-      <TaskChat task={childTask} setTask={setChildTask} parentTask={myTask} component_depth={component_depth}/>
+      { childTask && (  
+        <DynamicComponent is={childTask.component[component_depth]} task={childTask} setTask={setChildTask} parentTask={myTask} component_depth={props.component_depth}/>
+      )}
+      { /* <TaskChat task={childTask} setTask={setChildTask} parentTask={myTask} /> */ }
     </section> 
   )
 

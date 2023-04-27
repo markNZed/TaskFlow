@@ -1,35 +1,51 @@
 import React, { useState, useEffect } from 'react'
-import { delta } from '../utils/utils'
+import { delta, logWithComponent, getObjectDifference, hasOnlyResponseKey } from '../utils/utils'
 import useUpdateTask from '../hooks/useUpdateTask';
 import useStartTask from '../hooks/useStartTask';
 import useNextTask from '../hooks/useNextTask';
 import { useWebSocketContext } from '../contexts/WebSocketContext';
 import useFilteredWebSocket from '../hooks/useFilteredWebSocket';
 import withDebug from './withDebug'
+import _ from 'lodash';
 
 // When a task is shared then changes are detected at each wrapper
 
 function withTask(Component) {
 
-  const componentName = Component.name
+  const WithDebugComponent = withDebug(Component);
+
+  const componentName = WithDebugComponent.displayName // S owe get the Component that was wrapped by withDebug
 
   function TaskComponent(props) {
+
+    let local_component_depth
+    if (typeof props.component_depth === "number") {
+      local_component_depth = props.component_depth + 1
+    } else {
+      //console.log("Defaulting to component_depth 0")
+      local_component_depth = 0
+    }
 
     const [prevTask, setPrevTask] = useState();
     const [doneTask, setDoneTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
-    const local_component_depth = props.component_depth + 1
-    // By passing the depth we know whihc layer is sending the task
+    const [startTaskDepth, setStartTaskDepth] = useState(local_component_depth);
+    // By passing the component_depth we know which layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing condif from an earlier component
     const { updateTaskLoading, updateTaskError } = useUpdateTask(props.task, props.setTask, local_component_depth);
     const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
     const { webSocketEventEmitter } = useWebSocketContext();
-    const { startTask, startTaskLoading, startTaskError } = useStartTask(startTaskId, startTaskThreadId, local_component_depth);
+    const { startTaskReturned, startTaskLoading, startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
+    function startTaskFn(startId, threadId = null, depth = local_component_depth ) {
+      setStartTaskId(startId)
+      setStartTaskThreadId(threadId)
+      setStartTaskDepth(depth)
+    }
+    
     function updateStep(step) {
-      console.log("updateStep " + step)
       props.setTask(p => ({ ...p, step: step, last_step: p.step}))
       // Allow detection of new step
       delta(() => {
@@ -70,6 +86,55 @@ function withTask(Component) {
       //console.log("local_component_depth " + local_component_depth)
       //props.setTask(p => ({ ...p, component_depth : local_component_depth }))
     }, []);
+
+    function useTaskState(initialValue, name = "task") {
+      const [state, setState] = useState(initialValue);
+      const [prevTaskState, setPrevTaskState] = useState({});
+    
+      useEffect(() => {
+        if (!state) {return}
+        let diff
+        if (prevTaskState) {
+          diff = getObjectDifference(state, prevTaskState)
+        } else {
+          diff = state
+        }
+        let show_diff = true
+        if (hasOnlyResponseKey(diff)) {
+          if (!prevTaskState.response) {
+            diff.response = "..."
+          } else {
+            show_diff = false
+          }
+        }
+        if (show_diff && Object.keys(diff).length > 0) {
+          logWithComponent(componentName, name + " " + props.task.id + " changes:", diff)
+        }
+        if (!props.task.id) {
+          console.log("Unexpected: Task wihtout id ", props.task)
+        }
+        setPrevTaskState(state);
+      }, [state, prevTaskState]);
+    
+      const setTaskState = (newState) => {
+        if (typeof newState === 'function') {
+          setState((prevState) => {
+            const updatedState = newState(prevState);
+            return updatedState;
+          });
+        } else {
+          setState(newState);
+        }
+
+      }
+    
+      return [state, setTaskState]
+    }
+    
+    // Tracing
+    useEffect(() => {
+      //console.log("Tracing prevTask ", prevTask)
+    }, [prevTask]); 
   
     const componentProps = {
         ...props,
@@ -78,9 +143,10 @@ function withTask(Component) {
         updateTaskError,
         startTaskLoading,
         startTaskError,
-        startTask,
+        startTask : startTaskReturned,
         setStartTaskId,
         setStartTaskThreadId,
+        startTaskFn,
         nextTaskLoading,
         nextTaskError,
         nextTask,
@@ -91,13 +157,14 @@ function withTask(Component) {
         webSocketEventEmitter,
         useTaskWebSocket,
         component_depth: local_component_depth,
+        useTaskState,
     };
 
-    return <Component {...componentProps} />;
+    return <WithDebugComponent {...componentProps} />;
   }
 
   TaskComponent.displayName = componentName;
-  return withDebug(TaskComponent);
+  return TaskComponent;
 }
 
 export default withTask

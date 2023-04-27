@@ -16,7 +16,7 @@ import { fetchData } from '../utils/fetchData'
 const useStartTask = (startId, threadId = null, depth = 0) => {
 
   const { globalState } = useGlobalStateContext();
-  const [startTask, setStartTask] = useState();
+  const [startTaskReturned, setStartTaskReturned] = useState();
   const [startTaskLoading, setStartTaskLoading] = useState(true);
   const [startTaskError, setTaskStartError] = useState();
 
@@ -25,13 +25,14 @@ const useStartTask = (startId, threadId = null, depth = 0) => {
     const fetchTaskFromAPI = async () => {
       try {
         setStartTaskLoading(true);
+        console.log("Starting task ", startId, threadId, depth)
         const result = await fetchData(globalState, 'task/start', { startId: startId, threadId: threadId, component_depth: depth});
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)
-        setStartTask(result);
+        setStartTaskReturned(result);
       } catch (error) {
         setTaskStartError(error.message);
-        setStartTask(null);
+        setStartTaskReturned(null);
       } finally {
         setStartTaskLoading(false);
       }
@@ -41,7 +42,7 @@ const useStartTask = (startId, threadId = null, depth = 0) => {
 
   }, [startId]);
 
-  return { startTask, startTaskLoading, startTaskError };
+  return { startTaskReturned, startTaskLoading, startTaskError };
 
 };
 

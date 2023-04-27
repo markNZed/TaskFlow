@@ -32,13 +32,17 @@ import withTask from '../hoc/withTask';
 
 // We assume that the task globalState.selectedTaskId has a spawn_tasks property and it is this task that is
 // passed to the next component after setting the spawn_tasks in selectedTask to globalState.selectedTaskId
+
+// Should manage tasks not task
+
 function Taskflows(props) {
 
   const { 
     startTaskLoading,
     startTaskError,
     startTask,
-    setStartTaskId,
+    startTaskFn,
+    component_depth
   } = props
 
 
@@ -52,7 +56,7 @@ function Taskflows(props) {
   useEffect(() => {
     if (globalState.selectedTaskId && globalState.selectedTaskId !== selectedTask?.id) {
       setComponentName(null)
-      setStartTaskId(globalState.selectedTaskId)
+      startTaskFn(globalState.selectedTaskId, null, component_depth + 1)
     }
   }, [globalState]);
 
@@ -150,7 +154,7 @@ function Taskflows(props) {
               <Toolbar />
 
               {componentName && (
-                // Key could be parent instance
+                // Do we need to pass component_depth ?
                 <DynamicComponent is={componentName} task={selectedTask} setTask={setSelectedTask} parentTask={null} component_depth={0} />
                 //return <DynamicComponent key={selectedTask.id} is={componentName} startTask={selectedTask} setStartTask={setSelectedTask} />
               )}

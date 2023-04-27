@@ -15,7 +15,7 @@ import withTask from '../../hoc/withTask';
 
 const TaskFromAgent = (props) => {
   
-    const { leaving, task, setTask, component_depth, updateTask, updateStep, updateTaskLoading,} = props;
+    const { leaving, task, setTask, updateTask, updateStep, updateTaskLoading,} = props;
 
     const { webSocketEventEmitter } = useWebSocketContext();
 

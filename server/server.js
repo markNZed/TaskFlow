@@ -8,6 +8,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -------
 Review/simplification of code
   Up to client/src/components/Tasks/TaskConversation
+  Create a userTaskState type that provides debug support 
 Compare with similar systems
   LangChain is a framework for developing applications powered by language models.
     An abstraction above JS and Python
@@ -30,6 +31,7 @@ Compare with similar systems
     It would ideally be easy to use a Gradio component
     Embed in an iFrame
   Algovera
+    Not open sourced yet
 
   
 Backlog
@@ -57,7 +59,11 @@ Backlog
     Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
     If a Task has properties that are not declared then error (so we can catch things being filtered).
       Add properties list to Task Components
-    Map a usr to anoher user for testing
+    Maintain multiple tasks in Taskflows.js so we do not lose state info - maybe better to use Redux
+
+    Components
+    ----------
+    MyAgents->MyAgentConversation
 
     Low Priority
     ------------

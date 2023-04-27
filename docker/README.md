@@ -11,6 +11,8 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker-compose -f docker-compose-prod.yml up
 
+Remember to purge the cloudflare cache after updating on prod.
+
 npm run build
 npm install -g serve
 cd build

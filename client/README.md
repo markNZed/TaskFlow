@@ -18,26 +18,26 @@ Coding preferences:
 ## Task Conventions
 * If the component receives a task then assume the parent manages the task state
 * This implies the parent will have an array of Tasks if it instantiates multiple Task components
-* Use the higher-order-components withTask which provides Task specific features
+* Use the higher-order-component (HOC) withTask which provides Task specific features
   * Standard approach to [debug logging](#Debug)
   * Tracing of the task object (logged to console is debugging enabled)
-  * Props for starting a new Task (set setStartTaskId and optional setStartTaskThreadId then get startTask back)
+  * Props for starting a new Task
     * startTaskLoading
     * startTaskError
     * startTask
-    * setStartTaskId
-    * setStartTaskThreadId
-  * Props for getting the next Task (use setDoneTask to pass in the task and get nextTask back)
+    * startTaskFn()
+  * Props for getting the next Task
     * nextTaskLoading,
     * nextTaskError
     * nextTask
-    * setDoneTask
+    * setDoneTask()
   * Prop updateTask for updating members of the task  
     * `updateTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
   * Prop to update the step in a task
     * `updateStep('input')` is equivalent to `setTask(p => { return {...p, step : 'input'} })`
   * Websocket event that is filtered so only events for the task.id arrive
   * Prop component_depth that presents where in the component stack this component is (starts at 1)
+  * Loggin of task updates for any task variable e.g. `const [X, setX] = useTaskState(null,'X')`
 
 ### Debug
 * The HOC withTask wraps components with the HOC withDebug
