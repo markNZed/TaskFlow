@@ -12,12 +12,15 @@ import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from '../../hoc/withTask';
 import { setArrayState } from '../../utils/utils';
 
-
-// Currently task is only used to create the first task
-// Maybe activeTask is just a ref
-// How to update a task that is not prop.task (should update form the lower component when possible)
-// How to update a child's task fro parent?
-// useTasksState to allow for debug
+/*
+Task Process
+  Present a sequence of tasks in an Accordian component
+  We have an array of tasks stored here that are passed to the next component in the stack
+  
+ToDo:
+  useTasksState to help debug
+  Maybe tasksIdx is just a ref?
+*/
 
 function TaskStepper(props) {
 
@@ -140,7 +143,6 @@ function TaskStepper(props) {
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { /* Could pass in a key to DynamicComponent */}
               { component && (
                 <DynamicComponent key={instanceId} is={component[component_depth]} task={tasks[idx]} setTask={setTasksTask} leaving={leaving} parentTask={stepperTask}  component_depth={component_depth} />
               )}

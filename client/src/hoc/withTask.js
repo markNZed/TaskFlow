@@ -46,10 +46,10 @@ function withTask(Component) {
     }
     
     function updateStep(step) {
-      props.setTask(p => ({ ...p, step: step, last_step: p.step}))
+      props.setTask(p => ({ ...p, step: step, delta_step: p.step}))
       // Allow detection of new step
       delta(() => {
-        props.setTask(p => ({ ...p, last_step: p.step }))
+        props.setTask(p => ({ ...p, delta_step: p.step }))
       })
     }
 

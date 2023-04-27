@@ -10,7 +10,17 @@ import Paper from '@mui/material/Paper';
 
 import withTask from '../../hoc/withTask';
 
-// This component is complete overkill for what it is doing but it was useful during early dev
+// 
+
+
+/*
+Task Process
+  This component is complete overkill for what it is doing but it was useful during early dev
+  Fetches a response from the server that is hard coded in the task
+  
+ToDo:
+  
+*/
 
 const TaskShowResponse = (props) => {
 
@@ -31,28 +41,20 @@ const TaskShowResponse = (props) => {
     useEffect(() => {
         //console.log("task ", task)
         if (task && !myTaskId) {
-            //setMyStep('start') // I guess this triggers the state machine
             setMyTaskId(task.id)
             setResponseText('')
             if (!task?.steps) {
                 // Default sequence is to just get response
                 setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
             }
-            //setTask((p) => {return { ...p, step: 'start' }});
             setMyStep('start')
         }
     }, [task]);
 
-    useEffect(() => {
-        //console.log("task ", task)
-    }, [task]);
-
     // Sub_task state machine
     // Unique for each component that requires steps
-    // Split into next_state and action - no
     useEffect(() => {
-        if (myTaskId && myTaskId === task.id) { // remove myTaskId rename last_step delta step
-            // leaving should use id not name
+        if (myTaskId && myTaskId === task.id) {
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.steps[myStep]
             //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
@@ -77,7 +79,6 @@ const TaskShowResponse = (props) => {
                         // This effectively waits for the update
                         if (task.updated) { 
                             setMyStep(next_step) 
-                            //setFetched(null)
                             const response_text = task.response
                             setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
@@ -90,7 +91,6 @@ const TaskShowResponse = (props) => {
                     // Next state
                     // Actions
                     // Should defensively avoid calling taskDone twice?
-                    //setFetched(null) // This also breaks things, even clearFetch state does not work
                     if (leaving_now) {
                         setTask((p) => {return {...p, done: true}});
                     }

@@ -14,18 +14,11 @@ import Icon from "./TaskConversation/Icon"
 Task Process
   Present a conversation
   Launch a chat task that collects messages from human and bot
-  Currently this task does very little, in theory it could manage the conversation history
-  task has single component so we create that and pass down
-
-  Maybe pass the taskId into the component and then it looks after it
-  How does the chatTask communicate with Conversation ? 
-
-  We should only log the task at the component_depth
-
-Task Steps
+  Currently this TaskConversation does very little, in theory it could manage the conversation history
+  The Task is passed on to the TaskChat component
   
 ToDo:
-  // 
+  startTaskFn could return the task ?
 */
 
 const TaskConversation = (props) => {
@@ -33,7 +26,6 @@ const TaskConversation = (props) => {
   const { 
     task, 
     setTask,
-    updateTask, 
     startTaskLoading,
     startTaskError,
     startTask,
@@ -64,31 +56,9 @@ const TaskConversation = (props) => {
     }
   }, [startTask]);
 
-  /*
-  useEffect(() => {
-    if (fetchResponseStart) {
-      setTask(fetchResponseStart)
-    }
-  }, [fetchResponseStart]);
-  */
-
-  /*
-  // Upon loading this component fetches its own Task and passes the props.task on to the chat
-  useEffect(() => {
-    if (!myTask) {
-      setFetchStart('root.components.TaskConversation.start')
-    }
-  }, []);
-
-  useEffect(() => {
-    if (fetchResponseStart) {
-      setMyTask(fetchResponseStart)
-    }
-  }, [fetchResponseStart]);
-  */
-
   useEffect(() => {
     if (task) {
+      // Update msgs
       if (task?.step === 'receiving' && msgs) {
         const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
         lastElement.text = task.response;
@@ -100,7 +70,8 @@ const TaskConversation = (props) => {
             lastElement
           ]
         }));
-      } else if (task?.step === 'sending' && task.last_step !== 'sending') {
+      // Detect change to sending and creaet a slot for new msgs
+      } else if (task?.step === 'sending' && task.delta_step !== 'sending') {
         // here we need to create a new slot for the next message
         // Note we need to add the input to for the user
         //console.log("Creating new entry for next chat", task)
@@ -117,7 +88,8 @@ const TaskConversation = (props) => {
               ...newMsgArray
             ]
           }));
-      } else if (task?.step === 'input' && task.last_step !== 'input') {
+      // Need to check if we really need this
+      } else if (task?.step === 'input' && task.delta_step !== 'input') {
         const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
         lastElement.text = task.response;
         lastElement.isLoading = false 
@@ -128,6 +100,7 @@ const TaskConversation = (props) => {
             lastElement
           ]
         }));
+      // TaskChat is dealing with input
       } else if (task?.step === 'input') {
         //console.log("Step input")
       }
@@ -163,7 +136,6 @@ const TaskConversation = (props) => {
             { sender: 'bot', text: welcomeMessage, isLoading: false }
           ],
         });
-        //console.log("HERE2 ", msgs)
       }
     }
   }, [msgs, task]);
@@ -194,11 +166,6 @@ const TaskConversation = (props) => {
     };
   },[]);
 
-  // Tracing
-  useEffect(() => {
-    //console.log("Tracing task ", task)
-  }, [task]); 
-
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer} >
@@ -220,7 +187,6 @@ const TaskConversation = (props) => {
       { task && (  
         <DynamicComponent key={task.id} is={task.component[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
       )}
-      { /* <TaskChat task={task} setTask={setTask} parentTask={myTask} /> */ }
     </section> 
   )
 
