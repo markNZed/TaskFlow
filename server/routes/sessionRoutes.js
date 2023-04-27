@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { utils } from '../src/utils.mjs';
 import { users, groups, workflows } from './../src/configdata.mjs';
 import { sessionsStore_async } from './../src/storage.mjs'
-import { DEFAULT_USER } from './../config.mjs';
 import * as dotenv from 'dotenv'
 dotenv.config()
 

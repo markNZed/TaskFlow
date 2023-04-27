@@ -6,9 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 /* ToDo
 -------
-Review/simplification of code
-  Up to client/src/components/Tasks/TaskConversation
-  Create a userTaskState type that provides debug support 
+
 Compare with similar systems
   LangChain is a framework for developing applications powered by language models.
     An abstraction above JS and Python
@@ -32,18 +30,13 @@ Compare with similar systems
     Embed in an iFrame
   Algovera
     Not open sourced yet
-
   
 Backlog
 -------
 
   Bugs
   -----
-  When we go to prev instance in stepper what do we do with the child instances ? 
-    Maybe they should be deleted ? But not the same to jump back as active or to view.
   Scrolling to view suggested_prompts in TaskChat
-  // This assumes the components are expanded - need to do this in dataconfig
-  Switching between assistants
 
   Features
   --------
@@ -59,19 +52,18 @@ Backlog
     Msgs should be loaded from the server rather than saved on the client. Similar to stepper - both have history.
     If a Task has properties that are not declared then error (so we can catch things being filtered).
       Add properties list to Task Components
-    Maintain multiple tasks in Taskflows.js so we do not lose state info - maybe better to use Redux
+    Allow task to start another task on server side (needs functional interface to api/task/start )
 
     Components
     ----------
-    MyAgents->MyAgentConversation
+    MyAgents -> MyAgentConversation
 
     Low Priority
     ------------
     Multiple language support 'i18next-http-middleware for server and react-i18next for client
     Defensive programming + logging
     Websocket for tasks (so server can drive) just send incremental info for the task
-    Cache on client side for task fetching might require /api/task_get (so we know it is intended to just fetch)
-    Allow task to start another task on server side (needs functional interface to api/task/start )
+
 
 Notes/Idea
 -----
@@ -85,32 +77,27 @@ Notes/Idea
               Task 
                 User Task
                   Session Task
-  Meta-level is like a stack of tasks
-    Could be a task that observes another thread on the server side, can also have a UI
-  Asking the model to output in a format that would pass a test might be a good way of constraining
+  Asking the model to output in a format that would pass a test might be a good way of constraining prmopts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
 
   Architecture
   ------------
-    How to manage multiple interfaces for a Task: directory with sub-components and choose e.g. display option, basically a style or theme
-    Create separate common repo for Tasks: config + component + taskFn
+    How to manage multiple interfaces for a Task: directory with sub-components and basically a style or theme
+    Create separate common repo for Tasks: config + component + taskFn. Maybe do not gain much form this for now.
+    Tasks could be thought of as something like plugins, maybe there are patterns in that sort of software
     User defaults, workflow defaults etc can be tasks
     Could have something like middleware that tasks can use to modify input/output
       Cuurrently that would just be in the TaskFunction but should be easy to factor out when that makes sense
-    How does a task monitor other tasks ? Callback to mointor a thread or a task (middleware catch updates to instance store)
+    How does a task monitor other tasks ? Callback to monitor a thread or a task (middleware catch updates to instance store)
+      Maybe tasks are responsible for their own communication protocol 
+      Pattern of having the parent own the state? That allows for communication.
+      In React this is fairly easy. On the server this could be a pub-sub system. The common point is asynchronous messages.
     Should the geolocation be a task? It could still update the globalState on the client side
     How to call out to Python from the Task function
-      How to manage launching processes from Task function
-        "child process execution" with child_process library
-        RabbitMQ for message passing good for a local model but do we need high speed, probably not.
-        REST API would allow for remote etc, maybe better
-    HOC in React. higher-order component is a function that takes in a component and returns a new component.
-      Cross-cutting concerns
-      Manage the task state (available as a prop), setTask that would sync with server
-    React Compound component could be used by a task that is composed of other tasks, allows shared context. 
-    Try updating the task only from level 0, instead of updating from any level
-      First need to harmonise on useTaskStart and useTaskUpdate
-        Add useTaskStart to withTask and use in TaskConversation
+      "child process execution" with child_process library
+      RabbitMQ for message passing good for a local model but do we need high speed, probably not.
+      REST API would allow for remote etc, maybe better
+      AMQP or MQTT would be scalable. 
 
   Infra
   -----

@@ -6,11 +6,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { encode } from 'gpt-3-encoder';
 import { ChatGPTAPI } from 'chatgpt'
-import { utils } from './utils.mjs';
-import { DUMMY_OPENAI, CACHE_ENABLE } from './../config.mjs';
-import { users, agents, defaults } from './configdata.mjs';
-import { messagesStore_async, cacheStore_async, connections } from './storage.mjs'
-import { wsSendObject } from './websocket.js';
+import { utils } from '../../src/utils.mjs';
+import { DUMMY_OPENAI, CACHE_ENABLE } from '../../config.mjs';
+import { users, agents, defaults } from '../../src/configdata.mjs';
+import { messagesStore_async, cacheStore_async, connections } from '../../src/storage.mjs'
+import { wsSendObject } from '../../src/websocket.js';
 import * as dotenv from 'dotenv'
 dotenv.config()
 

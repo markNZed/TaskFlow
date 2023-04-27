@@ -10,7 +10,6 @@ import { utils } from '../src/utils.mjs';
 import { taskFunctions} from '../taskFunctions/taskFunctions.mjs';
 import { groups, tasks } from './../src/configdata.mjs';
 import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
-import { DEFAULT_USER } from './../config.mjs';
 import * as dotenv from 'dotenv'
 dotenv.config()
 

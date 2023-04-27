@@ -1,4 +1,4 @@
-import { chat_async } from '../src/chat.mjs';
+import { chat_async } from './TaskChat/chat.mjs';
 import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
 /*
 This Source Code Form is subject to the terms of the Mozilla Public
