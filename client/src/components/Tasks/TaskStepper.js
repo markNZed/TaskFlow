@@ -37,6 +37,7 @@ function TaskStepper(props) {
     nextTask,
     setDoneTask,
     startTaskFn,
+    useTaskState,
   } = props
 
   const [activeTask, setActiveTaskAfter] = useState();
@@ -45,7 +46,7 @@ function TaskStepper(props) {
   const [visitedStepperTasks, setVisitedStepperTasksWrapped] = useState([]);
   const [leaving, setLeaving] = useState();
   const [expanded, setExpanded] = useState(['start']);
-  const [myTask, setMyTask] = useState();
+  const [myTask, setMyTask] = useTaskState(null, 'myTask');
   const [childTask, setChildTask] = useState();
 
   // We are not using this but potentially it is the task that
@@ -53,6 +54,12 @@ function TaskStepper(props) {
   useEffect(() => {
     startTaskFn(task.id, null, component_depth)
   }, []);
+
+  useEffect(() => {
+    if (startTask) {
+      setMyTask(startTask)
+    }
+  }, [startTask]);
 
   // The first step is the task that was passed in
   useEffect(() => {

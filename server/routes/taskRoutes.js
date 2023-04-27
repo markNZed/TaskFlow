@@ -18,16 +18,16 @@ const router = express.Router();
 
 async function do_task_async(task) {
     let updated_task = {}
-    let depth = 0
+    let idx = 0
     if (task?.component_depth) {
-      console.log("Component ",task.component, depth)
-      depth = task.component_depth - 1
+      idx = task.component_depth - 1
+      console.log("Component ",task.component, " idx ", idx)
     }
-    if (taskFunctions.hasOwnProperty(`${task.component[depth]}_async`)) {
-      updated_task = await taskFunctions[`${task.component[depth]}_async`](task);
+    if (taskFunctions.hasOwnProperty(`${task.component[idx]}_async`)) {
+      updated_task = await taskFunctions[`${task.component[idx]}_async`](task);
     } else {
       updated_task = task;
-      const msg = "ERROR: server unknown component at depth " + depth + " : " + task.component;
+      const msg = "ERROR: server unknown component at idx " + idx + " : " + task.component;
       updated_task.error = msg;
       console.log(msg, taskFunctions);
     }
@@ -188,7 +188,7 @@ router.post('/start', async (req, res) => {
           console.log("Setting component_depth", component_depth)
           task.component_depth = component_depth
         } else if (task?.component) {
-          task.component_depth = task?.component.length - 1
+          task.component_depth = task?.component.length
         }
   
         //console.log(task)

@@ -40,7 +40,7 @@ ToDo:
 
 const TaskChat = (props) => {
 
-  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask } = props
+  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask, component_depth } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);

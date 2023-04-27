@@ -25,7 +25,7 @@ const useStartTask = (startId, threadId = null, depth = 0) => {
     const fetchTaskFromAPI = async () => {
       try {
         setStartTaskLoading(true);
-        console.log("Starting task ", startId, threadId, depth)
+        //console.log("Starting task ", startId, threadId, depth)
         const result = await fetchData(globalState, 'task/start', { startId: startId, threadId: threadId, component_depth: depth});
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)

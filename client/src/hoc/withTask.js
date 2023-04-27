@@ -55,23 +55,23 @@ function withTask(Component) {
 
     useEffect(() => {
       const { task } = props;
-      setPrevTask(task);
+      if (task && task.component_depth === local_component_depth) {
+        setPrevTask(task);
+      }
     }, []);
 
     useEffect(() => {
       const { task } = props;
-      if (prevTask !== task) {
-        setPrevTask(props.task);
+      if (task && task.component_depth === local_component_depth) {
+        if (prevTask !== task) {
+            setPrevTask(props.task);
+        } 
       }
     }, [props.task]);
 
     function updateTask(update) {
       props.setTask(prevState => ({ ...prevState, ...update }));
     }
-
-    const setTaskWithPrev = (newTask) => {
-      props.setTask(newTask);
-    };
 
     function useTaskWebSocket(callback) {
       useFilteredWebSocket(webSocketEventEmitter, props.task, callback)
@@ -125,7 +125,6 @@ function withTask(Component) {
         } else {
           setState(newState);
         }
-
       }
     
       return [state, setTaskState]
@@ -138,14 +137,11 @@ function withTask(Component) {
   
     const componentProps = {
         ...props,
-        setTask: setTaskWithPrev,
         updateTaskLoading, 
         updateTaskError,
         startTaskLoading,
         startTaskError,
         startTask : startTaskReturned,
-        setStartTaskId,
-        setStartTaskThreadId,
         startTaskFn,
         nextTaskLoading,
         nextTaskError,

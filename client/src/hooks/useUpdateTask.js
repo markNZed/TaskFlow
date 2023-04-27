@@ -13,22 +13,23 @@ import { fetchData } from '../utils/fetchData'
 //          Task with task
 // We should combine these
 
-const useUpdateTask = (task, setTask, depth) => {
+const useUpdateTask = (task, setTask, local_component_depth) => {
   
   const { globalState } = useGlobalStateContext();
   const [updateTaskLoading, setUpdateTaskLoading] = useState(true);
   const [updateTaskError, setUpdateTaskError] = useState(null);
 
   useEffect(() => {
-    if (task?.update && !task?.updating) {
+    if (task?.update && !task?.updating && task.component_depth === local_component_depth) {
       //console.log("useUpdateTask", task)
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true);
           setTask((p) => { return {...p, updated: false, updating: true}})
-          const result = await fetchData(globalState, 'task/update', { task: { ...task, component_depth: depth } });
+          //console.log("useUpdateTask before: ", task)
+          const result = await fetchData(globalState, 'task/update', { task: task });
           setTask((p) => { return {...p, ...result, updated: true, update: false, updating: false}})
-          //setTask(result);
+          //console.log("useUpdateTask after: ", result)
         } catch (error) {
           setUpdateTaskError(error.message);
           setTask(null);
@@ -39,7 +40,7 @@ const useUpdateTask = (task, setTask, depth) => {
       fetchTaskFromAPI();
       //setTask((p) => { return {...p, update: false}})
     }
-  }, [task, setTask]);
+  }, [task]);
 
   return { updateTaskLoading, updateTaskError };
 };

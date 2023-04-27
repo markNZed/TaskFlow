@@ -20,6 +20,8 @@ Task Process
   Maybe pass the taskId into the component and then it looks after it
   How does the chatTask communicate with Conversation ? 
 
+  We should only log the task at the component_depth
+
 Task Steps
   
 ToDo:
@@ -30,7 +32,8 @@ const TaskConversation = (props) => {
 
   const { 
     task, 
-    setTask, 
+    setTask,
+    updateTask, 
     startTaskLoading,
     startTaskError,
     startTask,
@@ -38,9 +41,6 @@ const TaskConversation = (props) => {
     component_depth,
     useTaskState,
   } = props
-
-  const [myTask, setMyTask] = useState();
-  const [childTask, setChildTask] = useState();
   
   const chatContainer = useRef(null);
   const messagesEndRef = useRef(null)
@@ -48,24 +48,32 @@ const TaskConversation = (props) => {
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState({});
+  const [conversationTask, setConversationTask] = useTaskState(null, 'conversationTask');
 
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?"
 
+  // We are not using this but potentially it is the task that
+  // manages a meta-level related to the conversation
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, component_depth + 1)
+    //startTaskFn(task.id, task.threadId, component_depth)
   }, []);
 
   useEffect(() => {
     if (startTask) {
-      setChildTask(startTask)
+      //setConversationTask(startTask)
     }
   }, [startTask]);
 
+  // We pass the task down so increment component_depth
+  useEffect(() => {
+    console.log("updateTask({component_depth : component_depth + 1})", component_depth + 1)
+    updateTask({component_depth : component_depth + 1})
+  }, []);
 
   /*
   useEffect(() => {
     if (fetchResponseStart) {
-      setChildTask(fetchResponseStart)
+      setTask(fetchResponseStart)
     }
   }, [fetchResponseStart]);
   */
@@ -86,10 +94,10 @@ const TaskConversation = (props) => {
   */
 
   useEffect(() => {
-    if (childTask) {
-      if (childTask?.step === 'receiving' && msgs) {
+    if (task) {
+      if (task?.step === 'receiving' && msgs) {
         const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
-        lastElement.text = childTask.response;
+        lastElement.text = task.response;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
@@ -98,12 +106,12 @@ const TaskConversation = (props) => {
             lastElement
           ]
         }));
-      } else if (childTask?.step === 'sending' && childTask.last_step !== 'sending') {
+      } else if (task?.step === 'sending' && task.last_step !== 'sending') {
         // here we need to create a new slot for the next message
         // Note we need to add the input to for the user
         //console.log("Creating new entry for next chat", task)
         const newMsgArray = [
-          { sender: 'user', text: childTask.client_prompt,  isLoading: false,}, 
+          { sender: 'user', text: task.client_prompt,  isLoading: false,}, 
           { sender: 'bot', 
             text: "", 
             isLoading: true, 
@@ -115,9 +123,9 @@ const TaskConversation = (props) => {
               ...newMsgArray
             ]
           }));
-      } else if (childTask?.step === 'input' && childTask.last_step !== 'input') {
+      } else if (task?.step === 'input' && task.last_step !== 'input') {
         const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
-        lastElement.text = childTask.response;
+        lastElement.text = task.response;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
@@ -130,7 +138,7 @@ const TaskConversation = (props) => {
         //console.log("Step input")
       }
     }
-  }, [childTask]);
+  }, [task]);
 
   useEffect(() => {
     if (task) {
@@ -194,8 +202,8 @@ const TaskConversation = (props) => {
 
   // Tracing
   useEffect(() => {
-    //console.log("Tracing childTask ", childTask)
-  }, [childTask]); 
+    //console.log("Tracing task ", task)
+  }, [task]); 
 
   return (
     <section className='chatbox'>
@@ -215,10 +223,10 @@ const TaskConversation = (props) => {
         })}
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
-      { childTask && (  
-        <DynamicComponent is={childTask.component[component_depth]} task={childTask} setTask={setChildTask} parentTask={myTask} component_depth={props.component_depth}/>
+      { task && (  
+        <DynamicComponent is={task.component[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
       )}
-      { /* <TaskChat task={childTask} setTask={setChildTask} parentTask={myTask} /> */ }
+      { /* <TaskChat task={task} setTask={setTask} parentTask={myTask} /> */ }
     </section> 
   )
 
