@@ -51,7 +51,7 @@ function TaskStepper(props) {
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    //startTaskFn(task.id, null, component_depth)
+    startTaskFn(task.id, null, component_depth)
   }, []);
 
   useEffect(() => {

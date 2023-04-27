@@ -30,16 +30,16 @@ const TaskFromAgent = (props) => {
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    // This is the level where we are gogn to use the task so set the component_depth
+    // This is the level where we are going to use the task so set the component_depth
     useEffect(() => {
         updateTask({component_depth : component_depth})
-      }, []);
+    }, []);
     
 
-    // Reset the task, seems a big extreme to access global for this (should be a prop)
+    // Reset the task. Allows for the same component to be reused for different tasks. 
+    // Probably always better to associate a component with a single task.
     useEffect(() => {
         if (task && !myTaskId) {
-            console.log("RESETING TaskFromAgent")
             setMyTaskId(task.id)
             setResponseText('')
             setUserInput('')

@@ -47,6 +47,11 @@ const TaskChat = (props) => {
   const textareaRef = useRef(null);
   const formRef = useRef(null);
 
+  // This is the level where we are going to use the task so set the component_depth
+  useEffect(() => {
+    updateTask({component_depth : component_depth})
+  }, []);
+
   function updateResponse(mode, text) {
     switch (mode) {
         case 'delta':

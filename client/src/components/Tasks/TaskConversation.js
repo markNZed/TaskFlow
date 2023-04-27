@@ -55,19 +55,14 @@ const TaskConversation = (props) => {
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation
   useEffect(() => {
-    //startTaskFn(task.id, task.threadId, component_depth)
+    startTaskFn(task.id, task.threadId, component_depth)
   }, []);
 
   useEffect(() => {
     if (startTask) {
-      //setConversationTask(startTask)
+      setConversationTask(startTask)
     }
   }, [startTask]);
-
-  // We pass the task down so increment component_depth
-  useEffect(() => {
-    updateTask({component_depth : component_depth + 1})
-  }, []);
 
   /*
   useEffect(() => {

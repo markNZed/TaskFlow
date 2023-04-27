@@ -14,18 +14,23 @@ import withTask from '../../hoc/withTask';
 
 const TaskShowResponse = (props) => {
 
-    const { leaving, task, setTask, parentTask, updateTask, updateStep, updateTaskLoading, } = props;
+    const { log, leaving, task, setTask, parentTask, updateTask, updateStep, updateTaskLoading, component_depth } = props;
 
     const [responseText, setResponseText] = useState('');
     const [myTaskId, setMyTaskId] = useState();
     const [myStep, setMyStep] = useState('');
     const [myLastStep, setMyLastStep] = useState('');
 
-    // Reset the task once, we wil not need to do this if not reused
+    // This is the level where we are going to use the task so set the component_depth
+    useEffect(() => {
+        updateTask({component_depth : component_depth})
+    }, []);
+
+    // Reset the task. Allows for the same component to be reused for different tasks. 
+    // Probably always better to associate a component with a single task.
     useEffect(() => {
         //console.log("task ", task)
         if (task && !myTaskId) {
-            console.log("RESETTING TaskShowResponse")
             //setMyStep('start') // I guess this triggers the state machine
             setMyTaskId(task.id)
             setResponseText('')
@@ -50,7 +55,7 @@ const TaskShowResponse = (props) => {
             // leaving should use id not name
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.steps[myStep]
-            console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+            //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -63,7 +68,7 @@ const TaskShowResponse = (props) => {
                     }
                     // We cache the response client side
                     if (task?.response) {
-                        console.log('Response cached client side')
+                        log('Response cached client side')
                         // Next state
                         setMyStep(next_step)
                         // Actions
