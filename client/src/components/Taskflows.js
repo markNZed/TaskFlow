@@ -56,8 +56,10 @@ function Taskflows(props) {
       }
       setTitle(globalState.workflowsTree[globalState.selectedTaskId].label)
     }
-    if (globalState?.workflowsTree && globalState.workflowsTree.length == 1) {
-      startTaskFn(globalState.workflowsTree[0].id + '.start', null, component_depth + 1)
+    if (globalState?.workflowLeafCount && globalState.workflowLeafCount == 1) {
+      const sortedKeys = Object.keys(globalState.workflowsTree).sort((a, b) => a.length - b.length);
+      const longestKey = sortedKeys[sortedKeys.length - 1];
+      startTaskFn(globalState.workflowsTree[longestKey].id + '.start', null, component_depth + 1)
       setHideSide(true)
       setDrawWidth(0)
     }

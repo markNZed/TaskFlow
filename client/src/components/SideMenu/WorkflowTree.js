@@ -28,6 +28,7 @@ function WorkflowTree() {
     }); // Effect runs after every render but will set expanded only once
 
     let tempNodeIds = []
+    let leafCount = 0
 
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
@@ -36,6 +37,12 @@ function WorkflowTree() {
     function handleSelectNode(node) {
       replaceGlobalState('selectedTaskId', node.id);
     }
+
+    useEffect(() => {
+      // This code will run after the component mounts and renders
+      replaceGlobalState('workflowLeafCount', leafCount)
+    }, []);
+
 
     function renderTree(nodes, id, handleSelectNode, propagateDefault) {
       if (!nodes) {return ''}
@@ -64,6 +71,8 @@ function WorkflowTree() {
           }
       } else {
           if (!menu) {return ''}
+          globalState.workflowsTree[id].leaf = true
+          leafCount++
           if (propagateDefault && node?.default) {
               handleSelectNode(node)
           }
@@ -91,7 +100,7 @@ function WorkflowTree() {
           expanded={expanded}
           onNodeToggle={handleToggle}
         >
-          {renderTree(globalState.workflowsTree, 'root', handleSelectNode, true)}
+          { renderTree(globalState.workflowsTree, 'root', handleSelectNode, true) }
         </TreeView>
       </div>
     );
