@@ -8,6 +8,10 @@ The following is for development where the server and client directories are mou
 <br> Access the client at http://localhost:3000 
 There have been issues with Firefox and websocket on localhost, if Firefox does not work, restart or try Chrome.
 
+# Notes
+
+Eventaully this wil lcapture how to deploy chat2flow in a production environment. 
+
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker-compose -f docker-compose-prod.yml up
 
