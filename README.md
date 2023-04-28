@@ -13,7 +13,7 @@ On the server side chat2flow provides a kernel for evaluating Task functions, st
 
 On the client side chat2flow provides Tasks with storage, server communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to run. The client runs in a web browser and builds on the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real time interaction) or REST style HTTP API.
 
-chat2flow provides a light flexible infrastructure for Human Computer Interaction. The configuration of workflows and Tasks is not part of chat2flow (except for a simple demonstration). This allows for the functionality of Tasks (both client interface and functionality) to be shared without sharing proprietary/private information such as the sequencing of Tasks and the content of prompts
+chat2flow provides a light flexible infrastructure for human computer interaction. The configuration of workflows and Tasks is not part of chat2flow (except for a simple demonstration). So the functionality of Tasks (both client interface and functionality) can be shared without sharing proprietary/private information such as the sequencing of Tasks and the content of prompts.
 
 chat2flow should play nicely with:
 * [LangChain](https://langchain.com/) (e.g, use LangChain features from within a Task function on the sever).

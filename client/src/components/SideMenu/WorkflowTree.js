@@ -34,7 +34,7 @@ function WorkflowTree() {
     };
 
     function handleSelectNode(node) {
-      replaceGlobalState('selectedTaskId', node.id + '.start');
+      replaceGlobalState('selectedTaskId', node.id);
     }
 
     function renderTree(nodes, id, handleSelectNode, propagateDefault) {

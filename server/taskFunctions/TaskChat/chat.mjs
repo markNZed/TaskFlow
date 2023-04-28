@@ -129,6 +129,13 @@ async function chat_prepare(task) {
     console.log("Dyad in progress between " + agent.name + " and " + user?.name)
   }
 
+  // If we can have PREPEND and APPEND then we could replace task.dyad with something general
+  // This allows for user defined system messages
+  if (task?.system_message) {
+    systemMessage = task.system_message;
+    console.log("Sytem message from task " + task.id)
+  }
+
   const threadId = task.threadId
   const instanceId = task.instanceId
   const agentId = agent.id
@@ -247,6 +254,11 @@ async function ChatGPTAPI_request(params) {
   if (cachedValue && cachedValue !== undefined) {
     messagesStore_async.set(threadId + agentId + 'parentMessageId', cachedValue.id)
     let text = cachedValue.text;
+    const words = text.split(" ");
+    // call SendIncrementalWs for each word
+    words.forEach((word) => {
+      SendIncrementalWs(word, instanceId, ws);
+    });
     message_from('cache', text, server_only, ws, instanceId)
     response_text_promise = Promise.resolve(text);
   } else {

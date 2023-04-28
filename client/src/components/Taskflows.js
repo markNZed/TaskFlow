@@ -21,6 +21,7 @@ import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from '../hoc/withTask';
 import { setArrayState } from '../utils/utils';
+import { appLabel } from '../config';
 
 
 // Move to taskStack ?
@@ -53,17 +54,20 @@ function Taskflows(props) {
   const [tasks, setTasks] = useState([]);
   const [tasksIds, setTasksIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
+  const [title, setTitle] = useState(appLabel)
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
     if (globalState.selectedTaskId) {
-      const index = tasksIds.indexOf(globalState.selectedTaskId)
+      const start =  globalState.selectedTaskId + '.start'
+      const index = tasksIds.indexOf(start)
       if (index === -1) {
-        startTaskFn(globalState.selectedTaskId, null, component_depth + 1)
+        startTaskFn(start, null, component_depth + 1)
       } else {
         setTasksIdx(index)
       }
+      setTitle(globalState.workflowsTree[globalState.selectedTaskId].label)
     }
   }, [globalState]);
 
@@ -83,10 +87,6 @@ function Taskflows(props) {
   function setTasksTask(t) {
     setArrayState(setTasks, tasksIdx, t)
   }
-
-  useEffect(() => {
-    console.log(tasksIdx)
-  }, [tasksIdx]);
 
   const drawWidth = 220;
 
@@ -110,7 +110,7 @@ function Taskflows(props) {
                 <MenuIcon />
               </IconButton>
               <Typography variant="h6">
-                Chat2Flow
+                { title }
               </Typography>
             </Toolbar>
           </AppBar>
