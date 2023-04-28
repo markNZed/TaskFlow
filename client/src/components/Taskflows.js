@@ -23,20 +23,6 @@ import withTask from '../hoc/withTask';
 import { setArrayState } from '../utils/utils';
 import { appLabel } from '../config';
 
-
-// Move to taskStack ?
-// Presentation task ?
-// 
-
-// Ultimately there could be multiple Workflows instantiated to allow for parallel workflows
-// Here we can assume there is a single active workflow with a single active task
-// We want to use a prop not a global for the task (so multiple Workflows can be supported)
-
-// We assume that the task globalState.selectedTaskId has a spawn_tasks property and it is this task that is
-// passed to the next component after setting the spawn_tasks in selectedTask to globalState.selectedTaskId
-
-// Should manage tasks not task
-
 function Taskflows(props) {
 
   const { 
@@ -48,9 +34,6 @@ function Taskflows(props) {
   } = props
 
   const { globalState } = useGlobalStateContext();
-
-  const [selectedTask, setSelectedTask] = useState();
-  const [componentName, setComponentName] = useState();
   const [tasks, setTasks] = useState([]);
   const [tasksIds, setTasksIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
@@ -73,7 +56,6 @@ function Taskflows(props) {
 
   useEffect(() => {
     if (startTask) {
-      console.log(tasks, startTask)
       setTasksIdx(tasks.length)
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask ])
       setTasksIds((p) => [...p, startTask.id ])
@@ -87,6 +69,10 @@ function Taskflows(props) {
   function setTasksTask(t) {
     setArrayState(setTasks, tasksIdx, t)
   }
+
+  useEffect(() => {
+    console.log("Tasks ", tasks, tasksIdx)
+  }, [tasks]);
 
   const drawWidth = 220;
 
@@ -162,7 +148,7 @@ function Taskflows(props) {
 
               {tasks.map(({ component, instanceId }, idx) => (
                 component && (
-                  <div className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
+                  <div key={instanceId} className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
                     <DynamicComponent
                       key={instanceId}
                       is={component[0]}

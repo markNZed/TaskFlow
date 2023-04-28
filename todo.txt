@@ -35,16 +35,21 @@ Backlog
   --------
     High Priority
     -------------
+    multiple configuration files for the server
+    Create infra directory
     Workflow features:
       Allow the user to specify the system prompt.
       Use a route for configuring: user, session, workflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
     Msgs could be loaded from the server. Similar to stepper - both have history.
     Allow task to start another task on server side (needs functional interface to api/task/start )
+    Utility filters e.g. remove outer quotes, an ordered list.
 
     Components
     ----------
     MyAgents -> MyAgentConversation
+    Multiple-choice above prompt to allow for quick refining of prompt e.g. use tutoiment, friendly, formal etc
+    Templating with user defined variables
 
     Low Priority
     ------------
