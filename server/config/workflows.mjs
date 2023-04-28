@@ -1,26 +1,8 @@
-import workflow_components from './components.mjs';
 import workflow_chatGPT from './workflow/chatGPT.mjs';
 
 const workflows_array = [
     {
         name: 'root',
-        filter_for_client: [ // parameter names that will not be stripped from the Task when sent from the server to the client
-            'id', 
-            'component',
-            'component_depth',
-            'next', 
-            'forget', 
-            'name', 
-            'label', 
-            'instanceId', 
-            'threadId', 
-            'children', 
-            'done', 
-            'steps', 
-            'step', 
-            'menu', 
-            'update_count',
-        ],
         menu: false,
         component: [] // Need this so APPEND will work in lower workflows
         //default: false,
@@ -91,6 +73,6 @@ const workflows_array = [
 ]
 
 // Importing arrays of workflows
-const workflows = [...workflows_array, ...workflow_components];
+const workflows = [...workflows_array];
 
 export { workflows };

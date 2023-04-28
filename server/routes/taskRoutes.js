@@ -8,7 +8,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid'
 import { utils } from '../src/utils.mjs';
 import { taskFunctions} from '../taskFunctions/taskFunctions.mjs';
-import { groups, tasks } from './../src/configdata.mjs';
+import { groups, tasks, components } from './../src/configdata.mjs';
 import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -109,7 +109,7 @@ router.post('/update', async (req, res) => {
       let instanceId = task.instanceId
       const server_side_task = await instancesStore_async.get(instanceId)
       // filter_out could also do some data cleaning
-      let clean_client_task = utils.filter_in(tasks, task)
+      let clean_client_task = utils.filter_in(components,tasks, task)
       let updated_task = Object.assign({}, server_side_task, clean_client_task)
   
       //console.log("task ", task)
@@ -148,7 +148,7 @@ router.post('/update', async (req, res) => {
         }
       }
   
-      let updated_client_task = utils.filter_in(tasks, updated_task)
+      let updated_client_task = utils.filter_in(components,tasks, updated_task)
       res.send(JSON.stringify(updated_client_task));
     } else {
       res.status(200).json({ error: "No user" });
@@ -237,7 +237,7 @@ router.post('/start', async (req, res) => {
   
         await instancesStore_async.set(task.instanceId, task)
     
-        let updated_client_task = utils.filter_in(tasks, task)
+        let updated_client_task = utils.filter_in(components,tasks, task)
         res.send(JSON.stringify(updated_client_task));
       }
     } else {

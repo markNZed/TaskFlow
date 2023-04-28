@@ -54,6 +54,7 @@ utils.load_data_async = async function(config_dir, name) {
     let result = {}
     try {
       result = (await import(config_dir + '/' + name + ".mjs"))[name];
+      //console.log("Importing data " + config_dir + '/' + name + ".mjs ")
     } catch (error) {
       console.log("No " + name + " at " + config_dir + '/' + name + ".mjs " + error);
     }
@@ -128,21 +129,24 @@ utils.filter_in_list = function(task, filter_list) {
   return taskCopy
 }
 
-utils.filter_in = function(tasks, task) {
-
+utils.filter_in = function(components, tasks, task) {
   if (!task?.id) {
     console.log("ERROR Task has no id ", task)
   }
   //console.log("BEFORE ", task)
-  let filter_list = [];
+  let filter_list = []
+  let filter_for_server = []
   // This assumes the components are not expanded - need to do this in dataconfig
   for (const c of task.component) {
-    filter_list = filter_list.concat(tasks['root.components.' + c + '.start'].filter_for_client)
+    filter_list = filter_list.concat(components['root.' + c].filter_for_client)
+    filter_list = filter_list.concat(components['root.' + c].filter_for_server)
   }
   if (task?.filter_for_client) {
     filter_list = filter_list.concat(task.filter_for_client)
+    filter_for_server = filter_for_server.concat(task.filter_for_server)
   }
   filter_list = Array.from(new Set(filter_list)) // uniquify
+  filter_for_server = Array.from(new Set(filter_for_server)) // uniquify
   if (filter_list.length < 1) {
     console.log("Warning: the task ", task,  " is missing filter")
   }
@@ -150,6 +154,9 @@ utils.filter_in = function(tasks, task) {
   for (const key in taskCopy) {
     if (!filter_list.includes(key)) {
       delete taskCopy[key];
+      if (!filter_for_server.includes(key)) {
+        console.log("Warning: Unknown task key " + key + " in task id " + task.id)
+      }
     }
   }
   //console.log("AFTER ", filter_list, taskCopy)

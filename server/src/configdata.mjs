@@ -16,6 +16,7 @@ console.log("Loading config data from " + CONFIG_DIR)
 var users = await utils.load_data_async(CONFIG_DIR, 'users')
 var groups = await utils.load_data_async(CONFIG_DIR, 'groups')
 var workflows = await utils.load_data_async(CONFIG_DIR, 'workflows')
+var components = await utils.load_data_async(CONFIG_DIR, 'components')
 var agents = await utils.load_data_async(CONFIG_DIR, 'agents')
 var defaults = await utils.load_data_async(CONFIG_DIR, 'defaults')
 var tasks = {} // We will build this from workflows
@@ -30,7 +31,7 @@ var tasks = {} // We will build this from workflows
 // We should introduce a concept of appending and prepending
 // e.g. PREPEND_property would prepend the content to content form higher level instead of replacing content
 // Functionality added but not tested
-function flattenWorkflows(workflows) {
+function flattenObjects(workflows) {
   // The default level is named 'root'
   var parent2id = {root : ''}
   var children = {}
@@ -178,8 +179,11 @@ function flattenWorkflows(workflows) {
 
 // This has side-effects, modifying workflows in-place
 // Could check that each workflow has a 'start' task
-workflows = flattenWorkflows(workflows)
+workflows = flattenObjects(workflows)
 //console.log(JSON.stringify(workflows, null, 2))
+
+components = flattenObjects(components)
+//console.log(JSON.stringify(components, null, 2))
 
 //Create a group for each user
 for (const userKey in users) {
@@ -263,4 +267,4 @@ function flattenTasks(workflows) {
 tasks = flattenTasks(workflows)
 //console.log(JSON.stringify(tasks, null, 2))
 
-export { users, groups, workflows, agents, defaults, tasks }
+export { users, groups, workflows, components, agents, defaults, tasks }

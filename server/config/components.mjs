@@ -1,63 +1,55 @@
-const workflow_components = [
+const components = [
     {
-        name: 'components',
-        parent: 'root',
-        menu: false,
+        name: 'root',
+        filter_for_client: [ // parameter names that will not be stripped from the Task when sent from the server to the client
+            'id', 
+            'component', 
+            'component_depth',
+            'next', 
+            'forget', 
+            'name', 
+            'label', 
+            'instanceId', 
+            'threadId', 
+            'children', 
+            'done', 
+            'steps', 
+            'step', 
+            'next_step',
+            'menu', 
+            'update_count',
+        ],
     },
     {
         name: 'TaskChat',
-        parent: 'components',
+        parent: 'root',
         menu: false,
         APPEND_filter_for_client: ['client_prompt', 'suggested_prompts', 'response'],
-        tasks: {
-            start : {
-                next: 'stop',
-            },
-        },
     },
     {
         name: 'TaskConversation',
-        parent: 'components',
+        parent: 'root',
         APPEND_filter_for_client: ['welcome_message'],
         menu: false,
-        tasks: {
-            start : {
-                next: 'stop',
-            },
-        },
     },
     {
         name: 'TaskStepper',
-        parent: 'components',
-        tasks: {
-            start : {
-                next: 'stop',
-            },
-        },
+        parent: 'root',
     },
     {
         name: 'TaskFromAgent',
-        parent: 'components',
+        parent: 'root',
         APPEND_filter_for_client: ['response', 'input', 'input_label', 'instruction'],
-        tasks: {
-            start : {
-                next: 'stop',
-            },
-        },
     },
     {
         name: 'TaskShowResponse',
-        parent: 'components',
+        parent: 'root',
         APPEND_filter_for_client: ['response'],
-        tasks: {
-            start : {
-                next: 'stop',
-            },
-        },
     },
     {
         name: 'TaskChoose',
-        parent: 'components',
+        parent: 'root',
     },
 ]
-export default workflow_components
+
+export { components }
