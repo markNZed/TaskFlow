@@ -41,13 +41,6 @@ function App() {
     }
   }, [address, enableGeolocation]);
 
-  // This is a hack for CloudFlare to ping the websocket server with a normal HTTP request to setup cookies etc
-  useEffect(() => {
-    if (!window.location.href.includes('authenticated')) {
-      window.location.replace(serverUrl + 'authenticate');
-    }
-  }, []);
-
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -76,7 +69,6 @@ function App() {
   return (
     <Routes>
       <Route exact path="/" element={<Taskflows/>} />
-      <Route path="/authenticated" element={<Taskflows/>} />
     </Routes>
   );
 }

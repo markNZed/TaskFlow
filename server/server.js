@@ -54,9 +54,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', miscRoutes);
 app.use('/api/session', sessionRoutes);
 app.use('/api/task', taskRoutes);
+app.use('/', miscRoutes) // After other routes because it has the default route
 
 const serverOptions = {}
 const server = http.createServer(serverOptions, app)

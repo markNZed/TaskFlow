@@ -21,16 +21,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Needed to add this to workaround for Cloudflare Zero Trust
-// We need to visit this server from the browser to get cookies etc
-router.get('/authenticate', async (req, res) => {
-  let authenticated_url = CLIENT_URL + '/authenticated'
-  let userId = utils.getUserId(req)
-  if (userId) {
-    res.redirect(authenticated_url);
-  } else {
-    res.redirect(authenticated_url);
-  }
+router.get('*', function(req, res) {
+  //console.log("* ", req)
+  res.status(404).send('Unknown end-point');
 });
 
 // Export the router
