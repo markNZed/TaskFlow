@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TreeView, TreeItem } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -16,6 +16,8 @@ function WorkflowTree() {
 
     const [expanded, setExpanded] = useState([]);
     const [expandedAll, setExpandedAll] = useState(false);
+    const [leafCount, setLeafCount] = useState(false);
+    const leafCountRef = useRef(0);
 
     useEffect(() => {
       setTimeout(() => {
@@ -28,7 +30,6 @@ function WorkflowTree() {
     }); // Effect runs after every render but will set expanded only once
 
     let tempNodeIds = []
-    let leafCount = 0
 
     const handleToggle = (event, nodeIds) => {
         setExpanded(nodeIds);
@@ -38,10 +39,25 @@ function WorkflowTree() {
       replaceGlobalState('selectedTaskId', node.id);
     }
 
+    function countSubtreeLeafNodes() {
+      let leafCountLocal = 0;
+      Object.keys(globalState.workflowsTree).forEach((nodeId) => {
+        if (globalState.workflowsTree[nodeId].leaf === true) {
+          leafCountLocal++;
+        }
+      });
+      setLeafCount(leafCountLocal)
+      return leafCountLocal
+    }  
+
     useEffect(() => {
-      // This code will run after the component mounts and renders
-      replaceGlobalState('workflowLeafCount', leafCount)
-    }, []);
+      if ( globalState?.workflowLeafCount !== leafCount ) {
+        countSubtreeLeafNodes()
+        //const subtreeLeafCount = countSubtreeLeafNodes('root');
+        // This code will run after the component mounts and renders
+        replaceGlobalState('workflowLeafCount', countSubtreeLeafNodes())
+      }
+    });
 
 
     function renderTree(nodes, id, handleSelectNode, propagateDefault) {
@@ -72,7 +88,6 @@ function WorkflowTree() {
       } else {
           if (!menu) {return ''}
           globalState.workflowsTree[id].leaf = true
-          leafCount++
           if (propagateDefault && node?.default) {
               handleSelectNode(node)
           }
