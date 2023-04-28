@@ -23,6 +23,8 @@ import withTask from '../hoc/withTask';
 import { setArrayState } from '../utils/utils';
 import { appLabel } from '../config';
 
+// If there is only one agent then do not show side menu
+
 function Taskflows(props) {
 
   const { 
@@ -38,6 +40,8 @@ function Taskflows(props) {
   const [tasksIds, setTasksIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel)
+  const [hideSide, setHideSide] = useState(false)
+  const [drawWidth, setDrawWidth] = useState(220)
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
@@ -51,6 +55,11 @@ function Taskflows(props) {
         setTasksIdx(index)
       }
       setTitle(globalState.workflowsTree[globalState.selectedTaskId].label)
+    }
+    if (globalState?.workflowsTree && globalState.workflowsTree.length == 1) {
+      startTaskFn(globalState.workflowsTree[0].id + '.start', null, component_depth + 1)
+      setHideSide(true)
+      setDrawWidth(0)
     }
   }, [globalState]);
 
@@ -75,8 +84,6 @@ function Taskflows(props) {
   useEffect(() => {
     //console.log("Tasks ", tasks, tasksIdx)
   }, [tasks]);
-
-  const drawWidth = 220;
 
   return (
         <div className="App">
@@ -104,11 +111,13 @@ function Taskflows(props) {
           </AppBar>
 
           <Stack direction="row" spacing={3} sx={{ width: '100%', marginRight: '24px' }}>
-
             <Box
               component="nav"
-              sx={{ width: { sm: drawWidth }, 
-                  flexShrink: { sm: 0 } }}
+              sx={{
+                width: { sm: drawWidth }, 
+                flexShrink: { sm: 0 },
+                ...(hideSide && { display: 'none' })
+              }}
             >
               <Drawer
                 variant="temporary"
