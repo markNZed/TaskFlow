@@ -51,7 +51,7 @@ function WorkflowTree() {
     }  
 
     useEffect(() => {
-      if ( globalState?.workflowLeafCount !== leafCount ) {
+      if ( globalState.workflowsTree && globalState?.workflowLeafCount !== leafCount ) {
         countSubtreeLeafNodes()
         //const subtreeLeafCount = countSubtreeLeafNodes('root');
         // This code will run after the component mounts and renders
