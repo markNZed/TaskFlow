@@ -19,6 +19,7 @@ const components = [
             'menu', 
             'update_count',
             'one_thread',
+            'use_address',
         ],
         filter_for_server: [ // parameter names that will be stripped from the Task when sent from the server to the client
             'APPEND_component',
@@ -37,7 +38,8 @@ const components = [
             'update',
             'delta_step',
             'messages_template',
-            'messages',         
+            'messages',
+            'model',     
         ],
     },
     {
