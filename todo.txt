@@ -145,6 +145,27 @@ Notes/Idea
             * `messages_template` 
             * `messages`
 
+Here is the recommended structure from GPT-4:
+
+{
+  "id": "", // Unique identifier for the task (e.g., UUID)
+  "type": "", // Task type or category, useful for handling tasks differently based on their nature
+  "name": "", // Human-readable name or title of the task
+  "description": "", // Brief description of the task and its purpose
+  "status": "", // Current status of the task (e.g., "pending", "in-progress", "completed", "error")
+  "priority": 0, // Priority level of the task, useful for determining the order of task execution
+  "createdAt": "", // Timestamp when the task was created
+  "updatedAt": "", // Timestamp when the task was last updated
+  "completedAt": "", // Timestamp when the task was completed (if applicable)
+  "input": {}, // Input data for the task, can be any JSON-serializable data
+  "output": {}, // Output data from the task, can be any JSON-serializable data
+  "error": null, // Any error message or details in case the task encounters an error
+  "metadata": {}, // Additional metadata related to the task, can be any JSON-serializable data
+  "dependencies": [], // Array of task IDs that this task depends on (if any)
+  "nextTasks": [] // Array of task IDs that should be executed after this task (if any)
+}
+
+
   Infra
   -----
   Run prod version instead of dev
