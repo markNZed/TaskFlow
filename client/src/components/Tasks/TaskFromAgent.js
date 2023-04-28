@@ -22,7 +22,7 @@ import withTask from '../../hoc/withTask';
 
 const TaskFromAgent = (props) => {
   
-    const { leaving, task, setTask, updateTask, updateStep, component_depth, useTaskWebSocket } = props;
+    const { log, leaving, task, setTask, updateTask, updateStep, component_depth, useTaskWebSocket } = props;
 
     const [responseText, setResponseText] = useState('');
     const [userInput, setUserInput] = useState('');
@@ -111,7 +111,7 @@ const TaskFromAgent = (props) => {
                     }
                     // We cache the response client side
                     if (task?.response) {
-                        console.log('Response cached client side')
+                        log('Response cached client side')
                         // Next state
                         setMyStep(next_step)
                         // Actions

@@ -70,8 +70,10 @@ function Taskflows(props) {
     setArrayState(setTasks, tasksIdx, t)
   }
 
+  //Tracing 
+
   useEffect(() => {
-    console.log("Tasks ", tasks, tasksIdx)
+    //console.log("Tasks ", tasks, tasksIdx)
   }, [tasks]);
 
   const drawWidth = 220;
@@ -148,7 +150,7 @@ function Taskflows(props) {
 
               {tasks.map(({ component, instanceId }, idx) => (
                 component && (
-                  <div key={instanceId} className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
+                  <div key={`unique${instanceId}`} className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
                     <DynamicComponent
                       key={instanceId}
                       is={component[0]}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { log } from '../utils/utils'
 
 function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
 
@@ -10,7 +11,7 @@ function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
 
     const handleMessage = (e) => {
       const message = JSON.parse(e.data);
-      //console.log("useFilteredWebSocket ", task?.instanceId, message?.instanceId)
+      //log("useFilteredWebSocket ", task?.instanceId, message?.instanceId)
       if (task?.instanceId && message?.instanceId === task.instanceId) {
         onMessage(message);
       }

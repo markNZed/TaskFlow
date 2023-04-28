@@ -1,7 +1,7 @@
 const components = [
     {
         name: 'root',
-        filter_for_client: [ // parameter names that will not be stripped from the Task when sent from the server to the client
+        filter_for_client: [ // parameter names that will NOT be stripped from the Task when sent from the server to the client
             'id', 
             'component', 
             'component_depth',
@@ -18,6 +18,26 @@ const components = [
             'next_step',
             'menu', 
             'update_count',
+            'one_thread',
+        ],
+        filter_for_server: [ // parameter names that will be stripped from the Task when sent from the server to the client
+            'APPEND_component',
+            'parent',
+            'parentId',
+            'parentInstanceId',
+            'agent',
+            'groups',
+            'parentId',
+            'sessionId',
+            'created',
+            'userId',
+            'prompt',
+            'assemble_prompt',
+            'last_change',
+            'update',
+            'delta_step',
+            'messages_template',
+            'messages',         
         ],
     },
     {

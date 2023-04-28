@@ -59,7 +59,7 @@ function App() {
         if (!globalState?.sessionId) {
           const sessionId = data.sessionId
           mergeGlobalState({ sessionId });
-          console.log("Set sessionId ", sessionId);
+          //console.log("Set sessionId ", sessionId);
         }
         // Should have a separate API
         if (data?.workflowsTree) {

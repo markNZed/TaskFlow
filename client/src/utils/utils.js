@@ -18,24 +18,36 @@ export function hasOnlyResponseKey(obj) {
     return keys.length === 1 && keys[0] === 'response'
 }
 
+function getCallerName(stackTrace) {
+  let callerName = ':unknown';
+  // Find caller name for both Chrome and Firefox
+  for (const line of stackTrace) {
+    const chromeMatch = line.match(/at (.*)\s\(/);
+    const firefoxMatch = line.match(/^(.*)@/);
+    if (chromeMatch || firefoxMatch) {
+      callerName = ':' + (chromeMatch ? chromeMatch[1] : firefoxMatch[1]);
+      break;
+    }
+  }
+  if (callerName.indexOf('/') !== -1) { callerName = ':unknown' } // File path probably 
+  if (callerName === ':logWithComponent') {
+      callerName = ''
+  }
+  return callerName
+}
+
 export const logWithComponent = (componentName, ...message) => {
     const stackTrace = new Error().stack.split('\n')
-    let callerName = ':unknown';
-    // Find caller name for both Chrome and Firefox
-    for (const line of stackTrace) {
-      const chromeMatch = line.match(/at (.*)\s\(/);
-      const firefoxMatch = line.match(/^(.*)@/);
-      if (chromeMatch || firefoxMatch) {
-        callerName = ':' + (chromeMatch ? chromeMatch[1] : firefoxMatch[1]);
-        break;
-      }
-    }
-    if (callerName.indexOf('/') !== -1) { callerName = ':unknown' } // File path probably 
-    if (callerName === ':logWithComponent') {
-        callerName = ''
-    }
+    const callerName = getCallerName(stackTrace)
     const log = debug(`${appAbbrev}:${componentName}${callerName}`)
     log(...message)
+}
+
+export const log = (...message) => {
+  const stackTrace = new Error().stack.split('\n')
+  const callerName = getCallerName(stackTrace)
+  const log = debug(`${appAbbrev}:${callerName}`)
+  log(...message)
 }
   
 // Set a task in an array, could have helper function for this in utils (pass in array, index, update)

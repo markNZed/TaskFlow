@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Do we have an issue with the streaming
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
@@ -16,7 +17,7 @@ Compare with similar systems
     https://github.com/Significant-Gravitas/Auto-GPT
     This might be the close but their focus on autonomy is quite different
   https://github.com/modal-labs/quillman
-    A complete ausio chat app. Meant to serve as a starting point for your own language model-based apps.
+    A complete audio chat app. Meant to serve as a starting point for your own language model-based apps.
   https://gradio.app/
     It would ideally be easy to use a Gradio component
     Embed in an iFrame
@@ -45,11 +46,15 @@ Backlog
     Allow task to start another task on server side (needs functional interface to api/task/start )
     Utility filters e.g. remove outer quotes, an ordered list.
 
-    Components
+    Tasks
     ----------
     MyAgents -> MyAgentConversation
     Multiple-choice above prompt to allow for quick refining of prompt e.g. use tutoiment, friendly, formal etc
     Templating with user defined variables
+    Assistant to help understanding a problem rather than solving the problem
+        Gamification to make learning more engaging
+        An assistant to help explaining what the problem is
+    Research assistant
 
     Low Priority
     ------------
@@ -68,11 +73,14 @@ Notes/Idea
         Workflow (Route)
           User Workflow
             Session Workflow
-              Task 
+              Task
                 User Task
                   Session Task
   Asking the model to output in a format that would pass a test might be a software good way of constraining prmopts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
+  How to interface with other apps with output from chat2flow ?
+  Things will be integrated into existing clients (e.g. email)
+  Educate the users to make use of the system
 
   Architecture
   ------------
