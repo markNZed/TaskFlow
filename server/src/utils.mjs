@@ -154,8 +154,8 @@ utils.filter_in = function(components, tasks, task) {
   for (const key in taskCopy) {
     if (!filter_list.includes(key)) {
       delete taskCopy[key];
-      if (!filter_for_server.includes(key)) {
-        console.log("Warning: Unknown task key " + key + " in task id " + task.id)
+      if (!filter_for_server.includes(key) && !key.startsWith('APPEND_') && !key.startsWith('PREPEND_')) {
+        console.log("Warning: Unknown task key not returned to client " + key + " in task id " + task.id)
       }
     }
   }

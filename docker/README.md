@@ -10,7 +10,7 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 
 # Notes
 
-Eventaully this wil lcapture how to deploy chat2flow in a production environment. 
+Eventaully this will capture how to deploy Chat2Flow in a production environment. 
 
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker-compose -f docker-compose-prod.yml up

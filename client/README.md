@@ -1,6 +1,6 @@
 # Client
 
-This is the frontend/client side of chat2flow written in Javascript using React and Material Design (MUI)
+This is the frontend/client side of Chat2Flow written in Javascript using React and Material Design (MUI)
 
 To install the node packages: `npm install` 
 

@@ -7,7 +7,7 @@ Compare with similar systems
     Standard interface to models (could reuse this)
     Model output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
-    The workflow in chat2flow is like an Agent in LangChain
+    The workflow in Chat2Flow is like an Agent in LangChain
   GPT-Index
     Should leverage this
   Open-AI Plugins
@@ -29,6 +29,7 @@ Backlog
   Bugs
   -----
   Scrolling to view suggested_prompts in TaskChat
+  Cleanup the initial authentication experience
 
   Features
   --------
@@ -104,7 +105,45 @@ Notes/Idea
         TaskFunction could run in a docker container
         Each TaskFunction could be a user on Linux
             User could run in a restricted environment e.g. firejail, bubblewrap
-    Administation/monitoring of chat2flow, could ping a service that alerts to problems
+    Administation/monitoring of Chat2Flow, could ping a service that alerts to problems
+    Is there a place for a scripting interfaec? Shell that understands Tasks.
+    Structure of the Task object:
+        * Shared between client and server:
+            * `id`
+            * `component` 
+            * `component_depth` 
+            * `next`  
+            * `forget`  
+            * `name`  
+            * `label`  
+            * `instanceId`  
+            * `threadId`  
+            * `children`  
+            * `done`  
+            * `steps`  
+            * `step`  
+            * `next_step` 
+            * `menu`  
+            * `update_count` 
+        * Server side only:
+            * `APPEND_*`
+            * `PREPEND_*` 
+            * `parent` 
+            * `parentId` 
+            * `parentInstanceId` 
+            * `agent` 
+            * `groups` 
+            * `parentId` 
+            * `sessionId` 
+            * `created` 
+            * `userId` 
+            * `prompt` 
+            * `assemble_prompt` 
+            * `last_change` 
+            * `update` 
+            * `delta_step` 
+            * `messages_template` 
+            * `messages`
 
   Infra
   -----
