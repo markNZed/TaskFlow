@@ -28,11 +28,12 @@ import { appLabel } from '../config';
 function Taskflows(props) {
 
   const { 
+    useTasksState,
     startTaskLoading,
     startTaskError,
     startTask,
     startTaskFn,
-    component_depth
+    component_depth,
   } = props
 
   const { globalState } = useGlobalStateContext();
