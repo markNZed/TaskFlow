@@ -17,6 +17,7 @@ const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
   }
 
   try {
+    //console.log("loading " + `./../Tasks/${is}`)
     Component = useDefaultPath
       ? require(`./../Tasks/${is}`).default
       : is;

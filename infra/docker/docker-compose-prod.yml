@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile-prod
     image: chat2flow-prod:latest
     volumes: 
-      - ..:/app/chat2flow
+      - ../..:/app/chat2flow
     networks:
       - web-proxy
 

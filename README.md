@@ -33,7 +33,7 @@ For developers Chat2Flow allows for a personal assistant that runs on your serve
 
 ## Getting Started
 
-To run Chat2Flow with docker, see [README.md](docker/README.md) in the docker directory.
+To run Chat2Flow with docker, see [README.md](infra/docker/README.md) in the docker directory.
 
 To learn more about the server, see [README.md](server/README.md) in the server directory.
 
@@ -43,7 +43,9 @@ To learn more about the client, see [README.md](client/README.md) in the client 
 
 Assuming the new task will be called TaskNew:
 * Create client/src/components/Tasks/TaskNew.js (copy an existing Task)
+* Add the license header to the file
 * Create server/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
+* Add the license header to the file
 * Add information about the new Task to server/config/components.mjs (this is typically a few lines)
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
@@ -51,6 +53,7 @@ You will need to include TaskNew in a sequence of tasks (or it could be standalo
   * add it directly to server/config/workflows.mjs
 * If the sequence is comlpicated/long then 
   * create a file in server/config/workflow/TaskNewFlow.mjs (copy the structure of an existing file)
+  * Add the license header to the file
   * edit server/config/workflows.mjs to import and include TaskNewFlow.mjs
 
 That should be all.

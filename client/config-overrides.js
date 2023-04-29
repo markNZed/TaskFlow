@@ -3,6 +3,7 @@
 const path = require('path');
 
 module.exports = {
+
   // The function to use to create a webpack dev server configuration when running the development
   // server with 'npm run start' or 'yarn start'.
   // Example: set the dev server to use a specific certificate in https.
@@ -25,6 +26,7 @@ module.exports = {
   },
 
   webpack: function (config, env) {
+    config.resolve.modules = [path.join(__dirname, 'shared', 'src')].concat(config.resolve.modules);
     config.resolve.modules = [path.resolve(__dirname, 'src')].concat(config.resolve.modules);
     return config;
   },

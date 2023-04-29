@@ -139,7 +139,7 @@ utils.filter_in = function(components, tasks, task) {
   // This assumes the components are not expanded - need to do this in dataconfig
   for (const c of task.component) {
     filter_list = filter_list.concat(components['root.' + c].filter_for_client)
-    filter_list = filter_list.concat(components['root.' + c].filter_for_server)
+    filter_for_server = filter_list.concat(components['root.' + c].filter_for_server)
   }
   if (task?.filter_for_client) {
     filter_list = filter_list.concat(task.filter_for_client)

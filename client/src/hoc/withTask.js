@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { delta, logWithComponent, getObjectDifference, hasOnlyResponseKey } from '../utils/utils'
+import { taskGet, taskMap } from 'taskAPI.mjs'
 import useUpdateTask from '../hooks/useUpdateTask';
 import useStartTask from '../hooks/useStartTask';
 import useNextTask from '../hooks/useNextTask';
@@ -14,7 +15,7 @@ function withTask(Component) {
 
   const WithDebugComponent = withDebug(Component);
 
-  const componentName = WithDebugComponent.displayName // S owe get the Component that was wrapped by withDebug
+  const componentName = WithDebugComponent.displayName // So we get the Component that was wrapped by withDebug
 
   function TaskComponent(props) {
 
@@ -108,10 +109,10 @@ function withTask(Component) {
           }
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          logWithComponent(componentName, name + " " + props.task.id + " changes:", diff)
+          logWithComponent(componentName, name + " " + state.id + " changes:", diff)
         }
         if (!props.task.id) {
-          console.log("Unexpected: Task wihtout id ", props.task)
+          console.log("Unexpected: Task wihtout id ", state)
         }
         setPrevTaskState(state);
       }, [state, prevTaskState]);
@@ -128,6 +129,53 @@ function withTask(Component) {
       }
     
       return [state, setTaskState]
+    }
+
+    function useTasksState(initialValue, name = "tasks") {
+      const [states, setStates] = useState(initialValue);
+      const [prevTasksState, setPrevTasksState] = useState({});
+    
+      useEffect(() => {
+        if (!states) {return}
+        for (let i = 0; i < states.length; i++) {
+          const state = states[i];
+          const prevTaskState = prevTasksState[i]
+          let diff
+          if (prevTaskState) {
+            diff = getObjectDifference(state, prevTaskState)
+          } else {
+            diff = state
+          }
+          let show_diff = true
+          if (hasOnlyResponseKey(diff)) {
+            if (!prevTaskState.response) {
+              diff.response = "..."
+            } else {
+              show_diff = false
+            }
+          }
+          if (show_diff && Object.keys(diff).length > 0) {
+            logWithComponent(componentName, name + " " + taskGet(state, 'id') + " changes:", diff)
+          }
+          if (!taskGet(state, 'id')) {
+            console.log("Unexpected: Task wihtout id ", state)
+          }
+        }
+        setPrevTasksState(states);
+      }, [states, prevTasksState]);
+
+      const setTasksState = (newStates) => {
+        if (typeof newStates === 'function') {
+          setStates((prevStates) => {
+            const updatedStates = newStates(prevStates);
+            return updatedStates;
+          });
+        } else {
+          setStates(newStates);
+        }
+      }
+    
+      return [states, setTasksState]
     }
     
     // Tracing
@@ -154,6 +202,7 @@ function withTask(Component) {
         useTaskWebSocket,
         component_depth: local_component_depth,
         useTaskState,
+        useTasksState,
     };
 
     return <WithDebugComponent {...componentProps} />;

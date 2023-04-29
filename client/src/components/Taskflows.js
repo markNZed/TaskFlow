@@ -36,7 +36,7 @@ function Taskflows(props) {
   } = props
 
   const { globalState } = useGlobalStateContext();
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useTasksState([]);
   const [tasksIds, setTasksIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel)
@@ -56,7 +56,7 @@ function Taskflows(props) {
       }
       setTitle(globalState.workflowsTree[globalState.selectedTaskId].label)
     }
-    if (globalState?.workflowLeafCount && globalState.workflowLeafCount == 1) {
+    if (globalState?.workflowLeafCount && globalState.workflowLeafCount === 1) {
       const sortedKeys = Object.keys(globalState.workflowsTree).sort((a, b) => a.length - b.length);
       const longestKey = sortedKeys[sortedKeys.length - 1];
       startTaskFn(globalState.workflowsTree[longestKey].id + '.start', null, component_depth + 1)

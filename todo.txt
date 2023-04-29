@@ -121,42 +121,41 @@ Notes/Idea
     Administation/monitoring of Chat2Flow, could ping a service that alerts to problems
     Is there a place for a scripting interfaec? Shell that understands Tasks.
     Structure of the Task object:
-        * Shared between client and server:
-            * `id`
-            * `component` 
-            * `component_depth` 
-            * `next`  
-            * `forget`  
-            * `name`  
-            * `label`  
-            * `instanceId`  
-            * `threadId`  
-            * `children`  
-            * `done`  
-            * `steps`  
-            * `step`  
-            * `next_step` 
-            * `menu`  
-            * `update_count` 
-        * Server side only:
+        * Shared between client and server
+             `id` // this should be type not id
+             `component` 
+             `component_depth` 
+             `next`  
+             `forget`  
+             `name`  // instead of label ?
+             `label`  // replace wih name
+             `instanceId`  // this should be id
+             `threadId`  
+             `children`  
+             `done`  
+             `steps`  
+             `step`  
+             `next_step` 
+             `menu`  // replaced by initiator
+             `update_count` 
+        * Server side only: (private to Task)
             * `APPEND_*`
             * `PREPEND_*` 
-            * `parent` 
-            * `parentId` 
-            * `parentInstanceId` 
-            * `agent` 
-            * `groups` 
-            * `parentId` 
-            * `sessionId` 
-            * `created` 
-            * `userId` 
-            * `prompt` 
-            * `assemble_prompt` 
-            * `last_change` 
-            * `update` 
-            * `delta_step` 
-            * `messages_template` 
-            * `messages`
+             `parent` // Replaced with parentType
+             `parentId` 
+             `parentInstanceId` // Replaced with parentId
+             `agent` 
+             `groups` 
+             `sessionId` 
+             `created` 
+             `userId` 
+             `prompt` 
+             `assemble_prompt` // promptTemplate
+             `last_change` 
+             `update` 
+             `delta_step` 
+             `messages_template`
+             `messages`
 
 Here is the recommended structure from GPT-4:
 
@@ -174,9 +173,93 @@ Here is the recommended structure from GPT-4:
   "output": {}, // Output data from the task, can be any JSON-serializable data
   "error": null, // Any error message or details in case the task encounters an error
   "metadata": {}, // Additional metadata related to the task, can be any JSON-serializable data
-  "dependencies": [], // Array of task IDs that this task depends on (if any)
+  "dependencies": [], // Array of task IDs that this task depends on (if any) Could wait on these ?
   "nextTasks": [] // Array of task IDs that should be executed after this task (if any)
 }
+
+Break into: private (stays within Task when possible, both input and output), public (transparent input and output), meta (structure, function)
+
+Private/public could just be a list like filtered_for_client
+Challenge is passing tasks to functions -- request/response relative to task
+Step -> state
+// If the server and client share a copy then could communicate only the difference between last version sent. This could be in the communication protocol.
+
+Use JSON Schema to define the object
+https://quicktype.io/ 
+https://github.com/bcherny/json-schema-to-typescript
+Better to have a single place where transforms are don - not on the fly.
+Load and transform then access natively
+
+Components needs more thought
+
+{
+  "meta": {
+    "privateMeta" : ["parentType", "parentId", "createdAt", "completedAt", "updatedAt", "error", "nextTasks", "dependencies", "children", "updateCount", "groups",] // list of private state variables
+    "publicMeta" : ["id", "type", "name", "description", "thread", "priority"] // list of public state variables
+    // Static
+    "id": "", // Unique identifier for the task (e.g., UUID)
+    "type": "", // Task type or category, useful for handling tasks differently based on their nature
+    "name": "", // Human-readable name or title of the task
+    "description": "", // Brief description of the task and its purpose
+    "createdAt": "", // Timestamp when the task was created
+    "completedAt": "", // Timestamp when the task was completed (if applicable)
+    "threadId": "", // id of the original task
+    "parentId" : "",
+    "parentType" : "",
+    "inititiator" : false, // Can this Task start a Taskflow (e.g. presented in menu)
+    "groups": [],
+    "userId": "",
+    "component" : [],
+    "version" : "", // Allow for Task data structure refactoring
+    // Dynamic
+    "updatedAt": "", // Timestamp when the task was last updated
+    "priority": 0, // Priority level of the task, useful for determining the order of task execution
+    "error": null, // Any error message or details in case the task encounters an error
+    "nextTasks": [] // Array of task IDs that should be executed after this task (if any)
+    "dependencies": [], // Array of task IDs that this task depends on (if any) Could wait on these ?
+    "children": [], // Array of task IDs that this task created
+    "updateCount": 0,
+    "send": "", // equivalent of update - where to send the Task for update
+    "componentDepth": 0,
+  },
+  "request": {
+    // API to external functionality
+    // Chat request:
+    "agent": "", // need another name
+    "prompt": "",
+    "systemMessage" : "",
+    "messages" : [],
+    "temperature" : 0,
+    "model" : "",
+    "forget" : false,
+  },
+  "response":{
+    // API from external functionality
+  },
+  "state": {
+      // static
+      "privateState" : ["nextState", "nextTasks"] // list of private state variables
+      "publicState" : ["id", "done"] // list of public state variables
+      "id" : ""
+      // dynamic
+      "nextState": {}, // allows for a lookup table for simple state machine, currently "steps"
+      "done": {}
+      },
+      "nextTasks" : [],
+      "sessionId" : "",
+      "deltaState" : "",
+      // Task specific example
+      "promptTemplate" : [], // was assemble_prompt
+      "systemMessageTemplate" : [],
+      "messagesTemplate" : [],
+  },
+  "input": {}, // Input data for the task, can be any JSON-serializable data
+  "output": {}, // Output data from the task, can be any JSON-serializable data
+}
+
+
+
+
 
 
   Infra
