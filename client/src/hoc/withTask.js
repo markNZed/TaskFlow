@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { delta, logWithComponent, getObjectDifference, hasOnlyResponseKey } from '../utils/utils'
-import { taskGet, taskMap } from 'taskAPI.mjs'
 import useUpdateTask from '../hooks/useUpdateTask';
 import useStartTask from '../hooks/useStartTask';
 import useNextTask from '../hooks/useNextTask';
@@ -155,9 +154,9 @@ function withTask(Component) {
             }
           }
           if (show_diff && Object.keys(diff).length > 0) {
-            logWithComponent(componentName, name + " " + taskGet(state, 'id') + " changes:", diff)
+            logWithComponent(componentName, name + " " + state.id + " changes:", diff)
           }
-          if (!taskGet(state, 'id')) {
+          if (!state?.id) {
             console.log("Unexpected: Task wihtout id ", state)
           }
         }
