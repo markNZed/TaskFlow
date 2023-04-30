@@ -1,6 +1,17 @@
 /* ToDo
 -------
-Do we have an issue with the streaming
+Do we have an issue with the streaming on first message?
+Create a shared object for task that is the current schema (create the schema too)
+  Single place where JSON is converted to JS on server and client
+    useNextTask, useStartTask, useUpdateTask (single utils function fetchTask)
+    websocket - should send part of task object
+      In TaskChat & TaskFromAgent message.mode, message.text 
+      JSON parsing in useFilteredWebsocket.js
+      Message: task.response.mode task.response.text 
+        On server side: chat.mjs
+  Map from old to new schema and refactor interface with client, then server, then remove translation
+    task/update task/start, websocket
+    
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
@@ -122,14 +133,14 @@ Notes/Idea
     Is there a place for a scripting interfaec? Shell that understands Tasks.
     Structure of the Task object:
         * Shared between client and server
-             `id` // this should be type not id
-             `component` 
-             `component_depth` 
+             `id` // this should be type not id, no type is component, id is like a path extendedType ?
+             `component` // stack
+             `component_depth` //stackPtr
              `next`  
              `forget`  
              `name`  // instead of label ?
              `label`  // replace wih name
-             `instanceId`  // this should be id
+             `instanceId` this is id
              `threadId`  
              `children`  
              `done`  
@@ -161,7 +172,7 @@ Here is the recommended structure from GPT-4:
 
 {
   "id": "", // Unique identifier for the task (e.g., UUID)
-  "type": "", // Task type or category, useful for handling tasks differently based on their nature
+  "type": "", // Task type or category, useful for handling tasks differently based on their natur
   "name": "", // Human-readable name or title of the task
   "description": "", // Brief description of the task and its purpose
   "status": "", // Current status of the task (e.g., "pending", "in-progress", "completed", "error")
@@ -190,27 +201,32 @@ https://github.com/bcherny/json-schema-to-typescript
 Better to have a single place where transforms are don - not on the fly.
 Load and transform then access natively
 
-Components needs more thought
+components.mjs is really a schema for Task - rename taskschema.mjs
+
+Privacy: a parallel data structure that is a copy of Task but with booleans.
+  Different services might have different privacy needs
+Split into different objects: outer which is standard for all tasks inner which is custom? No but be clear where this partition is.
 
 {
+  "privacy" : {}, // privacy object
   "meta": {
-    "privateMeta" : ["parentType", "parentId", "createdAt", "completedAt", "updatedAt", "error", "nextTasks", "dependencies", "children", "updateCount", "groups",] // list of private state variables
-    "publicMeta" : ["id", "type", "name", "description", "thread", "priority"] // list of public state variables
     // Static
     "id": "", // Unique identifier for the task (e.g., UUID)
-    "type": "", // Task type or category, useful for handling tasks differently based on their nature
-    "name": "", // Human-readable name or title of the task
-    "description": "", // Brief description of the task and its purpose
+    "type": "", // the baseType and configuration context
+    "baseType": "", // replaces will match with the stack entry at stackPtr
+    "name": "", // human-readable name or title of the task
     "createdAt": "", // Timestamp when the task was created
     "completedAt": "", // Timestamp when the task was completed (if applicable)
     "threadId": "", // id of the original task
     "parentId" : "",
     "parentType" : "",
     "inititiator" : false, // Can this Task start a Taskflow (e.g. presented in menu)
-    "groups": [],
+    "groups": [], // should be permissions or access
     "userId": "",
-    "component" : [],
-    "version" : "", // Allow for Task data structure refactoring
+    "stack" : [], 
+    "versionExternal" : "", // version of this particular Task functionality
+    "versionInternal" : "", // version of the general Task schema being used
+    "routing" : [], path of URL/IP of where to send, future placeholder
     // Dynamic
     "updatedAt": "", // Timestamp when the task was last updated
     "priority": 0, // Priority level of the task, useful for determining the order of task execution
@@ -219,10 +235,10 @@ Components needs more thought
     "dependencies": [], // Array of task IDs that this task depends on (if any) Could wait on these ?
     "children": [], // Array of task IDs that this task created
     "updateCount": 0,
-    "send": "", // equivalent of update - where to send the Task for update
-    "componentDepth": 0,
+    "send": "", // equivalent of update - when to send the Task for update
+    "stackPtr": 0, // index into the stack (should be the same as baseType)
   },
-  "request": {
+  "request": { // components should specify the request/response interface? Built on the fly
     // API to external functionality
     // Chat request:
     "agent": "", // need another name
@@ -232,29 +248,37 @@ Components needs more thought
     "temperature" : 0,
     "model" : "",
     "forget" : false,
+    "inputLabel" : "",
+    "version" : "",
   },
   "response":{
     // API from external functionality
+    "text" : "",
+    "userInput" : ""
+
   },
-  "state": {
+  "state": { // data the changes during the life of the Task
       // static
-      "privateState" : ["nextState", "nextTasks"] // list of private state variables
-      "publicState" : ["id", "done"] // list of public state variables
       "id" : ""
       // dynamic
-      "nextState": {}, // allows for a lookup table for simple state machine, currently "steps"
-      "done": {}
-      },
-      "nextTasks" : [],
+      "done": false,
       "sessionId" : "",
       "deltaState" : "",
-      // Task specific example
+      "current" : "",
+      "nextState" : "",
+  },
+  "config": {
+      // Task specific example e.g.
       "promptTemplate" : [], // was assemble_prompt
       "systemMessageTemplate" : [],
       "messagesTemplate" : [],
+      "suggestedPrompts" : [], 
+      "welcomeMessage": "",
+      "instruction": "",
+      "nextStates": {}, // allows for a lookup table for simple state machine, currently "steps"
   },
   "input": {}, // Input data for the task, can be any JSON-serializable data
-  "output": {}, // Output data from the task, can be any JSON-serializable data
+  "output": {}, // Output data from the task, can be any JSON-serializable data. The output is passed as input to the next Task(s)
 }
 
 

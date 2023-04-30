@@ -37,7 +37,7 @@ export function useGeolocation(enable) {
   useEffect(() => {
     if (location.latitude) {
       const reverse_lookup = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=18&addressdetails=1`
-      async function fetchData(reverse_lookup) { 
+      async function fetchLookup(reverse_lookup) { 
         let result = await fetch(reverse_lookup)
         .then((response) => response.json())
         .catch((err) => {
@@ -49,7 +49,7 @@ export function useGeolocation(enable) {
           return ''
         }
       }
-      fetchData(reverse_lookup).then((address) => {
+      fetchLookup(reverse_lookup).then((address) => {
         setAddress(address)
         console.log("Address set " + address)
       })

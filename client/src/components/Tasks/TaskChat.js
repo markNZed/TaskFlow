@@ -70,9 +70,11 @@ const TaskChat = (props) => {
       setResponsePending(false);
   }
 
-  useTaskWebSocket((message) => {
-    if (message?.mode && message?.text) {
-      updateResponse(message.mode, message.text);
+  useTaskWebSocket((partialTask) => {
+    if (partialTask?.response) {
+      if (partialTask.response?.mode && partialTask.response?.text) {
+        updateResponse(partialTask.response.mode, partialTask.response.text);
+      }
     }
   });
 

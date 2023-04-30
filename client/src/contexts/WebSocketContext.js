@@ -46,7 +46,6 @@ export function WebSocketProvider({ children, socketUrl}) {
         },
         onMessage: (e) => {
             webSocketEventEmitter.emit('message', e);
-            //console.log(e)
         },
         onClose: (e) => {
             console.log(`App webSocket closed with code ${e.code} and reason '${e.reason}'`);

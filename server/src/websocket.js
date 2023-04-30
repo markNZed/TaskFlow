@@ -12,7 +12,7 @@ function wsSendObject(ws, message = {}) {
     console.log("Lost websocket for wsSendObject");
   } else {
     ws.send(JSON.stringify(message));
-    //console.log("wsSendObject ", message )
+    //console.log("wsSendObject ", JSON.stringify(message) )
   }
 }
 

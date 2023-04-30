@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
-import { fetchData } from '../utils/fetchData'
+import { fetchTask } from '../utils/fetchTask'
 
 // We have: Start with startId, threadId
 //          Step with task
@@ -26,7 +26,7 @@ const useStartTask = (startId, threadId = null, depth = 0) => {
       try {
         setStartTaskLoading(true);
         //console.log("Starting task ", startId, threadId, depth)
-        const result = await fetchData(globalState, 'task/start', { startId: startId, threadId: threadId, component_depth: depth});
+        const result = await fetchTask(globalState, 'task/start', { startId: startId, threadId: threadId, component_depth: depth});
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);

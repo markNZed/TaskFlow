@@ -76,12 +76,13 @@ const TaskFromAgent = (props) => {
           }
     }
 
-    useTaskWebSocket((message) => {
-        if (message?.mode && message?.text) {
-          updateResponse(message.mode, message.text);
+    useTaskWebSocket((partialTask) => {
+        if (partialTask?.response) {
+          if (partialTask.response?.mode && partialTask.response?.text) {
+            updateResponse(partialTask.response.mode, partialTask.response.text);
+          }
         }
     });
-
 
     // Sub_task state machine
     // Unique for each component that requires steps

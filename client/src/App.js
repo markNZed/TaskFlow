@@ -26,7 +26,7 @@ function App() {
   //debug.enable(`${appAbbrev}:TaskConversation*`);
   debug.enable(`*`);
   
-  // Address is sent via utils/fetchData.js
+  // Address is sent via utils/fetchTask.js
   useEffect(() => {
     if (globalState?.use_address && !enableGeolocation) {
       setEnableGeolocation(true)
