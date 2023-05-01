@@ -13,7 +13,7 @@ import { fetchTask } from '../utils/fetchTask'
 //          Task with task
 // We should combine these
 
-const useStartTask = (startId, threadId = null, depth = 0) => {
+const useStartTask = (startId, threadId = null, component_depth = 0) => {
 
   const { globalState } = useGlobalStateContext();
   const [startTaskReturned, setStartTaskReturned] = useState();
@@ -26,7 +26,9 @@ const useStartTask = (startId, threadId = null, depth = 0) => {
       try {
         setStartTaskLoading(true);
         //console.log("Starting task ", startId, threadId, depth)
-        const result = await fetchTask(globalState, 'task/start', { startId: startId, threadId: threadId, component_depth: depth});
+        let task = {id: startId, component_depth: component_depth}
+        if (threadId) { task['threadId'] = threadId }
+        const result = await fetchTask(globalState, 'task/start', task);
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);

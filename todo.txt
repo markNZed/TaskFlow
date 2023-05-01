@@ -1,17 +1,9 @@
 /* ToDo
 -------
 Do we have an issue with the streaming on first message?
-Create a shared object for task that is the current schema (create the schema too)
-  Single place where JSON is converted to JS on server and client
-    useNextTask, useStartTask, useUpdateTask (single utils function fetchTask)
-    websocket - should send part of task object
-      In TaskChat & TaskFromAgent message.mode, message.text 
-      JSON parsing in useFilteredWebsocket.js
-      Message: task.response.mode task.response.text 
-        On server side: chat.mjs
-  Map from old to new schema and refactor interface with client, then server, then remove translation
-    task/update task/start, websocket
-    
+Map from old to new schema and refactor interface with client, then server, then remove translation
+  task/update task/start, websocket
+Add task type validation to websocket
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
@@ -69,11 +61,13 @@ Backlog
 
     Low Priority
     ------------
+    Move to TypeScript
     Way for tasks to register websocket event handlers
     Multiple language support 'i18next-http-middleware for server and react-i18next for client
     Defensive programming + logging
     Websocket for tasks (so server can drive) just send incremental info for the task
     Replace globalState with Redux
+    When sending task instance only send diff (client keeps server copy, server keeps client copy)
 
 Notes/Idea
 -----
@@ -168,7 +162,12 @@ Notes/Idea
              `messages_template`
              `messages`
 
+export { taskConverterToJson,  toTaskConverter };
+&& sed -i -e 's/module\\\\.exports = {/\\\\export default {/g' -e 's/};/};/g' src/shared/taskConverter.mjs\"
+ sed -i -e 's/module\.exports = {/export {/g' -e 's/};/};/g' src/shared/taskConverter.mjs
+
 Here is the recommended structure from GPT-4:
+
 
 {
   "id": "", // Unique identifier for the task (e.g., UUID)
@@ -206,6 +205,8 @@ components.mjs is really a schema for Task - rename taskschema.mjs
 Privacy: a parallel data structure that is a copy of Task but with booleans.
   Different services might have different privacy needs
 Split into different objects: outer which is standard for all tasks inner which is custom? No but be clear where this partition is.
+
+Pass as task and allow for sideband signals.
 
 {
   "privacy" : {}, // privacy object
@@ -281,15 +282,4 @@ Split into different objects: outer which is standard for all tasks inner which 
   "output": {}, // Output data from the task, can be any JSON-serializable data. The output is passed as input to the next Task(s)
 }
 
-
-
-
-
-
-  Infra
-  -----
-  Run prod version instead of dev
-  https://modal.com/
-
--------
-*/
+To create schema:

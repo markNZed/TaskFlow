@@ -1,21 +1,49 @@
-import { serverUrl } from '../config';
+import { serverUrl } from '../config'
+import { toTaskConverter, taskConverterToJson } from '../shared/taskConverter'
+import { log } from './utils'
 
-// This was extracted into a common util function because we set body_options_default
+export const fetchTask = async (globalState, end_point, task) => {
+  const sideband = {
+    sessionId: globalState.sessionId,
+    address: globalState?.address,
+  };
 
-export const fetchTask = async (globalState, end_point, body_options) => {
-    const body_options_default = {
-      sessionId: globalState.sessionId,
-      address: globalState?.address
-    }
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ ...body_options_default, ...body_options }),
+  let messageJsonString;
+
+  log("task", task)
+
+  try {
+    const validatedTaskJsonString = taskConverterToJson(task);
+    const validatedTaskObject = JSON.parse(validatedTaskJsonString);
+    const messageObject = {
+      ...sideband,
+      task: validatedTaskObject,
     };
-  
-    const response = await fetch(`${serverUrl}api/${end_point}`, requestOptions);
-    const data = await response.json();
-    return data;
+    messageJsonString = JSON.stringify(messageObject);
+  } catch (error) {
+    console.error("Error while converting Task to JSON:", error, task);
+    return;
+  }
+
+  log("messageJsonString", messageJsonString);
+
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: messageJsonString,
+  };
+
+  const response = await fetch(`${serverUrl}api/${end_point}`, requestOptions);
+
+  const data = await response.json();
+
+  try {
+    const task = toTaskConverter(JSON.stringify(data.task));
+    return task;
+  } catch (error) {
+    console.error("Error while converting JSON to Task:", error, data);
+  }
 };
+
   

@@ -149,7 +149,8 @@ router.post('/update', async (req, res) => {
       }
   
       let updated_client_task = utils.filter_in(components,tasks, updated_task)
-      res.send(JSON.stringify(updated_client_task));
+      //console.log(JSON.stringify({task : updated_client_task}))
+      res.send(JSON.stringify({task : updated_client_task}));
     } else {
       res.status(200).json({ error: "No user" });
     }
@@ -159,12 +160,12 @@ router.post('/start', async (req, res) => {
     console.log("/api/task/start")
     let userId = utils.getUserId(req)
     if (userId) {
-      //console.log("req.body " + JSON.stringify(req.body))
+      console.log("req.body " + JSON.stringify(req.body))
       const sessionId = req.body.sessionId;
-      const startId = req.body.startId;
-      const threadId = req.body?.threadId;
-      const component_depth = req.body?.component_depth;
-      let groupId = req.body.groupId;
+      const startId = req.body.task.id;
+      const threadId = req.body.task?.threadId;
+      const component_depth = req.body.task.component_depth;
+      let groupId = req.body.task?.groupId;
       let address = req.body.address;
   
       if (!tasks[startId]) {
@@ -238,7 +239,7 @@ router.post('/start', async (req, res) => {
         await instancesStore_async.set(task.instanceId, task)
     
         let updated_client_task = utils.filter_in(components,tasks, task)
-        res.send(JSON.stringify(updated_client_task));
+        res.send(JSON.stringify({task : updated_client_task}));
       }
     } else {
       res.status(200).json({ error: "No user" });

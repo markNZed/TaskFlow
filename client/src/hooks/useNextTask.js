@@ -26,7 +26,7 @@ const useNextTask = (task) => {
       const fetchTaskFromAPI = async () => {
         try {
           setNextTaskLoading(true);
-          const result = await fetchTask(globalState, 'task/update', { task : task });
+          const result = await fetchTask(globalState, 'task/update', task);
           setNextTask(result);
         } catch (error) {
           setNextTaskError(error.message);

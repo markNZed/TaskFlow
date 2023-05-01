@@ -27,7 +27,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           setUpdateTaskLoading(true);
           setTask((p) => { return {...p, updated: false, updating: true}})
           //console.log("useUpdateTask before: ", task)
-          const result = await fetchTask(globalState, 'task/update', { task: task });
+          const result = await fetchTask(globalState, 'task/update', task);
           setTask((p) => { return {...p, ...result, updated: true, update: false, updating: false}})
           //console.log("useUpdateTask after: ", result)
         } catch (error) {
