@@ -196,6 +196,7 @@ const typeMap = {
         { json: "name", js: "name", typ: u(undefined, "") },
         { json: "next", js: "next", typ: u(undefined, "") },
         { json: "next_step", js: "next_step", typ: u(undefined, "") },
+        { json: "one_thread", js: "one_thread", typ: u(undefined, true) },
         { json: "parent", js: "parent", typ: u(undefined, "") },
         { json: "parentId", js: "parentId", typ: u(undefined, "") },
         { json: "parentInstanceId", js: "parentInstanceId", typ: u(undefined, "") },
@@ -212,6 +213,7 @@ const typeMap = {
         { json: "updated", js: "updated", typ: u(undefined, true) },
         { json: "updating", js: "updating", typ: u(undefined, true) },
         { json: "userId", js: "userId", typ: u(undefined, "") },
+        { json: "welcome_message", js: "welcome_message", typ: u(undefined, "") },
     ], false),
     "Message": o([
         { json: "content", js: "content", typ: a("") },

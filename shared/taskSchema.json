@@ -148,6 +148,12 @@
                 },
                 "userId": {
                     "type": "string"
+                },
+                "welcome_message": {
+                    "type": "string"
+                },
+                "one_thread": {
+                    "type": "boolean"
                 }
             },
             "required": [
