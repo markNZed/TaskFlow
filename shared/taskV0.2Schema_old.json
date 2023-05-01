@@ -45,8 +45,47 @@
         },
         "Config": {
             "type": "object",
-            "additionalProperties": true,
-            "title": "Configuration"
+            "additionalProperties": {},
+            "properties": {
+                "instruction": {
+                    "type": "string"
+                },
+                "messagesTemplate": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/Messages"
+                    }
+                },
+                "nextStates": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "promptTemplate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "suggestedPrompts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "systemMessageTemplate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "welcomeMessage": {
+                    "type": "string"
+                }
+            },
+            "required": [],
+            "title": "Config"
         },
         "Meta": {
             "type": "object",
@@ -69,6 +108,12 @@
                     "type": "string",
                     "format": "date-time"
                 },
+                "dependencies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "error": {
                     "anyOf": [
                         {
@@ -79,7 +124,7 @@
                         }
                     ]
                 },
-                "permissions": {
+                "groups": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -105,6 +150,15 @@
                 },
                 "parentType": {
                     "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "routing": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "send": {
                     "type": "string"
@@ -152,14 +206,59 @@
         },
         "Request": {
             "type": "object",
-            "additionalProperties": true,
+            "additionalProperties": {},
+            "properties": {
+                "agent": {
+                    "type": "string"
+                },
+                "forget": {
+                    "type": "boolean"
+                },
+                "inputLabel": {
+                    "type": "string"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/Messages"
+                    }
+                },
+                "model": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "systemMessage": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "type": "number"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [],
             "title": "Request"
         },
         "Response": {
             "type": "object",
-            "additionalProperties": true,
+            "additionalProperties": {},
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "userInput": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "text",
+                "userInput"
+            ],
             "title": "Response"
-        },               
+        },
         "State": {
             "type": "object",
             "additionalProperties": {},
@@ -178,10 +277,34 @@
                 },
                 "nextState": {
                     "type": "string"
+                },
+                "sessionId": {
+                    "type": "string"
                 }
             },
             "required": [],
             "title": "State"
+        },
+        "Messages": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role": {
+                    "type": "string",
+                    "enum": ["user", "assistant"]
+                }
+            },
+            "required": [
+                "content",
+                "role"
+            ],
+            "title": "Message"
         }
     }
 }

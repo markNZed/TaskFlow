@@ -1,5 +1,5 @@
 import { serverUrl } from '../config'
-import { toTaskConverter, taskConverterToJson } from '../shared/taskConverter'
+import { toTask, fromTask } from './taskConverterWrapper'
 import { log } from './utils'
 
 export const fetchTask = async (globalState, end_point, task) => {
@@ -13,7 +13,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   log("task", task)
 
   try {
-    const validatedTaskJsonString = taskConverterToJson(task);
+    const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
     const messageObject = {
       ...sideband,
@@ -39,7 +39,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   const data = await response.json();
 
   try {
-    const task = toTaskConverter(JSON.stringify(data.task));
+    const task = toTask(JSON.stringify(data.task));
     return task;
   } catch (error) {
     console.error("Error while converting JSON to Task:", error, data);
