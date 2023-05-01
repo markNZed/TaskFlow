@@ -4,6 +4,7 @@ Do we have an issue with the streaming on first message?
 Map from old to new schema and refactor interface with client, then server, then remove translation
   task/update task/start, websocket
 Add task type validation to websocket
+Add task type validation to return from TaskFunctions
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
