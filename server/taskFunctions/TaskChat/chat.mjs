@@ -159,6 +159,10 @@ async function chat_prepare(task) {
   }
 
 }
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
   
 // Build the parameters that are specific to ChatGPTAPI
 // Manage cache
@@ -256,11 +260,13 @@ async function ChatGPTAPI_request(params) {
     const words = text.split(" ");
     // call SendIncrementalWs for each word
     let partialText = ""
-    words.forEach((word) => {
-      partialText += word
-      const partialResponse = {'delta' : word, 'text' : partialText}
+    for (const word of words) {
+      const delta = word + " "
+      partialText += delta
+      const partialResponse = {'delta' : delta, 'text' : partialText}
       SendIncrementalWs(partialResponse, instanceId, ws);
-    });
+      await sleep(50);
+    }
     message_from('cache', text, server_only, ws, instanceId)
     response_text_promise = Promise.resolve(text);
   } else {

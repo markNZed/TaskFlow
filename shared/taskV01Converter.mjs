@@ -9,11 +9,11 @@
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
-function toTaskV01Converter(json) {
+function toTaskConverter(json) {
     return cast(JSON.parse(json), r("TaskV01Converter"));
 }
 
-function taskV01ConverterToJson(value) {
+function taskConverterToJson(value) {
     return JSON.stringify(uncast(value, r("TaskV01Converter")), null, 2);
 }
 
@@ -226,6 +226,6 @@ const typeMap = {
 };
 
 export {
-    "taskV01ConverterToJson": taskV01ConverterToJson,
-    "toTaskV01Converter": toTaskV01Converter,
+    taskConverterToJson,
+    toTaskConverter,
 };
