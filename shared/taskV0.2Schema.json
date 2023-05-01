@@ -3,6 +3,7 @@
     "$ref": "#/definitions/Task",
     "definitions": {
         "Task": {
+            "title": "Task Object Definition",
             "type": "object",
             "additionalProperties": {},
             "properties": {
@@ -40,8 +41,7 @@
                 "request",
                 "response",
                 "state"
-            ],
-            "title": "Task"
+            ]
         },
         "Config": {
             "type": "object",
@@ -109,10 +109,12 @@
                     }
                 },
                 "completedAt": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "createdAt": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "dependencies": {
                     "type": "array",
@@ -188,7 +190,8 @@
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "userId": {
                     "type": "string"
@@ -313,7 +316,8 @@
                     }
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": ["user", "assistant"]
                 }
             },
             "required": [
