@@ -2,7 +2,7 @@
 //
 //   const Convert = require("./file");
 //
-//   const taskV01Converter = Convert.toTaskV01Converter(json);
+//   const taskV01Converter = Convert.toTaskConverter(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
@@ -212,6 +212,7 @@ const typeMap = {
         { json: "update_count", js: "update_count", typ: u(undefined, 0) },
         { json: "updated", js: "updated", typ: u(undefined, true) },
         { json: "updating", js: "updating", typ: u(undefined, true) },
+        { json: "use_address", js: "use_address", typ: u(undefined, true) },
         { json: "userId", js: "userId", typ: u(undefined, "") },
         { json: "welcome_message", js: "welcome_message", typ: u(undefined, "") },
     ], false),
