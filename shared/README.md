@@ -4,5 +4,5 @@ In a JSON schema, the title attribute is used to provide a short, human-readable
 
 Open Issues
 -----------
-How to deal with Task specific schema ?
+How to deal with Task specific schema ? We will create separate schema files 
 Move sessionId out of Task?

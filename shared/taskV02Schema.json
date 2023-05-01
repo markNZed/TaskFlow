@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Task",
+    "definitions": {
+        "Task": {
+            "title": "Task Object Definition",
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "meta": {
+                    "$ref": "./externalV02schema.json#/definitions/Meta"
+                },
+                "privacy": {
+                    "$ref": "./externalV02schema.json#/definitions/Privacy"
+                },
+                "input": {
+                    "$ref": "./externalV02schema.json#/definitions/Input"
+                },
+                "output": {
+                    "$ref": "./externalV02schema.json#/definitions/Output"
+                },
+                "config": {
+                    "$ref": "./internalV02schema.json#/definitions/Config"
+                },
+                "state": {
+                    "$ref": "./internalV02schema.json#/definitions/State"
+                },                
+                "request": {
+                    "$ref": "./internalV02schema.json#/definitions/Request"
+                },
+                "response": {
+                    "$ref": "./internalV02schema.json#/definitions/Response"
+                }
+            },
+            "required": [
+                "meta",
+                "privacy"
+            ]
+        }
+    }
+}

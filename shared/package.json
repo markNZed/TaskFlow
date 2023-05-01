@@ -1,0 +1,12 @@
+{
+    "name": "shared",
+    "version": "1.0.0",
+    "scripts": {
+        "generate-converter": "nodemon --watch *.json --exec ./generate-task-converter.sh",
+        "generate-converter-help": "quicktype --help"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22",
+        "quicktype": "^23.0.30"
+    }
+}

@@ -4,9 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "server": "nodemon --watch ../../chat-config --watch ../chat-config --watch . --ignore src/shared/taskV0.1Schema.json server",
-    "generate-converter": "nodemon --watch src/shared/taskSchema.json --exec  ./generate-task-converter.sh",
-    "generate-converter-help": "quicktype --help"
+    "server": "nodemon --watch ../../chat-config --watch ../chat-config --watch . --ignore src/shared/taskV0.1Schema.json server"
   },
   "dependencies": {
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",

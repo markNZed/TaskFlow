@@ -2,19 +2,19 @@
 //
 //   const Convert = require("./file");
 //
-//   const taskConverter = Convert.toTaskConverter(json);
+//   const taskV01Converter = Convert.toTaskV01Converter(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
-function toTaskConverter(json) {
-    return cast(JSON.parse(json), r("TaskConverter"));
+function toTaskV01Converter(json) {
+    return cast(JSON.parse(json), r("TaskV01Converter"));
 }
 
-function taskConverterToJson(value) {
-    return JSON.stringify(uncast(value, r("TaskConverter")), null, 2);
+function taskV01ConverterToJson(value) {
+    return JSON.stringify(uncast(value, r("TaskV01Converter")), null, 2);
 }
 
 function invalidValue(typ, val, key, parent = '') {
@@ -170,7 +170,7 @@ function r(name) {
 }
 
 const typeMap = {
-    "TaskConverter": o([
+    "TaskV01Converter": o([
         { json: "agent", js: "agent", typ: u(undefined, "") },
         { json: "assemble_prompt", js: "assemble_prompt", typ: u(undefined, a("")) },
         { json: "children", js: "children", typ: u(undefined, a("any")) },
@@ -226,6 +226,6 @@ const typeMap = {
 };
 
 export {
-    taskConverterToJson,
-    toTaskConverter,
+    "taskV01ConverterToJson": taskV01ConverterToJson,
+    "toTaskV01Converter": toTaskV01Converter,
 };

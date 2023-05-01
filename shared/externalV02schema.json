@@ -2,52 +2,6 @@
     "$schema": "http://json-schema.org/draft-06/schema#",
     "$ref": "#/definitions/Task",
     "definitions": {
-        "Task": {
-            "title": "Task Object Definition",
-            "type": "object",
-            "additionalProperties": {},
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/Config"
-                },
-                "input": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "meta": {
-                    "$ref": "#/definitions/Meta"
-                },
-                "output": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "privacy": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "request": {
-                    "$ref": "#/definitions/Request"
-                },
-                "response": {
-                    "$ref": "#/definitions/Response"
-                },
-                "state": {
-                    "$ref": "#/definitions/State"
-                }
-            },
-            "required": [
-                "config",
-                "meta",
-                "request",
-                "response",
-                "state"
-            ]
-        },
-        "Config": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Configuration"
-        },
         "Meta": {
             "type": "object",
             "additionalProperties": {},
@@ -150,38 +104,17 @@
             ],
             "title": "Meta"
         },
-        "Request": {
+        "Privacy": {
             "type": "object",
-            "additionalProperties": true,
-            "title": "Request"
+            "additionalProperties": {}
         },
-        "Response": {
+        "Input": {
             "type": "object",
-            "additionalProperties": true,
-            "title": "Response"
-        },               
-        "State": {
+            "additionalProperties": {}
+        },
+        "Output": {
             "type": "object",
-            "additionalProperties": {},
-            "properties": {
-                "current": {
-                    "type": "string"
-                },
-                "deltaState": {
-                    "type": "string"
-                },
-                "done": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "nextState": {
-                    "type": "string"
-                }
-            },
-            "required": [],
-            "title": "State"
+            "additionalProperties": {}
         }
     }
 }
