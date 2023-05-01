@@ -1,0 +1,326 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Task",
+    "definitions": {
+        "Task": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/Config"
+                },
+                "input": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "meta": {
+                    "$ref": "#/definitions/Meta"
+                },
+                "output": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "privacy": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "request": {
+                    "$ref": "#/definitions/Request"
+                },
+                "response": {
+                    "$ref": "#/definitions/Response"
+                },
+                "state": {
+                    "$ref": "#/definitions/State"
+                }
+            },
+            "required": [
+                "config",
+                "meta",
+                "request",
+                "response",
+                "state"
+            ],
+            "title": "Task"
+        },
+        "Config": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "instruction": {
+                    "type": "string"
+                },
+                "messagesTemplate": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/Messages"
+                    }
+                },
+                "nextStates": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "promptTemplate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "suggestedPrompts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "systemMessageTemplate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "welcomeMessage": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "instruction",
+                "messagesTemplate",
+                "nextStates",
+                "promptTemplate",
+                "suggestedPrompts",
+                "systemMessageTemplate",
+                "welcomeMessage"
+            ],
+            "title": "Config"
+        },
+        "Meta": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "baseType": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "completedAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dependencies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "error": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "initiator": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nextTasks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "parentId": {
+                    "type": "string"
+                },
+                "parentType": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "routing": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "send": {
+                    "type": "string"
+                },
+                "stack": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "stackPtr": {
+                    "type": "integer"
+                },
+                "threadId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updateCount": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "versionExternal": {
+                    "type": "string"
+                },
+                "versionInternal": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "baseType",
+                "createdAt",
+                "id",
+                "name",
+                "type",
+                "updatedAt"
+            ],
+            "title": "Meta"
+        },
+        "Request": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "agent": {
+                    "type": "string"
+                },
+                "forget": {
+                    "type": "boolean"
+                },
+                "inputLabel": {
+                    "type": "string"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/Messages"
+                    }
+                },
+                "model": {
+                    "type": "string"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "systemMessage": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "type": "number"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "agent",
+                "messages",
+                "prompt",
+                "systemMessage"
+            ],
+            "title": "Request"
+        },
+        "Response": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "userInput": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "text",
+                "userInput"
+            ],
+            "title": "Response"
+        },
+        "State": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "current": {
+                    "type": "string"
+                },
+                "deltaState": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nextState": {
+                    "type": "string"
+                },
+                "sessionId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "current",
+                "done",
+                "id",
+                "nextState",
+                "sessionId"
+            ],
+            "title": "State"
+        },
+        "Messages": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "content",
+                "role"
+            ],
+            "title": "Message"
+        }
+    }
+}
