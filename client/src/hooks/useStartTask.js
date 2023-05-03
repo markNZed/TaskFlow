@@ -7,8 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { fetchTask } from '../utils/fetchTask'
-import { toTask, fromTask } from '../utils/taskConverterWrapper'
-import { fromV01toV02, fromV02toV01 } from '../shared/taskV01toV02Map'
 import { log } from '../utils/utils'
 
 const useStartTask = (startId, threadId = null, component_depth = 0) => {
@@ -25,12 +23,9 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
         setStartTaskLoading(true);
         log("useStartTask", startId)
         //console.log("Starting task ", startId, threadId, depth)
-        let task = {id: startId, component_depth: component_depth}
-        // map to v02
-        let taskV02
-        taskV02 = fromV01toV02(task)
-        if (threadId) { task['threadId'] = threadId }
-        const result = await fetchTask(globalState, 'task/start', taskV02);
+        let task = {meta:{id: startId, stackPtr: component_depth}}
+        if (threadId) { task.meta['threadId'] = threadId }
+        const result = await fetchTask(globalState, 'task/start', task);
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);

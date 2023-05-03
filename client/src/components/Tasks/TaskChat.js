@@ -40,7 +40,7 @@ ToDo:
 
 const TaskChat = (props) => {
 
-  const { log, useTaskWebSocket, updateTask, updateTaskV2, updateStep, updateStepV2, updateTaskLoading, task, setTask, component_depth } = props
+  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask, component_depth } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
@@ -49,7 +49,7 @@ const TaskChat = (props) => {
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
-    updateTask({component_depth : component_depth})
+    updateTask({'meta.stackPtr' : component_depth})
   }, []);
 
   function updateResponse(mode, text) {
@@ -57,18 +57,18 @@ const TaskChat = (props) => {
         case 'delta':
           // Don't use updateTask because we want to append to a property in the task
           let partialText = ''
-          if (task.v02.response.text) {
-            partialText = task.v02.response.text
+          if (task.response.text) {
+            partialText = task.response.text
           }
           partialText += text
-          updateTaskV2({ 'v02.response.text': partialText });
+          updateTask({ 'response.text': partialText });
           break;
         case 'partial':
-          updateTaskV2({ 'v02.response.text': text });
+          updateTask({ 'response.text': text });
           break;
         case 'final':
           // So observers of the task know we finished
-          updateTaskV2({ 'v02.response.text': text });
+          updateTask({ 'response.text': text });
           break;
       }
       // Indicates the response has started
@@ -87,22 +87,22 @@ const TaskChat = (props) => {
   useEffect(() => {
     if (!task) {return}
     if (updateTaskLoading) { // Should this be part of the task object
-      if (task.v02.state.current === 'sending') {
+      if (task.state.current === 'sending') {
         // Start receiving
         updateStep('receiving')
       }
-    } else if (task.v02.state.current === 'receiving') {
+    } else if (task.state.current === 'receiving') {
         // The response also returns the compete text, which may already be updated by websocket.
-        updateResponse('final', task.v02.response.text)
+        updateResponse('final', task.response.text)
     }
   }, [updateTaskLoading]);
 
   useEffect(() => {
-    if (task && task.v02.state.current === 'input' && task.v02.state.deltaState !== 'input') {
+    if (task && task.state.current === 'input' && task.state.deltaState !== 'input') {
       // The server set the state to input so we set deltaState
       // Could look after this in useUpdateTask
       // Reset the request so we can use response.text for partial response
-      updateTaskV2({ 'v02.request.input': "", 'v02.response.text': "", 'v02.state.deltaState': 'input' })
+      updateTask({ 'request.input': "", 'response.text': "", 'state.deltaState': 'input' })
     }
   }, [task]);
 
@@ -112,7 +112,7 @@ const TaskChat = (props) => {
     setResponsePending(true);
     // Set update to send to server
     updateStep('sending')
-    updateTaskV2({ 'v02.request.input': prompt, 'v02.meta.send': true });
+    updateTask({ 'request.input': prompt, 'meta.send': true });
     //updateTask({ client_prompt: prompt, update: true, response: '' });
     // Clear the textbox
     setPrompt("");

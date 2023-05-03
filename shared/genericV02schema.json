@@ -108,40 +108,41 @@
                 }
             },
             "required": [
-                "createdAt",
-                "id",
-                "name",
+                "id"
             ],
             "title": "Meta"
         },
         "Privacy": {
             "type": "object",
-            "additionalProperties": {}
+            "additionalProperties": true,
+            "title": "Privacy"
         },
         "Input": {
             "type": "object",
-            "additionalProperties": {}
+            "additionalProperties": true,
+            "title": "Input"
         },
         "Output": {
             "type": "object",
-            "additionalProperties": {}
+            "additionalProperties": true,
+            "title": "Output"
         },
         "Config": {
             "type": "object",
             "additionalProperties": true,
             "title": "Configuration"
           },
-          "Request": {
+        "Request": {
             "type": "object",
             "additionalProperties": true,
             "title": "Request"
-          },
-          "Response": {
+        },
+        "Response": {
             "type": "object",
             "additionalProperties": true,
             "title": "Response"
-          },
-          "State": {
+        },
+        "State": {
             "type": "object",
             "additionalProperties": {},
             "properties": {
@@ -163,6 +164,6 @@
             },
             "required": [],
             "title": "State"
-          }
+        }
     }
 }

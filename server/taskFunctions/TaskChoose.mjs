@@ -21,19 +21,19 @@ const TaskChoose_async = async function(task) {
     const T = utils.createTaskValueGetter(task)
 
     // First we get the response
-    console.log("TaskChoose meta.name " + T('v02.meta.name'))
+    console.log("TaskChoose meta.name " + T('meta.name'))
   
-    T('v02.response.text', null) // Avoid using previously stored response
+    T('response.text', null) // Avoid using previously stored response
     let subtask = await TaskFromAgent_async(task) 
 
     const ST = utils.createTaskValueGetter(subtask)
 
     console.log(task)
   
-    const next_responses = Object.keys(T('v02.config.nextStateTemplate'))
-    const next_states = Object.values(T('v02.config.nextStateTemplate'))
+    const next_responses = Object.keys(T('config.nextStateTemplate'))
+    const next_states = Object.values(T('config.nextStateTemplate'))
     
-    const phrases = [ST('v02.response.text'), ...next_responses];
+    const phrases = [ST('response.text'), ...next_responses];
     
     try {
       const embeddingsData = await model.embed(phrases);
@@ -62,13 +62,13 @@ const TaskChoose_async = async function(task) {
       embeddingsData.dispose();
     
       // Need to go to next state, can stay on server side
-      T('v02.meta.nextTask', next_states[maxIndex])
-      T('v02.state.done', true)
+      T('meta.nextTask', next_states[maxIndex])
+      T('state.done', true)
   
     } catch (error) {
       // Handle the error here
       console.error('An error occurred:', error);
-      T('v02.meta.error', error.message)
+      T('meta.error', error.message)
     }
 
     return task

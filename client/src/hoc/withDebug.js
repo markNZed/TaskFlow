@@ -25,22 +25,22 @@ function withDebug(Component) {
         const diff = getObjectDifference(props.task, props.prevTask);
         let show_diff = true
         if (hasOnlyResponseKey(diff)) {
-          if (!props.prevTask.response) {
-            diff.response = " ..."
+          if (!props.prevTask.response?.text) {
+            diff.response.text = " ..."
           } else {
             show_diff = false
           }
         }
-        if (diff?.response && diff.response.length > 0) {
-          diff.response = diff.response.slice(0, 20) + " ...";
+        if (diff.response?.text && diff.response.text.length > 0) {
+          diff.response.text = diff.response.text.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if ( props.task.component_depth === props.component_depth) {
-            log("Task " + props.task.id + " changes:", diff)
+          if (!props.task.meta.id) {
+            console.log("Weird ", props.task)
           }
-        }
-        if (!props.task.id) {
-          console.log("Weird ", props.task)
+          if ( props.task.meta.stackPtr === props.component_depth) {
+            log("Task " + props.task.meta.stackPtr + " " + props.task.meta.id + " changes:", diff)
+          }
         }
       }
     }, [props.task]);

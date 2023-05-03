@@ -11,14 +11,14 @@ const TaskShowResponse_async = async function(task) {
 
   const T = utils.createTaskValueGetter(task)
 
-  console.log("TaskShowResponse meta.name " + T('v02.meta.name'))
+  console.log("TaskShowResponse meta.name " + T('meta.name'))
 
     let threadTasks = {}
-    const parentId = T('v02.meta.parentId')
-    if (T('v02.config.promptTemplate')) {
+    const parentId = T('meta.parentId')
+    if (T('config.promptTemplate')) {
       // We get the potentially relevant instances 
-      // Note we assume T('v02.meta.id') is unique in the thread (may not be true)
-      const instanceIds = await threadsStore_async.get(T('v02.meta.threadId'))
+      // Note we assume T('meta.id') is unique in the thread (may not be true)
+      const instanceIds = await threadsStore_async.get(T('meta.threadId'))
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
         threadTasks[tmp.id] = tmp;
@@ -26,8 +26,8 @@ const TaskShowResponse_async = async function(task) {
     }
 
     let response = ''
-    if (T('v02.config.promptTemplate')) {
-      response += T('v02.config.promptTemplate').reduce(function(acc, curr) {
+    if (T('config.promptTemplate')) {
+      response += T('config.promptTemplate').reduce(function(acc, curr) {
         // Currently this assumes the parts are from the same workflow, could extend this
         const regex = /(^.+)\.(.+$)/;
         const matches = regex.exec(curr);
@@ -47,10 +47,10 @@ const TaskShowResponse_async = async function(task) {
       });
       console.log("Assembled response " + prompt)
     } else {
-      response = T('v02.response.text')
+      response = T('response.text')
     }
     console.log("Returning from tasks.TaskShowResponse")
-    T('v02.response.text', response)
+    T('response.text', response)
     return task
 }
 

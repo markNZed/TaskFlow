@@ -11,11 +11,11 @@ const TaskFromAgent_async = async function(task) {
   
   const T = utils.createTaskValueGetter(task)
 
-  console.log("TaskFromAgent meta.name " + T('v02.meta.name') + " step " + T('v02.state.current'))
+  console.log("TaskFromAgent meta.name " + T('meta.name') + " step " + T('state.current'))
   
     // We have two potential steps: ['response', 'input']
     // We want to receive the task object from the client and from the server
-    if (T('v02.state.current') === 'input') {
+    if (T('state.current') === 'input') {
       // Nothing to do could update instance
       console.log('Returning task state input')
       return task
@@ -24,11 +24,11 @@ const TaskFromAgent_async = async function(task) {
     // Here we assume we are dealing with response step
 
     let threadTasks = {}
-    const parentId = T('v02.meta.parentId')
-    if (T('v02.config.messagesTemplate')) {
+    const parentId = T('meta.parentId')
+    if (T('config.messagesTemplate')) {
       // We get the potentially relevant instances 
-      // Note we assume T('v02.meta.id') is unique in the thread (may not be true)
-      const instanceIds = await threadsStore_async.get(T('v02.meta.threadId'))
+      // Note we assume T('meta.id') is unique in the thread (may not be true)
+      const instanceIds = await threadsStore_async.get(T('meta.threadId'))
       //console.log("instanceIds ", instanceIds)
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
@@ -40,8 +40,8 @@ const TaskFromAgent_async = async function(task) {
     //console.log("threadTasks ", threadTasks)
   
     let prompt = ""
-    if (T('v02.config.promptTemplate')) {
-      prompt += T('v02.config.promptTemplate').reduce(function(acc, curr) {
+    if (T('config.promptTemplate')) {
+      prompt += T('config.promptTemplate').reduce(function(acc, curr) {
         // Currently this assumes the parts are from the same workflow, could extend this
         const regex = /(^.+)\.(.+$)/;
         const matches = regex.exec(curr);
@@ -66,19 +66,19 @@ const TaskFromAgent_async = async function(task) {
       });
       console.log("Prompt " + prompt)
     } else {
-      if (T('v02.request.input')) {
-        prompt += T('v02.request.input')
+      if (T('request.input')) {
+        prompt += T('request.input')
         //console.log("Client prompt " + prompt)
       } else {
-        prompt = T('v02.request.prompt')
+        prompt = T('request.prompt')
       }
     }
   
-    if (T('v02.config.messagesTemplate')) {
+    if (T('config.messagesTemplate')) {
       console.log("Found messages_template")
-      T('v02.request.messages', JSON.parse(JSON.stringify(T('v02.config.messagesTemplate')))) // deep copy
+      T('request.messages', JSON.parse(JSON.stringify(T('config.messagesTemplate')))) // deep copy
       // assemble
-      T('v02.request.messages').forEach(message => {
+      T('request.messages').forEach(message => {
         if (Array.isArray(message['content'])) {
           message['content'] = message['content'].reduce(function(acc, curr) {
             // Currently this assumes the tasks are from the same workflow, could extend this
@@ -97,7 +97,7 @@ const TaskFromAgent_async = async function(task) {
           });
         }
       });
-      // console.log("T('v02.request.messages') " + JSON.stringify(workflow.tasks[taskName]))
+      // console.log("T('request.messages') " + JSON.stringify(workflow.tasks[taskName]))
       // Not sure we need this now
       //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
     }
@@ -105,13 +105,13 @@ const TaskFromAgent_async = async function(task) {
     let response_text = ''
     if (prompt) {
       //workflow.tasks[taskName].prompt = prompt
-      T('v02.request.prompt', prompt)
+      T('request.prompt', prompt)
       response_text = await chat_async(task)
     }
-    T('v02.response.text', response_text)
+    T('response.text', response_text)
     // Make available as an output to other Tasks
-    T('v02.output.text', response_text)
-    T('v02.meta.updatedAt', Date.now())
+    T('output.text', response_text)
+    T('meta.updatedAt', Date.now())
     //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
     console.log("Returning from tasks.TaskFromAgent ")// + response_text)
     return task

@@ -70,7 +70,7 @@ function Taskflows(props) {
     if (startTask) {
       setTasksIdx(tasks.length)
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask ])
-      setTasksIds((p) => [...p, startTask.id ])
+      setTasksIds((p) => [...p, startTask.meta.id ])
     }
   }, [startTask]);
   
@@ -160,12 +160,12 @@ function Taskflows(props) {
               
               <Toolbar />
 
-              {tasks.map(({ component, instanceId }, idx) => (
-                component && (
+              {tasks.map(({ meta: { stack, instanceId } }, idx) => (
+                stack && (
                   <div key={`unique${instanceId}`} className={`${tasksIdx !== idx ? 'hide' : 'flex-grow'}`} >
                     <DynamicComponent
                       key={instanceId}
-                      is={component[0]}
+                      is={stack[0]}
                       task={tasks[idx]}
                       setTask={setTasksTask}
                       parentTask={null}

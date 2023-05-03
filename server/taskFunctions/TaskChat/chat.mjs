@@ -46,7 +46,7 @@ async function chat_prepare(task) {
 
   const T = utils.createTaskValueGetter(task)
 
-  const sessionId = T('v02.config.sessionId')
+  const sessionId = T('config.sessionId')
   let ws = connections.get(sessionId);
   if (!ws) {
     console.log("Warning: chat_async could not find ws for " + sessionId)
@@ -57,12 +57,12 @@ async function chat_prepare(task) {
   let use_cache = CACHE_ENABLE
   let server_only = false;
 
-  let langModel = T('v02.request.model') || defaults.langModel
-  let temperature = T('v02.request.temperature') || defaults.temperature
-  let maxTokens = T('v02.request.maxTokens') || defaults.maxTokens
+  let langModel = T('request.model') || defaults.langModel
+  let temperature = T('request.temperature') || defaults.temperature
+  let maxTokens = T('request.maxTokens') || defaults.maxTokens
 
-  let prompt = T('v02.request.prompt')
-  let agent = agents[T('v02.request.agent')]
+  let prompt = T('request.prompt')
+  let agent = agents[T('request.agent')]
   if (!agent) {
     console.log("No agent for ", task)
   }
@@ -71,7 +71,7 @@ async function chat_prepare(task) {
   if (task?.one_thread) {
     // Prefix with location when it has changed
     if (task?.new_address) {
-      prompt = "Location: " + T('v02.request.address') + "\n" + prompt
+      prompt = "Location: " + T('request.address') + "\n" + prompt
     }
     // Prefix prompt with date/time
     const currentDate = new Date();
@@ -79,8 +79,8 @@ async function chat_prepare(task) {
     console.log("one_thread prompt : " + prompt)
   }
   
-  if (T('v02.request.use_cache')) {
-    use_cache = T('v02.request.use_cache')
+  if (T('request.use_cache')) {
+    use_cache = T('request.use_cache')
     console.log("Task set cache " + use_cache)
   }
 
@@ -94,19 +94,19 @@ async function chat_prepare(task) {
     console.log("Append agent prompt " + agent.append_prompt)
   }
 
-  if (T('v02.config.server_only')) {
-    server_only = T('v02.config.server_only')
+  if (T('config.server_only')) {
+    server_only = T('config.server_only')
     console.log("Task server_only")
   }
 
-  if (typeof T('v02.request.forget')) {
-    initializing = T('v02.request.forget')
+  if (typeof T('request.forget')) {
+    initializing = T('request.forget')
     console.log("Task forget previous messages")
   }
 
   if (!initializing) {
-    lastMessageId = await messagesStore_async.get(T('v02.meta.threadId') + agent.id + 'parentMessageId')
-    console.log("!initializing T('v02.meta.threadId') " + T('v02.meta.threadId') + " lastMessageId " + lastMessageId)
+    lastMessageId = await messagesStore_async.get(T('meta.threadId') + agent.id + 'parentMessageId')
+    console.log("!initializing T('meta.threadId') " + T('meta.threadId') + " lastMessageId " + lastMessageId)
   }
 
   if (!lastMessageId || initializing) {
@@ -117,8 +117,8 @@ async function chat_prepare(task) {
     }
 
     if (task?.messages) {
-      lastMessageId = await utils.processMessages_async(T('v02.request.messages'), messagesStore_async, lastMessageId)
-      console.log("Messages extended from meta.name " + T('v02.meta.name') + " lastMessageId " + lastMessageId)
+      lastMessageId = await utils.processMessages_async(T('request.messages'), messagesStore_async, lastMessageId)
+      console.log("Messages extended from meta.name " + T('meta.name') + " lastMessageId " + lastMessageId)
     }
   
   }
@@ -128,21 +128,21 @@ async function chat_prepare(task) {
     console.log("Sytem message from agent " + agent.name)
   }
 
-  if (users[T('v02.meta.userId')] && T('v02.request.dyad')) {
-    let user = users[T('v02.meta.userId')];
+  if (users[T('meta.userId')] && T('request.dyad')) {
+    let user = users[T('meta.userId')];
     systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
     console.log("Dyad in progress between " + agent.name + " and " + user?.name)
   }
 
-  // If we can have PREPEND and APPEND then we could replace T('v02.request.dyad') with something general
+  // If we can have PREPEND and APPEND then we could replace T('request.dyad') with something general
   // This allows for user defined system messages
-  if (T('v02.request.system_message')) {
-    systemMessage = T('v02.request.system_message');
-    console.log("Sytem message from task " + T('v02.meta.id'))
+  if (T('request.system_message')) {
+    systemMessage = T('request.system_message');
+    console.log("Sytem message from task " + T('meta.id'))
   }
 
-  const threadId = T('v02.meta.threadId')
-  const instanceId = T('v02.meta.instanceId')
+  const threadId = T('meta.threadId')
+  const instanceId = T('meta.instanceId')
   const agentId = agent.id
 
   return {

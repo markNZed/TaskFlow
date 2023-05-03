@@ -11,7 +11,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from '../../hoc/withTask';
 import { setArrayState, deepMerge, setNestedProperties } from '../../utils/utils';
-import { fromV01toV02, fromV02toV01 } from '../../shared/taskV01toV02Map'
 
 /*
 Task Process
@@ -52,7 +51,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.v02.meta.id, null, component_depth)
+    //startTaskFn(task.meta.id, null, component_depth)
   }, []);
 
   useEffect(() => {
@@ -64,14 +63,14 @@ function TaskStepper(props) {
   // The first step is the task that was passed in
   useEffect(() => {
       setTasks([task])
-      setPrevTaskName(task.v02.meta.name)
+      setPrevTaskName(task.meta.name)
   }, []);
 
   // When task is done then fetch next task
   useEffect(() => {
-    if (tasks.length && tasks[tasksIdx].v02.state.done) {
+    if (tasks.length && tasks[tasksIdx].state?.done) {
       // need a wrapper for this
-      setTasksTask(p => { return fromV02toV01(deepMerge(p, setNestedProperties({'v02.state.done': false})))})
+      setTasksTask(p => { return deepMerge(p, setNestedProperties({'state.done': false}))})
       setDoneTask(tasks[tasksIdx])
     }
   }, [tasks]);
@@ -106,12 +105,12 @@ function TaskStepper(props) {
   // Close previous task and open next task in stepper
   useEffect(() => {
     if (tasks.length > 0) {
-      if (tasks[tasksIdx].v02.meta.name !== prevTaskName) {
-        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].v02.meta.name]);
+      if (tasks[tasksIdx].meta.name !== prevTaskName) {
+        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].meta.name]);
         if (prevTaskName) {
           setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevTaskName));
         }
-        setPrevTaskName(tasks[tasksIdx].v02.meta.name)
+        setPrevTaskName(tasks[tasksIdx].meta.name)
       }
     }
   }, [tasksIdx]); 
@@ -134,29 +133,29 @@ function TaskStepper(props) {
   return (
     <div>
       <Stepper activeStep={tasksIdx}>
-        {tasks.map(({ name, label }) => (
+        {tasks.map(({ meta: { name, label } } ) => (
           <Step key={`task-${name}`}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
-      { tasks.map(({ name, label, component, next, instanceId }, idx) => (
+      { tasks.map(({ meta: { name, label, stack, nextTask: metaNextTask, instanceId } }, idx) => (
           <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { component && (
-                <DynamicComponent key={instanceId} is={component[component_depth]} task={tasks[idx]} setTask={setTasksTask} leaving={leaving} parentTask={stepperTask}  component_depth={component_depth} />
+              { stack && (
+                <DynamicComponent key={instanceId} is={stack[component_depth]} task={tasks[idx]} setTask={setTasksTask} leaving={leaving} parentTask={stepperTask}  component_depth={component_depth} />
               )}
             </AccordionDetails>
             <div>
-              {tasks[tasksIdx].v02.meta.name !== 'start' && tasks[tasksIdx].v02.meta.name === name && (
+              {tasks[tasksIdx].meta.name !== 'start' && tasks[tasksIdx].meta.name === name && (
                 <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'back')} variant="contained" color="primary">
                   Back
                 </Button>
               )}
-              {!/\.stop$/.test(next) && tasks[tasksIdx].v02.meta.name === name && (
+              {!/\.stop$/.test(metaNextTask) && tasks[tasksIdx].meta.name === name && (
                 <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'next')} variant="contained" color="primary">
                   Next
                 </Button>

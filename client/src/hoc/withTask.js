@@ -7,7 +7,6 @@ import { useWebSocketContext } from '../contexts/WebSocketContext';
 import useFilteredWebSocket from '../hooks/useFilteredWebSocket';
 import withDebug from './withDebug'
 import _ from 'lodash';
-import { fromV01toV02, fromV02toV01 } from '../shared/taskV01toV02Map'
 import { log } from '../utils/utils'
 
 // When a task is shared then changes are detected at each wrapper
@@ -47,21 +46,11 @@ function withTask(Component) {
       setStartTaskDepth(depth)
     }
     
-    function updateStep(step) {
-      props.setTask(p => (fromV01toV02({ ...p, step: step, delta_step: p.step})))
+    function updateStep(step) { // change to updateState
+      props.setTask(p => (deepMerge(p, setNestedProperties( {'state.current': step, 'state.deltaState': p?.state?.current}))))
       // Allow detection of new step
       delta(() => {
-        props.setTask(p => (fromV01toV02({ ...p, delta_step: p.step })))
-      })
-    }
-
-    function updateStepV2(step) {
-      //props.setTask(p => ({ ...p, step: step, delta_step: p.step}))
-      props.setTask(p => (deepMerge( p, setNestedProperties( {'v02.state.current': step, 'v02.state.deltaState': p?.v02?.state?.current} ) ) ))
-      // Allow detection of new step
-      delta(() => {
-        //props.setTask(p => ({ ...p, delta_step: p.step }))
-        props.setTask(p => (deepMerge( p, setNestedProperties( {'v02.state.deltaState': p?.v02?.state?.current} ) ) ))
+        props.setTask(p => (deepMerge(p, setNestedProperties( {'state.deltaState': p?.state?.current}))))
       })
     }
 
@@ -80,14 +69,14 @@ function withTask(Component) {
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.component_depth === local_component_depth) {
+      if (task && task.meta.stackPtr === local_component_depth) {
         setPrevTask(task);
       }
     }, []);
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.component_depth === local_component_depth) {
+      if (task && task.meta.stackPtr === local_component_depth) {
         if (prevTask !== task) {
             setPrevTask(props.task);
         } 
@@ -96,12 +85,7 @@ function withTask(Component) {
 
     function updateTask(update) {
       setNestedProperties(update)
-      props.setTask(prevState => (fromV01toV02(deepMerge(prevState, update))));
-    }
-
-    function updateTaskV2(update) {
-      setNestedProperties(update)
-      props.setTask(prevState => {const res = fromV02toV01(deepMerge(prevState, update)); return res})
+      props.setTask(prevState => {const res = deepMerge(prevState, update); return res})
     }
 
     function useTaskWebSocket(callback) {
@@ -132,17 +116,19 @@ function withTask(Component) {
         }
         let show_diff = true
         if (hasOnlyResponseKey(diff)) {
-          if (!prevTaskState.response) {
-            diff.response = "..."
+          if (!prevTaskState.response?.text) {
+            diff.response['text'] = "..."
           } else {
             show_diff = false
           }
         }
-        if (show_diff && Object.keys(diff).length > 0) {
-          logWithComponent(componentName, name + " " + state.id + " changes:", diff)
+        if (!state.meta.id) {
+          console.log("Unexpected: Task without id ", state)
         }
-        if (!props.task.id) {
-          console.log("Unexpected: Task wihtout id ", state)
+        if (show_diff && Object.keys(diff).length > 0) {
+          if ( state.meta.stackPtr === local_component_depth ) {
+            logWithComponent(componentName, name + " " + state.meta.id + " changes:", diff)
+          }
         }
         setPrevTaskState(state);
       }, [state, prevTaskState]);
@@ -178,17 +164,19 @@ function withTask(Component) {
           }
           let show_diff = true
           if (hasOnlyResponseKey(diff)) {
-            if (!prevTaskState.response) {
-              diff.response = "..."
+            if (!prevTaskState.response?.text) {
+              diff.response['text'] = "..."
             } else {
               show_diff = false
             }
           }
-          if (show_diff && Object.keys(diff).length > 0) {
-            logWithComponent(componentName, name + " " + state.id + " changes:", diff)
+          if (!state.meta?.id) {
+            console.log("Unexpected: Task without id ", state)
           }
-          if (!state?.id) {
-            console.log("Unexpected: Task wihtout id ", state)
+          if (show_diff && Object.keys(diff).length > 0) {
+            if ( state.meta.stackPtr === local_component_depth ) {
+              logWithComponent(componentName, name + " " + state.meta.id + " changes:", diff)
+            }
           }
         }
         setPrevTasksState(states);
@@ -227,9 +215,8 @@ function withTask(Component) {
         setDoneTask,
         prevTask,
         updateTask,
-        updateTaskV2,
+        updateTask,
         updateStep, // add log as a prop
-        updateStepV2,
         webSocketEventEmitter,
         useTaskWebSocket,
         component_depth: local_component_depth,

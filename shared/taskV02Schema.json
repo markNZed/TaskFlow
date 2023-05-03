@@ -33,8 +33,7 @@
                 }
             },
             "required": [
-                "meta",
-                "privacy"
+                "meta"
             ]
         }
     }

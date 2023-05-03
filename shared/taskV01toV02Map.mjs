@@ -43,7 +43,7 @@ function isDeepValueSet(obj, path) {
 export function fromV01toV02(taskV01) {
     //console.log("fromV01toV02 taskV01", taskV01);
 
-    let taskV02 = {v02: {
+    let taskV02 = {
         config: {},
         input: {},
         meta: {},
@@ -52,9 +52,9 @@ export function fromV01toV02(taskV01) {
         request: {},
         response: {},
         state: {},
-    }}
+    }
   
-    taskV02 = mergeTasks(taskV02, taskV01)
+    //taskV02 = mergeTasks(taskV02, taskV01)
     //taskV02 = JSON.parse(JSON.stringify(taskV02)) // deep copy
 
     //console.log("fromV01toV02 taskV02 after merge", taskV02);
@@ -123,10 +123,10 @@ export function fromV01toV02(taskV01) {
       const v02PathArray = v02Path.split(".");
   
       if (taskV01.hasOwnProperty(v01Key) && taskV01[v01Key] !== undefined) {
-        // make sure that taskV02.v02 is not already set but might be updating
-        //if (!isDeepValueSet(taskV02.v02, v02PathArray)) {
+        // make sure that taskV02 is not already set but might be updating
+        //if (!isDeepValueSet(taskV02, v02PathArray)) {
             console.log("setDeepValue", v01Key, v02PathArray, taskV01[v01Key])
-            setDeepValue(taskV02.v02, v02PathArray, taskV01[v01Key])
+            setDeepValue(taskV02, v02PathArray, taskV01[v01Key])
         //}
       }
     }
@@ -250,7 +250,7 @@ export function fromV02toV01(taskV02) {
     for (const key of Object.keys(v02Mapping)) {
 
       const v02Path = v02Mapping[key].split(".");
-      let tempObj = taskV02.v02;
+      let tempObj = taskV02;
   
       for (const prop of v02Path) {
         if (tempObj.hasOwnProperty(prop)) {
@@ -349,44 +349,44 @@ export function fromV01toV02_gpt4(taskV01) {
 
 export function fromV02toV01_gpt4(taskV02) {
     let taskV01 = {
-        agent: taskV02.request.agent,
-        assemble_prompt: taskV02.config.promptTemplate,
-        children: taskV02.meta.children,
-        created: taskV02.meta.createdAt,
-        delta_step: taskV02.state.deltaState,
-        done: taskV02.state.done,
-        forget: taskV02.request.forget,
-        groups: taskV02.meta.permissions,
-        menu: taskV02.meta.initiator,
-        id: taskV02.meta.id,
-        input: taskV02.response.userInput,
-        input_label: taskV02.request.inputLabel,
-        instruction: taskV02.config.instruction,
-        last_change: taskV02.meta.updatedAt,
-        messages: taskV02.request.messages.map(message => {
+        agent: taskrequest.agent,
+        assemble_prompt: taskconfig.promptTemplate,
+        children: taskmeta.children,
+        created: taskmeta.createdAt,
+        delta_step: taskstate.deltaState,
+        done: taskstate.done,
+        forget: taskrequest.forget,
+        groups: taskmeta.permissions,
+        menu: taskmeta.initiator,
+        id: taskmeta.id,
+        input: taskresponse.userInput,
+        input_label: taskrequest.inputLabel,
+        instruction: taskconfig.instruction,
+        last_change: taskmeta.updatedAt,
+        messages: taskrequest.messages.map(message => {
             return {
                 content: message.content,
                 role: message.role
             };
         }),
-        messages_template: taskV02.config.messagesTemplate.map(message => {
+        messages_template: taskconfig.messagesTemplate.map(message => {
             return {
                 content: message.content,
                 role: message.role
             };
         }),
-        name: taskV02.meta.name,
-        next_step: taskV02.state.nextState,
-        parentId: taskV02.meta.parentId,
-        prompt: taskV02.request.prompt,
-        response: taskV02.response.text,
-        step: taskV02.state.current,
-        steps: taskV02.config.nextStates,
-        suggested_prompts: taskV02.config.suggestedPrompts,
-        threadId: taskV02.meta.threadId,
-        update_count: taskV02.meta.updateCount,
-        userId: taskV02.meta.userId,
-        welcome_message: taskV02.config.welcomeMessage
+        name: taskmeta.name,
+        next_step: taskstate.nextState,
+        parentId: taskmeta.parentId,
+        prompt: taskrequest.prompt,
+        response: taskresponse.text,
+        step: taskstate.current,
+        steps: taskconfig.nextStates,
+        suggested_prompts: taskconfig.suggestedPrompts,
+        threadId: taskmeta.threadId,
+        update_count: taskmeta.updateCount,
+        userId: taskmeta.userId,
+        welcome_message: taskconfig.welcomeMessage
     };
     return taskV01;
 }

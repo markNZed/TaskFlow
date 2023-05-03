@@ -23,19 +23,17 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
 
   useEffect(() => {
     // This is executing twice
-    if (task?.v02?.meta?.send && !task?.v02?.request?.updating && task.v02.meta.stackPtr === local_component_depth) {
-      log("useUpdateTask",task.v02.id)
-      //console.log("useUpdateTask", task)
+    if (task?.meta?.send && !task?.request?.updating && task.meta.stackPtr === local_component_depth) {
+      log("useUpdateTask",task.meta.id)
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true)
-          const updating = {'v02.meta.send': false, 'v02.response.updating': true, update: false, updating: true}
+          const updating = {'meta.send': false, 'response.updating': true, update: false, updating: true}
           setNestedProperties(updating)
           setTask(p => (deepMerge(p, updating)))
-          //console.log("useUpdateTask before: ", updating)
           const result = await fetchTask(globalState, 'task/update', task);
           setTask(p => (deepMerge(p, result)))
-          const updated = {'v02.response.updated': true, 'v02.response.updating': false, updated: true, updating: true}
+          const updated = {'response.updated': true, 'response.updating': false, updated: true, updating: true}
           setNestedProperties(updated)
           setTask(p => (deepMerge(p, updated)))
         } catch (error) {
