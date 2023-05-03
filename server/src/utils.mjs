@@ -184,5 +184,34 @@ utils.authenticatedTask = function(task, userId, groups) {
 utils.capitalizeFirstLetter = function(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+utils.getNestedValue = function(obj, path) {
+  return path.split('.').reduce((prev, curr) => {
+    return prev && prev[curr] !== undefined ? prev[curr] : undefined;
+  }, obj);
+}
+
+utils.setNestedValue = function(obj, path, value) {
+  const pathArray = path.split('.');
+  const lastKey = pathArray.pop();
+  const target = pathArray.reduce((prev, curr) => {
+    return prev[curr] = prev[curr] || {};
+  }, obj);
+
+  target[lastKey] = value;
+}
+
+utils.createTaskValueGetter = function(task) {
+  return function(path, value) {
+    if (arguments.length === 2) {
+      utils.setNestedValue(task, path, value)
+      console.log("createTaskValueGetter set ",path,value)
+    } else {
+      const res = utils.getNestedValue(task, path)
+      console.log("createTaskValueGetter get ", path, res)
+      return res
+    }
+  };
+}
   
 export { utils };

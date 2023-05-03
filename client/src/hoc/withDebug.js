@@ -31,7 +31,7 @@ function withDebug(Component) {
             show_diff = false
           }
         }
-        if (diff?.response) {
+        if (diff?.response && diff.response.length > 0) {
           diff.response = diff.response.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {

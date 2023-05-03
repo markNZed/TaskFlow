@@ -24,7 +24,7 @@ ToDo:
 
 const TaskShowResponse = (props) => {
 
-    const { log, leaving, task, setTask, parentTask, updateTask, updateStep, updateTaskLoading, component_depth } = props;
+    const { log, leaving, task, setTask, parentTask, updateTask, updateStep, updateTaskLoading, component_depth, updateTaskV2 } = props;
 
     const [responseText, setResponseText] = useState('');
     const [myTaskId, setMyTaskId] = useState();
@@ -45,7 +45,8 @@ const TaskShowResponse = (props) => {
             setResponseText('')
             if (!task?.steps) {
                 // Default sequence is to just get response
-                setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
+                updateTaskV2({ 'v02.config.nextStates': {'start' : 'response', 'response' : 'stop'} })
+                //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
             }
             setMyStep('start')
         }
@@ -80,7 +81,8 @@ const TaskShowResponse = (props) => {
                         if (task.updated) { 
                             setMyStep(next_step) 
                             const response_text = task.response
-                            setTask((p) => {return {...p, response: response_text}});
+                            updateTaskV2({ 'v02.response.text': response_text })
+                            //setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         } else {
                             updateTask({update: true}) 
@@ -92,13 +94,15 @@ const TaskShowResponse = (props) => {
                     // Actions
                     // Should defensively avoid calling taskDone twice?
                     if (leaving_now) {
-                        setTask((p) => {return {...p, done: true}});
+                        updateTaskV2({ 'v02.state.done': true })
+                        //setTask((p) => {return {...p, done: true}});
                     }
                     break;
                 default:
                     console.log('ERROR unknown step : ' + myStep);
             }
-            setTask((p) => {return {...p, step: myStep}});
+            updateStep(myStep)
+            //setTask((p) => {return {...p, step: myStep}});
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

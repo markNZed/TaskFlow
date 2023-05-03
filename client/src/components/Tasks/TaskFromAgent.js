@@ -22,7 +22,7 @@ import withTask from '../../hoc/withTask';
 
 const TaskFromAgent = (props) => {
   
-    const { log, leaving, task, setTask, updateTask, updateStep, component_depth, useTaskWebSocket } = props;
+    const { log, leaving, task, setTask, updateTask, updateStep, component_depth, useTaskWebSocket, updateTaskV2 } = props;
 
     const [responseText, setResponseText] = useState('');
     const [userInput, setUserInput] = useState('');
@@ -38,7 +38,7 @@ const TaskFromAgent = (props) => {
     // This is the level where we are going to use the task so set the component_depth
     // Could have a setDepth function in withTask
     useEffect(() => {
-        updateTask({component_depth : component_depth})
+        updateTaskV2({'v02.meta.stackPtr': component_depth})
     }, []);
     
 
@@ -53,7 +53,8 @@ const TaskFromAgent = (props) => {
             setResponseTextWordCount(0)
             if (!task?.steps) {
                 // Default sequence is to just get response based on prompt text
-                setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
+                updateTaskV2({ 'v02.config.nextStates': {'start' : 'response', 'response' : 'stop'} })
+                //setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
             }
             setMyStep('start')
         }
@@ -123,12 +124,13 @@ const TaskFromAgent = (props) => {
                         }
                         // Actions
                         // send prompt to get response from agent
-                        updateTask({update: true})
+                        updateTaskV2({'v02.meta.send': true})
                         updateStep(myStep)
                         // show the response
                         if (task.updated) {
                             const response_text = task.response
-                            setTask((p) => {return {...p, response: response_text}});
+                            updateTaskV2({ 'v02.response.text': response_text })
+                            //setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         }
                     }
@@ -142,7 +144,7 @@ const TaskFromAgent = (props) => {
                     if (leaving_now) {
                         // Send the userInput input
                         updateStep(myStep)
-                        updateTask({update: true})
+                        updateTaskV2({'v02.meta.send': true})
                     }
                     break;
                 case 'stop':
@@ -150,13 +152,15 @@ const TaskFromAgent = (props) => {
                     // Actions
                     // Should defensively avoid calling taskDone twice?
                     if (leaving_now) {
-                        setTask((p) => {return {...p, done: true}});
+                        updateTaskV2({ 'v02.state.done': true })
+                        //setTask((p) => {return {...p, done: true}});
                     }
                     break;
                 default:
                     console.log('ERROR unknown step : ' + myStep);
             }
-            setTask((p) => {return {...p, step: myStep}});
+            updateStep(myStep)
+            //setTask((p) => {return {...p, step: myStep}});
             setMyLastStep(myStep) // Useful if we want an action only performed once in a state
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,7 +169,10 @@ const TaskFromAgent = (props) => {
     // Align task data with userInput input
     useEffect(() => {
         if (userInput) {
-            setTask((p) => {return {...p, input: userInput}});
+            updateTaskV2({ 'v02.request.input': userInput })
+            // Make available to other tasks an output of this task
+            updateTaskV2({ 'v02.output.input': userInput })
+            //setTask((p) => {return {...p, input: userInput}});
             console.log("Updating input " + userInput)
         }
     }, [userInput]);

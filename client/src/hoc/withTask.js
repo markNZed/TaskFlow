@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { delta, logWithComponent, getObjectDifference, hasOnlyResponseKey } from '../utils/utils'
+import { delta, logWithComponent, getObjectDifference, hasOnlyResponseKey, setNestedProperties, deepMerge} from '../utils/utils'
 import useUpdateTask from '../hooks/useUpdateTask';
 import useStartTask from '../hooks/useStartTask';
 import useNextTask from '../hooks/useNextTask';
@@ -7,6 +7,8 @@ import { useWebSocketContext } from '../contexts/WebSocketContext';
 import useFilteredWebSocket from '../hooks/useFilteredWebSocket';
 import withDebug from './withDebug'
 import _ from 'lodash';
+import { fromV01toV02, fromV02toV01 } from '../shared/taskV01toV02Map'
+import { log } from '../utils/utils'
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -46,12 +48,35 @@ function withTask(Component) {
     }
     
     function updateStep(step) {
-      props.setTask(p => ({ ...p, step: step, delta_step: p.step}))
+      props.setTask(p => (fromV01toV02({ ...p, step: step, delta_step: p.step})))
       // Allow detection of new step
       delta(() => {
-        props.setTask(p => ({ ...p, delta_step: p.step }))
+        props.setTask(p => (fromV01toV02({ ...p, delta_step: p.step })))
       })
     }
+
+    function updateStepV2(step) {
+      //props.setTask(p => ({ ...p, step: step, delta_step: p.step}))
+      props.setTask(p => (deepMerge( p, setNestedProperties( {'v02.state.current': step, 'v02.state.deltaState': p?.v02?.state?.current} ) ) ))
+      // Allow detection of new step
+      delta(() => {
+        //props.setTask(p => ({ ...p, delta_step: p.step }))
+        props.setTask(p => (deepMerge( p, setNestedProperties( {'v02.state.deltaState': p?.v02?.state?.current} ) ) ))
+      })
+    }
+
+    useEffect(() => {
+      if (startTaskError) {
+        log("startTaskError", startTaskError)
+      }
+      if (nextTaskError) {
+        log("nextTaskError", nextTaskError)
+      }      
+      if (updateTaskError) {
+        log("updateTaskError", updateTaskError)
+      }
+    }, [startTaskError, nextTaskError, updateTaskError]);
+    
 
     useEffect(() => {
       const { task } = props;
@@ -70,7 +95,13 @@ function withTask(Component) {
     }, [props.task]);
 
     function updateTask(update) {
-      props.setTask(prevState => ({ ...prevState, ...update }));
+      setNestedProperties(update)
+      props.setTask(prevState => (fromV01toV02(deepMerge(prevState, update))));
+    }
+
+    function updateTaskV2(update) {
+      setNestedProperties(update)
+      props.setTask(prevState => {const res = fromV02toV01(deepMerge(prevState, update)); return res})
     }
 
     function useTaskWebSocket(callback) {
@@ -196,7 +227,9 @@ function withTask(Component) {
         setDoneTask,
         prevTask,
         updateTask,
+        updateTaskV2,
         updateStep, // add log as a prop
+        updateStepV2,
         webSocketEventEmitter,
         useTaskWebSocket,
         component_depth: local_component_depth,

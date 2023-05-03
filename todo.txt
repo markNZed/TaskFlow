@@ -5,6 +5,11 @@ Map from old to new schema and refactor interface with client, then server, then
   task/update task/start, websocket
 Add task type validation to websocket
 Add task type validation to return from TaskFunctions
+Rather than a JS hierarchy we might be better to use KeyV mapping e.g. meta-name etc 
+  There is an issue of how to flatten the tasks
+  Maybe Task keeps the internal structure
+How to reference values from previous Tasks - available in "output" ?
+  
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.

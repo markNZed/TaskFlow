@@ -50,7 +50,6 @@ export const log = (...message) => {
   log(...message)
 }
   
-// Set a task in an array, could have helper function for this in utils (pass in array, index, update)
 export function setArrayState(setArray, idx, t) {
     setArray((prevElements) => {
       const updatedElements = [...prevElements]; // create a copy of the previous state array
@@ -58,4 +57,62 @@ export function setArrayState(setArray, idx, t) {
       updatedElements[idx] = changedElement;
       return updatedElements; // return the updated array
     });
+}
+
+// Support for dot notation in Task keys
+export function setNestedProperties(obj, path = null, value = null) {
+  const processKey = (obj, key, value) => {
+    if (key.includes('.')) {
+      const [head, ...tail] = key.split('.');
+      if (!obj.hasOwnProperty(head)) {
+        obj[head] = {};
+      }
+      processKey(obj[head], tail.join('.'), value);
+    } else {
+       obj[key] = value;
+     }
+  };
+
+  const processObj = (obj) => {
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        processObj(value);
+      }
+      if (key.includes('.')) {
+        //console.log("before", obj)
+        processKey(obj, key, value);
+        delete obj[key];
+        //console.log("after", obj)
+      }
+    }
+  };
+
+  if (path && typeof obj === 'object' && obj !== null) {
+    processKey(obj, path, value);
+  } else {
+    processObj(obj);
+  }
+
+  // Note this function operates in-place but it can be useful to have a return value too
+  return obj
+}
+
+// Without this we cannot make partial updates to objects in the Task
+export function deepMerge(prevState, update) {
+  const output = { ...prevState };
+  
+  for (const key of Object.keys(update)) {
+    const oldValue = prevState[key];
+    const newValue = update[key];
+
+    if (typeof oldValue === 'object' && oldValue !== null && !Array.isArray(oldValue) &&
+        typeof newValue === 'object' && newValue !== null && !Array.isArray(newValue)) {
+      output[key] = deepMerge(oldValue, newValue);
+    } else {
+      output[key] = newValue;
+    }
+  }
+  
+  return output;
 }

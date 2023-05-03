@@ -47,7 +47,7 @@ const TaskConversation = (props) => {
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, component_depth)
+    startTaskFn(task.v02.meta.id, task.v02.meta.threadId, component_depth)
   }, []);
 
   useEffect(() => {
@@ -59,49 +59,50 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (task) {
       // Update msgs
-      if (task?.step === 'receiving' && msgs) {
-        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
-        lastElement.text = task.response;
+      if (task.v02.state.current === 'receiving' && msgs) {
+        const lastElement = { ...msgs[task.v02.meta.threadId][msgs[task.v02.meta.threadId].length - 1]} // shallow copy
+        lastElement.text = task.v02.response.text;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
-          [task.threadId]: [
-            ...p[task.threadId].slice(0,-1), 
+          [task.v02.meta.threadId]: [
+            ...p[task.v02.meta.threadId].slice(0,-1), 
             lastElement
           ]
         }));
       // Detect change to sending and creaet a slot for new msgs
-      } else if (task?.step === 'sending' && task.delta_step !== 'sending') {
+      } else if (task.v02.state.current === 'sending' && task.v02.state.deltaState !== 'sending') { //should be delta not deltaState
         // here we need to create a new slot for the next message
         // Note we need to add the input to for the user
         //console.log("Creating new entry for next chat", task)
         const newMsgArray = [
-          { sender: 'user', text: task.client_prompt,  isLoading: false,}, 
+          { sender: 'user', text: task.v02.request.input,  isLoading: false,}, 
           { sender: 'bot', 
             text: "", 
             isLoading: true, 
           }];
         setMsgs((p) => ({
             ...p,
-            [task.threadId]: [
-              ...p[task.threadId], 
+            [task.v02.meta.threadId]: [
+              ...p[task.v02.meta.threadId], 
               ...newMsgArray
             ]
           }));
-      // Need to check if we really need this
-      } else if (task?.step === 'input' && task.delta_step !== 'input') {
-        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
-        lastElement.text = task.response;
+      } else if (task.v02.state.current === 'input' && task.v02.state.deltaState !== 'input') {
+        // In the case where the response is coming from HTTP not websocket
+        // The state will be set to input by the server
+        const lastElement = { ...msgs[task.v02.meta.threadId][msgs[task.v02.meta.threadId].length - 1]} // shallow copy
+        lastElement.text = task.v02.response.text;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
-          [task.threadId]: [
-            ...p[task.threadId].slice(0,-1), 
+          [task.v02.meta.threadId]: [
+            ...p[task.v02.meta.threadId].slice(0,-1), 
             lastElement
           ]
         }));
       // TaskChat is dealing with input
-      } else if (task?.step === 'input') {
+      } else if (task.v02.state.current === 'input') {
         //console.log("Step input")
       }
     }
@@ -113,7 +114,7 @@ const TaskConversation = (props) => {
       if (!isMountedRef.current) {
         setMsgs(
           {
-            [task.threadId] : [
+            [task.v02.meta.threadId] : [
               { sender: 'bot', text: welcomeMessage,  isLoading: true}
             ]
           }
@@ -121,18 +122,18 @@ const TaskConversation = (props) => {
         setTimeout(()=>{
             setMsgs(
               {
-                [task.threadId] : [
+                [task.v02.meta.threadId] : [
                   { sender: 'bot', text: welcomeMessage,  isLoading: false}
                 ]
               }
             );
         }, 1000);
         isMountedRef.current = true
-      } else if ( !(task.threadId in msgs) ) {
+      } else if ( !(task.v02.meta.threadId in msgs) ) {
         // Why do we need this? Should use (p) => style
         setMsgs({
           ...msgs,
-          [task.threadId]: [
+          [task.v02.meta.threadId]: [
             { sender: 'bot', text: welcomeMessage, isLoading: false }
           ],
         });
@@ -169,7 +170,7 @@ const TaskConversation = (props) => {
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer} >
-        {task && msgs[task.threadId] && msgs[task.threadId].map((msg, index) => {
+        {task && msgs[task.v02.meta.threadId] && msgs[task.v02.meta.threadId].map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
               <div className="chat"> 
@@ -184,8 +185,8 @@ const TaskConversation = (props) => {
         })}
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
-      { task && (  
-        <DynamicComponent key={task.id} is={task.component[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
+      { task?.v02?.meta && (  
+        <DynamicComponent key={task.v02.meta.id} is={task.v02.meta.stack[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
       )}
     </section> 
   )

@@ -10,11 +10,11 @@
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 function toTaskConverter(json) {
-    return cast(JSON.parse(json), r("TaskV01Converter"));
+    return cast(JSON.parse(json), "any");
 }
 
 function taskConverterToJson(value) {
-    return JSON.stringify(uncast(value, r("TaskV01Converter")), null, 2);
+    return JSON.stringify(uncast(value, "any"), null, 2);
 }
 
 function invalidValue(typ, val, key, parent = '') {
@@ -170,60 +170,6 @@ function r(name) {
 }
 
 const typeMap = {
-    "TaskV01Converter": o([
-        { json: "agent", js: "agent", typ: u(undefined, "") },
-        { json: "assemble_prompt", js: "assemble_prompt", typ: u(undefined, a("")) },
-        { json: "children", js: "children", typ: u(undefined, a("any")) },
-        { json: "client_prompt", js: "client_prompt", typ: u(undefined, "") },
-        { json: "component", js: "component", typ: u(undefined, a("")) },
-        { json: "component_depth", js: "component_depth", typ: 0 },
-        { json: "created", js: "created", typ: u(undefined, "") },
-        { json: "delta_step", js: "delta_step", typ: u(undefined, "") },
-        { json: "done", js: "done", typ: u(undefined, true) },
-        { json: "forget", js: "forget", typ: u(undefined, true) },
-        { json: "groupId", js: "groupId", typ: u(undefined, "") },
-        { json: "groups", js: "groups", typ: u(undefined, a("any")) },
-        { json: "id", js: "id", typ: "" },
-        { json: "input", js: "input", typ: u(undefined, "") },
-        { json: "input_label", js: "input_label", typ: u(undefined, "") },
-        { json: "instanceId", js: "instanceId", typ: u(undefined, "") },
-        { json: "instruction", js: "instruction", typ: u(undefined, "") },
-        { json: "label", js: "label", typ: u(undefined, "") },
-        { json: "last_change", js: "last_change", typ: u(undefined, "") },
-        { json: "menu", js: "menu", typ: u(undefined, true) },
-        { json: "messages", js: "messages", typ: u(undefined, a(r("Message"))) },
-        { json: "messages_template", js: "messages_template", typ: u(undefined, a(r("MessagesTemplate"))) },
-        { json: "name", js: "name", typ: u(undefined, "") },
-        { json: "next", js: "next", typ: u(undefined, "") },
-        { json: "next_step", js: "next_step", typ: u(undefined, "") },
-        { json: "one_thread", js: "one_thread", typ: u(undefined, true) },
-        { json: "parent", js: "parent", typ: u(undefined, "") },
-        { json: "parentId", js: "parentId", typ: u(undefined, "") },
-        { json: "parentInstanceId", js: "parentInstanceId", typ: u(undefined, "") },
-        { json: "prompt", js: "prompt", typ: u(undefined, "") },
-        { json: "response", js: "response", typ: u(undefined, "") },
-        { json: "sessionId", js: "sessionId", typ: u(undefined, "") },
-        { json: "startId", js: "startId", typ: u(undefined, "") },
-        { json: "step", js: "step", typ: u(undefined, "") },
-        { json: "steps", js: "steps", typ: u(undefined, m("")) },
-        { json: "suggested_prompts", js: "suggested_prompts", typ: u(undefined, a("")) },
-        { json: "threadId", js: "threadId", typ: u(undefined, "") },
-        { json: "update", js: "update", typ: u(undefined, true) },
-        { json: "update_count", js: "update_count", typ: u(undefined, 0) },
-        { json: "updated", js: "updated", typ: u(undefined, true) },
-        { json: "updating", js: "updating", typ: u(undefined, true) },
-        { json: "use_address", js: "use_address", typ: u(undefined, true) },
-        { json: "userId", js: "userId", typ: u(undefined, "") },
-        { json: "welcome_message", js: "welcome_message", typ: u(undefined, "") },
-    ], false),
-    "Message": o([
-        { json: "content", js: "content", typ: a("") },
-        { json: "role", js: "role", typ: "" },
-    ], "any"),
-    "MessagesTemplate": o([
-        { json: "content", js: "content", typ: a("") },
-        { json: "role", js: "role", typ: "" },
-    ], "any"),
 };
 
 export {

@@ -16,12 +16,14 @@
                     }
                 },
                 "completedAt": {
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
                 },
                 "createdAt": {
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
                 },
                 "error": {
                     "anyOf": [
@@ -39,6 +41,9 @@
                         "type": "string"
                     }
                 },
+                "groupId": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -54,14 +59,20 @@
                         "type": "string"
                     }
                 },
+                "nextTask": {
+                    "type": "string"
+                },
                 "parentId": {
+                    "type": "string"
+                },
+                "parentInstanceId": {
                     "type": "string"
                 },
                 "parentType": {
                     "type": "string"
                 },
                 "send": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "stack": {
                     "type": "array",
@@ -82,8 +93,9 @@
                     "type": "integer"
                 },
                 "updatedAt": {
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
                 },
                 "userId": {
                     "type": "string"
@@ -96,11 +108,9 @@
                 }
             },
             "required": [
-                "baseType",
                 "createdAt",
                 "id",
                 "name",
-                "type"
             ],
             "title": "Meta"
         },
@@ -115,6 +125,44 @@
         "Output": {
             "type": "object",
             "additionalProperties": {}
-        }
+        },
+        "Config": {
+            "type": "object",
+            "additionalProperties": true,
+            "title": "Configuration"
+          },
+          "Request": {
+            "type": "object",
+            "additionalProperties": true,
+            "title": "Request"
+          },
+          "Response": {
+            "type": "object",
+            "additionalProperties": true,
+            "title": "Response"
+          },
+          "State": {
+            "type": "object",
+            "additionalProperties": {},
+            "properties": {
+              "current": {
+                "type": "string"
+              },
+              "deltaState": {
+                "type": "string"
+              },
+              "done": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "nextState": {
+                "type": "string"
+              }
+            },
+            "required": [],
+            "title": "State"
+          }
     }
 }

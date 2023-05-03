@@ -8,28 +8,28 @@
             "additionalProperties": {},
             "properties": {
                 "meta": {
-                    "$ref": "./externalV02schema.json#/definitions/Meta"
+                    "$ref": "./genericV02schema.json#/definitions/Meta"
                 },
                 "privacy": {
-                    "$ref": "./externalV02schema.json#/definitions/Privacy"
+                    "$ref": "./genericV02schema.json#/definitions/Privacy"
                 },
                 "input": {
-                    "$ref": "./externalV02schema.json#/definitions/Input"
+                    "$ref": "./genericV02schema.json#/definitions/Input"
                 },
                 "output": {
-                    "$ref": "./externalV02schema.json#/definitions/Output"
+                    "$ref": "./genericV02schema.json#/definitions/Output"
                 },
                 "config": {
-                    "$ref": "./internalV02schema.json#/definitions/Config"
+                    "$ref": "./genericV02schema.json#/definitions/Config"
                 },
                 "state": {
-                    "$ref": "./internalV02schema.json#/definitions/State"
+                    "$ref": "./genericV02schema.json#/definitions/State"
                 },                
                 "request": {
-                    "$ref": "./internalV02schema.json#/definitions/Request"
+                    "$ref": "./genericV02schema.json#/definitions/Request"
                 },
                 "response": {
-                    "$ref": "./internalV02schema.json#/definitions/Response"
+                    "$ref": "./genericV02schema.json#/definitions/Response"
                 }
             },
             "required": [

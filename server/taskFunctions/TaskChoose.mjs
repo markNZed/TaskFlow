@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { TaskFromAgent_async } from './TaskFromAgent.mjs';
 import * as tf from '@tensorflow/tfjs-node';
 import * as use from '@tensorflow-models/universal-sentence-encoder';
+import { utils } from '../src/utils.mjs'
 
 const model = await use.load();
 
@@ -16,16 +17,23 @@ const cosineSimilarity = (tensor1, tensor2) => {
 };
 
 const TaskChoose_async = async function(task) {
+  
+    const T = utils.createTaskValueGetter(task)
+
     // First we get the response
-    console.log("TaskChoose task.name " + task.name)
+    console.log("TaskChoose meta.name " + T('v02.meta.name'))
   
-    task.response = null // Avoid using previously stored response
+    T('v02.response.text', null) // Avoid using previously stored response
     let subtask = await TaskFromAgent_async(task) 
+
+    const ST = utils.createTaskValueGetter(subtask)
+
+    console.log(task)
   
-    const next_responses = Object.keys(task.next_template)
-    const next_states = Object.values(task.next_template)
+    const next_responses = Object.keys(T('v02.config.nextStateTemplate'))
+    const next_states = Object.values(T('v02.config.nextStateTemplate'))
     
-    const phrases = [subtask.response, ...next_responses];
+    const phrases = [ST('v02.response.text'), ...next_responses];
     
     try {
       const embeddingsData = await model.embed(phrases);
@@ -54,15 +62,15 @@ const TaskChoose_async = async function(task) {
       embeddingsData.dispose();
     
       // Need to go to next state, can stay on server side
-      task.next = next_states[maxIndex]
-      task.done = true
+      T('v02.meta.nextTask', next_states[maxIndex])
+      T('v02.state.done', true)
   
     } catch (error) {
       // Handle the error here
       console.error('An error occurred:', error);
-      task.error = error.message
+      T('v02.meta.error', error.message)
     }
-    
+
     return task
   
 }

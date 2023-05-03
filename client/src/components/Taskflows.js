@@ -47,7 +47,7 @@ function Taskflows(props) {
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
-    if (globalState.selectedTaskId) {
+    if (globalState.selectedTaskId && tasksIds.length === 0 || globalState.selectedTaskId !== tasksIds[tasksIdx]) {
       const start =  globalState.selectedTaskId + '.start'
       const index = tasksIds.indexOf(start)
       if (index === -1) {

@@ -7,6 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { fetchTask } from '../utils/fetchTask'
+import { setNestedProperties, deepMerge, log } from '../utils/utils'
+
 
 // We have: Start with startId, threadId
 //          Step with task
@@ -16,20 +18,26 @@ import { fetchTask } from '../utils/fetchTask'
 const useUpdateTask = (task, setTask, local_component_depth) => {
   
   const { globalState } = useGlobalStateContext();
-  const [updateTaskLoading, setUpdateTaskLoading] = useState(true);
+  const [updateTaskLoading, setUpdateTaskLoading] = useState(false);
   const [updateTaskError, setUpdateTaskError] = useState(null);
 
   useEffect(() => {
-    if (task?.update && !task?.updating && task.component_depth === local_component_depth) {
+    // This is executing twice
+    if (task?.v02?.meta?.send && !task?.v02?.request?.updating && task.v02.meta.stackPtr === local_component_depth) {
+      log("useUpdateTask",task.v02.id)
       //console.log("useUpdateTask", task)
       const fetchTaskFromAPI = async () => {
         try {
-          setUpdateTaskLoading(true);
-          setTask((p) => { return {...p, updated: false, updating: true}})
-          //console.log("useUpdateTask before: ", task)
+          setUpdateTaskLoading(true)
+          const updating = {'v02.meta.send': false, 'v02.response.updating': true, update: false, updating: true}
+          setNestedProperties(updating)
+          setTask(p => (deepMerge(p, updating)))
+          //console.log("useUpdateTask before: ", updating)
           const result = await fetchTask(globalState, 'task/update', task);
-          setTask((p) => { return {...p, ...result, updated: true, update: false, updating: false}})
-          //console.log("useUpdateTask after: ", result)
+          setTask(p => (deepMerge(p, result)))
+          const updated = {'v02.response.updated': true, 'v02.response.updating': false, updated: true, updating: true}
+          setNestedProperties(updated)
+          setTask(p => (deepMerge(p, updated)))
         } catch (error) {
           setUpdateTaskError(error.message);
           setTask(null);
@@ -38,7 +46,6 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
         }
       };
       fetchTaskFromAPI();
-      //setTask((p) => { return {...p, update: false}})
     }
   }, [task]);
 

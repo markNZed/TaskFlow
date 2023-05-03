@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Task",
     "definitions": {
         "Task": {
             "type": "object",
@@ -35,7 +34,7 @@
                     "type": "integer"
                 },
                 "created": {
-                    "type": "string"
+                    "type": "integer",
                 },
                 "delta_step": {
                     "type": "string"
@@ -157,6 +156,12 @@
                 },
                 "use_address": {
                     "type": "boolean"
+                },
+                "next_template": {
+                    "type": "object",
+                },
+                "v02": {
+                    "type": "object",
                 }
             },
             "required": [

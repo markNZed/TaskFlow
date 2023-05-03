@@ -16,16 +16,16 @@ import send from '../../assets/send.svg';
 /*
 Task Process
   Present textarea and dropdown for user to enter a prompt
-  When prompt is submitted send the task to server with step=sending
-  Server sends incemental text responses by websocket updating task.response
-  Server sends final text and terminates HTTP request with step=input
+  When prompt is submitted send the task to server with state.current=sending
+  Server sends incemental text responses by websocket updating task.response.text
+  Server sends final text and terminates HTTP request with state.current=input
   Parent component is expected to:
-    Display updates to task.response while step=input
-    Detect step=sending and display/store user's prompt and set step=receiving ** should not be setting step in parent?
-  If server request returns (!updateTaskLoading) and step=receiving the websocket did not start/finish
+    Display updates to task.response.text while state.current=input
+    Detect state.current=sending and display/store user's prompt and set state.current=receiving ** should not be setting step in parent?
+  If server request returns (!updateTaskLoading) and state.current=receiving the websocket did not start/finish
     Update with the HTTP response so step=input
 
-Task Steps
+Task States
   input: get user prompt
   sending: sending user prmopt to server
   receiving: receiving websocket response from server
@@ -40,7 +40,7 @@ ToDo:
 
 const TaskChat = (props) => {
 
-  const { log, useTaskWebSocket, updateTask, updateStep, updateTaskLoading, task, setTask, component_depth } = props
+  const { log, useTaskWebSocket, updateTask, updateTaskV2, updateStep, updateStepV2, updateTaskLoading, task, setTask, component_depth } = props
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
@@ -56,14 +56,19 @@ const TaskChat = (props) => {
     switch (mode) {
         case 'delta':
           // Don't use updateTask because we want to append to a property in the task
-          setTask(p => ({ ...p, response: p.response + text}));
+          let partialText = ''
+          if (task.v02.response.text) {
+            partialText = task.v02.response.text
+          }
+          partialText += text
+          updateTaskV2({ 'v02.response.text': partialText });
           break;
         case 'partial':
-          updateTask({ response: text })
+          updateTaskV2({ 'v02.response.text': text });
           break;
         case 'final':
           // So observers of the task know we finished
-          updateTask({ response: text })
+          updateTaskV2({ 'v02.response.text': text });
           break;
       }
       // Indicates the response has started
@@ -82,25 +87,33 @@ const TaskChat = (props) => {
   useEffect(() => {
     if (!task) {return}
     if (updateTaskLoading) { // Should this be part of the task object
-      if (task.step === 'sending') {
+      if (task.v02.state.current === 'sending') {
         // Start receiving
         updateStep('receiving')
       }
-    } else if (task?.step === 'receiving') {
-      // Finished receiving
-      updateResponse('final', task.response)
-      // Let the update to task.response take effect before step=input
-      delta(() => {updateStep('input')})
+    } else if (task.v02.state.current === 'receiving') {
+        // The response also returns the compete text, which may already be updated by websocket.
+        updateResponse('final', task.v02.response.text)
     }
   }, [updateTaskLoading]);
+
+  useEffect(() => {
+    if (task && task.v02.state.current === 'input' && task.v02.state.deltaState !== 'input') {
+      // The server set the state to input so we set deltaState
+      // Could look after this in useUpdateTask
+      // Reset the request so we can use response.text for partial response
+      updateTaskV2({ 'v02.request.input': "", 'v02.response.text': "", 'v02.state.deltaState': 'input' })
+    }
+  }, [task]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault(); 
     if (!prompt){ return }
     setResponsePending(true);
     // Set update to send to server
-    updateTask({ client_prompt: prompt, update: true, response: '' });
     updateStep('sending')
+    updateTaskV2({ 'v02.request.input': prompt, 'v02.meta.send': true });
+    //updateTask({ client_prompt: prompt, update: true, response: '' });
     // Clear the textbox
     setPrompt("");
   },[prompt, setPrompt]);

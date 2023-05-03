@@ -2,19 +2,19 @@
 //
 //   const Convert = require("./file");
 //
-//   const taskV02Converter = Convert.toTaskV02Converter(json);
+//   const taskV02Converter = Convert.toTaskConverter(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
-function toTaskV02Converter(json) {
-    return cast(JSON.parse(json), r("TaskV02Converter"));
+function toTaskConverter(json) {
+    return cast(JSON.parse(json), r("TaskConverter"));
 }
 
-function taskV02ConverterToJson(value) {
-    return JSON.stringify(uncast(value, r("TaskV02Converter")), null, 2);
+function taskConverterToJson(value) {
+    return JSON.stringify(uncast(value, r("TaskConverter")), null, 2);
 }
 
 function invalidValue(typ, val, key, parent = '') {
@@ -170,7 +170,7 @@ function r(name) {
 }
 
 const typeMap = {
-    "TaskV02Converter": o([
+    "TaskConverter": o([
         { json: "config", js: "config", typ: u(undefined, m("any")) },
         { json: "input", js: "input", typ: u(undefined, m("any")) },
         { json: "meta", js: "meta", typ: r("Meta") },
@@ -181,25 +181,28 @@ const typeMap = {
         { json: "state", js: "state", typ: u(undefined, r("State")) },
     ], "any"),
     "Meta": o([
-        { json: "baseType", js: "baseType", typ: "" },
+        { json: "baseType", js: "baseType", typ: u(undefined, "") },
         { json: "children", js: "children", typ: u(undefined, a("")) },
-        { json: "completedAt", js: "completedAt", typ: u(undefined, Date) },
-        { json: "createdAt", js: "createdAt", typ: Date },
+        { json: "completedAt", js: "completedAt", typ: u(undefined, 0) },
+        { json: "createdAt", js: "createdAt", typ: 0 },
         { json: "error", js: "error", typ: u(undefined, u(null, "")) },
+        { json: "groupId", js: "groupId", typ: u(undefined, "") },
         { json: "id", js: "id", typ: "" },
         { json: "initiator", js: "initiator", typ: u(undefined, true) },
         { json: "name", js: "name", typ: "" },
+        { json: "nextTask", js: "nextTask", typ: u(undefined, "") },
         { json: "nextTasks", js: "nextTasks", typ: u(undefined, a("")) },
         { json: "parentId", js: "parentId", typ: u(undefined, "") },
+        { json: "parentInstanceId", js: "parentInstanceId", typ: u(undefined, "") },
         { json: "parentType", js: "parentType", typ: u(undefined, "") },
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
-        { json: "send", js: "send", typ: u(undefined, "") },
+        { json: "send", js: "send", typ: u(undefined, true) },
         { json: "stack", js: "stack", typ: u(undefined, a("")) },
         { json: "stackPtr", js: "stackPtr", typ: u(undefined, 0) },
         { json: "threadId", js: "threadId", typ: u(undefined, "") },
-        { json: "type", js: "type", typ: "" },
+        { json: "type", js: "type", typ: u(undefined, "") },
         { json: "updateCount", js: "updateCount", typ: u(undefined, 0) },
-        { json: "updatedAt", js: "updatedAt", typ: u(undefined, Date) },
+        { json: "updatedAt", js: "updatedAt", typ: u(undefined, 0) },
         { json: "userId", js: "userId", typ: u(undefined, "") },
         { json: "versionExternal", js: "versionExternal", typ: u(undefined, "") },
         { json: "versionInternal", js: "versionInternal", typ: u(undefined, "") },
@@ -214,6 +217,6 @@ const typeMap = {
 };
 
 export {
-    "taskV02ConverterToJson": taskV02ConverterToJson,
-    "toTaskV02Converter": toTaskV02Converter,
+    taskConverterToJson,
+    toTaskConverter,
 };

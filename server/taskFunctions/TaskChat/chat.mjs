@@ -44,7 +44,9 @@ async function chat_async(task) {
 // Also using connections, defaults, agents, messagesStore_async, users
 async function chat_prepare(task) {
 
-  const sessionId = task.sessionId
+  const T = utils.createTaskValueGetter(task)
+
+  const sessionId = T('v02.config.sessionId')
   let ws = connections.get(sessionId);
   if (!ws) {
     console.log("Warning: chat_async could not find ws for " + sessionId)
@@ -55,12 +57,12 @@ async function chat_prepare(task) {
   let use_cache = CACHE_ENABLE
   let server_only = false;
 
-  let langModel = task?.model || defaults.langModel
-  let temperature = task?.temperature || defaults.temperature
-  let maxTokens = task?.maxTokens || defaults.maxTokens
+  let langModel = T('v02.request.model') || defaults.langModel
+  let temperature = T('v02.request.temperature') || defaults.temperature
+  let maxTokens = T('v02.request.maxTokens') || defaults.maxTokens
 
-  let prompt = task?.prompt
-  let agent = agents[task.agent]
+  let prompt = T('v02.request.prompt')
+  let agent = agents[T('v02.request.agent')]
   if (!agent) {
     console.log("No agent for ", task)
   }
@@ -69,7 +71,7 @@ async function chat_prepare(task) {
   if (task?.one_thread) {
     // Prefix with location when it has changed
     if (task?.new_address) {
-      prompt = "Location: " + task.address + "\n" + prompt
+      prompt = "Location: " + T('v02.request.address') + "\n" + prompt
     }
     // Prefix prompt with date/time
     const currentDate = new Date();
@@ -77,8 +79,8 @@ async function chat_prepare(task) {
     console.log("one_thread prompt : " + prompt)
   }
   
-  if (typeof task.use_cache !== 'undefined') {
-    use_cache = task.use_cache
+  if (T('v02.request.use_cache')) {
+    use_cache = T('v02.request.use_cache')
     console.log("Task set cache " + use_cache)
   }
 
@@ -92,19 +94,19 @@ async function chat_prepare(task) {
     console.log("Append agent prompt " + agent.append_prompt)
   }
 
-  if (typeof task.server_only !== 'undefined') {
-    server_only = task.server_only
+  if (T('v02.config.server_only')) {
+    server_only = T('v02.config.server_only')
     console.log("Task server_only")
   }
 
-  if (typeof task.forget !== 'undefined') {
-    initializing = task.forget
+  if (typeof T('v02.request.forget')) {
+    initializing = T('v02.request.forget')
     console.log("Task forget previous messages")
   }
 
   if (!initializing) {
-    lastMessageId = await messagesStore_async.get(task.threadId + agent.id + 'parentMessageId')
-    console.log("!initializing task.threadId " + lastMessageId)
+    lastMessageId = await messagesStore_async.get(T('v02.meta.threadId') + agent.id + 'parentMessageId')
+    console.log("!initializing T('v02.meta.threadId') " + T('v02.meta.threadId') + " lastMessageId " + lastMessageId)
   }
 
   if (!lastMessageId || initializing) {
@@ -115,8 +117,8 @@ async function chat_prepare(task) {
     }
 
     if (task?.messages) {
-      lastMessageId = await utils.processMessages_async(task.messages, messagesStore_async, lastMessageId)
-      console.log("Messages extended from task.name " + task.name + " lastMessageId " + lastMessageId)
+      lastMessageId = await utils.processMessages_async(T('v02.request.messages'), messagesStore_async, lastMessageId)
+      console.log("Messages extended from meta.name " + T('v02.meta.name') + " lastMessageId " + lastMessageId)
     }
   
   }
@@ -126,21 +128,21 @@ async function chat_prepare(task) {
     console.log("Sytem message from agent " + agent.name)
   }
 
-  if (users[task.userId] && task.dyad) {
-    let user = users[task.userId];
+  if (users[T('v02.meta.userId')] && T('v02.request.dyad')) {
+    let user = users[T('v02.meta.userId')];
     systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
     console.log("Dyad in progress between " + agent.name + " and " + user?.name)
   }
 
-  // If we can have PREPEND and APPEND then we could replace task.dyad with something general
+  // If we can have PREPEND and APPEND then we could replace T('v02.request.dyad') with something general
   // This allows for user defined system messages
-  if (task?.system_message) {
-    systemMessage = task.system_message;
-    console.log("Sytem message from task " + task.id)
+  if (T('v02.request.system_message')) {
+    systemMessage = T('v02.request.system_message');
+    console.log("Sytem message from task " + T('v02.meta.id'))
   }
 
-  const threadId = task.threadId
-  const instanceId = task.instanceId
+  const threadId = T('v02.meta.threadId')
+  const instanceId = T('v02.meta.instanceId')
   const agentId = agent.id
 
   return {
@@ -185,6 +187,8 @@ async function ChatGPTAPI_request(params) {
     instanceId,
   } = params
 
+  const debug = true
+
   // Need to account for the system message and some margin because the token count may not be exact.
   //console.log("prompt " + prompt + " systemMessage " + systemMessage)
   if (!prompt) {console.log("ERROR: expect prompt to calculate tokens")}
@@ -205,7 +209,7 @@ async function ChatGPTAPI_request(params) {
     messageStore: messagesStore_async,
     maxResponseTokens: maxResponseTokens,
     maxModelTokens: maxTokens,
-    debug: true
+    debug: debug
   })
 
   const messageParams = {
@@ -223,11 +227,12 @@ async function ChatGPTAPI_request(params) {
 
   messagesStore_async.set(threadId + agentId + 'systemMessage', messageParams.systemMessage)
 
-  let cachedValue = '';
-  let cacheKey = '';
+  let cachedValue = ''
+  let cacheKey = ''
+  let cacheKeyText = {}
   if (use_cache) {
     const messagesText = await utils.messagesText_async(messagesStore_async, lastMessageId)
-    const cacheKeyText = [
+    cacheKeyText = [
       messageParams.systemMessage,  
       JSON.stringify(messageParams.completionParams), 
       prompt, 
@@ -265,9 +270,12 @@ async function ChatGPTAPI_request(params) {
       partialText += delta
       const partialResponse = {'delta' : delta, 'text' : partialText}
       SendIncrementalWs(partialResponse, instanceId, ws);
-      await sleep(50);
+      await sleep(20);
     }
     message_from('cache', text, server_only, ws, instanceId)
+    if (debug) {
+      console.log("Debug: ", cacheKeyText)
+    }
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise

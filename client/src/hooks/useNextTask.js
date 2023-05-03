@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from 'react';
 import { useGlobalStateContext } from '../contexts/GlobalStateContext';
 import { fetchTask } from '../utils/fetchTask'
+import { setNestedProperties, deepMerge, log } from '../utils/utils'
 
 // We have: Start with startId, threadId
 //          Step with task
@@ -21,7 +22,8 @@ const useNextTask = (task) => {
   const [nextTaskError, setNextTaskError] = useState(null);
 
   useEffect(() => {
-    if (task?.done) {
+    if (task && task.v02.state.done) {
+      log("useNextTask",task.v02.id)
       //console.log("useNextTask", task)
       const fetchTaskFromAPI = async () => {
         try {

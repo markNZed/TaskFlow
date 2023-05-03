@@ -10,7 +10,7 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   let messageJsonString;
 
-  log("task", task)
+  //log("task", task)
 
   try {
     const validatedTaskJsonString = fromTask(task);
@@ -25,7 +25,7 @@ export const fetchTask = async (globalState, end_point, task) => {
     return;
   }
 
-  log("messageJsonString", messageJsonString);
+  //log("messageJsonString", messageJsonString);
 
   const requestOptions = {
     method: 'POST',
