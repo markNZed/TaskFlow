@@ -51,7 +51,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    //startTaskFn(task.meta.id, null, component_depth)
+    startTaskFn(task.meta.id, null, component_depth)
   }, []);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ function TaskStepper(props) {
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = tasks[tasksIdx]
     if (action === 'next') {
-      if (currentTaskData && currentTaskData.next) {
+      if (currentTaskData && currentTaskData.meta.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({direction: 'next', task: currentTask});
         // Expect taskDone to be called from Task, rename leaving to taskLeave

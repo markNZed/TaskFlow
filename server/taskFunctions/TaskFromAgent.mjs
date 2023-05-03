@@ -25,15 +25,15 @@ const TaskFromAgent_async = async function(task) {
 
     let threadTasks = {}
     const parentId = T('meta.parentId')
-    if (T('config.messagesTemplate')) {
+    if (T('config.messagesTemplate') || T('config.promptTemplate')) {
       // We get the potentially relevant instances 
       // Note we assume T('meta.id') is unique in the thread (may not be true)
       const instanceIds = await threadsStore_async.get(T('meta.threadId'))
       //console.log("instanceIds ", instanceIds)
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
-        threadTasks[tmp.id] = tmp;
-        //console.log("tmp " + tmp.instanceId + " input " + tmp.input)
+        threadTasks[tmp.meta.id] = tmp;
+        //console.log("thread " + tmp.meta.id + " instanceId " + tmp.meta.instanceId + " output " + tmp.output)
       }
     }
 
@@ -52,19 +52,19 @@ const TaskFromAgent_async = async function(task) {
           if (threadTasks[parentId + '.' + matches[1]] === undefined) {
             console.log("threadTasks " + parentId + '.' + matches[1] +" does not exist")
           }
-          if (threadTasks[parentId + '.' + matches[1]]['v02']['output'] === undefined) {
+          if (threadTasks[parentId + '.' + matches[1]]['output'] === undefined) {
             console.log("threadTasks " + parentId + '.' + matches[1] + ".output does not exist in", threadTasks[parentId + '.' + matches[1]])
           }
-          if (threadTasks[parentId + '.' + matches[1]]['v02']['output'][matches[2]] === undefined) {
+          if (threadTasks[parentId + '.' + matches[1]]['output'][matches[2]] === undefined) {
             console.log("threadTasks " + parentId + '.' + matches[1] + ".output." + matches[2] + " does not exist in", threadTasks[parentId + '.' + matches[1]])
           }
           // Will crash server if not present
-          return acc + threadTasks[parentId + '.' + matches[1]]['v02']['output'][matches[2]]
+          return acc + threadTasks[parentId + '.' + matches[1]]['output'][matches[2]]
         } else {
           return acc + curr
         }
       });
-      console.log("Prompt " + prompt)
+      //console.log("Prompt " + prompt)
     } else {
       if (T('request.input')) {
         prompt += T('request.input')
@@ -85,7 +85,7 @@ const TaskFromAgent_async = async function(task) {
             const regex = /(^.+)\.(.+$)/;
             const matches = regex.exec(curr);
             if (matches) {
-              let substituted = threadTasks[parentId + '.' + matches[1]]['v02']['output'][matches[2]]
+              let substituted = threadTasks[parentId + '.' + matches[1]]['output'][matches[2]]
               return acc + substituted
             } else {
               if (typeof curr === 'string') {
@@ -97,9 +97,7 @@ const TaskFromAgent_async = async function(task) {
           });
         }
       });
-      // console.log("T('request.messages') " + JSON.stringify(workflow.tasks[taskName]))
-      // Not sure we need this now
-      //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
+      //console.log("T('request.messages') " + JSON.stringify(T('request.messages')))
     }
   
     let response_text = ''
@@ -111,6 +109,8 @@ const TaskFromAgent_async = async function(task) {
     T('response.text', response_text)
     // Make available as an output to other Tasks
     T('output.text', response_text)
+    // Ensure we do not overwrite the deltaState on the client
+    T('state.deltaState', undefined)
     T('meta.updatedAt', Date.now())
     //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
     console.log("Returning from tasks.TaskFromAgent ")// + response_text)

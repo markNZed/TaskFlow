@@ -10,7 +10,8 @@ export function updateState(setState, update) {
 export const delta = (callback, delay=0) => setTimeout(callback, delay)
 
 export const getObjectDifference = (obj1, obj2) => {
-    return _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]))
+    const res = _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]))
+    return _.cloneDeep(res)
 }
 
 export function hasOnlyResponseKey(obj) {

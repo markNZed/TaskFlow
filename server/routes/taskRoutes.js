@@ -115,7 +115,7 @@ router.post('/update', async (req, res) => {
     console.log("/api/task/update")
     let userId = utils.getUserId(req)
     if (userId) {
-      console.log("req.body " + JSON.stringify(req.body))
+      //console.log("req.body " + JSON.stringify(req.body))
       const sessionId = req.body.sessionId
       let task = req.body.task
       let address = req.body.address
@@ -200,7 +200,7 @@ router.post('/update', async (req, res) => {
         console.error("Error while validating Task against schema:", error, task);
         return;
       }
-      console.log(JSON.stringify(messageObject))
+      //console.log(JSON.stringify(messageObject))
       res.send(messageJsonString);
     } else {
       res.status(200).json({ error: "No user" });
@@ -309,7 +309,7 @@ router.post('/start', async (req, res) => {
           console.error("Error while validating Task against schema:", error, task)
           return;
         }
-        console.log(JSON.stringify(messageObject))
+        //console.log(JSON.stringify(messageObject))
         res.send(messageJsonString);
       }
     } else {

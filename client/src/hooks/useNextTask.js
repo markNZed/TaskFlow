@@ -28,6 +28,7 @@ const useNextTask = (task) => {
         try {
           setNextTaskLoading(true);
           const result = await fetchTask(globalState, 'task/update', task);
+          log("useNextTask result",task)
           setNextTask(result);
         } catch (error) {
           setNextTaskError(error.message);

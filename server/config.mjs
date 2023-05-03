@@ -9,7 +9,7 @@ dotenv.config()
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 const DEFAULT_USER = 'test@testing.com'
-let DUMMY_OPENAI = true
+let DUMMY_OPENAI = false
 
 const CACHE_ENABLE = process.env.CACHE_ENABLE === 'true' || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE)

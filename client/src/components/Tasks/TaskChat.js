@@ -138,10 +138,10 @@ const TaskChat = (props) => {
 
   return (
     <form onSubmit={handleSubmit} ref={formRef} className="msg-form">
-        {task?.suggested_prompts ?
+        {task.config?.suggestedPrompts ?
           <div style={{textAlign: 'left'}}>
             <PromptDropdown 
-              prompts={task?.suggested_prompts} 
+              prompts={task.config.suggestedPrompts} 
               onSelect={handleDropdownSelect} 
             />
           </div>

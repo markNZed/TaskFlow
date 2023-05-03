@@ -91,7 +91,7 @@ const TaskFromAgent = (props) => {
         if (myTaskId && myTaskId === task.meta.id) {
             const leaving_now = ((leaving?.direction === 'next') && leaving?.task.meta.name === task.meta.name)
             const next_step = task.config.nextStates[myStep]
-            //console.log("task.id " + task.meta.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+            //console.log("task.meta.id " + task.meta.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -191,7 +191,7 @@ const TaskFromAgent = (props) => {
     return (
 
         <div style={{ display: "flex", flexDirection: "column"}}>
-            {props.task?.instruction ?
+            {props.task.config?.instruction ?
                 <Paper elevation={3} 
                     style={{
                         overflow: "auto",
@@ -200,7 +200,7 @@ const TaskFromAgent = (props) => {
                         marginBottom: "12px",
                     }}
                 >
-                    <Typography style={{ marginTop: "16px" }}>{props.task.request.instruction}</Typography>
+                    <Typography style={{ marginTop: "16px" }}>{props.task.config.instruction}</Typography>
                 </Paper>
             : ''
             }
@@ -229,7 +229,7 @@ const TaskFromAgent = (props) => {
             {showUserInput ?
                 <div>
                     <TextareaAutosize
-                        placeholder={props.task?.input_label}
+                        placeholder={props.task.request?.inputLabel}
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
                         style={{ marginTop: "16px" }}

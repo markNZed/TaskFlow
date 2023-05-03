@@ -15,13 +15,13 @@ const TaskShowResponse_async = async function(task) {
 
     let threadTasks = {}
     const parentId = T('meta.parentId')
-    if (T('config.promptTemplate')) {
+    if (T('config.promptTemplate') || T('config.promptTemplate')) {
       // We get the potentially relevant instances 
       // Note we assume T('meta.id') is unique in the thread (may not be true)
       const instanceIds = await threadsStore_async.get(T('meta.threadId'))
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
-        threadTasks[tmp.id] = tmp;
+        threadTasks[tmp.meta.id] = tmp;
       }
     }
 
@@ -50,7 +50,10 @@ const TaskShowResponse_async = async function(task) {
       response = T('response.text')
     }
     console.log("Returning from tasks.TaskShowResponse")
+    // Ensure we do not overwrite the deltaState on the client
+    T('state.deltaState', undefined)  // Should be centralized?
     T('response.text', response)
+    T('meta.updatedAt', Date.now()) // Should be centralized?
     return task
 }
 

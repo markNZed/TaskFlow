@@ -18,6 +18,9 @@ function SendIncrementalWs(partialResponse, instanceId, ws) {
   const incr = JSON.stringify(partialResponse.delta) // check if we can send this
   if (ws) {
     let response
+    if (ws.data['delta_count'] === undefined) {
+      ws.data['delta_count'] = 0
+    }
     if (ws.data['delta_count'] && ws.data['delta_count'] % 20 === 0) {
       response = {'text' : partialResponse.text, 'mode' : "partial"}
     } else if (incr) {
@@ -68,15 +71,15 @@ async function chat_prepare(task) {
   }
   //console.log("Agent ", agent)
 
-  if (task?.one_thread) {
+  if (T('config.oneThread')) {
     // Prefix with location when it has changed
-    if (task?.new_address) {
+    if (T('request.newAddress')) {
       prompt = "Location: " + T('request.address') + "\n" + prompt
     }
     // Prefix prompt with date/time
     const currentDate = new Date();
     prompt = 'Time: ' + utils.formatDateAndTime(currentDate) + "\n" + prompt
-    console.log("one_thread prompt : " + prompt)
+    console.log("oneThread prompt : " + prompt)
   }
   
   if (T('request.use_cache')) {
@@ -99,9 +102,9 @@ async function chat_prepare(task) {
     console.log("Task server_only")
   }
 
-  if (typeof T('request.forget')) {
+  if (T('request.forget')) {
     initializing = T('request.forget')
-    console.log("Task forget previous messages")
+    console.log("Task forget previous messages", T('request.forget'))
   }
 
   if (!initializing) {
@@ -116,7 +119,7 @@ async function chat_prepare(task) {
       console.log("Initial messages from agent " + agent.name + " " + lastMessageId)
     }
 
-    if (task?.messages) {
+    if (T('request.messages')) {
       lastMessageId = await utils.processMessages_async(T('request.messages'), messagesStore_async, lastMessageId)
       console.log("Messages extended from meta.name " + T('meta.name') + " lastMessageId " + lastMessageId)
     }

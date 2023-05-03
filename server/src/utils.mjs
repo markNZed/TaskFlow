@@ -130,14 +130,14 @@ utils.filter_in_list = function(task, filter_list) {
 }
 
 utils.filter_in = function(components, tasks, task) {
-  if (!task?.id) {
+  if (!task.meta?.id) {
     console.log("ERROR Task has no id ", task)
   }
   //console.log("BEFORE ", task)
   let filter_list = []
   let filter_for_server = []
   // This assumes the components are not expanded - need to do this in dataconfig
-  for (const c of task.component) {
+  for (const c of task.meta.stack) {
     filter_list = filter_list.concat(components['root.' + c].filter_for_client)
     filter_for_server = filter_list.concat(components['root.' + c].filter_for_server)
   }
@@ -155,7 +155,7 @@ utils.filter_in = function(components, tasks, task) {
     if (!filter_list.includes(key)) {
       delete taskCopy[key];
       if (!filter_for_server.includes(key) && !key.startsWith('APPEND_') && !key.startsWith('PREPEND_')) {
-        console.log("Warning: Unknown task key not returned to client " + key + " in task id " + task.id)
+        console.log("Warning: Unknown task key not returned to client " + key + " in task id " + task.meta.id)
       }
     }
   }
@@ -165,8 +165,8 @@ utils.filter_in = function(components, tasks, task) {
 
 utils.authenticatedTask = function(task, userId, groups) {
   let authenticated = false
-  if (task?.groups) {
-    task.groups.forEach((group_name) => {
+  if (task.meta?.permissions) {
+    task.meta.permissions.forEach((group_name) => {
       if (!groups[group_name]) {
         console.log("Warning: could not find group " + group_name )
       } else {
@@ -205,10 +205,10 @@ utils.createTaskValueGetter = function(task) {
   return function(path, value) {
     if (arguments.length === 2) {
       utils.setNestedValue(task, path, value)
-      console.log("createTaskValueGetter set ",path,value)
+      //console.log("createTaskValueGetter set ",path,value)
     } else {
       const res = utils.getNestedValue(task, path)
-      console.log("createTaskValueGetter get ", path, res)
+      //console.log("createTaskValueGetter get ", path, res)
       return res
     }
   };

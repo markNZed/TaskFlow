@@ -12,7 +12,7 @@ function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
     const handleMessage = (e) => {
       const message = JSON.parse(e.data);
       //log("useFilteredWebSocket ", message)
-      if (task?.instanceId && message?.partialTask && message.partialTask?.instanceId === task.meta.instanceId) {
+      if (task.meta?.instanceId && message?.partialTask && message.partialTask?.instanceId === task.meta.instanceId) {
         //log("useFilteredWebSocket ", message)
         onMessage(message.partialTask);
       }

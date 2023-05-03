@@ -28,12 +28,13 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true)
-          const updating = {'meta.send': false, 'response.updating': true, update: false, updating: true}
+          const updating = {'meta.send': false, 'response.updating': true}
           setNestedProperties(updating)
           setTask(p => (deepMerge(p, updating)))
           const result = await fetchTask(globalState, 'task/update', task);
+          log("useUpdateTask result", task)
           setTask(p => (deepMerge(p, result)))
-          const updated = {'response.updated': true, 'response.updating': false, updated: true, updating: true}
+          const updated = {'response.updated': true, 'response.updating': false}
           setNestedProperties(updated)
           setTask(p => (deepMerge(p, updated)))
         } catch (error) {

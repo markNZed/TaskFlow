@@ -26,6 +26,7 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
         let task = {meta:{id: startId, stackPtr: component_depth}}
         if (threadId) { task.meta['threadId'] = threadId }
         const result = await fetchTask(globalState, 'task/start', task);
+        log("useStartTask result", task)
         //console.log("setStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);

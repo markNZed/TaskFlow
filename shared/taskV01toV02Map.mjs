@@ -101,6 +101,7 @@ export function fromV01toV02(taskV01) {
       "request.model": "model",
       "request.temperature": "temperature",
       "request.maxTokens": "maxTokens",
+      "request.newAddress": "new_address",
       "request.forget": "forget",
       "request.inputLabel": "input_label",
       "request.messages": "messages",
@@ -123,11 +124,8 @@ export function fromV01toV02(taskV01) {
       const v02PathArray = v02Path.split(".");
   
       if (taskV01.hasOwnProperty(v01Key) && taskV01[v01Key] !== undefined) {
-        // make sure that taskV02 is not already set but might be updating
-        //if (!isDeepValueSet(taskV02, v02PathArray)) {
-            console.log("setDeepValue", v01Key, v02PathArray, taskV01[v01Key])
-            setDeepValue(taskV02, v02PathArray, taskV01[v01Key])
-        //}
+        //console.log("setDeepValue", v01Key, v02PathArray, taskV01[v01Key])
+        setDeepValue(taskV02, v02PathArray, taskV01[v01Key])
       }
     }
   
@@ -219,6 +217,7 @@ export function fromV02toV01(taskV02) {
       menu: "meta.initiator",
       model: "request.model",
       name: "meta.name",
+      new_address: "request.newAddress",
       next: "meta.nextTask",
       next_step: "state.nextState",
       next_template: "config.nextStateTemplate",
@@ -272,121 +271,3 @@ export function fromV02toV01(taskV02) {
     return taskV01;
 }
   
-
-export function fromV01toV02_gpt4(taskV01) {
-    let taskV02 = {
-        config: {
-            instruction: taskV01.instruction,
-            label: taskV01.label,
-            messagesTemplate: taskV01.messages_template.map(message => {
-                return {
-                    content: message.content,
-                    role: message.role
-                };
-            }),
-            nextStates: taskV01.steps,
-            promptTemplate: taskV01.assemble_prompt,
-            suggestedPrompts: taskV01.suggested_prompts,
-            welcomeMessage: taskV01.welcome_message
-        },
-        input: {}, // assuming you want to initialize it as an empty object
-        meta: {
-            baseType: "", // assuming you want to initialize it as an empty string
-            children: taskV01.children,
-            completedAt: "", // assuming you want to initialize it as an empty string
-            createdAt: taskV01.created,
-            dependencies: [], // assuming you want to initialize it as an empty array
-            error: null, // assuming you want to initialize it as null
-            permissions: taskV01.groups,
-            id: taskV01.id,
-            initiator: taskV01.menu,
-            name: taskV01.name,
-            nextTasks: [], // assuming you want to initialize it as an empty array
-            parentId: taskV01.parentId,
-            parentType: "", // assuming you want to initialize it as an empty string
-            send: "", // assuming you want to initialize it as an empty string
-            stack: [], // assuming you want to initialize it as an empty array
-            stackPtr: 0, // assuming you want to initialize it as 0
-            threadId: taskV01.threadId,
-            type: "", // assuming you want to initialize it as an empty string
-            updateCount: taskV01.update_count,
-            updatedAt: taskV01.last_change,
-            userId: taskV01.userId,
-            versionExternal: "0.2", // assuming you want to initialize it as an empty string
-            versionInternal: "0.0" // assuming you want to initialize it as an empty string
-        },
-        output: {}, // assuming you want to initialize it as an empty object
-        privacy: {}, // assuming you want to initialize it as an empty object
-        request: {
-            agent: taskV01.agent,
-            forget: taskV01.forget,
-            inputLabel: taskV01.input_label,
-            messages: taskV01.messages.map(message => {
-                return {
-                    content: message.content,
-                    role: message.role
-                };
-            }),
-            model: "", // assuming you want to initialize it as an empty string
-            prompt: taskV01.input,
-            temperature: 0, // assuming you want to initialize it as 0
-        },
-        response: {
-            text: taskV01.response,
-            userInput: taskV01.input
-        },
-        state: {
-            current: taskV01.step,
-            deltaState: taskV01.delta_step,
-            done: taskV01.done,
-            id: "", // assuming you want to initialize it as an empty string
-            nextState: taskV01.next_step,
-            sessionId: taskV01.sessionId
-        }
-    };
-    return taskV02;
-}
-
-export function fromV02toV01_gpt4(taskV02) {
-    let taskV01 = {
-        agent: taskrequest.agent,
-        assemble_prompt: taskconfig.promptTemplate,
-        children: taskmeta.children,
-        created: taskmeta.createdAt,
-        delta_step: taskstate.deltaState,
-        done: taskstate.done,
-        forget: taskrequest.forget,
-        groups: taskmeta.permissions,
-        menu: taskmeta.initiator,
-        id: taskmeta.id,
-        input: taskresponse.userInput,
-        input_label: taskrequest.inputLabel,
-        instruction: taskconfig.instruction,
-        last_change: taskmeta.updatedAt,
-        messages: taskrequest.messages.map(message => {
-            return {
-                content: message.content,
-                role: message.role
-            };
-        }),
-        messages_template: taskconfig.messagesTemplate.map(message => {
-            return {
-                content: message.content,
-                role: message.role
-            };
-        }),
-        name: taskmeta.name,
-        next_step: taskstate.nextState,
-        parentId: taskmeta.parentId,
-        prompt: taskrequest.prompt,
-        response: taskresponse.text,
-        step: taskstate.current,
-        steps: taskconfig.nextStates,
-        suggested_prompts: taskconfig.suggestedPrompts,
-        threadId: taskmeta.threadId,
-        update_count: taskmeta.updateCount,
-        userId: taskmeta.userId,
-        welcome_message: taskconfig.welcomeMessage
-    };
-    return taskV01;
-}
