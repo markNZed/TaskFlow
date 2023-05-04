@@ -11,7 +11,7 @@ dotenv.config()
 
 // For now we use JS data structures instead of a DB
 // Removes need for an admin interface during dev
-const CONFIG_DIR = process.env.CONFIG_DIR || "./../config/";
+const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";
 console.log("Loading config data from " + CONFIG_DIR)
 var users = await utils.load_data_async(CONFIG_DIR, 'users')
 var groups = await utils.load_data_async(CONFIG_DIR, 'groups')
@@ -42,22 +42,22 @@ function flattenObjects(workflows) {
     if (!workflow?.name) {
       utils.fail('Error: Workflow missing name')
     }
-    if (!workflow?.parent && workflow.name !== 'root') {
-      utils.fail('Error: Workflow missing parent ' + workflow.name)
+    if (!workflow?.parentType && workflow.name !== 'root') {
+      utils.fail('Error: Workflow missing parentType ' + workflow.name)
     }
     /* Removed so we can have component names
     if (!regex_lowercase.test(workflow.name)) {
       utils.fail('Error: Workflow name should only include lowercase characters ' + workflow.name)
     }
     */
-    if (!parent2id[workflow.parent] && workflow.name !== 'root') {
-      utils.fail('Error: Workflow parent ' + workflow.parent + ' does not exist in ' + workflow.name)
+    if (!parent2id[workflow.parentType] && workflow.name !== 'root') {
+      utils.fail('Error: Workflow parentType ' + workflow.parentType + ' does not exist in ' + workflow.name)
     } 
     var id
     if (workflow.name === 'root') {
       id = 'root'
     } else {
-      id = parent2id[workflow.parent] + '.' + workflow.name
+      id = parent2id[workflow.parentType] + '.' + workflow.name
     }
     if (workflowLookup[id]) {
       utils.fail('Error: Duplicate workflow ' + id)
@@ -73,11 +73,11 @@ function flattenObjects(workflows) {
             workflow.tasks[key]['label'] = ''
           }
           // Convert relative task references to absolute
-          if (workflow.tasks[key]['next'] && !workflow.tasks[key]['next'].includes('.')) {
-            workflow.tasks[key]['next'] = id + '.' + workflow.tasks[key]['next']
+          if (workflow.tasks[key]['nextTask'] && !workflow.tasks[key]['nextTask'].includes('.')) {
+            workflow.tasks[key]['nextTask'] = id + '.' + workflow.tasks[key]['nextTask']
           }
-          if (workflow.tasks[key]['next_template']) {
-            let nt = workflow.tasks[key]['next_template']
+          if (workflow.tasks[key]['config'] && workflow.tasks[key]['config']['nextStateTemplate']) {
+            let nt = workflow.tasks[key]['config']['nextStateTemplate']
             for (const key in nt) {
               if (nt.hasOwnProperty(key)) {
                 if (!nt[key].includes('.')) {
@@ -93,8 +93,8 @@ function flattenObjects(workflows) {
       workflow['label'] = utils.capitalizeFirstLetter(workflow.name)
     }
     workflow['id'] = id
-    workflow['parentId'] = parent2id[workflow.parent]  
-    // Copy all the keys from the parent that are not in the current workflow
+    workflow['parentId'] = parent2id[workflow.parentType]  
+    // Copy all the keys from the parentType that are not in the current workflow
     // Could create functions here for PREPEND_ and APPEND_
     const parentWorkflow = workflowLookup[workflow['parentId']]
     for (const key in parentWorkflow) {

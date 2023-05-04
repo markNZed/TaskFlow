@@ -69,14 +69,14 @@ function WorkflowTree() {
         // Would be better to strip from children also
         return ''
       }
-      const { label, children, menu } = node;
+      const { label, children, initiator } = node;
       //console.log(id)
       if (propagateDefault) {
           tempNodeIds = [...tempNodeIds, id];
       }
       
       if (children && children.length > 0) {
-          if (menu) {
+          if (initiator) {
             return (
               <TreeItem key={id} nodeId={id} label={label} >
                 {children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))}
@@ -86,7 +86,7 @@ function WorkflowTree() {
             return children.map((child) => renderTree(nodes, child, handleSelectNode, propagateDefault))
           }
       } else {
-          if (!menu) {return ''}
+          if (!initiator) {return ''}
           globalState.workflowsTree[id].leaf = true
           if (propagateDefault && node?.default) {
               handleSelectNode(node)

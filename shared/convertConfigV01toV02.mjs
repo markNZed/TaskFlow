@@ -3,6 +3,7 @@ const v02Mapping = {
     client_prompt: "request.input",
     collaborate: "config.collaborate",
     component: "stack",
+    APPEND_component: "APPEND_stack", //Added for config
     component_depth: "stackPtr",
     agent: "request.agent",
     assemble_prompt: "config.promptTemplate",
@@ -13,6 +14,8 @@ const v02Mapping = {
     done: "state.done",
     dyad: "request.dyad", 
     error: "error",
+    APPEND_filter_for_client: "APPEND_filter_for_client", //Added for config
+    filter_for_client: "filter_for_client", //Added for config
     forget: "request.forget",
     groupId: "groupId",
     groups: "permissions",
@@ -59,6 +62,7 @@ const v02Mapping = {
     use_address: "config.useAddress",
 };
 
+// This is only mapping when it exists
 function updateDataStructure(obj) {
     const updatedObj = {};
 
@@ -74,11 +78,16 @@ function updateDataStructure(obj) {
       const value = obj[key];
   
       if (value !== undefined) {
-        const [firstPart, secondPart] = newKey.split('.');
-        if (!updatedObj[firstPart]) {
-          updatedObj[firstPart] = {};
+        if (newKey.includes('.')) {
+          const [firstPart, secondPart] = newKey.split('.');
+          if (!updatedObj[firstPart]) {
+            //console.log("THERE", firstPart, value)
+            updatedObj[firstPart] = {};
+          }
+          updatedObj[firstPart][secondPart] = value;
+        } else {
+          updatedObj[newKey] = value;
         }
-        updatedObj[firstPart][secondPart] = value;
       }
     }
   
@@ -88,38 +97,55 @@ function updateDataStructure(obj) {
 import fs from 'fs/promises';
 import fsExtra from 'fs-extra';
 
+/*
 import workflow_leguide from '/app/chat-config/workflow/leguide.mjs';
 import workflow_summary from '/app/chat-config/workflow/summary.mjs';
 import workflow_testing from '/app/chat-config/workflow/testing.mjs';
 import { workflows } from '/app/chat-config/workflows.mjs';
-
-// We will need to make some minor mods but we can convert the data structures then recreate the files
+import { components } from '/app/chat-config/components.mjs';
 
 const filenames = {
-    'workflows' : '/app/chat-config-v02/workflows.mjs', 
-    'workflow_leguide' : '/app/chat-config-v02/workflow/leguide.mjs', 
-    'workflow_summary' : '/app/chat-config-v02/workflow/summary.mjs', 
-    'workflow_testing' : '/app/chat-config-v02/workflow/testing.mjs',
+  'workflows' : '/app/chat-config-v02/workflows.mjs', 
+  'workflow_leguide' : '/app/chat-config-v02/workflow/leguide.mjs', 
+  'workflow_summary' : '/app/chat-config-v02/workflow/summary.mjs', 
+  'workflow_testing' : '/app/chat-config-v02/workflow/testing.mjs',
+  'components' : '/app/chat-config-v02/components.mjs',
 }
+
+const SRCDIR = '/app/chat-config';
+const DESTDIR = '/app/chat-config-v02';
 
 const dataStructures = {
     workflows,
     workflow_leguide,
     workflow_summary,
     workflow_testing,
+    components,
+};
+
+*/
+
+import { workflows } from '../server/config/workflows.mjs';
+import { components } from '../server/config/components.mjs';
+
+const filenames = {
+  'workflows' : '../server/config-v02/workflows.mjs', 
+  'components' : '../server/config-v02/components.mjs',
+}
+
+const SRCDIR = '../server/config';
+const DESTDIR = '../server/config-v02';
+
+const dataStructures = {
+    workflows,
+    components,
 };
 
 function updateNestedTasks(data) {
   if (data.tasks) {
     for (const taskId in data.tasks) {
-      const updatedData = Object.fromEntries(
-        Object.entries(data.tasks[taskId]).map(([key, value]) => {
-          console.log("HERE",value)
-          const updatedItem = updateDataStructure(value);
-          return [key, updatedItem]
-        })
-      )
-      data.tasks[taskId] = updatedData
+      const updatedItem = updateDataStructure(data.tasks[taskId]);
+      data.tasks[taskId] = updatedItem
     }
   }
   return data;
@@ -155,18 +181,16 @@ async function modifyAndSaveFiles() {
 }
 
 async function copyAndReplace() {
-  const srcDir = '/app/chat-config';
-  const destDir = '/app/chat-config-v02';
 
   try {
     // Ensure the destination directory exists
-    await fsExtra.ensureDir(destDir);
+    await fsExtra.ensureDir(DESTDIR);
 
     // Copy the source directory to the destination directory
     // If the destination directory contains files, they will be replaced
-    await fsExtra.copy(srcDir, destDir, {overwrite: true});
+    await fsExtra.copy(SRCDIR, DESTDIR, {overwrite: true});
 
-    console.log(`Copied '${srcDir}' to '${destDir}' and replaced existing files.`);
+    console.log(`Copied '${SRCDIR}' to '${DESTDIR}' and replaced existing files.`);
   } catch (err) {
     console.error(`Error copying and replacing files: ${err.message}`);
   }

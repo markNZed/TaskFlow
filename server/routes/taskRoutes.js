@@ -13,7 +13,6 @@ import { instancesStore_async, threadsStore_async} from './../src/storage.mjs'
 import * as dotenv from 'dotenv'
 dotenv.config()
 import { toTask, fromTask } from '../src/taskConverterWrapper.mjs'
-import { fromV01toV02 } from '../src/shared/taskV01toV02Map.mjs'
 
 const router = express.Router();
 
@@ -45,10 +44,8 @@ async function newTask_async(id, sessionId, threadId = null, siblingTask = null)
       threadId = siblingTask.threadId
     }
     let taskCopy = { ...tasks[id] }
-    try {
-      taskCopy = fromV01toV02(taskCopy)
-    } catch (error) {
-      console.error("Error while fromV01toV02:", error, taskCopy);
+    if (!taskCopy?.config) {
+      taskCopy['config'] = {}
     }
     if (!taskCopy?.input) {
       taskCopy['input'] = {}
@@ -220,7 +217,6 @@ router.post('/start', async (req, res) => {
       const threadId = task?.threadId;
       const component_depth = task.stackPtr;
       let groupId = task?.groupId;
-      
   
       if (!tasks[startId]) {
   

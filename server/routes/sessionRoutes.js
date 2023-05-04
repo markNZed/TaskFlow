@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
     let workflowsTree = {}
     for (const key in authorised_workflows) {
       let wf = authorised_workflows[key]
-      workflowsTree[key] = utils.filter_in_list(wf, ['id', 'label', 'children', 'menu'])
+      workflowsTree[key] = utils.filter_in_list(wf, ['id', 'label', 'children', 'initiator'])
     }
     //console.log("workflowsTree ", workflowsTree)
     if (userId) {
