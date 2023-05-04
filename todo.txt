@@ -1,15 +1,11 @@
 /* ToDo
 -------
-Create a script to convert the config files in-place
-
 Add task type validation to websocket
-Add task type validation to return from TaskFunctions
-Rather than a JS hierarchy we might be better to use KeyV mapping e.g. meta-name etc 
-  There is an issue of how to flatten the tasks
-  Maybe Task keeps the internal structure
+Rather than a JS hierarchy we might be better to use KeyV mapping e.g. response_text etc 
 How to reference values from previous Tasks - available in "output"
-If we put a T at hte beginning of each Task parameter it would be easier to update with replace
-  
+If we put a T at the beginning of each Task parameter it would be easier to update with search & replace
+  Better to use full path even in JXS e.g. task.name not name e.g in workflows and stepper
+The chat.mjs is like an internal request? make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO)
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
