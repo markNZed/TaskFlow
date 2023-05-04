@@ -28,10 +28,15 @@ router.get("/", async (req, res) => {
   let workflowsTree = {};
   for (const key in authorised_workflows) {
     let wf = authorised_workflows[key];
+    // This should probably be a separate menu config
+    // This is a hack to put the label back after change to v02 schema
+    if (wf?.config?.label) {
+      wf['label'] = wf.config.label;
+    }
     workflowsTree[key] = utils.filter_in_list(wf, [
       "id",
-      "label",
       "children",
+      "label",
       "initiator",
     ]);
   }

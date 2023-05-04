@@ -292,9 +292,11 @@ form img {
   text-align: left;
 }
 
+/*
 .workflowTree .MuiTreeItem-label::first-letter {
   text-transform: uppercase;
 }
+*/
 
 /**
  * ==============================================

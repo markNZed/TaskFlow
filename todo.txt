@@ -1,12 +1,30 @@
 /* ToDo
 -------
-Add task type validation to websocket
+Put label into main schema area from config
 Rather than a JS hierarchy we might be better to use KeyV mapping e.g. response_text etc 
 How to reference values from previous Tasks - available in "output"
 If we put a T at the beginning of each Task parameter it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in workflows and stepper
-The chat.mjs is like an internal request? make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO)
+The chat.mjs is like an internal request? Make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO)
 Format with Prettier extension
+How can we specify the UI in a more compact/easy way?
+  https://github.com/rjsf-team/react-jsonschema-form
+  If you're looking for a performant, hook-based solution with minimal boilerplate, React Hook Form is a great choice.
+Think about how to have a task deal with compound react components
+  config: list of components (with names) for display&input, mapping inputs to request.name.inputs
+  config: list of components (with names) for display, mapping to response.name.outputs (if it is displaying a return)
+  Basic pattern is: display -> input -> display -> input (can choose to use a subset)
+  Could associate components with state of the Task ?
+         * -> list of components that are active all the time
+    state1 -> list of active components
+    state2 -> list of active components
+Consider how we would add a radio select box to a component
+  Add the component and a config option to display or not
+  Dynamic mapping of config to the input
+  Standard way of mapping this to response. Make these available as variable in next Task (or state?)
+Can we have the same React component present a new Task? I guess it sort of does that automatically (carry the previous output along)
+  In this case the pattern display then input or input then display.
+Could have tasks that fill out a higher presentation task - like the stepper
 
 Compare with similar systems
   LangChain - a framework for developing applications powered by language models.
@@ -71,6 +89,7 @@ Backlog
     Websocket for tasks (so server can drive) just send incremental info for the task
     Replace globalState with Redux
     When sending task instance only send diff (client keeps server copy, server keeps client copy)
+    Add task type validation to websocket
 
 Notes/Idea
 -----

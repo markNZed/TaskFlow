@@ -14,6 +14,8 @@ The request/response fields are used to send Task specific information between t
 Changing the schema was a painful exercise:
 * Javascript uses references in hierarchical data structures and this can create issues e.g. code that worked with a shallow data structure breaks with a deeper data structure.
 * Common names make it hard to do global search & replace. A more semantic search and replace would help a lot.
+* Formatting the code with Prettier should make for easier search & replace
+* 
 
 ## Upgrading
 The convertConfigV01toV02.mjs is a script that helped with the conversion of V01 to V02

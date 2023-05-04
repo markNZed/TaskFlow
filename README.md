@@ -7,7 +7,7 @@ Chat2Flow is a Task centric collaborative web application framework leveraging A
 Chat2Flow supports activities combining software and AI models with human interaction. The originality of Chat2Flow is its Task centric approach. While the user will tend to think in workflows (a sequence of Tasks), Chat2Flow manages Tasks. Tasks can be chained into workflows, but the concept of a workflow is not central to Chat2Flow. The developer builds a Task, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
 The developer of Chat2Flow designs Tasks that consist of:
-* A textual specification (in Javascript syntax) of variables the Task may use
+* A textual specification (JSON Schema) of variables the Task may use
 * An optional client side component that interacts with a user and updates the Task
 * A server side function that updates the Task
 

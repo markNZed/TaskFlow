@@ -63,13 +63,8 @@ const TaskChat = (props) => {
   function updateResponse(mode, text) {
     switch (mode) {
       case "delta":
-        // Don't use updateTask because we want to append to a property in the task
-        let partialText = "";
-        if (task.response.text) {
-          partialText = task.response.text;
-        }
-        partialText += text;
-        updateTask({ "response.text": partialText });
+        // There are issues when calling setTask: TaskConversation does not see the change
+        updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
         break;
       case "partial":
         updateTask({ "response.text": text });

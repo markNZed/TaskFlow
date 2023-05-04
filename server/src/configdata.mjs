@@ -101,8 +101,11 @@ function flattenObjects(workflows) {
         }
       }
     }
-    if (!workflow?.label) {
-      workflow["label"] = utils.capitalizeFirstLetter(workflow.name);
+    if (!workflow.config) {
+      workflow['config'] = {}
+    }
+    if (!workflow.config?.label) {
+      workflow.config["label"] = utils.capitalizeFirstLetter(workflow.name);
     }
     workflow["id"] = id;
     workflow["parentId"] = parent2id[workflow.parentType];
