@@ -11,7 +11,7 @@ const TaskChat_async = async function(task) {
 
     const T = utils.createTaskValueGetter(task)
 
-    console.log("TaskChat meta.name " + T('meta.name'))
+    console.log("TaskChat name " + T('name'))
   
     T('response.text', null) // Avoid using previously stored response
 

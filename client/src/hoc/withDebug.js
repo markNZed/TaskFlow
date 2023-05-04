@@ -35,11 +35,11 @@ function withDebug(Component) {
           diff.response.text = diff.response.text.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if (!props.task.meta.id) {
+          if (!props.task.id) {
             console.log("Weird ", props.task)
           }
-          if ( props.task.meta.stackPtr === props.component_depth) {
-            log("Task " + props.task.meta.stackPtr + " " + props.task.meta.id + " changes:", diff)
+          if ( props.task.stackPtr === props.component_depth) {
+            log("Task " + props.task.stackPtr + " " + props.task.id + " changes:", diff)
           }
         }
       }

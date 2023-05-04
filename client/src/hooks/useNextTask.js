@@ -23,7 +23,7 @@ const useNextTask = (task) => {
 
   useEffect(() => {
     if (task && task.state.done) {
-      log("useNextTask",task.meta.id)
+      log("useNextTask",task.id)
       const fetchTaskFromAPI = async () => {
         try {
           setNextTaskLoading(true);

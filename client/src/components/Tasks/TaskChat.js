@@ -49,7 +49,7 @@ const TaskChat = (props) => {
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
-    updateTask({'meta.stackPtr' : component_depth})
+    updateTask({'stackPtr' : component_depth})
   }, []);
 
   function updateResponse(mode, text) {
@@ -112,7 +112,7 @@ const TaskChat = (props) => {
     setResponsePending(true);
     // Set update to send to server
     updateStep('sending')
-    updateTask({ 'request.input': prompt, 'meta.send': true });
+    updateTask({ 'request.input': prompt, 'send': true });
     //updateTask({ client_prompt: prompt, update: true, response: '' });
     // Clear the textbox
     setPrompt("");

@@ -69,14 +69,14 @@ function withTask(Component) {
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.meta.stackPtr === local_component_depth) {
+      if (task && task.stackPtr === local_component_depth) {
         setPrevTask(task);
       }
     }, []);
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.meta.stackPtr === local_component_depth) {
+      if (task && task.stackPtr === local_component_depth) {
         if (prevTask !== task) {
             setPrevTask(props.task);
         } 
@@ -122,12 +122,12 @@ function withTask(Component) {
             show_diff = false
           }
         }
-        if (!state.meta.id) {
+        if (!state.id) {
           console.log("Unexpected: Task without id ", state)
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if ( state.meta.stackPtr === local_component_depth ) {
-            logWithComponent(componentName, name + " " + state.meta.id + " changes:", diff)
+          if ( state.stackPtr === local_component_depth ) {
+            logWithComponent(componentName, name + " " + state.id + " changes:", diff)
           }
         }
         setPrevTaskState(state);
@@ -170,12 +170,12 @@ function withTask(Component) {
               show_diff = false
             }
           }
-          if (!state.meta?.id) {
+          if (!state?.id) {
             console.log("Unexpected: Task without id ", state)
           }
           if (show_diff && Object.keys(diff).length > 0) {
-            if ( state.meta.stackPtr === local_component_depth ) {
-              logWithComponent(componentName, name + " " + state.meta.id + " changes:", diff)
+            if ( state.stackPtr === local_component_depth ) {
+              logWithComponent(componentName, name + " " + state.id + " changes:", diff)
             }
           }
         }

@@ -108,8 +108,8 @@ async function chat_prepare(task) {
   }
 
   if (!initializing) {
-    lastMessageId = await messagesStore_async.get(T('meta.threadId') + agent.id + 'parentMessageId')
-    console.log("!initializing T('meta.threadId') " + T('meta.threadId') + " lastMessageId " + lastMessageId)
+    lastMessageId = await messagesStore_async.get(T('threadId') + agent.id + 'parentMessageId')
+    console.log("!initializing T('threadId') " + T('threadId') + " lastMessageId " + lastMessageId)
   }
 
   if (!lastMessageId || initializing) {
@@ -121,7 +121,7 @@ async function chat_prepare(task) {
 
     if (T('request.messages')) {
       lastMessageId = await utils.processMessages_async(T('request.messages'), messagesStore_async, lastMessageId)
-      console.log("Messages extended from meta.name " + T('meta.name') + " lastMessageId " + lastMessageId)
+      console.log("Messages extended from name " + T('name') + " lastMessageId " + lastMessageId)
     }
   
   }
@@ -131,8 +131,8 @@ async function chat_prepare(task) {
     console.log("Sytem message from agent " + agent.name)
   }
 
-  if (users[T('meta.userId')] && T('request.dyad')) {
-    let user = users[T('meta.userId')];
+  if (users[T('userId')] && T('request.dyad')) {
+    let user = users[T('userId')];
     systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
     console.log("Dyad in progress between " + agent.name + " and " + user?.name)
   }
@@ -141,11 +141,11 @@ async function chat_prepare(task) {
   // This allows for user defined system messages
   if (T('request.system_message')) {
     systemMessage = T('request.system_message');
-    console.log("Sytem message from task " + T('meta.id'))
+    console.log("Sytem message from task " + T('id'))
   }
 
-  const threadId = T('meta.threadId')
-  const instanceId = T('meta.instanceId')
+  const threadId = T('threadId')
+  const instanceId = T('instanceId')
   const agentId = agent.id
 
   return {

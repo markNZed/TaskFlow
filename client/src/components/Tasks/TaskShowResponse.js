@@ -30,7 +30,7 @@ const TaskShowResponse = (props) => {
 
     // This is the level where we are going to use the task so set the component_depth
     useEffect(() => {
-        updateTask({'meta.stackPtr' : component_depth})
+        updateTask({'stackPtr' : component_depth})
     }, []);
 
     // Reset the task. Allows for the same component to be reused for different tasks. 
@@ -38,7 +38,7 @@ const TaskShowResponse = (props) => {
     useEffect(() => {
         //console.log("task ", task)
         if (task && !myTaskId) {
-            setMyTaskId(task.meta.id)
+            setMyTaskId(task.id)
             setResponseText('')
             if (!task.config?.nextStates) {
                 // Default sequence is to just get response
@@ -52,10 +52,10 @@ const TaskShowResponse = (props) => {
     // Sub_task state machine
     // Unique for each component that requires steps
     useEffect(() => {
-        if (myTaskId && myTaskId === task.meta.id) {
-            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.meta.name === task.meta.name)
+        if (myTaskId && myTaskId === task.id) {
+            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.config.nextStates[myStep]
-            //console.log("task.meta.id " + task.meta.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+            //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -82,7 +82,7 @@ const TaskShowResponse = (props) => {
                             //setTask((p) => {return {...p, response: response_text}});
                             response_action(response_text) 
                         } else {
-                            updateTask({'meta.send': true}) 
+                            updateTask({'send': true}) 
                         }
                     }
                     break;

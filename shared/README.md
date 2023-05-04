@@ -18,8 +18,8 @@ The request/response fields are used to send Task specific information between t
 The chat.mjs is like an internal request? make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO)
 
 # History
-Moving from v0.1 to v0.2 was a major hassle because v0.1 was a "flat" object and v0.2 has a hierarchical structure e.g. meta.name
-Javascript does not have a compact way for accessing keys e.g. {meta.name: "toto"} is not possible
+Moving from v0.1 to v0.2 was a major hassle because v0.1 was a "flat" object and v0.2 has a hierarchical structure e.g. name
+Javascript does not have a compact way for accessing keys e.g. {name: "toto"} is not possible
 Updating objects in React also becomes more comlpicated as the ...task is shallow and we need to manage the deep merge/update of objects.
 
 The basic approach to updating the client/server code is to use the taskV01toV02Map.mjs functions so parts of the system can be converted to v0.2 progressively rather than having everything break at once. For example if a function is dealing with a task then at the beginning `task = fromV01toV02(task)` then update the code for v0.2 and at the end of hte code block `task = fromV02toV01(task)`. Then once all the client or server code is moved we can place the conversion at the API, eventually only the communicatin is in v0.1 then it can be dropped. 

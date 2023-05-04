@@ -51,7 +51,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.meta.id, null, component_depth)
+    startTaskFn(task.id, null, component_depth)
   }, []);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ function TaskStepper(props) {
   // The first step is the task that was passed in
   useEffect(() => {
       setTasks([task])
-      setPrevTaskName(task.meta.name)
+      setPrevTaskName(task.name)
   }, []);
 
   // When task is done then fetch next task
@@ -87,7 +87,7 @@ function TaskStepper(props) {
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = tasks[tasksIdx]
     if (action === 'next') {
-      if (currentTaskData && currentTaskData.meta.nextTask) {
+      if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({direction: 'next', task: currentTask});
         // Expect taskDone to be called from Task, rename leaving to taskLeave
@@ -105,12 +105,12 @@ function TaskStepper(props) {
   // Close previous task and open next task in stepper
   useEffect(() => {
     if (tasks.length > 0) {
-      if (tasks[tasksIdx].meta.name !== prevTaskName) {
-        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].meta.name]);
+      if (tasks[tasksIdx].name !== prevTaskName) {
+        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].name]);
         if (prevTaskName) {
           setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevTaskName));
         }
-        setPrevTaskName(tasks[tasksIdx].meta.name)
+        setPrevTaskName(tasks[tasksIdx].name)
       }
     }
   }, [tasksIdx]); 
@@ -133,13 +133,14 @@ function TaskStepper(props) {
   return (
     <div>
       <Stepper activeStep={tasksIdx}>
-        {tasks.map(({ meta: { name, label } } ) => (
+        {tasks.map(({ name, label } ) => (
           <Step key={`task-${name}`}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
-      { tasks.map(({ meta: { name, label, stack, nextTask: metaNextTask, instanceId } }, idx) => (
+      {/* nextTask is also a local state */}
+      { tasks.map(({ name, label, stack, nextTask: metaNextTask, instanceId }, idx) => (
           <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
@@ -150,12 +151,12 @@ function TaskStepper(props) {
               )}
             </AccordionDetails>
             <div>
-              {tasks[tasksIdx].meta.name !== 'start' && tasks[tasksIdx].meta.name === name && (
+              {tasks[tasksIdx].name !== 'start' && tasks[tasksIdx].name === name && (
                 <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'back')} variant="contained" color="primary">
                   Back
                 </Button>
               )}
-              {!/\.stop$/.test(metaNextTask) && tasks[tasksIdx].meta.name === name && (
+              {!/\.stop$/.test(metaNextTask) && tasks[tasksIdx].name === name && (
                 <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'next')} variant="contained" color="primary">
                   Next
                 </Button>

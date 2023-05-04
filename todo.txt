@@ -1,14 +1,13 @@
 /* ToDo
 -------
-Do we have an issue with the streaming on first message?
-Map from old to new schema and refactor interface with client, then server, then remove translation
-  task/update task/start, websocket
+Create a script to convert the config files in-place
+
 Add task type validation to websocket
 Add task type validation to return from TaskFunctions
 Rather than a JS hierarchy we might be better to use KeyV mapping e.g. meta-name etc 
   There is an issue of how to flatten the tasks
   Maybe Task keeps the internal structure
-How to reference values from previous Tasks - available in "output" ?
+How to reference values from previous Tasks - available in "output"
   
 
 Compare with similar systems

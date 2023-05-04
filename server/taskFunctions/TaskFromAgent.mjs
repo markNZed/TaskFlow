@@ -11,7 +11,7 @@ const TaskFromAgent_async = async function(task) {
   
   const T = utils.createTaskValueGetter(task)
 
-  console.log("TaskFromAgent meta.name " + T('meta.name') + " step " + T('state.current'))
+  console.log("TaskFromAgent name " + T('name') + " step " + T('state.current'))
   
     // We have two potential steps: ['response', 'input']
     // We want to receive the task object from the client and from the server
@@ -24,16 +24,16 @@ const TaskFromAgent_async = async function(task) {
     // Here we assume we are dealing with response step
 
     let threadTasks = {}
-    const parentId = T('meta.parentId')
+    const parentId = T('parentId')
     if (T('config.messagesTemplate') || T('config.promptTemplate')) {
       // We get the potentially relevant instances 
-      // Note we assume T('meta.id') is unique in the thread (may not be true)
-      const instanceIds = await threadsStore_async.get(T('meta.threadId'))
+      // Note we assume T('id') is unique in the thread (may not be true)
+      const instanceIds = await threadsStore_async.get(T('threadId'))
       //console.log("instanceIds ", instanceIds)
       for (const instanceId of instanceIds) {
         const tmp = await instancesStore_async.get(instanceId);
-        threadTasks[tmp.meta.id] = tmp;
-        //console.log("thread " + tmp.meta.id + " instanceId " + tmp.meta.instanceId + " output " + tmp.output)
+        threadTasks[tmp.id] = tmp;
+        //console.log("thread " + tmp.id + " instanceId " + tmp.instanceId + " output " + tmp.output)
       }
     }
 
@@ -111,7 +111,7 @@ const TaskFromAgent_async = async function(task) {
     T('output.text', response_text)
     // Ensure we do not overwrite the deltaState on the client
     T('state.deltaState', undefined)
-    T('meta.updatedAt', Date.now())
+    T('updatedAt', Date.now())
     //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
     console.log("Returning from tasks.TaskFromAgent ")// + response_text)
     return task

@@ -20,20 +20,20 @@ const router = express.Router();
 async function do_task_async(task) {
     let updated_task = {}
     let idx = 0
-    if (task.meta?.stackPtr) {
-      idx = task.meta.stackPtr - 1
-      console.log("Component ",task.meta.stack, " idx ", idx)
+    if (task?.stackPtr) {
+      idx = task.stackPtr - 1
+      console.log("Component ",task.stack, " idx ", idx)
     }
-    if (taskFunctions.hasOwnProperty(`${task.meta.stack[idx]}_async`)) {
-      updated_task = await taskFunctions[`${task.meta.stack[idx]}_async`](task);
+    if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
+      updated_task = await taskFunctions[`${task.stack[idx]}_async`](task);
     } else {
       updated_task = task;
-      const msg = "ERROR: server unknown component at idx " + idx + " : " + task.meta.stack;
-      updated_task.meta['error'] = msg;
+      const msg = "ERROR: server unknown component at idx " + idx + " : " + task.stack;
+      updated_task['error'] = msg;
       console.log(msg, taskFunctions);
     }
-    await instancesStore_async.set(task.meta.instanceId, updated_task)
-    console.log("instancesStore_async set " + task.meta.instanceId )
+    await instancesStore_async.set(task.instanceId, updated_task)
+    console.log("instancesStore_async set " + task.instanceId )
     //console.log(updated_task)
     return updated_task
 }
@@ -41,8 +41,8 @@ async function do_task_async(task) {
 async function newTask_async(id, sessionId, threadId = null, siblingTask = null) {
     let siblingInstanceId
     if (siblingTask) {
-      siblingInstanceId = siblingTask.meta.instanceId
-      threadId = siblingTask.meta.threadId
+      siblingInstanceId = siblingTask.instanceId
+      threadId = siblingTask.threadId
     }
     let taskCopy = { ...tasks[id] }
     try {
@@ -69,30 +69,30 @@ async function newTask_async(id, sessionId, threadId = null, siblingTask = null)
       taskCopy['state'] = {}
     }
     let instanceId = uuidv4();
-    taskCopy.meta['instanceId'] = instanceId
+    taskCopy['instanceId'] = instanceId
     if (siblingInstanceId) {
       // Should reanme to sibling?
-      taskCopy.meta['parentInstanceId'] = siblingInstanceId
+      taskCopy['parentInstanceId'] = siblingInstanceId
       let parent = await instancesStore_async.get(siblingInstanceId)
       if (parent.request?.address) { taskCopy.request['address'] = parent.request.address }
       if (!threadId) {
-        threadId = parent.meta.threadId
+        threadId = parent.threadId
       }
-      if (parent.meta?.stackPtr) {
+      if (parent?.stackPtr) {
         // Note component_depth may be modified in api/task/start
-        taskCopy.meta['stackPtr'] = parent.meta.stackPtr
+        taskCopy['stackPtr'] = parent.stackPtr
       }
-      if (!parent.meta.hasOwnProperty('childrenInstances') || !Array.isArray(parent.meta.childrenInstances)) {
-        parent.meta.childrenInstances = [];
+      if (!parent.hasOwnProperty('childrenInstances') || !Array.isArray(parent.childrenInstances)) {
+        parent.childrenInstances = [];
       }
-      parent.meta.childrenInstances.push(instanceId);
+      parent.childrenInstances.push(instanceId);
       await instancesStore_async.set(siblingInstanceId, parent)
-    } else if (taskCopy.meta?.stack) {
+    } else if (taskCopy?.stack) {
       // Note component_depth may be modified in api/task/start
-      taskCopy.meta['stackPtr'] =taskCopy.meta.stack.length
+      taskCopy['stackPtr'] =taskCopy.stack.length
     }
     if (threadId) {
-      taskCopy.meta['threadId'] = threadId
+      taskCopy['threadId'] = threadId
       let instanceIds = await threadsStore_async.get(threadId)
       if (instanceIds) {
         instanceIds.push(instanceId)
@@ -101,13 +101,13 @@ async function newTask_async(id, sessionId, threadId = null, siblingTask = null)
       }
       await threadsStore_async.set(threadId, instanceIds)
     } else {
-      taskCopy.meta['threadId'] = instanceId
+      taskCopy['threadId'] = instanceId
       await threadsStore_async.set(instanceId, [instanceId])
     }
-    taskCopy.meta['createdAt'] = Date.now()
+    taskCopy['createdAt'] = Date.now()
     await instancesStore_async.set(instanceId, taskCopy)
     //console.log("New task ", taskCopy)
-    console.log("New task id " + taskCopy.meta.id)
+    console.log("New task id " + taskCopy.id)
     return taskCopy
 }
   
@@ -123,8 +123,8 @@ router.post('/update', async (req, res) => {
       if (task) {
         if (sessionId) { task.config['sessionId'] = sessionId } else {console.log("Warning: sessionId missing")}
         if (address) { task.request['address'] = address } // This should be done on the client side
-        if (task.meta.updateCount) {task.meta.updateCount += 1} else {task.meta['updateCount'] = 1}
-        if (task.meta?.send) {task.meta.send = false}
+        if (task.updateCount) {task.updateCount += 1} else {task['updateCount'] = 1}
+        if (task?.send) {task.send = false}
       } else {
         const msg = "ERROR did not receive task"
         console.log(msg)
@@ -139,7 +139,7 @@ router.post('/update', async (req, res) => {
       }
   
       // Risk that client writes over server fields so filter_out before merge
-      let instanceId = task.meta.instanceId
+      let instanceId = task.instanceId
       const server_side_task = await instancesStore_async.get(instanceId)
       // filter_in could also do some data cleaning
       //let clean_client_task = utils.filter_in(components,tasks, task)
@@ -152,10 +152,10 @@ router.post('/update', async (req, res) => {
       //console.log("Merged task: ",updated_task)
   
       if (updated_task.state?.done) {
-        console.log("Client side task done " + updated_task.meta.id)
+        console.log("Client side task done " + updated_task.id)
         updated_task.state.done = false
         await instancesStore_async.set(instanceId, updated_task)
-        updated_task = await newTask_async(updated_task.meta.nextTask, sessionId, null, updated_task)
+        updated_task = await newTask_async(updated_task.nextTask, sessionId, null, updated_task)
       } else {
         updated_task = await do_task_async(updated_task)
       }
@@ -169,11 +169,11 @@ router.post('/update', async (req, res) => {
           exit
         }
         if (updated_task.state.done) {
-          console.log("Server side task done " + updated_task.meta.id)
+          console.log("Server side task done " + updated_task.id)
           //updated_task.done = false
           updated_task.state.done = false
-          await instancesStore_async.set(updated_task.meta.instanceId, updated_task)
-          updated_task = await newTask_async(updated_task.meta.nextTask, sessionId, null, updated_task)
+          await instancesStore_async.set(updated_task.instanceId, updated_task)
+          updated_task = await newTask_async(updated_task.nextTask, sessionId, null, updated_task)
         }
         if (updated_task.config?.serverOnly) {
           updated_task = await do_task_async(updated_task)
@@ -216,10 +216,10 @@ router.post('/start', async (req, res) => {
       let task = req.body.task
       let address = req.body.address;
 
-      const startId = task.meta.id;
-      const threadId = task.meta?.threadId;
-      const component_depth = task.meta.stackPtr;
-      let groupId = task.meta?.groupId;
+      const startId = task.id;
+      const threadId = task?.threadId;
+      const component_depth = task.stackPtr;
+      let groupId = task?.groupId;
       
   
       if (!tasks[startId]) {
@@ -235,22 +235,22 @@ router.post('/start', async (req, res) => {
         // Instances key: no recorded in DB
         let task = await newTask_async(startId, sessionId, threadId)
 
-        task.meta['userId'] = userId
+        task['userId'] = userId
         if (sessionId) { task.config['sessionId'] = sessionId }  else {console.log("Warning: sessionId missing")}
         if (address) { task.request['address'] = address }
         // We start with the deepest component in the stack
         if (typeof component_depth === "number") {
           console.log("Setting component_depth", component_depth)
-          task.meta.stackPtr = component_depth
-        } else if (task.meta?.stack) {
-          task.meta['stackPtr'] = task.meta.stack.length
+          task.stackPtr = component_depth
+        } else if (task?.stack) {
+          task['stackPtr'] = task.stack.length
         }
   
         //console.log(task)
   
         // Check if the user has permissions
         if (!utils.authenticatedTask(task, userId, groups)) {
-          console.log("Task authentication failed", task.meta.id, userId)
+          console.log("Task authentication failed", task.id, userId)
           res.status(400).json({ error: "Task authentication failed" });
           return
         }
@@ -272,7 +272,7 @@ router.post('/start', async (req, res) => {
             // Returning last so continuing (maybe should return first?)
             const instanceId = instanceIds[instanceIds.length - 1]
             task = await instancesStore_async.get(instanceId)
-            console.log("Restarting session " + instanceId + " for " + task.meta.id)
+            console.log("Restarting session " + instanceId + " for " + task.id)
           }
         }
         if (task.config?.collaborate) {
@@ -287,11 +287,11 @@ router.post('/start', async (req, res) => {
             // Returning last so continuing (maybe should return first?)
             const instanceId = instanceIds[instanceIds.length - 1]
             task = await instancesStore_async.get(instanceId)
-            console.log("Restarting collaboration " + instanceId + " for " + task.meta.id)
+            console.log("Restarting collaboration " + instanceId + " for " + task.id)
           }
         }
   
-        await instancesStore_async.set(task.meta.instanceId, task)
+        await instancesStore_async.set(task.instanceId, task)
     
         //let updated_client_task = utils.filter_in(components,tasks, task)
         let updated_client_task = task // need to filter based on Schema

@@ -2,116 +2,6 @@
     "$schema": "http://json-schema.org/draft-06/schema#",
     "$ref": "#/definitions/Task",
     "definitions": {
-        "Meta": {
-            "type": "object",
-            "additionalProperties": {},
-            "properties": {
-                "baseType": {
-                    "type": "string"
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "completedAt": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
-                },
-                "createdAt": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
-                },
-                "error": {
-                    "anyOf": [
-                        {
-                            "type": "null"
-                        },
-                        {
-                            "type": "string"
-                        }
-                    ]
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "groupId": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "initiator": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "nextTasks": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "nextTask": {
-                    "type": "string"
-                },
-                "parentId": {
-                    "type": "string"
-                },
-                "parentInstanceId": {
-                    "type": "string"
-                },
-                "parentType": {
-                    "type": "string"
-                },
-                "send": {
-                    "type": "boolean"
-                },
-                "stack": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "stackPtr": {
-                    "type": "integer"
-                },
-                "threadId": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updateCount": {
-                    "type": "integer"
-                },
-                "updatedAt": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
-                },
-                "userId": {
-                    "type": "string"
-                },
-                "versionExternal": {
-                    "type": "string"
-                },
-                "versionInternal": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "id"
-            ],
-            "title": "Meta"
-        },
         "Privacy": {
             "type": "object",
             "additionalProperties": true,
@@ -131,7 +21,7 @@
             "type": "object",
             "additionalProperties": true,
             "title": "Configuration"
-          },
+        },
         "Request": {
             "type": "object",
             "additionalProperties": true,

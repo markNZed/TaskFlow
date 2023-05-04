@@ -38,7 +38,7 @@ const TaskFromAgent = (props) => {
     // This is the level where we are going to use the task so set the component_depth
     // Could have a setDepth function in withTask
     useEffect(() => {
-        updateTask({'meta.stackPtr': component_depth})
+        updateTask({'stackPtr': component_depth})
     }, []);
     
 
@@ -46,7 +46,7 @@ const TaskFromAgent = (props) => {
     // Probably always better to associate a component with a single task.
     useEffect(() => {
         if (task && !myTaskId) {
-            setMyTaskId(task.meta.id)
+            setMyTaskId(task.id)
             setResponseText('')
             setUserInput('')
             setUserInputWordCount(0)
@@ -88,10 +88,10 @@ const TaskFromAgent = (props) => {
     // Sub_task state machine
     // Unique for each component that requires steps
     useEffect(() => {
-        if (myTaskId && myTaskId === task.meta.id) {
-            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.meta.name === task.meta.name)
+        if (myTaskId && myTaskId === task.id) {
+            const leaving_now = ((leaving?.direction === 'next') && leaving?.task.name === task.name)
             const next_step = task.config.nextStates[myStep]
-            //console.log("task.meta.id " + task.meta.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+            //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
             switch (myStep) {
                 case 'start':
                     // Next state
@@ -124,7 +124,7 @@ const TaskFromAgent = (props) => {
                         }
                         // Actions
                         // send prompt to get response from agent
-                        updateTask({'meta.send': true})
+                        updateTask({'send': true})
                         updateStep(myStep)
                         // show the response
                         if (task.response.updated) {
@@ -145,7 +145,7 @@ const TaskFromAgent = (props) => {
                     if (leaving_now) {
                         // Send the userInput input
                         updateStep(myStep)
-                        updateTask({'meta.send': true})
+                        updateTask({'send': true})
                     }
                     break;
                 case 'stop':

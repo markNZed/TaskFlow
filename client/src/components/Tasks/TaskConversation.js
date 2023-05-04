@@ -47,7 +47,7 @@ const TaskConversation = (props) => {
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation
   useEffect(() => {
-    startTaskFn(task.meta.id, task.meta.threadId, component_depth)
+    startTaskFn(task.id, task.threadId, component_depth)
   }, []);
 
   useEffect(() => {
@@ -60,13 +60,13 @@ const TaskConversation = (props) => {
     if (task) {
       // Update msgs
       if (task.state.current === 'receiving' && msgs) {
-        const lastElement = { ...msgs[task.meta.threadId][msgs[task.meta.threadId].length - 1]} // shallow copy
+        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
         lastElement.text = task.response.text;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
-          [task.meta.threadId]: [
-            ...p[task.meta.threadId].slice(0,-1), 
+          [task.threadId]: [
+            ...p[task.threadId].slice(0,-1), 
             lastElement
           ]
         }));
@@ -83,21 +83,21 @@ const TaskConversation = (props) => {
           }];
         setMsgs((p) => ({
             ...p,
-            [task.meta.threadId]: [
-              ...p[task.meta.threadId], 
+            [task.threadId]: [
+              ...p[task.threadId], 
               ...newMsgArray
             ]
           }));
       } else if (task.state.current === 'input' && task.state.deltaState !== 'input') {
         // In the case where the response is coming from HTTP not websocket
         // The state will be set to input by the server
-        const lastElement = { ...msgs[task.meta.threadId][msgs[task.meta.threadId].length - 1]} // shallow copy
+        const lastElement = { ...msgs[task.threadId][msgs[task.threadId].length - 1]} // shallow copy
         lastElement.text = task.response.text;
         lastElement.isLoading = false 
         setMsgs((p) => ({
           ...p,
-          [task.meta.threadId]: [
-            ...p[task.meta.threadId].slice(0,-1), 
+          [task.threadId]: [
+            ...p[task.threadId].slice(0,-1), 
             lastElement
           ]
         }));
@@ -114,7 +114,7 @@ const TaskConversation = (props) => {
       if (!isMountedRef.current) {
         setMsgs(
           {
-            [task.meta.threadId] : [
+            [task.threadId] : [
               { sender: 'bot', text: welcomeMessage,  isLoading: true}
             ]
           }
@@ -122,18 +122,18 @@ const TaskConversation = (props) => {
         setTimeout(()=>{
             setMsgs(
               {
-                [task.meta.threadId] : [
+                [task.threadId] : [
                   { sender: 'bot', text: welcomeMessage,  isLoading: false}
                 ]
               }
             );
         }, 1000);
         isMountedRef.current = true
-      } else if ( !(task.meta.threadId in msgs) ) {
+      } else if ( !(task.threadId in msgs) ) {
         // Why do we need this? Should use (p) => style
         setMsgs({
           ...msgs,
-          [task.meta.threadId]: [
+          [task.threadId]: [
             { sender: 'bot', text: welcomeMessage, isLoading: false }
           ],
         });
@@ -170,7 +170,7 @@ const TaskConversation = (props) => {
   return (
     <section className='chatbox'>
       <div id="chat-container" ref={chatContainer} >
-        {task && msgs[task.meta.threadId] && msgs[task.meta.threadId].map((msg, index) => {
+        {task && msgs[task.threadId] && msgs[task.threadId].map((msg, index) => {
           return (
             <div key={index} className={`wrapper ${msg.sender === 'bot' && 'ai'}`}>
               <div className="chat"> 
@@ -185,8 +185,8 @@ const TaskConversation = (props) => {
         })}
         <div ref={messagesEndRef} style={{height:"5px"}}/>
       </div>
-      { task?.meta && (  
-        <DynamicComponent key={task.meta.id} is={task.meta.stack[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
+      { task && (  
+        <DynamicComponent key={task.id} is={task.stack[component_depth]} task={task} setTask={setTask} parentTask={conversationTask} component_depth={props.component_depth}/>
       )}
     </section> 
   )

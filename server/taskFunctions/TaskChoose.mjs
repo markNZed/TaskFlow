@@ -21,7 +21,7 @@ const TaskChoose_async = async function(task) {
     const T = utils.createTaskValueGetter(task)
 
     // First we get the response
-    console.log("TaskChoose meta.name " + T('meta.name'))
+    console.log("TaskChoose name " + T('name'))
   
     T('response.text', null) // Avoid using previously stored response
     let subtask = await TaskFromAgent_async(task) 
@@ -62,13 +62,13 @@ const TaskChoose_async = async function(task) {
       embeddingsData.dispose();
     
       // Need to go to next state, can stay on server side
-      T('meta.nextTask', next_states[maxIndex])
+      T('nextTask', next_states[maxIndex])
       T('state.done', true)
   
     } catch (error) {
       // Handle the error here
       console.error('An error occurred:', error);
-      T('meta.error', error.message)
+      T('error', error.message)
     }
 
     return task
