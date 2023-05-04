@@ -18,53 +18,49 @@ const components = [
       "menu",
       "update_count",
       "one_thread",
-      "use_address"
+      "use_address",
     ],
-    name: "root"
+    name: "root",
   },
   {
     APPEND_filter_for_client: [
       "client_prompt",
       "suggested_prompts",
-      "response"
+      "response",
     ],
     initiator: false,
     name: "TaskChat",
-    parentType: "root"
+    parentType: "root",
   },
   {
-    APPEND_filter_for_client: [
-      "welcome_message"
-    ],
+    APPEND_filter_for_client: ["welcome_message"],
     initiator: false,
     name: "TaskConversation",
-    parentType: "root"
+    parentType: "root",
   },
   {
     name: "TaskStepper",
-    parentType: "root"
+    parentType: "root",
   },
   {
     APPEND_filter_for_client: [
       "response",
       "input",
       "input_label",
-      "instruction"
+      "instruction",
     ],
     name: "TaskFromAgent",
-    parentType: "root"
+    parentType: "root",
   },
   {
-    APPEND_filter_for_client: [
-      "response"
-    ],
+    APPEND_filter_for_client: ["response"],
     name: "TaskShowResponse",
-    parentType: "root"
+    parentType: "root",
   },
   {
     name: "TaskChoose",
-    parentType: "root"
-  }
+    parentType: "root",
+  },
 ];
 
 export { components };

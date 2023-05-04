@@ -1,59 +1,59 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/Task",
-    "definitions": {
-        "Privacy": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Privacy"
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/Task",
+  "definitions": {
+    "Privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Privacy"
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Input"
+    },
+    "Output": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Output"
+    },
+    "Config": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Configuration"
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Request"
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Response"
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": {},
+      "properties": {
+        "current": {
+          "type": "string"
         },
-        "Input": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Input"
+        "deltaState": {
+          "type": "string"
         },
-        "Output": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Output"
+        "done": {
+          "type": "boolean"
         },
-        "Config": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Configuration"
+        "id": {
+          "type": "string"
         },
-        "Request": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Request"
-        },
-        "Response": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Response"
-        },
-        "State": {
-            "type": "object",
-            "additionalProperties": {},
-            "properties": {
-              "current": {
-                "type": "string"
-              },
-              "deltaState": {
-                "type": "string"
-              },
-              "done": {
-                "type": "boolean"
-              },
-              "id": {
-                "type": "string"
-              },
-              "nextState": {
-                "type": "string"
-              }
-            },
-            "required": [],
-            "title": "State"
+        "nextState": {
+          "type": "string"
         }
+      },
+      "required": [],
+      "title": "State"
     }
+  }
 }

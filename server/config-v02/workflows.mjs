@@ -2,81 +2,69 @@ const workflows = [
   {
     initiator: false,
     name: "root",
-    stack: []
+    stack: [],
   },
   {
     initiator: true,
     name: "exercices",
-    parentType: "root"
+    parentType: "root",
   },
   {
-    APPEND_stack: [
-      "TaskConversation"
-    ],
+    APPEND_stack: ["TaskConversation"],
     name: "conversation",
-    parentType: "exercices"
+    parentType: "exercices",
   },
   {
     config: {
-      label: "chatGPT"
+      label: "chatGPT",
     },
     name: "chatgpt",
     parentType: "conversation",
     request: {
-      agent: "chatgpt"
+      agent: "chatgpt",
     },
     tasks: {
       start: {
-        APPEND_stack: [
-          "TaskChat"
-        ],
-        nextTask: "start"
-      }
-    }
+        APPEND_stack: ["TaskChat"],
+        nextTask: "start",
+      },
+    },
   },
   {
-    APPEND_stack: [
-      "TaskStepper"
-    ],
+    APPEND_stack: ["TaskStepper"],
     name: "workflow",
-    parentType: "exercices"
+    parentType: "exercices",
   },
   {
     name: "example",
     parentType: "workflow",
     tasks: {
       start: {
-        APPEND_stack: [
-          "TaskShowResponse"
-        ],
+        APPEND_stack: ["TaskShowResponse"],
         nextTask: "summarize",
         response: {
-          text: "Hello"
-        }
+          text: "Hello",
+        },
       },
       summarize: {
-        APPEND_stack: [
-          "TaskFromAgent"
-        ],
+        APPEND_stack: ["TaskFromAgent"],
         config: {
-          instruction: "Tell the user what to do"
+          instruction: "Tell the user what to do",
         },
         nextTask: "structure",
         request: {
           agent: "chatgpt",
           forget: true,
           inputLabel: "Respond here.",
-          prompt: "Tell me a story about something random."
+          prompt: "Tell me a story about something random.",
         },
         response: {
           text: "",
-          userInput: ""
-        }
+          userInput: "",
+        },
       },
       structure: {
-        APPEND_stack: [
-          "TaskFromAgent"
-        ],
+        APPEND_stack: ["TaskFromAgent"],
         config: {
           instruction: "This is what I think of your response",
           messagesTemplate: [
@@ -84,29 +72,29 @@ const workflows = [
               role: "user",
               content: [
                 "This is a response from an earlier message",
-                "summarize.response"
-              ]
+                "summarize.response",
+              ],
             },
             {
               role: "assistant",
-              content: "OK. Thank you. What would you like me to do?"
-            }
+              content: "OK. Thank you. What would you like me to do?",
+            },
           ],
           promptTemplate: [
             "Provide feedback on this prompt, is it a good prompt? ",
-            "\"",
+            '"',
             "summarize.input",
-            "\""
-          ]
+            '"',
+          ],
         },
         nextTask: "stop",
         request: {
           agent: "chatgpt",
-          forget: true
-        }
-      }
-    }
-  }
+          forget: true,
+        },
+      },
+    },
+  },
 ];
 
 export { workflows };

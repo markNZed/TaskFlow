@@ -4,12 +4,12 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useState } from 'react';
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import React, { useState } from "react";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { styled } from "@mui/material/styles";
 
 const PromptDropdown = ({ prompts, onSelect }) => {
-  const [selectedPrompt, setSelectedPrompt] = useState('');
+  const [selectedPrompt, setSelectedPrompt] = useState("");
 
   const handleChange = (event) => {
     const value = event.target.value;
@@ -18,14 +18,11 @@ const PromptDropdown = ({ prompts, onSelect }) => {
 
   const StyledFormControl = styled(FormControl)(({ theme }) => ({
     marginBottom: theme.spacing(2),
-    backgroundColor: 'white',
+    backgroundColor: "white",
   }));
 
-return (
-    <StyledFormControl 
-        fullWidth 
-        variant="outlined"
-    >
+  return (
+    <StyledFormControl fullWidth variant="outlined">
       <InputLabel htmlFor="custom-select">Choisissez un prompt</InputLabel>
       <Select
         labelId="prompt-select-label"

@@ -1,213 +1,205 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
-    "definitions": {
-        "Task": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "groupId": {
-                    "type": "string"
-                },
-                "agent": {
-                    "type": "string"
-                },
-                "assemble_prompt": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "children": {
-                    "type": "array",
-                    "items": {}
-                },
-                "client_prompt": {
-                    "type": "string"
-                },
-                "component": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "component_depth": {
-                    "type": "integer"
-                },
-                "created": {
-                    "type": "integer",
-                },
-                "delta_step": {
-                    "type": "string"
-                },
-                "done": {
-                    "type": "boolean"
-                },
-                "forget": {
-                    "type": "boolean"
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {}
-                },
-                "id": {
-                    "type": "string"
-                },
-                "startId": {
-                    "type": "string"
-                },
-               "input": {
-                    "type": "string"
-                },
-                "input_label": {
-                    "type": "string"
-                },
-                "instanceId": {
-                    "type": "string"
-                },
-                "instruction": {
-                    "type": "string"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "last_change": {
-                    "type": "string"
-                },
-                "menu": {
-                    "type": "boolean"
-                },
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Message"
-                    }
-                },
-                "messages_template": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/MessagesTemplate"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "next_step": {
-                    "type": "string"
-                },
-                "parent": {
-                    "type": "string"
-                },
-                "parentId": {
-                    "type": "string"
-                },
-                "parentInstanceId": {
-                    "type": "string"
-                },
-                "prompt": {
-                    "type": "string"
-                },
-                "response": {
-                    "type": "string"
-                },
-                "sessionId": {
-                    "type": "string"
-                },
-                "step": {
-                    "type": "string"
-                },
-                "steps": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "suggested_prompts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "threadId": {
-                    "type": ["string"]
-                },
-                "update": {
-                    "type": "boolean"
-                },
-                "updated": {
-                    "type": "boolean"
-                },
-                "updating": {
-                    "type": "boolean"
-                },
-                "update_count": {
-                    "type": "integer"
-                },
-                "userId": {
-                    "type": "string"
-                },
-                "welcome_message": {
-                    "type": "string"
-                },
-                "one_thread": {
-                    "type": "boolean"
-                },
-                "use_address": {
-                    "type": "boolean"
-                },
-                "next_template": {
-                    "type": "object",
-                },
-                "v02": {
-                    "type": "object",
-                }
-            },
-            "required": [
-                "id", "component_depth"
-            ],
-            "title": "Task"
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "definitions": {
+    "Task": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "groupId": {
+          "type": "string"
         },
-        "Message": {
-            "type": "object",
-            "additionalProperties": {},
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "role": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "content",
-                "role"
-            ],
-            "title": "Message"
+        "agent": {
+          "type": "string"
         },
-        "MessagesTemplate": {
-            "type": "object",
-            "additionalProperties": {},
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "role": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "content",
-                "role"
-            ],
-            "title": "MessagesTemplate"
+        "assemble_prompt": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {}
+        },
+        "client_prompt": {
+          "type": "string"
+        },
+        "component": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "component_depth": {
+          "type": "integer"
+        },
+        "created": {
+          "type": "integer"
+        },
+        "delta_step": {
+          "type": "string"
+        },
+        "done": {
+          "type": "boolean"
+        },
+        "forget": {
+          "type": "boolean"
+        },
+        "groups": {
+          "type": "array",
+          "items": {}
+        },
+        "id": {
+          "type": "string"
+        },
+        "startId": {
+          "type": "string"
+        },
+        "input": {
+          "type": "string"
+        },
+        "input_label": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string"
+        },
+        "instruction": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "last_change": {
+          "type": "string"
+        },
+        "menu": {
+          "type": "boolean"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Message"
+          }
+        },
+        "messages_template": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MessagesTemplate"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        },
+        "next_step": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "parentInstanceId": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "response": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "step": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "suggested_prompts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "threadId": {
+          "type": ["string"]
+        },
+        "update": {
+          "type": "boolean"
+        },
+        "updated": {
+          "type": "boolean"
+        },
+        "updating": {
+          "type": "boolean"
+        },
+        "update_count": {
+          "type": "integer"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "welcome_message": {
+          "type": "string"
+        },
+        "one_thread": {
+          "type": "boolean"
+        },
+        "use_address": {
+          "type": "boolean"
+        },
+        "next_template": {
+          "type": "object"
+        },
+        "v02": {
+          "type": "object"
         }
+      },
+      "required": ["id", "component_depth"],
+      "title": "Task"
+    },
+    "Message": {
+      "type": "object",
+      "additionalProperties": {},
+      "properties": {
+        "content": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": ["content", "role"],
+      "title": "Message"
+    },
+    "MessagesTemplate": {
+      "type": "object",
+      "additionalProperties": {},
+      "properties": {
+        "content": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": ["content", "role"],
+      "title": "MessagesTemplate"
     }
+  }
 }

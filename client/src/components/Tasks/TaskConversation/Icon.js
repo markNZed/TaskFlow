@@ -4,39 +4,33 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React from 'react';
-import Avatar from '@mui/material/Avatar';
-import bot from '../../../assets/bot.svg';
-import user from '../../../assets/user.svg';
+import React from "react";
+import Avatar from "@mui/material/Avatar";
+import bot from "../../../assets/bot.svg";
+import user from "../../../assets/user.svg";
 
-const Icon = ({sender}) => {
-
+const Icon = ({ sender }) => {
   //console.log("Icon compoent")
 
-  if (sender === "bot"){
+  if (sender === "bot") {
     return (
       <div className="profile">
         <img src={bot} alt={sender} />
       </div>
-    )
+    );
   }
 
-  if (sender === "user"){
+  if (sender === "user") {
     return (
       <div className="profile">
         <img src={user} alt={sender} />
       </div>
-    )
+    );
   }
 
   // impersonation
-  return (
-      <Avatar 
-        {...stringAvatar(sender)} 
-        variant="square" 
-        />
-    )
-  }
+  return <Avatar {...stringAvatar(sender)} variant="square" />;
+};
 
 export default React.memo(Icon);
 
@@ -49,7 +43,7 @@ function stringToColor(string) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  let color = '#';
+  let color = "#";
 
   for (i = 0; i < 3; i += 1) {
     const value = (hash >> (i * 8)) & 0xff;
@@ -60,24 +54,22 @@ function stringToColor(string) {
   return color;
 }
 
-function stringAvatar (name){
-  const avatarString = name
-    .split(" ")
-    .reduce((initials, currentStr) => {
-      if (currentStr.length > 0 && initials.length <= 2) {
-        return initials + "" + currentStr[0];
-      } else {
-        return initials;
-      }
-    }, "");
+function stringAvatar(name) {
+  const avatarString = name.split(" ").reduce((initials, currentStr) => {
+    if (currentStr.length > 0 && initials.length <= 2) {
+      return initials + "" + currentStr[0];
+    } else {
+      return initials;
+    }
+  }, "");
 
   return {
     sx: {
       bgcolor: stringToColor(name),
-      borderRadius:"5px",
-      width:"36px",
-      height:"36px",
+      borderRadius: "5px",
+      width: "36px",
+      height: "36px",
     },
     children: avatarString,
   };
-};
+}

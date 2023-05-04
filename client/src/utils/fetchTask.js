@@ -1,6 +1,6 @@
-import { serverUrl } from '../config'
-import { toTask, fromTask } from './taskConverterWrapper'
-import { log } from './utils'
+import { serverUrl } from "../config";
+import { toTask, fromTask } from "./taskConverterWrapper";
+import { log } from "./utils";
 
 export const fetchTask = async (globalState, end_point, task) => {
   const sideband = {
@@ -28,9 +28,9 @@ export const fetchTask = async (globalState, end_point, task) => {
   //log("messageJsonString", messageJsonString);
 
   const requestOptions = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: messageJsonString,
   };
 
@@ -45,5 +45,3 @@ export const fetchTask = async (globalState, end_point, task) => {
     console.error("Error while converting JSON to Task:", error, data);
   }
 };
-
-  

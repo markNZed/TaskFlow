@@ -1,21 +1,23 @@
-import React, { useEffect } from 'react'
-import { logWithComponent, getObjectDifference, hasOnlyResponseKey } from '../utils/utils'
-import _ from 'lodash';
+import React, { useEffect } from "react";
+import {
+  logWithComponent,
+  getObjectDifference,
+  hasOnlyResponseKey,
+} from "../utils/utils";
+import _ from "lodash";
 
 function withDebug(Component) {
-
-  const componentName = Component.name
+  const componentName = Component.name;
 
   function DebugComponent(props) {
-
     function log(...message) {
-      logWithComponent(componentName, ...message)
+      logWithComponent(componentName, ...message);
     }
 
     useEffect(() => {
-      log('mounted');
+      log("mounted");
       return () => {
-        log('unmounted');
+        log("unmounted");
       };
     }, []);
 
@@ -23,12 +25,12 @@ function withDebug(Component) {
     useEffect(() => {
       if (props?.prevTask) {
         const diff = getObjectDifference(props.task, props.prevTask);
-        let show_diff = true
+        let show_diff = true;
         if (hasOnlyResponseKey(diff)) {
           if (!props.prevTask.response?.text) {
-            diff.response.text = " ..."
+            diff.response.text = " ...";
           } else {
-            show_diff = false
+            show_diff = false;
           }
         }
         if (diff.response?.text && diff.response.text.length > 0) {
@@ -36,10 +38,13 @@ function withDebug(Component) {
         }
         if (show_diff && Object.keys(diff).length > 0) {
           if (!props.task.id) {
-            console.log("Weird ", props.task)
+            console.log("Weird ", props.task);
           }
-          if ( props.task.stackPtr === props.component_depth) {
-            log("Task " + props.task.stackPtr + " " + props.task.id + " changes:", diff)
+          if (props.task.stackPtr === props.component_depth) {
+            log(
+              "Task " + props.task.stackPtr + " " + props.task.id + " changes:",
+              diff
+            );
           }
         }
       }
@@ -52,8 +57,8 @@ function withDebug(Component) {
     }
 
     const componentProps = {
-        ...props,
-        log, // add log as a prop
+      ...props,
+      log, // add log as a prop
     };
 
     return <Component {...componentProps} />;
@@ -63,4 +68,4 @@ function withDebug(Component) {
   return DebugComponent;
 }
 
-export default withDebug
+export default withDebug;

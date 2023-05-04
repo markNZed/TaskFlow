@@ -14,10 +14,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 }
 
 body {
-  background: #474E68/* #343541 */;
+  background: #474e68 /* #343541 */;
 }
 
-.App{
+.App {
   text-align: center;
   display: flex;
   color: white;
@@ -28,7 +28,7 @@ body {
   right: 0;
 }
 
-.hide{
+.hide {
   display: none;
 }
 
@@ -37,13 +37,13 @@ body {
   display: flex;
 }
 
-.sidemenu{
+.sidemenu {
   width: 260px;
   padding: 10px;
-  background-color: #404258  /* #202123 #367E18*/;
+  background-color: #404258 /* #202123 #367E18*/;
 }
 
-.side-menu-button{
+.side-menu-button {
   border: 1px solid white;
   border-radius: 5px;
   padding: 7px;
@@ -51,20 +51,20 @@ body {
   transition: 0.25s all;
 }
 
-.side-menu-button:hover{
+.side-menu-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
 }
 
-.side-menu-button span{
+.side-menu-button span {
   padding-left: 4px;
   padding-right: 11px;
   font-size: 25px;
 }
 
-.chatbox{
+.chatbox {
   flex: 1;
-  background-color:#474E68  ;/* 83BD75 #B4E197 #343541 */;
+  background-color: #474e68; /* 83BD75 #B4E197 #343541 */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -74,7 +74,7 @@ body {
 #app {
   width: 100vw;
   height: 100vh;
-  background: #474E68;/* #343541; */
+  background: #474e68; /* #343541; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,7 +83,7 @@ body {
 
 #chat-container {
   display: flex;
-  /*   height: 95vh;  */ 
+  /*   height: 95vh;  */
   /* height: 85%; */
   /* padding: 24px; */
 
@@ -100,7 +100,6 @@ body {
   /* padding-bottom: 20px; */
   scroll-behavior: smooth;
   text-align: left;
-
 }
 
 /* hides scrollbar */
@@ -114,8 +113,7 @@ body {
 }
 
 .ai {
-  background: #6B728E /* #444654 */;
-  
+  background: #6b728e /* #444654 */;
 }
 
 .chat {
@@ -128,9 +126,9 @@ body {
   gap: 10px;
 }
 
-#chat-room-title{
+#chat-room-title {
   color: white;
-  margin-left: auto; 
+  margin-left: auto;
   margin-right: auto;
   margin-top: 5px;
   font-size: 1.6rem;
@@ -141,7 +139,7 @@ body {
   height: 36px;
   border-radius: 5px;
 
-  background: #ADA2FF/* #5436DA */;
+  background: #ada2ff /* #5436DA */;
 
   display: flex;
   justify-content: center;
@@ -173,7 +171,7 @@ body {
    * The pre-wrap value allows the browser to wrap long lines of text onto multiple lines if necessary.
    * The default value for the white-space property in CSS is "normal". This tells the browser to collapse multiple white space characters into a single space, and to wrap text onto multiple lines as needed to fit within its container.
   */
-  white-space: pre-wrap; 
+  white-space: pre-wrap;
 
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -190,14 +188,14 @@ body {
   /* padding: 12px; */
   /* background: #40414F; */
   /* position: absolute; */
-  bottom: 0; 
-  left:0; 
+  bottom: 0;
+  left: 0;
   right: 0;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
   /* border-radius: 5px; */
-  margin-bottom: .5em;
+  margin-bottom: 0.5em;
   /* box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25); */
   margin-top: auto;
 
@@ -225,8 +223,8 @@ textarea {
 
   padding: 24px;
   /* background: transparent; */
-  background: #40414F;
-  
+  background: #40414f;
+
   border: none;
   outline: none;
 }
@@ -240,7 +238,7 @@ textarea {
   margin-left: 5px;
   border-radius: 5px;
   width: 35px;
-  height: 30px;  
+  height: 30px;
 }
 
 .send-button.ready :hover {
@@ -249,14 +247,14 @@ textarea {
 }
 
 .send-button.not-ready :hover {
-  cursor:default;
+  cursor: default;
 }
 
 .send-ready {
   /* rotate: 90deg; */
   width: 75%;
   margin-bottom: 15px;
-  transition: 0.25s all; 
+  transition: 0.25s all;
 }
 
 .send-not-ready {
@@ -266,46 +264,44 @@ textarea {
   transition: 0.25s all;
 }
 
-
 form img {
   width: 30px;
   height: 30px;
 }
 
-#model-selector{
+#model-selector {
   color: white;
   /* margin: auto; */
 }
 
-#selector-label{
-  color:white;
+#selector-label {
+  color: white;
 }
 
-#selector-form{
+#selector-form {
   margin-top: 15px;
 }
 
-.slider-box{
+.slider-box {
   margin-top: 15px;
   margin-left: 10px;
   margin-right: 10px;
 }
 
-.workflowTree{
-  text-align: left
+.workflowTree {
+  text-align: left;
 }
 
 .workflowTree .MuiTreeItem-label::first-letter {
   text-transform: uppercase;
 }
 
-
 /**
  * ==============================================
  * Dot Typing
  * ==============================================
  */
- .dot-typing {
+.dot-typing {
   position: relative;
   left: -9999px;
   width: 10px;
@@ -317,29 +313,35 @@ form img {
   animation: dot-typing 1.5s infinite linear;
   margin-left: 20px;
   margin-top: 20px;
-  
 }
 
 @keyframes dot-typing {
   0% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
   16.667% {
-    box-shadow: 9984px -10px 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px -10px 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
   33.333% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
   50% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px -10px 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px -10px 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
   66.667% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
   83.333% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px -10px 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px -10px 0 0 #9880ff;
   }
   100% {
-    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+    box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff,
+      10014px 0 0 0 #9880ff;
   }
 }

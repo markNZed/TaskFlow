@@ -9,8 +9,12 @@ import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
-import withTask from '../../hoc/withTask';
-import { setArrayState, deepMerge, setNestedProperties } from '../../utils/utils';
+import withTask from "../../hoc/withTask";
+import {
+  setArrayState,
+  deepMerge,
+  setNestedProperties,
+} from "../../utils/utils";
 
 /*
 Task Process
@@ -23,11 +27,10 @@ ToDo:
 */
 
 function TaskStepper(props) {
-
   const {
     log,
-    task, 
-    setTask, 
+    task,
+    setTask,
     useTasksState,
     component_depth,
     startTaskLoading,
@@ -39,81 +42,85 @@ function TaskStepper(props) {
     setDoneTask,
     startTaskFn,
     useTaskState,
-  } = props
+  } = props;
 
   const [tasks, setTasks] = useTasksState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [leaving, setLeaving] = useState();
   const [prevTaskName, setPrevTaskName] = useState();
-  const [expanded, setExpanded] = useState(['start']);
-  const [stepperTask, setStepperTask] = useTaskState(null, 'stepperTask');
+  const [expanded, setExpanded] = useState(["start"]);
+  const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
 
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, null, component_depth)
+    startTaskFn(task.id, null, component_depth);
   }, []);
 
   useEffect(() => {
     if (startTask) {
-      setStepperTask(startTask)
+      setStepperTask(startTask);
     }
   }, [startTask]);
 
   // The first step is the task that was passed in
   useEffect(() => {
-      setTasks([task])
-      setPrevTaskName(task.name)
+    setTasks([task]);
+    setPrevTaskName(task.name);
   }, []);
 
   // When task is done then fetch next task
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
       // need a wrapper for this
-      setTasksTask(p => { return deepMerge(p, setNestedProperties({'state.done': false}))})
-      setDoneTask(tasks[tasksIdx])
+      setTasksTask((p) => {
+        return deepMerge(p, setNestedProperties({ "state.done": false }));
+      });
+      setDoneTask(tasks[tasksIdx]);
     }
   }, [tasks]);
 
   // Detect when new task has been fetched
   useEffect(() => {
     if (nextTask) {
-      setTasksIdx(tasks.length)
-      setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask ])
+      setTasksIdx(tasks.length);
+      setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
     }
   }, [nextTask]);
 
   // Instead of leaving we could have a task.exit ?
   function handleStepperNavigation(currentTask, action) {
-    const currentTaskData = tasks[tasksIdx]
-    if (action === 'next') {
+    const currentTaskData = tasks[tasksIdx];
+    if (action === "next") {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
-        setLeaving({direction: 'next', task: currentTask});
+        setLeaving({ direction: "next", task: currentTask });
         // Expect taskDone to be called from Task, rename leaving to taskLeave
       }
-    } else if (action === 'back') {
-      if (currentTaskData) { 
+    } else if (action === "back") {
+      if (currentTaskData) {
         // By updating leaving this ensure there is an event if next is activated
-        setLeaving({direction: 'prev', task: currentTask});
-        setTasksIdx(tasks.length - 2)
+        setLeaving({ direction: "prev", task: currentTask });
+        setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
       }
     }
   }
- 
+
   // Close previous task and open next task in stepper
   useEffect(() => {
     if (tasks.length > 0) {
       if (tasks[tasksIdx].name !== prevTaskName) {
         setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].name]);
         if (prevTaskName) {
-          setExpanded((prevExpanded) => prevExpanded.filter((p) => p !== prevTaskName));
+          setExpanded((prevExpanded) =>
+            prevExpanded.filter((p) => p !== prevTaskName)
+          );
         }
-        setPrevTaskName(tasks[tasksIdx].name)
+        setPrevTaskName(tasks[tasksIdx].name);
       }
     }
-  }, [tasksIdx]); 
+  }, [tasksIdx]);
 
   // Jump to previously completed steps
   const handleChange = (panel) => (event, newExpanded) => {
@@ -127,44 +134,71 @@ function TaskStepper(props) {
   const isExpanded = (panel) => expanded.includes(panel);
 
   function setTasksTask(t) {
-    setArrayState(setTasks, tasksIdx, t)
+    setArrayState(setTasks, tasksIdx, t);
   }
 
   return (
     <div>
       <Stepper activeStep={tasksIdx}>
-        {tasks.map(({ name, label } ) => (
+        {tasks.map(({ name, label }) => (
           <Step key={`task-${name}`}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
       {/* nextTask is also a local state */}
-      { tasks.map(({ name, label, stack, nextTask: metaNextTask, instanceId }, idx) => (
-          <Accordion key={name} expanded={isExpanded(name)} onChange={handleChange(name)}>
+      {tasks.map(
+        ({ name, label, stack, nextTask: metaNextTask, instanceId }, idx) => (
+          <Accordion
+            key={name}
+            expanded={isExpanded(name)}
+            onChange={handleChange(name)}
+          >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              { stack && (
-                <DynamicComponent key={instanceId} is={stack[component_depth]} task={tasks[idx]} setTask={setTasksTask} leaving={leaving} parentTask={stepperTask}  component_depth={component_depth} />
+              {stack && (
+                <DynamicComponent
+                  key={instanceId}
+                  is={stack[component_depth]}
+                  task={tasks[idx]}
+                  setTask={setTasksTask}
+                  leaving={leaving}
+                  parentTask={stepperTask}
+                  component_depth={component_depth}
+                />
               )}
             </AccordionDetails>
             <div>
-              {tasks[tasksIdx].name !== 'start' && tasks[tasksIdx].name === name && (
-                <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'back')} variant="contained" color="primary">
-                  Back
-                </Button>
-              )}
-              {!/\.stop$/.test(metaNextTask) && tasks[tasksIdx].name === name && (
-                <Button onClick={() => handleStepperNavigation(tasks[tasksIdx], 'next')} variant="contained" color="primary">
-                  Next
-                </Button>
-              )}
+              {tasks[tasksIdx].name !== "start" &&
+                tasks[tasksIdx].name === name && (
+                  <Button
+                    onClick={() =>
+                      handleStepperNavigation(tasks[tasksIdx], "back")
+                    }
+                    variant="contained"
+                    color="primary"
+                  >
+                    Back
+                  </Button>
+                )}
+              {!/\.stop$/.test(metaNextTask) &&
+                tasks[tasksIdx].name === name && (
+                  <Button
+                    onClick={() =>
+                      handleStepperNavigation(tasks[tasksIdx], "next")
+                    }
+                    variant="contained"
+                    color="primary"
+                  >
+                    Next
+                  </Button>
+                )}
             </div>
           </Accordion>
-        ))
-      }
+        )
+      )}
     </div>
   );
 }

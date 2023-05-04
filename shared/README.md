@@ -11,6 +11,10 @@ Then to run: `npm run generate-converter-v02`
 -----------
 The request/response fields are used to send Task specific information between the server and client but the princple could be applied for other services. We need to think about how this should be separated from the Task specific schema e.g. a distinction between internal and external requests. In this way a Task could publish a service and ohter tasks could make requests (rahter than assuming the communication is within a Task)
 
+Changing the schema was a painful exercise:
+* Javascript uses references in hierarchical data structures and this can create issues e.g. code that worked with a shallow data structure breaks with a deeper data structure.
+* Common names make it hard to do global search & replace. A more semantic search and replace would help a lot.
+
 ## Upgrading
 The convertConfigV01toV02.mjs is a script that helped with the conversion of V01 to V02
 
