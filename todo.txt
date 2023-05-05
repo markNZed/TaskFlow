@@ -7,6 +7,10 @@ Put label into main schema area from config.
 One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
 The infrastructure provided by the client/server should perform the updates to the Task object as this allows for services to be provided upon value changes.
 Document what the infrastructure is expected to provide - harmonise the client/server (both are just Task processors)
+  In React withTask HOC with useTask state.
+  A common JS module for managing the Task object. What can be generic to Task Processors and what is custom?
+  Task2Flow adds the concept of sessionId and address/location. Maybe the Task Processor could have a schema or set of functions.
+  
 Does the update actually update (deep merge) or does it replace?
 Privacy feature of Task is not implemented. 
 Rather than a JS hierarchy we might be better to use KeyV mapping e.g. response_text etc 
