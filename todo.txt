@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Rename to Chat@Flow ?
 baseType and type is confusing
 permissions is unclear
 Put label into main schema area from config.
