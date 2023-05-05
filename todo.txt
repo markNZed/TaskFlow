@@ -154,3 +154,8 @@ Comparison with similar systems
     Embed in an iFrame
   Algovera
     Not open sourced (yet)
+  Microsoft Power Automated
+  Zapier
+  IFTTT
+  n8n
+  Node-RED

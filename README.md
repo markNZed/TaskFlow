@@ -29,6 +29,10 @@ On the nodejsProcessor side, Chat@Flow provides a kernel for evaluating Task fun
 
 On the browserProcessor (user interface) side, Chat@Flow provides Tasks with storage, nodejsProcessor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The browserProcessor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
 
+### Task Environment
+
+The Task Processor provides a Task Environment for the Task to run in. The nodejsProcessor currently provides a Node Javascript environment. The browserProcessor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
+
 ## Motivation
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture value new services will provide. 
