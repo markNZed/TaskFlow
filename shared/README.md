@@ -119,7 +119,7 @@ When certain values are set then the Task Processor should perform certain actio
 * log -> message, append to logHistory
 * error -> 
 
-Rather than going through function calls we use the Task object. Thi allows a task written in X to run on a Task Processor written in Y
+Rather than going through function calls we use the Task object. This allows a task written in one langauge to run on a Task Processor written in anoher language.
 * command -> stopTask, writeTask, readTask, deleteTask, getTask, nextTask, getTaskThread, forkTask, archiveTask, getTaskHistory, getTaskMetrics, validateTask, getTaskSchema
 * commandAgs -> arguments for command
 * commandResult -> result of command
@@ -128,10 +128,10 @@ Rather than going through function calls we use the Task object. Thi allows a ta
 
 The Task may use a library to have a function based interface to the Task Processor.
 
-There does need to be a functonal interface to create a Task but this could accept a Task object.
+There does need to be a functonal interface to create a Task but this should accept a Task object.
 ### Task Environment
 
-The task environment is the software stack that the task requires. For exmaple the browserProcessor requires a web browser with Javascript. This would allow for Task Processors to accept Tasks if thehy can provide the correct environment. This could make the system sclae more easily.
+The task environment is the software stack that the Task requires. For example the browserProcessor requires a web browser with Javascript. This will allow for Task Processors to accept Tasks if they can provide the correct environment. This will make the system more scalable.
 
 ## Open Issues
 The request/response fields are used to send Task specific information between the nodejsProcessor and browserProcessor but the princple could be applied for other services. We need to think about how this should be separated from the Task specific schema e.g., a distinction between internal and external requests. In this way a Task could publish a service and other tasks could make requests (rather than assuming the communication is within a Task). Could have:
