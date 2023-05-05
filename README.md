@@ -6,6 +6,8 @@ Chat@Flow is a Task centric collaborative web application framework leveraging A
 
 Chat@Flow supports activities combining software and AI models with human interaction. Chat@Flow adopts a Task centric approach. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
+![Chat@Flow Diagram](Task.drawio.svg)
+
 Chat@Flow is intended to provide a light, flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of Chat2FLow (except for demonstration purposes) . The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 Chat@Flow should play nicely with:
