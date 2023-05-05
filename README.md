@@ -64,6 +64,10 @@ You will need to include TaskNew in a sequence of tasks (or it could be standalo
   * Add the license header to the file
   * edit nodejsProcessor/config/workflows.mjs to import and include TaskNewFlow.mjs
 
+### Coding Guidelines
+
+Code is currently formatted using Prettier defaults.
+
 ## License
 
 This project is licensed under the Mozilla Public License Version 2.0, see [LICENSE.txt](LICENSE.txt), and is open to contributions. An [ICLA](ICLA.txt) is provided for pull requests and managed automatically by https://cla-assistant.io. Contributions are licensed for use through the ICLA i.e., contributors continue to own their contributions. An important part of the ICLA allows the Project Owner to change the project license in the future. If the license is changed in the future, the source code prior to the change would still be available under the MPL 2.0, i.e., anyone could fork the MPL 2.0 project and continue using/developing Chat@Flow.
