@@ -16,6 +16,6 @@ if (window.location.hostname !== "localhost") {
 export const socketUrl = `${socketProtocol}//${socketHost}:${socketPort}/ws`;
 export const serverUrl =
   window.location.protocol + `//${socketHost}:${socketPort}/`;
-export const appLabel = "Chat@Flow";
-export const appName = "Chat@Flow";
+export const appLabel = "T@skFlow";
+export const appName = "T@skFlow";
 export const appAbbrev = "c2f";

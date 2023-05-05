@@ -1,6 +1,6 @@
 # Client
 
-This is the browserProcessor of Chat@Flow written in Javascript using React and Material Design (MUI)
+This is the browserProcessor of T@skFlow written in Javascript using React and Material Design (MUI)
 
 To install the node packages: `npm install` 
 

@@ -10,7 +10,7 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 
 # Notes
 
-Eventually this will capture how to deploy Chat@Flow in a "production" environment. 
+Eventually this will capture how to deploy T@skFlow in a "production" environment. 
 
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker-compose -f docker-compose-prod.yml up
