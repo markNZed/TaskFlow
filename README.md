@@ -18,8 +18,7 @@ T@skFlow should play nicely with:
 
 Tasks consist of:
 * A text specification of additional Task variables
-* An optional user interface component
-* An optional software function
+* Functionality intended for one or more Task Environment(s)
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
 
