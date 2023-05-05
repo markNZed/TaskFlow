@@ -36,7 +36,7 @@ v03:
 * status as an enum type (pending, in progress, completed, failed)
 * error -> errorMessage as string + errorDetails as object
 * expireAt as a Date
-* resourceRequirement as an object with properties: cpu, memory, disk, network
+* resourceRequirement as an object with properties: cpu, memory, disk, network, environment (e.g., browser, python, nodejs etc) 
 * dependencies as an array of instanceIds
 * resourceConsumed as an object with properties: cpu, memory, disk, network Could also include a signature. Allows for metrics.
 * tags as an array of strings
@@ -54,7 +54,15 @@ v03:
 * outgoingResponse
 * outgoingCount
 * children -> childIds
+* processor data provided by the Task processor
+  * location
+  * sessionId
+  * API a list of API ids consider what langchain does for models
+* done as a boolean
+* logHistory as an array of log messages
+* log as a string
 
+### Task Processor
 The Task processor should:
 * validate the Task
 * In the future:
@@ -89,6 +97,41 @@ The Task processor should:
 * Resource allocation
 * Metrics
 * Access to archived tasks e.g. by threadId
+
+Task Processor functionality
+* stopTask
+* writeTask
+* readTask
+* deleteTask
+* getTask
+* nextTask
+* getTaskThread
+* forkTask
+* archiveTask
+* getTaskHistory
+* getTaskMetrics
+* validateTask
+* getTaskSchema
+
+When certain values are set then the Task Processor should perform certain actions:
+* send -> true: send the Task
+* done -> true: set completedAt, status to completed
+* log -> message, append to logHistory
+* error -> 
+
+Rather than going through function calls we use the Task object. Thi allows a task written in X to run on a Task Processor written in Y
+* command -> stopTask, writeTask, readTask, deleteTask, getTask, nextTask, getTaskThread, forkTask, archiveTask, getTaskHistory, getTaskMetrics, validateTask, getTaskSchema
+* commandAgs -> arguments for command
+* commandResult -> result of command
+* commandStatus -> status of command: inProgress, completed, failed
+* commandLog -> log of commands
+
+The Task may use a library to have a function based interface to the Task Processor.
+
+There does need to be a functonal interface to create a Task but this could accept a Task object.
+### Task Environment
+
+The task environment is the software stack that the task requires. For exmaple the client requires a web browser with Javascript. This would allow for Task Processors to accept Tasks if thehy can provide the correct environment. This could make the system sclae more easily.
 
 ## Open Issues
 The request/response fields are used to send Task specific information between the server and client but the princple could be applied for other services. We need to think about how this should be separated from the Task specific schema e.g., a distinction between internal and external requests. In this way a Task could publish a service and other tasks could make requests (rather than assuming the communication is within a Task). Could have:
