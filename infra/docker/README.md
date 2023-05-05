@@ -1,7 +1,7 @@
 The following is for development where the nodejsProcessor and browserProcessor directories are mounted to the Docker container.
 
-<br> git clone https://github.com/markNZed/chat2flow.git
-<br> cd chat2flow/infra/docker
+<br> git clone https://github.com/markNZed/taskflow.git
+<br> cd taskflow/infra/docker
 <br> Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable
 <br> `docker-compose build`
 <br> `docker-compose up`

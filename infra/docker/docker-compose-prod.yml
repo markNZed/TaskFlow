@@ -1,12 +1,12 @@
 version: "3.9"
 services:
-  chat2flow-prod:
+  taskflow-prod:
     build:
       context: .
       dockerfile: Dockerfile-prod
-    image: chat2flow-prod:latest
+    image: taskflow-prod:latest
     volumes: 
-      - ../..:/app/chat2flow
+      - ../..:/app/taskflow
     networks:
       - web-proxy
 
