@@ -36,11 +36,11 @@ The Task Processor provides a Task Environment for the Task to run in. The nodej
 
 ## Motivation
 
-The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture value new services will provide. 
+The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 
 
 T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. Typically T@skFlow runs as a web service. On the nodejsProcessor side Tasks are first class citizens - they have full access to the nodejsProcessor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
-For developers T@skFlow could be a personal assistant that runs on your computer keeping your data local.
+For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
 
 ## Getting Started
 
