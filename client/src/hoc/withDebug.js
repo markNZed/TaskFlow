@@ -58,7 +58,7 @@ function withDebug(Component) {
 
     const componentProps = {
       ...props,
-      log, // add log as a prop
+      log,
     };
 
     return <Component {...componentProps} />;

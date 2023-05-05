@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useCallback, useState, useRef, useEffect } from "react";
-import { delta } from "../../utils/utils";
+import { delta, deepMerge } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
@@ -64,7 +64,19 @@ const TaskChat = (props) => {
     switch (mode) {
       case "delta":
         // There are issues when calling setTask: TaskConversation does not see the change
-        updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
+        // I guess because setTask is passed down from Taskflows.js
+        // Maybe need to or maybe wrap setTask in withTask
+        // It makes the change but does not trigger so why does updateTask ?
+        // It seems it does not see updates to p.response.text
+        // This does work. 
+        setTask((p) =>
+          deepMerge(
+            p,
+            {response: { text : p.response.text + text}}
+          )
+        );
+        
+        //updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
         break;
       case "partial":
         updateTask({ "response.text": text });

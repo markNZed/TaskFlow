@@ -122,16 +122,6 @@ function withTask(Component) {
       useFilteredWebSocket(webSocketEventEmitter, props.task, callback);
     }
 
-    // The order of component mounting in React is not gauranteed
-    // So a lower component_depth could override the task if it is passed down
-    // Should we pass down a copy of the task ?
-    // But conversation is communicating through a shared task - maybe that is a problem
-    // For now we pass the depth to useUpdateTask
-    useEffect(() => {
-      //console.log("local_component_depth " + local_component_depth)
-      //props.setTask(p => ({ ...p, component_depth : local_component_depth }))
-    }, []);
-
     function useTaskState(initialValue, name = "task") {
       const [state, setState] = useState(initialValue);
       const [prevTaskState, setPrevTaskState] = useState({});
@@ -258,7 +248,7 @@ function withTask(Component) {
       prevTask,
       updateTask,
       updateTask,
-      updateStep, // add log as a prop
+      updateStep,
       webSocketEventEmitter,
       useTaskWebSocket,
       component_depth: local_component_depth,

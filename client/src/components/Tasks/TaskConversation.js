@@ -91,7 +91,8 @@ const TaskConversation = (props) => {
         }));
       } else if (
         task.state.current === "input" &&
-        task.state.deltaState !== "input"
+        task.state.deltaState !== "input" &&
+        msgs[task.threadId]
       ) {
         // In the case where the response is coming from HTTP not websocket
         // The state will be set to input by the server

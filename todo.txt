@@ -1,6 +1,12 @@
 /* ToDo
 -------
-Put label into main schema area from config
+baseType and type is confusing
+permissions is unclear
+Put label into main schema area from config.
+The infrastructure provided by the client/server should perform the updates to the Task object as this allows for services to be provided upon value changes.
+Document what the infrastructure is expected to provide - harmonise the client/server (both are just Task processors)
+Does the update actually update (deep merge) or does it replace?
+Privacy feature of Task is not implemented. 
 Rather than a JS hierarchy we might be better to use KeyV mapping e.g. response_text etc 
 How to reference values from previous Tasks - available in "output"
 If we put a T at the beginning of each Task parameter it would be easier to update with search & replace
