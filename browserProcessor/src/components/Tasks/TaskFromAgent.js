@@ -121,9 +121,9 @@ const TaskFromAgent = (props) => {
               console.log("No text for response_action in TaskFromAgent");
             }
           }
-          // We cache the response client side
+          // We cache the response browserProcessor side
           if (task.response?.text) {
-            log("Response cached client side");
+            log("Response cached browserProcessor side");
             // Next state
             setMyStep(next_step);
             // Actions

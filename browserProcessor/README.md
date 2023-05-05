@@ -1,12 +1,12 @@
 # Client
 
-This is the frontend/client side of Chat@Flow written in Javascript using React and Material Design (MUI)
+This is the browserProcessor of Chat@Flow written in Javascript using React and Material Design (MUI)
 
 To install the node packages: `npm install` 
 
 To run locally: `npm start`
 
-Running on localhost set the port for the React client server in package.json where PORT=3000. Specify the port of the websocket server with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
+Running on localhost set the port for the React browserProcessor server in package.json where PORT=3000. Specify the port of the websocket nodejsProcessor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
 
 Coding preferences:
 * ES6 Javascript

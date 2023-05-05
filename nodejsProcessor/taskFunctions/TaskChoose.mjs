@@ -63,7 +63,7 @@ const TaskChoose_async = async function (task) {
     // Remember to clean up tensors to prevent memory leaks
     embeddingsData.dispose();
 
-    // Need to go to next state, can stay on server side
+    // Need to go to next state, can stay on nodejsProcessor side
     T("nextTask", next_states[maxIndex]);
     T("state.done", true);
   } catch (error) {

@@ -1,13 +1,13 @@
 /* ToDo
 -------
 Task Processor proposes environments, Task requires environment(s).
-Rename to Chat@Flow ?
+Rename to T@sk, T@ask TaskNet 
 baseType and type is confusing
 permissions is unclear
 Put label into main schema area from config.
 One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
-The infrastructure provided by the client/server should perform the updates to the Task object as this allows for services to be provided upon value changes.
-Document what the infrastructure is expected to provide - harmonise the client/server (both are just Task processors)
+The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
+Document what the infrastructure is expected to provide - harmonise the Task Processor (both are just Task processors)
   In React withTask HOC with useTask state.
   A common JS module for managing the Task object. What can be generic to Task Processors and what is custom?
   Task2Flow adds the concept of sessionId and address/location. Maybe the Task Processor could have a schema or set of functions.
@@ -73,14 +73,14 @@ Backlog
   --------
     High Priority
     -------------
-    multiple configuration files for the server
+    multiple configuration files for the nodejsProcessor
     Create infra directory
     Workflow features:
       Allow the user to specify the system prompt.
       Use a route for configuring: user, session, workflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
-    Msgs could be loaded from the server. Similar to stepper - both have history.
-    Allow task to start another task on server side (needs functional interface to api/task/start )
+    Msgs could be loaded from the nodejsProcessor. Similar to stepper - both have history.
+    Allow task to start another task on nodejsProcessor side (needs functional interface to api/task/start )
     Utility filters e.g. remove outer quotes, an ordered list.
 
     Tasks
@@ -97,11 +97,11 @@ Backlog
     ------------
     Move to TypeScript
     Way for tasks to register websocket event handlers
-    Multiple language support 'i18next-http-middleware for server and react-i18next for client
+    Multiple language support 'i18next-http-middleware for nodejsProcessor and react-i18next for browserProcessor
     Defensive programming + logging
-    Websocket for tasks (so server can drive) just send incremental info for the task
+    Websocket for tasks (so nodejsProcessor can drive) just send incremental info for the task
     Replace globalState with Redux
-    When sending task instance only send diff (client keeps server copy, server keeps client copy)
+    When sending task instance only send diff (browserProcessor keeps nodejsProcessor copy, nodejsProcessor keeps browserProcessor copy)
     Add task type validation to websocket
 
 Notes/Idea
@@ -130,7 +130,7 @@ Notes/Idea
         Implies catalog, installation, activation, configuration, updates, permissions, resource limits
         Requires a documented API, the basic principles at the moment:
             Use the Task object to pass information
-            Manage task specific storage (e.g. files, user specific data) independently of the server Stores
+            Manage task specific storage (e.g. files, user specific data) independently of the nodejsProcessor Stores
             Through JS imports the TaskFunction has access to:
                 config.mjs
                 src/configdata.mjs (users, groups, workflows, components, agents, defaults, tasks)
@@ -144,8 +144,8 @@ Notes/Idea
     How does a task monitor other tasks ? Callback to monitor a thread or a task (middleware catch updates to instance store)
       Maybe tasks are responsible for their own communication protocol 
       Pattern of having the parent own the state? That allows for communication.
-      In React this is fairly easy. On the server this could be a pub-sub system. The common point is asynchronous messages.
-    Should the geolocation be a task? It could still update the globalState on the client side
+      In React this is fairly easy. On the nodejsProcessor this could be a pub-sub system. The common point is asynchronous messages.
+    Should the geolocation be a task? It could still update the globalState on the browserProcessor side
     How to call out to Python from the Task function
       "child process execution" with child_process library
       RabbitMQ for message passing good for a local model but do we need high speed, probably not.
@@ -154,7 +154,7 @@ Notes/Idea
 
   Issues
   ------
-    Tasks run with full server rights. They should be sandboxed on the server.
+    Tasks run with full nodejsProcessor rights. They should be sandboxed on the nodejsProcessor.
         TaskFunction could run in a docker container
         Each TaskFunction could be a user on Linux
             User could run in a restricted environment e.g. firejail, bubblewrap

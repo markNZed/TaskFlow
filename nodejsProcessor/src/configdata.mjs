@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import {} from "./../config.mjs";
+import {} from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -303,7 +303,7 @@ function flattenTasks(workflows) {
             }
             tasks[taskId] = task;
             tasks[taskId]["parentId"] = workflowKey;
-            //tasks[taskId]['filter_for_client'] = workflows[workflowKey].filter_for_client;
+            //tasks[taskId]['filter_for_browserProcessor'] = workflows[workflowKey].filter_for_browserProcessor;
           }
         }
       }

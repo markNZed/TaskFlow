@@ -4,7 +4,7 @@ const path = require("path");
 
 module.exports = {
   // The function to use to create a webpack dev server configuration when running the development
-  // server with 'npm run start' or 'yarn start'.
+  // nodejsProcessor with 'npm run start' or 'yarn start'.
   // Example: set the dev server to use a specific certificate in https.
   devServer: function (configFunction) {
     // Return the replacement function for create-react-app to use to generate the Webpack

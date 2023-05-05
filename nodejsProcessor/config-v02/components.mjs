@@ -1,6 +1,6 @@
 const components = [
   {
-    filter_for_client: [
+    filter_for_browserProcessor: [
       "id",
       "component",
       "component_depth",
@@ -23,7 +23,7 @@ const components = [
     name: "root",
   },
   {
-    APPEND_filter_for_client: [
+    APPEND_filter_for_browserProcessor: [
       "client_prompt",
       "suggested_prompts",
       "response",
@@ -33,7 +33,7 @@ const components = [
     parentType: "root",
   },
   {
-    APPEND_filter_for_client: ["welcome_message"],
+    APPEND_filter_for_browserProcessor: ["welcome_message"],
     initiator: false,
     name: "TaskConversation",
     parentType: "root",
@@ -43,7 +43,7 @@ const components = [
     parentType: "root",
   },
   {
-    APPEND_filter_for_client: [
+    APPEND_filter_for_browserProcessor: [
       "response",
       "input",
       "input_label",
@@ -53,7 +53,7 @@ const components = [
     parentType: "root",
   },
   {
-    APPEND_filter_for_client: ["response"],
+    APPEND_filter_for_browserProcessor: ["response"],
     name: "TaskShowResponse",
     parentType: "root",
   },

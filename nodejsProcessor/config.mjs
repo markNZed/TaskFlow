@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+const BROWSER_URL = process.env.BROWSER_URL || "http://localhost:3000";
 const DEFAULT_USER = "test@testing.com";
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
@@ -19,4 +19,4 @@ if (process.env.OPENAI_API_KEY === "") {
 
 const MAP_USER = {};
 
-export { CLIENT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER };
+export { BROWSER_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER };

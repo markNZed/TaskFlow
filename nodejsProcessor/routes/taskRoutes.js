@@ -8,8 +8,8 @@ import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "../src/utils.mjs";
 import { taskFunctions } from "../taskFunctions/taskFunctions.mjs";
-import { groups, tasks, components } from "./../src/configdata.mjs";
-import { instancesStore_async, threadsStore_async } from "./../src/storage.mjs";
+import { groups, tasks, components } from "../src/configdata.mjs";
+import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../src/taskConverterWrapper.mjs";
@@ -28,7 +28,7 @@ async function do_task_async(task) {
   } else {
     updated_task = task;
     const msg =
-      "ERROR: server unknown component at idx " + idx + " : " + task.stack;
+      "ERROR: nodejsProcessor unknown component at idx " + idx + " : " + task.stack;
     updated_task["error"] = msg;
     console.log(msg, taskFunctions);
   }
@@ -136,7 +136,7 @@ router.post("/update", async (req, res) => {
       }
       if (address) {
         task.request["address"] = address;
-      } // This should be done on the client side
+      } // This should be done on the browserProcessor side
       if (task.updateCount) {
         task.updateCount += 1;
       } else {
@@ -158,7 +158,7 @@ router.post("/update", async (req, res) => {
       console.error("Error while validating Task against schema:", error, task);
     }
 
-    // Risk that client writes over server fields so filter_out before merge
+    // Risk that browserProcessor writes over nodejsProcessor fields so filter_out before merge
     let instanceId = task.instanceId;
     const server_side_task = await instancesStore_async.get(instanceId);
     // filter_in could also do some data cleaning

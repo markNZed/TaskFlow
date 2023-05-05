@@ -51,7 +51,7 @@ const TaskShowResponse_async = async function (task) {
               " does not exist"
           );
         }
-        // Will crash server if not present
+        // Will crash nodejsProcessor if not present
         return (
           acc + threadTasks[parentId + "." + matches[1]]["output"][matches[2]]
         );
@@ -64,7 +64,7 @@ const TaskShowResponse_async = async function (task) {
     response = T("response.text");
   }
   console.log("Returning from tasks.TaskShowResponse");
-  // Ensure we do not overwrite the deltaState on the client
+  // Ensure we do not overwrite the deltaState on the browserProcessor
   T("state.deltaState", undefined); // Should be centralized?
   T("response.text", response);
   T("updatedAt", Date.now()); // Should be centralized?

@@ -13,7 +13,7 @@ import withTask from "../../hoc/withTask";
 /*
 Task Process
   This component is complete overkill for what it is doing but it was useful during early dev
-  Fetches a response from the server that is hard coded in the task
+  Fetches a response from the nodejsProcessor that is hard coded in the task
   
 ToDo:
   
@@ -78,9 +78,9 @@ const TaskShowResponse = (props) => {
           function response_action(text) {
             setResponseText(text);
           }
-          // We cache the response client side
+          // We cache the response browserProcessor side
           if (task.response?.text) {
-            log("Response cached client side");
+            log("Response cached browserProcessor side");
             // Next state
             setMyStep(next_step);
             // Actions

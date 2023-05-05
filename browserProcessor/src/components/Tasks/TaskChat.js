@@ -16,19 +16,19 @@ import send from "../../assets/send.svg";
 /*
 Task Process
   Present textarea and dropdown for user to enter a prompt
-  When prompt is submitted send the task to server with state.current=sending
+  When prompt is submitted send the task to nodejsProcessor with state.current=sending
   Server sends incemental text responses by websocket updating task.response.text
   Server sends final text and terminates HTTP request with state.current=input
   Parent component is expected to:
     Display updates to task.response.text while state.current=input
     Detect state.current=sending and display/store user's prompt and set state.current=receiving ** should not be setting step in parent?
-  If server request returns (!updateTaskLoading) and state.current=receiving the websocket did not start/finish
+  If nodejsProcessor request returns (!updateTaskLoading) and state.current=receiving the websocket did not start/finish
     Update with the HTTP response so step=input
 
 Task States
   input: get user prompt
-  sending: sending user prmopt to server
-  receiving: receiving websocket response from server
+  sending: sending user prmopt to nodejsProcessor
+  receiving: receiving websocket response from nodejsProcessor
   
 ToDo:
   Allow copy/paste while updating
@@ -121,7 +121,7 @@ const TaskChat = (props) => {
       task.state.current === "input" &&
       task.state.deltaState !== "input"
     ) {
-      // The server set the state to input so we set deltaState
+      // The nodejsProcessor set the state to input so we set deltaState
       // Could look after this in useUpdateTask
       // Reset the request so we can use response.text for partial response
       updateTask({
@@ -139,7 +139,7 @@ const TaskChat = (props) => {
         return;
       }
       setResponsePending(true);
-      // Set update to send to server
+      // Set update to send to nodejsProcessor
       updateStep("sending");
       updateTask({ "request.input": prompt, send: true });
       //updateTask({ client_prompt: prompt, update: true, response: '' });

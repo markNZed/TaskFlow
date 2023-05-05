@@ -8,7 +8,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { v4 as uuidv4 } from "uuid";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
-import { MAP_USER, DEFAULT_USER } from "./../config.mjs";
+import { MAP_USER, DEFAULT_USER } from "../config.mjs";
 
 const utils = {};
 
@@ -145,20 +145,20 @@ utils.filter_in = function (components, tasks, task) {
   }
   //console.log("BEFORE ", task)
   let filter_list = [];
-  let filter_for_server = [];
+  let filter_for_nodejsProcessor = [];
   // This assumes the components are not expanded - need to do this in dataconfig
   for (const c of task.stack) {
-    filter_list = filter_list.concat(components["root." + c].filter_for_client);
-    filter_for_server = filter_list.concat(
-      components["root." + c].filter_for_server
+    filter_list = filter_list.concat(components["root." + c].filter_for_browserProcessor);
+    filter_for_nodejsProcessor = filter_list.concat(
+      components["root." + c].filter_for_nodejsProcessor
     );
   }
-  if (task?.filter_for_client) {
-    filter_list = filter_list.concat(task.filter_for_client);
-    filter_for_server = filter_for_server.concat(task.filter_for_server);
+  if (task?.filter_for_browserProcessor) {
+    filter_list = filter_list.concat(task.filter_for_browserProcessor);
+    filter_for_nodejsProcessor = filter_for_nodejsProcessor.concat(task.filter_for_nodejsProcessor);
   }
   filter_list = Array.from(new Set(filter_list)); // uniquify
-  filter_for_server = Array.from(new Set(filter_for_server)); // uniquify
+  filter_for_nodejsProcessor = Array.from(new Set(filter_for_nodejsProcessor)); // uniquify
   if (filter_list.length < 1) {
     console.log("Warning: the task ", task, " is missing filter");
   }
@@ -167,12 +167,12 @@ utils.filter_in = function (components, tasks, task) {
     if (!filter_list.includes(key)) {
       delete taskCopy[key];
       if (
-        !filter_for_server.includes(key) &&
+        !filter_for_nodejsProcessor.includes(key) &&
         !key.startsWith("APPEND_") &&
         !key.startsWith("PREPEND_")
       ) {
         console.log(
-          "Warning: Unknown task key not returned to client " +
+          "Warning: Unknown task key not returned to browserProcessor " +
             key +
             " in task id " +
             task.id

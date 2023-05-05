@@ -18,7 +18,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { CLIENT_URL } from "./config.mjs";
+import { BROWSER_URL } from "./config.mjs";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import miscRoutes from "./routes/miscRoutes.js";
@@ -34,7 +34,7 @@ app.use(bodyParser.json());
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
-const allowedOrigins = [CLIENT_URL];
+const allowedOrigins = [BROWSER_URL];
 
 app.use(
   cors({
@@ -66,4 +66,4 @@ const server = http.createServer(serverOptions, app);
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5000;
-server.listen(port, () => console.log("Chat@Flow server started"));
+server.listen(port, () => console.log("Chat@Flow nodejsProcessor started"));

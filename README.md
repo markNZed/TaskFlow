@@ -13,21 +13,23 @@ Tasks that consist of:
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, Chat@Flow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, Chat@Flow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
 
-On the server/software side, Chat@Flow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the server without user interaction. Tasks may use software/AI to decide on the next Task to start. The server uses Node Javascript and the Express framework.
+Tasks are processed by Task Processors, there are two Task Processors implemented in Chat@Flow: nodejsProcessor and browserProcessor. The nodejsProcessor runs on a server and the browserProcessor runs in a web browser. The nodejsProcessor and browserProcessor communicate using websockets or REST style HTTP API. The nodejsProcessor and browserProcessor are implemented in Javascript.
 
-On the user interface side, Chat@Flow provides Tasks with storage, server communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The client/interface runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
+On the nodejsProcessor side, Chat@Flow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the nodejsProcessor without user interaction. Tasks may use software/AI to decide on the next Task to start. The nodejsProcessor uses Node Javascript and the Express framework.
+
+On the browserProcessor (user interface) side, Chat@Flow provides Tasks with storage, nodejsProcessor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The browserProcessor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
 
 Chat@Flow is intended to provide a light, flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of Chat2FLow (except for demonstration purposes) . The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 Chat@Flow should play nicely with:
-* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the server)
-* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the server)
+* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the nodejsProcessor)
+* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the nodejsProcessor)
 
 ## Motivation
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture value new services will provide. 
 
-Chat@Flow is intended to allow rapid exploration of new ideas in a relatively trusted environment. Typically Chat@Flow runs as a web service. On the server side Tasks are first class citizens - they have full access to the server environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. Chat@Flow should make it easy to leverage existing services. Chat@Flow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
+Chat@Flow is intended to allow rapid exploration of new ideas in a relatively trusted environment. Typically Chat@Flow runs as a web service. On the nodejsProcessor side Tasks are first class citizens - they have full access to the nodejsProcessor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. Chat@Flow should make it easy to leverage existing services. Chat@Flow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
 For developers Chat@Flow allows for a personal assistant that runs on your computer keeping your data local.
 
@@ -35,28 +37,28 @@ For developers Chat@Flow allows for a personal assistant that runs on your compu
 
 To run Chat@Flow with docker, see [README.md](infra/docker/README.md) in the docker directory.
 
-To learn more about the server, see [README.md](server/README.md) in the server directory.
+To learn more about the nodejsProcessor, see [README.md](nodejsProcessor/README.md) in the nodejsProcessor directory.
 
-To learn more about the client, see [README.md](client/README.md) in the client directory.
+To learn more about the browserProcessor, see [README.md](browserProcessor/README.md) in the browserProcessor directory.
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
-* Create client/src/components/Tasks/TaskNew.js (copy an existing Task)
+* Create browserProcessor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Add the license header to the file
-* Create server/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
+* Create nodejsProcessor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
 * Add the license header to the file
-* Add information about the new Task to server/config/components.mjs
+* Add information about the new Task to nodejsProcessor/config/components.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 
-  * add it directly to server/config/workflows.mjs
+  * add it directly to nodejsProcessor/config/workflows.mjs
 * If the sequence is complicated/long then 
-  * create a file in server/config/workflow/TaskNewFlow.mjs (copy the structure of an existing file)
+  * create a file in nodejsProcessor/config/workflow/TaskNewFlow.mjs (copy the structure of an existing file)
   * Add the license header to the file
-  * edit server/config/workflows.mjs to import and include TaskNewFlow.mjs
+  * edit nodejsProcessor/config/workflows.mjs to import and include TaskNewFlow.mjs
 
 ## License
 
@@ -64,11 +66,11 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 
 ## Contributions
 
-The initial client code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-client](https://github.com/YaokunLin/chatbot-react-client), and the initial server code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-server). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
+The initial browserProcessor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-browserProcessor](https://github.com/YaokunLin/chatbot-react-browserProcessor), and the initial nodejsProcessor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-nodejsProcessor](https://github.com/YaokunLin/chatbot-nodejsProcessor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
 ## Future
 
-Here is what GPT-4 plans for Chat@Flow:
+Here is what GPT-4 has to say about Chat@Flow:
 
 A system like Chat@Flow has the potential to revolutionize human-computer interaction and collaboration, thanks to its task-centric approach and AI integration. Here are some opportunities and innovative ideas for this system:
 

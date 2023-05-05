@@ -95,7 +95,7 @@ const TaskConversation = (props) => {
         msgs[task.threadId]
       ) {
         // In the case where the response is coming from HTTP not websocket
-        // The state will be set to input by the server
+        // The state will be set to input by the nodejsProcessor
         const lastElement = {
           ...msgs[task.threadId][msgs[task.threadId].length - 1],
         }; // shallow copy

@@ -15,7 +15,7 @@ const TaskFromAgent_async = async function (task) {
   );
 
   // We have two potential steps: ['response', 'input']
-  // We want to receive the task object from the client and from the server
+  // We want to receive the task object from the browserProcessor and from the nodejsProcessor
   if (T("state.current") === "input") {
     // Nothing to do could update instance
     console.log("Returning task state input");
@@ -80,7 +80,7 @@ const TaskFromAgent_async = async function (task) {
             threadTasks[parentId + "." + matches[1]]
           );
         }
-        // Will crash server if not present
+        // Will crash nodejsProcessor if not present
         return (
           acc + threadTasks[parentId + "." + matches[1]]["output"][matches[2]]
         );
@@ -137,7 +137,7 @@ const TaskFromAgent_async = async function (task) {
   T("response.text", response_text);
   // Make available as an output to other Tasks
   T("output.text", response_text);
-  // Ensure we do not overwrite the deltaState on the client
+  // Ensure we do not overwrite the deltaState on the browserProcessor
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());
   //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
