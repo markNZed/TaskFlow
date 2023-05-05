@@ -45,7 +45,7 @@ Compare with similar systems
     Standard interface to models (could reuse this)
     Model output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
-    The workflow in Chat2Flow is like an Agent in LangChain
+    The workflow in Chat@Flow is like an Agent in LangChain
   GPT-Index
     Should leverage this
   Open-AI Plugins
@@ -118,7 +118,7 @@ Notes/Idea
                   Session Task
   Asking the model to output in a format that would pass a test might be a software good way of constraining prmopts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
-  How to interface with other apps with output from chat2flow ?
+  How to interface with other apps with output from Chat@Flow ?
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
 
@@ -158,6 +158,6 @@ Notes/Idea
         TaskFunction could run in a docker container
         Each TaskFunction could be a user on Linux
             User could run in a restricted environment e.g. firejail, bubblewrap
-    Administation/monitoring of Chat2Flow, could ping a service that alerts to problems
+    Administation/monitoring of Chat@Flow, could ping a service that alerts to problems
 
 

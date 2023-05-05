@@ -1,5 +1,5 @@
 # Server
-This is the backend/server side of Chat2Flow
+This is the backend/server side of Chat@Flow
 1. written in Node JS run-time, Express framework
 3. chat responses powered by OpenAi API's
 4. fetched data is cached by SQLite
