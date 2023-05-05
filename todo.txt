@@ -3,6 +3,7 @@
 baseType and type is confusing
 permissions is unclear
 Put label into main schema area from config.
+One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
 The infrastructure provided by the client/server should perform the updates to the Task object as this allows for services to be provided upon value changes.
 Document what the infrastructure is expected to provide - harmonise the client/server (both are just Task processors)
 Does the update actually update (deep merge) or does it replace?
