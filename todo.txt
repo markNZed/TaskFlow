@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Task Processor proposes environments, Task requires environment(s).
 Rename to Chat@Flow ?
 baseType and type is confusing
 permissions is unclear
@@ -158,43 +159,6 @@ Notes/Idea
         Each TaskFunction could be a user on Linux
             User could run in a restricted environment e.g. firejail, bubblewrap
     Administation/monitoring of Chat2Flow, could ping a service that alerts to problems
-    Is there a place for a scripting interfaec? Shell that understands Tasks.
-    Structure of the Task object:
-        * Shared between client and server
-             `id` // this should be type not id, no type is component, id is like a path extendedType ?
-             `component` // stack
-             `component_depth` //stackPtr
-             `next`  
-             `forget`  
-             `name`  // instead of label ?
-             `label`  // replace wih name
-             `instanceId` this is id
-             `threadId`  
-             `children`  
-             `done`  
-             `steps`  
-             `step`  
-             `next_step` 
-             `menu`  // replaced by initiator
-             `update_count` 
-        * Server side only: (private to Task)
-            * `APPEND_*`
-            * `PREPEND_*` 
-             `parent` // Replaced with parentType
-             `parentId` 
-             `parentInstanceId` // Replaced with parentId
-             `agent` 
-             `groups` 
-             `sessionId` 
-             `created` 
-             `userId` 
-             `prompt` 
-             `assemble_prompt` // promptTemplate
-             `last_change` 
-             `update` 
-             `delta_step` 
-             `messages_template`
-             `messages`
 
 export { taskConverterToJson,  toTaskConverter };
 && sed -i -e 's/module\\\\.exports = {/\\\\export default {/g' -e 's/};/};/g' src/shared/taskConverter.mjs\"
