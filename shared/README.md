@@ -16,14 +16,18 @@ The Task object currently has a fixed set of top level properties and `id` is th
 
 If a request is made then, typically, the entire Task object is sent. A copy of the Task may be held and it would then be the responsibility of the Task to deal with the Task object being updated when the request is completed. The state can be used to communicate between the Task Processor functionality of a Task.
 
-It would be relatively simple to maintain a copy of the last Task received on the nodejsProcessor and a copy of the last Task received on the browserProcessor, then to send only the difference when updating the Task.
+It would be relatively simple to maintain a copy of the last Task received on the nodejsProcessor and a copy of the last Task received on the browserProcessor, then to send only the difference when updating the Task. Anoher option is to use GraphQL.
 
-Currently the preference is to manage the Task object by operating on top lelve properties e.g. instead of updating a value inside the State object the entire State object should be updated/replaced. 
+Currently the preference is to manage the Task object by operating on top level properties e.g. instead of updating a value inside the State object the entire State object should be updated/replaced. 
 
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
 
 ## Future
 Tasks will be able to provide a schema. At the moment the Task could do this by including a schema in the config object of the Task and validate within the Task e.g., before sending a request and upon receiving a request/response.
+
+JSON schema provides several keywords to specify rules for relationships, such as allOf, anyOf, oneOf, and not.
+
+Draft-07 introduces conditional schema evaluation using the if, then, and else keywords. They provide a way to apply subschemas conditionally, allowing for more complex validation logic. Draft-07 introduces the propertyNames keyword, which can be used to apply a schema to the names of all properties in an object, allowing for validation of property names.
 
 v03:
 * privacy -> propertyMask
@@ -61,6 +65,10 @@ v03:
 * done as a boolean
 * logHistory as an array of log messages
 * log as a string
+* permissions -> groupAccess
+* baseType is not used, would be like APPEND_stack
+* type is not used, would be like id
+  * id could be renamed type, then instanceId could be renamed to id 
 
 ### Task Processor
 The Task processor should:
@@ -125,6 +133,7 @@ Rather than going through function calls we use the Task object. Thi allows a ta
 * commandResult -> result of command
 * commandStatus -> status of command: inProgress, completed, failed
 * commandLog -> log of commands
+The commands could use JSON-RPC format
 
 The Task may use a library to have a function based interface to the Task Processor.
 

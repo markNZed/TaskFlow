@@ -1,26 +1,27 @@
 /* ToDo
 -------
-baseType and type is confusing
-permissions is unclear
+Privacy feature of Task
+Tests are important because they will allow for better code generation
 
-One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
-Document what the infrastructure is expected to provide - harmonise the Task Processor (both are just Task processors)
-  In React withTask HOC with useTask state.
-  A common JS module for managing the Task object. What can be generic to Task Processors and what is custom?
-  Task2Flow adds the concept of sessionId and address/location. Maybe the Task Processor could have a schema or set of functions.
-  
+Harmonise the Task Processor
+  In React withTask HOC and useTask state.
+  A common JS module for managing the Task object. 
+    What is generic to Task Processors and what is custom?
+      Browser adds the concept of sessionId and address/location.
 Does the update actually update (deep merge) or does it replace?
-Privacy feature of Task is not implemented. 
-Rather than a JS hierarchy we might be better to use KeyV mapping e.g. response_text etc 
-How to reference values from previous Tasks - available in "output"
-If we put a T at the beginning of each Task parameter it would be easier to update with search & replace
+  While the Task is on nodejs how to deal with browser changes
+    Each param could have an updatedAt for merging
+    Task Processor could error on merge conflicts
+    There could be rules/assertions for the schema
+      Constrain what the Task expects regarding config
+If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in workflows and stepper
-The chat.mjs is like an internal request? Make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO)
+The chat.mjs is like an internal request? Make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO). It operates on a Task. More like a simple Task Processor thatn provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
 How can we specify the UI in a more compact/easy way?
   https://github.com/rjsf-team/react-jsonschema-form
-  If you're looking for a performant, hook-based solution with minimal boilerplate, React Hook Form is a great choice.
-Think about how to have a task deal with compound react components
+  A hook-based solution with minimal boilerplate: React Hook Form
+How to have a task deal with compound react components
   config: list of components (with names) for display&input, mapping inputs to request.name.inputs
   config: list of components (with names) for display, mapping to response.name.outputs (if it is displaying a return)
   Basic pattern is: display -> input -> display -> input (can choose to use a subset)
@@ -33,8 +34,7 @@ Consider how we would add a radio select box to a component
   Dynamic mapping of config to the input
   Standard way of mapping this to response. Make these available as variable in next Task (or state?)
 Can we have the same React component present a new Task? I guess it does that automatically (carry the previous output along)
-  In this case the patterns of display then input or input then display should be enough.
-Could have tasks that fill out a higher presentation task - like the stepper
+  In this case the patterns of display then input or input then display should be enough. TaskIO
 
 Backlog
 -------
@@ -61,9 +61,16 @@ Backlog
     Multiple-choice above prompt to allow for quick refining of prompt e.g. use tutoiment, friendly, formal etc
     Templating with user defined variables
     Assistant to help understanding a problem rather than solving the problem
-        Gamification to make learning more engaging
-        An assistant to help explaining what the problem is
+      Gamification to make learning more engaging
+      An assistant to help explaining what the problem is
     Research assistant
+    Refactoring assistant (provide a duplicate code environment as the Task Environment)
+      Example of the refactoring provided.
+      LLM to explain the refactoring
+      LLM to identify which files should be refactored
+      Apply refactoring
+        Syntax check as code is produced? 
+        Fix for syntax errors
 
     Low Priority
     ------------
@@ -92,8 +99,10 @@ Notes/Idea
   Asking the model to output in a format that would pass a test might be a software good way of constraining prmopts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
   How to interface with other apps with output from T@skFlow ?
+    Windows accessibility APIs, such as UI Automation or MSAA (Microsoft Active Accessibility)
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
+  One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
 
 Architecture
 ------------
