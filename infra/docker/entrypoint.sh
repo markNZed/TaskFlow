@@ -2,8 +2,10 @@
 
 cd /app/taskflow/nodejsProcessor
 npm install
-npm run server &
+screen -d -m npm run server
+
 cd /app/taskflow/browserProcessor
 npm install
-npm start &
+screen -d -m npm start
+
 sleep infinity

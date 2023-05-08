@@ -46,7 +46,7 @@ app.use(
       } else if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, origin);
       } else {
-        callback(new Error("Not allowed by CORS " + origin));
+        callback(new Error("Not allowed by CORS origin is " + origin + " allowedOrigins ", allowedOrigins));
         console.log("Not allowed by CORS " + origin);
       }
     },
