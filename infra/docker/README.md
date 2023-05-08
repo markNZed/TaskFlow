@@ -16,10 +16,6 @@ Eventually this will capture how to deploy T@skFlow in a "production" environmen
 <br> docker-compose -f docker-compose-prod.yml up
 
 Remember to purge the cloudflare cache after updating on prod.
-
-npm run build
-npm install -g serve
-cd build
-serve -s -l 3000
-
 screen
+
+Should have the chat client and server in different containers

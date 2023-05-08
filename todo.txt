@@ -1,8 +1,10 @@
 /* ToDo
 -------
+At which time should we introduce Typescript?
+  First try to simplify the code
+Swagger for the API ?
 Privacy feature of Task
 Tests are important because they will allow for better code generation
-
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
 Harmonise the Task Processor
   In React withTask HOC and useTask state.
@@ -71,6 +73,7 @@ Backlog
       Apply refactoring
         Syntax check as code is produced? 
         Fix for syntax errors
+    Fetch prompt suggestion
 
     Low Priority
     ------------
