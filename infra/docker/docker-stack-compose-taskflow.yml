@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  taskflow-browser:
+    #image: localhost:5000/taskflow-prod:latest
+    image: taskflow-prod:latest
+    volumes:
+      - ../..:/app/taskflow
+    entrypoint: ["/entrypoint-browser.sh"]
+    networks:
+      - web-proxy
+  taskflow-nodejs:
+    #image: localhost:5000/taskflow-prod:latest
+    image: taskflow-prod:latest
+    volumes:
+      - ../..:/app/taskflow
+    entrypoint: ["/entrypoint-nodejs.sh"]
+    networks:
+      - web-proxy
+
+networks:
+  web-proxy:
+    external: true
+

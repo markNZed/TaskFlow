@@ -9,6 +9,11 @@ RUN apt-get update && \
 EXPOSE 3000
 EXPOSE 5000
 
+COPY entrypoint-browser.sh /entrypoint-browser.sh
+RUN chmod 755 /entrypoint-browser.sh
+COPY entrypoint-nodejs.sh /entrypoint-nodejs.sh
+RUN chmod 755 /entrypoint-nodejs.sh
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 
