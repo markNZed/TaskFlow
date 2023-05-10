@@ -63,26 +63,21 @@ const TaskChat = (props) => {
   function updateResponse(mode, text) {
     switch (mode) {
       case "delta":
-        // There are issues when calling setTask: TaskConversation does not see the change
-        // I guess because setTask is passed down from Taskflows.js
-        // Maybe need to or maybe wrap setTask in withTask
-        // It makes the change but does not trigger so why does updateTask ?
-        // It seems it does not see updates to p.response.text
-        // This does work. 
+        // We can setTask but this requires looking after the deepMerge
+        /*
         setTask((p) =>
           deepMerge(
             p,
-            {response: { text : p.response.text + text}}
+            {response: { text : (p.response?.text ?? '') + text}}
           )
         );
-        
-        //updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
+        */  
+        updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
         break;
       case "partial":
         updateTask({ "response.text": text });
         break;
       case "final":
-        // So observers of the task know we finished
         updateTask({ "response.text": text });
         break;
     }
@@ -218,4 +213,4 @@ const TaskChat = (props) => {
   );
 };
 
-export default React.memo(withTask(TaskChat));
+export default withTask(TaskChat);

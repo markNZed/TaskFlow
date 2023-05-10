@@ -37,6 +37,8 @@ function Taskflows(props) {
 
   const { globalState } = useGlobalStateContext();
   const [tasks, setTasks] = useTasksState([]);
+  // We maintain a list of tasksIds so we can quickly find the relevant task
+  // if it has been previousyl created in tasks
   const [tasksIds, setTasksIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel);
@@ -86,8 +88,8 @@ function Taskflows(props) {
     setMobileViewOpen(!mobileViewOpen);
   };
 
-  function setTasksTask(t) {
-    setArrayState(setTasks, tasksIdx, t);
+  function setTasksTask(t, idx) {
+    setArrayState(setTasks, idx, t);
   }
 
   //Tracing
@@ -179,7 +181,7 @@ function Taskflows(props) {
                     key={instanceId}
                     is={stack[0]}
                     task={tasks[idx]}
-                    setTask={setTasksTask}
+                    setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
                     component_depth={component_depth}
                   />

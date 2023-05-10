@@ -10,6 +10,7 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 
 # Notes
 
+## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 
 
 <br> docker-compose -f docker-compose-prod.yml build
@@ -19,3 +20,9 @@ Remember to purge the cloudflare cache after updating on prod.
 
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-nodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-browser") /bin/bash
+
+## Dev
+This assumes T@skFlow is running behind a proxy on a docker network for dev:
+
+<br> docker-compose -f docker-compose-dev.yml build
+<br> docker-compose -f docker-compose-dev.yml up -d

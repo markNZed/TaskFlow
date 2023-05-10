@@ -77,10 +77,9 @@ const TaskConversation = (props) => {
         task.state.current === "sending" &&
         task.state.deltaState !== "sending"
       ) {
-        //should be delta not deltaState
-        // here we need to create a new slot for the next message
-        // Note we need to add the input to for the user
-        //console.log("Creating new entry for next chat", task)
+        // Should be delta not deltaState (this ensures we see the event once)
+        // Here we need to create a new slot for the next message
+        // Note we need to add the input too for the user
         const newMsgArray = [
           { sender: "user", text: task.request.input, isLoading: false },
           { sender: "bot", text: "", isLoading: true },
@@ -113,31 +112,21 @@ const TaskConversation = (props) => {
   }, [task]);
 
   useEffect(() => {
-    if (task) {
+    if (task && !msgs[task.threadId]) {
       let welcomeMessage = task?.welcome_message || welcomeMessage_default;
-      if (!isMountedRef.current) {
+      setMsgs({
+        [task.threadId]: [
+          { sender: "bot", text: welcomeMessage, isLoading: true },
+        ],
+      });
+      setTimeout(() => {
         setMsgs({
-          [task.threadId]: [
-            { sender: "bot", text: welcomeMessage, isLoading: true },
-          ],
-        });
-        setTimeout(() => {
-          setMsgs({
-            [task.threadId]: [
-              { sender: "bot", text: welcomeMessage, isLoading: false },
-            ],
-          });
-        }, 1000);
-        isMountedRef.current = true;
-      } else if (!(task.threadId in msgs)) {
-        // Why do we need this? Should use (p) => style
-        setMsgs({
-          ...msgs,
           [task.threadId]: [
             { sender: "bot", text: welcomeMessage, isLoading: false },
           ],
         });
-      }
+      }, 1000);
+      isMountedRef.current = true;
     }
   }, [msgs, task]);
 
@@ -208,4 +197,4 @@ const TaskConversation = (props) => {
   );
 };
 
-export default React.memo(withTask(TaskConversation));
+export default withTask(TaskConversation);

@@ -5,10 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
     image: taskflow:latest
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes: 
       - ../../..:/app/
-    ports:
-      - "127.0.0.1:3000:3000"
-      - "127.0.0.1:5000:5000"
+    networks:
+      - web-proxy
+
+networks:
+    web-proxy:
+       external: true

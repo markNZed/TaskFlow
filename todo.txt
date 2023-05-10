@@ -1,16 +1,72 @@
 /* ToDo
 -------
+Debug current prod version
+  Features:
+    general
+      permissions
+      authentication
+      parentType
+      task filtering
+      user
+        name
+        profile
+        interface
+    menu
+      user specific
+      labels
+    stepper
+      next
+      back
+      skip back
+      expand multiple
+      close step
+    conversation
+      userId specific
+        dyad
+      agent specific
+        dyad
+        forget
+      task specific
+        config 
+          messagesTemplate
+          promptTemplate
+          suggestedPrompts
+          welcomeMessage
+          nextTask
+          instruction
+          nextStates
+          serverOnly
+          oneThread
+          label
+        request
+          inputLabel
+          prompt
+          forget
+          agent
+          model
+        response
+          userInput
+          text
+        
+
+
+Restart server1
+Move chat.mjs into TaskService
+Harmonise the Task Processor
+  In React withTask HOC and useTask state.
+  A common JS module for managing the Task object. 
+    What is generic to Task Processors and what is custom?
+      Browser adds the concept of sessionId and address/location.
+
+Only display menu option if leaf is a real task
+TaskShowResponse shoul be usng config not response.text to complete the response
+
 At which time should we introduce Typescript?
   First try to simplify the code
 Swagger for the API ?
 Privacy feature of Task
 Tests are important because they will allow for better code generation
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
-Harmonise the Task Processor
-  In React withTask HOC and useTask state.
-  A common JS module for managing the Task object. 
-    What is generic to Task Processors and what is custom?
-      Browser adds the concept of sessionId and address/location.
 Does the update actually update (deep merge) or does it replace?
   While the Task is on nodejs how to deal with browser changes
     Each param could have an updatedAt for merging
@@ -166,6 +222,15 @@ Comparison with similar systems
     Embed in an iFrame
   Algovera
     Not open sourced (yet)
+    Langchain as backend
+    Text as primary interface for specifying workflowsWorkflow as first class object
+  https://dust.tt/
+    Chaining, version control, connections
+  https://www.multi.tech/ (MultiFlow)
+    workflows powered by generative models
+  https://www.kubeflow.org/
+    Making deployments of machine learning (ML) workflows on Kubernetes simple, portable and scalable. 
+
   Microsoft Power Automated
   Zapier
   IFTTT
