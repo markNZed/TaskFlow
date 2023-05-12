@@ -130,4 +130,4 @@ function WorkflowTree({ onClose }) {
   );
 }
 
-export default React.memo(WorkflowTree);
+export default WorkflowTree;
