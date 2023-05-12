@@ -69,13 +69,12 @@ const TaskChat = (props) => {
         //so we need to append to a ref to have the current value. 
         responseTextRef.current = responseTextRef.current + text
         updateTask({ "response.text": responseTextRef.current });
-        //console.log("responseTextRef.current", responseTextRef.current)
         break;
       case "partial":
-        //updateTask({ "response.text": text });
+        updateTask({ "response.text": text });
         break;
       case "final":
-        //updateTask({ "response.text": text });
+        updateTask({ "response.text": text });
         break;
     }
     // Indicates the response has started
