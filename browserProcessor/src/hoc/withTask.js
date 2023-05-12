@@ -9,8 +9,6 @@ import {
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
 import useNextTask from "../hooks/useNextTask";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
-import useFilteredWebSocket from "../hooks/useFilteredWebSocket";
 import withDebug from "./withDebug";
 import _ from "lodash";
 import { log } from "../utils/utils";
