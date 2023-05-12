@@ -70,10 +70,10 @@ const TaskChat = (props) => {
         updateTask({ "response.text": responseTextRef.current });
         break;
       case "partial":
-        //updateTask({ "response.text": text });
+        updateTask({ "response.text": text });
         break;
       case "final":
-        //updateTask({ "response.text": text });
+        updateTask({ "response.text": text });
         break;
     }
     // Indicates the response has started
