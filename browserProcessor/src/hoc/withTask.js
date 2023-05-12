@@ -45,7 +45,6 @@ function withTask(Component) {
       local_component_depth
     );
     const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
-    const { webSocketEventEmitter } = useWebSocketContext();
     const { startTaskReturned, startTaskLoading, startTaskError } =
       useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
@@ -70,19 +69,9 @@ function withTask(Component) {
           })
         )
       );
-      // Allow detection of new step
-      /*
-      delta(() => {
-        props.setTask((p) =>
-          deepMerge(
-            p,
-            setNestedProperties({ "state.deltaState": p?.state?.current })
-          )
-        );
-      });
-      */
     }
-
+  
+    // Allow detection of new step
     useEffect(() => {
       if (props.task?.state && props.task.state?.current && props.task.state.current != props.task.state.deltaState) {
         props.setTask((p) =>
@@ -124,15 +113,14 @@ function withTask(Component) {
 
     function updateTask(update) {
       setNestedProperties(update);
+      //console.log("updateTask", props.task)
       props.setTask((prevState) => {
         const res = deepMerge(prevState, update);
         return res;
       });
     }
 
-    function useTaskWebSocket(callback) {
-      useFilteredWebSocket(webSocketEventEmitter, props.task, callback);
-    }
+
 
     function useTaskState(initialValue, name = "task") {
       const [state, setState] = useState(initialValue);
@@ -185,9 +173,10 @@ function withTask(Component) {
       return [state, setTaskState];
     }
 
+    // This is not working for debug
     function useTasksState(initialValue, name = "tasks") {
       const [states, setStates] = useState(initialValue);
-      const [prevTasksState, setPrevTasksState] = useState({});
+      const [prevTasksState, setPrevTasksState] = useState([]);
 
       useEffect(() => {
         if (!states) {
@@ -261,8 +250,6 @@ function withTask(Component) {
       updateTask,
       updateTask,
       updateStep,
-      webSocketEventEmitter,
-      useTaskWebSocket,
       component_depth: local_component_depth,
       useTaskState,
       useTasksState,

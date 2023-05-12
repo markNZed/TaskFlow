@@ -32,11 +32,12 @@ function initWebSocketServer(server) {
         sessionId = j.sessionId;
         connections.set(sessionId, ws);
         ws.data["sessionId"] = sessionId;
+        console.log("Websocket sessionId", sessionId)
       }
 
       if (j?.ping) {
         wsSendObject(ws, { pong: "ok" });
-        console.log("Ponging", ws?.data)
+        //console.log("Ponging", ws?.data)
       }
     });
 

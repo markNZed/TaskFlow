@@ -11,6 +11,7 @@ import "./styles/normal.css";
 import Taskflows from "./components/Taskflows";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
+import { useWebSocketContext } from "./contexts/WebSocketContext";
 import { serverUrl, appAbbrev } from "./config";
 import debug from "debug";
 
@@ -19,6 +20,7 @@ function App() {
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =
     useGlobalStateContext();
+  const { sendJsonMessagePlus } = useWebSocketContext();
 
   // This gives us a central place to control debug
   // We can enable per component
@@ -54,6 +56,7 @@ function App() {
           const sessionId = data.sessionId;
           mergeGlobalState({ sessionId });
           //console.log("Set sessionId ", sessionId);
+          sendJsonMessagePlus("") // This will update the sessionId from globalState for the WebSocket
         }
         // Should have a separate API
         if (data?.workflowsTree) {

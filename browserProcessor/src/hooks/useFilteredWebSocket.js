@@ -1,7 +1,11 @@
 import { useEffect } from "react";
+import { useWebSocketContext } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
+function useFilteredWebSocket(instanceId, onMessage) {
+  
+  const { webSocketEventEmitter } = useWebSocketContext();
+  
   useEffect(() => {
     if (!webSocketEventEmitter) {
       return;
@@ -11,9 +15,9 @@ function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
       const message = JSON.parse(e.data);
       //log("useFilteredWebSocket ", message)
       if (
-        task?.instanceId &&
+        instanceId &&
         message?.partialTask &&
-        message.partialTask?.instanceId === task.instanceId
+        message.partialTask?.instanceId === instanceId
       ) {
         //log("useFilteredWebSocket ", message)
         onMessage(message.partialTask);
@@ -25,7 +29,7 @@ function useFilteredWebSocket(webSocketEventEmitter, task, onMessage) {
     return () => {
       webSocketEventEmitter.removeListener("message", handleMessage);
     };
-  }, [webSocketEventEmitter, task, onMessage]);
+  }, [webSocketEventEmitter, onMessage]);
 }
 
 export default useFilteredWebSocket;

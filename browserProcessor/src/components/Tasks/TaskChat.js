@@ -5,8 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useCallback, useState, useRef, useEffect } from "react";
-import { delta, deepMerge } from "../../utils/utils";
+import { delta } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
+import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
 
@@ -41,7 +42,6 @@ ToDo:
 const TaskChat = (props) => {
   const {
     log,
-    useTaskWebSocket,
     updateTask,
     updateStep,
     updateTaskLoading,
@@ -53,14 +53,15 @@ const TaskChat = (props) => {
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
   const responseTextRef = useRef("");
-  const textareaRef = useRef(null);
-  const formRef = useRef(null);
+  const textareaRef = useRef();
+  const formRef = useRef();
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
     updateTask({ stackPtr: component_depth });
   }, []);
 
+  // This is called from useFilteredWebSocket
   function updateResponse(mode, text) {
     switch (mode) {
       case "delta":
@@ -68,18 +69,30 @@ const TaskChat = (props) => {
         //so we need to append to a ref to have the current value. 
         responseTextRef.current = responseTextRef.current + text
         updateTask({ "response.text": responseTextRef.current });
+        //console.log("responseTextRef.current", responseTextRef.current)
         break;
       case "partial":
-        updateTask({ "response.text": text });
+        //updateTask({ "response.text": text });
         break;
       case "final":
-        updateTask({ "response.text": text });
+        //updateTask({ "response.text": text });
         break;
     }
     // Indicates the response has started
     setResponsePending(false);
   }
 
+  useFilteredWebSocket(task.instanceId,
+      (partialTask) => {
+      if (partialTask?.response) {
+        if (partialTask.response?.mode && partialTask.response?.text) {
+          updateResponse(partialTask.response.mode, partialTask.response.text);
+        }
+      }
+    }
+  );
+
+  /*
   useTaskWebSocket((partialTask) => {
     if (partialTask?.response) {
       if (partialTask.response?.mode && partialTask.response?.text) {
@@ -87,6 +100,7 @@ const TaskChat = (props) => {
       }
     }
   });
+  */
 
   // The websocket returns the response but if that fails we use the HTTP response here
   useEffect(() => {

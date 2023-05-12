@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Typography, TextareaAutosize } from "@mui/material";
+import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 /*
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +30,6 @@ const TaskFromAgent = (props) => {
     updateTask,
     updateStep,
     component_depth,
-    useTaskWebSocket,
   } = props;
 
   const [responseText, setResponseText] = useState("");
@@ -88,7 +88,7 @@ const TaskFromAgent = (props) => {
     }
   }
 
-  useTaskWebSocket((partialTask) => {
+  useFilteredWebSocket(task.instanceId, (partialTask) => {
     if (partialTask?.response) {
       if (partialTask.response?.mode && partialTask.response?.text) {
         updateResponse(partialTask.response.mode, partialTask.response.text);
