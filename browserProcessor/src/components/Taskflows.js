@@ -163,7 +163,7 @@ function Taskflows(props) {
             }}
             open
           >
-            <SideMenu />
+            <SideMenu onClose={() => (null)} />
           </Drawer>
         </Box>
 
