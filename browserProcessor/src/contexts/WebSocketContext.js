@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import { useGlobalStateContext } from "./GlobalStateContext";
@@ -20,8 +20,22 @@ export function useWebSocketContext() {
 }
 
 export function WebSocketProvider({ children, socketUrl }) {
+
   const [webSocket, setWebSocket] = useState(null);
   const { globalState } = useGlobalStateContext();
+
+  const sendJsonMessagePlusRef = useRef(); // add this line
+
+  // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
+  useEffect(() => {
+    sendJsonMessagePlusRef.current = function (m) {
+      if (globalState?.sessionId) {
+        m.sessionId = globalState.sessionId;
+      }
+      //console.log("Sending " + JSON.stringify(m))
+      sendJsonMessage(m);
+    };
+  }, [globalState]);
 
   const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
     reconnectAttempts: 10,
@@ -33,10 +47,10 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
-      sendJsonMessagePlus({ ping: "ok" });
+      sendJsonMessagePlusRef.current({ ping: "ok" });
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlus({ ping: "ok" });
+          sendJsonMessagePlusRef.current({ ping: "ok" });
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);
@@ -56,14 +70,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         clearInterval(ws.pingIntervalId);
       }
     },
-  });
-
-  const sendJsonMessagePlus = function (m) {
-    if (globalState?.sessionId) {
-      m.sessionId = globalState.sessionId;
+    onerror: (e) => {
+      console.log("App webSocket closed with error", e);
     }
-    sendJsonMessage(m);
-  };
+  });
 
   const connectionStatus = webSocket
     ? {
@@ -76,7 +86,11 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   return (
     <WebSocketContext.Provider
-      value={{ connectionStatus, webSocketEventEmitter, sendJsonMessagePlus }}
+      value={{ 
+        connectionStatus, 
+        webSocketEventEmitter, 
+        sendJsonMessagePlus: (...args) => sendJsonMessagePlusRef.current(...args),
+      }}
     >
       {children}
     </WebSocketContext.Provider>

@@ -3,52 +3,58 @@
 Debug current prod version
   Features:
     general
-      permissions
-      authentication
-      parentType
-      task filtering
+      mobile
+        screen rotation
+      websocket (with and without)
+      permissions X
+      authentication X
+      parentType X
       user
-        name
-        profile
-        interface
+        name X
+        profile X
+        interface X
     menu
-      user specific
-      labels
-    stepper
-      next
-      back
-      skip back
-      expand multiple
-      close step
-    conversation
-      userId specific
-        dyad
-      agent specific
-        dyad
-        forget
-      task specific
-        config 
-          messagesTemplate
-          promptTemplate
-          suggestedPrompts
-          welcomeMessage
-          nextTask
-          instruction
-          nextStates
-          serverOnly
-          oneThread
-          label
-        request
-          inputLabel
-          prompt
-          forget
-          agent
-          model
-        response
-          userInput
-          text
-        
-
+      user specific X
+      labels X
+      menu closes after select
+    Tasks
+      TaskStepper
+        next X
+        back X
+        skip back X
+        expand multiple X
+        close step X
+        scrolling X
+      TaskChoose
+      TaskFromAgent
+      TaskShowResponse
+      TaskChat
+      TaskConversation
+        scrolling (stop the bouncing) X
+        agent specific
+          dyad X
+          forget 
+        task specific
+          config 
+            messagesTemplate
+            promptTemplate
+            suggestedPrompts
+            welcomeMessage
+            nextTask
+            instruction
+            nextStates
+            serverOnly
+            oneThread
+            label
+          request
+            inputLabel
+            prompt
+            forget
+            agent
+            model
+          response
+            userInput
+            text
 
 Restart server1
 Move chat.mjs into TaskService

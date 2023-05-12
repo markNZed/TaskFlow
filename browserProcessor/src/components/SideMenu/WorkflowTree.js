@@ -10,13 +10,12 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
 
-function WorkflowTree() {
+function WorkflowTree({ onClose }) {
   const { globalState, replaceGlobalState } = useGlobalStateContext();
 
   const [expanded, setExpanded] = useState([]);
   const [expandedAll, setExpandedAll] = useState(false);
   const [leafCount, setLeafCount] = useState(false);
-  const leafCountRef = useRef(0);
 
   useEffect(() => {
     setTimeout(() => {
@@ -34,8 +33,9 @@ function WorkflowTree() {
     setExpanded(nodeIds);
   };
 
-  function handleSelectNode(node) {
+  function handleSelectNode(e, node) {
     replaceGlobalState("selectedTaskId", node.id);
+    onClose(e);
   }
 
   function countSubtreeLeafNodes() {
@@ -98,14 +98,14 @@ function WorkflowTree() {
       }
       globalState.workflowsTree[id].leaf = true;
       if (propagateDefault && node?.default) {
-        handleSelectNode(node);
+        handleSelectNode(null, node);
       }
       return (
         <TreeItem
           key={id}
           label={label}
           nodeId={id}
-          onClick={() => handleSelectNode(node)}
+          onClick={(e) => handleSelectNode(e, node)}
         />
       );
     }

@@ -4,9 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// If the module is exporting a named export, use curly braces to destructure the named export.
-// If the module is exporting a default export, import it directly without using curly braces.
-
 // 3rd party modules
 import express from "express";
 import cors from "cors";
@@ -23,10 +20,6 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import miscRoutes from "./routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/websocket.js";
-
-// Serve static files from the public directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(bodyParser.json());
@@ -54,6 +47,10 @@ app.use(
 );
 
 app.use(express.json());
+
+// Serve static files from the public directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/session", sessionRoutes);

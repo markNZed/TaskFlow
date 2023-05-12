@@ -14,7 +14,7 @@ import WorkflowTree from "./WorkflowTree";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 
-const SideMenu = () => {
+const SideMenu = ({ onClose }) => {
   const [openToast, setOpenToast] = useState(false);
   const { globalState, mergeGlobalState } = useGlobalStateContext();
 
@@ -91,7 +91,7 @@ const SideMenu = () => {
         />
       </div>
 
-      <WorkflowTree />
+      <WorkflowTree onClose={onClose}/>
     </aside>
   );
 };

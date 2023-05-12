@@ -149,7 +149,7 @@ function Taskflows(props) {
               },
             }}
           >
-            <SideMenu />
+            <SideMenu onClose={handleToggle} />
           </Drawer>
 
           <Drawer
@@ -169,7 +169,6 @@ function Taskflows(props) {
 
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Toolbar />
-
           {tasks.map(
             ({ stack, instanceId }, idx) =>
               stack && (
@@ -188,11 +187,11 @@ function Taskflows(props) {
                 </div>
               )
           )}
+          <div className={`${globalState.user?.interface !== "debug" ? "hide" : ""}`}>
+            <ObjectDisplay data={globalState} />
+          </div>
         </Box>
 
-        <div className={`${globalState?.interface !== "debug" ? "hide" : ""}`}>
-          <ObjectDisplay data={globalState.user} />
-        </div>
       </Stack>
     </div>
   );

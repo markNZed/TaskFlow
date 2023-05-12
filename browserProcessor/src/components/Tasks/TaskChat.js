@@ -52,6 +52,7 @@ const TaskChat = (props) => {
 
   const [prompt, setPrompt] = useState("");
   const [responsePending, setResponsePending] = useState(false);
+  const responseTextRef = useRef("");
   const textareaRef = useRef(null);
   const formRef = useRef(null);
 
@@ -63,22 +64,16 @@ const TaskChat = (props) => {
   function updateResponse(mode, text) {
     switch (mode) {
       case "delta":
-        // We can setTask but this requires looking after the deepMerge
-        /*
-        setTask((p) =>
-          deepMerge(
-            p,
-            {response: { text : (p.response?.text ?? '') + text}}
-          )
-        );
-        */  
-        updateTask({ "response.text": (task.response.text ? task.response.text + text : text) });
+        //This is used in a callback so we can't rely on having access to the current task object
+        //so we need to append to a ref to have the current value. 
+        responseTextRef.current = responseTextRef.current + text
+        updateTask({ "response.text": responseTextRef.current });
         break;
       case "partial":
-        updateTask({ "response.text": text });
+        //updateTask({ "response.text": text });
         break;
       case "final":
-        updateTask({ "response.text": text });
+        //updateTask({ "response.text": text });
         break;
     }
     // Indicates the response has started
@@ -104,8 +99,8 @@ const TaskChat = (props) => {
         // Start receiving
         updateStep("receiving");
       }
-    } else if (task.state.current === "receiving") {
-      // The response also returns the compete text, which may already be updated by websocket.
+    } else { // task has just been updated from server
+      // The response also returns the complete text, which may already be updated by websocket.
       updateResponse("final", task.response.text);
     }
   }, [updateTaskLoading]);
@@ -124,6 +119,7 @@ const TaskChat = (props) => {
         "response.text": "",
         "state.deltaState": "input",
       });
+      responseTextRef.current = ""
     }
   }, [task]);
 

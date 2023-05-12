@@ -137,4 +137,4 @@ const TaskShowResponse = (props) => {
   );
 };
 
-export default React.memo(withTask(TaskShowResponse));
+export default withTask(TaskShowResponse);

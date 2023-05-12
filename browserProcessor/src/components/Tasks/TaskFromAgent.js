@@ -38,6 +38,8 @@ const TaskFromAgent = (props) => {
   const [userInputWordCount, setUserInputWordCount] = useState(0);
   const [responseTextWordCount, setResponseTextWordCount] = useState(0);
   const userInputRef = useRef(null);
+  const responseTextRef = useRef(null);
+  const paraTopRef = useRef(0);
   const [userInputHeight, setUserInputHeight] = useState(0);
   const [myTaskId, setMyTaskId] = useState();
   const [myStep, setMyStep] = useState("");
@@ -114,12 +116,12 @@ const TaskFromAgent = (props) => {
               const words = text.trim().split(/\s+/).filter(Boolean);
               setResponseTextWordCount(words.length);
               setResponseText(text);
-              if (next_step === "input") {
-                setShowUserInput(true);
-              }
             } else {
               console.log("No text for response_action in TaskFromAgent");
             }
+          }
+          if (next_step === "input") {
+            setShowUserInput(true);
           }
           // We cache the response browserProcessor side
           if (task.response?.text) {
@@ -138,11 +140,8 @@ const TaskFromAgent = (props) => {
             updateStep(myStep);
             // show the response
             if (task.response.updated) {
-              // This is not making sense - check prior to v0.2
-              const response_text = task.response.text;
-              updateTask({ "response.text": response_text });
-              //setTask((p) => {return {...p, response: response_text}});
-              response_action(response_text);
+              // We also receive the response from the websocket
+              response_action(task.response.text);
             }
           }
           break;
@@ -183,20 +182,27 @@ const TaskFromAgent = (props) => {
       updateTask({ "request.input": userInput });
       // Make available to other tasks an output of this task
       updateTask({ "output.input": userInput });
-      //setTask((p) => {return {...p, input: userInput}});
-      console.log("Updating input " + userInput);
+      //console.log("Updating input " + userInput);
     }
   }, [userInput]);
 
   // Adjust userInput input area size when input grows
   useEffect(() => {
     if (userInputRef.current) {
-      setUserInputHeight(userInputRef.current.scrollHeight + 300);
+      setUserInputHeight(userInputRef.current.scrollHeight);
     }
     // filter removes empty entry
     const words = userInput.trim().split(/\s+/).filter(Boolean);
     setUserInputWordCount(words.length);
-  }, [userInput]);
+  }, [userInput, responseText]);
+
+  useEffect(() => {
+    const rect = responseTextRef.current?.getBoundingClientRect()
+    // Avoid decreasing so it does not jitter
+    if (rect?.top >= paraTopRef.current && rect.height > 100) {
+      paraTopRef.current = rect.top;
+    }
+  }, [responseText]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -223,10 +229,11 @@ const TaskFromAgent = (props) => {
             elevation={3}
             style={{
               overflow: "auto",
-              maxHeight: `calc(100vh - ${userInputHeight}px)`,
+              maxHeight: `calc(100vh - ${userInputHeight + paraTopRef.current + 120}px)`,
               textAlign: "justify",
               padding: "16px",
             }}
+            ref={responseTextRef}
           >
             {responseText.split("\\n").map((line, index) => (
               <Typography style={{ marginTop: "16px" }} key={index}>
@@ -276,4 +283,4 @@ const TaskFromAgent = (props) => {
   );
 };
 
-export default React.memo(withTask(TaskFromAgent));
+export default withTask(TaskFromAgent);

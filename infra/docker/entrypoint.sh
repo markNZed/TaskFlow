@@ -1,11 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-cd /app/taskflow/nodejsProcessor
-npm install
-screen -d -m npm run server
+screen -S my-session -d -m
 
-cd /app/taskflow/browserProcessor
-npm install
-screen -d -m npm start
+screen -S my-session -p 0 -X stuff "cd /app/taskflow/nodejsProcessor\n"
+screen -S my-session -p 0 -X stuff "npm install\n"
+screen -S my-session -p 0 -X stuff "npm run server\n"
+
+screen -S my-session -X screen
+
+screen -S my-session -p 1 -X stuff "cd /app/taskflow/browserProcessor\n"
+screen -S my-session -p 1 -X stuff "npm install\n"
+screen -S my-session -p 1 -X stuff "npm start\n"
 
 sleep infinity

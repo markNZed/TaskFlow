@@ -36,11 +36,12 @@ function initWebSocketServer(server) {
 
       if (j?.ping) {
         wsSendObject(ws, { pong: "ok" });
+        console.log("Ponging", ws?.data)
       }
     });
 
     ws.on("close", function (code, reason) {
-      console.log("ws is closed with code: " + code + " reason: " + reason);
+      console.log("ws is closed with code: " + code + " reason: ", reason);
       connections.delete(sessionId);
     });
   });

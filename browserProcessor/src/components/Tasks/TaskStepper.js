@@ -22,7 +22,6 @@ Task Process
   We have an array of tasks stored here that are passed to the next component in the stack
   
 ToDo:
-  useTasksState to help debug
   Maybe tasksIdx is just a ref?
 */
 
@@ -54,7 +53,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, null, component_depth);
+    startTaskFn(task.id, null, component_depth); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {
@@ -69,14 +68,14 @@ function TaskStepper(props) {
     setPrevTaskName(task.name);
   }, []);
 
-  // When task is done then fetch next task
+  // When task is done fetch next task
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
       // need a wrapper for this
       setTasksTask((p) => {
         return deepMerge(p, setNestedProperties({ "state.done": false }));
       });
-      setDoneTask(tasks[tasksIdx]);
+      setDoneTask(tasks[tasksIdx]); // Will result in nextTask being set
     }
   }, [tasks]);
 

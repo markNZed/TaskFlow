@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  delta,
   logWithComponent,
   getObjectDifference,
   hasOnlyResponseKey,
@@ -72,6 +71,7 @@ function withTask(Component) {
         )
       );
       // Allow detection of new step
+      /*
       delta(() => {
         props.setTask((p) =>
           deepMerge(
@@ -80,7 +80,19 @@ function withTask(Component) {
           )
         );
       });
+      */
     }
+
+    useEffect(() => {
+      if (props.task?.state && props.task.state?.current && props.task.state.current != props.task.state.deltaState) {
+        props.setTask((p) =>
+          deepMerge(
+            p,
+            setNestedProperties({ "state.deltaState": p?.state?.current })
+          )
+        );
+      }
+    }, [props.task]);
 
     useEffect(() => {
       if (startTaskError) {

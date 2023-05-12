@@ -33,9 +33,11 @@ const TaskConversation = (props) => {
     useTaskState,
   } = props;
 
-  const chatContainer = useRef(null);
+  const chatContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const hasScrolledRef = useRef(false);
+  const chatInputRef = useRef(null);
+  const [chatContainermaxHeight, setChatContainermaxHeight] = useState();
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState({});
@@ -77,7 +79,7 @@ const TaskConversation = (props) => {
         task.state.current === "sending" &&
         task.state.deltaState !== "sending"
       ) {
-        // Should be delta not deltaState (this ensures we see the event once)
+        // Should be named delta not deltaState (this ensures we see the event once)
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
         const newMsgArray = [
@@ -142,9 +144,10 @@ const TaskConversation = (props) => {
   }, [msgs, hasScrolled]);
 
   const handleScroll = () => {
+    const chatContainer = chatContainerRef.current;
     if (
-      window.innerHeight + window.scrollY >=
-      document.documentElement.scrollHeight - 20
+      chatContainer.clientHeight + chatContainer.scrollTop >=
+    chatContainer.scrollHeight - 50
     ) {
       setHasScrolled(false);
     } else {
@@ -153,15 +156,29 @@ const TaskConversation = (props) => {
   };
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
+    const chatContainerRect = chatContainerRef.current.getBoundingClientRect();
+    const chatInputRect = chatInputRef.current.getBoundingClientRect();
+    setChatContainermaxHeight(chatInputRect.top - chatContainerRect.top)
+  }, [chatContainerRef, chatInputRef]); // chatInputRef detects mobile screen rotation changes
+ 
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    chatContainer.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      chatContainer.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   return (
-    <section className="chatbox">
-      <div id="chat-container" ref={chatContainer}>
+    <section className="chat-section">
+      <div 
+        id="chat-container" 
+        ref={chatContainerRef}
+        style={{
+          maxHeight: `${chatContainermaxHeight}px`,
+        }}
+      >
         {task &&
           msgs[task.threadId] &&
           msgs[task.threadId].map((msg, index) => {
@@ -183,16 +200,18 @@ const TaskConversation = (props) => {
           })}
         <div ref={messagesEndRef} style={{ height: "5px" }} />
       </div>
-      {task && (
-        <DynamicComponent
-          key={task.id}
-          is={task.stack[component_depth]}
-          task={task}
-          setTask={setTask}
-          parentTask={conversationTask}
-          component_depth={props.component_depth}
-        />
-      )}
+      <div id="chat-input" ref={chatInputRef}>
+        {task && (
+          <DynamicComponent
+            key={task.id}
+            is={task.stack[component_depth]}
+            task={task}
+            setTask={setTask}
+            parentTask={conversationTask}
+            component_depth={props.component_depth}
+          />
+        )}
+      </div>
     </section>
   );
 };

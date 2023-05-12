@@ -18,7 +18,6 @@ export function GlobalStateProvider({ children }) {
     langModel: "gpt-3.5-turbo",
     temperature: 0,
     maxTokens: 4000,
-    sessionId: "",
   };
 
   const [globalState, setGlobalState] = useState(globalStatInit);

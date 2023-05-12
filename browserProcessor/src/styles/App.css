@@ -62,15 +62,6 @@ body {
   font-size: 25px;
 }
 
-.chatbox {
-  flex: 1;
-  background-color: #474e68; /* 83BD75 #B4E197 #343541 */
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  /* max-width: 80%; */
-}
-
 #app {
   width: 100vw;
   height: 100vh;
@@ -88,7 +79,7 @@ body {
   /* padding: 24px; */
 
   overflow-y: scroll;
-  /* s */
+  padding-bottom: 24px;
 
   display: flex;
   flex-direction: column;
@@ -100,11 +91,28 @@ body {
   /* padding-bottom: 20px; */
   scroll-behavior: smooth;
   text-align: left;
+
+  height: 100%;
 }
 
 /* hides scrollbar */
 #chat-container::-webkit-scrollbar {
   display: none;
+}
+
+#chat-input {
+  
+}
+
+.chat-section {
+  flex: 1;
+  background-color: #474e68; /* 83BD75 #B4E197 #343541 */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  margin-top: inherit;
+  /* max-width: 80%; */
 }
 
 .wrapper {
@@ -201,6 +209,8 @@ body {
 
   display: flex;
   flex-direction: column;
+
+  min-width: 200px; /* space for send button in column*/
 
   /* display: flex;
   flex-direction: row;
