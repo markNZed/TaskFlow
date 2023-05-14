@@ -22,21 +22,23 @@ const TaskChoose_async = async function (task) {
   // First we get the response
   console.log("TaskChoose name " + T("name"));
 
+  // This is not going to work because TaskFromAgent_async is returning immediately
   T("response.text", null); // Avoid using previously stored response
   let subtask = await TaskFromAgent_async(task);
 
   const ST = utils.createTaskValueGetter(subtask);
-
-  console.log(task);
 
   const next_responses = Object.keys(T("config.nextStateTemplate"));
   const next_states = Object.values(T("config.nextStateTemplate"));
 
   const phrases = [ST("response.text"), ...next_responses];
 
+  //console.log("phrases", phrases)
+
   try {
     const embeddingsData = await model.embed(phrases);
     const next_embeddings = tf.split(embeddingsData, phrases.length, 0);
+    //console.log("next_embeddings", next_embeddings)
     // Do something with next_embeddings
     const response_embedding = next_embeddings[0]; // The first embedding corresponds to response_text.
 
@@ -68,8 +70,14 @@ const TaskChoose_async = async function (task) {
     T("state.done", true);
   } catch (error) {
     // Handle the error here
-    console.error("An error occurred:", error);
+    console.log("An error occurred:", error);
     T("error", error.message);
+    const strArr = task.id.split('.');
+    strArr[strArr.length - 1] = "error";
+    const nextTask = strArr.join('.');
+    T("nextTask", nextTask);
+    // New task will not have error information
+    T("state.done", true);
   }
 
   return task;

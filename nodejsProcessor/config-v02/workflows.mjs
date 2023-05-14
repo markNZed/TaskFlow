@@ -42,7 +42,7 @@ const workflows = [
       start: {
         APPEND_stack: ["TaskShowResponse"],
         nextTask: "summarize",
-        response: {
+        config: {
           text: "Hello",
         },
       },

@@ -4,13 +4,20 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { threadsStore_async } from "./../src/storage.mjs";
+import { threadsStore_async, instancesStore_async } from "./../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
 const TaskShowResponse_async = async function (task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log("TaskShowResponse name " + T("name"));
+
+  if (task.id.endsWith(".error")) {
+    // Fetch the previous task
+    const prevTask = await instancesStore_async.get(task.parentInstanceId)
+    console.log("Set error from previous task", prevTask)
+    T("error", prevTask.error)
+  }
 
   let threadTasks = {};
   const parentId = T("parentId");
@@ -61,7 +68,7 @@ const TaskShowResponse_async = async function (task) {
     });
     console.log("Assembled response " + prompt);
   } else {
-    response = T("response.text");
+    response = T("config.response");
   }
   console.log("Returning from tasks.TaskShowResponse");
   // Ensure we do not overwrite the deltaState on the browserProcessor

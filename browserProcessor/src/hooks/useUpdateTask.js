@@ -23,10 +23,11 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
     // This is executing twice
     if (
       task?.send &&
-      !task?.request?.updating &&
+      !updateTaskLoading &&
       task.stackPtr === local_component_depth
     ) {
-      log("useUpdateTask", task.id);
+      log("useUpdateTask", task.id); // not logging
+      console.log("useUpdateTask", task.id)
       const fetchTaskFromAPI = async () => {
         try {
           setUpdateTaskLoading(true);
@@ -34,6 +35,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           const result = await fetchTask(globalState, "task/update", task);
+          result.state.deltaState = result.state.current
           log("useUpdateTask result", task);
           setTask((p) => deepMerge(p, result));
           const updated = {

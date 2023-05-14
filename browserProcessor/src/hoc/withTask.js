@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  log,
   logWithComponent,
   getObjectDifference,
   hasOnlyResponseKey,
@@ -11,7 +12,8 @@ import useStartTask from "../hooks/useStartTask";
 import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
-import { log } from "../utils/utils";
+import { EventEmitter } from "events";
+import useFilteredWebSocket from "../hooks/useFilteredWebSocket";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -45,6 +47,14 @@ function withTask(Component) {
     const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
     const { startTaskReturned, startTaskLoading, startTaskError } =
       useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
+    const webSocketEvent = new EventEmitter();
+    const [socketResponses, setSocketResponses] = useState([]);
+
+    useFilteredWebSocket(props.task?.instanceId,
+      (partialTask) => {
+        setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+      }
+    )
 
     function startTaskFn(
       startId,
@@ -63,7 +73,7 @@ function withTask(Component) {
           p,
           setNestedProperties({
             "state.current": step,
-            "state.deltaState": p?.state?.current,
+            "state.deltaState": step,
           })
         )
       );
@@ -71,11 +81,11 @@ function withTask(Component) {
   
     // Allow detection of new step
     useEffect(() => {
-      if (props.task?.state && props.task.state?.current && props.task.state.current != props.task.state.deltaState) {
+      if (props.task && props.task.state?.current && props.task.state.current === props.task.state.deltaState) {
         props.setTask((p) =>
           deepMerge(
             p,
-            setNestedProperties({ "state.deltaState": p?.state?.current })
+            setNestedProperties({ "state.deltaState": '' }) // note can't set this to null as deepMerge ignores
           )
         );
       }
@@ -117,8 +127,6 @@ function withTask(Component) {
         return res;
       });
     }
-
-
 
     function useTaskState(initialValue, name = "task") {
       const [state, setState] = useState(initialValue);
@@ -246,11 +254,12 @@ function withTask(Component) {
       setDoneTask,
       prevTask,
       updateTask,
-      updateTask,
       updateStep,
       component_depth: local_component_depth,
       useTaskState,
       useTasksState,
+      socketResponses,
+      setSocketResponses,
     };
 
     return <WithDebugComponent {...componentProps} />;

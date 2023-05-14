@@ -40,13 +40,16 @@ function getCallerName(stackTrace) {
 }
 
 export const logWithComponent = (componentName, ...message) => {
+  //console.log(...message)
   const stackTrace = new Error().stack.split("\n");
   const callerName = getCallerName(stackTrace);
   const log = debug(`${appAbbrev}:${componentName}${callerName}`);
   log(...message);
 };
 
+// Should not create debug each time, should create log locally
 export const log = (...message) => {
+  //console.log(...message)
   const stackTrace = new Error().stack.split("\n");
   const callerName = getCallerName(stackTrace);
   const log = debug(`${appAbbrev}:${callerName}`);
@@ -113,6 +116,10 @@ export function deepMerge(prevState, update) {
   for (const key of Object.keys(update)) {
     const oldValue = prevState[key];
     const newValue = update[key];
+
+    if (newValue === undefined || newValue === null) {
+      continue;
+    }
 
     if (
       typeof oldValue === "object" &&

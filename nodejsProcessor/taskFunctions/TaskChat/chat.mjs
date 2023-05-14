@@ -18,8 +18,9 @@ import { wsSendObject } from "../../src/websocket.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-function SendIncrementalWs(partialResponse, instanceId, ws) {
+function SendIncrementalWs(partialResponse, instanceId, sessionId) {
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
+  let ws = connections.get(sessionId);
   if (ws) {
     let response;
     if (ws.data["delta_count"] === undefined) {
@@ -70,6 +71,7 @@ async function chat_prepare(task) {
   let langModel = T("request.model") || defaults.langModel;
   let temperature = T("request.temperature") || defaults.temperature;
   let maxTokens = T("request.maxTokens") || defaults.maxTokens;
+  let maxResponseTokens = T("request.maxResponseTokens") || defaults.maxResponseTokens;
 
   let prompt = T("request.prompt");
   let agent = agents[T("request.agent")];
@@ -109,8 +111,13 @@ async function chat_prepare(task) {
     console.log("Task server_only");
   }
 
+  if (agent?.forget) {
+    initializing = true;
+    console.log("Agent forget previous messages");
+  }
+
   if (T("request.forget")) {
-    initializing = T("request.forget");
+    initializing = true;
     console.log("Task forget previous messages", T("request.forget"));
   }
 
@@ -150,6 +157,7 @@ async function chat_prepare(task) {
           " lastMessageId " +
           lastMessageId
       );
+      console.log(" T(request.messages)",  T("request.messages"))
     }
   }
 
@@ -186,10 +194,12 @@ async function chat_prepare(task) {
     langModel,
     temperature,
     maxTokens,
+    maxResponseTokens,
     ws,
     agentId,
     threadId,
     instanceId,
+    sessionId,
   };
 }
 
@@ -215,6 +225,11 @@ async function ChatGPTAPI_request(params) {
     agentId,
     threadId,
     instanceId,
+    sessionId,
+  } = params;
+
+  let {
+    maxResponseTokens,
   } = params;
 
   const debug = true;
@@ -234,7 +249,6 @@ async function ChatGPTAPI_request(params) {
     Math.floor(maxTokens * 0.1) -
     encode(prompt).length -
     encode(systemMessage).length;
-  let maxResponseTokens = 1000; // Leave room for conversation history
   maxResponseTokens =
     availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens;
   console.log(
@@ -266,7 +280,7 @@ async function ChatGPTAPI_request(params) {
 
   if (!server_only) {
     messageParams["onProgress"] = (partialResponse) =>
-      SendIncrementalWs(partialResponse, instanceId, ws);
+      SendIncrementalWs(partialResponse, instanceId, sessionId);
   }
 
   messagesStore_async.set(
@@ -284,6 +298,8 @@ async function ChatGPTAPI_request(params) {
     );
     cacheKeyText = [
       messageParams.systemMessage,
+      messageParams.maxResponseTokens,
+      messageParams.maxModelTokens,
       JSON.stringify(messageParams.completionParams),
       prompt,
       messagesText,
@@ -322,14 +338,17 @@ async function ChatGPTAPI_request(params) {
     );
     let text = cachedValue.text;
     const words = text.split(" ");
-    // call SendIncrementalWs for each word
+    // call SendIncrementalWs for pairs of word
     let partialText = "";
-    for (const word of words) {
-      const delta = word + " ";
+    for (let i = 0; i < words.length; i += 2) {
+      let delta = words[i] + " ";
+      if (words[i + 1]) {
+        delta += words[i + 1] + " ";
+      }
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
-      SendIncrementalWs(partialResponse, instanceId, ws);
-      await sleep(20);
+      SendIncrementalWs(partialResponse, instanceId, sessionId);
+      await sleep(50);
     }
     message_from("cache", text, server_only, ws, instanceId);
     if (debug) {
@@ -339,6 +358,9 @@ async function ChatGPTAPI_request(params) {
   } else {
     // Need to return a promise
     if (DUMMY_OPENAI) {
+      if (debug) {
+        console.log("Debug: ", cacheKeyText);
+      }
       const text = "Dummy text";
       message_from("Dummy API", text, server_only, ws, instanceId);
       response_text_promise = Promise.resolve(text);

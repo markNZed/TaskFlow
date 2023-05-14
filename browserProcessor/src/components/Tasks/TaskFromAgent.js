@@ -24,15 +24,20 @@ import withTask from "../../hoc/withTask";
 const TaskFromAgent = (props) => {
   const {
     log,
+    entering,
     leaving,
     task,
     setTask,
     updateTask,
+    updateTaskLoading,
     updateStep,
     component_depth,
+    socketResponses,
+    setSocketResponses,
   } = props;
 
   const [responseText, setResponseText] = useState("");
+  const [finalResponse, setFinalResponse] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [showUserInput, setShowUserInput] = useState(false);
   const [userInputWordCount, setUserInputWordCount] = useState(0);
@@ -55,6 +60,7 @@ const TaskFromAgent = (props) => {
   // Probably always better to associate a component with a single task.
   useEffect(() => {
     if (task && !myTaskId) {
+      console.log("Resetting", task.id)
       setMyTaskId(task.id);
       setResponseText("");
       setUserInput("");
@@ -65,36 +71,48 @@ const TaskFromAgent = (props) => {
         updateTask({
           "config.nextStates": { start: "response", response: "stop" },
         });
-        //setTask((p) => {return {...p, steps: {'start' : 'response', 'response' : 'stop'}}});
       }
       setMyStep("start");
     }
   }, [task]);
 
-  // Stream to the response_text)
-  function updateResponse(mode, text) {
-    switch (mode) {
-      case "delta":
-        // Don't use updateTask because we want to append to a property in the task
-        setResponseText((prevResponse) => prevResponse + text);
-        break;
-      case "partial":
-        setResponseText(text);
-        break;
-      case "final":
-        // So observers of the task know we finished
-        setResponseText(text);
-        break;
+  useEffect(() => {
+    const processResponses = () => {
+      setSocketResponses((prevResponses) => {
+        for (const response of prevResponses) {
+          const text = response.text;
+          const mode = response.mode;
+          switch (mode) {
+            case 'delta':
+              setResponseText((prevResponse) => prevResponse + text);
+              break;
+            case 'partial':
+              setResponseText(text);
+              break;
+            case 'final':
+              setResponseText(text);
+              setFinalResponse(true)
+              break;
+          }
+        }
+        //console.log("setResponseText", responseText)
+        return []; // Clear the processed responses
+      });
+    };
+    if (socketResponses.length > 0) {
+      processResponses();
     }
-  }
+  }, [socketResponses]);
 
-  useFilteredWebSocket(task.instanceId, (partialTask) => {
-    if (partialTask?.response) {
-      if (partialTask.response?.mode && partialTask.response?.text) {
-        updateResponse(partialTask.response.mode, partialTask.response.text);
+  useEffect(() => {
+    if (entering) {
+      if (entering.direction === "prev" && entering.task.name === task.name) {
+        if (task.config?.reenteringState) {
+          setMyStep(task.config.reenteringState)
+        } 
       }
     }
-  });
+  }, [entering]);
 
   // Sub_task state machine
   // Unique for each component that requires steps
@@ -104,6 +122,7 @@ const TaskFromAgent = (props) => {
         leaving?.direction === "next" && leaving?.task.name === task.name;
       const next_step = task.config.nextStates[myStep];
       //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
+      log("MyStep " + myStep, task)
       switch (myStep) {
         case "start":
           // Next state
@@ -111,59 +130,27 @@ const TaskFromAgent = (props) => {
           // Actions
           break;
         case "response":
-          function response_action(text) {
-            if (text) {
-              const words = text.trim().split(/\s+/).filter(Boolean);
-              setResponseTextWordCount(words.length);
-              setResponseText(text);
-            } else {
-              console.log("No text for response_action in TaskFromAgent");
-            }
+          if (myStep !== myLastStep) {
+            updateTask({ send: true });
+          } else if (finalResponse) { // waiting for response from websocket to end
+            setFinalResponse(false)
+            setMyStep(next_step);
           }
           if (next_step === "input") {
             setShowUserInput(true);
           }
-          // We cache the response browserProcessor side
-          if (task.response?.text) {
-            log("Response cached browserProcessor side");
-            // Next state
-            setMyStep(next_step);
-            // Actions
-            response_action(task.response.text);
-          } else {
-            if (task.response.updated) {
-              setMyStep(next_step);
-            }
-            // Actions
-            // send prompt to get response from agent
-            updateTask({ send: true });
-            updateStep(myStep);
-            // show the response
-            if (task.response.updated) {
-              // We also receive the response from the websocket
-              response_action(task.response.text);
-            }
-          }
           break;
         case "input":
-          // Next state
-          if (task.response.updated) {
-            setMyStep(next_step);
-          }
           // Actions
+          // Wait until leaving then send input and wait for repsonse before going to next state
           if (leaving_now) {
-            // Send the userInput input
-            updateStep(myStep);
             updateTask({ send: true });
+            setMyStep(next_step);
           }
           break;
         case "stop":
-          // Next state
-          // Actions
-          // Should defensively avoid calling taskDone twice?
-          if (leaving_now) {
+          if (leaving_now && !updateTaskLoading) { // wait until input has been sent (if sent)
             updateTask({ "state.done": true });
-            //setTask((p) => {return {...p, done: true}});
           }
           break;
         default:
@@ -174,9 +161,10 @@ const TaskFromAgent = (props) => {
       setMyLastStep(myStep); // Useful if we want an action only performed once in a state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myStep, task.response.updated]);
+  }, [leaving, myStep]);
 
   // Align task data with userInput input
+  // Could copy this just before sending rather than on every update
   useEffect(() => {
     if (userInput) {
       updateTask({ "request.input": userInput });

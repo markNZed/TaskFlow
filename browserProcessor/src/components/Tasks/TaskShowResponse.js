@@ -52,7 +52,7 @@ const TaskShowResponse = (props) => {
       if (!task.config?.nextStates) {
         // Default sequence is to just get response
         updateTask({
-          "config.nextStates": { start: "response", response: "stop" },
+          "config.nextStates": { start: "response", response: "wait", wait: "stop" },
         });
         //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
       }
@@ -67,6 +67,7 @@ const TaskShowResponse = (props) => {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
       const next_step = task.config.nextStates[myStep];
+      log("MyStep " + myStep)
       //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
       switch (myStep) {
         case "start":
@@ -89,22 +90,30 @@ const TaskShowResponse = (props) => {
             // This effectively waits for the update
             if (task.response.updated) {
               setMyStep(next_step);
-              const response_text = task.response.text;
+              let response_text;
+              if (task.error) {
+                response_text = "ERROR: " + task.error;
+              } else {
+                response_text = task.response.text;
+              }
               updateTask({ "response.text": response_text });
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);
-            } else {
+            } else if (myLastStep !== myStep) { // could introduce deltaState but we are managing myStep
               updateTask({ send: true });
             }
           }
           break;
-        case "stop":
-          // Next state
-          // Actions
-          // Should defensively avoid calling taskDone twice?
+        case "wait":
           if (leaving_now) {
             updateTask({ "state.done": true });
-            //setTask((p) => {return {...p, done: true}});
+            setMyStep(next_step);
+          }
+          break;
+        case "stop":
+          // We may return to this Task and want to leave it again
+          if (leaving_now) {
+            updateTask({ "state.done": true });
           }
           break;
         default:
@@ -127,7 +136,7 @@ const TaskShowResponse = (props) => {
           padding: "16px",
         }}
       >
-        {responseText.split("\\n").map((line, index) => (
+        {responseText && responseText.split("\\n").map((line, index) => (
           <Typography style={{ marginTop: "16px" }} key={index}>
             {line}
           </Typography>

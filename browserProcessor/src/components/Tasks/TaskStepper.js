@@ -46,6 +46,7 @@ function TaskStepper(props) {
   const [tasks, setTasks] = useTasksState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [leaving, setLeaving] = useState();
+  const [entering, setEntering] = useState();
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
   const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
@@ -84,6 +85,7 @@ function TaskStepper(props) {
     if (nextTask) {
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
+      setEntering({ direction: "next", task: nextTask });
     }
   }, [nextTask]);
 
@@ -94,7 +96,7 @@ function TaskStepper(props) {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({ direction: "next", task: currentTask });
-        // Expect taskDone to be called from Task, rename leaving to taskLeave
+        // Expect .done to be set in Task, rename leaving to taskLeave
       }
     } else if (action === "back") {
       if (currentTaskData) {
@@ -102,6 +104,7 @@ function TaskStepper(props) {
         setLeaving({ direction: "prev", task: currentTask });
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
+        setEntering({ direction: "prev", task: tasks[tasks.length - 2] });
       }
     }
   }
@@ -164,6 +167,7 @@ function TaskStepper(props) {
                   task={tasks[idx]}
                   setTask={setTasksTask}
                   leaving={leaving}
+                  entering={entering}
                   parentTask={stepperTask}
                   component_depth={component_depth}
                 />

@@ -29,7 +29,7 @@ export function useGeolocation(enable) {
       } else {
         const msg = "Geolocation is not supported by this browser.";
         setError(msg);
-        console.error(msg);
+        console.log(msg);
       }
     }
   }, []);

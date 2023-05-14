@@ -17,11 +17,11 @@ import { setNestedProperties, deepMerge, log } from "../utils/utils";
 const useNextTask = (task) => {
   const { globalState } = useGlobalStateContext();
   const [nextTask, setNextTask] = useState();
-  const [nextTaskLoading, setNextTaskLoading] = useState(true);
+  const [nextTaskLoading, setNextTaskLoading] = useState(false);
   const [nextTaskError, setNextTaskError] = useState(null);
 
   useEffect(() => {
-    if (task && task.state.done) {
+    if (task && task.state.done && !nextTaskLoading) {
       log("useNextTask", task.id);
       const fetchTaskFromAPI = async () => {
         try {

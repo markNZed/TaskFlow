@@ -34,7 +34,7 @@ const TaskFromAgent_async = async function (task) {
     for (const instanceId of instanceIds) {
       const tmp = await instancesStore_async.get(instanceId);
       threadTasks[tmp.id] = tmp;
-      //console.log("thread " + tmp.id + " instanceId " + tmp.instanceId + " output " + tmp.output)
+      //console.log("thread " + tmp.id + " instanceId " + tmp.instanceId + " output ", tmp.output)
     }
   }
 
@@ -42,6 +42,7 @@ const TaskFromAgent_async = async function (task) {
 
   let prompt = "";
   if (T("config.promptTemplate")) {
+    console.log("Found promptTemplate");
     prompt += T("config.promptTemplate").reduce(function (acc, curr) {
       // Currently this assumes the parts are from the same workflow, could extend this
       const regex = /(^.+)\.(.+$)/;
@@ -88,7 +89,7 @@ const TaskFromAgent_async = async function (task) {
         return acc + curr;
       }
     });
-    //console.log("Prompt " + prompt)
+    console.log("Prompt " + prompt)
   } else {
     if (T("request.input")) {
       prompt += T("request.input");
@@ -99,7 +100,7 @@ const TaskFromAgent_async = async function (task) {
   }
 
   if (T("config.messagesTemplate")) {
-    console.log("Found messages_template");
+    console.log("Found messagesTemplate");
     T(
       "request.messages",
       JSON.parse(JSON.stringify(T("config.messagesTemplate")))
@@ -114,6 +115,7 @@ const TaskFromAgent_async = async function (task) {
           if (matches) {
             let substituted =
               threadTasks[parentId + "." + matches[1]]["output"][matches[2]];
+            //console.log("substituted", substituted, threadTasks[parentId + "." + matches[1]])
             return acc + substituted;
           } else {
             if (typeof curr === "string") {
@@ -125,18 +127,35 @@ const TaskFromAgent_async = async function (task) {
         });
       }
     });
-    //console.log("T('request.messages') " + JSON.stringify(T('request.messages')))
+    console.log("T('request.messages') " + JSON.stringify(T('request.messages')))
   }
 
   let response_text = "";
   if (prompt) {
     //workflow.tasks[taskName].prompt = prompt
     T("request.prompt", prompt);
-    response_text = await chat_async(task);
+    //response_text = await chat_async(task);
+    // If we don't await then we can't store the response
+    // In a then clause we could update the task?
+    // response_text will hold a promise
+    // The response needs to be available for other tasks to point at
+    if (T("config.serverOnly")) {
+      // On the server we wait and don't use websocket
+      response_text = await chat_async(task);  
+      T("response.text", response_text);
+      T("output.text", response_text);
+    } else {
+      chat_async(task).then(async (response_text) => {
+        T("response.text", response_text);
+        T("output.text", response_text);
+        instancesStore_async.set(task.instanceId, task);
+        //console.log("TaskFromAgent_async response_text", response_text, task)
+      });
+    }
   }
-  T("response.text", response_text);
+  //T("response.text", response_text);
   // Make available as an output to other Tasks
-  T("output.text", response_text);
+  //T("output.text", response_text);
   // Ensure we do not overwrite the deltaState on the browserProcessor
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());

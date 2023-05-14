@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "../styles/App.css";
 import "../styles/normal.css";
 import SideMenu from "./SideMenu/SideMenu";
@@ -88,9 +88,21 @@ function Taskflows(props) {
     setMobileViewOpen(!mobileViewOpen);
   };
 
+  /*
   function setTasksTask(t, idx) {
     setArrayState(setTasks, idx, t);
   }
+  */
+
+  const setTasksTask = useCallback((t, idx) => {
+    // This is a hack to push updates outside of the rendering 
+    // The websocket is asynchronous so it can create calls during rendering
+    // Also passing the task and setTask down means that during the rendering of Taskflows
+    // DynamicComponents can call setTask which is aliased to setTasksTask
+    // Maybe Redux is the way to work around this
+    setTimeout(() => setArrayState(setTasks, idx, t), 0);
+    //setArrayState(setTasks, idx, t)
+  }, [setArrayState]);
 
   //Tracing
 

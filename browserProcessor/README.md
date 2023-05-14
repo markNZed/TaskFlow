@@ -46,6 +46,12 @@ Coding preferences:
 
 # Notes
 
+The Taskflows component holds an array of Tasks so the user can switch between Tasks that have started without losing the state.
+The TaskStepper and TaskGrid also hold an array of Tasks
+
+The Task state may be updated by a lower level component that receives events such as the websocket. This should not impact the
+result of Taskflows rendering but it will be sensitive to changes made to Tasks.
+
 ## Cloudflare
 Be careful of cloudflare caching.
 

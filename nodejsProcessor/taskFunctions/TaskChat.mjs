@@ -29,7 +29,8 @@ const TaskChat_async = async function (task) {
   if (ST("state.current") === "sending") {
     // Should get next user input
     // The websocket will have already switched the Task to this step if it is connected
-    ST("state.current", "input");
+    //ST("state.current", "input"); // Don't do this as it is not the end
+    ST("state.current", "receiving");
   }
 
   console.log("Returning from tasks.TaskChat_async");

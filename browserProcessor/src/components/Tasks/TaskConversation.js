@@ -75,10 +75,7 @@ const TaskConversation = (props) => {
           [task.threadId]: [...p[task.threadId].slice(0, -1), lastElement],
         }));
         // Detect change to sending and creaet a slot for new msgs
-      } else if (
-        task.state.current === "sending" &&
-        task.state.deltaState !== "sending"
-      ) {
+      } else if (task.state.deltaState === "sending") {
         // Should be named delta not deltaState (this ensures we see the event once)
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
@@ -90,11 +87,7 @@ const TaskConversation = (props) => {
           ...p,
           [task.threadId]: [...p[task.threadId], ...newMsgArray],
         }));
-      } else if (
-        task.state.current === "input" &&
-        task.state.deltaState !== "input" &&
-        msgs[task.threadId]
-      ) {
+      } else if (task.state.deltaState === "input" && msgs[task.threadId]) {
         // In the case where the response is coming from HTTP not websocket
         // The state will be set to input by the nodejsProcessor
         const lastElement = {
@@ -115,7 +108,7 @@ const TaskConversation = (props) => {
 
   useEffect(() => {
     if (task && !msgs[task.threadId]) {
-      let welcomeMessage = task?.welcome_message || welcomeMessage_default;
+      let welcomeMessage = task.config?.welcomeMessage || welcomeMessage_default;
       setMsgs({
         [task.threadId]: [
           { sender: "bot", text: welcomeMessage, isLoading: true },

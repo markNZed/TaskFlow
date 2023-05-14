@@ -59,8 +59,10 @@ app.use("/", miscRoutes); // After other routes because it has the default route
 
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);
+server.setTimeout(300000);
 
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5000;
 server.listen(port, () => console.log("T@skFlow nodejsProcessor started"));
+

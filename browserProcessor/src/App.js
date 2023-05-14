@@ -22,12 +22,13 @@ function App() {
     useGlobalStateContext();
   const { sendJsonMessagePlus } = useWebSocketContext();
 
+  //debug.disable();
   // This gives us a central place to control debug
   // We can enable per component
   //debug.enable(`${appAbbrev}:TaskChat*`);
   //debug.enable(`${appAbbrev}:TaskConversation*`);
   debug.enable(`*`);
-
+  
   // Address is sent via utils/fetchTask.js
   useEffect(() => {
     if (globalState?.use_address && !enableGeolocation) {
@@ -55,8 +56,8 @@ function App() {
         if (!globalState?.sessionId) {
           const sessionId = data.sessionId;
           mergeGlobalState({ sessionId });
-          //console.log("Set sessionId ", sessionId);
-          sendJsonMessagePlus("") // This will update the sessionId from globalState for the WebSocket
+          sendJsonMessagePlus({"sessionId" : sessionId}) // This will update the sessionId from globalState for the WebSocket
+          console.log("Set sessionId ", sessionId);
         }
         // Should have a separate API
         if (data?.workflowsTree) {

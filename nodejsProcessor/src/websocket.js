@@ -30,9 +30,11 @@ function initWebSocketServer(server) {
 
       if (j?.sessionId) {
         sessionId = j.sessionId;
-        connections.set(sessionId, ws);
-        ws.data["sessionId"] = sessionId;
-        console.log("Websocket sessionId", sessionId)
+        if (ws.data["sessionId"] !== sessionId) {
+          connections.set(sessionId, ws);
+          ws.data["sessionId"] = sessionId;
+          console.log("Websocket sessionId", sessionId)
+        }
       }
 
       if (j?.ping) {

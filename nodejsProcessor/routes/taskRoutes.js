@@ -49,6 +49,9 @@ async function newTask_async(
     siblingInstanceId = siblingTask.instanceId;
     threadId = siblingTask.threadId;
   }
+  if (!tasks[id]) {
+    console.log("ERROR could not find task with id", id)
+  }
   let taskCopy = { ...tasks[id] };
   if (!taskCopy?.config) {
     taskCopy["config"] = {};
@@ -164,7 +167,8 @@ router.post("/update", async (req, res) => {
     // filter_in could also do some data cleaning
     //let clean_client_task = utils.filter_in(components,tasks, task)
     let clean_client_task = task;
-    let updated_task = Object.assign({}, server_side_task, clean_client_task);
+    let updated_task = utils.deepMerge(server_side_task, clean_client_task)
+    //let updated_task = Object.assign({}, server_side_task, clean_client_task);
 
     //console.log("task ", task)
     //console.log("clean_client_task ", clean_client_task)
@@ -297,6 +301,8 @@ router.post("/start", async (req, res) => {
           console.log(
             "Restarting one_thread " + instanceId + " for " + task.id
           );
+        } else {
+          task.threadId = threadId
         }
       }
       if (task.config?.restoreSession) {
@@ -307,6 +313,8 @@ router.post("/start", async (req, res) => {
           const instanceId = instanceIds[instanceIds.length - 1];
           task = await instancesStore_async.get(instanceId);
           console.log("Restarting session " + instanceId + " for " + task.id);
+        } else {
+          task.threadId = threadId
         }
       }
       if (task.config?.collaborate) {
@@ -324,6 +332,8 @@ router.post("/start", async (req, res) => {
           console.log(
             "Restarting collaboration " + instanceId + " for " + task.id
           );
+        } else {
+          task.threadId = threadId
         }
       }
 

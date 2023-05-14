@@ -222,7 +222,7 @@ utils.setNestedValue = function (obj, path, value) {
   target[lastKey] = value;
 };
 
-utils.createTaskValueGetter = function (task) {
+utils.createTaskValueGetter = function(task) {
   return function (path, value) {
     if (arguments.length === 2) {
       utils.setNestedValue(task, path, value);
@@ -234,5 +234,35 @@ utils.createTaskValueGetter = function (task) {
     }
   };
 };
+
+// Without this we cannot make partial updates to objects in the Task
+utils.deepMerge =function(prevState, update) {
+  const output = { ...prevState };
+
+  for (const key of Object.keys(update)) {
+    const oldValue = prevState[key];
+    const newValue = update[key];
+
+    if (newValue === undefined || newValue === null) {
+      continue;
+    }
+
+    if (
+      typeof oldValue === "object" &&
+      oldValue !== null &&
+      !Array.isArray(oldValue) &&
+      typeof newValue === "object" &&
+      newValue !== null &&
+      !Array.isArray(newValue)
+    ) {
+      output[key] = utils.deepMerge(oldValue, newValue);
+    } else {
+      output[key] = newValue;
+    }
+  }
+
+  return output;
+}
+
 
 export { utils };

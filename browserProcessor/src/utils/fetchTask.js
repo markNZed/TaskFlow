@@ -21,7 +21,7 @@ export const fetchTask = async (globalState, end_point, task) => {
     };
     messageJsonString = JSON.stringify(messageObject);
   } catch (error) {
-    console.error("Error while converting Task to JSON:", error, task);
+    console.log("Error while converting Task to JSON:", error, task);
     return;
   }
 
@@ -42,6 +42,6 @@ export const fetchTask = async (globalState, end_point, task) => {
     const task = toTask(JSON.stringify(data.task));
     return task;
   } catch (error) {
-    console.error("Error while converting JSON to Task:", error, data);
+    console.log("Error while converting JSON to Task:", error, data);
   }
 };

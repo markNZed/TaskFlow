@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { delta } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
-import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
 
@@ -37,6 +36,7 @@ ToDo:
     In chatGPT they have the same problem inside the active <p> 
     but once rendered hte <p></p> can be copied
   Should updateTaskLoading be part of the task object?
+  On the server side we still use the full conversation so this partitoning needs some thought
 */
 
 const TaskChat = (props) => {
@@ -48,6 +48,8 @@ const TaskChat = (props) => {
     task,
     setTask,
     component_depth,
+    socketResponses,
+    setSocketResponses,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -61,76 +63,42 @@ const TaskChat = (props) => {
     updateTask({ stackPtr: component_depth });
   }, []);
 
-  // This is called from useFilteredWebSocket
-  function updateResponse(mode, text) {
-    switch (mode) {
-      case "delta":
-        //This is used in a callback so we can't rely on having access to the current task object
-        //so we need to append to a ref to have the current value. 
-        responseTextRef.current = responseTextRef.current + text
-        updateTask({ "response.text": responseTextRef.current });
-        break;
-      case "partial":
-        updateTask({ "response.text": text });
-        break;
-      case "final":
-        updateTask({ "response.text": text });
-        break;
-    }
-    // Indicates the response has started
-    setResponsePending(false);
-  }
-
-  useFilteredWebSocket(task.instanceId,
-      (partialTask) => {
-      if (partialTask?.response) {
-        if (partialTask.response?.mode && partialTask.response?.text) {
-          updateResponse(partialTask.response.mode, partialTask.response.text);
+  // Note that socketResponses may not (will not) be updated on every websocket event
+  // React groups setState operations and I have not undestood the criteria for this
+  useEffect(() => {
+    const processResponses = () => {
+      setSocketResponses((prevResponses) => {
+        for (const response of prevResponses) {
+          const text = response.text;
+          const mode = response.mode;
+          switch (mode) {
+            case 'delta':
+              responseTextRef.current += text;
+              break;
+            case 'partial':
+              responseTextRef.current = text;
+              break;
+            case 'final':
+              responseTextRef.current = text;
+              updateStep("input")
+              break;
+          }
         }
-      }
+        updateTask({ "response.text": responseTextRef.current });
+        return []; // Clear the processed responses
+      });
+    };
+    if (socketResponses.length > 0) {
+      processResponses();
     }
-  );
-
-  /*
-  useTaskWebSocket((partialTask) => {
-    if (partialTask?.response) {
-      if (partialTask.response?.mode && partialTask.response?.text) {
-        updateResponse(partialTask.response.mode, partialTask.response.text);
-      }
-    }
-  });
-  */
-
-  // The websocket returns the response but if that fails we use the HTTP response here
-  useEffect(() => {
-    if (!task) {
-      return;
-    }
-    if (updateTaskLoading) {
-      // Should this be part of the task object
-      if (task.state.current === "sending") {
-        // Start receiving
-        updateStep("receiving");
-      }
-    } else { // task has just been updated from server
-      // The response also returns the complete text, which may already be updated by websocket.
-      updateResponse("final", task.response.text);
-    }
-  }, [updateTaskLoading]);
+  }, [socketResponses]);
 
   useEffect(() => {
-    if (
-      task &&
-      task.state.current === "input" &&
-      task.state.deltaState !== "input"
-    ) {
-      // The nodejsProcessor set the state to input so we set deltaState
-      // Could look after this in useUpdateTask
+    if (task.state.deltaState === "input") {
       // Reset the request so we can use response.text for partial response
       updateTask({
         "request.input": "",
         "response.text": "",
-        "state.deltaState": "input",
       });
       responseTextRef.current = ""
     }
@@ -146,7 +114,6 @@ const TaskChat = (props) => {
       // Set update to send to nodejsProcessor
       updateStep("sending");
       updateTask({ "request.input": prompt, send: true });
-      //updateTask({ client_prompt: prompt, update: true, response: '' });
       // Clear the textbox
       setPrompt("");
     },
@@ -213,7 +180,6 @@ const TaskChat = (props) => {
           <img
             key={send}
             src={send}
-            alt="Send"
             className={responsePending ? "send-not-ready" : "send-ready"}
           />
         </button>

@@ -1,10 +1,14 @@
 /* ToDo
 -------
+Create shared code for utils.deepMerge
+Perhaps the error task should be part of the task config?
+Websocket needs to be robust (not passed?)
+
 Debug current prod version
   Features:
     general
       mobile
-        screen rotation
+        screen rotation X
       websocket (with and without)
       permissions X
       authentication X
@@ -26,8 +30,10 @@ Debug current prod version
         close step X
         scrolling X
       TaskChoose
+        error
       TaskFromAgent
       TaskShowResponse
+        error
       TaskChat
       TaskConversation
         scrolling (stop the bouncing) X
@@ -36,25 +42,32 @@ Debug current prod version
           forget 
         task specific
           config 
-            messagesTemplate
-            promptTemplate
-            suggestedPrompts
-            welcomeMessage
-            nextTask
-            instruction
-            nextStates
-            serverOnly
-            oneThread
-            label
+            messagesTemplate X
+            promptTemplate X
+            suggestedPrompts X
+            welcomeMessage X
+            nextTask X
+            instruction X
+            nextStates X
+            serverOnly X
+            oneThread X
+            label X
+            reentering
           request
-            inputLabel
-            prompt
-            forget
-            agent
-            model
+            inputLabel 
+            prompt X
+            forget X
+            agent X
+            model X
           response
-            userInput
-            text
+            userInput X
+            text X
+          model
+            langModel X
+            temperature X
+            maxTokens X
+            maxResponseTokens X
+          error
 
 Restart server1
 Move chat.mjs into TaskService
