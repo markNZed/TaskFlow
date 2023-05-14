@@ -3,6 +3,7 @@
 Create shared code for utils.deepMerge
 Perhaps the error task should be part of the task config?
 Websocket needs to be robust (not passed?)
+Prefill exercise so we can work on a specifc part of the sequence
 
 Debug current prod version
   Features:

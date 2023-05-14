@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { delta } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
+import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
 
@@ -48,8 +49,6 @@ const TaskChat = (props) => {
     task,
     setTask,
     component_depth,
-    socketResponses,
-    setSocketResponses,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -57,6 +56,7 @@ const TaskChat = (props) => {
   const responseTextRef = useRef("");
   const textareaRef = useRef();
   const formRef = useRef();
+  const [socketResponses, setSocketResponses] = useState([]);
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
@@ -81,6 +81,7 @@ const TaskChat = (props) => {
             case 'final':
               responseTextRef.current = text;
               updateStep("input")
+              setResponsePending(false);
               break;
           }
         }
@@ -92,6 +93,14 @@ const TaskChat = (props) => {
       processResponses();
     }
   }, [socketResponses]);
+
+  // I guess the websocket can cause events during rendering
+  // Putting this in the HoC causes a warning about setting state during rendering
+  useFilteredWebSocket(task?.instanceId,
+    (partialTask) => {
+      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+    }
+  )
 
   useEffect(() => {
     if (task.state.deltaState === "input") {

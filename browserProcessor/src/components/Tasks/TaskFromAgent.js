@@ -1,6 +1,3 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Typography, TextareaAutosize } from "@mui/material";
-import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 /*
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,8 +14,10 @@ ToDo:
   
 */
 
+import React, { useEffect, useState, useRef } from "react";
+import { Typography, TextareaAutosize } from "@mui/material";
+import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 import Paper from "@mui/material/Paper";
-
 import withTask from "../../hoc/withTask";
 
 const TaskFromAgent = (props) => {
@@ -32,8 +31,8 @@ const TaskFromAgent = (props) => {
     updateTaskLoading,
     updateStep,
     component_depth,
-    socketResponses,
-    setSocketResponses,
+    //socketResponses,
+    //setSocketResponses,
   } = props;
 
   const [responseText, setResponseText] = useState("");
@@ -49,6 +48,7 @@ const TaskFromAgent = (props) => {
   const [myTaskId, setMyTaskId] = useState();
   const [myStep, setMyStep] = useState("");
   const [myLastStep, setMyLastStep] = useState("");
+  const [socketResponses, setSocketResponses] = useState([]);
 
   // This is the level where we are going to use the task so set the component_depth
   // Could have a setDepth function in withTask
@@ -60,7 +60,7 @@ const TaskFromAgent = (props) => {
   // Probably always better to associate a component with a single task.
   useEffect(() => {
     if (task && !myTaskId) {
-      console.log("Resetting", task.id)
+      log("Resetting", task.id)
       setMyTaskId(task.id);
       setResponseText("");
       setUserInput("");
@@ -76,6 +76,17 @@ const TaskFromAgent = (props) => {
     }
   }, [task]);
 
+  // I guess the websocket can cause events during rendering
+  // Putting this in the HoC causes a warning about setting state during rendering
+  useFilteredWebSocket(task?.instanceId,
+    (partialTask) => {
+      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+    }
+  )
+
+  // This is asynchronous to the rendering so there may be conflicts where
+  // state is updated during rendering and this impacts the parent
+  // Probably needs to be moved outside of the component maybe into Redux
   useEffect(() => {
     const processResponses = () => {
       setSocketResponses((prevResponses) => {

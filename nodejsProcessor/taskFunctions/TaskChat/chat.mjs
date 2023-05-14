@@ -348,7 +348,7 @@ async function ChatGPTAPI_request(params) {
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
       SendIncrementalWs(partialResponse, instanceId, sessionId);
-      await sleep(50);
+      await sleep(80);
     }
     message_from("cache", text, server_only, ws, instanceId);
     if (debug) {

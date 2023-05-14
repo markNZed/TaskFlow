@@ -12,8 +12,6 @@ import useStartTask from "../hooks/useStartTask";
 import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
-import { EventEmitter } from "events";
-import useFilteredWebSocket from "../hooks/useFilteredWebSocket";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -47,14 +45,6 @@ function withTask(Component) {
     const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
     const { startTaskReturned, startTaskLoading, startTaskError } =
       useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
-    const webSocketEvent = new EventEmitter();
-    const [socketResponses, setSocketResponses] = useState([]);
-
-    useFilteredWebSocket(props.task?.instanceId,
-      (partialTask) => {
-        setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
-      }
-    )
 
     function startTaskFn(
       startId,
@@ -258,8 +248,6 @@ function withTask(Component) {
       component_depth: local_component_depth,
       useTaskState,
       useTasksState,
-      socketResponses,
-      setSocketResponses,
     };
 
     return <WithDebugComponent {...componentProps} />;
