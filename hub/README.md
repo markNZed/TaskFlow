@@ -2,6 +2,8 @@
 
 The Task Hub is implemented in node using the Express framework and SQLite database.
 
+This is just a placeholder for now, the function is currently performed by nodejsProcessor.
+
 * User details (currently users.mjs)
   * Provide a lis tof available "start" tasks (UI should look afte rconstructing menu hierarchy)
 * Groups (currently groups.mjs)
@@ -18,4 +20,5 @@ Through JS imports the Task has access to:
               src/configdata.mjs (users, groups, taskflows, components, tasks)
               src/utils.mjs
               src/storage.mjs (messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections)
-              src/w
+              src/websocket.js (wsSendObject)
+              .env

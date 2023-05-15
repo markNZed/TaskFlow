@@ -2,7 +2,7 @@
 
 T@skFlow is a Task centric collaborative web application framework for leveraging AI. It is under development.
 
-## Overview
+# Overview
 
 T@skFlow supports combining software and AI models and human interaction. T@skFlow adopts a Task centric approach. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
@@ -14,7 +14,7 @@ T@skFlow should play nicely with:
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the nodejsProcessor)
 * [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the nodejsProcessor)
 
-### Task Object
+## Task Object
 
 Tasks consist of:
 * A text specification of additional Task variables
@@ -24,7 +24,7 @@ For example, a chat application is a simple Task (receive user input, return lan
 
 A Task Processor can process a Task and send the same task in a request to another Task Processor. The rules for merging the Task upon receiving the response Task are: there should be no changes to the same entries in the Task object, changes made locally are kept and changes from the response are merged (in that order). There should be a check for any conflicts where a value has been set locally and is also set by the response Task.
 
-### Task Processor
+## Task Processor
 
 Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: nodejsProcessor and browserProcessor. The nodejsProcessor runs on a server and the browserProcessor runs in a web browser. The nodejsProcessor and browserProcessor communicate using websockets or REST style HTTP API. The nodejsProcessor and browserProcessor are implemented in Javascript.
 
@@ -38,13 +38,15 @@ The Task Processor provides a Task Environment for the Task to run in. The nodej
 
 ### SubTask
 
-A SubTask expects to be passed a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task (not a Task Processor). The SubTask runs within a Task Environment and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field includes a promise in Javascript.
+A SubTask expects to be passed a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field could include a promise in Javascript.
 
-### Task Hub
+There may be side-effects from a SubTask, for example, it may return results to a Task on another Task Processor using a WebSocket.
 
-Information that can be shared between Task Processors is maintained in the Task Hub.  
+## Task Hub
 
-## Motivation
+Information shared between Task Processors is maintained in the Task Hub, see [README.md](hub/README.md) 
+
+# Motivation
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 
 
@@ -52,7 +54,7 @@ T@skFlow is intended to allow rapid exploration of new ideas in a relatively tru
 
 For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
 
-## Getting Started
+# Getting Started
 
 To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the docker directory.
 
@@ -62,7 +64,7 @@ To learn more about the browserProcessor, see [README.md](browserProcessor/READM
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
-### Creating a New Task
+## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
 * Create browserProcessor/src/components/Tasks/TaskNew.js (copy an existing Task)
@@ -79,25 +81,25 @@ You will need to include TaskNew in a sequence of tasks (or it could be standalo
   * Add the license header to the file
   * edit nodejsProcessor/config/taskflows.mjs to import and include TaskNewFlow.mjs
 
-#### Task Patterns
+### Task Patterns
 
 **How to reference values from previous Tasks ?**
 
 Available in the "output" object of the previous Task Instance. Another option is to provide data from previous tasks in the "input" object. In either case the data could be a reference rather than the values. 
 
-### Coding Guidelines
+# Coding Guidelines
 
 Code is currently formatted using Prettier defaults.
 
-## License
+# License
 
 This project is licensed under the Mozilla Public License Version 2.0, see [LICENSE.txt](LICENSE.txt), and is open to contributions. An [ICLA](ICLA.txt) is provided for pull requests and managed automatically by https://cla-assistant.io. Contributions are licensed for use through the ICLA i.e., contributors continue to own their contributions. An important part of the ICLA allows the Project Owner to change the project license in the future. If the license is changed in the future, the source code prior to the change would still be available under the MPL 2.0, i.e., anyone could fork the MPL 2.0 project and continue using/developing T@skFlow.
 
-### Contributors
+## Contributors
 
 The initial browserProcessor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-browserProcessor](https://github.com/YaokunLin/chatbot-react-browserProcessor), and the initial nodejsProcessor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-nodejsProcessor](https://github.com/YaokunLin/chatbot-nodejsProcessor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
-## Future
+# Future
 
 Here is what GPT-4 has to say about T@skFlow:
 

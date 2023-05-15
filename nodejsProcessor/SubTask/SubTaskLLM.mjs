@@ -21,7 +21,7 @@ dotenv.config();
 var modeltemplates = await utils.load_data_async(CONFIG_DIR, "modeltemplates");
 // Add id to modeltemplates (index in DB)
 utils.add_index(modeltemplates);
-//console.log(JSON.stringify(users, null, 2))
+//console.log(JSON.stringify(modeltemplates, null, 2))
 
 var defaults = await utils.load_data_async(CONFIG_DIR, "defaults");
 
@@ -60,7 +60,7 @@ async function SubTaskLLM_async(task) {
   return task
 }
 
-// Prepare the paramters for the chat API request
+// Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
 // Also using connections, defaults, modeltemplates, messagesStore_async, users
 async function chat_prepare_async(task) {
