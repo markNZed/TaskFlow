@@ -142,18 +142,18 @@ utils.filter_in_list = function (task, filter_list) {
   return taskCopy;
 };
 
-utils.filter_in = function (components, tasks, task) {
+utils.filter_in = function (tasktemplates, tasks, task) {
   if (!task?.id) {
     console.log("ERROR Task has no id ", task);
   }
   //console.log("BEFORE ", task)
   let filter_list = [];
   let filter_for_nodejsProcessor = [];
-  // This assumes the components are not expanded - need to do this in dataconfig
+  // This assumes the tasktemplates are not expanded - need to do this in dataconfig
   for (const c of task.stack) {
-    filter_list = filter_list.concat(components["root." + c].filter_for_browserProcessor);
+    filter_list = filter_list.concat(tasktemplates["root." + c].filter_for_browserProcessor);
     filter_for_nodejsProcessor = filter_list.concat(
-      components["root." + c].filter_for_nodejsProcessor
+      tasktemplates["root." + c].filter_for_nodejsProcessor
     );
   }
   if (task?.filter_for_browserProcessor) {

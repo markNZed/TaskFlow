@@ -47,7 +47,7 @@ const taskflows = [
         },
       },
       summarize: {
-        APPEND_stack: ["TaskFromAgent"],
+        APPEND_stack: ["TaskLLMIO"],
         config: {
           instruction: "Tell the user what to do",
         },
@@ -64,7 +64,7 @@ const taskflows = [
         },
       },
       structure: {
-        APPEND_stack: ["TaskFromAgent"],
+        APPEND_stack: ["TaskLLMIO"],
         config: {
           instruction: "This is what I think of your response",
           messagesTemplate: [

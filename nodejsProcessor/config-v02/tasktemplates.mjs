@@ -1,4 +1,4 @@
-const components = [
+const tasktemplates = [
   {
     filter_for_browserProcessor: [
       "id",
@@ -49,7 +49,7 @@ const components = [
       "input_label",
       "instruction",
     ],
-    name: "TaskFromAgent",
+    name: "TaskLLMIO",
     parentType: "root",
   },
   {
@@ -63,4 +63,4 @@ const components = [
   },
 ];
 
-export { components };
+export { tasktemplates };

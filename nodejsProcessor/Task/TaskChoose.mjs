@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TaskFromAgent_async } from "./TaskFromAgent.mjs";
+import { TaskLLMIO_async } from "./TaskLLMIO.mjs";
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
 import { utils } from "../src/utils.mjs";
@@ -22,9 +22,9 @@ const TaskChoose_async = async function (task) {
   // First we get the response
   console.log("TaskChoose name " + T("name"));
 
-  // This is not going to work because TaskFromAgent_async is returning immediately
+  // This is not going to work because TaskLLMIO_async is returning immediately
   T("response.text", null); // Avoid using previously stored response
-  let subtask = await TaskFromAgent_async(task);
+  let subtask = await TaskLLMIO_async(task);
 
   const ST = utils.createTaskValueGetter(subtask);
 

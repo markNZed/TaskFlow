@@ -21,7 +21,7 @@ import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import { replaceNewlinesWithParagraphs } from "../../utils/utils";
 
-const TaskFromAgent = (props) => {
+const TaskLLMIO = (props) => {
   const {
     log,
     entering,
@@ -289,4 +289,4 @@ const TaskFromAgent = (props) => {
   );
 };
 
-export default withTask(TaskFromAgent);
+export default withTask(TaskLLMIO);

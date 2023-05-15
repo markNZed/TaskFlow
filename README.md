@@ -14,7 +14,7 @@ T@skFlow should play nicely with:
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the nodejsProcessor)
 * [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the nodejsProcessor)
 
-## Task Object
+## Task
 
 Tasks consist of:
 * A text specification of additional Task variables
@@ -71,7 +71,7 @@ Imagine a new task that will be called TaskNew:
 * Add the license header to the file
 * Create nodejsProcessor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
 * Add the license header to the file
-* Add information about the new Task to nodejsProcessor/config/components.mjs
+* Add information about the new Task to nodejsProcessor/config/tasktemplates.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 

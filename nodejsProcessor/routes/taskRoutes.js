@@ -8,7 +8,7 @@ import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "../src/utils.mjs";
 import { taskFunctions } from "../Task/taskFunctions.mjs";
-import { groups, tasks, components } from "../src/configdata.mjs";
+import { groups, tasks, tasktemplates } from "../src/configdata.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -165,7 +165,7 @@ router.post("/update", async (req, res) => {
     let instanceId = task.instanceId;
     const server_side_task = await instancesStore_async.get(instanceId);
     // filter_in could also do some data cleaning
-    //let clean_client_task = utils.filter_in(components,tasks, task)
+    //let clean_client_task = utils.filter_in(tasktemplates,tasks, task)
     let clean_client_task = task;
     let updated_task = utils.deepMerge(server_side_task, clean_client_task)
     //let updated_task = Object.assign({}, server_side_task, clean_client_task);
@@ -230,7 +230,7 @@ router.post("/update", async (req, res) => {
     }
 
     //console.log("Before filter: ", updated_task)
-    //let updated_client_task = utils.filter_in(components,tasks, updated_task)
+    //let updated_client_task = utils.filter_in(tasktemplates,tasks, updated_task)
     let updated_client_task = updated_task; // need to filter based on Schema
     //console.log("After filter: ", updated_client_task)
 
@@ -352,7 +352,7 @@ router.post("/start", async (req, res) => {
 
       await instancesStore_async.set(task.instanceId, task);
 
-      //let updated_client_task = utils.filter_in(components,tasks, task)
+      //let updated_client_task = utils.filter_in(tasktemplates,tasks, task)
       let updated_client_task = task; // need to filter based on Schema
 
       let messageJsonString;

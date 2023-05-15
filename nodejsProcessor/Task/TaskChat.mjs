@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TaskFromAgent_async } from "./TaskFromAgent.mjs";
+import { TaskLLMIO_async } from "./TaskLLMIO.mjs";
 import { utils } from "../src/utils.mjs";
 
 const TaskChat_async = async function (task) {
@@ -14,9 +14,9 @@ const TaskChat_async = async function (task) {
 
   T("response.text", null); // Avoid using previously stored response
 
-  // Need to move TaskFromAgent_async to V02 or convert it to V02
+  // Need to move TaskLLMIO_async to V02 or convert it to V02
 
-  let subtask = await TaskFromAgent_async(task);
+  let subtask = await TaskLLMIO_async(task);
 
   const ST = utils.createTaskValueGetter(subtask);
 

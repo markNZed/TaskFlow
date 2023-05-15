@@ -15,7 +15,7 @@ console.log("Loading config data from " + CONFIG_DIR);
 var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
 var taskflows = await utils.load_data_async(CONFIG_DIR, "taskflows");
-var components = await utils.load_data_async(CONFIG_DIR, "components");
+var tasktemplates = await utils.load_data_async(CONFIG_DIR, "tasktemplates");
 var tasks = {}; // We will build this from taskflows
 
 // We adopt a DRY strategy in the code and config files
@@ -225,8 +225,8 @@ function flattenObjects(taskflows) {
 taskflows = flattenObjects(taskflows);
 //console.log(JSON.stringify(taskflows, null, 2))
 
-components = flattenObjects(components);
-//console.log(JSON.stringify(components, null, 2))
+tasktemplates = flattenObjects(tasktemplates);
+//console.log(JSON.stringify(tasktemplates, null, 2))
 
 //Create a group for each user
 for (const userKey in users) {
@@ -300,4 +300,4 @@ function flattenTasks(taskflows) {
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
-export { users, groups, taskflows, components, tasks };
+export { users, groups, taskflows, tasktemplates, tasks };

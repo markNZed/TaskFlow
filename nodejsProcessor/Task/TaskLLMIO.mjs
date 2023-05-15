@@ -7,11 +7,11 @@ import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
-const TaskFromAgent_async = async function (task) {
+const TaskLLMIO_async = async function (task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(
-    "TaskFromAgent name " + T("name") + " step " + T("state.current")
+    "TaskLLMIO name " + T("name") + " step " + T("state.current")
   );
 
   // We have two potential steps: ['response', 'input']
@@ -142,12 +142,12 @@ const TaskFromAgent_async = async function (task) {
       T("response.text", response_text);
       T("output.text", response_text);
     } else {
-      console.log("TaskFromAgent_async subTask", subTask)
+      console.log("TaskLLMIO_async subTask", subTask)
       subTask.response.text_promise.then((text) => {
         T("response.text", text);
         T("output.text", text);
         instancesStore_async.set(task.instanceId, task);
-        //console.log("TaskFromAgent_async response_text", text, task)
+        //console.log("TaskLLMIO_async response_text", text, task)
       })
     }
   }
@@ -158,9 +158,9 @@ const TaskFromAgent_async = async function (task) {
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());
   //await sessionsStore_async.set(sessionId + taskflow.id + 'taskflow', taskflow)
-  console.log("Returning from tasks.TaskFromAgent "); // + response_text)
+  console.log("Returning from tasks.TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
   return task;
 };
 
-export { TaskFromAgent_async };
+export { TaskLLMIO_async };
