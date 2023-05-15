@@ -3,8 +3,6 @@
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
-Prefill tasks so we can work on a specifc part of the sequence (inherit workflow with tasks? Needs better recursion)
-Move chat.mjs into SubTask (assumes it is called by a Task not a TaskProcessor)
 Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
@@ -186,6 +184,10 @@ Comparison with similar systems
   IFTTT
   n8n
   Node-RED
+
+Test Plan
+---------
+Prefill tasks so we can work on a specifc part of the sequence (inherit workflow with tasks? Needs better recursion)
 
 A list of features that are manually tested
 -------------------------------------------

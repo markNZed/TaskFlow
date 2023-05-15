@@ -10,7 +10,7 @@ import { connections } from "./storage.mjs";
 function wsSendObject(sessionId, message = {}) {
   let ws = connections.get(sessionId);
   if (!ws) {
-    console.log("Lost websocket for wsSendObject");
+    console.log("Lost websocket for wsSendObject", sessionId, message);
   } else {
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject ", JSON.stringify(message) )
@@ -39,7 +39,7 @@ function initWebSocketServer(server) {
       }
 
       if (j?.ping) {
-        wsSendObject(ws, { pong: "ok" });
+        wsSendObject(sessionId, { pong: "ok" });
         //console.log("Ponging", ws?.data)
       }
     });
