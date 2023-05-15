@@ -22,6 +22,8 @@ Tasks consist of:
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
 
+A Task Processor can process a Task and send the same task in a request to another Task Processor. The rules for merging the Task upon receiving the response Task are: there should be no changes to the same entries in the Task object, changes made locally are kept and changes from the response are merged (in that order). There should be a check for any conflicts where a value has been set locally and is also set by the response Task.
+
 ### Task Processor
 
 Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: nodejsProcessor and browserProcessor. The nodejsProcessor runs on a server and the browserProcessor runs in a web browser. The nodejsProcessor and browserProcessor communicate using websockets or REST style HTTP API. The nodejsProcessor and browserProcessor are implemented in Javascript.

@@ -57,4 +57,17 @@ function getChanges(obj1, obj2) {
   return diff;
 }
 
-export { deepMerge, getChanges };
+function checkConflicts(obj1, obj2) {
+  // Helper function to check if a value is an object
+  const isObject = (value) => typeof value === 'object' && value !== null;
+  // Iterate over keys in obj1
+  Object.keys(obj1).forEach(key => {
+    if (obj2.hasOwnProperty(key)) {
+      throw new Error("Conflict in merge", key);
+    } else if (isObject(obj1[key]) && isObject(obj2[key])) {
+      checkConflicts(obj1[key], obj2[key]);
+    } 
+  });
+}
+
+export { deepMerge, getChanges, checkConflicts };

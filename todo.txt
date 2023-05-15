@@ -1,6 +1,7 @@
 /* ToDo
 -------
 SubTaskLLM needs access to the user - should be part of the Task
+Document what happens when a Task is on two processors - do we want to support that?
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -15,12 +16,6 @@ Swagger for the API ?
 Privacy feature of Task
 Tests will allow for better code generation
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
-Does the update actually update (deep merge) or does it replace?
-  While the Task is on nodejs how to deal with browser changes
-    Each param could have an updatedAt for merging, allows for mixed state
-    Task Processor could error on merge conflicts
-    There could be rules/assertions for the schema
-      Constrain what the Task expects regarding config
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
 Processor that provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
