@@ -113,14 +113,17 @@ export function setNestedProperties(obj, path = null, value = null) {
 }
 
 export function replaceNewlinesWithParagraphs(text) {
-  // Split the text on one or more newline characters to get an array of lines
-  var lines = text.split(/\n+/);
+  let html = ""
+  if (text) {
+    // Split the text on one or more newline characters to get an array of lines
+    var lines = text.split(/\n+/);
 
-  // Trim whitespace from each line and remove any empty ones
-  lines = lines.map(line => line.trim()).filter(line => line !== '');
+    // Trim whitespace from each line and remove any empty ones
+    lines = lines.map(line => line.trim()).filter(line => line !== '');
 
-  // Wrap each line in <p> tags
-  var html = lines.map(line => `<p>${line}</p>`).join('');
+    // Wrap each line in <p> tags
+    html = lines.map(line => `<p>${line}</p>`).join('');
+  }
 
   return html;
 }

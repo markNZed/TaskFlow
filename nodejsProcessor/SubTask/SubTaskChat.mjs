@@ -47,14 +47,16 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
 }
 
 async function SubTaskChat_async(task) {
-  const params = await chat_prepare(task);
-  return await ChatGPTAPI_request(params);
+  const params = await chat_prepare_async(task);
+  const res = ChatGPTAPI_request_async(params);
+  task.response.text_promise = res;
+  return task
 }
 
 // Prepare the paramters for the chat API request
 // Nothing specific to a partiuclar chat API
 // Also using connections, defaults, agents, messagesStore_async, users
-async function chat_prepare(task) {
+async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
   const sessionId = T("config.sessionId");
@@ -195,7 +197,6 @@ async function chat_prepare(task) {
     temperature,
     maxTokens,
     maxResponseTokens,
-    ws,
     agentId,
     threadId,
     instanceId,
@@ -211,7 +212,7 @@ function sleep(ms) {
 // Manage cache
 // Return response by websocket and return value
 // Also using process.env.OPENAI_API_KEY, messagesStore_async, cacheStore_async, DUMMY_OPENAI
-async function ChatGPTAPI_request(params) {
+async function ChatGPTAPI_request_async(params) {
   const {
     systemMessage,
     lastMessageId,
@@ -221,7 +222,6 @@ async function ChatGPTAPI_request(params) {
     langModel,
     temperature,
     maxTokens,
-    ws,
     agentId,
     threadId,
     instanceId,

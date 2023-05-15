@@ -34,6 +34,10 @@ On the browserProcessor (user interface) side, T@skFlow provides Tasks with stor
 
 The Task Processor provides a Task Environment for the Task to run in. The nodejsProcessor currently provides a Node Javascript environment. The browserProcessor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
 
+### SubTask
+
+A SubTask expects to be passed a Task instnace and will return the same Task instance. The SubTask assumes it is called from a Task (not a Task Processor). The SubTask runs within a Task Environment and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field includes a promise in Javascript.
+
 ## Motivation
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 

@@ -134,23 +134,21 @@ const TaskFromAgent_async = async function (task) {
   if (prompt) {
     //workflow.tasks[taskName].prompt = prompt
     T("request.prompt", prompt);
-    //response_text = await SubTaskChat_async(task);
-    // If we don't await then we can't store the response
-    // In a then clause we could update the task?
-    // response_text will hold a promise
     // The response needs to be available for other tasks to point at
+    const subTask = await SubTaskChat_async(task); 
     if (T("config.serverOnly")) {
-      // On the server we wait and don't use websocket
-      response_text = await SubTaskChat_async(task);  
+      // On the server we wait and don't use websocket   
+      response_text = await subTask.response.text_promise
       T("response.text", response_text);
       T("output.text", response_text);
     } else {
-      SubTaskChat_async(task).then(async (response_text) => {
-        T("response.text", response_text);
-        T("output.text", response_text);
+      console.log("TaskFromAgent_async subTask", subTask)
+      subTask.response.text_promise.then((text) => {
+        T("response.text", text);
+        T("output.text", text);
         instancesStore_async.set(task.instanceId, task);
-        //console.log("TaskFromAgent_async response_text", response_text, task)
-      });
+        //console.log("TaskFromAgent_async response_text", text, task)
+      })
     }
   }
   //T("response.text", response_text);
