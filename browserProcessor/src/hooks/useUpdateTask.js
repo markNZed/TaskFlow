@@ -37,13 +37,14 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           const result = await fetchTask(globalState, "task/update", task);
           result.state.deltaState = result.state.current
           log("useUpdateTask result", task);
-          setTask((p) => deepMerge(p, result));
-          const updated = {
-            "response.updated": true,
-            "response.updating": false,
-          };
-          setNestedProperties(updated);
-          setTask((p) => deepMerge(p, updated));
+          // With errors the same instance may not be returned
+          result.response.updating = false;
+          if (task.instanceId === result.instanceId) {
+            result.response.updated = true;
+            setTask((p) => deepMerge(p, result));
+          } else {
+            setTask(result);
+          }
         } catch (error) {
           setUpdateTaskError(error.message);
           setTask(null);

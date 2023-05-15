@@ -1,6 +1,9 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
+import { deepMerge } from "../shared/utils.mjs"
+
+export { deepMerge }
 
 export function updateState(setState, update) {
   setState((prevState) => ({ ...prevState, ...update }));
@@ -107,33 +110,4 @@ export function setNestedProperties(obj, path = null, value = null) {
 
   // Note this function operates in-place but it can be useful to have a return value too
   return obj;
-}
-
-// Without this we cannot make partial updates to objects in the Task
-export function deepMerge(prevState, update) {
-  const output = { ...prevState };
-
-  for (const key of Object.keys(update)) {
-    const oldValue = prevState[key];
-    const newValue = update[key];
-
-    if (newValue === undefined || newValue === null) {
-      continue;
-    }
-
-    if (
-      typeof oldValue === "object" &&
-      oldValue !== null &&
-      !Array.isArray(oldValue) &&
-      typeof newValue === "object" &&
-      newValue !== null &&
-      !Array.isArray(newValue)
-    ) {
-      output[key] = deepMerge(oldValue, newValue);
-    } else {
-      output[key] = newValue;
-    }
-  }
-
-  return output;
 }

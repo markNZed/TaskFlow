@@ -6,7 +6,8 @@ screen -S my-session -p 0 -X stuff "cd /app/taskflow/nodejsProcessor\n"
 screen -S my-session -p 0 -X stuff "npm install\n"
 screen -S my-session -p 0 -X stuff "npm run server\n"
 
-screen -S my-session -X screen
+# create a new window within the "my-session" screen
+screen -S my-session -X screen bash
 
 screen -S my-session -p 1 -X stuff "cd /app/taskflow/browserProcessor\n"
 screen -S my-session -p 1 -X stuff "npm install\n"

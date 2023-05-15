@@ -9,8 +9,11 @@ import { v4 as uuidv4 } from "uuid";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
+import { deepMerge } from "./shared/utils.mjs";
 
 const utils = {};
+
+utils.deepMerge = deepMerge;
 
 utils.getUserId = function (req) {
   let userId = DEFAULT_USER;
@@ -234,35 +237,5 @@ utils.createTaskValueGetter = function(task) {
     }
   };
 };
-
-// Without this we cannot make partial updates to objects in the Task
-utils.deepMerge =function(prevState, update) {
-  const output = { ...prevState };
-
-  for (const key of Object.keys(update)) {
-    const oldValue = prevState[key];
-    const newValue = update[key];
-
-    if (newValue === undefined || newValue === null) {
-      continue;
-    }
-
-    if (
-      typeof oldValue === "object" &&
-      oldValue !== null &&
-      !Array.isArray(oldValue) &&
-      typeof newValue === "object" &&
-      newValue !== null &&
-      !Array.isArray(newValue)
-    ) {
-      output[key] = utils.deepMerge(oldValue, newValue);
-    } else {
-      output[key] = newValue;
-    }
-  }
-
-  return output;
-}
-
 
 export { utils };

@@ -91,11 +91,7 @@ const TaskShowResponse = (props) => {
             if (task.response.updated) {
               setMyStep(next_step);
               let response_text;
-              if (task.error) {
-                response_text = "ERROR: " + task.error;
-              } else {
-                response_text = task.response.text;
-              }
+              response_text = task.response.text;
               updateTask({ "response.text": response_text });
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);

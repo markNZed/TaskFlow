@@ -7,7 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocketServer } from "ws";
 import { connections } from "./storage.mjs";
 
-function wsSendObject(ws, message = {}) {
+function wsSendObject(sessionId, message = {}) {
+  let ws = connections.get(sessionId);
   if (!ws) {
     console.log("Lost websocket for wsSendObject");
   } else {

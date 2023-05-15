@@ -201,6 +201,9 @@ const TaskFromAgent = (props) => {
     if (rect?.top >= paraTopRef.current && rect.height > 100) {
       paraTopRef.current = rect.top;
     }
+    // filter removes empty entry
+    const words = responseText.trim().split(/\s+/).filter(Boolean);
+    setResponseTextWordCount(words.length);
   }, [responseText]);
 
   return (
@@ -228,7 +231,7 @@ const TaskFromAgent = (props) => {
             elevation={3}
             style={{
               overflow: "auto",
-              maxHeight: `calc(100vh - ${userInputHeight + paraTopRef.current + 120}px)`,
+              maxHeight: `max(calc(100vh - ${userInputHeight + paraTopRef.current + 120}px), 200px)`,
               textAlign: "justify",
               padding: "16px",
             }}

@@ -24,6 +24,20 @@ router.get("/", async (req, res) => {
       authorised_workflows[key] = workflows[key];
     }
   }
+  // If a workflow is authorized then the path to that workflow is authorized
+  for (const key in authorised_workflows) {
+    let id = workflows[key].id
+    let paths = id.split('.');
+    let result = [];
+    for (let i = 0; i < paths.length; i++) {
+      result.push(paths.slice(0, i + 1).join('.'));
+    }
+    result.forEach(path => {
+      if (!authorised_workflows[path]) {
+        authorised_workflows[path] = workflows[path];
+      }
+    });
+  }
   //console.log("authorised_workflows ", authorised_workflows)
   let workflowsTree = {};
   for (const key in authorised_workflows) {

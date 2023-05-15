@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: taskflow:latest
+    restart: always
     volumes: 
       - ../../..:/app/
       - ./root:/root # For SSH and gitconfig

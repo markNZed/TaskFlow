@@ -32,10 +32,10 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
       response = { text: partialResponse.delta, mode: "delta" };
     }
     if (response) {
-      const task = {
+      const partialTask = {
         partialTask: { instanceId: instanceId, response: response },
       };
-      wsSendObject(ws, task);
+      wsSendObject(sessionId, partialTask);
       ws.data["delta_count"] += 1;
     }
     //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
@@ -157,7 +157,7 @@ async function chat_prepare(task) {
           " lastMessageId " +
           lastMessageId
       );
-      console.log(" T(request.messages)",  T("request.messages"))
+      //console.log(" T(request.messages)",  T("request.messages"))
     }
   }
 
@@ -312,17 +312,18 @@ async function ChatGPTAPI_request(params) {
   }
 
   // Message can be sent from one of multiple sources
-  function message_from(source, text, server_only, ws, instanceId) {
+  function message_from(source, text, server_only, sessionId, instanceId) {
     // Don't add ... when response is fully displayed
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
       partialTask: { instanceId: instanceId, response: response },
     };
+    let ws = connections.get(sessionId);
     if (ws) {
       ws.data["delta_count"] = 0;
       if (!server_only) {
-        wsSendObject(ws, partialTask);
+        wsSendObject(sessionId, partialTask);
       }
     } else {
       console.log("Lost ws in message_from");
@@ -350,7 +351,7 @@ async function ChatGPTAPI_request(params) {
       SendIncrementalWs(partialResponse, instanceId, sessionId);
       await sleep(80);
     }
-    message_from("cache", text, server_only, ws, instanceId);
+    message_from("cache", text, server_only, sessionId, instanceId);
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
@@ -362,7 +363,7 @@ async function ChatGPTAPI_request(params) {
         console.log("Debug: ", cacheKeyText);
       }
       const text = "Dummy text";
-      message_from("Dummy API", text, server_only, ws, instanceId);
+      message_from("Dummy API", text, server_only, sessionId, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {
       response_text_promise = api
@@ -373,7 +374,7 @@ async function ChatGPTAPI_request(params) {
             response.id
           );
           let text = response.text;
-          message_from("API", text, server_only, ws, instanceId);
+          message_from("API", text, server_only, sessionId, instanceId);
           if (use_cache) {
             cacheStore_async.set(cacheKey, response);
             console.log("cache stored key ", cacheKey);
@@ -382,7 +383,7 @@ async function ChatGPTAPI_request(params) {
         })
         .catch((error) => {
           let text = "ERROR " + error.message;
-          message_from("API", text, server_only, ws);
+          message_from("API", text, server_only, sessionId);
           return text;
         });
     }

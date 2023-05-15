@@ -26,3 +26,5 @@ This assumes T@skFlow is running behind a proxy on a docker network for dev:
 
 <br> docker-compose -f docker-compose-dev.yml build
 <br> docker-compose -f docker-compose-dev.yml up -d
+
+docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash

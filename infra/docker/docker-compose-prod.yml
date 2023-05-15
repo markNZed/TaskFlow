@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile-prod
     image: taskflow-prod:latest
+    restart: always
     volumes: 
       - ../..:/app/taskflow
     networks:

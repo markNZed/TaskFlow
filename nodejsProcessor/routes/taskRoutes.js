@@ -190,16 +190,29 @@ router.post("/update", async (req, res) => {
     }
 
     let i = 0;
-    while (updated_task.config?.serverOnly) {
+    while (updated_task.config?.serverOnly || updated_task.error) {
       // A sanity check to avoid erroneuos infinite loops
       i = i + 1;
       if (i > 10) {
         console.log("Unexpected looping on server_only ", updated_task);
         exit;
       }
+      if (updated_task.error) {
+        let errorTask
+        if (updated_task.config?.errorTask) {
+          errorTask = updated_task.config.errorTask
+        } else {
+          // Assumes there is a default errorTask named error
+          const strArr = updated_task.id.split('.');
+          strArr[strArr.length - 1] = "error";
+          errorTask = strArr.join('.');
+        }
+        updated_task.nextTask = errorTask
+        updated_task.state.done = true
+        console.log("Task error " + updated_task.id);
+      } 
       if (updated_task.state.done) {
         console.log("Server side task done " + updated_task.id);
-        //updated_task.done = false
         updated_task.state.done = false;
         await instancesStore_async.set(updated_task.instanceId, updated_task);
         updated_task = await newTask_async(

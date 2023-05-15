@@ -12,11 +12,13 @@ const TaskShowResponse_async = async function (task) {
 
   console.log("TaskShowResponse name " + T("name"));
 
+  let response = "";
+
   if (task.id.endsWith(".error")) {
     // Fetch the previous task
     const prevTask = await instancesStore_async.get(task.parentInstanceId)
-    console.log("Set error from previous task", prevTask)
-    T("error", prevTask.error)
+    response = "ERROR: " + prevTask.error
+    console.log("Set error from previous task", prevTask.error)
   }
 
   let threadTasks = {};
@@ -31,7 +33,6 @@ const TaskShowResponse_async = async function (task) {
     }
   }
 
-  let response = "";
   if (T("config.promptTemplate")) {
     response += T("config.promptTemplate").reduce(function (acc, curr) {
       // Currently this assumes the parts are from the same workflow, could extend this
@@ -67,14 +68,15 @@ const TaskShowResponse_async = async function (task) {
       }
     });
     console.log("Assembled response " + prompt);
-  } else {
+  } else if (T("config.response")) {
+    // Should not pass here if this is an error
     response = T("config.response");
   }
-  console.log("Returning from tasks.TaskShowResponse");
   // Ensure we do not overwrite the deltaState on the browserProcessor
   T("state.deltaState", undefined); // Should be centralized?
   T("response.text", response);
   T("updatedAt", Date.now()); // Should be centralized?
+  console.log("Returning from tasks.TaskShowResponse");
   return task;
 };
 

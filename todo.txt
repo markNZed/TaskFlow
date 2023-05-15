@@ -1,11 +1,11 @@
 /* ToDo
 -------
-Create shared code for utils.deepMerge
-Perhaps the error task should be part of the task config?
-Websocket needs to be robust (not passed?)
-Prefill exercise so we can work on a specifc part of the sequence
+Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
+  Where/how to manage variables? 
+    Lookup only the required tasks not the whole thread.
+Prefill tasks so we can work on a specifc part of the sequence (inherit workflow with tasks? Needs better recursion)
 
-Debug current prod version
+A list of features that are manually tested
   Features:
     general
       mobile
@@ -33,6 +33,10 @@ Debug current prod version
       TaskChoose
         error
       TaskFromAgent
+        input
+          word count X 
+        response
+          word count X
       TaskShowResponse
         error
       TaskChat
@@ -68,10 +72,11 @@ Debug current prod version
             temperature X
             maxTokens X
             maxResponseTokens X
-          error
+          error X
+          errorTask
 
 Restart server1
-Move chat.mjs into TaskService
+Move chat.mjs into SubTask (assumes it is called by a Task not a TaskProcessor)
 Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
@@ -79,7 +84,6 @@ Harmonise the Task Processor
       Browser adds the concept of sessionId and address/location.
 
 Only display menu option if leaf is a real task
-TaskShowResponse shoul be usng config not response.text to complete the response
 
 At which time should we introduce Typescript?
   First try to simplify the code
@@ -95,7 +99,7 @@ Does the update actually update (deep merge) or does it replace?
       Constrain what the Task expects regarding config
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in workflows and stepper
-The chat.mjs is like an internal request? Make it part of TaskChat not TaskFromAgent (rename this to TaskTextIO). It operates on a Task. More like a simple Task Processor thatn provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
+Processor that provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
 How can we specify the UI in a more compact/easy way?
   https://github.com/rjsf-team/react-jsonschema-form
   A hook-based solution with minimal boilerplate: React Hook Form
@@ -131,7 +135,7 @@ Backlog
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
     Msgs could be loaded from the nodejsProcessor. Similar to stepper - both have history.
     Allow task to start another task on nodejsProcessor side (needs functional interface to api/task/start )
-    Utility filters e.g. remove outer quotes, an ordered list.
+    Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
 
     Tasks
     ----------

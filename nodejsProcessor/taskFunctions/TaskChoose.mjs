@@ -72,12 +72,6 @@ const TaskChoose_async = async function (task) {
     // Handle the error here
     console.log("An error occurred:", error);
     T("error", error.message);
-    const strArr = task.id.split('.');
-    strArr[strArr.length - 1] = "error";
-    const nextTask = strArr.join('.');
-    T("nextTask", nextTask);
-    // New task will not have error information
-    T("state.done", true);
   }
 
   return task;

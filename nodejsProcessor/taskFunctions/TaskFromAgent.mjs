@@ -161,6 +161,7 @@ const TaskFromAgent_async = async function (task) {
   T("updatedAt", Date.now());
   //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
   console.log("Returning from tasks.TaskFromAgent "); // + response_text)
+  //T("error", "Testing an error");
   return task;
 };
 
