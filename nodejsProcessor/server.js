@@ -15,7 +15,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { BROWSER_URL } from "./config.mjs";
+import { BROWSER_URL, appName } from "./config.mjs";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import miscRoutes from "./routes/miscRoutes.js";
@@ -64,5 +64,5 @@ server.setTimeout(300000);
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5000;
-server.listen(port, () => console.log("T@skFlow nodejsProcessor started"));
+server.listen(port, () => console.log(appName + " nodejsProcessor started"));
 

@@ -10,7 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
 
-function WorkflowTree({ onClose }) {
+function TaskflowTree({ onClose }) {
   const { globalState, replaceGlobalState } = useGlobalStateContext();
 
   const [expanded, setExpanded] = useState([]);
@@ -40,8 +40,8 @@ function WorkflowTree({ onClose }) {
 
   function countSubtreeLeafNodes() {
     let leafCountLocal = 0;
-    Object.keys(globalState.workflowsTree).forEach((nodeId) => {
-      if (globalState.workflowsTree[nodeId].leaf === true) {
+    Object.keys(globalState.taskflowsTree).forEach((nodeId) => {
+      if (globalState.taskflowsTree[nodeId].leaf === true) {
         leafCountLocal++;
       }
     });
@@ -51,13 +51,13 @@ function WorkflowTree({ onClose }) {
 
   useEffect(() => {
     if (
-      globalState.workflowsTree &&
-      globalState?.workflowLeafCount !== leafCount
+      globalState.taskflowsTree &&
+      globalState?.taskflowLeafCount !== leafCount
     ) {
       countSubtreeLeafNodes();
       //const subtreeLeafCount = countSubtreeLeafNodes('root');
       // This code will run after the component mounts and renders
-      replaceGlobalState("workflowLeafCount", countSubtreeLeafNodes());
+      replaceGlobalState("taskflowLeafCount", countSubtreeLeafNodes());
     }
   });
 
@@ -96,7 +96,7 @@ function WorkflowTree({ onClose }) {
       if (!initiator) {
         return "";
       }
-      globalState.workflowsTree[id].leaf = true;
+      globalState.taskflowsTree[id].leaf = true;
       if (propagateDefault && node?.default) {
         handleSelectNode(null, node);
       }
@@ -111,23 +111,23 @@ function WorkflowTree({ onClose }) {
     }
   }
 
-  if (!globalState.workflowsTree) {
+  if (!globalState.taskflowsTree) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="workflowTree">
+    <div className="taskflowTree">
       <TreeView
-        aria-label="workflows"
+        aria-label="taskflows"
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
         expanded={expanded}
         onNodeToggle={handleToggle}
       >
-        {renderTree(globalState.workflowsTree, "root", handleSelectNode, true)}
+        {renderTree(globalState.taskflowsTree, "root", handleSelectNode, true)}
       </TreeView>
     </div>
   );
 }
 
-export default WorkflowTree;
+export default TaskflowTree;

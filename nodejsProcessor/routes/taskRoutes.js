@@ -331,7 +331,7 @@ router.post("/start", async (req, res) => {
         }
       }
       if (task.config?.collaborate) {
-        // Workflow to choose the group (workflow should include that)
+        // Taskflow to choose the group (taskflow should include that)
         if (!groupId) {
           // This is a hack for the collaborate feature
           groupId = task.config.collaborate;

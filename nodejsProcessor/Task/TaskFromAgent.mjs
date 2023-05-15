@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { SubTaskChat_async } from "../SubTask/SubTaskChat.mjs";
+import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
@@ -44,12 +44,12 @@ const TaskFromAgent_async = async function (task) {
   if (T("config.promptTemplate")) {
     console.log("Found promptTemplate");
     prompt += T("config.promptTemplate").reduce(function (acc, curr) {
-      // Currently this assumes the parts are from the same workflow, could extend this
+      // Currently this assumes the parts are from the same taskflow, could extend this
       const regex = /(^.+)\.(.+$)/;
       const matches = regex.exec(curr);
       if (matches) {
         // We need to find the relevant task using the threadId ?
-        // like workflow key: threadId + taskId
+        // like taskflow key: threadId + taskId
         // console.log("matches task " + matches[1] + " " + matches[2])
         if (threadTasks[parentId + "." + matches[1]] === undefined) {
           console.log(
@@ -109,7 +109,7 @@ const TaskFromAgent_async = async function (task) {
     T("request.messages").forEach((message) => {
       if (Array.isArray(message["content"])) {
         message["content"] = message["content"].reduce(function (acc, curr) {
-          // Currently this assumes the tasks are from the same workflow, could extend this
+          // Currently this assumes the tasks are from the same taskflow, could extend this
           const regex = /(^.+)\.(.+$)/;
           const matches = regex.exec(curr);
           if (matches) {
@@ -132,10 +132,10 @@ const TaskFromAgent_async = async function (task) {
 
   let response_text = "";
   if (prompt) {
-    //workflow.tasks[taskName].prompt = prompt
+    //taskflow.tasks[taskName].prompt = prompt
     T("request.prompt", prompt);
     // The response needs to be available for other tasks to point at
-    const subTask = await SubTaskChat_async(task); 
+    const subTask = await SubTaskLLM_async(task); 
     if (T("config.serverOnly")) {
       // On the server we wait and don't use websocket   
       response_text = await subTask.response.text_promise
@@ -157,7 +157,7 @@ const TaskFromAgent_async = async function (task) {
   // Ensure we do not overwrite the deltaState on the browserProcessor
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());
-  //await sessionsStore_async.set(sessionId + workflow.id + 'workflow', workflow)
+  //await sessionsStore_async.set(sessionId + taskflow.id + 'taskflow', taskflow)
   console.log("Returning from tasks.TaskFromAgent "); // + response_text)
   //T("error", "Testing an error");
   return task;

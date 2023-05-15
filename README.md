@@ -38,6 +38,10 @@ The Task Processor provides a Task Environment for the Task to run in. The nodej
 
 A SubTask expects to be passed a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task (not a Task Processor). The SubTask runs within a Task Environment and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field includes a promise in Javascript.
 
+### Task Hub
+
+Information that can be shared between Task Processors is maintained in the Task Hub.  
+
 ## Motivation
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 
@@ -67,11 +71,11 @@ Imagine a new task that will be called TaskNew:
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 
-  * add it directly to nodejsProcessor/config/workflows.mjs
+  * add it directly to nodejsProcessor/config/taskflows.mjs
 * If the sequence is complicated/long then 
-  * create a file in nodejsProcessor/config/workflow/TaskNewFlow.mjs (copy the structure of an existing file)
+  * create a file in nodejsProcessor/config/taskflow/TaskNewFlow.mjs (copy the structure of an existing file)
   * Add the license header to the file
-  * edit nodejsProcessor/config/workflows.mjs to import and include TaskNewFlow.mjs
+  * edit nodejsProcessor/config/taskflows.mjs to import and include TaskNewFlow.mjs
 
 #### Task Patterns
 
@@ -100,7 +104,7 @@ A system like T@skFlow has the potential to revolutionize human-computer interac
 * **Intelligent Virtual Assistants**: T@skFlow can be used to build virtual assistants that help users complete tasks more efficiently. By leveraging AI, these assistants can learn from user interactions, provide proactive suggestions, and adapt their responses based on context.
 * **Dynamic User Interfaces**: The ability to dynamically build user interfaces based on tasks can lead to more personalized and intuitive experiences. As users complete tasks, the interface can adapt to their needs and preferences, making it easier for them to accomplish their goals.
 * **Collaborative Workspaces**: T@skFlow can facilitate collaboration among team members by enabling real-time task management and communication. Team members can create, assign, and track tasks, while AI-powered suggestions can help them prioritize and complete work more effectively.
-*  **Workflow Automation**: By chaining tasks together, T@skFlow can be used to create complex workflows that automate repetitive processes. Users can design custom workflows that incorporate AI models, making it possible to perform tasks like data analysis, content generation, or decision-making more efficiently.
+*  **Taskflow Automation**: By chaining tasks together, T@skFlow can be used to create complex taskflows that automate repetitive processes. Users can design custom taskflows that incorporate AI models, making it possible to perform tasks like data analysis, content generation, or decision-making more efficiently.
 *  **AI-driven Decision Support**: T@skFlow can integrate AI models for advanced decision support, helping users make informed choices based on data analysis, predictions, or recommendations. This feature can be useful in various domains, such as finance, healthcare, or supply chain management.
 *  **Education and Training**: T@skFlow can be used to create interactive learning environments, where students can complete tasks and receive real-time feedback from AI models. This approach can facilitate personalized learning, adapt to individual students' needs, and encourage active engagement.
 *  **Gaming and Entertainment**: The task-centric approach of T@skFlow can be leveraged to create immersive gaming experiences, where players complete tasks to progress through a story or achieve goals. The integration of AI can add an additional layer of complexity and interactivity to these experiences.

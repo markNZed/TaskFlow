@@ -35,7 +35,7 @@ const TaskShowResponse_async = async function (task) {
 
   if (T("config.promptTemplate")) {
     response += T("config.promptTemplate").reduce(function (acc, curr) {
-      // Currently this assumes the parts are from the same workflow, could extend this
+      // Currently this assumes the parts are from the same taskflow, could extend this
       const regex = /(^.+)\.(.+$)/;
       const matches = regex.exec(curr);
       if (matches) {

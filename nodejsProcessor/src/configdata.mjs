@@ -5,91 +5,88 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import {} from "../config.mjs";
+import { CONFIG_DIR } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
 // For now we use JS data structures instead of a DB
 // Removes need for an admin interface during dev
-const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";
 console.log("Loading config data from " + CONFIG_DIR);
 var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
-var workflows = await utils.load_data_async(CONFIG_DIR, "workflows");
+var taskflows = await utils.load_data_async(CONFIG_DIR, "taskflows");
 var components = await utils.load_data_async(CONFIG_DIR, "components");
-var agents = await utils.load_data_async(CONFIG_DIR, "agents");
-var defaults = await utils.load_data_async(CONFIG_DIR, "defaults");
-var tasks = {}; // We will build this from workflows
+var tasks = {}; // We will build this from taskflows
 
 // We adopt a DRY strategy in the code and config files
 // But not in the data structures that are generated from the config for the code
-// Transform hierarchical workflows structure into a hash
-// Build tasks hash from the workflows hash
+// Transform hierarchical taskflows structure into a hash
+// Build tasks hash from the taskflows hash
 
 // Not that this has huge side-effects
-// Transform workflows array into flattened workflows hash
+// Transform taskflows array into flattened taskflows hash
 // We should introduce a concept of appending and prepending
 // e.g. PREPEND_property would prepend the content to content form higher level instead of replacing content
 // Functionality added but not tested
-function flattenObjects(workflows) {
+function flattenObjects(taskflows) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
   const regex_lowercase = /^[a-z]+$/;
-  var workflowLookup = {};
-  workflows.forEach(function (workflow) {
-    //console.log("Workflow: " + workflow?.name)
-    if (!workflow?.name) {
-      utils.fail("Error: Workflow missing name");
+  var taskflowLookup = {};
+  taskflows.forEach(function (taskflow) {
+    //console.log("Taskflow: " + taskflow?.name)
+    if (!taskflow?.name) {
+      utils.fail("Error: Taskflow missing name");
     }
-    if (!workflow?.parentType && workflow.name !== "root") {
-      utils.fail("Error: Workflow missing parentType " + workflow.name);
+    if (!taskflow?.parentType && taskflow.name !== "root") {
+      utils.fail("Error: Taskflow missing parentType " + taskflow.name);
     }
     /* Removed so we can have component names
-    if (!regex_lowercase.test(workflow.name)) {
-      utils.fail('Error: Workflow name should only include lowercase characters ' + workflow.name)
+    if (!regex_lowercase.test(taskflow.name)) {
+      utils.fail('Error: Taskflow name should only include lowercase characters ' + taskflow.name)
     }
     */
-    if (!parent2id[workflow.parentType] && workflow.name !== "root") {
+    if (!parent2id[taskflow.parentType] && taskflow.name !== "root") {
       utils.fail(
-        "Error: Workflow parentType " +
-          workflow.parentType +
+        "Error: Taskflow parentType " +
+          taskflow.parentType +
           " does not exist in " +
-          workflow.name
+          taskflow.name
       );
     }
     var id;
-    if (workflow.name === "root") {
+    if (taskflow.name === "root") {
       id = "root";
     } else {
-      id = parent2id[workflow.parentType] + "." + workflow.name;
+      id = parent2id[taskflow.parentType] + "." + taskflow.name;
     }
-    if (workflowLookup[id]) {
-      utils.fail("Error: Duplicate workflow " + id);
+    if (taskflowLookup[id]) {
+      utils.fail("Error: Duplicate taskflow " + id);
     }
     // Add id to each task
-    if (workflow?.tasks) {
-      for (const key in workflow.tasks) {
-        if (workflow.tasks.hasOwnProperty(key)) {
-          workflow.tasks[key]["name"] = key;
-          workflow.tasks[key]["id"] = id + "." + key;
-          // Avoid the task inheriting the label from the Workflow
-          if (!workflow.tasks[key]["label"]) {
-            workflow.tasks[key]["label"] = "";
+    if (taskflow?.tasks) {
+      for (const key in taskflow.tasks) {
+        if (taskflow.tasks.hasOwnProperty(key)) {
+          taskflow.tasks[key]["name"] = key;
+          taskflow.tasks[key]["id"] = id + "." + key;
+          // Avoid the task inheriting the label from the Taskflow
+          if (!taskflow.tasks[key]["label"]) {
+            taskflow.tasks[key]["label"] = "";
           }
           // Convert relative task references to absolute
           if (
-            workflow.tasks[key]["nextTask"] &&
-            !workflow.tasks[key]["nextTask"].includes(".")
+            taskflow.tasks[key]["nextTask"] &&
+            !taskflow.tasks[key]["nextTask"].includes(".")
           ) {
-            workflow.tasks[key]["nextTask"] =
-              id + "." + workflow.tasks[key]["nextTask"];
+            taskflow.tasks[key]["nextTask"] =
+              id + "." + taskflow.tasks[key]["nextTask"];
           }
           if (
-            workflow.tasks[key]["config"] &&
-            workflow.tasks[key]["config"]["nextStateTemplate"]
+            taskflow.tasks[key]["config"] &&
+            taskflow.tasks[key]["config"]["nextStateTemplate"]
           ) {
-            let nt = workflow.tasks[key]["config"]["nextStateTemplate"];
+            let nt = taskflow.tasks[key]["config"]["nextStateTemplate"];
             for (const key in nt) {
               if (nt.hasOwnProperty(key)) {
                 if (!nt[key].includes(".")) {
@@ -101,96 +98,96 @@ function flattenObjects(workflows) {
         }
       }
     }
-    if (!workflow.config) {
-      workflow['config'] = {}
+    if (!taskflow.config) {
+      taskflow['config'] = {}
     }
-    if (!workflow.config?.label) {
-      workflow.config["label"] = utils.capitalizeFirstLetter(workflow.name);
+    if (!taskflow.config?.label) {
+      taskflow.config["label"] = utils.capitalizeFirstLetter(taskflow.name);
     }
-    workflow["id"] = id;
-    workflow["parentId"] = parent2id[workflow.parentType];
-    // Copy all the keys from the parentType that are not in the current workflow
+    taskflow["id"] = id;
+    taskflow["parentId"] = parent2id[taskflow.parentType];
+    // Copy all the keys from the parentType that are not in the current taskflow
     // Could create functions here for PREPEND_ and APPEND_
-    const parentWorkflow = workflowLookup[workflow["parentId"]];
-    for (const key in parentWorkflow) {
-      if (parentWorkflow.hasOwnProperty(key)) {
+    const parentTaskflow = taskflowLookup[taskflow["parentId"]];
+    for (const key in parentTaskflow) {
+      if (parentTaskflow.hasOwnProperty(key)) {
         if (
-          !workflow.hasOwnProperty(key) &&
+          !taskflow.hasOwnProperty(key) &&
           !key.startsWith("APPEND_") &&
           !key.startsWith("PREPEND_")
         ) {
-          workflow[key] = parentWorkflow[key];
+          taskflow[key] = parentTaskflow[key];
         }
-        if (workflow.hasOwnProperty("PREPEND_" + key)) {
-          if (Array.isArray(workflow["PREPEND_" + key])) {
-            workflow[key] = workflow["PREPEND_" + key].concat(
-              parentWorkflow[key]
+        if (taskflow.hasOwnProperty("PREPEND_" + key)) {
+          if (Array.isArray(taskflow["PREPEND_" + key])) {
+            taskflow[key] = taskflow["PREPEND_" + key].concat(
+              parentTaskflow[key]
             );
           } else {
-            workflow[key] = workflow["PREPEND_" + key] + parentWorkflow[key];
+            taskflow[key] = taskflow["PREPEND_" + key] + parentTaskflow[key];
           }
-          //console.log("Workflow " + workflow.id + " PREPEND_ ", workflow['PREPEND_' + key], " to " + key)
+          //console.log("Taskflow " + taskflow.id + " PREPEND_ ", taskflow['PREPEND_' + key], " to " + key)
         }
-        if (workflow.hasOwnProperty("APPEND_" + key)) {
-          if (Array.isArray(workflow["APPEND_" + key])) {
-            workflow[key] = parentWorkflow[key].concat(
-              workflow["APPEND_" + key]
+        if (taskflow.hasOwnProperty("APPEND_" + key)) {
+          if (Array.isArray(taskflow["APPEND_" + key])) {
+            taskflow[key] = parentTaskflow[key].concat(
+              taskflow["APPEND_" + key]
             );
           } else {
-            workflow[key] = parentWorkflow[key] + workflow["APPEND_" + key];
+            taskflow[key] = parentTaskflow[key] + taskflow["APPEND_" + key];
           }
-          //console.log("Workflow " + workflow.id + " APPEND_ ", workflow['APPEND_' + key], " to " + key)
+          //console.log("Taskflow " + taskflow.id + " APPEND_ ", taskflow['APPEND_' + key], " to " + key)
         }
       }
     }
-    // Copy all the keys from the workflow that are not in the current tasks
-    if (workflow?.tasks) {
-      for (const taskkey in workflow.tasks) {
-        if (workflow.tasks.hasOwnProperty(taskkey)) {
-          for (const workflowkey in workflow) {
-            if (workflow.hasOwnProperty(workflowkey)) {
+    // Copy all the keys from the taskflow that are not in the current tasks
+    if (taskflow?.tasks) {
+      for (const taskkey in taskflow.tasks) {
+        if (taskflow.tasks.hasOwnProperty(taskkey)) {
+          for (const taskflowkey in taskflow) {
+            if (taskflow.hasOwnProperty(taskflowkey)) {
               if (
-                !workflow.tasks[taskkey].hasOwnProperty(workflowkey) &&
-                workflowkey !== "tasks" &&
-                !workflowkey.startsWith("APPEND_") &&
-                !workflowkey.startsWith("PREPEND_")
+                !taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
+                taskflowkey !== "tasks" &&
+                !taskflowkey.startsWith("APPEND_") &&
+                !taskflowkey.startsWith("PREPEND_")
               ) {
-                workflow.tasks[taskkey][workflowkey] = workflow[workflowkey];
+                taskflow.tasks[taskkey][taskflowkey] = taskflow[taskflowkey];
                 if (
-                  workflow.tasks[taskkey].hasOwnProperty(
-                    "PREPEND_" + workflowkey
+                  taskflow.tasks[taskkey].hasOwnProperty(
+                    "PREPEND_" + taskflowkey
                   )
                 ) {
                   if (
                     Array.isArray(
-                      workflow.tasks[taskkey]["PREPEND_" + workflowkey]
+                      taskflow.tasks[taskkey]["PREPEND_" + taskflowkey]
                     )
                   ) {
-                    workflow.tasks[taskkey][workflowkey] = workflow.tasks[
+                    taskflow.tasks[taskkey][taskflowkey] = taskflow.tasks[
                       taskkey
-                    ]["PREPEND_" + workflowkey].concat(workflow[workflowkey]);
+                    ]["PREPEND_" + taskflowkey].concat(taskflow[taskflowkey]);
                   } else {
-                    workflow.tasks[taskkey][workflowkey] =
-                      workflow.tasks[taskkey]["PREPEND_" + workflowkey] +
-                      workflow[workflowkey];
+                    taskflow.tasks[taskkey][taskflowkey] =
+                      taskflow.tasks[taskkey]["PREPEND_" + taskflowkey] +
+                      taskflow[taskflowkey];
                   }
                 } else if (
-                  workflow.tasks[taskkey].hasOwnProperty(
-                    "APPEND_" + workflowkey
+                  taskflow.tasks[taskkey].hasOwnProperty(
+                    "APPEND_" + taskflowkey
                   )
                 ) {
                   if (
                     Array.isArray(
-                      workflow.tasks[taskkey]["APPEND_" + workflowkey]
+                      taskflow.tasks[taskkey]["APPEND_" + taskflowkey]
                     )
                   ) {
-                    workflow.tasks[taskkey][workflowkey] = workflow[
-                      workflowkey
-                    ].concat(workflow.tasks[taskkey]["APPEND_" + workflowkey]);
+                    taskflow.tasks[taskkey][taskflowkey] = taskflow[
+                      taskflowkey
+                    ].concat(taskflow.tasks[taskkey]["APPEND_" + taskflowkey]);
                   } else {
-                    workflow.tasks[taskkey][workflowkey] =
-                      workflow[workflowkey] +
-                      workflow.tasks[taskkey]["APPEND_" + workflowkey];
+                    taskflow.tasks[taskkey][taskflowkey] =
+                      taskflow[taskflowkey] +
+                      taskflow.tasks[taskkey]["APPEND_" + taskflowkey];
                   }
                 }
               }
@@ -199,34 +196,34 @@ function flattenObjects(workflows) {
         }
       }
     }
-    workflowLookup[id] = workflow;
-    parent2id[workflow.name] = id;
+    taskflowLookup[id] = taskflow;
+    parent2id[taskflow.name] = id;
     // Build children data
-    if (children[workflow["parentId"]]) {
-      children[workflow["parentId"]].push(workflow.id);
+    if (children[taskflow["parentId"]]) {
+      children[taskflow["parentId"]].push(taskflow.id);
     } else {
-      children[workflow["parentId"]] = [workflow.id];
+      children[taskflow["parentId"]] = [taskflow.id];
     }
   });
 
-  //console.log(JSON.stringify(workflowLookup, null, 2))
+  //console.log(JSON.stringify(taskflowLookup, null, 2))
 
   // For the menu building
-  workflows.forEach(function (workflow) {
-    if (children[workflow.id]) {
-      workflowLookup[workflow.id]["children"] = children[workflow.id];
+  taskflows.forEach(function (taskflow) {
+    if (children[taskflow.id]) {
+      taskflowLookup[taskflow.id]["children"] = children[taskflow.id];
     }
   });
 
-  // Replace array of workflows with hash
+  // Replace array of taskflows with hash
   // Array just made it easier for the user to specify parents in the config file
-  return workflowLookup;
+  return taskflowLookup;
 }
 
-// This has side-effects, modifying workflows in-place
-// Could check that each workflow has a 'start' task
-workflows = flattenObjects(workflows);
-//console.log(JSON.stringify(workflows, null, 2))
+// This has side-effects, modifying taskflows in-place
+// Could check that each taskflow has a 'start' task
+taskflows = flattenObjects(taskflows);
+//console.log(JSON.stringify(taskflows, null, 2))
 
 components = flattenObjects(components);
 //console.log(JSON.stringify(components, null, 2))
@@ -242,25 +239,13 @@ for (const userKey in users) {
   }
 }
 
-// Adding key of object as id in object
-function add_index(config) {
-  for (const key in config) {
-    if (config.hasOwnProperty(key)) {
-      config[key]["id"] = key;
-    }
-  }
-}
 
 // Add id to groups (index in DB)
-add_index(groups);
+utils.add_index(groups);
 //console.log(JSON.stringify(groups, null, 2))
 
 // Add id to users (index in DB)
-add_index(users);
-//console.log(JSON.stringify(users, null, 2))
-
-// Add id to agents (index in DB)
-add_index(agents);
+utils.add_index(users);
 //console.log(JSON.stringify(users, null, 2))
 
 //Add list of groups to each user (a view in a DB)
@@ -286,24 +271,24 @@ for (const groupKey in groups) {
 }
 //console.log(JSON.stringify(users, null, 2))
 
-// Flatten the hash of tasks from workflows
+// Flatten the hash of tasks from taskflows
 // Add the parentId to task objects
-function flattenTasks(workflows) {
+function flattenTasks(taskflows) {
   const tasks = {};
-  for (const workflowKey in workflows) {
-    if (Object.prototype.hasOwnProperty.call(workflows, workflowKey)) {
-      const workflowTasks = workflows[workflowKey].tasks;
-      if (workflowTasks) {
-        for (const taskKey in workflowTasks) {
-          if (Object.prototype.hasOwnProperty.call(workflowTasks, taskKey)) {
-            const task = workflows[workflowKey].tasks[taskKey];
+  for (const taskflowKey in taskflows) {
+    if (Object.prototype.hasOwnProperty.call(taskflows, taskflowKey)) {
+      const taskflowTasks = taskflows[taskflowKey].tasks;
+      if (taskflowTasks) {
+        for (const taskKey in taskflowTasks) {
+          if (Object.prototype.hasOwnProperty.call(taskflowTasks, taskKey)) {
+            const task = taskflows[taskflowKey].tasks[taskKey];
             const taskId = task.id;
             if (!taskId) {
-              console.log("taskID not set " + taskKey + " " + workflowKey);
+              console.log("taskID not set " + taskKey + " " + taskflowKey);
             }
             tasks[taskId] = task;
-            tasks[taskId]["parentId"] = workflowKey;
-            //tasks[taskId]['filter_for_browserProcessor'] = workflows[workflowKey].filter_for_browserProcessor;
+            tasks[taskId]["parentId"] = taskflowKey;
+            //tasks[taskId]['filter_for_browserProcessor'] = taskflows[taskflowKey].filter_for_browserProcessor;
           }
         }
       }
@@ -312,7 +297,7 @@ function flattenTasks(workflows) {
   return tasks;
 }
 
-tasks = flattenTasks(workflows);
+tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
-export { users, groups, workflows, components, agents, defaults, tasks };
+export { users, groups, taskflows, components, tasks };

@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "../src/utils.mjs";
-import { users, groups, workflows } from "../src/configdata.mjs";
+import { users, groups, taskflows } from "../src/configdata.mjs";
 import { sessionsStore_async } from "../src/storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -18,43 +18,43 @@ router.get("/", async (req, res) => {
   console.log("/api/session");
   let userId = utils.getUserId(req);
   const sessionId = uuidv4();
-  let authorised_workflows = {};
-  for (const key in workflows) {
-    if (utils.authenticatedTask(workflows[key], userId, groups)) {
-      authorised_workflows[key] = workflows[key];
+  let authorised_taskflows = {};
+  for (const key in taskflows) {
+    if (utils.authenticatedTask(taskflows[key], userId, groups)) {
+      authorised_taskflows[key] = taskflows[key];
     }
   }
-  // If a workflow is authorized then the path to that workflow is authorized
-  for (const key in authorised_workflows) {
-    let id = workflows[key].id
+  // If a taskflow is authorized then the path to that taskflow is authorized
+  for (const key in authorised_taskflows) {
+    let id = taskflows[key].id
     let paths = id.split('.');
     let result = [];
     for (let i = 0; i < paths.length; i++) {
       result.push(paths.slice(0, i + 1).join('.'));
     }
     result.forEach(path => {
-      if (!authorised_workflows[path]) {
-        authorised_workflows[path] = workflows[path];
+      if (!authorised_taskflows[path]) {
+        authorised_taskflows[path] = taskflows[path];
       }
     });
   }
-  //console.log("authorised_workflows ", authorised_workflows)
-  let workflowsTree = {};
-  for (const key in authorised_workflows) {
-    let wf = authorised_workflows[key];
+  //console.log("authorised_taskflows ", authorised_taskflows)
+  let taskflowsTree = {};
+  for (const key in authorised_taskflows) {
+    let wf = authorised_taskflows[key];
     // This should probably be a separate menu config
     // This is a hack to put the label back after change to v02 schema
     if (wf?.config?.label) {
       wf['label'] = wf.config.label;
     }
-    workflowsTree[key] = utils.filter_in_list(wf, [
+    taskflowsTree[key] = utils.filter_in_list(wf, [
       "id",
       "children",
       "label",
       "initiator",
     ]);
   }
-  //console.log("workflowsTree ", workflowsTree)
+  //console.log("taskflowsTree ", taskflowsTree)
   if (userId) {
     console.log("Creating session for ", userId);
     sessionsStore_async.set(sessionId + "userId", userId);
@@ -64,7 +64,7 @@ router.get("/", async (req, res) => {
         interface: users[userId]?.interface,
       },
       sessionId: sessionId,
-      workflowsTree: workflowsTree,
+      taskflowsTree: taskflowsTree,
     });
   } else {
     res.send({ userId: "" });

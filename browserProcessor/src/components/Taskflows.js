@@ -59,15 +59,15 @@ function Taskflows(props) {
       } else {
         setTasksIdx(index);
       }
-      setTitle(globalState.workflowsTree[globalState.selectedTaskId].label);
+      setTitle(globalState.taskflowsTree[globalState.selectedTaskId].label);
     }
-    if (globalState?.workflowLeafCount && globalState.workflowLeafCount === 1) {
-      const sortedKeys = Object.keys(globalState.workflowsTree).sort(
+    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1) {
+      const sortedKeys = Object.keys(globalState.taskflowsTree).sort(
         (a, b) => a.length - b.length
       );
       const longestKey = sortedKeys[sortedKeys.length - 1];
       startTaskFn(
-        globalState.workflowsTree[longestKey].id + ".start",
+        globalState.taskflowsTree[longestKey].id + ".start",
         null,
         component_depth + 1
       );

@@ -1,6 +1,6 @@
 {
-  "homepage": "https://github.com/markNZed/chat2flow",
-  "name": "chat2flow-client",
+  "homepage": "https://github.com/markNZed/taskflow",
+  "name": "taskflow-browser",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

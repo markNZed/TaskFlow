@@ -7,8 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
 import { utils } from "../src/utils.mjs";
-import { DUMMY_OPENAI, CACHE_ENABLE } from "../config.mjs";
-import { users, agents, defaults } from "../src/configdata.mjs";
+import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../config.mjs";
+import { users } from "../src/configdata.mjs";
 import {
   messagesStore_async,
   cacheStore_async,
@@ -17,6 +17,13 @@ import {
 import { wsSendObject } from "../src/websocket.js";
 import * as dotenv from "dotenv";
 dotenv.config();
+
+var modeltemplates = await utils.load_data_async(CONFIG_DIR, "modeltemplates");
+// Add id to modeltemplates (index in DB)
+utils.add_index(modeltemplates);
+//console.log(JSON.stringify(users, null, 2))
+
+var defaults = await utils.load_data_async(CONFIG_DIR, "defaults");
 
 function SendIncrementalWs(partialResponse, instanceId, sessionId) {
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
@@ -46,7 +53,7 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
   }
 }
 
-async function SubTaskChat_async(task) {
+async function SubTaskLLM_async(task) {
   const params = await chat_prepare_async(task);
   const res = ChatGPTAPI_request_async(params);
   task.response.text_promise = res;
@@ -55,14 +62,14 @@ async function SubTaskChat_async(task) {
 
 // Prepare the paramters for the chat API request
 // Nothing specific to a partiuclar chat API
-// Also using connections, defaults, agents, messagesStore_async, users
+// Also using connections, defaults, modeltemplates, messagesStore_async, users
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
   const sessionId = T("config.sessionId");
   let ws = connections.get(sessionId);
   if (!ws) {
-    console.log("Warning: SubTaskChat_async could not find ws for " + sessionId);
+    console.log("Warning: SubTaskLLM_async could not find ws for " + sessionId);
   }
   let systemMessage = "";
   let lastMessageId = null;
@@ -76,11 +83,11 @@ async function chat_prepare_async(task) {
   let maxResponseTokens = T("request.maxResponseTokens") || defaults.maxResponseTokens;
 
   let prompt = T("request.prompt");
-  let agent = agents[T("request.agent")];
-  if (!agent) {
-    console.log("No agent for ", task);
+  let modeltemplate = modeltemplates[T("request.modeltemplate")];
+  if (!modeltemplate) {
+    console.log("No modeltemplate for ", task);
   }
-  //console.log("Agent ", agent)
+  //console.log("Agent ", modeltemplate)
 
   if (T("config.oneThread")) {
     // Prefix with location when it has changed
@@ -98,14 +105,14 @@ async function chat_prepare_async(task) {
     console.log("Task set cache " + use_cache);
   }
 
-  if (typeof agent?.prepend_prompt !== "undefined") {
-    prompt = agent.prepend_prompt + prompt;
-    console.log("Prepend agent prompt " + agent.prepend_prompt);
+  if (typeof modeltemplate?.prepend_prompt !== "undefined") {
+    prompt = modeltemplate.prepend_prompt + prompt;
+    console.log("Prepend modeltemplate prompt " + modeltemplate.prepend_prompt);
   }
 
-  if (typeof agent?.append_prompt !== "undefined") {
-    prompt += agent.append_prompt;
-    console.log("Append agent prompt " + agent.append_prompt);
+  if (typeof modeltemplate?.append_prompt !== "undefined") {
+    prompt += modeltemplate.append_prompt;
+    console.log("Append modeltemplate prompt " + modeltemplate.append_prompt);
   }
 
   if (T("config.server_only")) {
@@ -113,7 +120,7 @@ async function chat_prepare_async(task) {
     console.log("Task server_only");
   }
 
-  if (agent?.forget) {
+  if (modeltemplate?.forget) {
     initializing = true;
     console.log("Agent forget previous messages");
   }
@@ -125,7 +132,7 @@ async function chat_prepare_async(task) {
 
   if (!initializing) {
     lastMessageId = await messagesStore_async.get(
-      T("threadId") + agent.id + "parentMessageId"
+      T("threadId") + modeltemplate.id + "parentMessageId"
     );
     console.log(
       "!initializing T('threadId') " +
@@ -136,14 +143,14 @@ async function chat_prepare_async(task) {
   }
 
   if (!lastMessageId || initializing) {
-    if (agent?.messages) {
+    if (modeltemplate?.messages) {
       lastMessageId = await utils.processMessages_async(
-        agent.messages,
+        modeltemplate.messages,
         messagesStore_async,
         lastMessageId
       );
       console.log(
-        "Initial messages from agent " + agent.name + " " + lastMessageId
+        "Initial messages from modeltemplate " + modeltemplate.name + " " + lastMessageId
       );
     }
 
@@ -163,16 +170,16 @@ async function chat_prepare_async(task) {
     }
   }
 
-  if (agent?.system_message) {
-    systemMessage = agent.system_message;
-    console.log("Sytem message from agent " + agent.name);
+  if (modeltemplate?.system_message) {
+    systemMessage = modeltemplate.system_message;
+    console.log("Sytem message from modeltemplate " + modeltemplate.name);
   }
 
   if (users[T("userId")] && T("request.dyad")) {
     let user = users[T("userId")];
     systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
     console.log(
-      "Dyad in progress between " + agent.name + " and " + user?.name
+      "Dyad in progress between " + modeltemplate.name + " and " + user?.name
     );
   }
 
@@ -185,7 +192,7 @@ async function chat_prepare_async(task) {
 
   const threadId = T("threadId");
   const instanceId = T("instanceId");
-  const agentId = agent.id;
+  const modeltemplateId = modeltemplate.id;
 
   return {
     systemMessage,
@@ -197,7 +204,7 @@ async function chat_prepare_async(task) {
     temperature,
     maxTokens,
     maxResponseTokens,
-    agentId,
+    modeltemplateId,
     threadId,
     instanceId,
     sessionId,
@@ -222,7 +229,7 @@ async function ChatGPTAPI_request_async(params) {
     langModel,
     temperature,
     maxTokens,
-    agentId,
+    modeltemplateId,
     threadId,
     instanceId,
     sessionId,
@@ -284,7 +291,7 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   messagesStore_async.set(
-    threadId + agentId + "systemMessage",
+    threadId + modeltemplateId + "systemMessage",
     messageParams.systemMessage
   );
 
@@ -334,7 +341,7 @@ async function ChatGPTAPI_request_async(params) {
 
   if (cachedValue && cachedValue !== undefined) {
     messagesStore_async.set(
-      threadId + agentId + "parentMessageId",
+      threadId + modeltemplateId + "parentMessageId",
       cachedValue.id
     );
     let text = cachedValue.text;
@@ -370,7 +377,7 @@ async function ChatGPTAPI_request_async(params) {
         .sendMessage(prompt, messageParams)
         .then((response) => {
           messagesStore_async.set(
-            threadId + agentId + "parentMessageId",
+            threadId + modeltemplateId + "parentMessageId",
             response.id
           );
           let text = response.text;
@@ -391,4 +398,4 @@ async function ChatGPTAPI_request_async(params) {
   return response_text_promise;
 }
 
-export { SubTaskChat_async };
+export { SubTaskLLM_async };

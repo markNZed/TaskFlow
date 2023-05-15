@@ -9,7 +9,7 @@ import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
 import { AVAILABLE_MODELS } from "../../utils/constants";
 import SliderBox from "./SliderBox";
 import SelectBox from "./SelectBox";
-import WorkflowTree from "./WorkflowTree";
+import TaskflowTree from "./TaskflowTree";
 
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
@@ -91,7 +91,7 @@ const SideMenu = ({ onClose }) => {
         />
       </div>
 
-      <WorkflowTree onClose={onClose}/>
+      <TaskflowTree onClose={onClose}/>
     </aside>
   );
 };

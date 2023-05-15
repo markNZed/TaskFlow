@@ -183,7 +183,7 @@ Expiration: A time-to-live (TTL) or expiration property can be useful in job pro
 
 Could imagine the Task has a resource requirement and services cold then compete to run the Task.
 
-Dependencies: The schema does not explicitly handle task dependencies. While properties like 'nextTasks', 'nextTask', and 'parentId' can be used to describe some task relationships, having a dedicated property for dependencies can be beneficial in managing task execution order and handling complex workflows.
+Dependencies: The schema does not explicitly handle task dependencies. While properties like 'nextTasks', 'nextTask', and 'parentId' can be used to describe some task relationships, having a dedicated property for dependencies can be beneficial in managing task execution order and handling complex taskflows.
 
 Metrics and monitoring: Properties related to task metrics and monitoring (e.g., duration, start time, end time, and performance indicators) are missing from the schema. These properties can be useful in understanding the efficiency and effectiveness of the job processing system.
 ## Generating

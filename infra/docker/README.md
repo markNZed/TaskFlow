@@ -13,6 +13,10 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 
 
+!!Should not mount the nodejs dir in the browser and vice-versa
+
+Set up a reverse proxy server, to listen on a single port and forward requests to different ports based on the requested URL.
+
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod
 

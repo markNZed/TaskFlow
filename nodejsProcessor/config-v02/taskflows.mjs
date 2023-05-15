@@ -1,4 +1,4 @@
-const workflows = [
+const taskflows = [
   {
     initiator: false,
     name: "root",
@@ -21,7 +21,7 @@ const workflows = [
     name: "chatgpt",
     parentType: "conversation",
     request: {
-      agent: "chatgpt",
+      modeltemplate: "chatgpt",
     },
     tasks: {
       start: {
@@ -32,12 +32,12 @@ const workflows = [
   },
   {
     APPEND_stack: ["TaskStepper"],
-    name: "workflow",
+    name: "taskflow",
     parentType: "exercices",
   },
   {
     name: "example",
-    parentType: "workflow",
+    parentType: "taskflow",
     tasks: {
       start: {
         APPEND_stack: ["TaskShowResponse"],
@@ -53,7 +53,7 @@ const workflows = [
         },
         nextTask: "structure",
         request: {
-          agent: "chatgpt",
+          modeltemplate: "chatgpt",
           forget: true,
           inputLabel: "Respond here.",
           prompt: "Tell me a story about something random.",
@@ -89,7 +89,7 @@ const workflows = [
         },
         nextTask: "stop",
         request: {
-          agent: "chatgpt",
+          modeltemplate: "chatgpt",
           forget: true,
         },
       },
@@ -97,4 +97,4 @@ const workflows = [
   },
 ];
 
-export { workflows };
+export { taskflows };

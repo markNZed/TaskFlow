@@ -238,4 +238,14 @@ utils.createTaskValueGetter = function(task) {
   };
 };
 
+// Adding key of object as id in object
+utils.add_index = function(config) {
+  for (const key in config) {
+    if (config.hasOwnProperty(key)) {
+      config[key]["id"] = key;
+    }
+  }
+}
+
+
 export { utils };

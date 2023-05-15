@@ -1,5 +1,6 @@
 /* ToDo
 -------
+SubTaskLLM needs access to the user - should be part of the Task
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -21,7 +22,7 @@ Does the update actually update (deep merge) or does it replace?
     There could be rules/assertions for the schema
       Constrain what the Task expects regarding config
 If we prefix a T on Task parameters it would be easier to update with search & replace
-  Better to use full path even in JXS e.g. task.name not name e.g in workflows and stepper
+  Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
 Processor that provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
 How can we specify the UI in a more compact/easy way?
   https://github.com/rjsf-team/react-jsonschema-form
@@ -54,7 +55,7 @@ Backlog
     High Priority
     -------------
     Simplify multiple configuration files for the nodejsProcessor
-    Use a route for configuring: user, session, workflow, task
+    Use a route for configuring: user, session, taskflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
     Msgs could be loaded from the nodejsProcessor. Similar to stepper - both have history.
     Allow task to start another task on nodejsProcessor side (needs functional interface to api/task/start )
@@ -62,7 +63,7 @@ Backlog
 
     Tasks
     ----------
-    MyAgents -> MyAgentConversation
+    MyAssistant -> MyAssistantConversation
     Multiple-choice above prompt to allow for quick refining of prompt e.g. use tutoiment, friendly, formal etc
     Templating with user defined variables
     Assistant to help understanding a problem rather than solving the problem
@@ -97,9 +98,9 @@ Notes/Idea
   Defaults
     User (Route)
       Session
-        Workflow (Route)
-          User Workflow
-            Session Workflow
+        Taskflow (Route)
+          User Taskflow
+            Session Taskflow
               Task
                 User Task
                   Session Task
@@ -122,12 +123,12 @@ Architecture
           Manage task specific storage (e.g. files, user specific data) independently of the nodejsProcessor Stores
           Through JS imports the TaskFunction has access to:
               config.mjs
-              src/configdata.mjs (users, groups, workflows, components, agents, defaults, tasks)
+              src/configdata.mjs (users, groups, taskflows, components, tasks)
               src/utils.mjs
               src/storage.mjs (messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections)
               src/websocket.js (wsSendObject)
               .env
-  User defaults, workflow defaults etc can be tasks
+  User defaults, taskflow defaults etc can be tasks
   Could add middleware that tasks can use to modify input/output (similar to LangChain)
     Currently in the TaskFunction but should be easy to factor out when that makes sense
   How does a task monitor other tasks ? Callback to monitor a thread or a task (middleware catch updates to instance store)
@@ -155,7 +156,7 @@ Comparison with similar systems
     Standard interface to models (could reuse this)
     Model output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
-    The workflow in T@skFlow is like an Agent in LangChain
+    The taskflow in T@skFlow is like an Agent in LangChain
   GPT-Index
     Should leverage this
   Open-AI Plugins
@@ -171,13 +172,13 @@ Comparison with similar systems
   Algovera
     Not open sourced (yet)
     Langchain as backend
-    Text as primary interface for specifying workflowsWorkflow as first class object
+    Text as primary interface for specifying taskflowsTaskflow as first class object
   https://dust.tt/
     Chaining, version control, connections
   https://www.multi.tech/ (MultiFlow)
-    workflows powered by generative models
+    taskflows powered by generative models
   https://www.kubeflow.org/
-    Making deployments of machine learning (ML) workflows on Kubernetes simple, portable and scalable. 
+    Making deployments of machine learning (ML) taskflows on Kubernetes simple, portable and scalable. 
 
   Microsoft Power Automated
   Zapier
@@ -187,7 +188,7 @@ Comparison with similar systems
 
 Test Plan
 ---------
-Prefill tasks so we can work on a specifc part of the sequence (inherit workflow with tasks? Needs better recursion)
+Prefill tasks so we can work on a specifc part of the sequence (inherit taskflow with tasks? Needs better recursion)
 
 A list of features that are manually tested
 -------------------------------------------

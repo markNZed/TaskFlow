@@ -60,9 +60,9 @@ function App() {
           console.log("Set sessionId ", sessionId);
         }
         // Should have a separate API
-        if (data?.workflowsTree) {
-          const workflowsTree = data.workflowsTree;
-          mergeGlobalState({ workflowsTree });
+        if (data?.taskflowsTree) {
+          const taskflowsTree = data.taskflowsTree;
+          mergeGlobalState({ taskflowsTree });
         }
       } catch (err) {
         console.log(err.message);
