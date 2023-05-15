@@ -1,11 +1,18 @@
 /* ToDo
 -------
 SubTaskLLM needs access to the user - should be part of the Task
-Document what happens when a Task is on two processors - do we want to support that?
+  It is only used for the Dyad Text
+  Should probably be a generic templating approach with access to user data
+    Building the system message in the Task
+    Could rework this with the templating
+Task Hub
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
+  What about use across languages?
+    Logic-less might be better: Handlebars
 Harmonise the Task Processor
+  The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
@@ -15,10 +22,8 @@ At which time should we introduce Typescript?
 Swagger for the API ?
 Privacy feature of Task
 Tests will allow for better code generation
-The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
-Processor that provides an LLM Environment ? In this case pull it up to the top level e.g. LLMprocessor
 How can we specify the UI in a more compact/easy way?
   https://github.com/rjsf-team/react-jsonschema-form
   A hook-based solution with minimal boilerplate: React Hook Form
