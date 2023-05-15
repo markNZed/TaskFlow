@@ -36,7 +36,7 @@ The Task Processor provides a Task Environment for the Task to run in. The nodej
 
 ### SubTask
 
-A SubTask expects to be passed a Task instnace and will return the same Task instance. The SubTask assumes it is called from a Task (not a Task Processor). The SubTask runs within a Task Environment and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field includes a promise in Javascript.
+A SubTask expects to be passed a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task (not a Task Processor). The SubTask runs within a Task Environment and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field includes a promise in Javascript.
 
 ## Motivation
 
