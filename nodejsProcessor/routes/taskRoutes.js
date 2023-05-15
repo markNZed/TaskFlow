@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "../src/utils.mjs";
-import { taskFunctions } from "../taskFunctions/taskFunctions.mjs";
+import { taskFunctions } from "../Task/taskFunctions.mjs";
 import { groups, tasks, components } from "../src/configdata.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import * as dotenv from "dotenv";

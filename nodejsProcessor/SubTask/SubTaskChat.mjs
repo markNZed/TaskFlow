@@ -6,15 +6,15 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
-import { utils } from "../../src/utils.mjs";
-import { DUMMY_OPENAI, CACHE_ENABLE } from "../../config.mjs";
-import { users, agents, defaults } from "../../src/configdata.mjs";
+import { utils } from "../src/utils.mjs";
+import { DUMMY_OPENAI, CACHE_ENABLE } from "../config.mjs";
+import { users, agents, defaults } from "../src/configdata.mjs";
 import {
   messagesStore_async,
   cacheStore_async,
   connections,
-} from "../../src/storage.mjs";
-import { wsSendObject } from "../../src/websocket.js";
+} from "../src/storage.mjs";
+import { wsSendObject } from "../src/websocket.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -46,7 +46,7 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
   }
 }
 
-async function chat_async(task) {
+async function SubTaskChat_async(task) {
   const params = await chat_prepare(task);
   return await ChatGPTAPI_request(params);
 }
@@ -60,7 +60,7 @@ async function chat_prepare(task) {
   const sessionId = T("config.sessionId");
   let ws = connections.get(sessionId);
   if (!ws) {
-    console.log("Warning: chat_async could not find ws for " + sessionId);
+    console.log("Warning: SubTaskChat_async could not find ws for " + sessionId);
   }
   let systemMessage = "";
   let lastMessageId = null;
@@ -391,4 +391,4 @@ async function ChatGPTAPI_request(params) {
   return response_text_promise;
 }
 
-export { chat_async };
+export { SubTaskChat_async };

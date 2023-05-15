@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { chat_async } from "./TaskChat/chat.mjs";
+import { SubTaskChat_async } from "../SubTask/SubTaskChat.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
@@ -134,18 +134,18 @@ const TaskFromAgent_async = async function (task) {
   if (prompt) {
     //workflow.tasks[taskName].prompt = prompt
     T("request.prompt", prompt);
-    //response_text = await chat_async(task);
+    //response_text = await SubTaskChat_async(task);
     // If we don't await then we can't store the response
     // In a then clause we could update the task?
     // response_text will hold a promise
     // The response needs to be available for other tasks to point at
     if (T("config.serverOnly")) {
       // On the server we wait and don't use websocket
-      response_text = await chat_async(task);  
+      response_text = await SubTaskChat_async(task);  
       T("response.text", response_text);
       T("output.text", response_text);
     } else {
-      chat_async(task).then(async (response_text) => {
+      SubTaskChat_async(task).then(async (response_text) => {
         T("response.text", response_text);
         T("output.text", response_text);
         instancesStore_async.set(task.instanceId, task);
