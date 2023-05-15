@@ -7,8 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
-
 import withTask from "../../hoc/withTask";
+import { replaceNewlinesWithParagraphs } from "../../utils/utils";
 
 /*
 Task Process
@@ -133,9 +133,12 @@ const TaskShowResponse = (props) => {
         }}
       >
         {responseText && responseText.split("\\n").map((line, index) => (
-          <Typography style={{ marginTop: "16px" }} key={index}>
-            {line}
-          </Typography>
+          <Typography 
+            style={{ marginTop: "16px" }} 
+            key={index}
+            className="text2html"
+            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(line) }}
+          />
         ))}
       </Paper>
     </div>

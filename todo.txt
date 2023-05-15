@@ -4,96 +4,21 @@ Embedding functions in the template? Use ejs, could also have a template for the
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
 Prefill tasks so we can work on a specifc part of the sequence (inherit workflow with tasks? Needs better recursion)
-
-A list of features that are manually tested
-  Features:
-    general
-      mobile
-        screen rotation X
-      websocket (with and without)
-      permissions X
-      authentication X
-      parentType X
-      user
-        name X
-        profile X
-        interface X
-    menu
-      user specific X
-      labels X
-      menu closes after select
-    Tasks
-      TaskStepper
-        next X
-        back X
-        skip back X
-        expand multiple X
-        close step X
-        scrolling X
-      TaskChoose
-        error
-      TaskFromAgent
-        input
-          word count X 
-        response
-          word count X
-      TaskShowResponse
-        error
-      TaskChat
-      TaskConversation
-        scrolling (stop the bouncing) X
-        agent specific
-          dyad X
-          forget 
-        task specific
-          config 
-            messagesTemplate X
-            promptTemplate X
-            suggestedPrompts X
-            welcomeMessage X
-            nextTask X
-            instruction X
-            nextStates X
-            serverOnly X
-            oneThread X
-            label X
-            reentering
-          request
-            inputLabel 
-            prompt X
-            forget X
-            agent X
-            model X
-          response
-            userInput X
-            text X
-          model
-            langModel X
-            temperature X
-            maxTokens X
-            maxResponseTokens X
-          error X
-          errorTask
-
-Restart server1
 Move chat.mjs into SubTask (assumes it is called by a Task not a TaskProcessor)
 Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
       Browser adds the concept of sessionId and address/location.
-
-Only display menu option if leaf is a real task
-
 At which time should we introduce Typescript?
   First try to simplify the code
 Swagger for the API ?
 Privacy feature of Task
-Tests are important because they will allow for better code generation
+Tests will allow for better code generation
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
 Does the update actually update (deep merge) or does it replace?
   While the Task is on nodejs how to deal with browser changes
-    Each param could have an updatedAt for merging
+    Each param could have an updatedAt for merging, allows for mixed state
     Task Processor could error on merge conflicts
     There could be rules/assertions for the schema
       Constrain what the Task expects regarding config
@@ -165,6 +90,7 @@ Backlog
     Replace globalState with Redux
     When sending task instance only send diff (browserProcessor keeps nodejsProcessor copy, nodejsProcessor keeps browserProcessor copy)
     Add task type validation to websocket
+    Only display menu option if leaf is a real task
 
 Notes/Idea
 -----
@@ -260,3 +186,74 @@ Comparison with similar systems
   IFTTT
   n8n
   Node-RED
+
+A list of features that are manually tested
+-------------------------------------------
+  Features:
+    general
+      mobile
+        screen rotation X
+      websocket (with and without)
+      permissions X
+      authentication X
+      parentType X
+      user
+        name X
+        profile X
+        interface X
+    menu
+      user specific X
+      labels X
+      menu closes after select
+    Tasks
+      TaskStepper
+        next X
+        back X
+        skip back X
+        expand multiple X
+        close step X
+        scrolling X
+      TaskChoose
+        error
+      TaskFromAgent
+        input
+          word count X 
+        response
+          word count X
+      TaskShowResponse
+        error
+      TaskChat
+      TaskConversation
+        scrolling (stop the bouncing) X
+        agent specific
+          dyad X
+          forget 
+        task specific
+          config 
+            messagesTemplate X
+            promptTemplate X
+            suggestedPrompts X
+            welcomeMessage X
+            nextTask X
+            instruction X
+            nextStates X
+            serverOnly X
+            oneThread X
+            label X
+            reentering
+          request
+            inputLabel 
+            prompt X
+            forget X
+            agent X
+            model X
+          response
+            userInput X
+            text X
+          model
+            langModel X
+            temperature X
+            maxTokens X
+            maxResponseTokens X
+          error X
+          errorTask

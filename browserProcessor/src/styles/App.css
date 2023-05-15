@@ -10,11 +10,15 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Alegreya Sans", sans-serif;
+  /*font-family: "Alegreya Sans", sans-serif;*/
 }
 
 body {
   background: #474e68 /* #343541 */;
+}
+
+.text2html p {
+  margin-bottom: 1em;
 }
 
 .App {

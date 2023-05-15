@@ -19,6 +19,7 @@ import { Typography, TextareaAutosize } from "@mui/material";
 import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
+import { replaceNewlinesWithParagraphs } from "../../utils/utils";
 
 const TaskFromAgent = (props) => {
   const {
@@ -238,9 +239,12 @@ const TaskFromAgent = (props) => {
             ref={responseTextRef}
           >
             {responseText.split("\\n").map((line, index) => (
-              <Typography style={{ marginTop: "16px" }} key={index}>
-                {line}
-              </Typography>
+              <Typography 
+                style={{ marginTop: "16px" }} 
+                key={index}
+                className="text2html"
+                dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(line) }}
+              />
             ))}
           </Paper>
 

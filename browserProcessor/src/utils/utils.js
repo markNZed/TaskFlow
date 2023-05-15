@@ -1,9 +1,9 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { deepMerge } from "../shared/utils.mjs"
+import { deepMerge, getChanges } from "../shared/utils.mjs"
 
-export { deepMerge }
+export { deepMerge, getChanges }
 
 export function updateState(setState, update) {
   setState((prevState) => ({ ...prevState, ...update }));
@@ -110,4 +110,17 @@ export function setNestedProperties(obj, path = null, value = null) {
 
   // Note this function operates in-place but it can be useful to have a return value too
   return obj;
+}
+
+export function replaceNewlinesWithParagraphs(text) {
+  // Split the text on one or more newline characters to get an array of lines
+  var lines = text.split(/\n+/);
+
+  // Trim whitespace from each line and remove any empty ones
+  lines = lines.map(line => line.trim()).filter(line => line !== '');
+
+  // Wrap each line in <p> tags
+  var html = lines.map(line => `<p>${line}</p>`).join('');
+
+  return html;
 }
