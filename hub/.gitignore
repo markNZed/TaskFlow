@@ -1,0 +1,8 @@
+node_modules
+.env
+cache.json
+config.dev
+config.prod
+db/*
+!db/.gitignore
+temp.txt

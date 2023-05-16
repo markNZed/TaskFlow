@@ -1,14 +1,12 @@
 /* ToDo
 -------
-What are the rules for a Task?
-  Can a Task be distributed? Currently yes
-    Could create new instances
 SubTaskLLM needs access to the user - should be part of the Task
-  It is only used for the Dyad Text
+  It is only used for the Dyad text
   Should probably be a generic templating approach with access to user data
     Building the system message in the Task
     Could rework this with the templating
 Task Hub
+  To begin with it can share the data with Task Processor and then we move interactions to the Task Hub progressively.
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.

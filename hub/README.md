@@ -11,9 +11,11 @@ This is just a placeholder for now, the function is currently performed by nodej
   * Should the Hub start tasks so it can send the Task to a Processor with the appropriate Environment?
 * Task instances (currently in db/main.sqlite)
   * Threads (currently in db/main.sqlite)
+* The sessionId is set by the Task Hub
+
+The Task Processors need to register with the Task Hub. 
 
 What about messagesStore_async ?
-
 
 Through JS imports the Task has access to:
               config.mjs
@@ -38,3 +40,12 @@ Completed tasks should be archived on the hub. Need a simple way to get outputs 
 Need to be able to fetch available Start Tasks. Taskflows are stored on the Task Hub. How are these eventually managed? Task Processor needs to provide a Taskflow specific environment where Taskflows can be fetched, modified etc. Then a Task Flow is just transferred as part of the data in a Task. But the Task Hub would need to implement commands to manage this.
 
 Maybe we need the idea of TaskTemplate to replace component?
+
+# Start
+This is the Task Hub T@skFlow
+1. written in Node JS run-time, Express framework
+2. fetched data is cached by SQLite
+
+To install the node packages: `npm install` 
+
+Then to run: `npm start`

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /app/taskflow/nodejsProcessor
+cd /app/taskflow/hub
 npm install
 screen -d -m npm start
 sleep infinity
