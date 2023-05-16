@@ -23,6 +23,9 @@ var tasks = {}; // We will build this from taskflows
 // Transform hierarchical taskflows structure into a hash
 // Build tasks hash from the taskflows hash
 
+tasktemplates = flattenObjects(tasktemplates);
+console.log(JSON.stringify(tasktemplates, null, 2))
+
 // Not that this has huge side-effects
 // Transform taskflows array into flattened taskflows hash
 // We should introduce a concept of appending and prepending
@@ -70,6 +73,31 @@ function flattenObjects(taskflows) {
         if (taskflow.tasks.hasOwnProperty(key)) {
           taskflow.tasks[key]["name"] = key;
           taskflow.tasks[key]["id"] = id + "." + key;
+          // APPEND_stack should be the tasktemplate name
+          // We will copy the tasktemplate into the task
+          if (taskflow.tasks[key]["APPEND_stack"]) {
+            if (taskflow.tasks[key]["APPEND_stack"].length !== 1) {
+              console.log("APPEND_stack should be an array of length 1");
+            }
+            const tasktemplate = "root." + taskflow.tasks[key]["APPEND_stack"][0];
+            if (tasktemplates[tasktemplate]) {
+              // for each key in the tasktemplate copy it into this task
+              for (const key2 in tasktemplates[tasktemplate]) {
+                if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
+                  console.log("Adding " + key2, tasktemplates[tasktemplate][key2])
+                  taskflow.tasks[key][key2] = tasktemplates[tasktemplate][key2]
+                }
+              }
+              // We do not want the label from the tasktemplate
+              if (taskflow.tasks[key].config && taskflow.tasks[key].config.label) {
+                delete taskflow.tasks[key].config.label;
+              }
+            } else {
+              console.log("Count not find task template", tasktemplate)
+            }
+          } else {
+            console.log("Should have APPEND_stack in every task?")
+          }
           // Avoid the task inheriting the label from the Taskflow
           if (!taskflow.tasks[key]["label"]) {
             taskflow.tasks[key]["label"] = "";
@@ -224,9 +252,6 @@ function flattenObjects(taskflows) {
 // Could check that each taskflow has a 'start' task
 taskflows = flattenObjects(taskflows);
 //console.log(JSON.stringify(taskflows, null, 2))
-
-tasktemplates = flattenObjects(tasktemplates);
-//console.log(JSON.stringify(tasktemplates, null, 2))
 
 //Create a group for each user
 for (const userKey in users) {

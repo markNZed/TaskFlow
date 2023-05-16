@@ -18,8 +18,7 @@ import debug from "debug";
 function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
-  const { globalState, mergeGlobalState, replaceGlobalState } =
-    useGlobalStateContext();
+  const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const { sendJsonMessagePlus } = useWebSocketContext();
 
   //debug.disable();
@@ -56,7 +55,6 @@ function App() {
         if (!globalState?.sessionId) {
           const sessionId = data.sessionId;
           mergeGlobalState({ sessionId });
-          sendJsonMessagePlus({"sessionId" : sessionId})
           console.log("Set sessionId ", sessionId);
         }
         // Should have a separate API

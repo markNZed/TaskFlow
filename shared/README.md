@@ -70,6 +70,7 @@ v03:
 * type is not used, would be like id
   * id could be renamed type, then instanceId could be renamed to id 
 * error -> an object with type and message and stack (or just a free-form object)
+* APPEND_stack in a leaf task -> taskTemplate (could append to stack still)
 
 ### Task Processor
 The Task processor should:

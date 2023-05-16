@@ -39,7 +39,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           setTask((p) => deepMerge(p, updating));
           const result = await fetchTask(globalState, "task/update", task);
           result.state.deltaState = result.state.current
-          //log("useUpdateTask result", result);
+          log("useUpdateTask result", result);
           const localChanges = getChanges(snapshot, task)
           const remoteChanges = getChanges(snapshot, result)
           checkConflicts(localChanges, remoteChanges)

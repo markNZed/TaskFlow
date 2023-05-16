@@ -16,7 +16,6 @@ dotenv.config();
 
 // App specific modules
 import { BROWSER_URL, appName } from "./config.mjs";
-import sessionRoutes from "./routes/sessionRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import miscRoutes from "./routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/websocket.js";
@@ -58,7 +57,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/nodejs/api/session", sessionRoutes);
 app.use("/nodejs/api/task", taskRoutes);
 app.use("/nodejs/", miscRoutes); // After other routes because it has the default route
 

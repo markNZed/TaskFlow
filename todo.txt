@@ -2,8 +2,10 @@
 -------
 Task Hub
   To begin with it can share the data with Task Processor and then we move interactions to the Task Hub progressively.
+  The websocket is slow to setup 
+  When we send the request to nodejs we should establish the websocket also (if the task requires it)
   Order:
-    /api/session
+    /api/session - now working on /hub
     /api/task/start
     Move newTask_async into shared
     configdata: users, groups, taskflows, tasktemplates, tasks
