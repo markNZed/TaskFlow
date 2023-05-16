@@ -27,7 +27,12 @@ app.use(bodyParser.json());
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
-const allowedOrigins = [BROWSER_URL];
+let allowedOrigins = [BROWSER_URL];
+allowedOrigins = allowedOrigins.map(o => {
+  const url = new URL(o);
+  return url.origin;
+});
+console.log("allowedOrigins", allowedOrigins);
 
 app.use(
   cors({
@@ -53,9 +58,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/api/session", sessionRoutes);
-app.use("/api/task", taskRoutes);
-app.use("/", miscRoutes); // After other routes because it has the default route
+app.use("/nodejs/api/session", sessionRoutes);
+app.use("/nodejs/api/task", taskRoutes);
+app.use("/nodejs/", miscRoutes); // After other routes because it has the default route
 
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);

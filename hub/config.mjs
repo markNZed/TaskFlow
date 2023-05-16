@@ -10,7 +10,9 @@ import path from 'path';
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const BROWSER_URL = process.env.BROWSER_URL || "http://localhost:3000";
+const BROWSER_URL = process.env.BROWSER_URL || "http://localhost:3000/browser";
+
+const NODEJS_URL = process.env.NODEJS_URL || "http://localhost:5000/nodejs"; // A hack until we have config
 
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);

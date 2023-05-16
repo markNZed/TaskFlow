@@ -15,7 +15,7 @@ dotenv.config();
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  console.log("/api/session");
+  console.log("/hub/api/session");
   let userId = utils.getUserId(req);
   const sessionId = uuidv4();
   let authorised_taskflows = {};

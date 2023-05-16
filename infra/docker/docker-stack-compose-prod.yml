@@ -6,6 +6,9 @@ services:
     volumes:
       - ../..:/app/taskflow
     entrypoint: ["/entrypoint-browser.sh"]
+    environment:
+      - REACT_APP_TASKHUB_URL=http://localhost:5001/hub
+      - REACT_APP_LABEL=T@skFlow
     networks:
       - web-proxy
   taskflow-nodejs:
@@ -14,6 +17,8 @@ services:
     volumes:
       - ../..:/app/taskflow
     entrypoint: ["/entrypoint-nodejs.sh"]
+    environment:
+      - TASKHUB_URL=http://localhost:5001/hub
     networks:
       - web-proxy
   taskflow-hub:
@@ -22,6 +27,9 @@ services:
     volumes:
       - ../..:/app/taskflow
     entrypoint: ["/entrypoint-hub.sh"]
+    environment:
+      - NODEJS_URL=http://localhost:5000/nodejs
+      - BROWSER_URL=http://localhost:5000/nodejs
     networks:
       - web-proxy
 

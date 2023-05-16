@@ -21,7 +21,7 @@ module.exports = {
 
       // This allows the WebPack dev server to use the proxy
       //
-      config.client.webSocketURL = "auto://0.0.0.0:0/ws";
+      config.client.webSocketURL = "auto://0.0.0.0:0/reactws";
 
       // Return your customised Webpack Development Server config.
       return config;

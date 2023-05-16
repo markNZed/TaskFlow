@@ -1,13 +1,21 @@
 /* ToDo
 -------
-Can't use .env in shared because React does not like it
+Task Hub
+  To begin with it can share the data with Task Processor and then we move interactions to the Task Hub progressively.
+  Order:
+    /api/session
+    /api/task/start
+    Move newTask_async into shared
+    configdata: users, groups, taskflows, tasktemplates, tasks
+    storage:  messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections
+  How do we deal with the websession? Peer2Peer is OK but when is it establihsed? The Task requests it?
+  initiator should be calculated?
+  Can use a single port for browser+hub+nodejs
 SubTaskLLM needs access to the user - should be part of the Task
   It is only used for the Dyad text
   Should probably be a generic templating approach with access to user data
     Building the system message in the Task
     Could rework this with the templating
-Task Hub
-  To begin with it can share the data with Task Processor and then we move interactions to the Task Hub progressively.
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.

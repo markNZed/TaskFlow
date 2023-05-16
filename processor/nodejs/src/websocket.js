@@ -18,7 +18,7 @@ function wsSendObject(sessionId, message = {}) {
 }
 
 function initWebSocketServer(server) {
-  const websocketServer = new WebSocketServer({ server: server, path: "/ws" });
+  const websocketServer = new WebSocketServer({ server: server, path: "/nodejs/ws" });
 
   websocketServer.on("connection", (ws) => {
     console.log("websocketServer.on");

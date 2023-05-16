@@ -1,4 +1,4 @@
-import { serverUrl } from "../config";
+import { nodejsUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { log } from "./utils";
 
@@ -34,7 +34,7 @@ export const fetchTask = async (globalState, end_point, task) => {
     body: messageJsonString,
   };
 
-  const response = await fetch(`${serverUrl}api/${end_point}`, requestOptions);
+  const response = await fetch(`${nodejsUrl}/api/${end_point}`, requestOptions);
 
   const data = await response.json();
 

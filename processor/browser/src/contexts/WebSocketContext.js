@@ -32,7 +32,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (globalState?.sessionId) {
         m.sessionId = globalState.sessionId;
       }
-      //console.log("Sending " + JSON.stringify(m))
+      console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       sendJsonMessage(m);
     };
   }, [globalState]);

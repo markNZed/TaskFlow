@@ -9,6 +9,10 @@ services:
     volumes: 
       - ../../..:/app/
       - ./root:/root # For SSH and gitconfig
+    environment:
+      - REACT_APP_TASKHUB_URL=http://localhost:5001
+      - TASKHUB_URL=http://localhost:5001
+      - NODEJS_URL=http://localhost:5000
     networks:
       - web-proxy
 

@@ -100,7 +100,7 @@ async function newTask_async(
 }
 
 router.post("/start", async (req, res) => {
-  console.log("/api/task/start");
+  console.log("/hub/api/task/start");
   let userId = utils.getUserId(req);
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))

@@ -19,7 +19,6 @@ import { BROWSER_URL, appName } from "./config.mjs";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import miscRoutes from "./routes/miscRoutes.js";
-import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -27,7 +26,12 @@ app.use(bodyParser.json());
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
-const allowedOrigins = [BROWSER_URL];
+let allowedOrigins = [BROWSER_URL];
+allowedOrigins = allowedOrigins.map(o => {
+  const url = new URL(o);
+  return url.origin;
+});
+console.log("allowedOrigins", allowedOrigins);
 
 app.use(
   cors({
@@ -53,15 +57,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/api/session", sessionRoutes);
-app.use("/api/task", taskRoutes);
-app.use("/", miscRoutes); // After other routes because it has the default route
+app.use("/hub/api/session", sessionRoutes);
+app.use("/hub/api/task", taskRoutes);
+app.use("/hub/", miscRoutes); // After other routes because it has the default route
 
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
-
-initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5001;
 server.listen(port, () => console.log(appName + " Task Hub started"));

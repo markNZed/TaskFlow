@@ -12,7 +12,7 @@ import Taskflows from "./components/Taskflows";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
 import { useWebSocketContext } from "./contexts/WebSocketContext";
-import { serverUrl, appAbbrev } from "./config";
+import { taskhubUrl } from "./config";
 import debug from "debug";
 
 function App() {
@@ -46,7 +46,7 @@ function App() {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await fetch(`${serverUrl}api/session`, {
+        const response = await fetch(`${taskhubUrl}/api/session`, {
           credentials: "include",
         });
         const data = await response.json();
@@ -56,7 +56,7 @@ function App() {
         if (!globalState?.sessionId) {
           const sessionId = data.sessionId;
           mergeGlobalState({ sessionId });
-          sendJsonMessagePlus({"sessionId" : sessionId}) // This will update the sessionId from globalState for the WebSocket
+          sendJsonMessagePlus({"sessionId" : sessionId})
           console.log("Set sessionId ", sessionId);
         }
         // Should have a separate API
