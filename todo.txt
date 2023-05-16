@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Can't use .env in shared because React does not like it
 SubTaskLLM needs access to the user - should be part of the Task
   It is only used for the Dyad text
   Should probably be a generic templating approach with access to user data
@@ -55,11 +56,11 @@ Backlog
   --------
     High Priority
     -------------
-    Simplify multiple configuration files for the nodejsProcessor
+    Simplify multiple configuration files for the NodeJS Task Processor
     Use a route for configuring: user, session, taskflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
-    Msgs could be loaded from the nodejsProcessor. Similar to stepper - both have history.
-    Allow task to start another task on nodejsProcessor side (needs functional interface to api/task/start )
+    Msgs could be loaded from the NodeJS Task Processor. Similar to stepper - both have history.
+    Allow task to start another task on NodeJS Task Processor side (needs functional interface to api/task/start )
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
 
     Tasks
@@ -84,11 +85,11 @@ Backlog
     ------------
     Move to TypeScript
     Way for tasks to register websocket event handlers
-    Multiple language support 'i18next-http-middleware for nodejsProcessor and react-i18next for browserProcessor
+    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for Browser Task Processor
     Defensive programming + logging
-    Websocket for tasks (so nodejsProcessor can drive) just send incremental info for the task
+    Websocket for tasks (so NodeJS Task Processor can drive) just send incremental info for the task
     Replace globalState with Redux
-    When sending task instance only send diff (browserProcessor keeps nodejsProcessor copy, nodejsProcessor keeps browserProcessor copy)
+    When sending task instance only send diff (Browser Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps Browser Task Processor copy)
     Add task type validation to websocket
     Only display menu option if leaf is a real task
 
@@ -121,7 +122,7 @@ Architecture
       Implies catalog, installation, activation, configuration, updates, permissions, resource limits
       Requires a documented API, the basic principles at the moment:
           Use the Task object to pass information
-          Manage task specific storage (e.g. files, user specific data) independently of the nodejsProcessor Stores
+          Manage task specific storage (e.g. files, user specific data) independently of the NodeJS Task Processor Stores
           Through JS imports the TaskFunction has access to:
               config.mjs
               src/configdata.mjs (users, groups, taskflows, tasktemplates, tasks)
@@ -135,8 +136,8 @@ Architecture
   How does a task monitor other tasks ? Callback to monitor a thread or a task (middleware catch updates to instance store)
     Maybe tasks are responsible for their own communication protocol 
     Pattern of having the parent own the state? That allows for communication.
-    In React this is fairly easy. On the nodejsProcessor this could be a pub-sub system. The common point is asynchronous messages.
-  How to call out to Python from the Task function (better to create a Python Task and have the nodejsProcessor provide the environment?)
+    In React this is fairly easy. On the NodeJS Task Processor this could be a pub-sub system. The common point is asynchronous messages.
+  How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Task Processor provide the environment?)
     "child process execution" with child_process library
     RabbitMQ for message passing good for a local model but do we need high speed, probably not.
     REST API would allow for remote etc, maybe better
@@ -144,7 +145,7 @@ Architecture
 
 Issues
 ------
-  Tasks run with full nodejsProcessor rights. They should be sandboxed on the nodejsProcessor.
+  Tasks run with full NodeJS Task Processor rights. They should be sandboxed on the NodeJS Task Processor.
       TaskFunction could run in a docker container
       Each TaskFunction could be a user on Linux
           User could run in a restricted environment e.g. firejail, bubblewrap

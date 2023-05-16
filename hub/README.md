@@ -2,7 +2,7 @@
 
 The Task Hub is implemented in node using the Express framework and SQLite database.
 
-This is just a placeholder for now, the function is currently performed by nodejsProcessor.
+This is just a placeholder for now, the function is currently performed by NodeJS Task Processor.
 
 * User details (currently users.mjs)
   * Provide a list of available "start" tasks (UI should look afte rconstructing menu hierarchy)

@@ -16,6 +16,14 @@ services:
     entrypoint: ["/entrypoint-nodejs.sh"]
     networks:
       - web-proxy
+  taskflow-hub:
+    #image: localhost:5000/taskflow-prod:latest
+    image: taskflow-prod:latest
+    volumes:
+      - ../..:/app/taskflow
+    entrypoint: ["/entrypoint-hub.sh"]
+    networks:
+      - web-proxy
 
 networks:
   web-proxy:

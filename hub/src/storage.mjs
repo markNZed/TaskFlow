@@ -12,7 +12,8 @@ dotenv.config();
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 
 // Each keyv store is in a different table
-const DB_URI = "sqlite://../nodejsProcessor/db/main.sqlite";
+const DB_URI = "sqlite://../processor/nodejs/db/main.sqlite";
+console.log("DB_URI", DB_URI);
 
 // We could have one keyv store and use prefix for different tables
 

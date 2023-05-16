@@ -11,8 +11,8 @@ T@skFlow supports combining software and AI models and human interaction. T@skFl
 T@skFlow is intended to provide a light, flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 T@skFlow should play nicely with:
-* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the nodejsProcessor)
-* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the nodejsProcessor)
+* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
+* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)
 
 ## Task
 
@@ -26,15 +26,15 @@ A Task Processor can process a Task and send the same task in a request to anoth
 
 ## Task Processor
 
-Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: nodejsProcessor and browserProcessor. The nodejsProcessor runs on a server and the browserProcessor runs in a web browser. The nodejsProcessor and browserProcessor communicate using websockets or REST style HTTP API. The nodejsProcessor and browserProcessor are implemented in Javascript.
+Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and Browser Task Processor. The NodeJS Task Processor runs on a server and the Browser Task Processor runs in a web browser. The NodeJS Task Processor and Browser Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and Browser Task Processor are implemented in Javascript.
 
-On the nodejsProcessor side, T@skFlow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the nodejsProcessor without user interaction. Tasks may use software/AI to decide on the next Task to start. The nodejsProcessor uses Node Javascript and the Express framework.
+On the NodeJS Task Processor side, T@skFlow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node Javascript and the Express framework.
 
-On the browserProcessor (user interface) side, T@skFlow provides Tasks with storage, nodejsProcessor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The browserProcessor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
+On the Browser Task Processor (user interface) side, T@skFlow provides Tasks with storage, NodeJS Task Processor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The Browser Task Processor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
 
 ### Task Environment
 
-The Task Processor provides a Task Environment for the Task to run in. The nodejsProcessor currently provides a Node Javascript environment. The browserProcessor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
+The Task Processor provides a Task Environment for the Task to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The Browser Task Processor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
 
 ### SubTask
 
@@ -50,7 +50,7 @@ Information shared between Task Processors is maintained in the Task Hub, see [R
 
 The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 
 
-T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the nodejsProcessor side Tasks are first class citizens - they have full access to the nodejsProcessor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
+T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the NodeJS Task Processor side Tasks are first class citizens - they have full access to the NodeJS Task Processor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
 For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
 
@@ -58,28 +58,28 @@ For developers T@skFlow could become a personal assistant that runs on your comp
 
 To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the docker directory.
 
-To learn more about the nodejsProcessor, see [README.md](nodejsProcessor/README.md) in the nodejsProcessor directory.
+To learn more about the NodeJS Task Processor, see [README.md](NodeJS Task Processor/README.md) in the NodeJS Task Processor directory.
 
-To learn more about the browserProcessor, see [README.md](browserProcessor/README.md) in the browserProcessor directory.
+To learn more about the Browser Task Processor, see [README.md](Browser Task Processor/README.md) in the Browser Task Processor directory.
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
-* Create browserProcessor/src/components/Tasks/TaskNew.js (copy an existing Task)
+* Create Browser Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Add the license header to the file
-* Create nodejsProcessor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
+* Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
 * Add the license header to the file
-* Add information about the new Task to nodejsProcessor/config/tasktemplates.mjs
+* Add information about the new Task to NodeJS Task Processor/config/tasktemplates.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 
-  * add it directly to nodejsProcessor/config/taskflows.mjs
+  * add it directly to NodeJS Task Processor/config/taskflows.mjs
 * If the sequence is complicated/long then 
-  * create a file in nodejsProcessor/config/taskflow/TaskNewFlow.mjs (copy the structure of an existing file)
+  * create a file in NodeJS Task Processor/config/taskflow/TaskNewFlow.mjs (copy the structure of an existing file)
   * Add the license header to the file
-  * edit nodejsProcessor/config/taskflows.mjs to import and include TaskNewFlow.mjs
+  * edit NodeJS Task Processor/config/taskflows.mjs to import and include TaskNewFlow.mjs
 
 ### Task Patterns
 
@@ -97,7 +97,7 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 
 ## Contributors
 
-The initial browserProcessor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-browserProcessor](https://github.com/YaokunLin/chatbot-react-browserProcessor), and the initial nodejsProcessor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-nodejsProcessor](https://github.com/YaokunLin/chatbot-nodejsProcessor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
+The initial Browser Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-Browser Task Processor](https://github.com/YaokunLin/chatbot-react-Browser Task Processor), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-NodeJS Task Processor](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
 # Future
 
