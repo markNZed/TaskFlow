@@ -8,6 +8,7 @@ RUN apt-get update && \
 
 EXPOSE 3000
 EXPOSE 5000
+EXPOSE 5001
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh

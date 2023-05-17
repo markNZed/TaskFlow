@@ -2,12 +2,26 @@
 -------
 Task Hub
   To begin with it can share the data with Task Processor and then we move interactions to the Task Hub progressively.
-  The websocket is slow to setup 
+  The nodejs websocket is slow to setup. Maybe related to Firefox can’t establish a connection to the server at wss://chat-dev.understudy.top/reactws.
   When we send the request to nodejs we should establish the websocket also (if the task requires it)
+  Two start requests for the resume 
+    Normal, 1 for stepper, 1 for instructions
   Order:
     /api/session - now working on /hub
-    /api/task/start
-    Move newTask_async into shared
+    /api/task/start - shifted to hub by not working yet
+      Is the tasktemplate removing the config for the response. // !!! We should to deep merge if the key already exists
+      https://chat-dev.understudy.top/nodejs is a bad gateway
+        The node server was down
+      Request from nodejs to hub not workng
+        Maybe CORS ? URL seems OK
+        Maybe blocked by Cloudflare - what do we need to specify as the hostname for CORS? The IP ? Can we dump the request?
+        http://127.0.0.1
+        Need to deal with authentication ort make local requests
+        Better to just send the request locally and bypass the authentication
+          Deal with JWT later
+          Just set the server from nodejs to hub to use docker address?
+      Generate a JSON Web Token (JWT)
+        Will need to pass the userId as will not get that from authentication any longer
     configdata: users, groups, taskflows, tasktemplates, tasks
     storage:  messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections
   How do we deal with the websession? Peer2Peer is OK but when is it establihsed? The Task requests it?

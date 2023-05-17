@@ -142,7 +142,7 @@ const TaskLLMIO_async = async function (task) {
       T("response.text", response_text);
       T("output.text", response_text);
     } else {
-      console.log("TaskLLMIO_async subTask", subTask)
+      //console.log("TaskLLMIO_async subTask", subTask)
       subTask.response.text_promise.then((text) => {
         T("response.text", text);
         T("output.text", text);

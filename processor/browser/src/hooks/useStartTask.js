@@ -32,12 +32,11 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
           task["threadId"] = threadId;
         }
         const result = await fetchTask(globalState, "task/start", task);
-        log("useStartTask result", task);
-        //console.log("setStartTask result ", result)
+        console.log("useStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);
         // If the task expects a websocket let's establish that
-        if (globalState.sessionId) {
+        if (globalState.sessionId && result.websocket) {
           sendJsonMessagePlus({"sessionId" : globalState.sessionId})
           console.log("Set sessionId ", globalState.sessionId);
         }
@@ -50,6 +49,7 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
     };
 
     fetchTaskFromAPI();
+  // eslint-disable-next-line
   }, [startId]);
 
   return { startTaskReturned, startTaskLoading, startTaskError };

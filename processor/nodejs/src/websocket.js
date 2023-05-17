@@ -45,7 +45,7 @@ function initWebSocketServer(server) {
     });
 
     ws.on("close", function (code, reason) {
-      console.log("ws is closed with code: " + code + " reason: ", reason);
+      console.log("ws sessionId " + ws.data.sessionId + " is closed with code: " + code + " reason: ", reason);
       connections.delete(sessionId);
     });
   });

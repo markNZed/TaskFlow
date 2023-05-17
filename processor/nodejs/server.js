@@ -31,6 +31,7 @@ allowedOrigins = allowedOrigins.map(o => {
   const url = new URL(o);
   return url.origin;
 });
+allowedOrigins.push("http://localhost:5001");
 console.log("allowedOrigins", allowedOrigins);
 
 app.use(

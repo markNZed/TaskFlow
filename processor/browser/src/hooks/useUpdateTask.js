@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { setNestedProperties, deepMerge, log, getChanges, checkConflicts } from "../utils/utils";
+import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 // We have: Start with startId, threadId
 //          Step with task
@@ -18,6 +19,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
   const { globalState } = useGlobalStateContext();
   const [updateTaskLoading, setUpdateTaskLoading] = useState(false);
   const [updateTaskError, setUpdateTaskError] = useState();
+  const { sendJsonMessagePlus } = useWebSocketContext();
   let snapshot = {}
 
 
@@ -37,9 +39,19 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           const updating = { send: false, "response.updating": true };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
+          // If the task expects a websocket let's establish that
+          if (globalState.sessionId && task.websocket) {
+            sendJsonMessagePlus({"sessionId" : globalState.sessionId})
+            console.log("Set sessionId ", globalState.sessionId);
+          }
           const result = await fetchTask(globalState, "task/update", task);
           result.state.deltaState = result.state.current
           log("useUpdateTask result", result);
+          // If the task expects a websocket let's establish that
+          if (globalState.sessionId) {
+            sendJsonMessagePlus({"sessionId" : globalState.sessionId})
+            console.log("Set sessionId ", globalState.sessionId);
+          }
           const localChanges = getChanges(snapshot, task)
           const remoteChanges = getChanges(snapshot, result)
           checkConflicts(localChanges, remoteChanges)
@@ -64,6 +76,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
       };
       fetchTaskFromAPI();
     }
+  // eslint-disable-next-line
   }, [task]);
 
   return { updateTaskLoading, updateTaskError };

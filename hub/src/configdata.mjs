@@ -24,7 +24,7 @@ var tasks = {}; // We will build this from taskflows
 // Build tasks hash from the taskflows hash
 
 tasktemplates = flattenObjects(tasktemplates);
-console.log(JSON.stringify(tasktemplates, null, 2))
+//console.log(JSON.stringify(tasktemplates, null, 2))
 
 // Not that this has huge side-effects
 // Transform taskflows array into flattened taskflows hash
@@ -84,8 +84,11 @@ function flattenObjects(taskflows) {
               // for each key in the tasktemplate copy it into this task
               for (const key2 in tasktemplates[tasktemplate]) {
                 if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
-                  console.log("Adding " + key2, tasktemplates[tasktemplate][key2])
-                  taskflow.tasks[key][key2] = tasktemplates[tasktemplate][key2]
+                  //console.log("Adding " + key2, tasktemplates[tasktemplate][key2])
+                  // !!! We should to deep merge if the key already exists
+                  if (!taskflow.tasks[key][key2]) {
+                    taskflow.tasks[key][key2] = tasktemplates[tasktemplate][key2]
+                  }
                 }
               }
               // We do not want the label from the tasktemplate

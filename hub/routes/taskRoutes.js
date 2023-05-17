@@ -17,7 +17,6 @@ const router = express.Router();
 
 async function newTask_async(
   id,
-  sessionId,
   threadId = null,
   siblingTask = null
 ) {
@@ -104,12 +103,14 @@ router.post("/start", async (req, res) => {
   let userId = utils.getUserId(req);
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
-    const sessionId = req.body.sessionId;
+    let sessionId = req.body?.sessionId;
     let task = req.body.task;
-    let address = req.body.address;
+    let address = req.body?.address;
+    const siblingTask = req.body?.siblingTask;
 
     const startId = task.id;
     const threadId = task?.threadId;
+
     const component_depth = task.stackPtr;
     let groupId = task?.groupId;
 
@@ -121,7 +122,11 @@ router.post("/start", async (req, res) => {
     } else {
       // default is to start a new thread
       // Instances key: no recorded in DB
-      let task = await newTask_async(startId, sessionId, threadId);
+      let task = await newTask_async(startId, threadId, siblingTask);
+
+      if (!sessionId) {
+        sessionId = siblingTask.config?.sessionId;
+      }
 
       task["userId"] = userId;
       if (sessionId) {
@@ -221,6 +226,7 @@ router.post("/start", async (req, res) => {
       res.send(messageJsonString);
     }
   } else {
+    console.log("No user");
     res.status(200).json({ error: "No user" });
   }
 });

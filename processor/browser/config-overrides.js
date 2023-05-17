@@ -20,8 +20,20 @@ module.exports = {
       const config = configFunction(proxy, allowedHost);
 
       // This allows the WebPack dev server to use the proxy
-      //
-      config.client.webSocketURL = "auto://0.0.0.0:0/reactws";
+      // Tried to change the path to reactws but it didn't work, not sure why.
+      // Maybe need to use WDS_SOCKET_PATH
+      config.client.webSocketURL = "auto://0.0.0.0:0/ws";
+
+      /*
+      config.client.webSocketURL = {
+        hostname: '0.0.0.0',
+        pathname: '/reactws',
+        password: 'dev-server',
+        port: 443,
+        protocol: 'wss',
+      };
+      console.log("config.client ", config.client)
+      */
 
       // Return your customised Webpack Development Server config.
       return config;
@@ -37,4 +49,5 @@ module.exports = {
     );
     return config;
   },
+
 };
