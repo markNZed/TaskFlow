@@ -33,7 +33,7 @@ const TaskChat_async = async function (task) {
     ST("state.current", "receiving");
   }
 
-  console.log("Returning from tasks.TaskChat_async");
+  console.log("Returning from TaskChat_async");
 
   return subtask;
 };

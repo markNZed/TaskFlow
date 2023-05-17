@@ -5,11 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { v4 as uuidv4 } from "uuid";
 import { utils } from "../src/utils.mjs";
 import { taskFunctions } from "../Task/taskFunctions.mjs";
-import { groups, tasks, tasktemplates } from "../src/configdata.mjs";
-import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
+import { instancesStore_async } from "../src/storage.mjs";
 import { startTask_async } from "../src/startTask.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -81,8 +79,6 @@ router.post("/update", async (req, res) => {
     // Risk that Browser Task Processor writes over NodeJS Task Processor fields so filter_out before merge
     let instanceId = task.instanceId;
     const server_side_task = await instancesStore_async.get(instanceId);
-    // filter_in could also do some data cleaning
-    //let clean_client_task = utils.filter_in(tasktemplates,tasks, task)
     let clean_client_task = task;
     let updated_task = utils.deepMerge(server_side_task, clean_client_task)
     //let updated_task = Object.assign({}, server_side_task, clean_client_task);
@@ -134,9 +130,9 @@ router.post("/update", async (req, res) => {
       if (updated_task.state.done) {
         console.log("Server side task done " + updated_task.id);
         updated_task.state.done = false;
-        await instancesStore_async.set(userId, updated_task.instanceId, updated_task);
+        await instancesStore_async.set(updated_task.instanceId, updated_task);
         // Fetch from the Task Hub
-        updated_task = await startTask_async(updated_task.nextTask, updated_task);
+        updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
         /*
         updated_task = await newTask_async(
           updated_task.nextTask,
@@ -152,15 +148,10 @@ router.post("/update", async (req, res) => {
       }
     }
 
-    //console.log("Before filter: ", updated_task)
-    //let updated_client_task = utils.filter_in(tasktemplates,tasks, updated_task)
-    let updated_client_task = updated_task; // need to filter based on Schema
-    //console.log("After filter: ", updated_client_task)
-
     let messageJsonString;
     let messageObject;
     try {
-      const validatedTaskJsonString = fromTask(updated_client_task);
+      const validatedTaskJsonString = fromTask(updated_task);
       let validatedTaskObject = JSON.parse(validatedTaskJsonString);
       messageObject = {
         task: validatedTaskObject,

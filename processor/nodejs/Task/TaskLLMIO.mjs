@@ -132,7 +132,6 @@ const TaskLLMIO_async = async function (task) {
 
   let response_text = "";
   if (prompt) {
-    //taskflow.tasks[taskName].prompt = prompt
     T("request.prompt", prompt);
     // The response needs to be available for other tasks to point at
     const subTask = await SubTaskLLM_async(task); 
@@ -157,8 +156,7 @@ const TaskLLMIO_async = async function (task) {
   // Ensure we do not overwrite the deltaState on the Browser Task Processor
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());
-  //await sessionsStore_async.set(sessionId + taskflow.id + 'taskflow', taskflow)
-  console.log("Returning from tasks.TaskLLMIO "); // + response_text)
+  console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
   return task;
 };

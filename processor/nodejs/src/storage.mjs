@@ -21,10 +21,6 @@ const DB_URI = "sqlite://db/main.sqlite";
 // should be an interface to the threads + instances
 const messagesStore_async = utils.newKeyV(DB_URI, "messages");
 // Schema:
-//   Key: sessionId || sessionId + 'userId'
-//   Value: object
-const sessionsStore_async = utils.newKeyV(DB_URI, "sessions");
-// Schema:
 //   Key: hash
 //   Value: object
 const cacheStore_async = utils.newKeyV(DB_URI, "cache");
@@ -39,7 +35,6 @@ const threadsStore_async = utils.newKeyV(DB_URI, "threads");
 
 export {
   messagesStore_async,
-  sessionsStore_async,
   cacheStore_async,
   instancesStore_async,
   threadsStore_async,

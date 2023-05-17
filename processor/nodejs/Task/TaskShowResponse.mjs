@@ -76,7 +76,7 @@ const TaskShowResponse_async = async function (task) {
   T("state.deltaState", undefined); // Should be centralized?
   T("response.text", response);
   T("updatedAt", Date.now()); // Should be centralized?
-  console.log("Returning from tasks.TaskShowResponse");
+  console.log("Returning from TaskShowResponse");
   return task;
 };
 

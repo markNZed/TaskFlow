@@ -122,7 +122,7 @@ router.post("/start", async (req, res) => {
     } else {
       // default is to start a new thread
       // Instances key: no recorded in DB
-      let task = await newTask_async(startId, threadId, siblingTask);
+      task = await newTask_async(startId, threadId, siblingTask);
 
       if (!sessionId) {
         sessionId = siblingTask.config?.sessionId;

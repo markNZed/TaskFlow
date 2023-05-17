@@ -73,34 +73,6 @@ function flattenObjects(taskflows) {
         if (taskflow.tasks.hasOwnProperty(key)) {
           taskflow.tasks[key]["name"] = key;
           taskflow.tasks[key]["id"] = id + "." + key;
-          // APPEND_stack should be the tasktemplate name
-          // We will copy the tasktemplate into the task
-          if (taskflow.tasks[key]["APPEND_stack"]) {
-            if (taskflow.tasks[key]["APPEND_stack"].length !== 1) {
-              console.log("APPEND_stack should be an array of length 1");
-            }
-            const tasktemplate = "root." + taskflow.tasks[key]["APPEND_stack"][0];
-            if (tasktemplates[tasktemplate]) {
-              // for each key in the tasktemplate copy it into this task
-              for (const key2 in tasktemplates[tasktemplate]) {
-                if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
-                  //console.log("Adding " + key2, tasktemplates[tasktemplate][key2])
-                  // !!! We should to deep merge if the key already exists
-                  if (!taskflow.tasks[key][key2]) {
-                    taskflow.tasks[key][key2] = tasktemplates[tasktemplate][key2]
-                  }
-                }
-              }
-              // We do not want the label from the tasktemplate
-              if (taskflow.tasks[key].config && taskflow.tasks[key].config.label) {
-                delete taskflow.tasks[key].config.label;
-              }
-            } else {
-              console.log("Count not find task template", tasktemplate)
-            }
-          } else {
-            console.log("Should have APPEND_stack in every task?")
-          }
           // Avoid the task inheriting the label from the Taskflow
           if (!taskflow.tasks[key]["label"]) {
             taskflow.tasks[key]["label"] = "";
@@ -177,6 +149,7 @@ function flattenObjects(taskflows) {
         if (taskflow.tasks.hasOwnProperty(taskkey)) {
           for (const taskflowkey in taskflow) {
             if (taskflow.hasOwnProperty(taskflowkey)) {
+              // Will not override, need to merge?
               if (
                 !taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
                 taskflowkey !== "tasks" &&
@@ -224,6 +197,36 @@ function flattenObjects(taskflows) {
               }
             }
           }
+
+          // APPEND_stack should be the tasktemplate name
+          // We will copy the tasktemplate into the task
+          if (taskflow.tasks[taskkey]["APPEND_stack"]) {
+            if (taskflow.tasks[taskkey]["APPEND_stack"].length !== 1) {
+              console.log("APPEND_stack should be an array of length 1");
+            }
+            const tasktemplate = "root." + taskflow.tasks[taskkey]["APPEND_stack"][0];
+            if (tasktemplates[tasktemplate]) {
+              taskflow.tasks[taskkey]
+              // for each taskkey in the tasktemplate copy it into this task
+              // Should detect conflices if there is a conflict
+              // Should be merging not looping
+              for (const key2 in tasktemplates[tasktemplate]) {
+                if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
+                  //console.log("Adding " + key2, tasktemplates[tasktemplate][key2])
+                  // !!! We should to deep merge if the key already exists
+                  if (!taskflow.tasks[taskkey][key2]) {
+                    //console.log("Adding taskkey " + taskkey + " key2 " + key2, tasktemplates[tasktemplate][key2])
+                    taskflow.tasks[taskkey][key2] = tasktemplates[tasktemplate][key2]
+                  }
+                }
+              }
+            } else {
+              console.log("Count not find task template", tasktemplate)
+            }
+          } else {
+            console.log("Should have APPEND_stack in every task?")
+          }
+
         }
       }
     }

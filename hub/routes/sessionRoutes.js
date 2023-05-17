@@ -47,6 +47,8 @@ router.get("/", async (req, res) => {
     if (wf?.config?.label) {
       wf['label'] = wf.config.label;
     }
+    const initiator = authorised_taskflows[key]?.tasks?.start ? true : false
+    wf['initiator'] = initiator;
     taskflowsTree[key] = utils.filter_in_list(wf, [
       "id",
       "children",

@@ -79,7 +79,7 @@ function TaskflowTree({ onClose }) {
     }
 
     if (children && children.length > 0) {
-      if (initiator) {
+      if (id != "root") {
         return (
           <TreeItem key={id} nodeId={id} label={label}>
             {children.map((child) =>

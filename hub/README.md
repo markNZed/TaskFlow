@@ -15,8 +15,6 @@ This is just a placeholder for now, the function is currently performed by NodeJ
 
 The Task Processors need to register with the Task Hub. 
 
-What about messagesStore_async ?
-
 Through JS imports the Task has access to:
               config.mjs
               src/configdata.mjs (users, groups, taskflows, tasktemplates, tasks)
