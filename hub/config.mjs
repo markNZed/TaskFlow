@@ -10,7 +10,7 @@ import path from 'path';
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const BROWSER_URL = process.env.BROWSER_URL || "http://localhost:3000/browser";
+const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
 
 const NODEJS_URL = process.env.NODEJS_URL || "http://localhost:5000/nodejs"; // A hack until we have config
 
@@ -30,4 +30,4 @@ const CONFIG_DIR = process.env.CONFIG_DIR || path.resolve("./../processor/nodejs
 
 console.log("TASKHUB_URL", TASKHUB_URL)
 
-export { BROWSER_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL };
+export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL };

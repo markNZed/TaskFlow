@@ -1,6 +1,6 @@
 {
   "homepage": "https://github.com/markNZed/taskflow",
-  "name": "taskflow-browser",
+  "name": "taskflow-react",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

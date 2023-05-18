@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { BROWSER_URL } from "../config.mjs";
+import { REACT_URL } from "../config.mjs";
 import { utils } from "../src/utils.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();

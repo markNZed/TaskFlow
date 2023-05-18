@@ -17,24 +17,28 @@ T@skFlow should play nicely with:
 ## Task
 
 Tasks consist of:
-* A text specification of additional Task variables
-* Functionality intended for one or more Task Environment(s)
+* Task Data that conforms to a generic Task schema
+  * In Task Data may reference data not provided by T@skFLow
+* Task Function available in one or more Task Environment(s)
+  * A Task Functions may use API services not provided by T@askFlow
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
 
-A Task Processor can process a Task and send the same task in a request to another Task Processor. The rules for merging the Task upon receiving the response Task are: there should be no changes to the same entries in the Task object, changes made locally are kept and changes from the response are merged (in that order). There should be a check for any conflicts where a value has been set locally and is also set by the response Task.
+The concpet of **Task Instance** refers to a particular Task Data object.
+
+The concept of **Task Context** refers to the data and functionality beyond the Task Data and Task Function that is used by the Task Instance.  
 
 ## Task Processor
 
-Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and Browser Task Processor. The NodeJS Task Processor runs on a server and the Browser Task Processor runs in a web browser. The NodeJS Task Processor and Browser Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and Browser Task Processor are implemented in Javascript.
+Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and React Task Processor. The NodeJS Task Processor runs on a server and the React Task Processor runs in a web browser. The NodeJS Task Processor and React Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
 
 On the NodeJS Task Processor side, T@skFlow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node Javascript and the Express framework.
 
-On the Browser Task Processor (user interface) side, T@skFlow provides Tasks with storage, NodeJS Task Processor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The Browser Task Processor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
+On the React Task Processor (user interface) side, T@skFlow provides Tasks with storage, NodeJS Task Processor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The React Task Processor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
 
 ### Task Environment
 
-The Task Processor provides a Task Environment for the Task to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The Browser Task Processor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
+The Task Processor provides a Task Environment for the Task to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
 
 ### SubTask
 
@@ -60,14 +64,14 @@ To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the dock
 
 To learn more about the NodeJS Task Processor, see [README.md](NodeJS Task Processor/README.md) in the NodeJS Task Processor directory.
 
-To learn more about the Browser Task Processor, see [README.md](Browser Task Processor/README.md) in the Browser Task Processor directory.
+To learn more about the React Task Processor, see [README.md](React Task Processor/README.md) in the React Task Processor directory.
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
-* Create Browser Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
+* Create React Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Add the license header to the file
 * Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
 * Add the license header to the file
@@ -97,7 +101,7 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 
 ## Contributors
 
-The initial Browser Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-Browser Task Processor](https://github.com/YaokunLin/chatbot-react-Browser Task Processor), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-NodeJS Task Processor](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
+The initial React Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Task Processor](https://github.com/YaokunLin/chatbot-react-React Task Processor), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-NodeJS Task Processor](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
 # Future
 

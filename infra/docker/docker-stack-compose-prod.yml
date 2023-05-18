@@ -1,11 +1,11 @@
 version: "3.9"
 services:
-  taskflow-browser:
+  taskflow-react:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
       - ../..:/app/taskflow
-    entrypoint: ["/entrypoint-browser.sh"]
+    entrypoint: ["/entrypoint-react.sh"]
     environment:
       - REACT_APP_TASKHUB_URL=http://localhost:5001/hub
       - REACT_APP_LABEL=T@skFlow
@@ -29,7 +29,7 @@ services:
     entrypoint: ["/entrypoint-hub.sh"]
     environment:
       - NODEJS_URL=http://localhost:5000/nodejs
-      - BROWSER_URL=http://localhost:5000/nodejs
+      - REACT_URL=http://localhost:5000/nodejs
     networks:
       - web-proxy
 

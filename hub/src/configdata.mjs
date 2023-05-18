@@ -319,7 +319,7 @@ function flattenTasks(taskflows) {
             }
             tasks[taskId] = task;
             tasks[taskId]["parentId"] = taskflowKey;
-            //tasks[taskId]['filter_for_browser'] = taskflows[taskflowKey].filter_for_browser;
+            //tasks[taskId]['filter_for_react'] = taskflows[taskflowKey].filter_for_react;
           }
         }
       }

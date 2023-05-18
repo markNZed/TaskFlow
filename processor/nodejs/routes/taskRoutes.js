@@ -54,7 +54,7 @@ router.post("/update", async (req, res) => {
       }
       if (address) {
         task.request["address"] = address;
-      } // This should be done on the Browser Task Processor side
+      } // This should be done on the React Task Processor side
       if (task.updateCount) {
         task.updateCount += 1;
       } else {
@@ -76,7 +76,7 @@ router.post("/update", async (req, res) => {
       console.error("Error while validating Task against schema:", error, task);
     }
 
-    // Risk that Browser Task Processor writes over NodeJS Task Processor fields so filter_out before merge
+    // Risk that React Task Processor writes over NodeJS Task Processor fields so filter_out before merge
     let instanceId = task.instanceId;
     const server_side_task = await instancesStore_async.get(instanceId);
     let clean_client_task = task;

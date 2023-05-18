@@ -79,9 +79,9 @@ const TaskShowResponse = (props) => {
           function response_action(text) {
             setResponseText(text);
           }
-          // We cache the response Browser Task Processor side
+          // We cache the response React Task Processor side
           if (task.response?.text) {
-            log("Response cached Browser Task Processor side");
+            log("Response cached React Task Processor side");
             // Next state
             setMyStep(next_step);
             // Actions

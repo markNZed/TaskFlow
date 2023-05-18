@@ -1,12 +1,12 @@
-# Client
+# React Task Porcessor
 
-This is the Browser Task Processor of T@skFlow written in Javascript using React and Material Design (MUI)
+This is the React Task Processor of T@skFlow written in Javascript using React and Material Design (MUI)
 
 To install the node packages: `npm install` 
 
 To run locally: `npm start`
 
-Running on localhost set the port for the React Browser Task Processor server in package.json where PORT=3000. Specify the port of the websocket NodeJS Task Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
+Running on localhost set the port for the React React Task Processor server in package.json where PORT=3000. Specify the port of the websocket NodeJS Task Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
 
 Coding preferences:
 * ES6 Javascript

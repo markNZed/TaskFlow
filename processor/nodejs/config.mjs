@@ -10,7 +10,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const TASKHUB_URL = process.env.TASKHUB_URL || TASKHUB_URL_DEFAULT;
-const BROWSER_URL = process.env.BROWSER_URL || "http://localhost:3000/browser";
+const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
 
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
@@ -31,4 +31,4 @@ if (process.env.MAP_USER_JSON) {
 
 const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";
 
-export { BROWSER_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR };
+export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR };

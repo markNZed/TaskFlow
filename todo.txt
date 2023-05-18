@@ -1,24 +1,22 @@
 /* ToDo
 -------
-Setup proxy on hub for browser<->nodejs connection
+Rename browser to react
+Setup proxy on hub for react<->nodejs connection
 Currently nodejs saves instances of tasks, eventually they will pass through the hub.
 When we start a task should we be able to add config info? For example the user.profile
   Could be added when it goes through the hub ? e.g. task.request.hub.user.profile
-We need to sort out privacy - should only be on the Hub
+We need to sort out privacy - should only be implemented the Hub
 
 Task Hub
-  Need to move users data from SubTaskLLM.mjs to the task, then no longer using users
-  groups, taskflows, tasktemplates, tasks only used in configdata.mjs
   TaskLLMIO_async needs access to instancesStore_async, threadsStore_async
   SubTaskLLM.mjs needs access to messagesStore_async (only used here)
-    Should this just be in the task and stop using the storage in the API
-  SubTaskLLM.mjs using connections -  seems OK to have this store
-
-SubTaskLLM needs access to the user - should be part of the Task
-  It is only used for the Dyad text
-  Should probably be a generic templating approach with access to user data
-    Building the system message in the Task
-    Could rework this with the templating
+    Should this just be in the task and stop using the storage in the API ?
+  SubTaskLLM needs access to the user - should be part of the Task
+    Need to move users data from SubTaskLLM.mjs to the task, then no longer using users in nodejs
+    It is only used for the Dyad text
+    Should probably be a generic templating approach with access to user data
+      Building the system message in the Task
+      Could rework this with the templating
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -29,8 +27,8 @@ Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
-      Browser adds the concept of sessionId and address/location.
-At which time should we introduce Typescript?
+      React adds the concept of sessionId and address/location.
+When should we introduce Typescript?
   First try to simplify the code
 Swagger for the API ?
 Privacy feature of Task
@@ -97,11 +95,11 @@ Backlog
     JWT connection between Task Hub and Processors (currently rely on Cloudflare)
     Move to TypeScript
     Way for tasks to register websocket event handlers
-    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for Browser Task Processor
+    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for React Task Processor
     Defensive programming + logging
     Websocket for tasks (so NodeJS Task Processor can drive) just send incremental info for the task
     Replace globalState with Redux
-    When sending task instance only send diff (Browser Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps Browser Task Processor copy)
+    When sending task instance only send diff (React Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps React Task Processor copy)
     Add task type validation to websocket
     Only display menu option if leaf is a real task
 

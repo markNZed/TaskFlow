@@ -15,7 +15,7 @@ const TaskLLMIO_async = async function (task) {
   );
 
   // We have two potential steps: ['response', 'input']
-  // We want to receive the task object from the Browser Task Processor and from the NodeJS Task Processor
+  // We want to receive the task object from the React Task Processor and from the NodeJS Task Processor
   if (T("state.current") === "input") {
     // Nothing to do could update instance
     console.log("Returning task state input");
@@ -153,7 +153,7 @@ const TaskLLMIO_async = async function (task) {
   //T("response.text", response_text);
   // Make available as an output to other Tasks
   //T("output.text", response_text);
-  // Ensure we do not overwrite the deltaState on the Browser Task Processor
+  // Ensure we do not overwrite the deltaState on the React Task Processor
   T("state.deltaState", undefined);
   T("updatedAt", Date.now());
   console.log("Returning from TaskLLMIO "); // + response_text)

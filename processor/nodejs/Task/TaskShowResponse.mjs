@@ -72,7 +72,7 @@ const TaskShowResponse_async = async function (task) {
     // Should not pass here if this is an error
     response = T("config.response");
   }
-  // Ensure we do not overwrite the deltaState on the Browser Task Processor
+  // Ensure we do not overwrite the deltaState on the React Task Processor
   T("state.deltaState", undefined); // Should be centralized?
   T("response.text", response);
   T("updatedAt", Date.now()); // Should be centralized?

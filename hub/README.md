@@ -27,7 +27,7 @@ The Task Hub should allow for stacking i.e., many Task Hubs that can be coordina
 
 Should the Task Processor start new Tasks or should this be done by the Task Hub? Simpler to always start new Tasks from the Task Hub. So the Task Processor deals with updating and the Task Hub with starting.
 
-Currently we start a Task on the Browser from the broser, the Task is returned to the Browser, then the Task will update but how does it know where to send the Task? Currently hard coded. It should request a Task Environment and the Task Hub should point to the Task Processor. Maybe upon starting the Task Hub should provide that information , so the Task includes an object that lists the environments it needs and the Task Hub provides the information to the Task. For example, the Tasks need the LLM and nodejs provides that. What about user data, we can't provide all the data with the task, the Task needs to request this from the Task Hub (could be part of the request during start). 
+Currently we start a Task on the React TP from the browser, the Task is returned to the React TP, then the Task will update but how does it know where to send the Task? Currently hard coded. It should request a Task Environment and the Task Hub should point to the Task Processor. Maybe upon starting the Task Hub should provide that information , so the Task includes an object that lists the environments it needs and the Task Hub provides the information to the Task. For example, the Tasks need the LLM and nodejs provides that. What about user data, we can't provide all the data with the task, the Task needs to request this from the Task Hub (could be part of the request during start). 
 
 Split nodejs into update and move start into Task Hub. This will be another server.
 
