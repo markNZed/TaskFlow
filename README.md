@@ -17,16 +17,16 @@ T@skFlow should play nicely with:
 ## Task
 
 Tasks consist of:
-* Task Data that conforms to a generic Task schema
-  * In Task Data may reference data not provided by T@skFLow
+* Task Definition that conforms to a generic Task schema
+  * In Task Definition may reference data not provided by T@skFLow
 * Task Function available in one or more Task Environment(s)
   * A Task Functions may use API services not provided by T@askFlow
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
 
-The concpet of **Task Instance** refers to a particular Task Data object.
+The concpet of **Task Instance** refers to a particular Task Definition object.
 
-The concept of **Task Context** refers to the data and functionality beyond the Task Data and Task Function that is used by the Task Instance.  
+The concept of **Task Context** refers to the data and functionality beyond the Task Definition and Task Function that is used by the Task Instance.  
 
 ## Task Processor
 
