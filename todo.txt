@@ -2,6 +2,8 @@
 -------
 Goal for today could be the HTTP proxy working without any information modified by Hub
   Then same thing for Websocket
+    websocat ws://localhost:5000/nodejs/ws 
+    
   Then refactor where information is stored
     Processor registers Functions with Hub
     Hub routes functions then Processor no longer specifies destination

@@ -12,7 +12,7 @@ import Taskflows from "./components/Taskflows";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
 import { useWebSocketContext } from "./contexts/WebSocketContext";
-import { taskhubUrl } from "./config";
+import { hubUrl } from "./config";
 import debug from "debug";
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await fetch(`${taskhubUrl}/api/session`, {
+        const response = await fetch(`${hubUrl}/api/session`, {
           credentials: "include",
         });
         const data = await response.json();

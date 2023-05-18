@@ -23,7 +23,9 @@ utils.getUserId = function (req) {
   }
   // If the request is from localhost then no need to authenticate
   if (sourceIP === "127.0.0.1") {
-    userId = req.body.userId;
+    if (req.body.userId) {
+      userId = req.body.userId;
+    }
   } else if (process.env.AUTHENTICATION === "basic") { // untested
     const authHeader = req.headers.authorization;
     if (authHeader) {

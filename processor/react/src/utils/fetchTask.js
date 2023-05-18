@@ -1,4 +1,4 @@
-import { nodejsUrl, taskhubUrl } from "../config";
+import { nodejsUrl, hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { log } from "./utils";
 
@@ -15,7 +15,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   // This does not seem right, maybe need a fetchHub and fetchProcessor
   let server;
   if (end_point === "task/start") {
-    server = taskhubUrl;
+    server = hubUrl;
   } else {
     server = nodejsUrl;
   }
@@ -26,10 +26,10 @@ export const fetchTask = async (globalState, end_point, task) => {
   // The immedaite destination of this request
   let destination;
   if (end_point === "task/start") {
-    destination = `${taskhubUrl}/api/${end_point}`
+    destination = `${hubUrl}/api/${end_point}`
   } else {
     //destination = task.destination // Not using proxy
-    destination = `${taskhubUrl}/processor/nodejs` // Using proxy
+    destination = `${hubUrl}/processor/nodejs` // Using proxy
   }
 
   try {

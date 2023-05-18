@@ -32,7 +32,10 @@ function initWebSocketServer(server) {
     ws.data = { sessionId: sessionId };
 
     ws.on("message", async (message) => {
+
       const j = JSON.parse(message);
+
+      console.log("ws.on message", j)
 
       if (j?.sessionId) {
         sessionId = j.sessionId;

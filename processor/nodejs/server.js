@@ -59,7 +59,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/nodejs/api/task", taskRoutes);
-app.use("/nodejs/", miscRoutes); // After other routes because it has the default route
+app.use("/", miscRoutes); // After other routes because it has the default route
 
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);

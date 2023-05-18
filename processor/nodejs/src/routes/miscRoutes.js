@@ -12,7 +12,8 @@ dotenv.config();
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/nodejs", async (req, res) => {
+  console.log("/nodejs")
   let userId = utils.getUserId(req);
   if (userId) {
     res.send(`Hello, ${userId}!`);
@@ -22,7 +23,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("*", function (req, res) {
-  //console.log("* ", req)
+  console.log("*")
   res.status(404).send("Unknown end-point");
 });
 

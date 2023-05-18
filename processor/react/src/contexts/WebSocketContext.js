@@ -8,6 +8,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import { useGlobalStateContext } from "./GlobalStateContext";
+import { hubSocketUrl } from "../config";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -41,7 +42,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     };
   }, [globalState]);
 
-  const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
+  const { sendJsonMessage, getWebSocket } = useWebSocket(hubSocketUrl, {
     reconnectAttempts: 10,
     reconnectInterval: 500,
     shouldReconnect: (closeEvent) => {

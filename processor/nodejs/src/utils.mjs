@@ -17,7 +17,26 @@ utils.deepMerge = deepMerge;
 
 utils.getUserId = function (req) {
   let userId = DEFAULT_USER;
-  if (process.env.AUTHENTICATION === "cloudflare") {
+  let sourceIP = req.ip;
+  if (sourceIP.startsWith('::ffff:')) {
+    sourceIP = sourceIP.substring('::ffff:'.length);
+  }
+  console.log("sourceIP", sourceIP)
+  // If the request is from localhost then no need to authenticate
+  if (sourceIP === "127.0.0.1") {
+    if (req.body.userId) {
+      userId = req.body.userId;
+    }
+  } else if (process.env.AUTHENTICATION === "basic") { // untested
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const encodedCredentials = authHeader.split(' ')[1];
+      const decodedCredentials = Buffer.from(encodedCredentials, 'base64').toString();
+      const [username, password] = decodedCredentials.split(':');
+      userId = username;
+    }
+    //userId = req.headers["x-authenticated-userid"]; // unsure if this works
+  } else if (process.env.AUTHENTICATION === "cloudflare") {
     userId = req.headers["cf-access-authenticated-user-email"];
   }
   if (MAP_USER && MAP_USER[userId]) {
