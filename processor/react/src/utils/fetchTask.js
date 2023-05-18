@@ -17,19 +17,19 @@ export const fetchTask = async (globalState, end_point, task) => {
   if (end_point === "task/start") {
     server = taskhubUrl;
   } else {
-    server = nodejsUrl 
+    server = nodejsUrl;
   }
 
   // The final destination of the task
-  task.destination = `${server}/api/${end_point}`
+  task.destination = `${server}/api/${end_point}`;
 
   // The immedaite destination of this request
   let destination;
   if (end_point === "task/start") {
     destination = `${taskhubUrl}/api/${end_point}`
   } else {
-    destination = task.destination // Not using proxy
-    //destination = `${taskhubUrl}/processor/nodejs` // Using proxy
+    //destination = task.destination // Not using proxy
+    destination = `${taskhubUrl}/processor/nodejs` // Using proxy
   }
 
   try {

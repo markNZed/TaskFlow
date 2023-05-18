@@ -55,7 +55,7 @@ app.use(
 
 app.use(express.json());
 
-app.use('/processor', proxyHandler);
+app.use('/hub/processor', proxyHandler);
 
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);
@@ -72,3 +72,4 @@ server.setTimeout(300000);
 
 const port = process.env.WS_PORT || 5001;
 server.listen(port, () => console.log(appName + " Task Hub started"));
+server.on('upgrade', proxyHandler.upgrade); // <-- subscribe to http 'upgrade'

@@ -1,25 +1,22 @@
-// proxyHandler.js
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 
-// We also need to modify the message to add the task.source
-
-// Create a custom router to dynamically change the target
+// Route the Task to task.destination
 function dynamicRouter(req) {
-  let target = 'http://default-target.com'; // Default target
-  let j = JSON.parse(req.body);
-  if (j?.task?.destination) {
-    target = j.task.destination;
+  let target = 'http://null'; // Default target
+  if (req.body?.task?.destination) {
+    target = req.body.task.destination;
+    //console.log('dynamicRouter: ', target)
   }
   return target;
 }
 
-// The hub needs to intercept both requests and responses
-// For requests it copies the IP of the request into the task.source
-// For responses it copies the IP of the response into the task.source
-const proxyHandler = createProxyMiddleware('/processor', {
-  target: 'http://default-target.com', // this is a placeholder, will be overridden
+const proxyHandler = createProxyMiddleware('/hub/processor/*', {
+  target: 'http://null',
   changeOrigin: true,
   ws: true,
+  pathRewrite: {
+    '^/hub/processor/.*': ''
+  },
   router: dynamicRouter,
   onError: (err, req, res) => {
     if (err.code !== 'ECONNRESET') {
@@ -30,7 +27,34 @@ const proxyHandler = createProxyMiddleware('/processor', {
     }
     const json = { error: 'proxy_error', reason: err.message };
     res.end(JSON.stringify(json));
-  }
+  },
+  // Rccord the IP of the processor making the request in task.source
+  onProxyReq: (proxyReq, req, res) => {
+    //console.log('onProxyReq: ', req.body);
+    if (!req.body) {
+      console.log('onProxyReq: no body');
+      return
+    }
+    // Modify the request here
+    let originalBody = req.body;
+    originalBody.task.source = req.ip;  // assuming the task object already exists in the body
+    let modifiedBody = JSON.stringify(originalBody);
+
+    proxyReq.setHeader('Content-Type', 'application/json');
+    proxyReq.setHeader('Content-Length', Buffer.byteLength(modifiedBody));
+    proxyReq.write(modifiedBody);
+  },
+  // res.end() will be called internally by responseInterceptor()
+  // If end is sent automatically responseInterceptor cannot update the response
+  selfHandleResponse: true, 
+  onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+    const response = responseBuffer.toString('utf8');
+    let data = JSON.parse(response);
+    let task = data.task;
+    //task.label = "testing it"
+    //console.log('task: ', task);
+    return JSON.stringify(data);
+  }),
 });
 
 export default proxyHandler;
