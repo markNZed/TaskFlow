@@ -10,15 +10,17 @@ import cors from "cors";
 import http from "http";
 import bodyParser from "body-parser";
 import path from "path";
+
 import { fileURLToPath } from "url";
 import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
 import { REACT_URL, appName } from "./config.mjs";
-import sessionRoutes from "./routes/sessionRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
-import miscRoutes from "./routes/miscRoutes.js";
+import sessionRoutes from "./src/routes/sessionRoutes.js";
+import taskRoutes from "./src/routes/taskRoutes.js";
+import miscRoutes from "./src/routes/miscRoutes.js";
+import proxyHandler from './src/proxyHandler.js';
 
 const app = express();
 app.use(bodyParser.json());
@@ -53,6 +55,8 @@ app.use(
 
 app.use(express.json());
 
+app.use('/processor', proxyHandler);
+
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,4 +72,3 @@ server.setTimeout(300000);
 
 const port = process.env.WS_PORT || 5001;
 server.listen(port, () => console.log(appName + " Task Hub started"));
-

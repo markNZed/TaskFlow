@@ -26,6 +26,9 @@
           "minimum": 0,
           "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
         },
+        "destination": {
+          "type": "string"
+        },
         "error": {
           "anyOf": [
             {
@@ -47,9 +50,6 @@
         },
         "id": {
           "type": "string"
-        },
-        "initiator": {
-          "type": "boolean"
         },
         "name": {
           "type": "string"
@@ -74,6 +74,9 @@
         },
         "send": {
           "type": "boolean"
+        },
+        "source": {
+          "type": "string"
         },
         "stack": {
           "type": "array",

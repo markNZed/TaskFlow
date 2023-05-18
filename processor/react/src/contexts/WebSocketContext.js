@@ -33,6 +33,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         m.sessionId = globalState.sessionId;
       }
       console.log("Sending " + socketUrl + " " + JSON.stringify(m))
+      if (!m?.task) {
+        m["task"] = {}
+      }
+      m.task.destination = socketUrl
       sendJsonMessage(m);
     };
   }, [globalState]);

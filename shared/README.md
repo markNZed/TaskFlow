@@ -1,7 +1,6 @@
 # Shared
 
-This directory holds files that are shared between the React Task Processor and NodeJS Task Processor. Currently this is limited to the Task schema.
-# Task Schema
+# Task Definition Schema
 
 The schema is defined in JSON and [Quicktype](https://quicktype.io) is used to generate validation code.
 
@@ -13,6 +12,47 @@ The Task object currently has a fixed set of top level properties and `id` is th
 * state - an object that allows the Task Processor to manage the Task state
 * request - any object, defines what the recipient of the Task should do
 * response - any object, results from a request
+
+Separate the concerns addressed by the Task Definition:
+* Versioning
+* Authentication
+* Authorization
+* Task Hub interaction
+* Task Routing
+* Task Processor interaction
+* Task Identity
+* Task metadata
+* Task Masking
+* Task relations
+* Error handling
+* Task Configuration
+* IO
+* Task State
+
+There is a hierarchy: 
+* Versioning
+  * Authentication
+    * Authorization
+      * Task Hub
+        * Task Routing
+          * Task Processor
+            * Task Identity
+                * Task Masking
+                  * Task Metadata
+                    * Task Relations
+                  * Error handling
+                    * Task Configuration
+                    * Task Function
+                      * Status
+                      * State
+                        * Incoming
+                          * Request
+                          * Response
+                        * Outgoing
+                          * Request
+                          * Response
+                        * IO
+
 
 If a request is made then, typically, the entire Task object is sent. A copy of the Task may be held and it would then be the responsibility of the Task to deal with the Task object being updated when the request is completed. The state can be used to communicate between the Task Processor functionality of a Task.
 
@@ -32,6 +72,8 @@ Tasks will be able to provide a schema. At the moment the Task could do this by 
 JSON schema provides several keywords to specify rules for relationships, such as allOf, anyOf, oneOf, and not.
 
 Draft-07 introduces conditional schema evaluation using the if, then, and else keywords. They provide a way to apply subschemas conditionally, allowing for more complex validation logic. Draft-07 introduces the propertyNames keyword, which can be used to apply a schema to the names of all properties in an object, allowing for validation of property names.
+
+What additional concerns are address: incoming/outgoing, logging
 
 v03:
 * privacy -> propertyMask

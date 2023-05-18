@@ -5,13 +5,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { utils } from "../src/utils.mjs";
-import { taskFunctions } from "../Task/taskFunctions.mjs";
-import { instancesStore_async } from "../src/storage.mjs";
-import { startTask_async } from "../src/startTask.mjs";
+import { utils } from "../utils.mjs";
+import { taskFunctions } from "../../Task/taskFunctions.mjs";
+import { instancesStore_async } from "../storage.mjs";
+import { startTask_async } from "../startTask.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
-import { toTask, fromTask } from "../src/taskConverterWrapper.mjs";
+import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 
 const router = express.Router();
 

@@ -12,6 +12,11 @@ function wsSendObject(sessionId, message = {}) {
   if (!ws) {
     console.log("Lost websocket for wsSendObject", sessionId, message);
   } else {
+    if (!message?.task) {
+      message["task"] = {}
+    }
+    // The destination is availalbe because nodejs does not initiate webscoket connections
+    message.task.destination = ws.data.destination;
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject ", JSON.stringify(message) )
   }
@@ -35,6 +40,12 @@ function initWebSocketServer(server) {
           connections.set(sessionId, ws);
           ws.data["sessionId"] = sessionId;
           console.log("Websocket sessionId", sessionId)
+          if (j?.task?.source) {
+            ws.data["destination"] = j.task.source;
+          } else {
+            console.log("No task.source in message", j)
+            ws.data["destination"] = "unknown";
+          }
         }
       }
 

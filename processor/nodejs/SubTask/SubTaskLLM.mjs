@@ -40,7 +40,7 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
     }
     if (response) {
       const partialTask = {
-        partialTask: { instanceId: instanceId, response: response },
+        task: { instanceId: instanceId, response: response },
       };
       wsSendObject(sessionId, partialTask);
       ws.data["delta_count"] += 1;
@@ -324,7 +324,7 @@ async function ChatGPTAPI_request_async(params) {
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
-      partialTask: { instanceId: instanceId, response: response },
+      task: { instanceId: instanceId, response: response },
     };
     let ws = connections.get(sessionId);
     if (ws) {

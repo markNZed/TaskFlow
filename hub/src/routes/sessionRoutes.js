@@ -6,9 +6,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import { utils } from "../src/utils.mjs";
-import { users, groups, taskflows } from "../src/configdata.mjs";
-import { sessionsStore_async } from "../src/storage.mjs";
+import { utils } from "../utils.mjs";
+import { users, groups, taskflows } from "../configdata.mjs";
+import { sessionsStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 

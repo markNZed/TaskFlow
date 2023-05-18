@@ -4,7 +4,7 @@ T@skFlow is a Task centric collaborative web application framework for leveragin
 
 # Overview
 
-T@skFlow supports combining software and AI models and human interaction. T@skFlow adopts a Task centric approach. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software and AI models and human interaction. T@skFlow adopts a Task centric approach. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
@@ -57,6 +57,8 @@ The potential of large langauge models like chatGPT has become apparent to many 
 T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the NodeJS Task Processor side Tasks are first class citizens - they have full access to the NodeJS Task Processor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
 For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
+
+Many systems are trying to capture value and this often limits the solution in some way. For example, many businesses would liek to have influence over the community using their infrastructure and eventually monetize this. Proprietary system tend to seek to lock-in users. T@skFlow is not not intended to capture value, it is intended to enable users to capture value.
 
 # Getting Started
 

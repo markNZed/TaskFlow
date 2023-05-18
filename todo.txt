@@ -1,11 +1,29 @@
 /* ToDo
 -------
-Rename browser to react
+Goal for today could be the HTTP proxy working without any information modified by Hub
+  Then same thing for Websocket
+  Then refactor where information is stored
+    Processor registers Functions with Hub
+    Hub routes functions then Processor no longer specifies destination
 Setup proxy on hub for react<->nodejs connection
+  First get this working for HTTP then websocket. 
+  Make sure basic HTTP is working without proxy.
+  Enable proxy
+    Trace request/response through each step
+  At the moment the React TP decides on the destination processor
+    Eventually the Hub should choose the processor based on the Task Function the task requests
+      The processor registers its list of Functions with the Hub (add functions as data structure)
+        Then TaskChat becomes TaskChat Task with functions: User, Bot
+          Does each task have a function
+            Could be specified in the tasktemplate mapping ?        
+
 Currently nodejs saves instances of tasks, eventually they will pass through the hub.
+The hub and nodejs should share utils?
+
 When we start a task should we be able to add config info? For example the user.profile
   Could be added when it goes through the hub ? e.g. task.request.hub.user.profile
-We need to sort out privacy - should only be implemented the Hub
+We need to sort out privacy - should only be implemented on the Hub
+The Hub and Processors need to have secure communication, then identification is only controlled on the hub.
 
 Task Hub
   TaskLLMIO_async needs access to instancesStore_async, threadsStore_async
@@ -190,13 +208,14 @@ Comparison with similar systems
   https://www.multi.tech/ (MultiFlow)
     taskflows powered by generative models
   https://www.kubeflow.org/
-    Making deployments of machine learning (ML) taskflows on Kubernetes simple, portable and scalable. 
+    Making deployments of machine learning (ML) taskflows on Kubernetes simple, portable and scalable.
+  https://n8n.io/
+    This is very close to what I want
+    But n8n is fair-code distributed under the Sustainable Use License and the n8n Enterprise License.
+    Commercially restricted by its authors
+    This led me to Node-RED
+  https://nodered.org/
 
-  Microsoft Power Automated
-  Zapier
-  IFTTT
-  n8n
-  Node-RED
 
 Test Plan
 ---------

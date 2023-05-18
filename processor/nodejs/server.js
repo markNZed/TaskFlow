@@ -16,8 +16,8 @@ dotenv.config();
 
 // App specific modules
 import { REACT_URL, appName } from "./config.mjs";
-import taskRoutes from "./routes/taskRoutes.js";
-import miscRoutes from "./routes/miscRoutes.js";
+import taskRoutes from "./src/routes/taskRoutes.js";
+import miscRoutes from "./src/routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();

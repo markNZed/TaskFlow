@@ -10,10 +10,10 @@ function useFilteredWebSocket(instanceId, onMessage) {
     const message = JSON.parse(e.data);
     if (
       instanceId &&
-      message?.partialTask &&
-      message.partialTask?.instanceId === instanceId
+      message?.task &&
+      message.task?.instanceId === instanceId
     ) {
-      onMessage(message.partialTask);
+      onMessage(message.task);
     }
   }, [instanceId, onMessage]);
 
@@ -21,9 +21,7 @@ function useFilteredWebSocket(instanceId, onMessage) {
     if (!webSocketEventEmitter) {
       return;
     }
-
     webSocketEventEmitter.on("message", handleMessage);
-
     return () => {
       webSocketEventEmitter.removeListener("message", handleMessage);
     };

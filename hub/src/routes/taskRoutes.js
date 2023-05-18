@@ -6,12 +6,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import { utils } from "../src/utils.mjs";
-import { groups, tasks } from "../src/configdata.mjs";
-import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
+import { utils } from "../utils.mjs";
+import { groups, tasks } from "../configdata.mjs";
+import { instancesStore_async, threadsStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
-import { toTask, fromTask } from "../src/taskConverterWrapper.mjs";
+import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 
 const router = express.Router();
 
@@ -108,6 +108,9 @@ router.post("/start", async (req, res) => {
     let address = req.body?.address;
     const siblingTask = req.body?.siblingTask;
 
+    const ip = req.ip || req.connection.remoteAddress;
+    console.log('Source IP: ', ip);
+
     const startId = task.id;
     const threadId = task?.threadId;
 
@@ -123,6 +126,7 @@ router.post("/start", async (req, res) => {
       // default is to start a new thread
       // Instances key: no recorded in DB
       task = await newTask_async(startId, threadId, siblingTask);
+      task.source = ip;
 
       if (!sessionId) {
         sessionId = siblingTask.config?.sessionId;

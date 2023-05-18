@@ -12,6 +12,26 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   //log("task", task)
 
+  // This does not seem right, maybe need a fetchHub and fetchProcessor
+  let server;
+  if (end_point === "task/start") {
+    server = taskhubUrl;
+  } else {
+    server = nodejsUrl 
+  }
+
+  // The final destination of the task
+  task.destination = `${server}/api/${end_point}`
+
+  // The immedaite destination of this request
+  let destination;
+  if (end_point === "task/start") {
+    destination = `${taskhubUrl}/api/${end_point}`
+  } else {
+    destination = task.destination // Not using proxy
+    //destination = `${taskhubUrl}/processor/nodejs` // Using proxy
+  }
+
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
@@ -33,16 +53,8 @@ export const fetchTask = async (globalState, end_point, task) => {
     credentials: "include",
     body: messageJsonString,
   };
-
-  // This does not seem right, maybe need a fetchHub and fetchProcessor
-  let server;
-  if (end_point === "task/start") {
-    server = taskhubUrl;
-  } else {
-    server = nodejsUrl;
-  }
   
-  const response = await fetch(`${server}/api/${end_point}`, requestOptions);
+  const response = await fetch(destination, requestOptions);
 
   const data = await response.json();
 
