@@ -20,7 +20,8 @@ import { REACT_URL, appName } from "./config.mjs";
 import sessionRoutes from "./src/routes/sessionRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
-import { proxyHandler, proxyHandlerWs } from './src/proxyHandler.js';
+import { proxyHandler } from './src/proxyHandler.js';
+import { initWebSocketProxy } from "./src/websocket.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -56,7 +57,6 @@ app.use(
 app.use(express.json());
 
 app.use('/hub/processor', proxyHandler);
-app.use('/hub/ws', proxyHandlerWs);
 
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);
@@ -71,6 +71,7 @@ const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
 
+initWebSocketProxy(server);
+
 const port = process.env.WS_PORT || 5001;
 server.listen(port, () => console.log(appName + " Task Hub started"));
-server.on('upgrade', proxyHandlerWs.upgrade); // <-- subscribe to http 'upgrade'

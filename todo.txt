@@ -1,23 +1,32 @@
 /* ToDo
--------
-Goal for today could be the HTTP proxy working without any information modified by Hub
-  Then same thing for Websocket
-    websocat ws://localhost:5000/nodejs/ws 
-    
-  Then refactor where information is stored
-    Processor registers Functions with Hub
-    Hub routes functions then Processor no longer specifies destination
-Setup proxy on hub for react<->nodejs connection
-  First get this working for HTTP then websocket. 
-  Make sure basic HTTP is working without proxy.
-  Enable proxy
-    Trace request/response through each step
+-------  
+Build the websocket proxy so we can sync objects.
+
+Eventually we move to using only web sockets?
+
+This argues for Tasks being distributed - different functions.
+  If a Task passes through the Hub then we should track it in a keyv and maintain a distributed object
+    a library called KVS (Key Value Storage) which is suitable for both the browser and Node.js environments
+  Only start tracking the task if it is on two or more processors
+    Need to note this in the task
+
+The Task Processor should start the Task ? So the Hub does not need the details.
+  But the config needs to be stored somewhere that might not be specifc to Task processor
+  So Hub is the right place for now.
+Refactor where information is stored
+  Processor registers Functions with Hub. Send infor on startup. Make sure Hub starts first.
+  Hub routes functions then Processor no longer specifies destination
+
   At the moment the React TP decides on the destination processor
     Eventually the Hub should choose the processor based on the Task Function the task requests
       The processor registers its list of Functions with the Hub (add functions as data structure)
         Then TaskChat becomes TaskChat Task with functions: User, Bot
           Does each task have a function
-            Could be specified in the tasktemplate mapping ?        
+            Could be specified in the tasktemplate mapping ?
+
+Maybe websocket between Functions is OK. 
+
+Limitations of http-proxy-middleware for websocket. Could create a simple middle-man.  
 
 Currently nodejs saves instances of tasks, eventually they will pass through the hub.
 The hub and nodejs should share utils?

@@ -1,5 +1,8 @@
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 
+// We are not able to see the content of messages using http-proxy-middleware
+// So we create a websocket server etc outselves
+
 // Route the Task to task.destination
 function dynamicRouter(req) {
   console.log('dynamicRouter')
@@ -9,8 +12,6 @@ function dynamicRouter(req) {
   }
   return target;
 }
-
-// Maybe we should proxy the ws connection to localhost:5000
 
 const proxyHandler = createProxyMiddleware('/hub/processor/*', {
   target: 'http://null',
@@ -59,36 +60,4 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
   }),
 });
 
-const proxyHandlerWs = createProxyMiddleware('/hub/ws', {
-  target: 'ws://localhost:5000/nodejs/ws',
-  pathRewrite: {
-    '^/hub/ws': ''
-  },
-  logLevel : 'debug',
-  changeOrigin: true,
-  ws: true,
-  onError: (err, req, res) => {
-    if (err.code !== 'ECONNRESET') {
-      console.error('proxy error', err);
-    }
-    if (!res.headersSent) {
-      res.writeHead(500, { 'content-type': 'application/json' });
-    }
-    const json = { error: 'proxy_error', reason: err.message };
-    res.end(JSON.stringify(json));
-  },
-  // The event provides an http.ClientRequest object, which is the outgoing request being made to the target of the proxy.
-  // If we want to inject information then it would need a middleman appraoch with a custom websocket server
-  // Do we want/need this? Maybe we leave websocket as peer to peer?
-  onProxyReqWs: (proxyReqWs, req, socket, options, head) => {
-    // We are not able to see the content of messages using http-proxy-middleware
-    // add custom header
-    //proxyReqWs.setHeader('X-Special-Proxy-Header', 'foobar');
-    //console.log('req', req)
-    //console.log('socket', socket)
-    //console.log('options', options) // the createProxyMiddleware options
-    //console.log(head.toString('hex')); // part of the websocket handshake
-  },
-});
-
-export { proxyHandler, proxyHandlerWs };
+export { proxyHandler };

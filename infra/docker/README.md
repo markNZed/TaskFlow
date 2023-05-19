@@ -25,6 +25,8 @@ Remember to purge the cloudflare cache after updating on prod.
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-nodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-react") /bin/bash
 
+How do we order the containers so Hub starts first?
+
 ## Dev
 This assumes T@skFlow is running behind a proxy on a docker network for dev:
 
