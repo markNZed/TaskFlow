@@ -24,7 +24,7 @@ function wsSendObject(sessionId, message = {}) {
 }
 
 function wsSendTask(message) {
-  console.log("wsSendTask")
+  //console.log("wsSendTask")
   wsSendObject(message.task.sessionId, message);
 }
 
@@ -46,7 +46,7 @@ function initWebSocketProxy(server) {
 
       const j = JSON.parse(message);
 
-      console.log("ws.on message", j)
+      //console.log("ws.on message", j)
 
       if (j?.sessionId) {
         sessionId = j.sessionId;

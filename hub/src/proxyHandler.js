@@ -12,6 +12,9 @@ import { utils } from "./utils.mjs";
 // We are not able to see the content of messages using http-proxy-middleware
 // So we create a websocket server etc outselves
 
+// We are not able to return a response from here so there needs to be an earlier
+// middleware to intercept commands for the hub and return a response
+
 // Route the Task to task.destination
 function dynamicRouter(req) {
   let target = 'http://null';

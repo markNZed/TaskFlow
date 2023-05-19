@@ -23,6 +23,10 @@ import miscRoutes from "./src/routes/miscRoutes.js";
 import { proxyHandler } from './src/proxyHandler.js';
 import { initWebSocketProxy } from "./src/websocket.js";
 
+import { utils } from "./src/utils.mjs";
+import { instancesStore_async } from "./src/storage.mjs";
+import newTask_async from "./src/newTask.mjs";
+
 const app = express();
 app.use(bodyParser.json());
 
@@ -56,7 +60,28 @@ app.use(
 
 app.use(express.json());
 
-app.use('/hub/processor', proxyHandler);
+//app.use('/hub/processor', proxyHandler);
+app.use('/hub/processor', async (req, res, next) => {
+  console.log('/hub/processor');
+  if (!req.body) {
+    console.log('/hub/processor: no body');
+    next()
+  }
+  let originalBody = req.body;
+  let task = originalBody.task;
+  let userId = utils.getUserId(req);
+  if (task.state?.done) {
+    console.log("Task done through proxy " + task.id);
+    task.state.done = false;
+    await instancesStore_async.set(task.instanceId, task);
+    // Fetch from the Task Hub
+    const newTask = await newTask_async(task.nextTask, userId, req.ip, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    res.json({task: newTask});
+  } else {
+    console.log('proxyHandler next');
+    next();
+  }
+}, proxyHandler);
 
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);

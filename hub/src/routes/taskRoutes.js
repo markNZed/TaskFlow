@@ -24,7 +24,7 @@ router.post("/start", async (req, res) => {
     const siblingTask = req.body?.siblingTask;
     const ip = req.ip || req.connection.remoteAddress;
 
-    console.log("task", task);
+    //console.log("task", task);
 
     const startId = task.id;
     const threadId = task.threadId;

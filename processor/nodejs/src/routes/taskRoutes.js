@@ -97,12 +97,8 @@ router.post("/update", async (req, res) => {
     //console.log("Merged task: ",updated_task)
 
     // This should be done on the Hub
-    if (updated_task.state?.done) {
-      console.log("Client side task done " + updated_task.id);
-      updated_task.state.done = false;
-      await instancesStore_async.set(instanceId, updated_task);
-      // Fetch from the Task Hub
-      updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
+    if (updated_task.state.done) {
+      console.error("Unexpected task done " + updated_task.id);
     } else {
       updated_task = await do_task_async(updated_task);
     }

@@ -19,7 +19,7 @@ async function newTask_async(
     threadId = null,
     siblingTask = null
   ) {
-    console.log("newTask_async", id, userId, ip, sessionId, groupId, component_depth, threadId);
+    //console.log("newTask_async", id, userId, ip, sessionId, groupId, component_depth, threadId);
     let siblingInstanceId;
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
