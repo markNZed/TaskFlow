@@ -12,6 +12,7 @@ export const hubUrl = process.env.REACT_APP_TASKHUB_URL || TASKHUB_URL;
 
 const socketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
-export const socketUrl = `${socketProtocol}//${window.location.hostname}/nodejs/ws`;
+//export const socketUrl = `${socketProtocol}//${window.location.hostname}/nodejs/ws`;
+export const socketUrl = 'ws://localhost:5000/nodejs/ws';
 export const nodejsUrl = window.location.protocol + "//" + (process.env.REACT_APP_NODEJS_HOST || "localhost:5000") + `/nodejs`;
 export const hubSocketUrl = `${socketProtocol}//${window.location.hostname}/hub/ws`;

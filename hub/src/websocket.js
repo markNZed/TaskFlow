@@ -22,39 +22,16 @@ function wsSendObject(sessionId, message = {}) {
   }
 }
 
-function initWebSocketProxy(server) {
-  const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
+const processorConnections = new Map(); // Could merge into connections?
 
-  const nodejsUrl = 'ws://localhost:5000/nodejs/ws';
+function initWebSocketProxy(server) {
+
+  const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
   websocketServer.on("connection", (ws) => {
     console.log("websocketServer.on");
 
     let closing = false;
-
-    // All we are doing is forwarding messages
-    // Should reproduce ping/pong also
-    const nodejsWs = new WebSocket(nodejsUrl);
-
-    nodejsWs.on('message', function incoming(message) {
-      // Just forwarding the message did not work
-      // Need to set binary false to avoid sending as blob
-      ws.send(message, { binary: false });
-      
-      // If we want to intercept:
-      //const j = JSON.parse(message);
-      //console.log('nodejsWs.on message', j)
-      //ws.send(JSON.stringify(j));
-      
-    });
-
-    nodejsWs.on("close", function (code, reason) {
-      console.log("nodejsWs is closed with code: " + code + " reason: ", reason);
-      if (!closing) {
-        ws.close(code, reason);
-      }
-      closing = true;
-    });
 
     let sessionId = undefined;
     ws.data = { sessionId: sessionId };
@@ -63,10 +40,7 @@ function initWebSocketProxy(server) {
 
       const j = JSON.parse(message);
 
-      console.log("ws.on message", j)
-
-      // just forwarding the message did work here
-      nodejsWs.send(JSON.stringify(j));
+      //console.log("ws.on message", j)
 
       if (j?.sessionId) {
         sessionId = j.sessionId;
@@ -74,10 +48,34 @@ function initWebSocketProxy(server) {
           connections.set(sessionId, ws);
           ws.data["sessionId"] = sessionId;
           console.log("Websocket sessionId", sessionId)
-          if (j?.task?.source) {
-            ws.data["destination"] = j.task.source;
+          if (j?.task?.destination) {
+            ws.data["destination"] = j.task.destination;
+            const processorUrl = j.task.destination
+
+            let processorWs = processorConnections.get(sessionId + processorUrl);
+            if (!processorWs || processorWs.readyState !== WebSocket.OPEN) {
+              console.log("Creating processorWs for " + processorUrl)
+              processorWs = new WebSocket(processorUrl);
+              processorConnections.set(sessionId + processorUrl, processorWs);
+
+              processorWs.on('message', function incoming(message) {
+                // Just forwarding the message did not work
+                // Need to set binary false to avoid sending as blob
+                //console.log("processorWs.on message", message)
+                ws.send(message, { binary: false });
+              });
+
+              processorWs.on("close", function (code, reason) {
+                console.log("processorWs is closed with code: " + code + " reason: ", reason);
+                processorConnections.delete(processorUrl);
+                if (!closing) {
+                  ws.close(code, reason);
+                }
+                closing = true;
+              });
+            }
           } else {
-            console.log("No task.source in message", j)
+            console.log("No task.destination in message", j)
             ws.data["destination"] = "unknown";
           }
         }
@@ -85,7 +83,12 @@ function initWebSocketProxy(server) {
 
       if (j?.ping) {
         wsSendObject(sessionId, { pong: "ok" });
-        console.log("Ponging", ws?.data)
+      }
+
+      // Forward the message to the node.js server
+      const processorWs = processorConnections.get(sessionId + ws.data["destination"]);
+      if (processorWs && processorWs.readyState === WebSocket.OPEN) {
+        processorWs.send(JSON.stringify(j));
       }
     });
 
@@ -93,11 +96,15 @@ function initWebSocketProxy(server) {
       console.log("ws sessionId " + ws.data.sessionId + " is closed with code: " + code + " reason: ", reason);
       connections.delete(sessionId);
       if (!closing) {
-        nodejsWs.close(code, reason);
+        const processorWs = processorConnections.get(sessionId + ws.data["destination"]);
+        if (processorWs && processorWs.readyState === WebSocket.OPEN) {
+          processorWs.close(code, reason);
+        }
       }
+      processorConnections.delete(sessionId + ws.data["destination"]);
       closing = true;
     });
   });
-}
+};
 
 export { initWebSocketProxy, wsSendObject };

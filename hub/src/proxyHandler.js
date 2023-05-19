@@ -5,7 +5,7 @@ import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middlewar
 
 // Route the Task to task.destination
 function dynamicRouter(req) {
-  console.log('dynamicRouter')
+  //console.log('dynamicRouter')
   let target = 'http://null';
   if (req.body?.task?.destination) {
     target = req.body.task.destination;
@@ -33,7 +33,7 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
   },
   // Rccord the IP of the processor making the request in task.source
   onProxyReq: (proxyReq, req, res) => {
-    console.log('onProxyReq');
+    //console.log('onProxyReq');
     if (!req.body) {
       console.log('onProxyReq: no body');
       return
