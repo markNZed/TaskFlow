@@ -17,9 +17,15 @@ function wsSendObject(sessionId, message = {}) {
     }
     // The destination is availalbe because nodejs does not initiate webscoket connections
     message.task.destination = ws.data.destination;
+    message.task.sessionId = sessionId;
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject ", JSON.stringify(message) )
   }
+}
+
+function wsSendTask(message) {
+  console.log("wsSendTask " + message.task.sessionId)
+  wsSendObject(message.task.sessionId, message);
 }
 
 function initWebSocketServer(server) {
@@ -54,7 +60,7 @@ function initWebSocketServer(server) {
 
       if (j?.ping) {
         wsSendObject(sessionId, { pong: "ok" });
-        //console.log("Ponging", ws?.data)
+        console.log("Pong " + sessionId)
       }
     });
 
@@ -62,7 +68,15 @@ function initWebSocketServer(server) {
       console.log("ws sessionId " + ws.data.sessionId + " is closed with code: " + code + " reason: ", reason);
       connections.delete(sessionId);
     });
+
+    ws.on('error', function(error) {
+      console.error("Websocket error: ", error);
+      if (ws.data.sessionId) {
+        connections.delete(ws.data.sessionId);
+      }
+    });
+
   });
 }
 
-export { initWebSocketServer, wsSendObject };
+export { initWebSocketServer, wsSendObject, wsSendTask };

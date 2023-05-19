@@ -106,7 +106,6 @@ v03:
 * children -> childIds
 * processor data provided by the Task processor
   * location
-  * sessionId
   * API a list of API ids consider what langchain does for models
 * done as a boolean
 * logHistory as an array of log messages

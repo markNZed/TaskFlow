@@ -1,6 +1,34 @@
 /* ToDo
 -------  
-Build the websocket proxy so we can sync objects.
+In tasktemplates environments: ["nodejs"] could replace serverOnly
+Each processor needs a list of active Tasks
+  Need to be able to push tasks to Processor
+    Websocket commands task.processor.command 
+  First implement on nodejs for: TaskChat
+    React side just behaves as usual
+    Hub has special treatment for TaskChat
+    Nodejs has special treatment for TaskChat
+    When hub receives request to start task it should send command to nodejs to also start task
+      Nodejs needs to store active tasks
+      Currently react sends task to nodejs though update
+        Hub could capture update and send diff to nodejs
+          Nodejs updates the task, this can hook into the current update function
+          Eventualy the update function is like a kernel that processes tasks
+            Loops over the tasks updating those that have changed.
+              The task that is returned from the Task Function is used to update the Processor copy and then send diff to Hub
+                Hub then creates full task and sends as Update reply to React.
+Refactor where information is stored
+  The Hub knows which processors have which Functions through tasktemplates
+  Hub routes functions then Processor no longer specifies destination
+  At the moment the React TP decides on the destination processor
+    Eventually the Hub should choose the processor based on the Task Function the task requests
+      The processor registers its list of Functions with the Hub (add functions as data structure)
+        Then TaskChat becomes TaskChat Task with functions: User, Bot
+          Does each task have a function
+            Could be specified in the tasktemplate mapping ?
+            
+We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemnted on the Task Processor. 
+  Maybe a field in the Task is for local processor - this makes sense
 
 Eventually we move to using only web sockets?
 
@@ -10,23 +38,7 @@ This argues for Tasks being distributed - different functions.
   Only start tracking the task if it is on two or more processors
     Need to note this in the task
 
-The Task Processor should start the Task ? So the Hub does not need the details.
-  But the config needs to be stored somewhere that might not be specifc to Task processor
-  So Hub is the right place for now.
-Refactor where information is stored
-  Processor registers Functions with Hub. Send infor on startup. Make sure Hub starts first.
-  Hub routes functions then Processor no longer specifies destination
-
-  At the moment the React TP decides on the destination processor
-    Eventually the Hub should choose the processor based on the Task Function the task requests
-      The processor registers its list of Functions with the Hub (add functions as data structure)
-        Then TaskChat becomes TaskChat Task with functions: User, Bot
-          Does each task have a function
-            Could be specified in the tasktemplate mapping ?
-
-Maybe websocket between Functions is OK. 
-
-Limitations of http-proxy-middleware for websocket. Could create a simple middle-man.  
+Maybe websocket between Functions is OK. Yes but not managed by T@skFlow. 
 
 Currently nodejs saves instances of tasks, eventually they will pass through the hub.
 The hub and nodejs should share utils?
@@ -56,7 +68,7 @@ Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
-      React adds the concept of sessionId and address/location.
+      React adds the concept of address/location.
 When should we introduce Typescript?
   First try to simplify the code
 Swagger for the API ?

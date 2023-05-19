@@ -5,8 +5,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { v4 as uuidv4 } from "uuid";
 import { utils } from "../utils.mjs";
+import newTask_async from "../newTask.mjs";
 import { groups, tasks } from "../configdata.mjs";
 import { instancesStore_async, threadsStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
@@ -15,95 +15,11 @@ import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 
 const router = express.Router();
 
-async function newTask_async(
-  id,
-  threadId = null,
-  siblingTask = null
-) {
-  let siblingInstanceId;
-  if (siblingTask) {
-    siblingInstanceId = siblingTask.instanceId;
-    threadId = siblingTask.threadId;
-  }
-  if (!tasks[id]) {
-    console.log("ERROR could not find task with id", id)
-  }
-  let taskCopy = { ...tasks[id] };
-  if (!taskCopy?.config) {
-    taskCopy["config"] = {};
-  }
-  if (!taskCopy?.input) {
-    taskCopy["input"] = {};
-  }
-  if (!taskCopy?.output) {
-    taskCopy["output"] = {};
-  }
-  if (!taskCopy?.privacy) {
-    taskCopy["privacy"] = {};
-  }
-  if (!taskCopy?.request) {
-    taskCopy["request"] = {};
-  }
-  if (!taskCopy?.response) {
-    taskCopy["response"] = {};
-  }
-  if (!taskCopy?.state) {
-    taskCopy["state"] = {};
-  }
-  let instanceId = uuidv4();
-  taskCopy["instanceId"] = instanceId;
-  if (siblingInstanceId) {
-    // Should reanme to sibling?
-    taskCopy["parentInstanceId"] = siblingInstanceId;
-    let parent = await instancesStore_async.get(siblingInstanceId);
-    if (parent.request?.address) {
-      taskCopy.request["address"] = parent.request.address;
-    }
-    if (!threadId) {
-      threadId = parent.threadId;
-    }
-    if (parent?.stackPtr) {
-      // Note component_depth may be modified in api/task/start
-      taskCopy["stackPtr"] = parent.stackPtr;
-    }
-    if (
-      !parent.hasOwnProperty("childrenInstances") ||
-      !Array.isArray(parent.childrenInstances)
-    ) {
-      parent.childrenInstances = [];
-    }
-    parent.childrenInstances.push(instanceId);
-    await instancesStore_async.set(siblingInstanceId, parent);
-  } else if (taskCopy?.stack) {
-    // Note component_depth may be modified in api/task/start
-    taskCopy["stackPtr"] = taskCopy.stack.length;
-  }
-  if (threadId) {
-    taskCopy["threadId"] = threadId;
-    let instanceIds = await threadsStore_async.get(threadId);
-    if (instanceIds) {
-      instanceIds.push(instanceId);
-    } else {
-      instanceIds = [instanceId];
-    }
-    await threadsStore_async.set(threadId, instanceIds);
-  } else {
-    taskCopy["threadId"] = instanceId;
-    await threadsStore_async.set(instanceId, [instanceId]);
-  }
-  taskCopy["createdAt"] = Date.now();
-  await instancesStore_async.set(instanceId, taskCopy);
-  //console.log("New task ", taskCopy)
-  console.log("New task id " + taskCopy.id);
-  return taskCopy;
-}
-
 router.post("/start", async (req, res) => {
   console.log("/hub/api/task/start");
   let userId = utils.getUserId(req);
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
-    let sessionId = req.body?.sessionId;
     let task = req.body.task;
     let address = req.body?.address;
     const siblingTask = req.body?.siblingTask;
@@ -113,6 +29,7 @@ router.post("/start", async (req, res) => {
 
     const startId = task.id;
     const threadId = task?.threadId;
+    let sessionId = task?.sessionId;
 
     const component_depth = task.stackPtr;
     let groupId = task?.groupId;
@@ -129,7 +46,7 @@ router.post("/start", async (req, res) => {
       task.source = ip;
 
       if (!sessionId) {
-        sessionId = siblingTask.config?.sessionId;
+        sessionId = siblingTask.sessionId;
       }
 
       task["userId"] = userId;

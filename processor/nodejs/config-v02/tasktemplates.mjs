@@ -1,34 +1,46 @@
+// Get rid of the parentType and root node
+
 const tasktemplates = [
   {
     name: "root"
   },
   {
-    initiator: false,
     name: "TaskChat",
     parentType: "root",
     websocket: true,
+    // If multiple environments then it will be synchronized
+    environments: ["react", "nodejs"],
   },
   {
-    initiator: false,
     name: "TaskConversation",
-    parentType: "root"
+    parentType: "root",
+    environments: ["react", "nodejs"],
   },
   {
     name: "TaskStepper",
-    parentType: "root"
+    parentType: "root",
+    environments: ["react"],
+  },
+  {
+    name: "TaskGrid",
+    parentType: "root",
+    environments: ["react"],
   },
   {
     name: "TaskLLMIO",
     parentType: "root",
     websocket: true,
+    environments: ["nodejs"],
   },
   {
     name: "TaskShowResponse",
-    parentType: "root"
+    parentType: "root",
+    environments: ["react", "nodejs"],
   },
   {
     name: "TaskChoose",
-    parentType: "root"
+    parentType: "root",
+    environments: ["nodejs"],
   }
 ];
 

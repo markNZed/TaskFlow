@@ -14,7 +14,7 @@ import {
   cacheStore_async,
   connections,
 } from "../src/storage.mjs";
-import { wsSendObject } from "../src/websocket.js";
+import { wsSendTask } from "../src/websocket.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -40,9 +40,9 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
     }
     if (response) {
       const partialTask = {
-        task: { instanceId: instanceId, response: response },
+        task: { instanceId: instanceId, response: response, sessionId: sessionId },
       };
-      wsSendObject(sessionId, partialTask);
+      wsSendTask(partialTask);
       ws.data["delta_count"] += 1;
     }
     //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
@@ -324,13 +324,13 @@ async function ChatGPTAPI_request_async(params) {
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
-      task: { instanceId: instanceId, response: response },
+      task: { instanceId: instanceId, response: response, sessionId: sessionId },
     };
     let ws = connections.get(sessionId);
     if (ws) {
       ws.data["delta_count"] = 0;
       if (!server_only) {
-        wsSendObject(sessionId, partialTask);
+        wsSendTask(partialTask);
       }
     } else {
       console.log("Lost ws in message_from");

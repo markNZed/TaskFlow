@@ -7,13 +7,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import { taskFunctions } from "../../Task/taskFunctions.mjs";
-import { instancesStore_async } from "../storage.mjs";
+import { instancesStore_async, activeTasksStore_async } from "../storage.mjs";
 import { startTask_async } from "../startTask.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 
 const router = express.Router();
+const activeTasks = {};
 
 async function do_task_async(task) {
   let updated_task = {};
@@ -37,20 +38,28 @@ async function do_task_async(task) {
   return updated_task;
 }
 
+async function activateTask_async(instanceId, task) {
+  await activeTasksStore_async.set(instanceId, task)
+  // We use a hash to avoid duplicates
+  activeTasks[instanceId] = true;
+  processActiveTasks_async(instanceId)
+}
+
+async function processActiveTasks_async() {
+ return
+}
+
 router.post("/update", async (req, res) => {
   console.log("/api/task/update");
   let userId = utils.getUserId(req);
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
-    const sessionId = req.body.sessionId;
     let task = req.body.task;
     let address = req.body.address;
 
     if (task) {
-      if (sessionId) {
-        task.config["sessionId"] = sessionId;
-      } else {
-        console.log("Warning: sessionId missing");
+      if (!task.sessionId) {
+        console.log("Warning: sessionId missing from task");
       }
       if (address) {
         task.request["address"] = address;
@@ -83,11 +92,15 @@ router.post("/update", async (req, res) => {
     let updated_task = utils.deepMerge(server_side_task, clean_client_task)
     //let updated_task = Object.assign({}, server_side_task, clean_client_task);
 
+    // process the task
+    activateTask_async(instanceId, updated_task);
+
     //console.log("task ", task)
     //console.log("clean_client_task ", clean_client_task)
     //console.log("server_side_task ", server_side_task)
     //console.log("Merged task: ",updated_task)
 
+    // This should be done on the Hub
     if (updated_task.state?.done) {
       console.log("Client side task done " + updated_task.id);
       updated_task.state.done = false;

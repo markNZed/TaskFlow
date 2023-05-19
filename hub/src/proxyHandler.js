@@ -1,4 +1,12 @@
+/*
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
+import { instancesStore_async } from "./storage.mjs";
+import newTask_async from "./newTask.mjs";
 
 // We are not able to see the content of messages using http-proxy-middleware
 // So we create a websocket server etc outselves
@@ -40,7 +48,20 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
     }
     // Modify the request here
     let originalBody = req.body;
-    originalBody.task.source = req.ip;  // assuming the task object already exists in the body
+    let task = originalBody.task;
+
+    // Process the task
+    task.source = req.ip;  // assuming the task object already exists in the body
+
+    if (task.state?.done) {
+      console.log("Task done " + task.id);
+      task.state.done = false;
+      //await instancesStore_async.set(instanceId, task);
+      // Fetch from the Task Hub
+      //updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
+
+    }
+
     let modifiedBody = JSON.stringify(originalBody);
 
     proxyReq.setHeader('Content-Type', 'application/json');

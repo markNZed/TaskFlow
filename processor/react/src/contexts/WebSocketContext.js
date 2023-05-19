@@ -30,14 +30,12 @@ export function WebSocketProvider({ children, socketUrl }) {
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   useEffect(() => {
     sendJsonMessagePlusRef.current = function (m) {
-      if (globalState?.sessionId) {
-        m.sessionId = globalState.sessionId;
-      }
       console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       if (!m?.task) {
         m["task"] = {}
       }
       m.task.destination = socketUrl
+      m.task.sessionId = globalState?.sessionId
       sendJsonMessage(m);
     };
   }, [globalState]);
@@ -52,10 +50,10 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
-      sendJsonMessagePlusRef.current({ ping: "ok" });
+      sendJsonMessagePlusRef.current({ sessionId: globalState?.sessionId, ping: "ok" });
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({ ping: "ok" });
+          sendJsonMessagePlusRef.current({ sessionId: globalState?.sessionId, ping: "ok" });
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);

@@ -4,7 +4,6 @@ import { log } from "./utils";
 
 export const fetchTask = async (globalState, end_point, task) => {
   const sideband = {
-    sessionId: globalState.sessionId,
     address: globalState?.address,
   };
 
@@ -22,6 +21,7 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   // The final destination of the task
   task.destination = `${server}/api/${end_point}`;
+  task.sessionId = globalState?.sessionId;
 
   // The immedaite destination of this request
   let destination;

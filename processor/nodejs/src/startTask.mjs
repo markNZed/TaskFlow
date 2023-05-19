@@ -7,28 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { TASKHUB_URL } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 
-/*
-let task = { id: startId, stackPtr: component_depth };
-        if (threadId) {
-          task["threadId"] = threadId;
-        }
-
-async function newTask_async(
-  id,
-  siblingTask = null
-) {
-
-    const sessionId = req.body.sessionId;
-    let task = req.body.task;
-
-    const startId = task.id;
-    const threadId = task?.threadId;
-    const component_depth = task.stackPtr;
-    let groupId = task?.groupId;
-
-// Need to add the option of pasing a sibling task
-*/
-
 export const startTask_async = async (userId, startId, siblingTask) => {
 
   let task = { id: startId };

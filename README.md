@@ -52,13 +52,13 @@ Information shared between Task Processors is maintained in the Task Hub, see [R
 
 # Motivation
 
-The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide. 
+The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide.
+
+The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a technology of ethics i.e., using technology to prefer certain moral outcomes over other possible outcomes. T@skFlow is intended to support a new way of thinking.
 
 T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the NodeJS Task Processor side Tasks are first class citizens - they have full access to the NodeJS Task Processor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
 For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
-
-Many systems are trying to capture value and this often limits the solution in some way. For example, many businesses would liek to have influence over the community using their infrastructure and eventually monetize this. Proprietary system tend to seek to lock-in users. T@skFlow is not not intended to capture value, it is intended to enable users to capture value.
 
 # Getting Started
 
@@ -106,6 +106,8 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 The initial React Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Task Processor](https://github.com/YaokunLin/chatbot-react-React Task Processor), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-NodeJS Task Processor](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
 # Future
+
+Many systems are trying to capture value and this often limits the solution in some way. For example, many businesses would like to have influence over the community using their infrastructure and eventually monetize this. Proprietary system tend to seek to lock-in users. T@skFlow is not not intended to capture value, it is intended to enable users to capture value. It is assumed that if this value is significant then T@skFlow will be given resources to further amplify that value creation.
 
 Here is what GPT-4 has to say about T@skFlow:
 

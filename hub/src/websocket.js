@@ -17,9 +17,15 @@ function wsSendObject(sessionId, message = {}) {
     }
     // The destination is availalbe because nodejs does not initiate webscoket connections
     message.task.destination = ws.data.destination;
+    message.task.sessionId = sessionId;
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject ", JSON.stringify(message) )
   }
+}
+
+function wsSendTask(message) {
+  console.log("wsSendTask")
+  wsSendObject(message.task.sessionId, message);
 }
 
 const processorConnections = new Map(); // Could merge into connections?
@@ -40,7 +46,7 @@ function initWebSocketProxy(server) {
 
       const j = JSON.parse(message);
 
-      //console.log("ws.on message", j)
+      console.log("ws.on message", j)
 
       if (j?.sessionId) {
         sessionId = j.sessionId;
@@ -67,11 +73,16 @@ function initWebSocketProxy(server) {
 
               processorWs.on("close", function (code, reason) {
                 console.log("processorWs is closed with code: " + code + " reason: ", reason);
-                processorConnections.delete(processorUrl);
+                processorConnections.delete(sessionId + processorUrl);
                 if (!closing) {
                   ws.close(code, reason);
                 }
                 closing = true;
+              });
+
+              processorWs.on('error', function(error) {
+                console.error("Websocket error: ", error);
+                connections.delete(sessionId + processorUrl);
               });
             }
           } else {
@@ -83,6 +94,7 @@ function initWebSocketProxy(server) {
 
       if (j?.ping) {
         wsSendObject(sessionId, { pong: "ok" });
+        console.log("Pong " + sessionId)
       }
 
       // Forward the message to the node.js server
@@ -104,7 +116,15 @@ function initWebSocketProxy(server) {
       processorConnections.delete(sessionId + ws.data["destination"]);
       closing = true;
     });
+
+    ws.on('error', function(error) {
+      console.error("Websocket error: ", error);
+      if (ws.data.sessionId) {
+        connections.delete(ws.data.sessionId);
+      }
+    });
+
   });
 };
 
-export { initWebSocketProxy, wsSendObject };
+export { initWebSocketProxy, wsSendObject, wsSendTask };

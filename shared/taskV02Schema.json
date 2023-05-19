@@ -75,6 +75,9 @@
         "send": {
           "type": "boolean"
         },
+        "sessionId": {
+          "type": "string"
+        },
         "source": {
           "type": "string"
         },
