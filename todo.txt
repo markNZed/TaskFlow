@@ -1,5 +1,7 @@
 /* ToDo
 -------  
+address is just a part of a task request
+  raises the idea of a task setting user information on the hub
 In tasktemplates environments: ["nodejs"] could replace serverOnly
 Each processor needs a list of active Tasks
   Need to be able to push tasks to Processor

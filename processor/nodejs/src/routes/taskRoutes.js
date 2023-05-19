@@ -55,15 +55,11 @@ router.post("/update", async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
-    let address = req.body.address;
 
     if (task) {
       if (!task.sessionId) {
         console.log("Warning: sessionId missing from task");
       }
-      if (address) {
-        task.request["address"] = address;
-      } // This should be done on the React Task Processor side
       if (task.updateCount) {
         task.updateCount += 1;
       } else {

@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 
 async function newTask_async(
     id,
+    userId,
     threadId = null,
     siblingTask = null
   ) {
@@ -43,6 +44,7 @@ async function newTask_async(
     if (!taskCopy?.state) {
       taskCopy["state"] = {};
     }
+    taskCopy["userId"] = userId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;
     if (siblingInstanceId) {

@@ -50,6 +50,8 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
     let originalBody = req.body;
     let task = originalBody.task;
 
+    let userId = utils.getUserId(req);
+
     // Process the task
     task.source = req.ip;  // assuming the task object already exists in the body
 

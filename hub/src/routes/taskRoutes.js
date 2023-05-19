@@ -21,11 +21,10 @@ router.post("/start", async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
-    let address = req.body?.address;
     const siblingTask = req.body?.siblingTask;
 
     const ip = req.ip || req.connection.remoteAddress;
-    console.log('Source IP: ', ip);
+    //console.log('Source IP: ', ip);
 
     const startId = task.id;
     const threadId = task?.threadId;
@@ -42,21 +41,13 @@ router.post("/start", async (req, res) => {
     } else {
       // default is to start a new thread
       // Instances key: no recorded in DB
-      task = await newTask_async(startId, threadId, siblingTask);
+      task = await newTask_async(startId, userId, threadId, siblingTask);
       task.source = ip;
 
-      if (!sessionId) {
-        sessionId = siblingTask.sessionId;
-      }
-
-      task["userId"] = userId;
       if (sessionId) {
         task.config["sessionId"] = sessionId;
       } else {
         console.log("Warning: sessionId missing");
-      }
-      if (address) {
-        task.request["address"] = address;
       }
       // We start with the deepest component in the stack
       if (typeof component_depth === "number") {

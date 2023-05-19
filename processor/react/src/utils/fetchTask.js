@@ -3,9 +3,6 @@ import { toTask, fromTask } from "./taskConverterWrapper";
 import { log } from "./utils";
 
 export const fetchTask = async (globalState, end_point, task) => {
-  const sideband = {
-    address: globalState?.address,
-  };
 
   let messageJsonString;
 
@@ -22,6 +19,9 @@ export const fetchTask = async (globalState, end_point, task) => {
   // The final destination of the task
   task.destination = `${server}/api/${end_point}`;
   task.sessionId = globalState?.sessionId;
+  if ( globalState?.address && task.request ) {
+    task.request["address"] = globalState.address;
+  }
 
   // The immedaite destination of this request
   let destination;
@@ -35,11 +35,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
-    const messageObject = {
-      ...sideband,
-      task: validatedTaskObject,
-    };
-    messageJsonString = JSON.stringify(messageObject);
+    messageJsonString = JSON.stringify({ task: validatedTaskObject });
   } catch (error) {
     console.log("Error while converting Task to JSON:", error, task);
     return;
