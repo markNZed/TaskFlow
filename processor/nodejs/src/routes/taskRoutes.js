@@ -103,13 +103,6 @@ router.post("/update", async (req, res) => {
       await instancesStore_async.set(instanceId, updated_task);
       // Fetch from the Task Hub
       updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
-      /*
-      updated_task = await newTask_async(
-        updated_task.nextTask,
-        null,
-        updated_task
-      );
-      */
     } else {
       updated_task = await do_task_async(updated_task);
     }
@@ -142,13 +135,6 @@ router.post("/update", async (req, res) => {
         await instancesStore_async.set(updated_task.instanceId, updated_task);
         // Fetch from the Task Hub
         updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
-        /*
-        updated_task = await newTask_async(
-          updated_task.nextTask,
-          null,
-          updated_task
-        );
-        */
       }
       if (updated_task.config?.serverOnly) {
         updated_task = await do_task_async(updated_task);

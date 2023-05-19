@@ -14,11 +14,11 @@ import { utils } from "./utils.mjs";
 
 // Route the Task to task.destination
 function dynamicRouter(req) {
-  //console.log('dynamicRouter')
   let target = 'http://null';
   if (req.body?.task?.destination) {
     target = req.body.task.destination;
   }
+  console.log('dynamicRouter target: ', target);
   return target;
 }
 
@@ -58,10 +58,10 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
 
     if (task.state?.done) {
       console.log("Task done " + task.id);
-      task.state.done = false;
+      //task.state.done = false;
       //await instancesStore_async.set(instanceId, task);
       // Fetch from the Task Hub
-      //updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
+      //updated_task = await newTask_async(userId, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
 
     }
 
@@ -75,12 +75,19 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
   // If end is sent automatically responseInterceptor cannot update the response
   selfHandleResponse: true, 
   onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
-    const response = responseBuffer.toString('utf8');
-    let data = JSON.parse(response);
-    let task = data.task;
-    //task.label = "testing it"
-    //console.log('task: ', task);
-    return JSON.stringify(data);
+    let response = responseBuffer.toString('utf8');
+    try {
+      let data = JSON.parse(response);
+      //let task = data.task;
+      //task.label = "testing it"
+      //console.log('task: ', task);
+      response = JSON.stringify(data);
+    } catch (error) {
+      console.log("Invalid JSON string:", error);
+      console.log(response);
+      
+    }
+    return response
   }),
 });
 

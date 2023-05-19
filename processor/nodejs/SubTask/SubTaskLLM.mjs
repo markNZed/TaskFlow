@@ -48,7 +48,7 @@ function SendIncrementalWs(partialResponse, instanceId, sessionId) {
     //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
   } else {
     console.log(
-      "Lost websocket in SendIncrementalWs for instanceId " + instanceId
+      "Lost websocket in SendIncrementalWs for sessionId " + sessionId
     );
   }
 }
@@ -66,7 +66,7 @@ async function SubTaskLLM_async(task) {
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
-  const sessionId = T("config.sessionId");
+  const sessionId = T("sessionId");
   let ws = connections.get(sessionId);
   if (!ws) {
     console.log("Warning: SubTaskLLM_async could not find ws for " + sessionId);

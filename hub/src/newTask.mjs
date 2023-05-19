@@ -5,15 +5,21 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { instancesStore_async, threadsStore_async } from "./storage.mjs";
-import { tasks } from "./configdata.mjs";
+import { groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
+import { utils } from "./utils.mjs";
 
 async function newTask_async(
     id,
     userId,
+    ip,
+    groupId,
+    sessionId,
+    component_depth = null,
     threadId = null,
     siblingTask = null
   ) {
+    console.log("newTask_async", id, userId, ip, sessionId, groupId, component_depth, threadId);
     let siblingInstanceId;
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
@@ -23,6 +29,14 @@ async function newTask_async(
       console.log("ERROR could not find task with id", id)
     }
     let taskCopy = { ...tasks[id] };
+
+    // Check if the user has permissions
+    if (!utils.authenticatedTask(taskCopy, userId, groups)) {
+      console.log("Task authentication failed", taskCopy.id, userId);
+      taskCopy["error"] = "Task authentication failed";
+      return taskCopy;
+    }
+
     if (!taskCopy?.config) {
       taskCopy["config"] = {};
     }
@@ -45,6 +59,8 @@ async function newTask_async(
       taskCopy["state"] = {};
     }
     taskCopy["userId"] = userId;
+    taskCopy["source"] = ip;
+    taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;
     if (siblingInstanceId) {
@@ -57,9 +73,13 @@ async function newTask_async(
       if (!threadId) {
         threadId = parent.threadId;
       }
-      if (parent?.stackPtr) {
-        // Note component_depth may be modified in api/task/start
+      // We start with the deepest component in the stack
+      if (typeof component_depth === "number") {
+        taskCopy["stackPtr"] = component_depth;
+      } else if (parent?.stackPtr) {
         taskCopy["stackPtr"] = parent.stackPtr;
+      } else if (taskCopy?.stack) {
+        taskCopy["stackPtr"] = taskCopy.stack.length;
       }
       if (
         !parent.hasOwnProperty("childrenInstances") ||
@@ -88,6 +108,55 @@ async function newTask_async(
     }
     taskCopy["createdAt"] = Date.now();
     await instancesStore_async.set(instanceId, taskCopy);
+
+    if (taskCopy.config?.oneThread) {
+      const threadId = id + userId;
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (instanceIds) {
+        // Returning last so continuing (maybe should return first?)
+        const instanceId = instanceIds[instanceIds.length - 1];
+        taskCopy = await instancesStore_async.get(instanceId);
+        console.log(
+          "Restarting one_thread " + instanceId + " for " + taskCopy.id
+        );
+      } else {
+        taskCopy.threadId = threadId
+      }
+    }
+    
+    if (taskCopy.config?.restoreSession) {
+      const threadId = id + sessionId;
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (instanceIds) {
+        // Returning last so continuing (maybe should return first?)
+        const instanceId = instanceIds[instanceIds.length - 1];
+        taskCopy = await instancesStore_async.get(instanceId);
+        console.log("Restarting session " + instanceId + " for " + taskCopy.id);
+      } else {
+        taskCopy.threadId = threadId
+      }
+    }
+
+    if (taskCopy.config?.collaborate) {
+      // Taskflow to choose the group (taskflow should include that)
+      if (!groupId) {
+        // This is a hack for the collaborate feature
+        groupId = taskCopy.config.collaborate;
+      }
+      const threadId = id + groupId;
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (instanceIds) {
+        // Returning last so continuing (maybe should return first?)
+        const instanceId = instanceIds[instanceIds.length - 1];
+        taskCopy = await instancesStore_async.get(instanceId);
+        console.log(
+          "Restarting collaboration " + instanceId + " for " + taskCopy.id
+        );
+      } else {
+        taskCopy.threadId = threadId
+      }
+    }
+
     //console.log("New task ", taskCopy)
     console.log("New task id " + taskCopy.id);
     return taskCopy;

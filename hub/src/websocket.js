@@ -75,7 +75,7 @@ function initWebSocketProxy(server) {
                 console.log("processorWs is closed with code: " + code + " reason: ", reason);
                 processorConnections.delete(sessionId + processorUrl);
                 if (!closing) {
-                  ws.close(code, reason);
+                  ws.close(1000);
                 }
                 closing = true;
               });
@@ -110,7 +110,7 @@ function initWebSocketProxy(server) {
       if (!closing) {
         const processorWs = processorConnections.get(sessionId + ws.data["destination"]);
         if (processorWs && processorWs.readyState === WebSocket.OPEN) {
-          processorWs.close(code, reason);
+          processorWs.close(1000);
         }
       }
       processorConnections.delete(sessionId + ws.data["destination"]);

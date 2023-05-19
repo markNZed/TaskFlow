@@ -7,8 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import newTask_async from "../newTask.mjs";
-import { groups, tasks } from "../configdata.mjs";
-import { instancesStore_async, threadsStore_async } from "../storage.mjs";
+import { tasks } from "../configdata.mjs";
+import { instancesStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -22,16 +22,15 @@ router.post("/start", async (req, res) => {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
     const siblingTask = req.body?.siblingTask;
-
     const ip = req.ip || req.connection.remoteAddress;
-    //console.log('Source IP: ', ip);
+
+    console.log("task", task);
 
     const startId = task.id;
-    const threadId = task?.threadId;
-    let sessionId = task?.sessionId;
+    const threadId = task.threadId;
+    let sessionId = task.sessionId;
 
     const component_depth = task.stackPtr;
-    let groupId = task?.groupId;
 
     if (!tasks[startId]) {
       const msg = "ERROR could not find task " + startId;
@@ -40,87 +39,15 @@ router.post("/start", async (req, res) => {
       return;
     } else {
       // default is to start a new thread
-      // Instances key: no recorded in DB
-      task = await newTask_async(startId, userId, threadId, siblingTask);
-      task.source = ip;
+      // Maybe we just set initial task values and pass that in instead of a long list of arguments?
+      const startTask = await newTask_async(startId, userId, ip, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
-      if (sessionId) {
-        task.config["sessionId"] = sessionId;
-      } else {
-        console.log("Warning: sessionId missing");
-      }
-      // We start with the deepest component in the stack
-      if (typeof component_depth === "number") {
-        console.log("Setting component_depth", component_depth);
-        task.stackPtr = component_depth;
-      } else if (task?.stack) {
-        task["stackPtr"] = task.stack.length;
-      }
-
-      //console.log(task)
-
-      // Check if the user has permissions
-      if (!utils.authenticatedTask(task, userId, groups)) {
-        console.log("Task authentication failed", task.id, userId);
-        res.status(400).json({ error: "Task authentication failed" });
-        return;
-      }
-
-      if (task.config?.oneThread) {
-        const threadId = startId + userId;
-        let instanceIds = await threadsStore_async.get(threadId);
-        if (instanceIds) {
-          // Returning last so continuing (maybe should return first?)
-          const instanceId = instanceIds[instanceIds.length - 1];
-          task = await instancesStore_async.get(instanceId);
-          console.log(
-            "Restarting one_thread " + instanceId + " for " + task.id
-          );
-        } else {
-          task.threadId = threadId
-        }
-      }
-      if (task.config?.restoreSession) {
-        const threadId = startId + sessionId;
-        let instanceIds = await threadsStore_async.get(threadId);
-        if (instanceIds) {
-          // Returning last so continuing (maybe should return first?)
-          const instanceId = instanceIds[instanceIds.length - 1];
-          task = await instancesStore_async.get(instanceId);
-          console.log("Restarting session " + instanceId + " for " + task.id);
-        } else {
-          task.threadId = threadId
-        }
-      }
-      if (task.config?.collaborate) {
-        // Taskflow to choose the group (taskflow should include that)
-        if (!groupId) {
-          // This is a hack for the collaborate feature
-          groupId = task.config.collaborate;
-        }
-        const threadId = startId + groupId;
-        let instanceIds = await threadsStore_async.get(threadId);
-        if (instanceIds) {
-          // Returning last so continuing (maybe should return first?)
-          const instanceId = instanceIds[instanceIds.length - 1];
-          task = await instancesStore_async.get(instanceId);
-          console.log(
-            "Restarting collaboration " + instanceId + " for " + task.id
-          );
-        } else {
-          task.threadId = threadId
-        }
-      }
-
-      await instancesStore_async.set(task.instanceId, task);
-
-      //let updated_client_task = utils.filter_in(tasktemplates,tasks, task)
-      let updated_client_task = task; // need to filter based on Schema
+      await instancesStore_async.set(task.instanceId, startTask);
 
       let messageJsonString;
       let messageObject;
       try {
-        const validatedTaskJsonString = fromTask(updated_client_task);
+        const validatedTaskJsonString = fromTask(startTask);
         let validatedTaskObject = JSON.parse(validatedTaskJsonString);
         messageObject = {
           task: validatedTaskObject,
@@ -130,7 +57,7 @@ router.post("/start", async (req, res) => {
         console.error(
           "Error while validating Task against schema:",
           error,
-          task
+          startTask
         );
         return;
       }
