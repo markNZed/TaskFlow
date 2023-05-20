@@ -4,80 +4,97 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { WebSocketServer } from "ws";
-import { connections } from "./storage.mjs";
+import { WebSocket } from "ws";
+import { hubSocketUrl } from "./../config.mjs";
 
-function wsSendObject(sessionId, message = {}) {
-  let ws = connections.get(sessionId);
-  if (!ws) {
-    console.log("Lost websocket for wsSendObject", sessionId, message);
+console.log("hubSocketUrl", hubSocketUrl);
+let connectionAttempts = 0;
+let maxAttempts = 10;
+let processorWs;
+
+function wsSendObject(message = {}) {
+  if (!processorWs) {
+    console.log("Lost websocket for wsSendObject", message);
   } else {
     if (!message?.task) {
       message["task"] = {}
     }
-    // The destination is availalbe because nodejs does not initiate webscoket connections
-    message.task.destination = ws.data.destination;
-    message.task.sessionId = sessionId;
+    if (!message.task?.sessionId && !message.task?.ping) {
+      console.log("Missing sessionId");
+    }
+    // This is just ahack, it should be set by the Task Function
+    if (!message.task?.newDestination) {
+      message.task.newDestination = "react";
+    }
     message.task.source = "nodejs";
-    ws.send(JSON.stringify(message));
-    //console.log("wsSendObject ", JSON.stringify(message) )
+    processorWs.send(JSON.stringify(message));
+    if (!message.task?.ping) {
+      console.log("wsSendObject ", JSON.stringify(message) )
+    }
   }
 }
 
 function wsSendTask(message) {
   //console.log("wsSendTask " + message.task.sessionId)
-  wsSendObject(message.task.sessionId, message);
+  wsSendObject(message);
 }
 
-function initWebSocketServer(server) {
-  const websocketServer = new WebSocketServer({ server: server, path: "/nodejs/ws" });
+const connectWebSocket = () => {
+  processorWs = new WebSocket(hubSocketUrl);
 
-  websocketServer.on("connection", (ws) => {
-    console.log("websocketServer.on");
-
-    let sessionId = undefined;
-    ws.data = { sessionId: sessionId };
-
-    ws.on("message", async (message) => {
-
-      const j = JSON.parse(message);
-
-      //console.log("ws.on message", j)
-
-      if (j?.sessionId) {
-        sessionId = j.sessionId;
-        if (ws.data["sessionId"] !== sessionId) {
-          connections.set(sessionId, ws);
-          ws.data["sessionId"] = sessionId;
-          console.log("Websocket sessionId", sessionId)
-          if (j?.task?.source) {
-            ws.data["destination"] = j.task.source;
-          } else {
-            console.log("No task.source in message", j)
-            ws.data["destination"] = "unknown";
-          }
-        }
+  processorWs.onopen = () => {
+    console.log("processorWs.onOpen");
+    // reset connection attempts on successful connection
+    connectionAttempts = 0;
+    const taskPing = () => {
+      return {
+        ping: "ok",
+        newDestination: "hub",
       }
-
-      if (j?.ping) {
-        wsSendObject(sessionId, { pong: "ok" });
-        //console.log("Pong " + sessionId)
+    }
+    wsSendTask({task: taskPing()});
+    const intervalId = setInterval(() => {
+      if (processorWs.readyState === WebSocket.OPEN) {
+        wsSendTask({task: taskPing()});
+      } else {
+        clearInterval(intervalId);
       }
-    });
+    }, 30 * 1000);
+    processorWs.pingIntervalId = intervalId;
+  }
 
-    ws.on("close", function (code, reason) {
-      console.log("ws sessionId " + ws.data.sessionId + " is closed with code: " + code + " reason: ", reason);
-      connections.delete(sessionId);
-    });
+  processorWs.onmessage = async (event) => {
+    const j = JSON.parse(event.data);
+    //console.log("ws.on message", j)
+  };
 
-    ws.on('error', function(error) {
-      console.error("Websocket error: ", error);
-      if (ws.data.sessionId) {
-        connections.delete(ws.data.sessionId);
-      }
-    });
+  processorWs.onclose = function (event) {
+    console.log("processorWs sessionId is closed with code: " + event.code);
+    // attempt reconnection with backoff on close
+    if (connectionAttempts < maxAttempts) {
+      let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
+      console.log(`Attempting reconnection in ${backoffTime}ms...`);
+      setTimeout(connectWebSocket, backoffTime);
+      connectionAttempts++;
+    } else {
+      console.log("Max reconnection attempts reached.");
+    }
+  };
 
-  });
+  processorWs.onerror = function(error) {
+    console.error("Websocket error: ", error.message);
+    // attempt reconnection with backoff on error
+    if (connectionAttempts < maxAttempts) {
+      let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
+      console.log(`Attempting reconnection in ${backoffTime}ms...`);
+      setTimeout(connectWebSocket, backoffTime);
+      connectionAttempts++;
+    } else {
+      console.log("Max reconnection attempts reached.");
+    }
+  };
 }
 
-export { initWebSocketServer, wsSendObject, wsSendTask };
+connectWebSocket();
+
+export { wsSendTask };

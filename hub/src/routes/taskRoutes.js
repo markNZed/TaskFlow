@@ -32,12 +32,19 @@ router.post("/start", async (req, res) => {
 
     const component_depth = task.stackPtr;
 
-    // default is to start a new thread
     // Maybe we just set initial task values and pass that in instead of a long list of arguments?
     const startTask = await newTask_async(startId, userId, true, source, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
-    instancesStore_async.set(task.instanceId, startTask);
-    activeTasksStore_async.set(task.instanceId + source, startTask);
+    const processorId = startTask.sessionId + startTask.source;
+    if (await activeTasksStore_async.has(task.instanceId)) {
+      const activeTask = await activeTasksStore_async.get(task.instanceId)
+      console.log("activeTask", activeTask)
+      activeTask.processorIds.push(processorId);
+      activeTasksStore_async.set(task.instanceId, activeTask);
+    } else {
+      const activeTask = {task: startTask, processorIds: [processorId]};
+      activeTasksStore_async.set(task.instanceId, activeTask);
+    }
 
     // Here we will need to send the task to each environment
     // We are not yet dealing with distributed tasks

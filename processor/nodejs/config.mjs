@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // .env is intended to allow for config that is not under version control
-import { appLabel, appName, appAbbrev, TASKHUB_URL as TASKHUB_URL_DEFAULT } from "./src/shared/config.mjs"
+import { appLabel, appName, appAbbrev, TASKHUB_URL as TASKHUB_URL_DEFAULT, hubSocketUrl } from "./src/shared/config.mjs"
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -31,4 +31,4 @@ if (process.env.MAP_USER_JSON) {
 
 const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";
 
-export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR };
+export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl };

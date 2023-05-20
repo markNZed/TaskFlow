@@ -1,9 +1,19 @@
 /* ToDo
 -------  
-Hub as a router rather than proxy 
+Use explicit processorId : j.task.sessionId + "react" instead of sessionId ?
+The hub to nodejs only needs one websocket not one per session?
+Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
+The processors have client websockets now.
+Should nodejs have a server or should it be a client?
+  It posts to update on Hub
+  The tasks on the processor would be udated how? 
+
+Demo of collaborative chat would be good.
+
+Hub as a router rather than proxy
   The processor should not worry about destination ?
     It should request the destination as the environment not the processor.
-      Then Hub sends to processor
+      Not even  - Hub should update all activeTasks
     React
       destination is set in WebSocketContext.js and fetchTask.js
       Really just need to start or update. After update all copies should be updated.
@@ -250,6 +260,8 @@ Comparison with similar systems
     Commercially restricted by its authors
     This led me to Node-RED
   https://nodered.org/
+  Meteor
+     Meteor's data synchronization mechanism known as Distributed Data Protocol (DDP).
 
 
 Test Plan

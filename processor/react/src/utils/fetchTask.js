@@ -19,7 +19,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   }
 
   // The final destination of the task
-  task.destination = `${server}/api/${end_point}`;
+  task.destination = `${server}/api/${end_point}`;;
   task.sessionId = globalState?.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
@@ -29,9 +29,12 @@ export const fetchTask = async (globalState, end_point, task) => {
   let destination;
   if (end_point === "task/start") {
     destination = `${hubUrl}/api/${end_point}`
+    task.newDestination = "hub"
   } else {
     //destination = task.destination // Not using proxy
     destination = `${hubUrl}/processor/nodejs` // Using proxy
+    // The Task Function should define this
+    task.newDestination = "nodejs"
   }
 
   try {

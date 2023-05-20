@@ -24,7 +24,7 @@ import { proxyHandler } from './src/proxyHandler.js';
 import { initWebSocketProxy } from "./src/websocket.js";
 
 import { utils } from "./src/utils.mjs";
-import { instancesStore_async } from "./src/storage.mjs";
+import { instancesStore_async, activeTasksStore_async } from "./src/storage.mjs";
 import newTask_async from "./src/newTask.mjs";
 import updateTask_async from "./src/updateTask.mjs";
 import { processors, tasktemplates } from "./src/configdata.mjs";
@@ -76,8 +76,8 @@ app.use('/hub/processor', async (req, res, next) => {
     console.log("Task done through proxy " + task.id);
     task.state.done = false;
     instancesStore_async.set(task.instanceId, task);
-    // We should send a delete message to all the copies and also delete those
-    activeTasksStore_async.delete(task.instanceId + source);
+    // We should send a delete message to all the copies and also delete those (see Meteor protocol)
+    activeTasksStore_async.delete(task.instanceId);
     // Fetch from the Task Hub
     let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
     // What is the active tasktemplate?

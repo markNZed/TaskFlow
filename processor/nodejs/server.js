@@ -18,7 +18,6 @@ dotenv.config();
 import { REACT_URL, appName } from "./config.mjs";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
-import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -64,8 +63,6 @@ app.use("/", miscRoutes); // After other routes because it has the default route
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
-
-initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5000;
 server.listen(port, () => console.log(appName + " NodeJS Task Processor started"));

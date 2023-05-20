@@ -35,6 +35,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         m["task"] = {}
       }
       m.task.destination = socketUrl
+      m.task.newDestination = "hub"
       m.task.sessionId = globalState?.sessionId
       m.task.source = "react"
       sendJsonMessage(m);
@@ -54,10 +55,17 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
-      sendJsonMessagePlusRef.current({ sessionId: globalState?.sessionId, ping: "ok" });
+      const taskPing = () => {
+        return {
+          sessionId: globalState?.sessionId,
+          ping: "ok",
+          newDestination: "hub",
+        }
+      }
+      sendJsonMessagePlusRef.current({task: taskPing()});
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({ sessionId: globalState?.sessionId, ping: "ok" });
+          sendJsonMessagePlusRef.current({task: taskPing()});
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);

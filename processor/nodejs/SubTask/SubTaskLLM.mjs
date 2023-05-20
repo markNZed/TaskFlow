@@ -12,7 +12,6 @@ import { users } from "../src/configdata.mjs";
 import {
   messagesStore_async,
   cacheStore_async,
-  connections,
 } from "../src/storage.mjs";
 import { wsSendTask } from "../src/websocket.js";
 import * as dotenv from "dotenv";
@@ -25,32 +24,27 @@ utils.add_index(modeltemplates);
 
 var defaults = await utils.load_data_async(CONFIG_DIR, "defaults");
 
+const wsDelta = {}
+
 function SendIncrementalWs(partialResponse, instanceId, sessionId) {
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
-  let ws = connections.get(sessionId);
-  if (ws) {
-    let response;
-    if (ws.data["delta_count"] === undefined) {
-      ws.data["delta_count"] = 0;
-    }
-    if (ws.data["delta_count"] && ws.data["delta_count"] % 20 === 0) {
-      response = { text: partialResponse.text, mode: "partial" };
-    } else if (incr) {
-      response = { text: partialResponse.delta, mode: "delta" };
-    }
-    if (response) {
-      const partialTask = {
-        task: { instanceId: instanceId, response: response, sessionId: sessionId },
-      };
-      wsSendTask(partialTask);
-      ws.data["delta_count"] += 1;
-    }
-    //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
-  } else {
-    console.log(
-      "Lost websocket in SendIncrementalWs for sessionId " + sessionId
-    );
+  let response;
+  if (wsDelta[sessionId] === undefined) {
+    wsDelta[sessionId] = 0;
   }
+  if (wsDelta[sessionId] && wsDelta[sessionId] % 20 === 0) {
+    response = { text: partialResponse.text, mode: "partial" };
+  } else if (incr) {
+    response = { text: partialResponse.delta, mode: "delta" };
+  }
+  if (response) {
+    const partialTask = {
+      task: { instanceId: instanceId, response: response, sessionId: sessionId },
+    };
+    wsSendTask(partialTask);
+    wsDelta[sessionId] += 1;
+  }
+  //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
 }
 
 async function SubTaskLLM_async(task) {
@@ -67,15 +61,11 @@ async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
   const sessionId = T("sessionId");
-  let ws = connections.get(sessionId);
-  if (!ws) {
-    console.log("Warning: SubTaskLLM_async could not find ws for " + sessionId);
-  }
   let systemMessage = "";
   let lastMessageId = null;
   let initializing = false;
   let use_cache = CACHE_ENABLE;
-  let server_only = false;
+  let noWebsocket = false;
 
   let langModel = T("request.model") || defaults.langModel;
   let temperature = T("request.temperature") || defaults.temperature;
@@ -116,9 +106,11 @@ async function chat_prepare_async(task) {
     console.log("Append modeltemplate prompt " + modeltemplate.append_prompt);
   }
 
-  if (T("config.server_only")) {
-    server_only = T("config.server_only");
-    console.log("Task server_only");
+  const environments = T("environments");
+  // If the task is running on the nodejs processor we do not use websocket
+  if (environments.length === 1 && environments[0] === "nodejs") {
+    noWebsocket = true;
+    console.log("Task noWebsocket");
   }
 
   if (modeltemplate?.forget) {
@@ -198,7 +190,7 @@ async function chat_prepare_async(task) {
   return {
     systemMessage,
     lastMessageId,
-    server_only,
+    noWebsocket,
     prompt,
     use_cache,
     langModel,
@@ -224,7 +216,7 @@ async function ChatGPTAPI_request_async(params) {
   const {
     systemMessage,
     lastMessageId,
-    server_only,
+    noWebsocket,
     prompt,
     use_cache,
     langModel,
@@ -286,7 +278,7 @@ async function ChatGPTAPI_request_async(params) {
     systemMessage: systemMessage,
   };
 
-  if (!server_only) {
+  if (!noWebsocket) {
     messageParams["onProgress"] = (partialResponse) =>
       SendIncrementalWs(partialResponse, instanceId, sessionId);
   }
@@ -320,21 +312,16 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   // Message can be sent from one of multiple sources
-  function message_from(source, text, server_only, sessionId, instanceId) {
+  function message_from(source, text, noWebsocket, sessionId, instanceId) {
     // Don't add ... when response is fully displayed
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
       task: { instanceId: instanceId, response: response, sessionId: sessionId },
     };
-    let ws = connections.get(sessionId);
-    if (ws) {
-      ws.data["delta_count"] = 0;
-      if (!server_only) {
-        wsSendTask(partialTask);
-      }
-    } else {
-      console.log("Lost ws in message_from");
+    if (!noWebsocket) {
+      wsDelta[sessionId] = 0
+      wsSendTask(partialTask);
     }
   }
 
@@ -359,7 +346,7 @@ async function ChatGPTAPI_request_async(params) {
       SendIncrementalWs(partialResponse, instanceId, sessionId);
       await sleep(80);
     }
-    message_from("cache", text, server_only, sessionId, instanceId);
+    message_from("cache", text, noWebsocket, sessionId, instanceId);
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
@@ -371,7 +358,7 @@ async function ChatGPTAPI_request_async(params) {
         console.log("Debug: ", cacheKeyText);
       }
       const text = "Dummy text";
-      message_from("Dummy API", text, server_only, sessionId, instanceId);
+      message_from("Dummy API", text, noWebsocket, sessionId, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {
       response_text_promise = api
@@ -382,7 +369,7 @@ async function ChatGPTAPI_request_async(params) {
             response.id
           );
           let text = response.text;
-          message_from("API", text, server_only, sessionId, instanceId);
+          message_from("API", text, noWebsocket, sessionId, instanceId);
           if (use_cache) {
             cacheStore_async.set(cacheKey, response);
             console.log("cache stored key ", cacheKey);
@@ -391,7 +378,7 @@ async function ChatGPTAPI_request_async(params) {
         })
         .catch((error) => {
           let text = "ERROR " + error.message;
-          message_from("API", text, server_only, sessionId);
+          message_from("API", text, noWebsocket, sessionId);
           return text;
         });
     }
