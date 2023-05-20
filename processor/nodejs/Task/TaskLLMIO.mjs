@@ -93,9 +93,10 @@ const TaskLLMIO_async = async function (task) {
   } else {
     if (T("request.input")) {
       prompt += T("request.input");
-      //console.log("Client prompt " + prompt)
+      console.log("request.input " + prompt)
     } else {
       prompt = T("request.prompt");
+      console.log("request.prompt " + prompt)
     }
   }
 

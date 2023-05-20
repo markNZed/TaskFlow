@@ -30,7 +30,7 @@ async function newTask_async(
       console.log("ERROR could not find task with id", id)
     }
     let taskCopy = { ...tasks[id] };
-
+    //console.log("taskCopy", taskCopy)
     // Check if the user has permissions
     if (authenticate && !utils.authenticatedTask(taskCopy, userId, groups)) {
       console.log("Task authentication failed", taskCopy.id, userId);

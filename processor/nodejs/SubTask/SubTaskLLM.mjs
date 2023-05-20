@@ -83,6 +83,7 @@ async function chat_prepare_async(task) {
   let maxResponseTokens = T("request.maxResponseTokens") || defaults.maxResponseTokens;
 
   let prompt = T("request.prompt");
+  //console.log("prompt " + prompt);
   let modeltemplate = modeltemplates[T("request.modeltemplate")];
   if (!modeltemplate) {
     console.log("No modeltemplate for ", task);
