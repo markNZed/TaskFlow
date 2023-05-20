@@ -7,8 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import newTask_async from "../newTask.mjs";
-import { tasks } from "../configdata.mjs";
-import { instancesStore_async } from "../storage.mjs";
+import { instancesStore_async, activeTasksStore_async, } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -37,7 +36,11 @@ router.post("/start", async (req, res) => {
     // Maybe we just set initial task values and pass that in instead of a long list of arguments?
     const startTask = await newTask_async(startId, userId, true, source, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
-    await instancesStore_async.set(task.instanceId, startTask);
+    instancesStore_async.set(task.instanceId, startTask);
+    activeTasksStore_async.set(task.instanceId + source, startTask);
+
+    // Here we will need to send the task to each environment
+    // We are not yet dealing with distributed tasks
 
     let messageJsonString;
     let messageObject;

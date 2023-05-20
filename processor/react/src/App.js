@@ -9,9 +9,9 @@ import { Routes, Route } from "react-router-dom";
 import "./styles/App.css";
 import "./styles/normal.css";
 import Taskflows from "./components/Taskflows";
+import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
-import { useWebSocketContext } from "./contexts/WebSocketContext";
 import { hubUrl } from "./config";
 import debug from "debug";
 
@@ -19,7 +19,6 @@ function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
-  const { sendJsonMessagePlus } = useWebSocketContext();
 
   //debug.disable();
   // This gives us a central place to control debug
@@ -72,6 +71,7 @@ function App() {
   return (
     <Routes>
       <Route exact path="/" element={<Taskflows />} />
+      <Route exact path="/db" element={<IndexedDBViewer />} />
     </Routes>
   );
 }

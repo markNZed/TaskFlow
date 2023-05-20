@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { TASKHUB_URL } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
+import { activeTasksStore_async } from "../storage.mjs";
 
 export const startTask_async = async (userId, startId, siblingTask) => {
 
@@ -53,6 +54,7 @@ export const startTask_async = async (userId, startId, siblingTask) => {
 
   try {
     const task = toTask(JSON.stringify(data.task));
+    activeTasksStore_async.set(task.instanceId, task);
     return task;
   } catch (error) {
     console.log("Error while converting JSON to Task:", error, data);

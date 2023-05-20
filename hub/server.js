@@ -75,7 +75,9 @@ app.use('/hub/processor', async (req, res, next) => {
   if (task.state?.done) {
     console.log("Task done through proxy " + task.id);
     task.state.done = false;
-    await instancesStore_async.set(task.instanceId, task);
+    instancesStore_async.set(task.instanceId, task);
+    // We should send a delete message to all the copies and also delete those
+    activeTasksStore_async.delete(task.instanceId + source);
     // Fetch from the Task Hub
     let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
     // What is the active tasktemplate?
@@ -103,6 +105,7 @@ app.use('/hub/processor', async (req, res, next) => {
       if (environment === "nodejs") {
         newTask.destination = processor.url + "/api/task/update";
         //console.log("newTask", newTask)
+        // This update activity basically creates the task on the processor
         newTask = await updateTask_async(newTask)
         res.json({task: newTask});
         return;

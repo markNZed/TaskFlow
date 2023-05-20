@@ -1,8 +1,13 @@
 /* ToDo
 -------  
-Hub as a standard routes rather than proxy.
-Add function to remove last paragraph
-  
+Hub as a router rather than proxy 
+  The processor should not worry about destination ?
+    It should request the destination as the environment not the processor.
+      Then Hub sends to processor
+    React
+      destination is set in WebSocketContext.js and fetchTask.js
+      Really just need to start or update. After update all copies should be updated.
+      THe Hub needs to keep track of the tasks
 Each processor needs a list of active Tasks
   Need to be able to push tasks to Processor
     Websocket commands task.processor.command 
@@ -13,25 +18,30 @@ Each processor needs a list of active Tasks
     When hub receives request from React to start task it should send command to nodejs to also start task
       Nodejs needs to store active tasks
       Currently react sends task to nodejs though update
-        Hub could capture update and send diff to nodejs
           Nodejs updates the task, this can hook into the current update function
           Eventualy the update function is like a kernel that processes tasks
             Loops over the tasks updating those that have changed.
-              The task that is returned from the Task Function is used to update the Processor copy and then send diff to Hub
-                Hub then creates full task and sends as Update reply to React.
+              The task that is returned from the Task Function is used to update the Processor copy and send to Hub
+              Hub then creates full task and sends as Update reply to React.
 Refactor where information is stored
   The Hub knows which processors have which Functions through tasktemplates
   Hub routes functions then Processor no longer specifies destination
   At the moment the React TP decides on the destination processor
     Eventually the Hub should choose the processor based on the environments the Task uses
 
-address is just a part of a task request
-  raises the idea of a task setting user information on the hub
+Add function to remove last paragraph
+  Interesting to explore how that might be done
+
+Address is just a part of a task request
+  Raises the idea of a task setting user information on the hub
+    Or should there be a Task to do that?
             
 We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemnted on the Task Processor. 
   Maybe a field in the Task is for local processor - this makes sense
 
 Eventually do we move to using only web sockets? Maybe harder to debug.
+  Sending Tasks to React will require websocket to at least trigger a request.
+    This can allow things to "popup" into the UI
 
 This argues for Tasks being distributed - different functions.
   If a Task passes through the Hub then we should track it in a keyv and maintain a distributed object

@@ -29,10 +29,16 @@ const instancesStore_async = utils.newKeyV(DB_URI, "instances");
 //   Key: threadId || taskId + userId || taskId + sessionId || taskId + groupId
 //   Value: array of instanceId
 const threadsStore_async = utils.newKeyV(DB_URI, "threads");
+// Schema:
+//   Key: instanceId
+//   Value: task object
+const activeTasksStore_async = utils.newKeyV(DB_URI, "activeTasks");
+
 
 export {
   sessionsStore_async,
   instancesStore_async,
   threadsStore_async,
+  activeTasksStore_async,
   connections,
 };
