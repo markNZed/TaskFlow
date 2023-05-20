@@ -36,6 +36,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.destination = socketUrl
       m.task.sessionId = globalState?.sessionId
+      m.task.source = "react"
       sendJsonMessage(m);
     };
   }, [globalState]);

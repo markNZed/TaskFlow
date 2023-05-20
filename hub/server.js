@@ -16,7 +16,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { REACT_URL, appName } from "./config.mjs";
+import { REACT_URL, NODEJS_URL, appName } from "./config.mjs";
 import sessionRoutes from "./src/routes/sessionRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
@@ -26,6 +26,8 @@ import { initWebSocketProxy } from "./src/websocket.js";
 import { utils } from "./src/utils.mjs";
 import { instancesStore_async } from "./src/storage.mjs";
 import newTask_async from "./src/newTask.mjs";
+import updateTask_async from "./src/updateTask.mjs";
+import { processors, tasktemplates } from "./src/configdata.mjs";
 
 const app = express();
 app.use(bodyParser.json());
@@ -75,7 +77,42 @@ app.use('/hub/processor', async (req, res, next) => {
     task.state.done = false;
     await instancesStore_async.set(task.instanceId, task);
     // Fetch from the Task Hub
-    const newTask = await newTask_async(task.nextTask, userId, req.ip, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    // What is the active tasktemplate?
+    const tasktemplateName = newTask.stack[newTask.stackPtr - 1]
+    //console.log("tasktemplateName", tasktemplateName);
+    const tasktemplate = tasktemplates["root." + tasktemplateName]
+    //console.log("tasktemplate", tasktemplate);
+    const environments = tasktemplate.environments;
+    // Need to deal with multiple environments.
+    // If the task.source is not in the environments array then we need to send the task to the relevant processor.
+    //console.log("environments", environments);
+    //console.log("task.source", task.source);
+    if (environments.indexOf(task.source) !== -1) {
+      // The source is in the environments array so we can just return.
+      console.log("Remember to deal with multiple environments")
+      res.json({task: newTask});
+      return;
+    } else if (environments.length === 1) {
+      // The desired environment
+      const environment = environments[0];
+      // Assuming there is one processor for each environment
+      const processor = processors["root." + environment];
+      //console.log("processor", processor);
+      // send the task to the correct processor
+      if (environment === "nodejs") {
+        newTask.destination = processor.url + "/api/task/update";
+        //console.log("newTask", newTask)
+        newTask = await updateTask_async(newTask)
+        res.json({task: newTask});
+        return;
+      } else {
+        console.log("Need to deal with other environments than nodejs " + environment);
+      }
+    } else {
+      console.log("Need to deal with multiple environments")
+    }
+    console.log("Should not be here");
     res.json({task: newTask});
   } else {
     console.log('proxyHandler next');

@@ -4,26 +4,16 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TASKHUB_URL } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 
-export const startTask_async = async (userId, startId, siblingTask) => {
-
-  let task = { id: startId, source: "nodejs" };
+const updateTask_async = async (task) => {
 
   let messageJsonString;
 
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
-    const validatedSiblingTaskJsonString = fromTask(siblingTask);
-    const validatedSiblingTask = JSON.parse(validatedSiblingTaskJsonString);
-    const messageObject = {
-      task: validatedTaskObject,
-      siblingTask: validatedSiblingTask,
-      userId: userId,
-    };
-    messageJsonString = JSON.stringify(messageObject);
+    messageJsonString = JSON.stringify({task: validatedTaskObject});
   } catch (error) {
     console.log("Error while converting Task to JSON:", error, task);
     return;
@@ -38,8 +28,8 @@ export const startTask_async = async (userId, startId, siblingTask) => {
     body: messageJsonString,
   };
 
-  const apiUrl = `${TASKHUB_URL}/api/task/start`
-  console.log("API startTask_async call to " + apiUrl)
+  const apiUrl = task.destination;
+  console.log("API updateTask_async call to " + apiUrl)
 
   const response = await fetch(apiUrl, requestOptions)
     .then(response => {
@@ -58,3 +48,5 @@ export const startTask_async = async (userId, startId, siblingTask) => {
     console.log("Error while converting JSON to Task:", error, data);
   }
 };
+
+export default updateTask_async;

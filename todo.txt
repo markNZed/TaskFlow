@@ -1,8 +1,14 @@
 /* ToDo
 -------  
-address is just a part of a task request
-  raises the idea of a task setting user information on the hub
-In tasktemplates environments: ["nodejs"] could replace serverOnly
+When user interacts reset the counter to try to establish websocket on client
+check4spelling will not work because it will return the TaskChoose to React 
+  Need to take into account the environments 
+  See comments in server.js
+Maybe think of Hub in standard routes rather than proxy.
+On NodeJS instead of updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
+  Should we send task update to nodejs from nodejs through hub ? Then it will deal with done.
+  Seems right as Hub can then track done tasks. Only need to do this if there is a nextTask 
+In tasktemplates environments: ["nodejs"] should replace serverOnly
 Each processor needs a list of active Tasks
   Need to be able to push tasks to Processor
     Websocket commands task.processor.command 
@@ -10,7 +16,7 @@ Each processor needs a list of active Tasks
     React side just behaves as usual
     Hub has special treatment for TaskChat
     Nodejs has special treatment for TaskChat
-    When hub receives request to start task it should send command to nodejs to also start task
+    When hub receives request from React to start task it should send command to nodejs to also start task
       Nodejs needs to store active tasks
       Currently react sends task to nodejs though update
         Hub could capture update and send diff to nodejs
@@ -23,16 +29,15 @@ Refactor where information is stored
   The Hub knows which processors have which Functions through tasktemplates
   Hub routes functions then Processor no longer specifies destination
   At the moment the React TP decides on the destination processor
-    Eventually the Hub should choose the processor based on the Task Function the task requests
-      The processor registers its list of Functions with the Hub (add functions as data structure)
-        Then TaskChat becomes TaskChat Task with functions: User, Bot
-          Does each task have a function
-            Could be specified in the tasktemplate mapping ?
+    Eventually the Hub should choose the processor based on the environments the Task uses
+
+address is just a part of a task request
+  raises the idea of a task setting user information on the hub
             
 We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemnted on the Task Processor. 
   Maybe a field in the Task is for local processor - this makes sense
 
-Eventually we move to using only web sockets?
+Eventually do we move to using only web sockets? Maybe harder to debug.
 
 This argues for Tasks being distributed - different functions.
   If a Task passes through the Hub then we should track it in a keyv and maintain a distributed object

@@ -12,14 +12,15 @@ import { utils } from "./utils.mjs";
 async function newTask_async(
     id,
     userId,
-    ip,
+    authenticate,
+    source,
     groupId,
     sessionId,
     component_depth = null,
     threadId = null,
     siblingTask = null
   ) {
-    //console.log("newTask_async", id, userId, ip, sessionId, groupId, component_depth, threadId);
+    //console.log("newTask_async", id, userId, source, sessionId, groupId, component_depth, threadId);
     let siblingInstanceId;
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
@@ -31,7 +32,7 @@ async function newTask_async(
     let taskCopy = { ...tasks[id] };
 
     // Check if the user has permissions
-    if (!utils.authenticatedTask(taskCopy, userId, groups)) {
+    if (authenticate && !utils.authenticatedTask(taskCopy, userId, groups)) {
       console.log("Task authentication failed", taskCopy.id, userId);
       taskCopy["error"] = "Task authentication failed";
       return taskCopy;
@@ -59,7 +60,7 @@ async function newTask_async(
       taskCopy["state"] = {};
     }
     taskCopy["userId"] = userId;
-    taskCopy["source"] = ip;
+    taskCopy["source"] = source;
     taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;

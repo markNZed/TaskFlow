@@ -5,9 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
-import { instancesStore_async } from "./storage.mjs";
-import newTask_async from "./newTask.mjs";
-import { utils } from "./utils.mjs";
 
 // We are not able to see the content of messages using http-proxy-middleware
 // So we create a websocket server etc outselves
@@ -54,19 +51,8 @@ const proxyHandler = createProxyMiddleware('/hub/processor/*', {
     let originalBody = req.body;
     let task = originalBody.task;
 
-    let userId = utils.getUserId(req);
-
     // Process the task
     task.source = req.ip;  // assuming the task object already exists in the body
-
-    if (task.state?.done) {
-      console.log("Task done " + task.id);
-      //task.state.done = false;
-      //await instancesStore_async.set(instanceId, task);
-      // Fetch from the Task Hub
-      //updated_task = await newTask_async(userId, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
-
-    }
 
     let modifiedBody = JSON.stringify(originalBody);
 

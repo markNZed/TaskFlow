@@ -18,6 +18,7 @@ function wsSendObject(sessionId, message = {}) {
     // The destination is availalbe because nodejs does not initiate webscoket connections
     message.task.destination = ws.data.destination;
     message.task.sessionId = sessionId;
+    message.task.source = "nodejs";
     ws.send(JSON.stringify(message));
     //console.log("wsSendObject ", JSON.stringify(message) )
   }

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import { CONFIG_DIR } from "../config.mjs";
+import { CONFIG_DIR, REACT_URL, NODEJS_URL } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -16,6 +16,7 @@ var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
 var taskflows = await utils.load_data_async(CONFIG_DIR, "taskflows");
 var tasktemplates = await utils.load_data_async(CONFIG_DIR, "tasktemplates");
+var processors = await utils.load_data_async(CONFIG_DIR, "processors");
 var tasks = {}; // We will build this from taskflows
 
 // We adopt a DRY strategy in the code and config files
@@ -270,7 +271,6 @@ for (const userKey in users) {
   }
 }
 
-
 // Add id to groups (index in DB)
 utils.add_index(groups);
 //console.log(JSON.stringify(groups, null, 2))
@@ -331,4 +331,22 @@ function flattenTasks(taskflows) {
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
-export { users, groups, taskflows, tasktemplates, tasks };
+// Add url for each processor
+for (const key in processors) {
+  if (Object.prototype.hasOwnProperty.call(processors, key)) {
+    if (processors[key].environments) {
+      if (processors[key].environments[0] === "react") {
+        processors[key].url = REACT_URL
+      } else if (processors[key].environments[0] === "nodejs") {
+        processors[key].url = NODEJS_URL
+      } else {
+        console.log("Unknown environment", processors[key].environments)
+      }
+    }
+  }
+}
+
+processors = flattenObjects(processors);
+//console.log(JSON.stringify(processors, null, 2))
+
+export { users, groups, processors, taskflows, tasktemplates, tasks };

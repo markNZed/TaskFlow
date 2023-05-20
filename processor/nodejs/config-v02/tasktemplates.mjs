@@ -30,7 +30,7 @@ const tasktemplates = [
     name: "TaskLLMIO",
     parentType: "root",
     websocket: true,
-    environments: ["nodejs"],
+    environments: ["react", "nodejs"],
   },
   {
     name: "TaskShowResponse",

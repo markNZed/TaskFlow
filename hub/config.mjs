@@ -30,4 +30,4 @@ const CONFIG_DIR = process.env.CONFIG_DIR || path.resolve("./../processor/nodejs
 
 console.log("TASKHUB_URL", TASKHUB_URL)
 
-export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL };
+export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL, NODEJS_URL };

@@ -8,7 +8,7 @@ import express from "express";
 import { utils } from "../utils.mjs";
 import { taskFunctions } from "../../Task/taskFunctions.mjs";
 import { instancesStore_async, activeTasksStore_async } from "../storage.mjs";
-import { startTask_async } from "../startTask.mjs";
+import { updateTask_async } from "../updateTask.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -126,11 +126,16 @@ router.post("/update", async (req, res) => {
         console.log("Task error " + updated_task.id);
       } 
       if (updated_task.state.done) {
-        console.log("Server side task done " + updated_task.id);
-        updated_task.state.done = false;
+        // Send to Hub and fetch next task
+        // Set the destination to NodeJS and it would process also
+        // The destination does not matter as it intercepts done.
+        updated_task.destination = "NodeJS";
+        console.log("NodeJS task done " + updated_task.id);
+        //updated_task.state.done = false;
         await instancesStore_async.set(updated_task.instanceId, updated_task);
         // Fetch from the Task Hub
-        updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
+        updated_task = await updateTask_async(updated_task)
+        //updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
       }
       if (updated_task.config?.serverOnly) {
         updated_task = await do_task_async(updated_task);
