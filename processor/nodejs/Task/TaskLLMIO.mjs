@@ -136,13 +136,17 @@ const TaskLLMIO_async = async function (task) {
     T("request.prompt", prompt);
     // The response needs to be available for other tasks to point at
     const subTask = await SubTaskLLM_async(task); 
-    if (T("config.serverOnly")) {
+    const environments = T("environments");
+    // If the task is running on the nodejs processor we need to wait for the response
+    if (environments.length === 1 && environments[0] === "nodejs") {
       // On the server we wait and don't use websocket   
       response_text = await subTask.response.text_promise
       T("response.text", response_text);
       T("output.text", response_text);
     } else {
       //console.log("TaskLLMIO_async subTask", subTask)
+      // The response will be sent by websocket
+      // This allows for very slow repsonses
       subTask.response.text_promise.then((text) => {
         T("response.text", text);
         T("output.text", text);

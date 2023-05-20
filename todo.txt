@@ -1,14 +1,8 @@
 /* ToDo
 -------  
-When user interacts reset the counter to try to establish websocket on client
-check4spelling will not work because it will return the TaskChoose to React 
-  Need to take into account the environments 
-  See comments in server.js
-Maybe think of Hub in standard routes rather than proxy.
-On NodeJS instead of updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
-  Should we send task update to nodejs from nodejs through hub ? Then it will deal with done.
-  Seems right as Hub can then track done tasks. Only need to do this if there is a nextTask 
-In tasktemplates environments: ["nodejs"] should replace serverOnly
+Hub as a standard routes rather than proxy.
+Add function to remove last paragraph
+  
 Each processor needs a list of active Tasks
   Need to be able to push tasks to Processor
     Websocket commands task.processor.command 
@@ -119,6 +113,7 @@ Backlog
     Msgs could be loaded from the NodeJS Task Processor. Similar to stepper - both have history.
     Allow task to start another task on NodeJS Task Processor side (needs functional interface to api/task/start )
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
+    When user interacts reset the counter to try to establish websocket on client
 
     Tasks
     ----------
@@ -301,7 +296,6 @@ A list of features that are manually tested
             nextTask X
             instruction X
             nextStates X
-            serverOnly X
             oneThread X
             label X
             reentering

@@ -61,7 +61,7 @@ function initWebSocketServer(server) {
 
       if (j?.ping) {
         wsSendObject(sessionId, { pong: "ok" });
-        console.log("Pong " + sessionId)
+        //console.log("Pong " + sessionId)
       }
     });
 

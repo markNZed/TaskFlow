@@ -104,7 +104,8 @@ router.post("/update", async (req, res) => {
     }
 
     let i = 0;
-    while (updated_task.config?.serverOnly || updated_task.error) {
+    
+    while ((updated_task.environments.length === 1 && updated_task.environments[0] === "nodejs") || updated_task.error) {
       // A sanity check to avoid erroneuos infinite loops
       i = i + 1;
       if (i > 10) {
@@ -137,7 +138,7 @@ router.post("/update", async (req, res) => {
         updated_task = await updateTask_async(updated_task)
         //updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
       }
-      if (updated_task.config?.serverOnly) {
+      if (updated_task.environments.length === 1 && updated_task.environments[0] === "nodejs") {
         updated_task = await do_task_async(updated_task);
       } else {
         break;
