@@ -110,6 +110,8 @@ async function newTask_async(
     taskCopy["createdAt"] = Date.now();
     await instancesStore_async.set(instanceId, taskCopy);
 
+    
+
     if (taskCopy.config?.oneThread) {
       const threadId = id + userId;
       let instanceIds = await threadsStore_async.get(threadId);
