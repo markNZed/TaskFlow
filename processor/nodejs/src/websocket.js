@@ -6,11 +6,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "./../config.mjs";
+import register_async from "./register.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
 let connectionAttempts = 0;
-let maxAttempts = 10;
+let maxAttempts = 15;
 let processorWs;
 
 function wsSendObject(message = {}) {
@@ -30,9 +31,9 @@ function wsSendObject(message = {}) {
     message.task.source = "nodejs";
     message.task.newSource = processorId;
     processorWs.send(JSON.stringify(message));
-    //if (!message.task?.ping) {
+    if (!message.task?.ping) {
       console.log("wsSendObject ", JSON.stringify(message) )
-    //}
+    }
   }
 }
 
@@ -46,6 +47,9 @@ const connectWebSocket = () => {
 
   processorWs.onopen = () => {
     console.log("processorWs.onOpen");
+    processorWs.data = {};
+    processorWs.data["didStart"] = true;
+    register_async();
     // reset connection attempts on successful connection
     connectionAttempts = 0;
     const taskPing = () => {
@@ -75,13 +79,17 @@ const connectWebSocket = () => {
   processorWs.onclose = function (event) {
     console.log("processorWs sessionId is closed with code: " + event.code);
     // attempt reconnection with backoff on close
-    if (connectionAttempts < maxAttempts) {
-      let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
-      console.log(`Attempting reconnection in ${backoffTime}ms...`);
-      setTimeout(connectWebSocket, backoffTime);
-      connectionAttempts++;
-    } else {
-      console.log("Max reconnection attempts reached.");
+    if (processorWs?.data?.didStart) {
+      if (connectionAttempts < maxAttempts) {
+        let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
+        let currentDateTime = new Date();
+        let currentDateTimeString = currentDateTime.toString();
+        console.log(`Attempting onclose reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
+        setTimeout(connectWebSocket, backoffTime);
+        connectionAttempts++;
+      } else {
+        console.log("Max onclose reconnection attempts reached.");
+      }
     }
   };
 
@@ -90,11 +98,13 @@ const connectWebSocket = () => {
     // attempt reconnection with backoff on error
     if (connectionAttempts < maxAttempts) {
       let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
-      console.log(`Attempting reconnection in ${backoffTime}ms...`);
+      let currentDateTime = new Date();
+      let currentDateTimeString = currentDateTime.toString();
+      console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
       setTimeout(connectWebSocket, backoffTime);
       connectionAttempts++;
     } else {
-      console.log("Max reconnection attempts reached.");
+      console.log("Max onerror reconnection attempts reached.");
     }
   };
 }

@@ -54,7 +54,12 @@ function App() {
     const fetchSession = async () => {
       try {
         const response = await fetch(`${hubUrl}/api/session`, {
+          method: "POST",
           credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
         });
         const data = await response.json();
         const user = data.user;
@@ -70,6 +75,28 @@ function App() {
           const taskflowsTree = data.taskflowsTree;
           mergeGlobalState({ taskflowsTree });
         }
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch(`${hubUrl}/api/register`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+             processorId: globalState.processorId,
+             environments: ["react"]
+          }),
+        });
+        const data = await response.json();
         if (data?.hubId) {
           const hubId = data.hubId;
           mergeGlobalState({ hubId });
@@ -78,8 +105,11 @@ function App() {
         console.log(err.message);
       }
     };
-    fetchSession();
-  }, []);
+    // Wait for the processorId to be set
+    if (globalState?.processorId && !globalState?.sessionId) {
+      fetchSession();
+    }
+  }, [globalState?.processorId]);
 
   return (
     <Routes>

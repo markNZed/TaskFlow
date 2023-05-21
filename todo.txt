@@ -1,11 +1,11 @@
 /* ToDo
 -------  
 Hub is managing activeTasksStore_async on start
-  Add update route and forward instead of proxy.
+  Add update route and forward instead of proxy
   Then can remove the proxy route
   Then Hub has up to date copy of Task from react
   Then send the Task to nodejs using websocket
-Maybe forwarding webscoket is enough to maintian those changes to Task
+Maybe forwarding websocket is enough to maintian those changes to Task
 Move nodejs HTTP server to client
   Triggered by update to Task
     When appropriate call the update function on the task
@@ -16,6 +16,10 @@ Move nodejs HTTP server to client
   Task objects synchronized by websocket first.
 
 Demo of collaborative chat would be good.
+
+When the websocket drops in react could re-register the processor.
+  Just register when socket opens?
+  Could register with websocket
 
 Hub as a router rather than proxy
   The processor should not worry about destination ?
@@ -45,6 +49,8 @@ Refactor where information is stored
   Hub routes functions then Processor no longer specifies destination
   At the moment the React TP decides on the destination processor
     Eventually the Hub should choose the processor based on the environments the Task uses
+
+Hold all Task states at the top of React
 
 Add function to remove last paragraph
   Interesting to explore how that might be done

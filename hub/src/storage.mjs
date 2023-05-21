@@ -10,6 +10,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
+var activeProcessors = new Map();
 
 // Each keyv store is in a different table
 const DB_URI = "sqlite://../processor/nodejs/db/main.sqlite";
@@ -34,12 +35,11 @@ const threadsStore_async = utils.newKeyV(DB_URI, "threads");
 //   Value: {task: {}, processorIds: []};
 const activeTasksStore_async = utils.newKeyV(DB_URI, "activeTasks");
 
-
-
 export {
   sessionsStore_async,
   instancesStore_async,
   threadsStore_async,
   activeTasksStore_async,
   connections,
+  activeProcessors,
 };

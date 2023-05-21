@@ -8,16 +8,18 @@ import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "../utils.mjs";
 import { users, groups, taskflows } from "../configdata.mjs";
-import { sessionsStore_async } from "../storage.mjs";
+import { sessionsStore_async, activeProcessors } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
   console.log("/hub/api/session");
   let userId = utils.getUserId(req);
+  let processorId = req.body.processorId;
+  let environments = req.body.environments;
   const sessionId = uuidv4();
   let authorised_taskflows = {};
   for (const key in taskflows) {

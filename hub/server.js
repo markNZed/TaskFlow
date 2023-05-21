@@ -18,6 +18,7 @@ dotenv.config();
 // App specific modules
 import { REACT_URL, NODEJS_URL, appName } from "./config.mjs";
 import sessionRoutes from "./src/routes/sessionRoutes.js";
+import registerRoutes from "./src/routes/registerRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
 import { proxyHandler } from './src/proxyHandler.js';
@@ -79,7 +80,7 @@ app.use('/hub/processor', async (req, res, next) => {
     // We should send a delete message to all the copies and also delete those (see Meteor protocol)
     activeTasksStore_async.delete(task.instanceId);
     // Fetch from the Task Hub
-    let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
     // What is the active tasktemplate?
     const tasktemplateName = newTask.stack[newTask.stackPtr - 1]
     //console.log("tasktemplateName", tasktemplateName);
@@ -129,6 +130,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/hub/api/session", sessionRoutes);
+app.use("/hub/api/register", registerRoutes);
 app.use("/hub/api/task", taskRoutes);
 app.use("/", miscRoutes); // After other routes because it has the default route
 

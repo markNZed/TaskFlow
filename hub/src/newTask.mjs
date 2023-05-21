@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async } from "./storage.mjs";
+import { instancesStore_async, threadsStore_async, activeTasksStore_async, sessionsStore_async, activeProcessors } from "./storage.mjs";
 import { groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -14,6 +14,7 @@ async function newTask_async(
     userId,
     authenticate,
     source,
+    processorId,
     groupId,
     sessionId,
     component_depth = null,
@@ -110,8 +111,6 @@ async function newTask_async(
     taskCopy["createdAt"] = Date.now();
     await instancesStore_async.set(instanceId, taskCopy);
 
-    
-
     if (taskCopy.config?.oneThread) {
       const threadId = id + userId;
       let instanceIds = await threadsStore_async.get(threadId);
@@ -161,6 +160,80 @@ async function newTask_async(
         taskCopy.threadId = threadId
         console.log("Collaborating on " + threadId)
       }
+    }
+
+    // Build list of processesors that need to be notified about this task
+    let taskProcessors = []
+
+    // Get the list of processors in the session
+    const sessionsStoreId = taskCopy.sessionId + "_processors";
+    let sessionProcessors = [];
+    if (await sessionsStore_async.has(sessionsStoreId)) {
+      sessionProcessors = await sessionsStore_async.get(sessionsStoreId);
+    }
+
+    // Allocate the task to processor that supports the environment(s) requested
+    for (const environment of taskCopy.environments) {
+      // Check if the processor starting this task supports this environment
+      const activeProcessor = activeProcessors.get(processorId);
+      if (!activeProcessor) {
+        throw new Error("Processor " + processorId + " not active");
+      }
+      let found = false;
+      if (activeProcessor.environments && activeProcessor.environments.includes(environment)) {
+        found = true;
+        taskProcessors.push(processorId);  
+        // Should already be in the session
+        if (!sessionProcessors.includes(processorId)) {
+          throw new Error("Processor " + processorId + " not in session " + taskCopy.sessionId);
+        }
+      }
+      // Check if one of the processors in sessionProcessors supports this environment
+      if (!found) {
+        for (const sessionProcessorId of sessionProcessors) {
+          const activeProcessor = activeProcessors.get(sessionProcessorId)
+          if (!activeProcessor) {
+            throw new Error("Processor " + sessionProcessorId + " not active");
+          }
+          const environments = activeProcessor.environments;
+          if (environments && environments.includes(environment)) {
+            found = true;
+            taskProcessors.push(sessionProcessorId);
+          }
+          break;
+        }
+      }
+      // Find an active processor that supports this environment and add it to the session
+      if (!found) {
+        for (let [activeProcessorId, value] of activeProcessors) {
+          console.log("activeProcessor ", activeProcessorId, value);
+          const environments = value.environments;
+          if (environments && environments.includes(environment)) {
+            sessionProcessors.push(processorId);
+            await sessionsStore_async.set(sessionsStoreId, sessionProcessors);
+            found = true;
+            taskProcessors.push(activeProcessorId);
+          }
+        }
+      }
+      if (!found) {
+        throw new Error("No processor found for environment " + environment);
+      }
+    }
+
+    // Record which processors have this task
+    // Could convert this into aysynchronous form
+    if (await activeTasksStore_async.has(taskCopy.instanceId)) {
+      const activeTask = await activeTasksStore_async.get(taskCopy.instanceId)
+      taskProcessors.array.forEach(id => {
+        if (activeTask.processorIds && !activeTask.processorIds.includes(id)) {
+          activeTask.processorIds.push(id);
+          activeTasksStore_async.set(taskCopy.instanceId, activeTask);
+        } 
+      });
+    } else {
+      const activeTask = {task: taskCopy, processorIds: taskProcessors};
+      activeTasksStore_async.set(taskCopy.instanceId, activeTask);
     }
 
     //console.log("New task ", taskCopy)

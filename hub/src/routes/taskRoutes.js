@@ -34,20 +34,7 @@ router.post("/start", async (req, res) => {
     const component_depth = task.stackPtr;
 
     // Maybe we just set initial task values and pass that in instead of a long list of arguments?
-    const startTask = await newTask_async(startId, userId, true, source, sessionId, task?.groupId, component_depth, threadId, siblingTask);
-
-    // Could convert this into aysynchronous form
-    if (await activeTasksStore_async.has(startTask.instanceId)) {
-      const activeTask = await activeTasksStore_async.get(startTask.instanceId)
-      console.log("activeTask", activeTask)
-      if (!activeTask.processorIds.includes(processorId)) {
-        activeTask.processorIds.push(processorId);
-        activeTasksStore_async.set(startTask.instanceId, activeTask);
-      } 
-    } else {
-      const activeTask = {task: startTask, processorIds: [processorId]};
-      activeTasksStore_async.set(startTask.instanceId, activeTask);
-    }
+    const startTask = await newTask_async(startId, userId, true, source, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
     // Here we will need to send the task to each environment
     // We are not yet dealing with distributed tasks
@@ -75,6 +62,23 @@ router.post("/start", async (req, res) => {
     res.send(messageJsonString);
   } else {
     console.log("No user");
+    res.status(200).json({ error: "No user" });
+  }
+});
+
+router.post("/update", async (req, res) => {
+  console.log("/hub/api/task/update");
+  let userId = utils.getUserId(req);
+  if (userId) {
+    //console.log("req.body " + JSON.stringify(req.body))
+    let task = req.body.task;
+
+    task = await updateTask_async(task)
+    res.json({task: newTask});
+
+  } else {
+    console.log("No user");
+    // Clean up all the HTTP IDs used on routes
     res.status(200).json({ error: "No user" });
   }
 });

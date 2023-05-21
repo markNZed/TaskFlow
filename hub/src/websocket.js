@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections } from "./storage.mjs";
+import { connections, sessionsStore_async, activeProcessors } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
@@ -20,7 +20,9 @@ function wsSendObject(processorId, message = {}) {
     message.task.destination = ws.data.destination;
     message.task.hubId = hubId;
     ws.send(JSON.stringify(message));
-    console.log("wsSendObject ", JSON.stringify(message) )
+    if (!message.task?.pong) {
+      //console.log("wsSendObject ", JSON.stringify(message) )
+    }
   }
 }
 
@@ -34,8 +36,6 @@ function initWebSocketProxy(server) {
 
   const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
-  let session2processors = {}
-
   websocketServer.on("connection", (ws) => {
     console.log("websocketServer.on");
 
@@ -46,42 +46,55 @@ function initWebSocketProxy(server) {
       const j = JSON.parse(message);
 
       if (!j?.task?.ping) {
-        console.log("ws.on message", j)
+        //console.log("ws.on message", j)
       }
 
       if (j?.task) {
         const processorId = j.task.newSource;
-        console.log("processorId", processorId)
+        //console.log("processorId", processorId)
         if (ws.data["processorId"] !== processorId) {
           connections.set(processorId, ws);
           ws.data["processorId"] = processorId;
-          console.log("Websocket processorId", processorId)
+          //console.log("Websocket processorId", processorId)
         }
+        let processors = [];
         if (j.task.sessionId) {
-          const sessionId = j.task.sessionId;
-          if (session2processors[sessionId]) {
-            if (!session2processors[sessionId].includes(processorId)) {
-              session2processors[sessionId].push(processorId);
+          const sessionsStoreId = j.task.sessionId + "_processors";
+          if (await sessionsStore_async.has(sessionsStoreId)) {
+            let currentProcessors = await sessionsStore_async.get(sessionsStoreId);
+            if (!currentProcessors.includes(processorId)) {
+              currentProcessors.push(processorId)
+              await sessionsStore_async.set(sessionsStoreId, currentProcessors);
             }
+            processors = currentProcessors;
           } else {
-            session2processors[sessionId] = [processorId];
+            await sessionsStore_async.set(sessionsStoreId, [processorId]);
+            processors = [processorId]
           }
         }
+
+        // Need to know the processortemplate
+        //activeProcessors
           
         // Forwarding messages from nodejs to react
         // Eventually we will not use newDestination (just sync tasks)
         // Use the sessionId to identify the react websockets
         // We do not have messages going from react to nodejs via websocket
         // This code needs to be generalized, later.
-        if (j?.task?.newDestination?.startsWith("react")) {
-          for (const processorId of session2processors[j.task.sessionId]) {
-            if (processorId.startsWith("react")) {
-              const reactWs = connections.get(processorId);
-              if (!reactWs) {
-                console.log("Lost websocket for react", processorId);
-              } else {
-                console.log("Forwarding message to ", processorId)    
-                reactWs.send(message, { binary: false });
+        if (!j?.task?.ping) {
+          if (!processors) {
+            throw new Error("No processors ", j.task);
+          }
+          if (j?.task?.newDestination?.startsWith("react")) {
+            for (const processorId of processors) {
+              if (processorId.startsWith("react")) {
+                const reactWs = connections.get(processorId);
+                if (!reactWs) {
+                  console.log("Lost websocket for react", processorId);
+                } else {
+                  //console.log("Forwarding message to ", processorId)    
+                  reactWs.send(message, { binary: false });
+                }
               }
             }
           }
