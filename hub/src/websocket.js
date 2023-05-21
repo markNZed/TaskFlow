@@ -32,7 +32,7 @@ function wsSendTask(m) {
   wsSendObject(processorId, m);
 }
 
-function initWebSocketProxy(server) {
+function initWebSocketServer(server) {
 
   const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
@@ -133,4 +133,4 @@ function initWebSocketProxy(server) {
   });
 };
 
-export { initWebSocketProxy, wsSendObject, wsSendTask };
+export { initWebSocketServer, wsSendObject, wsSendTask };

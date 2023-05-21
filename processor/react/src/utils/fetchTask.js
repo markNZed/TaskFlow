@@ -25,15 +25,16 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   task.newSource = globalState.processorId;
 
-  // The immedaite destination of this request
+  // The immediate destination of this request
   let destination;
   if (end_point === "task/start") {
     destination = `${hubUrl}/api/${end_point}`
     task.newDestination = globalState.hubId;
   } else {
     //destination = task.destination // Not using proxy
-    destination = `${hubUrl}/processor/nodejs` // Using proxy
-    // The Task Function should define this, not even
+    //destination = `${hubUrl}/processor/nodejs` // Using proxy
+    destination = `${hubUrl}/api/${end_point}` 
+    // The Task Function should define this, no it should not (only operates on Task)
     task.newDestination = "nodejs"
   }
 

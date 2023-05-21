@@ -16,19 +16,12 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { REACT_URL, NODEJS_URL, appName } from "./config.mjs";
+import { REACT_URL, appName } from "./config.mjs";
 import sessionRoutes from "./src/routes/sessionRoutes.js";
 import registerRoutes from "./src/routes/registerRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
-import { proxyHandler } from './src/proxyHandler.js';
-import { initWebSocketProxy } from "./src/websocket.js";
-
-import { utils } from "./src/utils.mjs";
-import { instancesStore_async, activeTasksStore_async } from "./src/storage.mjs";
-import newTask_async from "./src/newTask.mjs";
-import updateTask_async from "./src/updateTask.mjs";
-import { processors, tasktemplates } from "./src/configdata.mjs";
+import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -63,67 +56,6 @@ app.use(
 
 app.use(express.json());
 
-//app.use('/hub/processor', proxyHandler);
-app.use('/hub/processor', async (req, res, next) => {
-  console.log('/hub/processor');
-  if (!req.body) {
-    console.log('/hub/processor: no body');
-    next()
-  }
-  let originalBody = req.body;
-  let task = originalBody.task;
-  let userId = utils.getUserId(req);
-  if (task.state?.done) {
-    console.log("Task done through proxy " + task.id);
-    task.state.done = false;
-    instancesStore_async.set(task.instanceId, task);
-    // We should send a delete message to all the copies and also delete those (see Meteor protocol)
-    activeTasksStore_async.delete(task.instanceId);
-    // Fetch from the Task Hub
-    let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
-    // What is the active tasktemplate?
-    const tasktemplateName = newTask.stack[newTask.stackPtr - 1]
-    //console.log("tasktemplateName", tasktemplateName);
-    const tasktemplate = tasktemplates["root." + tasktemplateName]
-    //console.log("tasktemplate", tasktemplate);
-    const environments = tasktemplate.environments;
-    // Need to deal with multiple environments.
-    // If the task.source is not in the environments array then we need to send the task to the relevant processor.
-    //console.log("environments", environments);
-    //console.log("task.source", task.source);
-    if (environments.indexOf(task.source) !== -1) {
-      // The source is in the environments array so we can just return.
-      console.log("Remember to deal with multiple environments")
-      res.json({task: newTask});
-      return;
-    } else if (environments.length === 1) {
-      // The desired environment
-      const environment = environments[0];
-      // Assuming there is one processor for each environment
-      const processor = processors["root." + environment];
-      //console.log("processor", processor);
-      // send the task to the correct processor
-      if (environment === "nodejs") {
-        newTask.destination = processor.url + "/api/task/update";
-        //console.log("newTask", newTask)
-        // This update activity basically creates the task on the processor
-        newTask = await updateTask_async(newTask)
-        res.json({task: newTask});
-        return;
-      } else {
-        console.log("Need to deal with other environments than nodejs " + environment);
-      }
-    } else {
-      console.log("Need to deal with multiple environments")
-    }
-    console.log("Should not be here");
-    res.json({task: newTask});
-  } else {
-    console.log('proxyHandler next');
-    next();
-  }
-}, proxyHandler);
-
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -138,7 +70,7 @@ const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
 
-initWebSocketProxy(server);
+initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5001;
 server.listen(port, () => console.log(appName + " Task Hub started"));

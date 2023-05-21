@@ -176,11 +176,8 @@ async function newTask_async(
     for (const environment of taskCopy.environments) {
       // Check if the processor starting this task supports this environment
       const activeProcessor = activeProcessors.get(processorId);
-      if (!activeProcessor) {
-        throw new Error("Processor " + processorId + " not active");
-      }
       let found = false;
-      if (activeProcessor.environments && activeProcessor.environments.includes(environment)) {
+      if (activeProcessor && activeProcessor.environments.includes(environment)) {
         found = true;
         taskProcessors.push(processorId);  
         // Should already be in the session
