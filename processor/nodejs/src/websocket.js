@@ -30,9 +30,9 @@ function wsSendObject(message = {}) {
     message.task.source = "nodejs";
     message.task.newSource = processorId;
     processorWs.send(JSON.stringify(message));
-    if (!message.task?.ping) {
+    //if (!message.task?.ping) {
       console.log("wsSendObject ", JSON.stringify(message) )
-    }
+    //}
   }
 }
 
@@ -49,8 +49,10 @@ const connectWebSocket = () => {
     // reset connection attempts on successful connection
     connectionAttempts = 0;
     const taskPing = () => {
+      let currentDateTime = new Date();
+      let currentDateTimeString = currentDateTime.toString();
       return {
-        ping: "ok",
+        ping: currentDateTimeString,
         newDestination: "hub",
       }
     }

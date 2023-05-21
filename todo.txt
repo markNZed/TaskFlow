@@ -1,5 +1,11 @@
 /* ToDo
 -------  
+Hub is managing activeTasksStore_async on start
+  Add update route and forward instead of proxy.
+  Then can remove the proxy route
+  Then Hub has up to date copy of Task from react
+  Then send the Task to nodejs using websocket
+Maybe forwarding webscoket is enough to maintian those changes to Task
 Move nodejs HTTP server to client
   Triggered by update to Task
     When appropriate call the update function on the task
@@ -8,7 +14,6 @@ Move nodejs HTTP server to client
     Provide update API on hub
       Can run in parallel to start with - send the task to processors via ws
   Task objects synchronized by websocket first.
-It is the request in the task that can specify the environment
 
 Demo of collaborative chat would be good.
 

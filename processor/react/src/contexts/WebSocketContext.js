@@ -57,10 +57,12 @@ export function WebSocketProvider({ children, socketUrl }) {
       let ws = getWebSocket();
       setWebSocket(ws);
       const taskPing = () => {
+        let currentDateTime = new Date();
+        let currentDateTimeString = currentDateTime.toString();  
         return {
           sessionId: globalState?.sessionId,
-          ping: "ok",
-          newDestination: "hub",
+          ping: currentDateTimeString,
+          newDestination: globalState?.hubId,
         }
       }
       sendJsonMessagePlusRef.current({task: taskPing()});
