@@ -34,6 +34,8 @@ function initWebSocketProxy(server) {
 
   const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
+  let session2processors = {}
+
   websocketServer.on("connection", (ws) => {
     console.log("websocketServer.on");
 
@@ -55,15 +57,36 @@ function initWebSocketProxy(server) {
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)
         }
+        if (j.task.sessionId) {
+          const sessionId = j.task.sessionId;
+          if (session2processors[sessionId]) {
+            if (!session2processors[sessionId].includes(processorId)) {
+              session2processors[sessionId].push(processorId);
+            }
+          } else {
+            session2processors[sessionId] = [processorId];
+          }
+        }
           
         // Forwarding messages from nodejs to react
-        if (j?.task?.newDestination === "react") {
-          const reactWs = connections.get(j.task.sessionId + "react");
-          if (!reactWs) {
-            console.log("Lost websocket for react", j.task.sessionId + "react");
+        // Eventually we will not use newDestination (just sync tasks)
+        // Use the sessionId to identify the react websockets
+        // We do not have messages going from react to nodejs via websocket
+        // This code needs to be generalized, later.
+        if (j?.task?.newDestination?.startsWith("react")) {
+          for (const processorId of session2processors[j.task.sessionId]) {
+            if (processorId.startsWith("react")) {
+              const reactWs = connections.get(processorId);
+              if (!reactWs) {
+                console.log("Lost websocket for react", processorId);
+              } else {
+                console.log("Forwarding message to ", processorId)    
+                reactWs.send(message, { binary: false });
+              }
+            }
           }
-          reactWs.send(message, { binary: false });
         }
+        
       }
 
       if (j?.task?.ping) {

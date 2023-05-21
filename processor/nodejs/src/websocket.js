@@ -7,7 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "./../config.mjs";
 
-console.log("hubSocketUrl", hubSocketUrl);
+// The reconnection logic should be reworked if an error genrates a close event
+
 let connectionAttempts = 0;
 let maxAttempts = 10;
 let processorWs;
@@ -22,7 +23,7 @@ function wsSendObject(message = {}) {
     if (!message.task?.sessionId && !message.task?.ping) {
       console.log("Missing sessionId");
     }
-    // This is just ahack, it should be set by the Task Function
+    // This is just a hack, should be automated by hub
     if (!message.task?.newDestination) {
       message.task.newDestination = "react";
     }

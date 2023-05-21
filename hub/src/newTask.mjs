@@ -124,6 +124,7 @@ async function newTask_async(
         );
       } else {
         taskCopy.threadId = threadId
+        console.log("Continuing one_thread " + threadId)
       }
     }
     
@@ -137,6 +138,7 @@ async function newTask_async(
         console.log("Restarting session " + instanceId + " for " + taskCopy.id);
       } else {
         taskCopy.threadId = threadId
+        console.log("Restoring session " + threadId)
       }
     }
 
@@ -157,6 +159,7 @@ async function newTask_async(
         );
       } else {
         taskCopy.threadId = threadId
+        console.log("Collaborating on " + threadId)
       }
     }
 

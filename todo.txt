@@ -9,7 +9,6 @@ Move nodejs HTTP server to client
       Can run in parallel to start with - send the task to processors via ws
   Task objects synchronized by websocket first.
 It is the request in the task that can specify the environment
-Use explicit processorId : j.task.sessionId + "react" instead of sessionId ?
 
 Demo of collaborative chat would be good.
 

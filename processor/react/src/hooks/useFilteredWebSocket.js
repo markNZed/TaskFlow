@@ -6,9 +6,7 @@ function useFilteredWebSocket(instanceId, onMessage) {
   
   const { webSocketEventEmitter } = useWebSocketContext();
 
-  // If instanceId or the onMessage function change then the callback will be recreated
-
-  const handleMessage = useCallback((e) => {
+  const handleMessage = (e) => {
     //console.log("useFilteredWebSocket handleMessage", e);
     if (e.data instanceof Blob) {
       console.log("e.data is a Blob");
@@ -22,18 +20,19 @@ function useFilteredWebSocket(instanceId, onMessage) {
     ) {
       onMessage(message.task);
     }
-  }, [instanceId, onMessage]);
+  };
 
   useEffect(() => {
     if (!webSocketEventEmitter) {
       return;
     }
-    console.log("useFilteredWebSocket useEffect adding handleMessage")
+    //console.log("useFilteredWebSocket useEffect adding handleMessage instanceId", instanceId);
     webSocketEventEmitter.on("message", handleMessage);
     return () => {
+      //console.log("useFilteredWebSocket useEffect removing handleMessage instanceId", instanceId);
       webSocketEventEmitter.removeListener("message", handleMessage);
     };
-  }, [webSocketEventEmitter, handleMessage]);
+  }, []);
   
 }
 

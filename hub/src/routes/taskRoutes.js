@@ -29,7 +29,7 @@ router.post("/start", async (req, res) => {
     const threadId = task.threadId;
     let sessionId = task.sessionId;
     const source = task.source;
-    const processorId = task.request.processorId;
+    const processorId = task.newSource;
 
     const component_depth = task.stackPtr;
 
@@ -37,14 +37,16 @@ router.post("/start", async (req, res) => {
     const startTask = await newTask_async(startId, userId, true, source, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
     // Could convert this into aysynchronous form
-    if (await activeTasksStore_async.has(task.instanceId)) {
-      const activeTask = await activeTasksStore_async.get(task.instanceId)
+    if (await activeTasksStore_async.has(startTask.instanceId)) {
+      const activeTask = await activeTasksStore_async.get(startTask.instanceId)
       console.log("activeTask", activeTask)
-      activeTask.processorIds.push(processorId);
-      activeTasksStore_async.set(task.instanceId, activeTask);
+      if (!activeTask.processorIds.includes(processorId)) {
+        activeTask.processorIds.push(processorId);
+        activeTasksStore_async.set(startTask.instanceId, activeTask);
+      } 
     } else {
       const activeTask = {task: startTask, processorIds: [processorId]};
-      activeTasksStore_async.set(task.instanceId, activeTask);
+      activeTasksStore_async.set(startTask.instanceId, activeTask);
     }
 
     // Here we will need to send the task to each environment
