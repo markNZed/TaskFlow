@@ -6,8 +6,6 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   let messageJsonString;
 
-  //log("task", task)
-
   task.source = "react"
 
   // This does not seem right, maybe need a fetchHub and fetchProcessor
@@ -23,6 +21,12 @@ export const fetchTask = async (globalState, end_point, task) => {
   task.sessionId = globalState?.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
+  }
+  if ( globalState?.processorId ) {
+    if ( !task.request ) {
+      task.request = {};
+    }
+    task.request["processorId"] = globalState.processorId;
   }
 
   // The immedaite destination of this request

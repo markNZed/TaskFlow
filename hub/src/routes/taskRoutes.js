@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import newTask_async from "../newTask.mjs";
-import { instancesStore_async, activeTasksStore_async, } from "../storage.mjs";
+import { activeTasksStore_async, } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -29,13 +29,14 @@ router.post("/start", async (req, res) => {
     const threadId = task.threadId;
     let sessionId = task.sessionId;
     const source = task.source;
+    const processorId = task.request.processorId;
 
     const component_depth = task.stackPtr;
 
     // Maybe we just set initial task values and pass that in instead of a long list of arguments?
     const startTask = await newTask_async(startId, userId, true, source, sessionId, task?.groupId, component_depth, threadId, siblingTask);
 
-    const processorId = startTask.sessionId + startTask.source;
+    // Could convert this into aysynchronous form
     if (await activeTasksStore_async.has(task.instanceId)) {
       const activeTask = await activeTasksStore_async.get(task.instanceId)
       console.log("activeTask", activeTask)
@@ -48,6 +49,8 @@ router.post("/start", async (req, res) => {
 
     // Here we will need to send the task to each environment
     // We are not yet dealing with distributed tasks
+    // In the case of a collaborative task this might require sending to a group
+    // The newTask_async should build the list of processors
 
     let messageJsonString;
     let messageObject;

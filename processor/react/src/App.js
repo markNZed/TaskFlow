@@ -14,11 +14,21 @@ import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
 import { hubUrl } from "./config";
 import debug from "debug";
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
+
+  useEffect(() => {
+    let id = localStorage.getItem('processorId');
+    if (!id) {
+      id = "react-" + uuidv4();
+      localStorage.setItem('processorId', id);
+    }
+    replaceGlobalState("processorId", id);
+  }, []);
 
   //debug.disable();
   // This gives us a central place to control debug
@@ -27,7 +37,6 @@ function App() {
   //debug.enable(`${appAbbrev}:TaskConversation*`);
   debug.enable(`*`);
   
-  // Address is sent via utils/fetchTask.js
   useEffect(() => {
     if (globalState?.use_address && !enableGeolocation) {
       setEnableGeolocation(true);
@@ -60,6 +69,10 @@ function App() {
         if (data?.taskflowsTree) {
           const taskflowsTree = data.taskflowsTree;
           mergeGlobalState({ taskflowsTree });
+        }
+        if (data?.hubId) {
+          const hubId = data.hubId;
+          mergeGlobalState({ hubId });
         }
       } catch (err) {
         console.log(err.message);

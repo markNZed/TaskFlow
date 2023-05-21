@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocket } from "ws";
-import { hubSocketUrl } from "./../config.mjs";
+import { hubSocketUrl, processorId } from "./../config.mjs";
 
 console.log("hubSocketUrl", hubSocketUrl);
 let connectionAttempts = 0;
@@ -27,6 +27,7 @@ function wsSendObject(message = {}) {
       message.task.newDestination = "react";
     }
     message.task.source = "nodejs";
+    message.task.newSource = processorId;
     processorWs.send(JSON.stringify(message));
     if (!message.task?.ping) {
       console.log("wsSendObject ", JSON.stringify(message) )

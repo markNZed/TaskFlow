@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { utils } from "../utils.mjs";
 import { users, groups, taskflows } from "../configdata.mjs";
 import { sessionsStore_async } from "../storage.mjs";
+import { hubId } from "../../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -66,6 +67,7 @@ router.get("/", async (req, res) => {
         interface: users[userId]?.interface,
       },
       sessionId: sessionId,
+      hubId: hubId,
       taskflowsTree: taskflowsTree,
     });
   } else {

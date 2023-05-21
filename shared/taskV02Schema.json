@@ -48,6 +48,9 @@
         "groupId": {
           "type": "string"
         },
+        "hubId": {
+          "type": "string"
+        },
         "id": {
           "type": "string"
         },

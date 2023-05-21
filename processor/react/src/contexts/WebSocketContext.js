@@ -30,14 +30,15 @@ export function WebSocketProvider({ children, socketUrl }) {
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   useEffect(() => {
     sendJsonMessagePlusRef.current = function (m) {
-      console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       if (!m?.task) {
         m["task"] = {}
       }
       m.task.destination = socketUrl
       m.task.newDestination = "hub"
       m.task.sessionId = globalState?.sessionId
-      m.task.source = "react"
+      m.task.source = "react" // Could remove this eventually
+      m.task.newSource = globalState.processorId;
+      console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       sendJsonMessage(m);
     };
   }, [globalState]);

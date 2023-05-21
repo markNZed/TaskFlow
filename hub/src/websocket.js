@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocketServer } from "ws";
 import { connections } from "./storage.mjs";
+import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
   let ws = connections.get(processorId);
@@ -17,15 +18,16 @@ function wsSendObject(processorId, message = {}) {
     }
     // The destination is availalbe because nodejs does not initiate webscoket connections
     message.task.destination = ws.data.destination;
+    message.task.hubId = hubId;
     ws.send(JSON.stringify(message));
     console.log("wsSendObject ", JSON.stringify(message) )
   }
 }
 
-function wsSendTask(message) {
-  const processorId = message.task?.sessionId + message.task.newDestination;
+function wsSendTask(m) {
   //console.log("wsSendTask")
-  wsSendObject(processorId, message);
+  let processorId = m.task.newDestination;
+  wsSendObject(processorId, m);
 }
 
 function initWebSocketProxy(server) {
@@ -46,7 +48,7 @@ function initWebSocketProxy(server) {
       }
 
       if (j?.task) {
-        const processorId = j.task.sessionId + j.task.source;
+        const processorId = j.task.newSource;
         console.log("processorId", processorId)
         if (ws.data["processorId"] !== processorId) {
           connections.set(processorId, ws);
@@ -65,7 +67,14 @@ function initWebSocketProxy(server) {
       }
 
       if (j?.task?.ping) {
-        wsSendTask({task: {pong: "ok", sessionId: j.task?.sessionId, newDestination: j.task.source}});
+        let m = {
+          task: {
+            pong: "ok", 
+            sessionId: j.task?.sessionId, 
+            newDestination: j.task.newSource,
+          }
+        };
+        wsSendTask(m);
         //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 

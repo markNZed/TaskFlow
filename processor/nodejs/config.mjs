@@ -6,6 +6,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // .env is intended to allow for config that is not under version control
 import { appLabel, appName, appAbbrev, TASKHUB_URL as TASKHUB_URL_DEFAULT, hubSocketUrl } from "./src/shared/config.mjs"
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -29,6 +31,20 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";
+const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";;
 
-export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl };
+let processorId;
+const processorIdFile = './db/processorId.txt';
+try {
+    // Try to read the id from a file
+    processorId = fs.readFileSync(processorIdFile, 'utf-8');
+} catch (e) {
+    // If the file does not exist, generate a new id
+    processorId = "nodejs-" + uuidv4();
+    // Save the id to a file for future use
+    fs.writeFileSync(processorIdFile, processorId);
+}
+
+console.log(`Processor ID: ${processorId}`);
+
+export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };

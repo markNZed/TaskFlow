@@ -1,12 +1,15 @@
 /* ToDo
 -------  
+Move nodejs HTTP server to client
+  Triggered by update to Task
+    When appropriate call the update function on the task
+      Pull out a doTask function/module
+        Triggered by request ?
+    Provide update API on hub
+      Can run in parallel to start with - send the task to processors via ws
+  Task objects synchronized by websocket first.
+It is the request in the task that can specify the environment
 Use explicit processorId : j.task.sessionId + "react" instead of sessionId ?
-The hub to nodejs only needs one websocket not one per session?
-Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
-The processors have client websockets now.
-Should nodejs have a server or should it be a client?
-  It posts to update on Hub
-  The tasks on the processor would be udated how? 
 
 Demo of collaborative chat would be good.
 
@@ -262,6 +265,8 @@ Comparison with similar systems
   https://nodered.org/
   Meteor
      Meteor's data synchronization mechanism known as Distributed Data Protocol (DDP).
+     Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
+
 
 
 Test Plan
