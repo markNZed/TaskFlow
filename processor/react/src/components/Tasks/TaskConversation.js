@@ -63,6 +63,7 @@ const TaskConversation = (props) => {
 
   useEffect(() => {
     if (task) {
+      console.log("In conversation ", task.state.current)
       // Update msgs
       if (task.state.current === "receiving" && msgs) {
         const lastElement = {

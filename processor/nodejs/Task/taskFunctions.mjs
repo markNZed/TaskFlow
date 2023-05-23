@@ -18,9 +18,10 @@ const importFunctions = async () => {
   const importPromises = taskFiles.map(async (file) => {
     const moduleName = path.basename(file, ".mjs");
     const modulePath = `./${file}`;
+    console.log("Importing " + moduleName)
     const module = await import(modulePath);
     taskFunctions[moduleName + "_async"] = module[moduleName + "_async"];
-    //console.log("Imported " + moduleName)
+    console.log("Imported " + moduleName)
   });
 
   await Promise.all(importPromises);

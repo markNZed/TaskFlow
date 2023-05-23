@@ -8,7 +8,7 @@ import { processorId } from "../config.mjs";
 import { taskFunctions } from "../Task/taskFunctions.mjs";
 import { instancesStore_async, activeTasksStore_async } from "./storage.mjs";
 
-export async function do_task_async(task) {
+export async function do_task_async(wsSendTask, task) {
     let updated_task = {};
     let idx = 0;
     if (task?.stackPtr) {
@@ -16,39 +16,19 @@ export async function do_task_async(task) {
       console.log("Component ", task.stack, " idx ", idx);
     }
     if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
-      updated_task = await taskFunctions[`${task.stack[idx]}_async`](task);
+      updated_task = await taskFunctions[`${task.stack[idx]}_async`](wsSendTask, task);
       updated_task.newSource = processorId;
       // This will then trigger the syncTasks_async
       // Not sure we need to await on this
-      await activeTasksStore_async.set(task.instanceId, task)
+      await activeTasksStore_async.set(wsSendTask, task.instanceId, task)
     } else {
       console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
       updated_task = task;
     }
     await instancesStore_async.set(task.instanceId, updated_task);
-    console.log("instancesStore_async set " + task.instanceId);
+    //console.log("instancesStore_async set " + task.instanceId);
     //console.log(updated_task)
-    // This logic can be moved to the Hub on errors
-    if (updated_task.error) {
-        let errorTask
-        if (updated_task.config?.errorTask) {
-          errorTask = updated_task.config.errorTask
-        } else {
-          // Assumes there is a default errorTask named error
-          const strArr = updated_task.id.split('.');
-          strArr[strArr.length - 1] = "error";
-          errorTask = strArr.join('.');
-        }
-        if (!errorTask) {
-            throw new Error("No error task defined for " + updated_task.id);
-        }
-        updated_task.nextTask = errorTask
-        updated_task.state.done = true
-        console.log("Task error " + updated_task.id);
-        // The task is done so process
-        // Not sure we need to await on this
-        updated_task = await updateTask_async(updated_task)
-    }
+
     // When next task is running on the same environment. Should still let this go to Hub and come back.
     // The Hub is using task.destination
     let i = 0;
@@ -72,7 +52,7 @@ export async function do_task_async(task) {
           //updated_task = await startTask_async(userId, updated_task.nextTask, updated_task);
         }
         if (updated_task.environments.length === 1 && updated_task.environments[0] === "nodejs") {
-          updated_task = await do_task_async(updated_task);
+          updated_task = await do_task_async(wsSendTask, updated_task);
         } else {
           break;
         }

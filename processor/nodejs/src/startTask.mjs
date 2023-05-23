@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { TASKHUB_URL } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { activeTasksStore_async } from "../storage.mjs";
+import { wsSendTask } from "./websocket.js";
 
 export const startTask_async = async (userId, startId, siblingTask) => {
 
@@ -57,7 +58,7 @@ export const startTask_async = async (userId, startId, siblingTask) => {
     // By setting here we do not need to update
     // Could optimizse by ignoring the update sent by hub
     // For example the hub does not need to send to the processorID of task.newSource
-    activeTasksStore_async.set(task.instanceId, task); // Does not have processor ids as per hub
+    activeTasksStore_async.set(wsSendTask, task.instanceId, task); // Does not have processor ids as per hub
     return task;
   } catch (error) {
     console.log("Error while converting JSON to Task:", error, data);

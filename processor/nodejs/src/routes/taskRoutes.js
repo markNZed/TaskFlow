@@ -7,11 +7,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import { instancesStore_async } from "../storage.mjs";
-import { updateTask_async } from "../updateTask.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 import { do_task_async } from "../doTask.mjs";
+import { wsSendTask } from "../websocket.js";
 
 const router = express.Router();
 
@@ -47,11 +47,7 @@ router.post("/update", async (req, res) => {
       console.error("Error while validating Task against schema:", error, task);
     }
 
-    // Risk that React Task Processor writes over NodeJS Task Processor fields so filter_out before merge
-    let instanceId = task.instanceId;
-    const server_side_task = await instancesStore_async.get(instanceId);
-    let clean_client_task = task;
-    let updated_task = utils.deepMerge(server_side_task, clean_client_task)
+    let updated_task = task;
  
     //console.log("task ", task)
     //console.log("clean_client_task ", clean_client_task)
@@ -63,7 +59,7 @@ router.post("/update", async (req, res) => {
       throw new Error("Unexpected task done " + updated_task.id);
     }
 
-    updated_task = await do_task_async(updated_task);
+    updated_task = await do_task_async(wsSendTask, updated_task);
 
     let messageJsonString;
     let messageObject;

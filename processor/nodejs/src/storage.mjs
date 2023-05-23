@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import {} from "../config.mjs";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
-import syncTasks from "./syncTasks.mjs";
+import syncTasks_async from "./syncTasks.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -17,6 +17,7 @@ var connections = new Map(); // Stores WebSocket instances with unique session I
 const DB_URI = "sqlite://db/main.sqlite";
 
 // Allows for middleware
+// Passing the websocket to avoid circular imports
 function newKeyV(uri, table, setCallback = null) {
   const keyv = new Keyv({
     store: new KeyvBetterSqlite3({
@@ -25,11 +26,11 @@ function newKeyV(uri, table, setCallback = null) {
     }),
   });
   const originalSet = keyv.set.bind(keyv);
-  keyv.set = async function(key, value, ttl) {
+  keyv.set = async function(wsSendTask, key, value, ttl) {
     // Middleware logic before setting the value
     if (typeof setCallback === 'function') {
-      setCallback(key, value);
       //console.log("Setting table", table, "key", key, "value", value)
+      setCallback(wsSendTask, keyv, key, value);
     }
     const result = await originalSet(key, value, ttl);
     return result;
@@ -54,7 +55,7 @@ const instancesStore_async = newKeyV(DB_URI, "instances");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks);
+const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks_async);
 // Schema:
 //   Key: threadId || taskId + userId || taskId + sessionId || taskId + groupId
 //   Value: array of instanceId

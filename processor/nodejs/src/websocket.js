@@ -8,6 +8,7 @@ import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "./../config.mjs";
 import register_async from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
+import { do_task_async } from "./doTask.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -23,7 +24,7 @@ function wsSendObject(message = {}) {
       message["task"] = {}
     }
     if (!message.task?.sessionId && !message.task?.ping) {
-      console.log("Missing sessionId");
+      console.log("Missing sessionId", message);
     }
     // This is just a hack, should be automated by hub
     if (!message.task?.newDestination) {
@@ -31,15 +32,20 @@ function wsSendObject(message = {}) {
     }
     message.task.source = "nodejs";
     message.task.newSource = processorId;
-    processorWs.send(JSON.stringify(message));
     if (!message.task?.ping) {
-      console.log("wsSendObject ", JSON.stringify(message) )
+      //console.log("wsSendObject ", JSON.stringify(message) )
     }
+    processorWs.send(JSON.stringify(message));
   }
 }
 
-function wsSendTask(message) {
+const wsSendTask = function (task, command = null) {
   //console.log("wsSendTask " + message)
+  let message = {}
+  message["task"] = task;
+  if (command) {
+    message["command"] = command;
+  }
   wsSendObject(message);
 }
 
@@ -61,10 +67,10 @@ const connectWebSocket = () => {
         newDestination: "hub",
       }
     }
-    wsSendTask({task: taskPing()});
+    wsSendTask(taskPing());
     const intervalId = setInterval(() => {
       if (processorWs.readyState === WebSocket.OPEN) {
-        wsSendTask({task: taskPing()});
+        wsSendTask(taskPing());
       } else {
         clearInterval(intervalId);
       }
@@ -79,18 +85,18 @@ const connectWebSocket = () => {
     }
     const message = JSON.parse(e.data);
     if (message?.command === "update") {
-      console.log("ws updating activeTasksStore_async")
-      await activeTasksStore_async.set(message.task.instanceId, message.task)
-      //processActiveTasks_async(task)
-    } else if (message?.task?.ping) {
-      //console.log("ws ping received", message)
+      console.log("processorWs updating activeTasksStore_async")
+      await activeTasksStore_async.set(wsSendTask, message.task.instanceId, message.task)
+      await do_task_async(wsSendTask, message.task)
+    } else if (message?.task?.pong) {
+      //console.log("ws pong received", message)
     } else {
       console.log("Unexpected message", message)
     }
   };
 
   processorWs.onclose = function (event) {
-    console.log("processorWs sessionId is closed with code: " + event.code);
+    console.log("processorWs is closed with code: " + event.code, event.reason);
     // attempt reconnection with backoff on close
     if (processorWs?.data?.didStart) {
       if (connectionAttempts < maxAttempts) {
@@ -124,4 +130,4 @@ const connectWebSocket = () => {
 
 connectWebSocket();
 
-export { wsSendTask, wsSendObject };
+export { wsSendTask };

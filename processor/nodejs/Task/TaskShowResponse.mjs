@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { threadsStore_async, instancesStore_async } from "./../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
-const TaskShowResponse_async = async function (task) {
+const TaskShowResponse_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log("TaskShowResponse name " + T("name"));

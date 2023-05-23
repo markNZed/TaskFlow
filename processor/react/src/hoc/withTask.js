@@ -69,15 +69,10 @@ function withTask(Component) {
       );
     }
   
-    // Allow detection of new step
+    // Allow detection of new state
     useEffect(() => {
       if (props.task && props.task.state?.current && props.task.state.current === props.task.state.deltaState) {
-        props.setTask((p) =>
-          deepMerge(
-            p,
-            setNestedProperties({ "state.deltaState": '' }) // note can't set this to null as deepMerge ignores
-          )
-        );
+        props.setTask(p => ({...p, state: {...p.state, deltaState: ''}}))
       }
     }, [props.task]);
 

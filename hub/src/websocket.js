@@ -56,7 +56,7 @@ function initWebSocketServer(server) {
         if (ws.data["processorId"] !== processorId) {
           connections.set(processorId, ws);
           ws.data["processorId"] = processorId;
-          //console.log("Websocket processorId", processorId)
+          console.log("Websocket processorId", processorId)
         }
         let processors = [];
         if (j.task.sessionId) {
@@ -69,12 +69,16 @@ function initWebSocketServer(server) {
               await sessionsStore_async.set(sessionsStoreId, currentProcessors);
             }
             processors = currentProcessors;
+            //console.log("Processors in session", sessionsStoreId, processors)
           } else {
+            throw new Error("No processors in session", sessionsStoreId);
             // We should not be able to reach here?
-            await sessionsStore_async.set(sessionsStoreId, [processorId]);
-            processors = [processorId]
-            console.log("Initial processor to session", processorId)
+            //await sessionsStore_async.set(sessionsStoreId, [processorId]);
+            //processors = [processorId]
+            //console.log("Initial processor to session", processorId)
           }
+        } else if (!j?.task?.ping) {
+          console.log("No sessionId in task", j.task)
         }
 
         // Need to know the processortemplate
@@ -86,9 +90,6 @@ function initWebSocketServer(server) {
         // We do not have messages going from react to nodejs via websocket
         // This code needs to be generalized, later.
         if (!j?.task?.ping) {
-          if (!processors) {
-            throw new Error("No processors ", j.task);
-          }
           if (j?.task?.newDestination?.startsWith("react")) {
             if (processors.length === 0) {
               throw new Error("No processors ", j.task);
@@ -97,9 +98,9 @@ function initWebSocketServer(server) {
               if (processorId.startsWith("react")) {
                 const reactWs = connections.get(processorId);
                 if (!reactWs) {
-                  console.log("Lost websocket for react", processorId);
+                  console.log("Lost websocket for react", processorId, connections.keys());
                 } else {
-                  console.log("Forwarding message to ", processorId)    
+                  //console.log("Forwarding message to ", processorId)    
                   reactWs.send(message, { binary: false });
                 }
               }

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../src/utils.mjs";
 
-const TaskConversation_async = async function (task) {
+const TaskConversation_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log("Returning from TaskConversation_async");

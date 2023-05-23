@@ -36,7 +36,9 @@ const register_async = async () => {
     console.log("data", data);
     return data;
   } catch (error) {
-    console.log("Error while converting JSON:", error.message);
+    const statusText = response.statusText; // Text description of the status
+    const statusCode = response.status; // HTTP status 
+    console.log("Error while converting JSON:", error.message, statusCode, statusText);
   }
 
 };

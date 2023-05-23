@@ -7,7 +7,7 @@ import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 import { instancesStore_async, threadsStore_async } from "../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
-const TaskLLMIO_async = async function (task) {
+const TaskLLMIO_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(
@@ -135,7 +135,7 @@ const TaskLLMIO_async = async function (task) {
   if (prompt) {
     T("request.prompt", prompt);
     // The response needs to be available for other tasks to point at
-    const subTask = await SubTaskLLM_async(task); 
+    const subTask = await SubTaskLLM_async(wsSendTask, task); 
     const environments = T("environments");
     // If the task is running on the nodejs processor we need to wait for the response
     if (environments.length === 1 && environments[0] === "nodejs") {

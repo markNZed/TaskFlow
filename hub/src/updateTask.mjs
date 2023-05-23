@@ -39,13 +39,41 @@ const updateTask_async = async (task) => {
     })
     .catch(error => console.error('Error during fetch:', error));
 
-  const data = await response.json();
+  let updated_task = {};
+  if (response) {
+    const data = await response.json();
 
-  try {
-    const task = toTask(JSON.stringify(data.task));
-    return task;
-  } catch (error) {
-    console.log("Error while converting JSON to Task:", error, data);
+    try {
+      updated_task = toTask(JSON.stringify(data.task));
+    } catch (error) {
+      throw new Error("Error while converting JSON to Task:", error, data);
+    }
+
+    // Will need to move this somewhere where it can also deal with websocket messages
+    if (updated_task.error) {
+      let errorTask
+      if (updated_task.config?.errorTask) {
+        errorTask = updated_task.config.errorTask
+      } else {
+        // Assumes there is a default errorTask named error
+        const strArr = updated_task.id.split('.');
+        strArr[strArr.length - 1] = "error";
+        errorTask = strArr.join('.');
+      }
+      if (!errorTask) {
+          throw new Error("No error task defined for " + updated_task.id);
+      }
+      updated_task.nextTask = errorTask
+      updated_task.state.done = true
+      console.log("Task error " + task.id);
+      // The task is done so process
+      updated_task = await doneTask_async(updated_task) 
+    }
+
+    return updated_task;
+  } else {
+    console.log("No response from " + apiUrl);
+    return null;
   }
 };
 

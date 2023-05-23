@@ -21,7 +21,7 @@ const syncTasks_async = async (key, value) => {
     if (processorId === task.newSource) {
       const message = { command: "update", task: task };
       wsSendObject(processorId, message);
-      console.log("syncTasks_async updating", key, processorId);
+      //console.log("syncTasks_async updating", key, processorId);
     }
   }
 

@@ -16,7 +16,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-const TaskChoose_async = async function (task) {
+const TaskChoose_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   // First we get the response
@@ -24,7 +24,7 @@ const TaskChoose_async = async function (task) {
 
   // This is not going to work because TaskLLMIO_async is returning immediately
   T("response.text", null); // Avoid using previously stored response
-  let subtask = await TaskLLMIO_async(task);
+  let subtask = await TaskLLMIO_async(wsSendTask, task);
 
   const ST = utils.createTaskValueGetter(subtask);
 

@@ -1,5 +1,8 @@
 /* ToDo
 -------  
+We might need multiple levels of session:
+  session processor-node
+  user session
 Next step is processActiveTasks_async
   Send updates to the Hub via HTTP request
     It probably is much easier to debug if the whole task is sent on updates, same with start.
@@ -8,6 +11,7 @@ Next step is processActiveTasks_async
     But we need some protocol to know when to call update
       The Task Function should decide if/when it should do something
         Use request signal + state
+The diff is going to have to deal with deleting members - send diffUpdate and diffRemove
 Seem reasonable that partial results would be sent point to point and just routed
   Can temporarily disable delta/partial and re-enable after diff if working.
 Ideally we want the same code for Task storage on Hub/React/NodeJs

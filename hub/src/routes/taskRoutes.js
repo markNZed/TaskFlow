@@ -84,14 +84,20 @@ router.post("/update", async (req, res) => {
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else{
       // Just a hack for now
+      console.log("task from ", task.newSource)
       task.destination = NODEJS_URL + "/api/task/update";
+      // It would be better to use try here and not return null from updateTask_async
       task = await updateTask_async(task)
-      let activeTask = await activeTasksStore_async.get(task.instanceId);
-      //console.log("activeTask",task.instanceId, activeTask);
-      activeTask.task = task
-      activeTasksStore_async.set(task.instanceId, activeTask);
-      // Somehow we need to indicate that the task has changed.
-      res.json({task: task});
+      if (task) {
+        let activeTask = await activeTasksStore_async.get(task.instanceId);
+        //console.log("activeTask",task.instanceId, activeTask);
+        activeTask.task = task
+        activeTasksStore_async.set(task.instanceId, activeTask);
+        // Somehow we need to indicate that the task has changed.
+        res.json({task: task});
+      } else {
+        res.json({task: null});
+      }
     }
   } else {
     console.log("No user");

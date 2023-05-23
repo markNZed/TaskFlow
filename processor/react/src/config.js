@@ -8,9 +8,15 @@ import { appLabel as appLabelDefault, appName, appAbbrev, TASKHUB_URL } from "./
 
 export { appName, appAbbrev }
 export const appLabel = process.env.REACT_APP_LABEL || appLabelDefault; 
-export const hubUrl = process.env.REACT_APP_TASKHUB_URL || TASKHUB_URL;
 
 const socketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
+let hubUrl = TASKHUB_URL;
+if (process.env.REACT_APP_TASKHUB_URL) {
+    hubUrl = window.location.protocol + "//" + process.env.REACT_APP_TASKHUB_URL
+};
+export { hubUrl };
+
 
 //export const socketUrl = `${socketProtocol}//${window.location.hostname}/nodejs/ws`;
 export const socketUrl = 'ws://localhost:5000/nodejs/ws';

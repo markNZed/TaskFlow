@@ -4,26 +4,23 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTasksStore_async } from "./storage.mjs";
-import { wsSendObject } from "./websocket.js";
 import { processorId } from "../config.mjs";
 
-const syncTasks_async = async (key, value) => {
+const syncTasks_async = async (wsSendTask, keyv, key, value) => {
 
-  console.log("syncTasks_async", key, value);
+  //console.log("syncTasks_async", key, value);
 
   const task = value;
-  const has = await activeTasksStore_async.has(key);
+  const has = await keyv.has(key);
   if (has) { 
-    const activeTask = await activeTasksStore_async.get(key);
+    const activeTask = await keyv.get(key);
     // Here we could calculate the diff
   }
 
   // Could check if newSource is processorId
   if (!task.newSource.startsWith("hub-")) {
-    console.log("syncTasks_async updating", key);
-    const message = { command: "update", task: task };
-    wsSendObject(message);
+    //console.log("syncTasks_async updating", key);
+    wsSendTask(task, "update");
   }
 
 };

@@ -7,7 +7,7 @@ function useFilteredWebSocket(instanceId, onMessage) {
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleMessage = (task) => {
-    //console.log("useFilteredWebSocket handleMessage", e);
+    //console.log("useFilteredWebSocket handleMessage", task);
     if (instanceId && task.instanceId === instanceId) {
       onMessage(task);
     }
