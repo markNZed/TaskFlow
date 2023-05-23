@@ -1,10 +1,30 @@
 /* ToDo
 -------  
-Hub is managing activeTasksStore_async on start
-  Add update route and forward instead of proxy
-  Then can remove the proxy route
-  Then Hub has up to date copy of Task from react
-  Then send the Task to nodejs using websocket
+Next step is processActiveTasks_async
+  Send updates to the Hub via HTTP request
+    It probably is much easier to debug if the whole task is sent on updates, same with start.
+  The nodejs should not be working with update route (it should be a client)
+    Replace with function that is called from websocket
+    But we need some protocol to know when to call update
+      The Task Function should decide if/when it should do something
+        Use request signal + state
+Seem reasonable that partial results would be sent point to point and just routed
+  Can temporarily disable delta/partial and re-enable after diff if working.
+Ideally we want the same code for Task storage on Hub/React/NodeJs
+  Could use @kvs/node-localstorage instead of 
+  The Hub is different because it needs to manage multiple destinations
+React has storage.js where activeTasks are stored using App.js
+  Will need to extend with commands like remove, clear etc  
+Separation of configdata
+Internal/External IO is an important distinction
+  A list of dependenceies/references that are monitored by the processor
+    External outputs are monitored 
+    What happens when a task is done - depends if monitoring the thread or instance
+    Maybe the nextTask becomes available on the output then the monitoring task can decide to include this in 
+    dependencies or not.
+Do we want to keep server on nodejs processor - yes but for debug/admin etc a sort of meta level above the task.
+  Performance, utilization etc, a Processor Object for this (instead of Task)
+  THe debug feature can be shared between processors
 Maybe forwarding websocket is enough to maintian those changes to Task
 Move nodejs HTTP server to client
   Triggered by update to Task

@@ -26,8 +26,9 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-function wsSendTask(m) {
+function wsSendTask(task) {
   //console.log("wsSendTask")
+  let m = { task: task };
   let processorId = m.task.newDestination;
   wsSendObject(processorId, m);
 }
@@ -62,14 +63,17 @@ function initWebSocketServer(server) {
           const sessionsStoreId = j.task.sessionId + "_processors";
           if (await sessionsStore_async.has(sessionsStoreId)) {
             let currentProcessors = await sessionsStore_async.get(sessionsStoreId);
-            if (!currentProcessors.includes(processorId)) {
+            if (currentProcessors && !currentProcessors.includes(processorId)) {
+              console.log("Adding processor to session", processorId, currentProcessors)
               currentProcessors.push(processorId)
               await sessionsStore_async.set(sessionsStoreId, currentProcessors);
             }
             processors = currentProcessors;
           } else {
+            // We should not be able to reach here?
             await sessionsStore_async.set(sessionsStoreId, [processorId]);
             processors = [processorId]
+            console.log("Initial processor to session", processorId)
           }
         }
 
@@ -86,13 +90,16 @@ function initWebSocketServer(server) {
             throw new Error("No processors ", j.task);
           }
           if (j?.task?.newDestination?.startsWith("react")) {
+            if (processors.length === 0) {
+              throw new Error("No processors ", j.task);
+            }
             for (const processorId of processors) {
               if (processorId.startsWith("react")) {
                 const reactWs = connections.get(processorId);
                 if (!reactWs) {
                   console.log("Lost websocket for react", processorId);
                 } else {
-                  //console.log("Forwarding message to ", processorId)    
+                  console.log("Forwarding message to ", processorId)    
                   reactWs.send(message, { binary: false });
                 }
               }
@@ -103,14 +110,12 @@ function initWebSocketServer(server) {
       }
 
       if (j?.task?.ping) {
-        let m = {
-          task: {
-            pong: "ok", 
-            sessionId: j.task?.sessionId, 
-            newDestination: j.task.newSource,
-          }
+        const task = {
+          pong: "ok", 
+          sessionId: j.task?.sessionId, 
+          newDestination: j.task.newSource,
         };
-        wsSendTask(m);
+        wsSendTask(task);
         //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 

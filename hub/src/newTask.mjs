@@ -15,13 +15,24 @@ async function newTask_async(
     authenticate,
     source,
     processorId,
-    groupId,
     sessionId,
+    groupId,
     component_depth = null,
     threadId = null,
     siblingTask = null
   ) {
-    //console.log("newTask_async", id, userId, source, sessionId, groupId, component_depth, threadId);
+    /*
+    console.log(
+      "id:", id, 
+      "userId:", userId, 
+      "source:", source, 
+      "processorId:", processorId, 
+      "sessionId:", sessionId, 
+      "groupId:", groupId, 
+      "component_depth:", component_depth, 
+      "threadId:", threadId
+    );
+    */    
     let siblingInstanceId;
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
@@ -166,68 +177,73 @@ async function newTask_async(
     let taskProcessors = []
 
     // Get the list of processors in the session
-    const sessionsStoreId = taskCopy.sessionId + "_processors";
+    const sessionsStoreId = sessionId + "_processors";
     let sessionProcessors = [];
     if (await sessionsStore_async.has(sessionsStoreId)) {
       sessionProcessors = await sessionsStore_async.get(sessionsStoreId);
+    } else {
+      throw new Error("No processors in session " + sessionId);
     }
 
-    // Allocate the task to processor that supports the environment(s) requested
+    if (!taskCopy.environments) {
+      throw new Error("No environments in task " + taskCopy.id);
+    }
+
+    // Allocate the task to processors that supports the environment(s) requested
     for (const environment of taskCopy.environments) {
-      // Check if the processor starting this task supports this environment
-      const activeProcessor = activeProcessors.get(processorId);
+      // All the session processors with this environment should be included
+      // This could deal with multiple browsers in the same session.
+      //console.log("Looking for sessionProcessors with environment ", environment)
       let found = false;
-      if (activeProcessor && activeProcessor.environments.includes(environment)) {
-        found = true;
-        taskProcessors.push(processorId);  
-        // Should already be in the session
-        if (!sessionProcessors.includes(processorId)) {
-          throw new Error("Processor " + processorId + " not in session " + taskCopy.sessionId);
-        }
-      }
-      // Check if one of the processors in sessionProcessors supports this environment
       if (!found) {
         for (const sessionProcessorId of sessionProcessors) {
+          //console.log("sessionProcessor ", sessionProcessorId)
           const activeProcessor = activeProcessors.get(sessionProcessorId)
           if (!activeProcessor) {
-            throw new Error("Processor " + sessionProcessorId + " not active");
+            throw new Error("Processor " + sessionProcessorId + " not active ", activeProcessors);
           }
           const environments = activeProcessor.environments;
           if (environments && environments.includes(environment)) {
             found = true;
             taskProcessors.push(sessionProcessorId);
+            //console.log("Adding processor " + sessionProcessorId + " to session")
           }
-          break;
         }
       }
       // Find an active processor that supports this environment and add it to the session
       if (!found) {
+        //console.log("sessionProcessors did not match, now looking in activeProcessors")
         for (let [activeProcessorId, value] of activeProcessors) {
-          console.log("activeProcessor ", activeProcessorId, value);
+          //console.log("activeProcessor ", activeProcessorId, value);
           const environments = value.environments;
           if (environments && environments.includes(environment)) {
-            sessionProcessors.push(processorId);
+            sessionProcessors.push(activeProcessorId);
+            //console.log("Adding processor " + activeProcessorId + " to session " + sessionId, sessionProcessors)
             await sessionsStore_async.set(sessionsStoreId, sessionProcessors);
             found = true;
             taskProcessors.push(activeProcessorId);
+            break
           }
         }
       }
-      if (!found) {
-        throw new Error("No processor found for environment " + environment);
-      }
+    }
+
+    if (taskProcessors.length == 0) {
+      throw new Error("No processors allocated for task " + taskCopy.id);
     }
 
     // Record which processors have this task
     // Could convert this into aysynchronous form
     if (await activeTasksStore_async.has(taskCopy.instanceId)) {
       const activeTask = await activeTasksStore_async.get(taskCopy.instanceId)
-      taskProcessors.array.forEach(id => {
-        if (activeTask.processorIds && !activeTask.processorIds.includes(id)) {
-          activeTask.processorIds.push(id);
-          activeTasksStore_async.set(taskCopy.instanceId, activeTask);
+      let processorIds = activeTask.processorIds
+      taskProcessors.forEach(id => {
+        // Should build an 
+        if (processorIds && !processorIds.includes(id)) {
+          processorIds.push(id);
         } 
       });
+      activeTasksStore_async.set(taskCopy.instanceId, activeTask);
     } else {
       const activeTask = {task: taskCopy, processorIds: taskProcessors};
       activeTasksStore_async.set(taskCopy.instanceId, activeTask);

@@ -77,8 +77,18 @@ export function WebSocketProvider({ children, socketUrl }) {
       ws.pingIntervalId = intervalId;
     },
     onMessage: (e) => {
+      if (e.data instanceof Blob) {
+        console.log("e.data is a Blob");
+        return
+      }
       //console.log("App webSocket message received:", e);
-      webSocketEventEmitter.emit("message", e);
+      // Should be in try/catch block
+      const message = JSON.parse(e.data);
+      if (message?.command) {
+        webSocketEventEmitter.emit(message?.command, message.task);
+      } else {
+        webSocketEventEmitter.emit("message", message.task);
+      }
     },
     onClose: (e) => {
       console.log(

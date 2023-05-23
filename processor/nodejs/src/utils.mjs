@@ -6,8 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import Keyv from "keyv";
-import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
 import { deepMerge } from "./shared/utils.mjs";
 
@@ -43,15 +41,6 @@ utils.getUserId = function (req) {
     userId = MAP_USER[userId];
   }
   return userId;
-};
-
-utils.newKeyV = function (uri, table) {
-  return new Keyv({
-    store: new KeyvBetterSqlite3({
-      uri: uri,
-      table: table,
-    }),
-  });
 };
 
 utils.fail = function (msg) {

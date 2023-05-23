@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "./../config.mjs";
 import register_async from "./register.mjs";
+import { activeTasksStore_async } from "./storage.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -38,7 +39,7 @@ function wsSendObject(message = {}) {
 }
 
 function wsSendTask(message) {
-  //console.log("wsSendTask " + message.task.sessionId)
+  //console.log("wsSendTask " + message)
   wsSendObject(message);
 }
 
@@ -71,9 +72,21 @@ const connectWebSocket = () => {
     processorWs.pingIntervalId = intervalId;
   }
 
-  processorWs.onmessage = async (event) => {
-    const j = JSON.parse(event.data);
-    //console.log("ws.on message", j)
+  processorWs.onmessage = async (e) => {
+    if (e.data instanceof Blob) {
+      console.log("e.data is a Blob");
+      return
+    }
+    const message = JSON.parse(e.data);
+    if (message?.command === "update") {
+      console.log("ws updating activeTasksStore_async")
+      await activeTasksStore_async.set(message.task.instanceId, message.task)
+      //processActiveTasks_async(task)
+    } else if (message?.task?.ping) {
+      //console.log("ws ping received", message)
+    } else {
+      console.log("Unexpected message", message)
+    }
   };
 
   processorWs.onclose = function (event) {
@@ -111,4 +124,4 @@ const connectWebSocket = () => {
 
 connectWebSocket();
 
-export { wsSendTask };
+export { wsSendTask, wsSendObject };

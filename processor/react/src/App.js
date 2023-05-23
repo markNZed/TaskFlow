@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 import "./styles/App.css";
 import "./styles/normal.css";
@@ -12,14 +12,18 @@ import Taskflows from "./components/Taskflows";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
+import { useWebSocketContext } from "./contexts/WebSocketContext";
 import { hubUrl } from "./config";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
+import { openStorage } from "./storage.js";
 
 function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
+  const { webSocketEventEmitter } = useWebSocketContext();
+  const storageRef = useRef(null);
 
   useEffect(() => {
     let id = localStorage.getItem('processorId');
@@ -59,7 +63,9 @@ function App() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({
+            processorId: globalState.processorId,
+          }),
         });
         const data = await response.json();
         const user = data.user;
@@ -79,11 +85,13 @@ function App() {
         console.log(err.message);
       }
     };
-    fetchSession();
-  }, []);
+    if (globalState?.processorId) {
+      fetchSession();
+    }
+  }, [globalState?.processorId]);
 
   useEffect(() => {
-    const fetchSession = async () => {
+    const registerProcessor = async () => {
       try {
         const response = await fetch(`${hubUrl}/api/register`, {
           method: "POST",
@@ -106,10 +114,36 @@ function App() {
       }
     };
     // Wait for the processorId to be set
-    if (globalState?.processorId && !globalState?.sessionId) {
-      fetchSession();
+    if (globalState?.processorId) {
+      registerProcessor();
     }
   }, [globalState?.processorId]);
+
+  useEffect(() => {
+    const initializeStorage = async () => {
+      const storageInstance = await openStorage();
+      storageRef.current = storageInstance;
+    };
+
+    initializeStorage();
+  }, []);
+
+  const updateTask = async (task) => {
+    // We are not using this storage yet
+    // We will need to clean it up
+    storageRef.current.set(task.instanceId, task);
+    //const value = await storageRef.current.get("a1");
+    console.log("Storage updated ", task.instanceId);
+  };
+
+  useEffect(() => {
+    //console.log("useFilteredWebSocket useEffect adding handleMessage instanceId", instanceId);
+    webSocketEventEmitter.on("update", updateTask);
+    return () => {
+      //console.log("useFilteredWebSocket useEffect removing handleMessage instanceId", instanceId);
+      webSocketEventEmitter.removeListener("update", updateTask);
+    };
+  }, []);
 
   return (
     <Routes>

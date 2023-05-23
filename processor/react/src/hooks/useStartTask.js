@@ -9,7 +9,6 @@ import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
-import { openStorage } from "../storage.js";
 
 const useStartTask = (startId, threadId = null, component_depth = 0) => {
   const { globalState } = useGlobalStateContext();
@@ -17,17 +16,6 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
   const [startTaskLoading, setStartTaskLoading] = useState(true);
   const [startTaskError, setTaskStartError] = useState();
   const { sendJsonMessagePlus } = useWebSocketContext();
-  const storageRef = useRef(null);
-
-  useEffect(() => {
-    const initializeStorage = async () => {
-      const storageInstance = await openStorage();
-      storageRef.current = storageInstance;
-    };
-
-    initializeStorage();
-  }, []);
-
 
   useEffect(() => {
     if (!startId) {
@@ -46,15 +34,10 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
         console.log("useStartTask result ", result)
         //console.log("component_depth ", depth)
         setStartTaskReturned(result);
-        // We are not using this storage yet
-        // We will need to clean it up
-        storageRef.current.set(result.instanceId, result);
-        const value = await storageRef.current.get("a1");
-        console.log("storage testing ", value);
         // If the task expects a websocket let's establish that
-        if (globalState.sessionId && result.websocket) {
-          sendJsonMessagePlus({"sessionId" : globalState.sessionId})
-          console.log("Set sessionId ", globalState.sessionId);
+        // Maybe we should do this in any case?
+        if (result.websocket) {
+          sendJsonMessagePlus({})
         }
       } catch (error) {
         setTaskStartError(error.message);

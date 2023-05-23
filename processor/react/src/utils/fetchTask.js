@@ -18,25 +18,15 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   // The final destination of the task
   task.destination = `${server}/api/${end_point}`;;
-  task.sessionId = globalState?.sessionId;
+  task.sessionId = globalState.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
   }
-
   task.newSource = globalState.processorId;
 
   // The immediate destination of this request
-  let destination;
-  if (end_point === "task/start") {
-    destination = `${hubUrl}/api/${end_point}`
-    task.newDestination = globalState.hubId;
-  } else {
-    //destination = task.destination // Not using proxy
-    //destination = `${hubUrl}/processor/nodejs` // Using proxy
-    destination = `${hubUrl}/api/${end_point}` 
-    // The Task Function should define this, no it should not (only operates on Task)
-    task.newDestination = "nodejs"
-  }
+  let destination = `${hubUrl}/api/${end_point}` // using hub routing
+  task.newDestination = globalState.hubId;
 
   try {
     const validatedTaskJsonString = fromTask(task);

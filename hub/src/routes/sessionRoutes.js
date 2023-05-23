@@ -63,6 +63,9 @@ router.post("/", async (req, res) => {
   if (userId) {
     console.log("Creating session for ", userId);
     sessionsStore_async.set(sessionId + "userId", userId);
+    const sessionsStoreId = sessionId + "_processors";
+    sessionsStore_async.set(sessionsStoreId, [processorId]);
+    console.log("sessionsStoreId processor Ids", [processorId]);
     res.send({
       user: {
         userId: userId,

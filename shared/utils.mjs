@@ -1,5 +1,14 @@
 // Without this we cannot make partial updates to objects in the Task
 function deepMerge(prevState, update) {
+
+    if (prevState === undefined) {
+      return update;
+    }
+
+    if (update === undefined) {
+      return prevState;
+    }
+
     const output = { ...prevState };
   
     for (const key of Object.keys(update)) {

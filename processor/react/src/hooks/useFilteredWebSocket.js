@@ -6,19 +6,10 @@ function useFilteredWebSocket(instanceId, onMessage) {
   
   const { webSocketEventEmitter } = useWebSocketContext();
 
-  const handleMessage = (e) => {
+  const handleMessage = (task) => {
     //console.log("useFilteredWebSocket handleMessage", e);
-    if (e.data instanceof Blob) {
-      console.log("e.data is a Blob");
-      return
-    }
-    const message = JSON.parse(e.data);
-    if (
-      instanceId &&
-      message?.task &&
-      message.task?.instanceId === instanceId
-    ) {
-      onMessage(message.task);
+    if (instanceId && task.instanceId === instanceId) {
+      onMessage(task);
     }
   };
 
