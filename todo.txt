@@ -1,16 +1,24 @@
 /* ToDo
 -------  
-We might need multiple levels of session:
-  session processor-node
-  user session
+In theory not using the nodejs update route (need to check)
+  When an update command is received over ws the do_task_async recursion
+  
+NodeJs should send update at end of the openAI request
 Next step is processActiveTasks_async
+  It seems the nodejs processor is not in the activeTasks
   Send updates to the Hub via HTTP request
-    It probably is much easier to debug if the whole task is sent on updates, same with start.
+    Easier to debug if the whole task is sent on updates, same with start.
+    Use websocket for synchronization
   The nodejs should not be working with update route (it should be a client)
     Replace with function that is called from websocket
     But we need some protocol to know when to call update
       The Task Function should decide if/when it should do something
         Use request signal + state
+Rename startTask to newTask
+For hte resume we need to g oto dummy API, it is making two requests for the sample text
+We might need multiple levels of session:
+  session processor-node
+  user session
 The diff is going to have to deal with deleting members - send diffUpdate and diffRemove
 Seem reasonable that partial results would be sent point to point and just routed
   Can temporarily disable delta/partial and re-enable after diff if working.
