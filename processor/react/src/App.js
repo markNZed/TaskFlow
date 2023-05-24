@@ -128,20 +128,20 @@ function App() {
     initializeStorage();
   }, []);
 
-  const updateTask = async (task) => {
+  const updateTaskDB = async (task) => {
     // We are not using this storage yet
     // We will need to clean it up
     storageRef.current.set(task.instanceId, task);
     //const value = await storageRef.current.get("a1");
-    console.log("Storage updated ", task.instanceId);
+    //console.log("Storage updated ", task.instanceId);
   };
 
   useEffect(() => {
-    //console.log("useFilteredWebSocket useEffect adding handleMessage instanceId", instanceId);
-    webSocketEventEmitter.on("update", updateTask);
+    //console.log("usePartialWebSocket useEffect adding handleMessage instanceId", instanceId);
+    webSocketEventEmitter.on("update", updateTaskDB);
     return () => {
-      //console.log("useFilteredWebSocket useEffect removing handleMessage instanceId", instanceId);
-      webSocketEventEmitter.removeListener("update", updateTask);
+      //console.log("usePartialWebSocket useEffect removing handleMessage instanceId", instanceId);
+      webSocketEventEmitter.removeListener("update", updateTaskDB);
     };
   }, []);
 

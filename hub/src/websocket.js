@@ -5,20 +5,25 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, sessionsStore_async, activeProcessors } from "./storage.mjs";
+import { connections, sessionsStore_async, activeProcessors, activeTasksStore_async } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
+  
   let ws = connections.get(processorId);
   if (!ws) {
     console.log("Lost websocket for wsSendObject", processorId, message);
   } else {
     if (!message?.task) {
-      message["task"] = {}
+      throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
-    // The destination is availalbe because nodejs does not initiate webscoket connections
-    message.task.destination = ws.data.destination;
-    message.task.hubId = hubId;
+    // Need to make a copy so any changes here d onot impact the object 
+    let localTask = { ...message.task }
+    // The destination is available because nodejs does not initiate websocket connections
+    localTask.destination = ws.data.destination;
+    localTask.hubId = hubId;
+    localTask.newSource = hubId;
+    message.task = localTask;
     ws.send(JSON.stringify(message));
     if (!message.task?.pong) {
       //console.log("wsSendObject ", JSON.stringify(message) )
@@ -26,11 +31,15 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-function wsSendTask(task) {
-  //console.log("wsSendTask")
-  let m = { task: task };
-  let processorId = m.task.newDestination;
-  wsSendObject(processorId, m);
+const wsSendTask = function (task, command = null) {
+  //console.log("wsSendTask " + message)
+  let message = {}
+  message["task"] = task;
+  if (command) {
+    message["command"] = command;
+  }
+  let processorId = message.task.newDestination;
+  wsSendObject(processorId,message);
 }
 
 function initWebSocketServer(server) {
@@ -58,51 +67,26 @@ function initWebSocketServer(server) {
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)
         }
-        let processors = [];
-        if (j.task.sessionId) {
-          const sessionsStoreId = j.task.sessionId + "_processors";
-          if (await sessionsStore_async.has(sessionsStoreId)) {
-            let currentProcessors = await sessionsStore_async.get(sessionsStoreId);
-            if (currentProcessors && !currentProcessors.includes(processorId)) {
-              console.log("Adding processor to session", processorId, currentProcessors)
-              currentProcessors.push(processorId)
-              await sessionsStore_async.set(sessionsStoreId, currentProcessors);
-            }
-            processors = currentProcessors;
-            //console.log("Processors in session", sessionsStoreId, processors)
+        const activeTask = await activeTasksStore_async.get(j.task.instanceId);
+        // We have the processor list in activeTasksStore and in sessionsStore
+        // Do we need the ssessionsStore?
+        if (j.command === "update" || j.command === "partial") {
+          //console.log("ws update", j.task)
+          if (!activeTask.processorIds) {
+            throw new Error("No processors ", j.task);
           } else {
-            throw new Error("No processors in session " + sessionsStoreId);
-            // We should not be able to reach here?
-            //await sessionsStore_async.set(sessionsStoreId, [processorId]);
-            //processors = [processorId]
-            //console.log("Initial processor to session", processorId)
+            //console.log("Number of processors " + activeTask.processorIds.length)
           }
-        } else if (!j?.task?.ping) {
-          console.log("No sessionId in task", j.task)
-        }
 
-        // Need to know the processortemplate
-        //activeProcessors
-          
-        // Forwarding messages from nodejs to react
-        // Eventually we will not use newDestination (just sync tasks)
-        // Use the sessionId to identify the react websockets
-        // We do not have messages going from react to nodejs via websocket
-        // This code needs to be generalized, later.
-        if (!j?.task?.ping) {
-          if (j?.task?.newDestination?.startsWith("react")) {
-            if (processors.length === 0) {
-              throw new Error("No processors ", j.task);
-            }
-            for (const processorId of processors) {
-              if (processorId.startsWith("react")) {
-                const reactWs = connections.get(processorId);
-                if (!reactWs) {
-                  console.log("Lost websocket for react", processorId, connections.keys());
-                } else {
-                  //console.log("Forwarding message to ", processorId)    
-                  reactWs.send(message, { binary: false });
-                }
+          for (const id of activeTask.processorIds) {
+            if (id !== j.task.newSource) {
+              const ws = connections.get(id);
+              if (!ws) {
+                console.log("Lost websocket for ", id, connections.keys());
+              } else {
+                //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
+                j.task.newDestination = id;
+                wsSendTask(j.task, j.command);
               }
             }
           }

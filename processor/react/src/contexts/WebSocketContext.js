@@ -85,9 +85,10 @@ export function WebSocketProvider({ children, socketUrl }) {
       // Should be in try/catch block
       const message = JSON.parse(e.data);
       if (message?.command) {
+        //console.log("App webSocket command", message.command,  message.task);
         webSocketEventEmitter.emit(message?.command, message.task);
-      } else {
-        webSocketEventEmitter.emit("message", message.task);
+      } else if (!message?.task?.pong) {
+        console.log("App webSocket unexpected message", message);
       }
     },
     onClose: (e) => {

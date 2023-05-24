@@ -84,7 +84,6 @@ router.post("/update", async (req, res) => {
     } else{
       // Just a hack for now
       console.log("task from ", task.newSource)
-      task.destination = NODEJS_URL + "/api/task/update";
       // It would be better to use try here and not return null from updateTask_async
       // Now we just want to update the activeTasksStore and that should synchronize the task
       //task = await updateTask_async(task)

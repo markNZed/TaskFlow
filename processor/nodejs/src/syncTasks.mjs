@@ -17,13 +17,19 @@ const syncTasks_async = async (wsSendTask, keyv, key, value) => {
     // Here we could calculate the diff
   }
 
-  // Could check if newSource is processorId
-  if (!task.newSource || !task.newSource.startsWith("hub-")) {
-    // Not sure we need to do this - it should be done by sending update
-    // Just sync in the background with websocket
-    console.log("syncTasks_async updating", key, processorId);
-    task.newSource = processorId
-    wsSendTask(task, "update");
+  // Passing in a null function is a way to disable sending tasks
+  // This is used when we send th task with an HTTP request.
+  if (wsSendTask !== null) {
+    // If processor is setting task then send it to the hub
+    if (!task?.newSource) {
+      console.log("task missing newSource", key, value);
+      throw new Error("task missing newSource");
+    } else if (task.newSource === processorId) {
+      // Not sure we need to do this - it should be done by sending update
+      // Just sync in the background with websocket
+      console.log("syncTasks_async updating", key, processorId);
+      wsSendTask(task, "update");
+    }
   }
 
 };

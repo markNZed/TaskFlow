@@ -73,6 +73,7 @@ async function newTask_async(
     }
     taskCopy["userId"] = userId;
     taskCopy["source"] = source;
+    taskCopy["newSource"] = processorId;
     taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;
@@ -232,8 +233,10 @@ async function newTask_async(
       throw new Error("No processors allocated for task " + taskCopy.id);
     }
 
+    console.log("Allocated task " + taskCopy.id + " to processors " + taskProcessors);
+
     // Record which processors have this task
-    // Could convert this into aysynchronous form
+    // Could convert this into asynchronous form
     let activeTask;
     if (await activeTasksStore_async.has(taskCopy.instanceId)) {
       activeTask = await activeTasksStore_async.get(taskCopy.instanceId)

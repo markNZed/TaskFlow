@@ -1,7 +1,20 @@
 /* ToDo
 -------  
-In theory not using the nodejs update route (need to check)
-  When an update command is received over ws the do_task_async is called
+Message in chat is not being cleared. Because final is not being received.
+
+The websocket in hub is not passing to react because newDestinaiton is not set - we should not use this. Followi simialr logic to newTask (probably need to turn that into a function)
+
+Create ping command insted of task.ping
+
+Move processors out of activeTasks on hub and into activePorcessors with task instancId key
+
+For command partial use emit partial not message
+
+Need VSCode debugging
+.vscode/launch.json
+To get .vscode under version control we should have the taskflow directory as the top.
+  This requires putting the config in the taskflow directory
+  Clean up config at same time (move into hub)
 
 NodeJs should send update at end of the openAI request
 Next step is processActiveTasks_async

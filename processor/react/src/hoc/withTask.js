@@ -12,6 +12,7 @@ import useStartTask from "../hooks/useStartTask";
 import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
+import useUpdateWebSocket from "../hooks/useUpdateWebSocket";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -45,6 +46,15 @@ function withTask(Component) {
     const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
     const { startTaskReturned, startTaskLoading, startTaskError } =
       useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
+
+    useUpdateWebSocket(props.task?.instanceId,
+      (updatedTask) => {
+        if (updatedTask.stackPtr === local_component_depth) {
+          //console.log("useUpdateWebSocket", updatedTask);
+          updateTask(updatedTask)
+        }
+      }
+    )
 
     function startTaskFn(
       startId,

@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { delta } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
-import useFilteredWebSocket from "../../hooks/useFilteredWebSocket";
+import usePartialWebSocket from "../../hooks/usePartialWebSocket";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
 
@@ -96,8 +96,9 @@ const TaskChat = (props) => {
 
   // I guess the websocket can cause events during rendering
   // Putting this in the HoC causes a warning about setting state during rendering
-  useFilteredWebSocket(task?.instanceId,
+  usePartialWebSocket(task?.instanceId,
     (partialTask) => {
+      console.log("TaskChat usePartialWebSocket partialTask", partialTask);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   )

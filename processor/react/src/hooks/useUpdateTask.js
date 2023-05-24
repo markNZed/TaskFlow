@@ -39,13 +39,18 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
           const updating = { send: false, "response.updating": true };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
+          // The setTask prior to sending the result will not have taken effect
+          // So we align the snapshot with the updated task and send that
+          // otherwise send could come back treu and we will get a loop
+          snapshot.response.updating = false;
+          snapshot.send = false;
           // Here we could check if the websocket is already open
           if (globalState.sessionId) {
             sendJsonMessagePlus({"sessionId" : globalState.sessionId})
             console.log("Set sessionId ", globalState.sessionId);
           }
           // fetchTask can change some parmeters in Task and then we get conflicts (e.g. destination)
-          const result = await fetchTask(globalState, "task/update", task);
+          const result = await fetchTask(globalState, "task/update", snapshot);
           if (result === "synchronizing") {
             // Trying to move to websocket sync
             // Note we were setting result.response.updated = true; below
@@ -59,10 +64,6 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
             // remove the destination so we don't get conflicts in checkConflicts
             delete result.destination
             delete result.newSource
-            // The setTask prior to getting the result may not have taken effect so we set the result
-            // otherwise send will be true and we will get a loop
-            result.send = false;
-            result.response.updating = false;
             log("useUpdateTask result", result);
             // If the task expects a websocket let's establish that
             if (globalState.sessionId) {

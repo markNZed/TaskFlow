@@ -42,7 +42,7 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId) {
       response: response, 
       sessionId: sessionId,
     };
-    wsSendTask(partialTask);
+    wsSendTask(partialTask, "partial");
     wsDelta[sessionId] += 1;
   }
   //console.log("ws.data['delta_count'] " + ws.data['delta_count'])

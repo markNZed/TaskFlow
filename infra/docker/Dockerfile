@@ -10,6 +10,8 @@ RUN wget -qO /usr/local/bin/websocat https://github.com/vi/websocat/releases/lat
 RUN chmod a+x /usr/local/bin/websocat
 #websocat --version
 
+RUN apt-get install -y net-tools
+
 EXPOSE 3000
 EXPOSE 5000
 EXPOSE 5001

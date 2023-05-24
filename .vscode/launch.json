@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+    
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Hub",
+            "address": "localhost",
+            "port": 9229,
+            "localRoot": "/app/taskflow/hub",
+            "remoteRoot": "/app/taskflow/hub"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "NodeJS Processsor",
+            "address": "localhost",
+            "port": 9230,
+            "localRoot": "/app/taskflow/processor/nodejs",
+            "remoteRoot": "/app/taskflow/processor/nodejs"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Servers",
+            "configurations": ["Hub", "NodeJS Processsor"]
+        }
+    ]
+}

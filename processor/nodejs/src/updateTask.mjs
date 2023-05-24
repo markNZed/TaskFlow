@@ -29,8 +29,8 @@ export const updateTask_async = async (task) => {
     body: messageJsonString,
   };
 
-  const apiUrl = `${TASKHUB_URL}/processor/nodejs`
-  console.log("API updateTask_async call to " + apiUrl)
+  const apiUrl = `${TASKHUB_URL}/api/task/update`
+  //console.log("API updateTask_async call to " + apiUrl)
 
   const response = await fetch(apiUrl, requestOptions)
     .then(response => {
@@ -40,12 +40,5 @@ export const updateTask_async = async (task) => {
     })
     .catch(error => console.error('Error during fetch:', error));
 
-  const data = await response.json();
-
-  try {
-    const task = toTask(JSON.stringify(data.task));
-    return task;
-  } catch (error) {
-    console.log("Error while converting JSON to Task:", error, data);
-  }
+  // Not expecting a useful response, the hub will broadcast via ws
 };
