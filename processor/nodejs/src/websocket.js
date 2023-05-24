@@ -128,6 +128,4 @@ const connectWebSocket = () => {
   };
 }
 
-connectWebSocket();
-
-export { wsSendTask };
+export { wsSendTask, connectWebSocket };

@@ -1,8 +1,8 @@
 /* ToDo
 -------  
 In theory not using the nodejs update route (need to check)
-  When an update command is received over ws the do_task_async recursion
-  
+  When an update command is received over ws the do_task_async is called
+
 NodeJs should send update at end of the openAI request
 Next step is processActiveTasks_async
   It seems the nodejs processor is not in the activeTasks
@@ -15,6 +15,7 @@ Next step is processActiveTasks_async
       The Task Function should decide if/when it should do something
         Use request signal + state
 Rename startTask to newTask
+Remove user validation from nodejs
 For hte resume we need to g oto dummy API, it is making two requests for the sample text
 We might need multiple levels of session:
   session processor-node

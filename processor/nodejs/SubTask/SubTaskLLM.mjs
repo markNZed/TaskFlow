@@ -291,9 +291,9 @@ async function ChatGPTAPI_request_async(params) {
     messageParams.systemMessage
   );
 
-  let cachedValue = "";
+  let cachedValue = {};
   let cacheKey = "";
-  let cacheKeyText = {};
+  let cacheKeyText = "";
   if (use_cache) {
     const messagesText = await utils.messagesText_async(
       messagesStore_async,
@@ -312,6 +312,7 @@ async function ChatGPTAPI_request_async(params) {
     cacheKey = utils.djb2Hash(cacheKeyText);
     console.log("cacheKey " + cacheKey);
     cachedValue = await cacheStore_async.get(cacheKey);
+    //console.log("cachedValue ", cachedValue);
   }
 
   // Message can be sent from one of multiple sources

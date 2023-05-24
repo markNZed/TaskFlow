@@ -7,11 +7,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import newTask_async from "../newTask.mjs";
-import { activeTasksStore_async, instancesStore_async} from "../storage.mjs";
+import { activeTasksStore_async} from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
-import updateTask_async from "../updateTask.mjs";
 import { NODEJS_URL} from "../../config.mjs";
 import { doneTask_async } from "../doneTask.mjs";
 

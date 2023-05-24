@@ -9,7 +9,7 @@ import { wsSendObject } from "./websocket.js";
 
 const syncTasks_async = async (key, value) => {
 
-  //console.log("syncTasks_async", key, value)
+console.log("syncTasks_async", key)
 
   const task = value.task;
   const processorIds = value.processorIds;
@@ -25,6 +25,8 @@ const syncTasks_async = async (key, value) => {
         const message = { command: "update", task: task };
         wsSendObject(processorId, message);
         console.log("syncTasks_async updating", key, processorId);
+      } {
+        console.log("syncTasks_async skipping", key, processorId);
       }
     }
   } else {

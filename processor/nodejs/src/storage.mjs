@@ -25,16 +25,16 @@ function newKeyV(uri, table, setCallback = null) {
       table: table,
     }),
   });
-  const originalSet = keyv.set.bind(keyv);
-  keyv.set = async function(wsSendTask, key, value, ttl) {
-    // Middleware logic before setting the value
-    if (typeof setCallback === 'function') {
+  if (typeof setCallback === 'function') {
+    const originalSet = keyv.set.bind(keyv);
+    keyv.set = async function(wsSendTask, key, value, ttl) {
+      // Middleware logic before setting the value
       //console.log("Setting table", table, "key", key, "value", value)
       setCallback(wsSendTask, keyv, key, value);
-    }
-    const result = await originalSet(key, value, ttl);
-    return result;
-  };
+      const result = await originalSet(key, value, ttl);
+      return result;
+    };
+  }
   return keyv;
 };
 
