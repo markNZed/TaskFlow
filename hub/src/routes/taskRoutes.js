@@ -77,7 +77,7 @@ router.post("/update", async (req, res) => {
     let task = req.body.task;
     // We intercept tasks that are done.
     if (task.state?.done) {
-      task = await doneTask_async(task) 
+      const newTask = await doneTask_async(task) 
       res.json({task: newTask});
       return;
     // Pass on tasks that are not done
@@ -87,17 +87,13 @@ router.post("/update", async (req, res) => {
       console.log("task from ", task.newSource)
       task.destination = NODEJS_URL + "/api/task/update";
       // It would be better to use try here and not return null from updateTask_async
-      task = await updateTask_async(task)
-      if (task) {
-        let activeTask = await activeTasksStore_async.get(task.instanceId);
-        //console.log("activeTask",task.instanceId, activeTask);
-        activeTask.task = task
-        activeTasksStore_async.set(task.instanceId, activeTask);
-        // Somehow we need to indicate that the task has changed.
-        res.json({task: task});
-      } else {
-        res.json({task: null});
-      }
+      // Now we just want to update the activeTasksStore and that should synchronize the task
+      //task = await updateTask_async(task)
+      const activeTask = await activeTasksStore_async.get(task.instanceId)
+      activeTask.task = task;
+      await activeTasksStore_async.set(task.instanceId, activeTask);
+      // So we do not return a task anymore. This requirs the task synchronization working.
+      res.json({task: "synchronizing"});
     }
   } else {
     console.log("No user");

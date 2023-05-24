@@ -71,7 +71,7 @@ function initWebSocketServer(server) {
             processors = currentProcessors;
             //console.log("Processors in session", sessionsStoreId, processors)
           } else {
-            throw new Error("No processors in session", sessionsStoreId);
+            throw new Error("No processors in session " + sessionsStoreId);
             // We should not be able to reach here?
             //await sessionsStore_async.set(sessionsStoreId, [processorId]);
             //processors = [processorId]

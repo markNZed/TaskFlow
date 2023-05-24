@@ -18,8 +18,11 @@ const syncTasks_async = async (wsSendTask, keyv, key, value) => {
   }
 
   // Could check if newSource is processorId
-  if (!task.newSource.startsWith("hub-")) {
-    //console.log("syncTasks_async updating", key);
+  if (!task.newSource || !task.newSource.startsWith("hub-")) {
+    // Not sure we need to do this - it should be done by sending update
+    // Just sync in the background with websocket
+    console.log("syncTasks_async updating", key, processorId);
+    task.newSource = processorId
     wsSendTask(task, "update");
   }
 

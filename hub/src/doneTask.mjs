@@ -17,7 +17,7 @@ export async function doneTask_async(task) {
     // We should send a delete message to all the copies and also delete those (see Meteor protocol)
     activeTasksStore_async.delete(task.instanceId);
     // Fetch from the Task Hub
-    let newTask = await newTask_async(task.nextTask, userId, false, task.source, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    let newTask = await newTask_async(task.nextTask, task.userId, false, task.source, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
     // What is the active tasktemplate?
     const tasktemplateName = newTask.stack[newTask.stackPtr - 1]
     //console.log("tasktemplateName", tasktemplateName);

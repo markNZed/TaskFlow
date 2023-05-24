@@ -76,10 +76,10 @@ const TaskChat = (props) => {
               responseTextRef.current += text;
               break;
             case 'partial':
-              //responseTextRef.current = text;
+              responseTextRef.current = text;
               break;
             case 'final':
-              //responseTextRef.current = text;
+              responseTextRef.current = text;
               updateStep("input")
               setResponsePending(false);
               break;

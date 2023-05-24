@@ -46,7 +46,7 @@ const updateTask_async = async (task) => {
     try {
       updated_task = toTask(JSON.stringify(data.task));
     } catch (error) {
-      throw new Error("Error while converting JSON to Task:", error, data);
+      throw new Error("Error while converting JSON to Task:" + error.message);
     }
 
     // Will need to move this somewhere where it can also deal with websocket messages

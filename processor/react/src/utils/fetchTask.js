@@ -50,10 +50,14 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   const data = await response.json();
 
-  try {
-    const task = toTask(JSON.stringify(data.task));
-    return task;
-  } catch (error) {
-    console.log("Error while converting JSON to Task:", error, data);
+  if (data.task === "synchronizing") {
+    return data.task;
+  } else {
+    try {
+      const task = toTask(JSON.stringify(data.task));
+      return task;
+    } catch (error) {
+      console.log("Error while converting JSON to Task:", error, data);
+    }
   }
 };

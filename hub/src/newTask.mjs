@@ -200,7 +200,7 @@ async function newTask_async(
           //console.log("sessionProcessor ", sessionProcessorId)
           const activeProcessor = activeProcessors.get(sessionProcessorId)
           if (!activeProcessor) {
-            throw new Error("Processor " + sessionProcessorId + " not active ", activeProcessors);
+            throw new Error("Processor " + sessionProcessorId + " not active. Active processors: " + JSON.stringify(activeProcessors));
           }
           const environments = activeProcessor.environments;
           if (environments && environments.includes(environment)) {
@@ -234,8 +234,9 @@ async function newTask_async(
 
     // Record which processors have this task
     // Could convert this into aysynchronous form
+    let activeTask;
     if (await activeTasksStore_async.has(taskCopy.instanceId)) {
-      const activeTask = await activeTasksStore_async.get(taskCopy.instanceId)
+      activeTask = await activeTasksStore_async.get(taskCopy.instanceId)
       let processorIds = activeTask.processorIds
       taskProcessors.forEach(id => {
         // Should build an 
@@ -245,9 +246,11 @@ async function newTask_async(
       });
       activeTasksStore_async.set(taskCopy.instanceId, activeTask);
     } else {
-      const activeTask = {task: taskCopy, processorIds: taskProcessors};
+      activeTask = {task: taskCopy, processorIds: taskProcessors};
       activeTasksStore_async.set(taskCopy.instanceId, activeTask);
     }
+
+    //console.log("activeTasksStore_async activeTask", activeTask)
 
     //console.log("New task ", taskCopy)
     console.log("New task id " + taskCopy.id);

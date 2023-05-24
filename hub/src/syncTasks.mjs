@@ -9,6 +9,8 @@ import { wsSendObject } from "./websocket.js";
 
 const syncTasks_async = async (key, value) => {
 
+  //console.log("syncTasks_async", key, value)
+
   const task = value.task;
   const processorIds = value.processorIds;
   const has = await activeTasksStore_async.has(key);
@@ -17,12 +19,16 @@ const syncTasks_async = async (key, value) => {
     // Here we could calculate the diff
   }
   // foreach processorId in processorIds send the task to the processor
-  for (const processorId of processorIds) {
-    if (processorId === task.newSource) {
-      const message = { command: "update", task: task };
-      wsSendObject(processorId, message);
-      //console.log("syncTasks_async updating", key, processorId);
+  if (processorIds) {
+    for (const processorId of processorIds) {
+      if (processorId !== task.newSource) {
+        const message = { command: "update", task: task };
+        wsSendObject(processorId, message);
+        console.log("syncTasks_async updating", key, processorId);
+      }
     }
+  } else {
+    console.log("syncTasks_async no processorIds", key, value);
   }
 
 };
