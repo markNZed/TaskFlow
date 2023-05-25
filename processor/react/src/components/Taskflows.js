@@ -28,7 +28,6 @@ import { appLabel } from "../config";
 function Taskflows(props) {
   const {
     useTasksState,
-    startTaskLoading,
     startTaskError,
     startTask,
     startTaskFn,

@@ -36,7 +36,6 @@ ToDo:
     To allow this we need to append dom elements. 
     In chatGPT they have the same problem inside the active <p> 
     but once rendered hte <p></p> can be copied
-  Should updateTaskLoading be part of the task object?
   On the server side we still use the full conversation so this partitoning needs some thought
 */
 
@@ -45,7 +44,6 @@ const TaskChat = (props) => {
     log,
     updateTask,
     updateStep,
-    updateTaskLoading,
     task,
     setTask,
     component_depth,

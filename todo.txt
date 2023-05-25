@@ -1,6 +1,19 @@
 /* ToDo
 -------  
+Get conversation working without Start taks being returned, then copy the strategy for the next task
+No longer returning task fro nextTask and startTask so need to deal with this in React.
+  There could be a start command that is sent to the processor initiating the request.
+  Something very similar for the nextTask
+  Taskflows.js expects startTask to be set - we can do that from withTask using command
+  use the source of the task in newTask to send the start command
+    Better to have a start field in the task 
+    Maybe the start sould be based on environment
+  TaskStepper.js is expecting nextTask can take a similar approach.
+
 Message in chat is not being cleared. Because final is not being received.
+
+UpdateTask and nextTask might become the same thing ? No it is closer to startTask where a Task is returned.
+We need to stop returning task from start too.
 
 The websocket in hub is not passing to react because newDestinaiton is not set - we should not use this. Followi simialr logic to newTask (probably need to turn that into a function)
 

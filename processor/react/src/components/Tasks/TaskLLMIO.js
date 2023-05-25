@@ -29,7 +29,6 @@ const TaskLLMIO = (props) => {
     task,
     setTask,
     updateTask,
-    updateTaskLoading,
     updateStep,
     component_depth,
     //socketResponses,
@@ -161,7 +160,7 @@ const TaskLLMIO = (props) => {
           }
           break;
         case "stop":
-          if (leaving_now && !updateTaskLoading) { // wait until input has been sent (if sent)
+          if (leaving_now) {
             updateTask({ "state.done": true });
           }
           break;

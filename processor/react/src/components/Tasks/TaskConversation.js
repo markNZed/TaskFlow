@@ -25,7 +25,6 @@ const TaskConversation = (props) => {
   const {
     task,
     setTask,
-    startTaskLoading,
     startTaskError,
     startTask,
     startTaskFn,

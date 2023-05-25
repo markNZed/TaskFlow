@@ -28,7 +28,6 @@ const TaskShowResponse = (props) => {
     parentTask,
     updateTask,
     updateStep,
-    updateTaskLoading,
     component_depth,
   } = props;
 

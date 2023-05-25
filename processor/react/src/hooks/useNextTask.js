@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 // We have: Start with startId, threadId
 //          Step with task
@@ -17,38 +16,24 @@ import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 const useNextTask = (task) => {
   const { globalState } = useGlobalStateContext();
-  const [nextTask, setNextTask] = useState();
-  const [nextTaskLoading, setNextTaskLoading] = useState(false);
   const [nextTaskError, setNextTaskError] = useState(null);
-  const { sendJsonMessagePlus } = useWebSocketContext();
 
   useEffect(() => {
-    if (task && task.state.done && !nextTaskLoading) {
+    if (task && task.state.done) {
       log("useNextTask", task.id);
       const fetchTaskFromAPI = async () => {
         try {
-          setNextTaskLoading(true);
-          const result = await fetchTask(globalState, "task/update", task);
-          // If the task expects a websocket let's establish that
-          if (globalState.sessionId && result.websocket) {
-            sendJsonMessagePlus({"sessionId" : globalState.sessionId})
-            console.log("Set sessionId ", globalState.sessionId);
-          }
-          log("useNextTask result", result);
-          setNextTask(result);
+          fetchTask(globalState, "task/update", task);
         } catch (error) {
           setNextTaskError(error.message);
-          setNextTask(null);
-        } finally {
-          setNextTaskLoading(false);
         }
       };
       fetchTaskFromAPI();
     }
   // eslint-disable-next-line
-  }, [task, setNextTask]);
+  }, [task]);
 
-  return { nextTask, nextTaskLoading, nextTaskError };
+  return { nextTaskError };
 };
 
 export default useNextTask;

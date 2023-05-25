@@ -8,14 +8,10 @@ import { useState, useEffect, useRef } from "react";
 import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 const useStartTask = (startId, threadId = null, component_depth = 0) => {
   const { globalState } = useGlobalStateContext();
-  const [startTaskReturned, setStartTaskReturned] = useState();
-  const [startTaskLoading, setStartTaskLoading] = useState(true);
   const [startTaskError, setTaskStartError] = useState();
-  const { sendJsonMessagePlus } = useWebSocketContext();
 
   useEffect(() => {
     if (!startId) {
@@ -23,27 +19,15 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
     }
     const fetchTaskFromAPI = async () => {
       try {
-        setStartTaskLoading(true);
         log("useStartTask", startId);
-        //console.log("Starting task ", startId, threadId, depth)
+        console.log("Starting task ", startId)
         let task = { id: startId, stackPtr: component_depth };
         if (threadId) {
           task["threadId"] = threadId;
         }
-        const result = await fetchTask(globalState, "task/start", task);
-        console.log("useStartTask result ", result)
-        //console.log("component_depth ", depth)
-        setStartTaskReturned(result);
-        // If the task expects a websocket let's establish that
-        // Maybe we should do this in any case?
-        if (result.websocket) {
-          sendJsonMessagePlus({})
-        }
+        fetchTask(globalState, "task/start", task);
       } catch (error) {
         setTaskStartError(error.message);
-        setStartTaskReturned(null);
-      } finally {
-        setStartTaskLoading(false);
       }
     };
 
@@ -51,7 +35,7 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
   // eslint-disable-next-line
   }, [startId]);
 
-  return { startTaskReturned, startTaskLoading, startTaskError };
+  return { startTaskError };
 };
 
 export default useStartTask;

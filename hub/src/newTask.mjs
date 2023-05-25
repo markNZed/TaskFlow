@@ -34,9 +34,11 @@ async function newTask_async(
     );
     */    
     let siblingInstanceId;
+    let prevInstanceId = null
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
       threadId = siblingTask.threadId;
+      prevInstanceId = siblingTask.instanceId;
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
@@ -71,6 +73,7 @@ async function newTask_async(
     if (!taskCopy?.state) {
       taskCopy["state"] = {};
     }
+    taskCopy["prevInstanceId"] = prevInstanceId 
     taskCopy["userId"] = userId;
     taskCopy["source"] = source;
     taskCopy["newSource"] = processorId;
@@ -200,14 +203,15 @@ async function newTask_async(
         for (const sessionProcessorId of sessionProcessors) {
           //console.log("sessionProcessor ", sessionProcessorId)
           const activeProcessor = activeProcessors.get(sessionProcessorId)
-          if (!activeProcessor) {
-            throw new Error("Processor " + sessionProcessorId + " not active. Active processors: " + JSON.stringify(activeProcessors));
-          }
-          const environments = activeProcessor.environments;
-          if (environments && environments.includes(environment)) {
-            found = true;
-            taskProcessors.push(sessionProcessorId);
-            //console.log("Adding processor " + sessionProcessorId + " to session")
+          if (activeProcessor) {
+            const environments = activeProcessor.environments;
+            if (environments && environments.includes(environment)) {
+              found = true;
+              taskProcessors.push(sessionProcessorId);
+              //console.log("Adding processor " + sessionProcessorId + " to session")
+            }
+          } else {
+            console.log("No active processor for ", sessionProcessorId)
           }
         }
       }
@@ -233,7 +237,7 @@ async function newTask_async(
       throw new Error("No processors allocated for task " + taskCopy.id);
     }
 
-    console.log("Allocated task " + taskCopy.id + " to processors " + taskProcessors);
+    console.log("Allocated new task " + taskCopy.id + " to processors " + taskProcessors);
 
     // Record which processors have this task
     // Could convert this into asynchronous form

@@ -85,9 +85,9 @@ const connectWebSocket = () => {
     }
     const message = JSON.parse(e.data);
     if (message?.command === "update") {
-      //console.log("processorWs updating activeTasksStore_async")
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
+      console.log("processorWs updating activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(null, message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (message?.task?.pong) {
@@ -103,7 +103,7 @@ const connectWebSocket = () => {
     if (processorWs?.data?.didStart) {
       if (connectionAttempts < maxAttempts) {
         //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
-        let backoffTime = 1000; // Exponential backoff
+        let backoffTime = 1000;
         let currentDateTime = new Date();
         let currentDateTimeString = currentDateTime.toString();
         console.log(`Attempting onclose reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
@@ -119,7 +119,8 @@ const connectWebSocket = () => {
     console.error("Websocket error: ", error.message);
     // attempt reconnection with backoff on error
     if (connectionAttempts < maxAttempts) {
-      let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
+      //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
+      let backoffTime = 1000;
       let currentDateTime = new Date();
       let currentDateTimeString = currentDateTime.toString();
       console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);

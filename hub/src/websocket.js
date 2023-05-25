@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, sessionsStore_async, activeProcessors, activeTasksStore_async } from "./storage.mjs";
+import { connections, activeTasksStore_async } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
@@ -39,6 +39,9 @@ const wsSendTask = function (task, command = null) {
     message["command"] = command;
   }
   let processorId = message.task.newDestination;
+  if (!message.task?.pong) {
+    console.log("wsSendTask task " + message.task.id + " to " + processorId)
+  }
   wsSendObject(processorId,message);
 }
 
@@ -77,7 +80,7 @@ function initWebSocketServer(server) {
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
-
+          console.log("Forwarding " + j.command + " from " + processorId)
           for (const id of activeTask.processorIds) {
             if (id !== j.task.newSource) {
               const ws = connections.get(id);

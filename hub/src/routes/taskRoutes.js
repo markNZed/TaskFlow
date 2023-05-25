@@ -11,7 +11,6 @@ import { activeTasksStore_async} from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
-import { NODEJS_URL} from "../../config.mjs";
 import { doneTask_async } from "../doneTask.mjs";
 
 const router = express.Router();
@@ -35,33 +34,11 @@ router.post("/start", async (req, res) => {
 
     const component_depth = task.stackPtr;
 
-    // Maybe we just set initial task values and pass that in instead of a long list of arguments?
-    const startTask = await newTask_async(startId, userId, true, source, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
+    // Just set initial task values and pass that in instead of a long list of arguments?
+    await newTask_async(startId, userId, true, source, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
+    res.json({task: "synchronizing"});
+    return;
 
-    // Here we will need to send the task to each environment
-    // We are not yet dealing with distributed tasks
-    // In the case of a collaborative task this might require sending to a group
-    // The newTask_async should build the list of processors
-
-    let messageJsonString;
-    let messageObject;
-    try {
-      const validatedTaskJsonString = fromTask(startTask);
-      let validatedTaskObject = JSON.parse(validatedTaskJsonString);
-      messageObject = {
-        task: validatedTaskObject,
-      };
-      messageJsonString = JSON.stringify(messageObject);
-    } catch (error) {
-      console.error(
-        "Error while validating Task against schema:",
-        error,
-        startTask
-      );
-      return;
-    }
-    //console.log(JSON.stringify(messageObject))
-    res.send(messageJsonString);
   } else {
     console.log("No user");
     res.status(200).json({ error: "No user" });
@@ -76,22 +53,20 @@ router.post("/update", async (req, res) => {
     let task = req.body.task;
     // We intercept tasks that are done.
     if (task.state?.done) {
-      const newTask = await doneTask_async(task) 
-      res.json({task: newTask});
+      doneTask_async(task) 
+      res.json({task: "synchronizing"});
       return;
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else{
       // Just a hack for now
-      console.log("task from ", task.newSource)
-      // It would be better to use try here and not return null from updateTask_async
-      // Now we just want to update the activeTasksStore and that should synchronize the task
-      //task = await updateTask_async(task)
+      console.log("task " + task.id + " from " + task.newSource)
       const activeTask = await activeTasksStore_async.get(task.instanceId)
       activeTask.task = task;
       await activeTasksStore_async.set(task.instanceId, activeTask);
-      // So we do not return a task anymore. This requirs the task synchronization working.
+      // So we do not return a task anymore. This requires the task synchronization working.
       res.json({task: "synchronizing"});
+      return;
     }
   } else {
     console.log("No user");

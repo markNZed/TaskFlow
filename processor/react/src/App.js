@@ -133,7 +133,7 @@ function App() {
     // We will need to clean it up
     storageRef.current.set(task.instanceId, task);
     //const value = await storageRef.current.get("a1");
-    //console.log("Storage updated ", task.instanceId);
+    console.log("Storage updated ", task);
   };
 
   useEffect(() => {

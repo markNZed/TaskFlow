@@ -20,7 +20,7 @@ const syncTasks_async = async (key, value) => {
   }
   // foreach processorId in processorIds send the task to the processor
   if (processorIds) {
-    //console.log("syncTasks_async task.newSource " + task.newSource);
+    console.log("syncTasks_async task " + task.id + " from " + task.newSource);
     for (const processorId of processorIds) {
       if (processorId !== task.newSource) {
         const message = { command: "update", task: task };

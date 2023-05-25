@@ -13,6 +13,8 @@ import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
 import useUpdateWebSocket from "../hooks/useUpdateWebSocket";
+import useStartWebSocket from "../hooks/useStartWebSocket";
+import useNextWebSocket from "../hooks/useNextWebSocket";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -38,20 +40,39 @@ function withTask(Component) {
     // By passing the component_depth we know which layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing condif from an earlier component
-    const { updateTaskLoading, updateTaskError } = useUpdateTask(
+    const { updateTaskError } = useUpdateTask(
       props.task,
       props.setTask,
       local_component_depth
     );
-    const { nextTask, nextTaskLoading, nextTaskError } = useNextTask(doneTask);
-    const { startTaskReturned, startTaskLoading, startTaskError } =
-      useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
+    const [nextTask, setNextTask] = useState();
+    const { nextTaskError } = useNextTask(doneTask);
+    const [startTaskReturned, setStartTaskReturned] = useState();
+    const { startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
     useUpdateWebSocket(props.task?.instanceId,
       (updatedTask) => {
         if (updatedTask.stackPtr === local_component_depth) {
           //console.log("useUpdateWebSocket", updatedTask);
           updateTask(updatedTask)
+        }
+      }
+    )
+
+    useStartWebSocket(startTaskId,
+      (updatedTask) => {
+        console.log("useStartWebSocket", updatedTask);
+        setStartTaskId(null);
+        setStartTaskReturned(updatedTask)
+      }
+    )
+
+    useNextWebSocket(props.task?.instanceId,
+      (updatedTask) => {
+        if (updatedTask.stackPtr === local_component_depth) {
+          //console.log("useNextWebSocket", updatedTask);
+          setNextTask(updatedTask)
+          //updateTask(updatedTask)
         }
       }
     )
@@ -237,13 +258,10 @@ function withTask(Component) {
 
     const componentProps = {
       ...props,
-      updateTaskLoading,
       updateTaskError,
-      startTaskLoading,
       startTaskError,
       startTask: startTaskReturned,
       startTaskFn,
-      nextTaskLoading,
       nextTaskError,
       nextTask,
       setDoneTask,

@@ -75,6 +75,9 @@
         "parentType": {
           "type": "string"
         },
+        "prevInstanceId": {
+          "type": ["null", "string"]
+        },        
         "send": {
           "type": "boolean"
         },
