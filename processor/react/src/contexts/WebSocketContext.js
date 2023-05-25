@@ -27,6 +27,8 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   const sendJsonMessagePlusRef = useRef(); // add this line
 
+  webSocketEventEmitter.setMaxListeners(100);
+
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   useEffect(() => {
     sendJsonMessagePlusRef.current = function (m) {
