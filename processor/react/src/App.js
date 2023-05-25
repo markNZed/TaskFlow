@@ -137,10 +137,10 @@ function App() {
   };
 
   useEffect(() => {
-    //console.log("usePartialWebSocket useEffect adding handleMessage instanceId", instanceId);
+    //console.log("usePartialWSFilter useEffect adding handleMessage instanceId", instanceId);
     webSocketEventEmitter.on("update", updateTaskDB);
     return () => {
-      //console.log("usePartialWebSocket useEffect removing handleMessage instanceId", instanceId);
+      //console.log("usePartialWSFilter useEffect removing handleMessage instanceId", instanceId);
       webSocketEventEmitter.removeListener("update", updateTaskDB);
     };
   }, []);

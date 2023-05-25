@@ -16,7 +16,7 @@ ToDo:
 
 import React, { useEffect, useState, useRef } from "react";
 import { Typography, TextareaAutosize } from "@mui/material";
-import usePartialWebSocket from "../../hooks/usePartialWebSocket";
+import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import { replaceNewlinesWithParagraphs } from "../../utils/utils";
@@ -78,7 +78,7 @@ const TaskLLMIO = (props) => {
 
   // I guess the websocket can cause events during rendering
   // Putting this in the HoC causes a warning about setting state during rendering
-  usePartialWebSocket(task?.instanceId,
+  usePartialWSFilter(task?.instanceId,
     (partialTask) => {
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }

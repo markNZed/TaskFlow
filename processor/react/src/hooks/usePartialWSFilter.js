@@ -2,12 +2,12 @@ import { useEffect, useCallback } from "react";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function usePartialWebSocket(instanceId, onMessage) {
+function usePartialWSFilter(instanceId, onMessage) {
   
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleMessage = (task) => {
-    //console.log("usePartialWebSocket handleMessage", task);
+    //console.log("usePartialWSFilter handleMessage", task);
     if (instanceId && task.instanceId === instanceId) {
       onMessage(task);
     }
@@ -17,14 +17,14 @@ function usePartialWebSocket(instanceId, onMessage) {
     if (!webSocketEventEmitter) {
       return;
     }
-    //console.log("usePartialWebSocket useEffect adding handleMessage instanceId", instanceId);
+    //console.log("usePartialWSFilter useEffect adding handleMessage instanceId", instanceId);
     webSocketEventEmitter.on("partial", handleMessage);
     return () => {
-      //console.log("usePartialWebSocket useEffect removing handleMessage instanceId", instanceId);
+      //console.log("usePartialWSFilter useEffect removing handleMessage instanceId", instanceId);
       webSocketEventEmitter.removeListener("partial", handleMessage);
     };
   }, []);
   
 }
 
-export default usePartialWebSocket;
+export default usePartialWSFilter;

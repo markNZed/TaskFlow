@@ -12,9 +12,9 @@ import useStartTask from "../hooks/useStartTask";
 import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
-import useUpdateWebSocket from "../hooks/useUpdateWebSocket";
-import useStartWebSocket from "../hooks/useStartWebSocket";
-import useNextWebSocket from "../hooks/useNextWebSocket";
+import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
+import useStartWSFilter from "../hooks/useStartWSFilter";
+import useNextWSFilter from "../hooks/useNextWSFilter";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -50,27 +50,27 @@ function withTask(Component) {
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
-    useUpdateWebSocket(props.task?.instanceId,
+    useUpdateWSFilter(props.task?.instanceId,
       (updatedTask) => {
         if (updatedTask.stackPtr === local_component_depth) {
-          //console.log("useUpdateWebSocket", updatedTask);
+          //console.log("useUpdateWSFilter", updatedTask);
           updateTask(updatedTask)
         }
       }
     )
 
-    useStartWebSocket(startTaskId,
+    useStartWSFilter(startTaskId,
       (updatedTask) => {
-        console.log("useStartWebSocket", updatedTask);
+        console.log("useStartWSFilter", updatedTask);
         setStartTaskId(null);
         setStartTaskReturned(updatedTask)
       }
     )
 
-    useNextWebSocket(props.task?.instanceId,
+    useNextWSFilter(props.task?.instanceId,
       (updatedTask) => {
         if (updatedTask.stackPtr === local_component_depth) {
-          //console.log("useNextWebSocket", updatedTask);
+          //console.log("useNextWSFilter", updatedTask);
           setNextTask(updatedTask)
           //updateTask(updatedTask)
         }

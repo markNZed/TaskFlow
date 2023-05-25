@@ -2,12 +2,12 @@ import { useEffect, useCallback } from "react";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useNextWebSocket(instanceId, onNext) {
+function useNextWSFilter(instanceId, onNext) {
   
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleNext = (task) => {
-    //console.log("useNextWebSocket handleNext", task);
+    //console.log("useNextWSFilter handleNext", task);
     if (instanceId && task.prevInstanceId === instanceId) {
       onNext(task);
     }
@@ -17,14 +17,14 @@ function useNextWebSocket(instanceId, onNext) {
     if (!webSocketEventEmitter) {
       return;
     }
-    //console.log("useNextWebSocket useEffect adding handleNext instanceId", instanceId);
+    //console.log("useNextWSFilter useEffect adding handleNext instanceId", instanceId);
     webSocketEventEmitter.on("update", handleNext);
     return () => {
-      //console.log("useNextWebSocket useEffect removing handleNext instanceId", instanceId);
+      //console.log("useNextWSFilter useEffect removing handleNext instanceId", instanceId);
       webSocketEventEmitter.removeListener("update", handleNext);
     };
   }, []);
   
 }
 
-export default useNextWebSocket;
+export default useNextWSFilter;
