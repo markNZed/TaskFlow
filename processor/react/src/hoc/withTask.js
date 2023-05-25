@@ -67,12 +67,13 @@ function withTask(Component) {
       }
     )
 
-    useNextWSFilter(props.task?.instanceId,
+    useNextWSFilter(props.task?.instanceId, doneTask,
       (updatedTask) => {
-        if (updatedTask.stackPtr === local_component_depth) {
-          //console.log("useNextWSFilter", updatedTask);
+        //console.log("useNextWSFilter before setNextTask local_component_depth", local_component_depth, doneTask);
+        if (doneTask !== null && doneTask !== undefined) {
+          console.log("useNextWSFilter setNextTask local_component_depth", local_component_depth);
+          setDoneTask(null)
           setNextTask(updatedTask)
-          //updateTask(updatedTask)
         }
       }
     )

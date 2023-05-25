@@ -96,7 +96,7 @@ const TaskChat = (props) => {
   // Putting this in the HoC causes a warning about setting state during rendering
   usePartialWSFilter(task?.instanceId,
     (partialTask) => {
-      console.log("TaskChat usePartialWSFilter partialTask", partialTask);
+      //console.log("TaskChat usePartialWSFilter partialTask", partialTask);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   )

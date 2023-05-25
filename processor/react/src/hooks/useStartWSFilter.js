@@ -7,12 +7,12 @@ function useStartWSFilter(startTaskId, onStart) {
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleStart = (task) => {
-    console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
+    //console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
     if (startTaskId 
       && startTaskId === task.id 
       && task.prevInstanceId === null
     ) {
-      console.log("useStartWSFilter handleStart", startTaskId, task);
+      //console.log("useStartWSFilter handleStart", startTaskId, task);
       //setStartTaskId(null);
       onStart(task);
     }

@@ -80,6 +80,7 @@ const TaskLLMIO = (props) => {
   // Putting this in the HoC causes a warning about setting state during rendering
   usePartialWSFilter(task?.instanceId,
     (partialTask) => {
+      console.log("TaskLLMIO usePartialWSFilter partialTask", partialTask);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   )

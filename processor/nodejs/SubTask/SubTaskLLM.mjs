@@ -327,7 +327,7 @@ async function ChatGPTAPI_request_async(params) {
     };
     if (!noWebsocket) {
       wsDelta[sessionId] = 0
-      wsSendTask(partialTask);
+      wsSendTask(partialTask, "partial");
     }
   }
 
