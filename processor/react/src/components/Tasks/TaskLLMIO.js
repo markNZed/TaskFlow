@@ -161,7 +161,7 @@ const TaskLLMIO = (props) => {
           }
           break;
         case "stop":
-          if (leaving_now) {
+          if (leaving_now && !task.send) {
             updateTask({ "state.done": true });
           }
           break;
@@ -180,8 +180,6 @@ const TaskLLMIO = (props) => {
   useEffect(() => {
     if (userInput) {
       updateTask({ "request.input": userInput });
-      // Make available to other tasks an output of this task
-      updateTask({ "output.input": userInput });
       //console.log("Updating input " + userInput);
     }
   }, [userInput]);

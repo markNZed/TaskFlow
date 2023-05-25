@@ -30,6 +30,8 @@ How do we order the containers so Hub starts first?
 ## Dev
 This assumes T@skFlow is running behind a proxy on a docker network for dev:
 
+SetupVSCode debugging in .vscode/launch.json
+
 <br> docker-compose -f docker-compose-dev.yml build
 <br> docker-compose -f docker-compose-dev.yml up -d
 

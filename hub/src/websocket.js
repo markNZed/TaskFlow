@@ -40,7 +40,7 @@ const wsSendTask = function (task, command = null) {
   }
   let processorId = message.task.newDestination;
   if (!message.task?.pong) {
-    console.log("wsSendTask task " + message.task.id + " to " + processorId)
+    console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
   wsSendObject(processorId,message);
 }

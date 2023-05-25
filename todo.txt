@@ -1,51 +1,19 @@
 /* ToDo
--------  
-NodeJS cannot rely on threadsStore_async
-  The hub should provide template variables?
-  All template variables should be the output of tasks
-  When generating task config create a list of outputs that are required
-    threadContext
-
-Two major steps before code cleanup:
- 1) move template variable extraction to Hub
- 2) nodejs using TaskChoose
-
-There are a number fo event emitters created maybe this is not working as expected? Or maybe when page crashes/reloads. Or maybe the limit is low?
-
-The websocket in hub is not passing to react because newDestinaiton is not set - we should not use this. Followi similar logic to newTask (probably need to turn that into a function)
-
+-------
+Handling prevTask.error needs to move from TaskShwoResponse to Hub
+  After this we can focus on code cleanup/review
 Create ping command insted of task.ping
+Move processors out of activeTasks on hub and into activeProcessors with task instancId key
 
-Move processors out of activeTasks on hub and into activePorcessors with task instancId key
-
-For command partial use emit partial not message
-
-Need VSCode debugging
-.vscode/launch.json
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)
-
-NodeJs should send update at end of the openAI request
-Next step is processActiveTasks_async
-  It seems the nodejs processor is not in the activeTasks
-  Send updates to the Hub via HTTP request
-    Easier to debug if the whole task is sent on updates, same with start.
-    Use websocket for synchronization
-  The nodejs should not be working with update route (it should be a client)
-    Replace with function that is called from websocket
-    But we need some protocol to know when to call update
-      The Task Function should decide if/when it should do something
-        Use request signal + state
 Rename startTask to newTask
 Remove user validation from nodejs
-For hte resume we need to g oto dummy API, it is making two requests for the sample text
 We might need multiple levels of session:
   session processor-node
   user session
 The diff is going to have to deal with deleting members - send diffUpdate and diffRemove
-Seem reasonable that partial results would be sent point to point and just routed
-  Can temporarily disable delta/partial and re-enable after diff if working.
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage instead of 
   The Hub is different because it needs to manage multiple destinations
@@ -58,24 +26,11 @@ Internal/External IO is an important distinction
     What happens when a task is done - depends if monitoring the thread or instance
     Maybe the nextTask becomes available on the output then the monitoring task can decide to include this in 
     dependencies or not.
-Do we want to keep server on nodejs processor - yes but for debug/admin etc a sort of meta level above the task.
+Do we want to keep server on nodejs processor - yes but for debug/admin/metrics etc
   Performance, utilization etc, a Processor Object for this (instead of Task)
-  THe debug feature can be shared between processors
-Maybe forwarding websocket is enough to maintian those changes to Task
-Move nodejs HTTP server to client
-  Triggered by update to Task
-    When appropriate call the update function on the task
-      Pull out a doTask function/module
-        Triggered by request ?
-    Provide update API on hub
-      Can run in parallel to start with - send the task to processors via ws
-  Task objects synchronized by websocket first.
+  The debug features can be shared between processors e.g. just connect to keyv with activeTasks
 
 Demo of collaborative chat would be good.
-
-When the websocket drops in react could re-register the processor.
-  Just register when socket opens?
-  Could register with websocket
 
 Hub as a router rather than proxy
   The processor should not worry about destination ?
@@ -124,11 +79,9 @@ Eventually do we move to using only web sockets? Maybe harder to debug.
 
 This argues for Tasks being distributed - different functions.
   If a Task passes through the Hub then we should track it in a keyv and maintain a distributed object
-    a library called KVS (Key Value Storage) which is suitable for both the browser and Node.js environments
+    Library called KVS (Key Value Storage) is suitable for both the browser and Node.js environments
   Only start tracking the task if it is on two or more processors
     Need to note this in the task
-
-Maybe websocket between Functions is OK. Yes but not managed by T@skFlow. 
 
 Currently nodejs saves instances of tasks, eventually they will pass through the hub.
 The hub and nodejs should share utils?

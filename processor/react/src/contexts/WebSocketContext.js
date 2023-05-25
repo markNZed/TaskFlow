@@ -23,10 +23,13 @@ export function useWebSocketContext() {
 export function WebSocketProvider({ children, socketUrl }) {
 
   const [webSocket, setWebSocket] = useState(null);
-  const { globalState } = useGlobalStateContext();
+  const { globalState, replaceGlobalState } = useGlobalStateContext();
 
   const sendJsonMessagePlusRef = useRef(); // add this line
 
+  // The default is 10 but we have at least 3 listeners per task
+  // There is also the listener for partial results
+  // So this would allow for about 4 * 25 concurrent tasks
   webSocketEventEmitter.setMaxListeners(100);
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
@@ -60,6 +63,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
+      // This will cause teh App to re-register with the hub
+      replaceGlobalState({ hubId: null });
       const taskPing = () => {
         let currentDateTime = new Date();
         let currentDateTimeString = currentDateTime.toString();  

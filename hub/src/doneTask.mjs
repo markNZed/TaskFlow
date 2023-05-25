@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTasksStore_async, instancesStore_async} from "./storage.mjs";
+import { activeTasksStore_async, instancesStore_async, outputStore_async} from "./storage.mjs";
 import newTask_async from "./newTask.mjs";
 
 export async function doneTask_async(task) {
@@ -12,6 +12,9 @@ export async function doneTask_async(task) {
     console.log("Task done " + task.id);
     task.state.done = false;
     instancesStore_async.set(task.instanceId, task);
+    let outputs = await outputStore_async.get(task.threadId) || {};
+    outputs[task.id] = task.output;
+    await outputStore_async.set(task.threadId, outputs); // Wait so available in newTask_async
     // We should send a delete message to all the copies and also delete those (see Meteor protocol)
     // !!!
     activeTasksStore_async.delete(task.instanceId);

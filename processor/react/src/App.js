@@ -117,7 +117,7 @@ function App() {
     if (globalState?.processorId) {
       registerProcessor();
     }
-  }, [globalState?.processorId]);
+  }, [globalState?.processorId, globalState?.hubId]);
 
   useEffect(() => {
     const initializeStorage = async () => {

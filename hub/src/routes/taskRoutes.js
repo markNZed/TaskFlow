@@ -62,11 +62,17 @@ router.post("/update", async (req, res) => {
       // Just a hack for now
       console.log("task " + task.id + " from " + task.newSource)
       const activeTask = await activeTasksStore_async.get(task.instanceId)
-      activeTask.task = task;
-      await activeTasksStore_async.set(task.instanceId, activeTask);
-      // So we do not return a task anymore. This requires the task synchronization working.
-      res.json({task: "synchronizing"});
-      return;
+      if (activeTask) {
+        activeTask.task = task;
+        await activeTasksStore_async.set(task.instanceId, activeTask);
+        // So we do not return a task anymore. This requires the task synchronization working.
+        res.json({task: "synchronizing"});
+        return;
+      } else {
+        console.log("No active task for " + task.instanceId);
+        res.json({task: "synchronizing error"});
+        return;
+      }
     }
   } else {
     console.log("No user");

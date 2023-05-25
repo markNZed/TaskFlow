@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async, activeTasksStore_async, sessionsStore_async, activeProcessors } from "./storage.mjs";
+import { instancesStore_async, threadsStore_async, activeTasksStore_async, sessionsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -34,16 +34,27 @@ async function newTask_async(
     );
     */    
     let siblingInstanceId;
-    let prevInstanceId = null
+    let prevInstanceId = null;
+    let newThread = false;
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
       threadId = siblingTask.threadId;
-      prevInstanceId = siblingTask.instanceId;
+      // In the case where the thread advances on anohter processor 
+      // we still need to be able to find the nextTask 
+      if (siblingTask.prevInstanceId) {
+        prevInstanceId = siblingTask.prevInstanceId
+      } else {
+        prevInstanceId = {}
+      }
+      prevInstanceId[processorId] = siblingTask.instanceId
+    }
+    if (!threadId) {
+      newThread = true;
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
     }
-    let taskCopy = { ...tasks[id] };
+    let taskCopy = JSON.parse(JSON.stringify(tasks[id])); // deep copy
     //console.log("taskCopy", taskCopy)
     // Check if the user has permissions
     if (authenticate && !utils.authenticatedTask(taskCopy, userId, groups)) {
@@ -125,6 +136,63 @@ async function newTask_async(
     }
     taskCopy["createdAt"] = Date.now();
     await instancesStore_async.set(instanceId, taskCopy);
+
+    const outputs = await outputStore_async.get(threadId);
+
+    if (!newThread && taskCopy.config?.promptTemplate) {
+      console.log("promptTemplate", taskCopy.config.promptTemplate)
+      let filledPromptTemplate = "";
+      filledPromptTemplate += taskCopy.config.promptTemplate.reduce(function (acc, curr) {
+        // Currently this assumes the parts are from the same taskflow, could extend this
+        const regex = /(^.+)\.(.+$)/;
+        const matches = regex.exec(curr);
+        if (matches) {
+          // We need to find the relevant task using the threadId ?
+          // like taskflow key: threadId + taskId
+          // console.log("matches task " + matches[1] + " " + matches[2])
+          const outputPath = taskCopy.parentId + "." + matches[1]
+          if (outputs[outputPath] === undefined) {
+            throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
+          }
+          if ( outputs[outputPath][matches[2]] === undefined ) {
+            throw new Error("outputStore " + threadId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
+          }
+          return (
+            acc + outputs[outputPath][matches[2]]
+          );
+        } else {
+          return acc + curr;
+        }
+      });
+      console.log("filledPromptTemplate " + filledPromptTemplate)
+      taskCopy.config.promptTemplate = filledPromptTemplate;
+    }
+
+    // Should align coding style with promptTemplate
+    if (!newThread && taskCopy.config?.messagesTemplate) {
+      let filledMessagesTemplate = "";
+      // assemble
+      taskCopy.config.messagesTemplate.forEach((message) => {
+        if (Array.isArray(message["content"])) {
+          message["content"] = message["content"].reduce(function (acc, curr) {
+            // Currently this assumes the tasks are from the same taskflow, could extend this
+            const regex = /(^.+)\.(.+$)/;
+            const matches = regex.exec(curr);
+            if (matches) {
+              const outputPath = taskCopy.parentId + "." + matches[1]
+              let substituted = outputs[outputPath][matches[2]]
+              return acc + substituted;
+            } else {
+              if (typeof curr === "string") {
+                return acc + curr;
+              } else {
+                return acc + JSON.stringify(curr);
+              }
+            }
+          });
+        }
+      });
+    }
 
     if (taskCopy.config?.oneThread) {
       const threadId = id + userId;

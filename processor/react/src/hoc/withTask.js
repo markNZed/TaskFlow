@@ -61,7 +61,7 @@ function withTask(Component) {
 
     useStartWSFilter(startTaskId,
       (updatedTask) => {
-        console.log("useStartWSFilter", updatedTask);
+        //console.log("useStartWSFilter", updatedTask);
         setStartTaskId(null);
         setStartTaskReturned(updatedTask)
       }
@@ -69,15 +69,15 @@ function withTask(Component) {
 
     useNextWSFilter(props.task?.instanceId, doneTask,
       (updatedTask) => {
-        //console.log("useNextWSFilter before setNextTask local_component_depth", local_component_depth, doneTask);
-        if (doneTask !== null && doneTask !== undefined) {
-          console.log("useNextWSFilter setNextTask local_component_depth", local_component_depth);
+        //console.log("useNextWSFilter before setNextTask local_component_depth", local_component_depth, updatedTask);
+        //if (doneTask !== null && doneTask !== undefined) {
+          //console.log("useNextWSFilter setNextTask local_component_depth", local_component_depth);
           setDoneTask(null)
           setNextTask(updatedTask)
-        }
+        //}
       }
     )
-
+    
     function startTaskFn(
       startId,
       threadId = null,

@@ -13,7 +13,7 @@ import { do_task_async } from "./doTask.mjs";
 // The reconnection logic should be reworked if an error genrates a close event
 
 let connectionAttempts = 0;
-let maxAttempts = 15;
+let maxAttempts = 100;
 let processorWs;
 
 function wsSendObject(message = {}) {
@@ -34,8 +34,8 @@ function wsSendObject(message = {}) {
     message.task.newSource = processorId;
     if (!message.task?.ping) {
       //console.log("wsSendObject ", JSON.stringify(message) )
-      console.log("wsSendObject " + message.command + " " + message.task.id )
-      //console.log("wsSendObject ", message )
+      //console.log("wsSendObject " + message.command + " " + message.task.id )
+      console.log("wsSendObject ", message )
     }
     processorWs.send(JSON.stringify(message));
   }
@@ -122,7 +122,7 @@ const connectWebSocket = () => {
     // attempt reconnection with backoff on error
     if (connectionAttempts < maxAttempts) {
       //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
-      let backoffTime = 1000;
+      let backoffTime = 5000;
       let currentDateTime = new Date();
       let currentDateTimeString = currentDateTime.toString();
       console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
