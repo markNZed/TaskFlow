@@ -1,16 +1,16 @@
 # T@skFlow
 
-T@skFlow is a Task centric collaborative web application framework for leveraging AI. It is under development.
+T@skFlow is a Task centric collaborative framework for leveraging AI. It is under development.
 
 # Overview
 
-T@skFlow combines software and AI models and human interaction. T@skFlow adopts a Task centric approach. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software and AI models and human interaction. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
-T@skFlow is intended to provide a light, flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
+T@skFlow is intended to provide a flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
-T@skFlow should play nicely with:
+T@skFlow will play nicely with:
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
 * [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)
 

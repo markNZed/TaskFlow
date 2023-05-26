@@ -15,6 +15,7 @@ import _ from "lodash";
 import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
 import useStartWSFilter from "../hooks/useStartWSFilter";
 import useNextWSFilter from "../hooks/useNextWSFilter";
+import useErrorWSFilter from "../hooks/useErrorWSFilter";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -78,6 +79,16 @@ function withTask(Component) {
       }
     )
     
+    useErrorWSFilter(props.task?.threadId,
+      (updatedTask) => {
+        console.log("useErrorWSFilter", updatedTask.id, updatedTask.response.text);
+        // We do not have a plan for dealing with errors here yet
+        // Currently an error task is returned so it can work if 
+        // we are waiting on useStartWSFilter or useNextWSFilter
+        // update will not see the error Task because the instanceId is different
+      }
+    )
+
     function startTaskFn(
       startId,
       threadId = null,

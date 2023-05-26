@@ -35,7 +35,7 @@ function wsSendObject(message = {}) {
     if (!message.task?.ping) {
       //console.log("wsSendObject ", JSON.stringify(message) )
       //console.log("wsSendObject " + message.command + " " + message.task.id )
-      console.log("wsSendObject ", message )
+      //console.log("wsSendObject ", message )
     }
     processorWs.send(JSON.stringify(message));
   }

@@ -52,6 +52,20 @@ router.post("/update", async (req, res) => {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
     // We intercept tasks that are done.
+    if (task.error) {
+      let errorTask
+      if (task.config?.errorTask) {
+        errorTask = task.config.errorTask
+      } else {
+        // Assumes there is a default errorTask named error
+        const strArr = task.id.split('.');
+        strArr[strArr.length - 1] = "error";
+        errorTask = strArr.join('.');
+      }
+      task.nextTask = errorTask
+      task.state.done = true
+      console.log("Task error " + task.id);
+    }
     if (task.state?.done) {
       doneTask_async(task) 
       res.json({task: "synchronizing"});

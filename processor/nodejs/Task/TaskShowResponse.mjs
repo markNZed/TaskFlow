@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async } from "./../src/storage.mjs";
 import { utils } from "../src/utils.mjs";
 
 const TaskShowResponse_async = async function (wsSendTask, task) {
@@ -13,13 +12,6 @@ const TaskShowResponse_async = async function (wsSendTask, task) {
   console.log("TaskShowResponse name " + T("name"));
 
   let response = "";
-
-  if (task.id.endsWith(".error")) {
-    // Fetch the previous task
-    const prevTask = await instancesStore_async.get(task.parentInstanceId)
-    response = "ERROR: " + prevTask.error
-    console.log("Set error from previous task", prevTask.error)
-  }
 
   if (T("config.promptTemplate")) {
     console.log("Found promptTemplate");

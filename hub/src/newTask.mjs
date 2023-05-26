@@ -248,6 +248,17 @@ async function newTask_async(
     // Build list of processesors that need to be notified about this task
     let taskProcessors = []
 
+    // Deal with errors
+    if (taskCopy.id.endsWith(".error")) {
+      // Fetch the previous task
+      const prevTask = await instancesStore_async.get(taskCopy.parentInstanceId)
+      const response = "ERROR: " + prevTask.error
+      console.log("Set error from previous task", prevTask.id)
+      taskCopy.response.text = response
+      taskCopy.environments = prevTask.environments
+      //console.log("Error task", taskCopy)
+    }
+
     // Get the list of processors in the session
     const sessionsStoreId = sessionId + "_processors";
     let sessionProcessors = [];

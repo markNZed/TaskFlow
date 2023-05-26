@@ -1,7 +1,5 @@
 /* ToDo
 -------
-Handling prevTask.error needs to move from TaskShwoResponse to Hub
-  After this we can focus on code cleanup/review
 Create ping command insted of task.ping
 Move processors out of activeTasks on hub and into activeProcessors with task instancId key
 
@@ -360,4 +358,4 @@ A list of features that are manually tested
             maxTokens X
             maxResponseTokens X
           error X
-          errorTask
+          errorTask X To test this uncomment line before return in processor/nodejs/Task/TaskLLMIO.mjs
