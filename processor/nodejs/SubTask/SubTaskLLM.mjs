@@ -8,7 +8,6 @@ import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
 import { utils } from "../src/utils.mjs";
 import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../config.mjs";
-import { users } from "../src/configdata.mjs";
 import {
   messagesStore_async,
   cacheStore_async,
@@ -165,23 +164,30 @@ async function chat_prepare_async(task) {
     }
   }
 
-  if (modeltemplate?.system_message) {
-    systemMessage = modeltemplate.system_message;
+  if (modeltemplate?.systemMessage) {
+    systemMessage = modeltemplate.systemMessage;
     console.log("Sytem message from modeltemplate " + modeltemplate.name);
   }
 
-  if (users[T("userId")] && T("request.dyad")) {
-    let user = users[T("userId")];
-    systemMessage += ` Vous etes en dyad avec votre user qui s'appelle ${user?.name}. ${user?.profile}`;
-    console.log(
-      "Dyad in progress between " + modeltemplate.name + " and " + user?.name
-    );
+  // Replace MODEL variables in systemMessageTemplate
+  let systemMessageTemplate = T("config.systemMessageTemplate");
+  if (systemMessageTemplate) {
+    console.log("systemMessageTemplate " + systemMessageTemplate);
+    const regex = /(MODEL)\.([^\s.]+)/g;
+    // Using replace with a callback function
+    systemMessage = systemMessageTemplate.replace(regex, (match, p1, p2) => {
+      if (!modeltemplate[p2]) {
+        throw new Error("modeltemplate " + p2 + " does not exist");
+      }
+      return modeltemplate[p2]
+    });
+    console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
   }
 
   // If we can have PREPEND and APPEND then we could replace T('request.dyad') with something general
   // This allows for user defined system messages
-  if (T("request.system_message")) {
-    systemMessage = T("request.system_message");
+  if (T("request.systemMessage")) {
+    systemMessage = T("request.systemMessage");
     console.log("Sytem message from task " + T("id"));
   }
 

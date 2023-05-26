@@ -76,15 +76,6 @@ const TaskLLMIO = (props) => {
     }
   }, [task]);
 
-  // I guess the websocket can cause events during rendering
-  // Putting this in the HoC causes a warning about setting state during rendering
-  usePartialWSFilter(task?.instanceId,
-    (partialTask) => {
-      console.log("TaskLLMIO usePartialWSFilter partialTask", partialTask);
-      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
-    }
-  )
-
   // This is asynchronous to the rendering so there may be conflicts where
   // state is updated during rendering and this impacts the parent
   // Probably needs to be moved outside of the component maybe into Redux
@@ -106,8 +97,8 @@ const TaskLLMIO = (props) => {
               setFinalResponse(true)
               break;
           }
+          //console.log("response", response)
         }
-        //console.log("setResponseText", responseText)
         return []; // Clear the processed responses
       });
     };
@@ -115,6 +106,15 @@ const TaskLLMIO = (props) => {
       processResponses();
     }
   }, [socketResponses]);
+
+  // I guess the websocket can cause events during rendering
+  // Putting this in the HoC causes a warning about setting state during rendering
+  usePartialWSFilter(task?.instanceId,
+    (partialTask) => {
+      console.log("TaskLLMIO usePartialWSFilter partialTask", partialTask.response);
+      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+    }
+  )
 
   useEffect(() => {
     if (entering) {

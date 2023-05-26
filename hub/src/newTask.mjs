@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeProcessorsStore_async, sessionsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
-import { groups, tasks } from "./configdata.mjs";
+import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 
@@ -135,60 +135,60 @@ async function newTask_async(
     await instancesStore_async.set(instanceId, taskCopy);
 
     const outputs = await outputStore_async.get(threadId);
+    //console.log("outputs", outputs)
 
-    if (!newThread && taskCopy.config?.promptTemplate) {
-      //console.log("promptTemplate", taskCopy.config.promptTemplate)
-      let filledPromptTemplate = "";
-      filledPromptTemplate += taskCopy.config.promptTemplate.reduce(function (acc, curr) {
-        // Currently this assumes the parts are from the same taskflow, could extend this
-        const regex = /(^.+)\.(.+$)/;
-        const matches = regex.exec(curr);
-        if (matches) {
-          // We need to find the relevant task using the threadId ?
-          // like taskflow key: threadId + taskId
-          // console.log("matches task " + matches[1] + " " + matches[2])
-          const outputPath = taskCopy.parentId + "." + matches[1]
-          if (outputs[outputPath] === undefined) {
-            throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
-          }
-          if ( outputs[outputPath][matches[2]] === undefined ) {
-            throw new Error("outputStore " + threadId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
-          }
-          return (
-            acc + outputs[outputPath][matches[2]]
-          );
-        } else {
-          return acc + curr;
-        }
-      });
-      //console.log("filledPromptTemplate " + filledPromptTemplate)
-      taskCopy.config.promptTemplate = filledPromptTemplate;
+    // Templating functionality
+    function isAllCaps(str) {
+      return /^[A-Z\s]+$/.test(str);
     }
-
-    // Should align coding style with promptTemplate
-    if (!newThread && taskCopy.config?.messagesTemplate) {
-      let filledMessagesTemplate = "";
-      // assemble
-      taskCopy.config.messagesTemplate.forEach((message) => {
-        if (Array.isArray(message["content"])) {
-          message["content"] = message["content"].reduce(function (acc, curr) {
-            // Currently this assumes the tasks are from the same taskflow, could extend this
-            const regex = /(^.+)\.(.+$)/;
+    function processArrays(obj, taskCopy, outputs, threadId) {
+      // Do substitution on arrays of strings and return a string
+      if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
+        return obj.reduce(function (acc, curr) {
+          // Substitute variables with previous outputs
+          const regex = /^([^\s.]+)\.([^\s.]+)$/;
+          const matches = regex.exec(curr);
+          //console.log("curr ", curr, " matches", matches)
+          if (matches && !isAllCaps(matches[1])) {
+            const outputPath = taskCopy.parentId + "." + matches[1]
+            if (outputs[outputPath] === undefined) {
+              throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
+            }
+            if (outputs[outputPath][matches[2]] === undefined) {
+              throw new Error("outputStore " + threadId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
+            }
+            //console.log("Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
+            return acc.concat(outputs[outputPath][matches[2]]);
+          } else {
+            const regex = /^(USER)\.([^\s.]+)$/;
             const matches = regex.exec(curr);
             if (matches) {
-              const outputPath = taskCopy.parentId + "." + matches[1]
-              let substituted = outputs[outputPath][matches[2]]
-              return acc + substituted;
+              let user = users[taskCopy.userId];
+              // Substitute variables with user data
+              return acc.concat(user[matches[2]])
             } else {
-              if (typeof curr === "string") {
-                return acc + curr;
-              } else {
-                return acc + JSON.stringify(curr);
-              }
+              return acc.concat(curr);
             }
-          });
+          }
+        }, []).join("");
+      } else {
+        for (const key in obj) {
+          if (Array.isArray(obj[key])) {
+            obj[key] = processArrays(obj[key], taskCopy, outputs, threadId);
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            processArrays(obj[key], taskCopy, outputs, threadId);
+          }
         }
-      });
+      }
+      return obj
+    }
+     // Find all the config variable that end with Template
+    for (const [key, template] of Object.entries(taskCopy.config)) {
+      if (key.endsWith("Template")) {
+        console.log("Template found", key, template);
+        taskCopy.config[key] = processArrays(template, taskCopy, outputs, threadId);
+        console.log("Processed template", taskCopy.config[key]);
+      }
     }
 
     if (taskCopy.config?.oneThread) {

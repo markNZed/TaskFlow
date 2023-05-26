@@ -7,7 +7,7 @@ function useErrorWSFilter(threadId, onError) {
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleError = (task) => {
-    if (threadId && task.threadId === threadId ) {
+    if (threadId && task.threadId === threadId && task.error ) {
       //console.log("useErrorWSFilter handleError", task);
       onError(task);
     }

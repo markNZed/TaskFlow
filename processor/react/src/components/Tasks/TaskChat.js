@@ -82,6 +82,7 @@ const TaskChat = (props) => {
               setResponsePending(false);
               break;
           }
+          //console.log("TaskChat processResponses responseTextRef.current", responseTextRef.current);
         }
         updateTask({ "response.text": responseTextRef.current });
         return []; // Clear the processed responses
@@ -96,7 +97,7 @@ const TaskChat = (props) => {
   // Putting this in the HoC causes a warning about setting state during rendering
   usePartialWSFilter(task?.instanceId,
     (partialTask) => {
-      //console.log("TaskChat usePartialWSFilter partialTask", partialTask);
+      //console.log("TaskChat usePartialWSFilter partialTask", partialTask.response);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   )
@@ -106,7 +107,6 @@ const TaskChat = (props) => {
       // Reset the request so we can use response.text for partial response
       updateTask({
         "request.input": "",
-        "response.text": "",
       });
       responseTextRef.current = ""
     }
