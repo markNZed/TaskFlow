@@ -13,7 +13,6 @@ async function newTask_async(
     id,
     userId,
     authenticate,
-    source,
     processorId,
     sessionId,
     groupId,
@@ -25,7 +24,6 @@ async function newTask_async(
     console.log(
       "id:", id, 
       "userId:", userId, 
-      "source:", source, 
       "processorId:", processorId, 
       "sessionId:", sessionId, 
       "groupId:", groupId, 
@@ -86,7 +84,6 @@ async function newTask_async(
     }
     taskCopy["prevInstanceId"] = prevInstanceId 
     taskCopy["userId"] = userId;
-    taskCopy["source"] = source;
     taskCopy["newSource"] = processorId;
     taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();

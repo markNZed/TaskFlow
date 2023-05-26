@@ -99,7 +99,7 @@ function initWebSocketServer(server) {
           destination: j.task.newSource,
         };
         wsSendTask(task, "pong");
-        //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
+        //console.log("Pong " + j.task?.sessionId + " " + j.task.newSource)
       }
 
     });

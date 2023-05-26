@@ -6,8 +6,6 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   let messageJsonString;
 
-  task.source = "react"
-
   // This does not seem right, maybe need a fetchHub and fetchProcessor
   let server;
   if (end_point === "task/start") {

@@ -40,7 +40,6 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.destination = globalState?.hubId
       m.task.sessionId = globalState?.sessionId
-      m.task.source = "react" // Could remove this eventually
       m.task.newSource = globalState.processorId;
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))

@@ -29,13 +29,12 @@ router.post("/start", async (req, res) => {
     const startId = task.id;
     const threadId = task.threadId;
     const sessionId = task.sessionId;
-    const source = task.source;
     const processorId = task.newSource;
 
     const component_depth = task.stackPtr;
 
     // Just set initial task values and pass that in instead of a long list of arguments?
-    await newTask_async(startId, userId, true, source, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
+    await newTask_async(startId, userId, true, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
     res.json({task: "synchronizing"});
     return;
 

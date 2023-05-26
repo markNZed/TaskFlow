@@ -20,7 +20,7 @@ export async function doneTask_async(task) {
     activeTasksStore_async.delete(task.instanceId);
     activeProcessorsStore_async.delete(task.instanceId);
     // Fetch from the Task Hub
-    let newTask = await newTask_async(task.nextTask, task.userId, false, task.source, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
+    let newTask = await newTask_async(task.nextTask, task.userId, false, task.newSource, task.sessionId, task?.groupId, task.stackPtr, task.nextTask, task);
     // In theory the newTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
     return newTask;
   } else {
