@@ -16,8 +16,6 @@ export const fetchTask = async (globalState, end_point, task) => {
     server = nodejsUrl;
   }
 
-  // The final destination of the task
-  task.destination = `${server}/api/${end_point}`;;
   task.sessionId = globalState.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;

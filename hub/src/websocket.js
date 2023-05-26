@@ -9,7 +9,6 @@ import { connections, activeProcessorsStore_async } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
-  
   let ws = connections.get(processorId);
   if (!ws) {
     console.log("Lost websocket for wsSendObject", processorId, message);
@@ -19,8 +18,6 @@ function wsSendObject(processorId, message = {}) {
     }
     // Need to make a copy so any changes here d onot impact the object 
     let localTask = { ...message.task }
-    // The destination is available because nodejs does not initiate websocket connections
-    localTask.destination = ws.data.destination;
     localTask.hubId = hubId;
     localTask.newSource = hubId;
     message.task = localTask;

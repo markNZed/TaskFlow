@@ -38,8 +38,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (!m?.task) {
         m["task"] = {}
       }
-      m.task.destination = socketUrl
-      m.task.newDestination = "hub"
+      m.task.newDestination = globalState?.hubId
       m.task.sessionId = globalState?.sessionId
       m.task.source = "react" // Could remove this eventually
       m.task.newSource = globalState.processorId;

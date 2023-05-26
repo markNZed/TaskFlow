@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Separation of configdata
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)
@@ -12,16 +13,13 @@ Ideally we want the same code for Task storage on Hub/React/NodeJs
   The Hub is different because it needs to manage multiple destinations
 React has storage.js where activeTasks are stored using App.js
   Will need to extend with commands like remove, clear etc  
-Separation of configdata
+
 Internal/External IO is an important distinction
   A list of dependenceies/references that are monitored by the processor
     External outputs are monitored 
     What happens when a task is done - depends if monitoring the thread or instance
     Maybe the nextTask becomes available on the output then the monitoring task can decide to include this in 
     dependencies or not.
-Do we want to keep server on nodejs processor - yes but for debug/admin/metrics etc
-  Performance, utilization etc, a Processor Object for this (instead of Task)
-  The debug features can be shared between processors e.g. just connect to keyv with activeTasks
 
 Demo of collaborative chat would be good.
 
@@ -211,13 +209,6 @@ Architecture
       Requires a documented API, the basic principles at the moment:
           Use the Task object to pass information
           Manage task specific storage (e.g. files, user specific data) independently of the NodeJS Task Processor Stores
-          Through JS imports the TaskFunction has access to:
-              config.mjs
-              src/configdata.mjs (users, groups, taskflows, tasktemplates, tasks)
-              src/utils.mjs
-              src/storage.mjs (messagesStore_async, sessionsStore_async, cacheStore_async, instancesStore_async, threadsStore_async, connections)
-              src/websocket.js (wsSendObject)
-              .env
   User defaults, taskflow defaults etc can be tasks
   Could add middleware that tasks can use to modify input/output (similar to LangChain)
     Currently in the TaskFunction but should be easy to factor out when that makes sense
@@ -230,6 +221,9 @@ Architecture
     RabbitMQ for message passing good for a local model but do we need high speed, probably not.
     REST API would allow for remote etc, maybe better
     AMQP or MQTT would be more scalable.
+  Keep server on nodejs processor - yes but for debug/admin/metrics etc
+    Performance, utilization etc, a Processor Object for this (instead of Task)
+    The debug features can be shared between processors e.g. just connect to keyv with activeTasks
 
 Issues
 ------
