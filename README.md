@@ -48,7 +48,7 @@ There may be side-effects from a SubTask, for example, it may return results to 
 
 ## Task Hub
 
-Information shared between Task Processors is maintained in the Task Hub, see [README.md](hub/README.md) 
+Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see [README.md](hub/README.md) 
 
 # Motivation
 
