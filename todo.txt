@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Create ping command insted of task.ping
 Move processors out of activeTasks on hub and into activeProcessors with task instancId key
 
 To get .vscode under version control we should have the taskflow directory as the top.

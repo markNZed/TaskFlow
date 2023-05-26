@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import newTask_async from "../newTask.mjs";
-import { activeTasksStore_async} from "../storage.mjs";
+import { activeTasksStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -73,12 +73,10 @@ router.post("/update", async (req, res) => {
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else{
-      // Just a hack for now
-      console.log("task " + task.id + " from " + task.newSource)
+      console.log("Update task " + task.id + " from " + task.newSource)
       const activeTask = await activeTasksStore_async.get(task.instanceId)
       if (activeTask) {
-        activeTask.task = task;
-        await activeTasksStore_async.set(task.instanceId, activeTask);
+        await activeTasksStore_async.set(task.instanceId, task);
         // So we do not return a task anymore. This requires the task synchronization working.
         res.json({task: "synchronizing"});
         return;

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTasksStore_async } from "./storage.mjs";
+import { connections, activeProcessorsStore_async } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 
 function wsSendObject(processorId, message = {}) {
@@ -66,18 +66,18 @@ function initWebSocketServer(server) {
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)
         }
-        const activeTask = await activeTasksStore_async.get(j.task.instanceId);
+        const activeProcessors = await activeProcessorsStore_async.get(j.task.instanceId);
         // We have the processor list in activeTasksStore and in sessionsStore
         // Do we need the ssessionsStore?
         if (j.command === "update" || j.command === "partial") {
           //console.log("ws update", j.task)
-          if (!activeTask.processorIds) {
+          if (!activeProcessors) {
             throw new Error("No processors ", j.task);
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
           console.log("Forwarding " + j.command + " from " + processorId)
-          for (const id of activeTask.processorIds) {
+          for (const id of activeProcessors) {
             if (id !== j.task.newSource) {
               const ws = connections.get(id);
               if (!ws) {

@@ -54,8 +54,12 @@ const instancesStore_async = newKeyV(DB_URI, "instances");
 const threadsStore_async = newKeyV(DB_URI, "threads");
 // Schema:
 //   Key: instanceId
-//   Value: {task: {}, processorIds: []};
+//   Value: task object
 const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks);
+// Schema:
+//   Key: instanceId
+//   Value: array of processorIds
+const activeProcessorsStore_async = newKeyV(DB_URI, "activeProcessors");
 // Schema:
 //   Key: threadId + taskId
 //   Value: {taskId : output}
@@ -66,6 +70,7 @@ export {
   instancesStore_async,
   threadsStore_async,
   activeTasksStore_async,
+  activeProcessorsStore_async,
   outputStore_async,
   connections,
   activeProcessors,
