@@ -17,7 +17,7 @@ export async function do_task_async(wsSendTask, task) {
       console.log("Component ", task.stack, " idx ", idx);
     }
     if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
-      task.newSource = processorId;
+      task.source = processorId;
       updated_task = await taskFunctions[`${task.stack[idx]}_async`](wsSendTask, task);
       // This will then trigger the syncTasks_async
       // Not sure we need to await on this

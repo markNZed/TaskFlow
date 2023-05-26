@@ -84,7 +84,7 @@ async function newTask_async(
     }
     taskCopy["prevInstanceId"] = prevInstanceId 
     taskCopy["userId"] = userId;
-    taskCopy["newSource"] = processorId;
+    taskCopy["source"] = processorId;
     taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;

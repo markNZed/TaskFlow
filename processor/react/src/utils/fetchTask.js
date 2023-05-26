@@ -18,7 +18,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
   }
-  task.newSource = globalState.processorId;
+  task.source = globalState.processorId;
 
   // The immediate destination of this request
   let destination = `${hubUrl}/api/${end_point}` // using hub routing

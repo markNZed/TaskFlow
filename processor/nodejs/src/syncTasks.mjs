@@ -21,10 +21,10 @@ const syncTasks_async = async (wsSendTask, keyv, key, value) => {
   // This is used when we send th task with an HTTP request.
   if (wsSendTask !== null) {
     // If processor is setting task then send it to the hub
-    if (!task?.newSource) {
-      console.log("task missing newSource", key, value);
-      throw new Error("task missing newSource");
-    } else if (task.newSource === processorId) {
+    if (!task?.source) {
+      console.log("task missing source", key, value);
+      throw new Error("task missing source");
+    } else if (task.source === processorId) {
       // Not sure we need to do this - it should be done by sending update
       // Just sync in the background with websocket
       console.log("syncTasks_async updating", key, processorId);

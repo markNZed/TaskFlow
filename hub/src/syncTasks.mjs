@@ -20,9 +20,9 @@ const syncTasks_async = async (key, value) => {
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeProcessorsStore_async.get(key);
   if (processorIds) {
-    console.log("syncTasks_async task " + task.id + " from " + task.newSource);
+    console.log("syncTasks_async task " + task.id + " from " + task.source);
     for (const processorId of processorIds) {
-      if (processorId !== task.newSource) {
+      if (processorId !== task.source) {
         const message = { command: "update", task: task };
         wsSendObject(processorId, message);
         //console.log("syncTasks_async updating", key, processorId);

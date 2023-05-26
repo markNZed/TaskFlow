@@ -19,7 +19,7 @@ function wsSendObject(processorId, message = {}) {
     // Need to make a copy so any changes here d onot impact the object 
     let localTask = { ...message.task }
     localTask.hubId = hubId;
-    localTask.newSource = hubId;
+    localTask.source = hubId;
     message.task = localTask;
     ws.send(JSON.stringify(message));
     if (message.command !== "pong") {
@@ -56,7 +56,7 @@ function initWebSocketServer(server) {
       const j = JSON.parse(message);
 
       if (j?.task) {
-        const processorId = j.task.newSource;
+        const processorId = j.task.source;
         //console.log("processorId", processorId)
         if (ws.data["processorId"] !== processorId) {
           connections.set(processorId, ws);
@@ -75,7 +75,7 @@ function initWebSocketServer(server) {
           }
           console.log("Forwarding " + j.command + " from " + processorId)
           for (const id of activeProcessors) {
-            if (id !== j.task.newSource) {
+            if (id !== j.task.source) {
               const ws = connections.get(id);
               if (!ws) {
                 console.log("Lost websocket for ", id, connections.keys());
@@ -96,10 +96,10 @@ function initWebSocketServer(server) {
         const task = {
           updatedeAt: currentDateTimeString,
           sessionId: j.task?.sessionId, 
-          destination: j.task.newSource,
+          destination: j.task.source,
         };
         wsSendTask(task, "pong");
-        //console.log("Pong " + j.task?.sessionId + " " + j.task.newSource)
+        //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 
     });

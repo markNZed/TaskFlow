@@ -29,7 +29,7 @@ router.post("/start", async (req, res) => {
     const startId = task.id;
     const threadId = task.threadId;
     const sessionId = task.sessionId;
-    const processorId = task.newSource;
+    const processorId = task.source;
 
     const component_depth = task.stackPtr;
 
@@ -72,7 +72,7 @@ router.post("/update", async (req, res) => {
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else{
-      console.log("Update task " + task.id + " from " + task.newSource)
+      console.log("Update task " + task.id + " from " + task.source)
       const activeTask = await activeTasksStore_async.get(task.instanceId)
       if (activeTask) {
         await activeTasksStore_async.set(task.instanceId, task);

@@ -40,7 +40,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.destination = globalState?.hubId
       m.task.sessionId = globalState?.sessionId
-      m.task.newSource = globalState.processorId;
+      m.task.source = globalState.processorId;
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       }
