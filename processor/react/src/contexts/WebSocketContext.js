@@ -91,10 +91,12 @@ export function WebSocketProvider({ children, socketUrl }) {
       //console.log("App webSocket message received:", e);
       // Should be in try/catch block
       const message = JSON.parse(e.data);
-      if (message?.command) {
-        //console.log("App webSocket command", message.command,  message.task);
+      if (message?.command && message.command !== "pong") {
+        console.log("App webSocket command", message.command,  message.task.instanceId);
         webSocketEventEmitter.emit(message?.command, message.task);
       } else if (message.command === "pong") {
+        //console.log("App webSocket received pong", message);
+      } else {
         console.log("App webSocket unexpected message", message);
       }
     },

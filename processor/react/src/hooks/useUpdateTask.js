@@ -11,7 +11,7 @@ import { setNestedProperties, deepMerge, log, getChanges, checkConflicts } from 
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 // We have: Start with startId, threadId
-//          Step with task
+//          State with task
 //          Task with task
 // We should combine these
 

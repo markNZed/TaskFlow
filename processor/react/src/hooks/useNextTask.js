@@ -10,7 +10,7 @@ import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
 // We have: Start with startId, threadId
-//          Step with task
+//          State with task
 //          Task with task
 // We should combine these
 

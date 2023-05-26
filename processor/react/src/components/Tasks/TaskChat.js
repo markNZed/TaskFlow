@@ -22,9 +22,9 @@ Task Process
   Server sends final text and terminates HTTP request with state.current=input
   Parent component is expected to:
     Display updates to task.response.text while state.current=input
-    Detect state.current=sending and display/store user's prompt and set state.current=receiving ** should not be setting step in parent?
+    Detect state.current=sending and display/store user's prompt and set state.current=receiving ** should not be setting state in parent?
   If NodeJS Task Processor request returns (!updateTaskLoading) and state.current=receiving the websocket did not start/finish
-    Update with the HTTP response so step=input
+    Update with the HTTP response so state=input
 
 Task States
   input: get user prompt
@@ -43,7 +43,7 @@ const TaskChat = (props) => {
   const {
     log,
     updateTask,
-    updateStep,
+    updateState,
     task,
     setTask,
     component_depth,
@@ -78,7 +78,7 @@ const TaskChat = (props) => {
               break;
             case 'final':
               responseTextRef.current = text;
-              updateStep("input")
+              updateState("input")
               setResponsePending(false);
               break;
           }
@@ -120,7 +120,7 @@ const TaskChat = (props) => {
       }
       setResponsePending(true);
       // Set update to send to NodeJS Task Processor
-      updateStep("sending");
+      updateState("sending");
       updateTask({ "request.input": prompt, send: true });
       // Clear the textbox
       setPrompt("");

@@ -8,6 +8,7 @@ import { instancesStore_async, threadsStore_async, activeTasksStore_async, activ
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
+import { hubId } from "../config.mjs";
 
 async function newTask_async(
     id,
@@ -84,7 +85,7 @@ async function newTask_async(
     }
     taskCopy["prevInstanceId"] = prevInstanceId 
     taskCopy["userId"] = userId;
-    taskCopy["source"] = processorId;
+    taskCopy["source"] = hubId;
     taskCopy["sessionId"] = sessionId;
     let instanceId = uuidv4();
     taskCopy["instanceId"] = instanceId;

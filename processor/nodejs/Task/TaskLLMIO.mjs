@@ -10,8 +10,13 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(
-    "TaskLLMIO name " + T("name") + " step " + T("state.current")
+    "TaskLLMIO name " + T("name") + " state " + T("state.current")
   );
+
+  if (T("state.current") === undefined) {
+    console.log("TaskLLMIO state.current is undefined");
+    return null
+  }
 
   // We have two potential steps: ['response', 'input']
   // We want to receive the task object from the React Task Processor and from the NodeJS Task Processor
@@ -26,7 +31,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
     return task;
   }
 
-  // Here we assume we are dealing with response step
+  // Here we assume we are dealing with response state
 
   let prompt = "";
   if (T("config.promptTemplate")) {

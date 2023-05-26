@@ -27,14 +27,14 @@ const TaskShowResponse = (props) => {
     setTask,
     parentTask,
     updateTask,
-    updateStep,
+    updateState,
     component_depth,
   } = props;
 
   const [responseText, setResponseText] = useState("");
   const [myTaskId, setMyTaskId] = useState();
-  const [myStep, setMyStep] = useState("");
-  const [myLastStep, setMyLastStep] = useState("");
+  const [myState, setMyState] = useState("");
+  const [myLastState, setMyLastState] = useState("");
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
@@ -55,7 +55,7 @@ const TaskShowResponse = (props) => {
         });
         //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
       }
-      setMyStep("start");
+      setMyState("start");
     }
   }, [task]);
 
@@ -65,13 +65,13 @@ const TaskShowResponse = (props) => {
     if (myTaskId && myTaskId === task.id) {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
-      const next_step = task.config.nextStates[myStep];
-      log("MyStep " + myStep)
-      //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
-      switch (myStep) {
+      const nextState = task.config.nextStates[myState];
+      log("myState " + myState)
+      //console.log("task.id " + task.id + " myState " + myState + " nextState " + nextState + " leaving_now " + leaving_now)
+      switch (myState) {
         case "start":
           // Next state
-          setMyStep(next_step);
+          setMyState(nextState);
           // Actions
           break;
         case "response":
@@ -82,19 +82,19 @@ const TaskShowResponse = (props) => {
           if (task.response?.text) {
             log("Response cached React Task Processor side");
             // Next state
-            setMyStep(next_step);
+            setMyState(nextState);
             // Actions
             response_action(task.response.text);
           } else {
             // This effectively waits for the update
             if (task.response.updated) {
-              setMyStep(next_step);
+              setMyState(nextState);
               let response_text;
               response_text = task.response.text;
               updateTask({ "response.text": response_text });
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);
-            } else if (myLastStep !== myStep) { // could introduce deltaState but we are managing myStep
+            } else if (myLastState !== myState) { // could introduce deltaState but we are managing myState
               updateTask({ send: true });
             }
           }
@@ -102,7 +102,7 @@ const TaskShowResponse = (props) => {
         case "wait":
           if (leaving_now) {
             updateTask({ "state.done": true });
-            setMyStep(next_step);
+            setMyState(nextState);
           }
           break;
         case "stop":
@@ -112,14 +112,14 @@ const TaskShowResponse = (props) => {
           }
           break;
         default:
-          console.log("ERROR unknown step : " + myStep);
+          console.log("ERROR unknown state : " + myState);
       }
-      updateStep(myStep);
-      //setTask((p) => {return {...p, step: myStep}});
-      setMyLastStep(myStep); // Useful if we want an action only performed once in a state
+      updateState(myState);
+      //setTask((p) => {return {...p, state: myState}});
+      setMyLastState(myState); // Useful if we want an action only performed once in a state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myStep, task.response?.updated]);
+  }, [leaving, myState, task.response?.updated]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

@@ -101,7 +101,7 @@ const TaskConversation = (props) => {
         }));
         // TaskChat is dealing with input
       } else if (task.state.current === "input") {
-        //console.log("Step input")
+        //console.log("State input")
       }
     }
   }, [task]);

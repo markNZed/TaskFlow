@@ -29,7 +29,7 @@ const TaskLLMIO = (props) => {
     task,
     setTask,
     updateTask,
-    updateStep,
+    updateState,
     component_depth,
     //socketResponses,
     //setSocketResponses,
@@ -46,8 +46,8 @@ const TaskLLMIO = (props) => {
   const paraTopRef = useRef(0);
   const [userInputHeight, setUserInputHeight] = useState(0);
   const [myTaskId, setMyTaskId] = useState();
-  const [myStep, setMyStep] = useState("");
-  const [myLastStep, setMyLastStep] = useState("");
+  const [myState, setMyState] = useState("");
+  const [myLastState, setMyLastState] = useState("");
   const [socketResponses, setSocketResponses] = useState([]);
 
   // This is the level where we are going to use the task so set the component_depth
@@ -72,7 +72,7 @@ const TaskLLMIO = (props) => {
           "config.nextStates": { start: "response", response: "stop" },
         });
       }
-      setMyStep("start");
+      setMyState("start");
     }
   }, [task]);
 
@@ -120,7 +120,7 @@ const TaskLLMIO = (props) => {
     if (entering) {
       if (entering.direction === "prev" && entering.task.name === task.name) {
         if (task.config?.reenteringState) {
-          setMyStep(task.config.reenteringState)
+          setMyState(task.config.reenteringState)
         } 
       }
     }
@@ -132,23 +132,23 @@ const TaskLLMIO = (props) => {
     if (myTaskId && myTaskId === task.id) {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
-      const next_step = task.config.nextStates[myStep];
-      //console.log("task.id " + task.id + " myStep " + myStep + " next_step " + next_step + " leaving_now " + leaving_now)
-      log("MyStep " + myStep, task)
-      switch (myStep) {
+      const nextState = task.config.nextStates[myState];
+      //console.log("task.id " + task.id + " myState " + myState + " nextState " + nextState + " leaving_now " + leaving_now)
+      log("myState " + myState, task)
+      switch (myState) {
         case "start":
           // Next state
-          setMyStep(next_step);
+          setMyState(nextState);
           // Actions
           break;
         case "response":
-          if (myStep !== myLastStep) {
+          if (myState !== myLastState) {
             updateTask({ send: true });
           } else if (finalResponse) { // waiting for response from websocket to end
             setFinalResponse(false)
-            setMyStep(next_step);
+            setMyState(nextState);
           }
-          if (next_step === "input") {
+          if (nextState === "input") {
             setShowUserInput(true);
           }
           break;
@@ -157,7 +157,7 @@ const TaskLLMIO = (props) => {
           // Wait until leaving then send input and wait for repsonse before going to next state
           if (leaving_now) {
             updateTask({ send: true });
-            setMyStep(next_step);
+            setMyState(nextState);
           }
           break;
         case "stop":
@@ -166,14 +166,14 @@ const TaskLLMIO = (props) => {
           }
           break;
         default:
-          console.log("ERROR unknown step : " + myStep);
+          console.log("ERROR unknown state : " + myState);
       }
-      updateStep(myStep);
-      //setTask((p) => {return {...p, step: myStep}});
-      setMyLastStep(myStep); // Useful if we want an action only performed once in a state
+      updateState(myState);
+      //setTask((p) => {return {...p, state: myState}});
+      setMyLastState(myState); // Useful if we want an action only performed once in a state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myStep]);
+  }, [leaving, myState]);
 
   // Align task data with userInput input
   // Could copy this just before sending rather than on every update

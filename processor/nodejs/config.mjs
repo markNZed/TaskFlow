@@ -17,7 +17,7 @@ const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
-let DUMMY_OPENAI = false;
+let DUMMY_OPENAI = true;
 if (process.env.OPENAI_API_KEY === "") {
   DUMMY_OPENAI = true;
 }

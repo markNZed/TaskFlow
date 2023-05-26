@@ -33,8 +33,8 @@ Coding preferences:
     * setDoneTask()
   * Prop for updating properties of a Task  
     * `updateTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
-  * Prop to update the step in a Task
-    * `updateStep('input')` is equivalent to `setTask(p => { return {...p, step : 'input'} })`
+  * Prop to update the state in a Task
+    * `updateState('input')` is equivalent to `setTask(p => { return {...p, state : 'input'} })`
   * Prop for websocket event that is filtered so only events for the task.id initiating the task arrive
   * Prop component_depth that presents where in the component stack the component is (starts at 1)
   * Logging of changes for any Task variable e.g. `const [X, setX] = useTaskState(null,'X')`

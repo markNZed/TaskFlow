@@ -1,11 +1,8 @@
 /* ToDo
 -------
-Separation of configdata
-  SubTaskLLMIO to deal with systemMessageTemplate
-  modelTempaltes stay with nodejs and substitution of MODEL.XXx should be done in SubTaskLLMIO
-  NewTask to deal with USER
-  Remove users from SubTaskLLMIO
-Clicking next twice 
+Clicking next twice in summary exercise
+Not streaming text to summary
+  Start streaming after update?
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)

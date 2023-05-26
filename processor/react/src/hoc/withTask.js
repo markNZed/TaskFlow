@@ -99,14 +99,14 @@ function withTask(Component) {
       setStartTaskDepth(depth);
     }
 
-    function updateStep(step) {
+    function updateState(state) {
       // change to updateState
       props.setTask((p) =>
         deepMerge(
           p,
           setNestedProperties({
-            "state.current": step,
-            "state.deltaState": step,
+            "state.current": state,
+            "state.deltaState": state,
           })
         )
       );
@@ -279,7 +279,7 @@ function withTask(Component) {
       setDoneTask,
       prevTask,
       updateTask,
-      updateStep,
+      updateState,
       component_depth: local_component_depth,
       useTaskState,
       useTasksState,
