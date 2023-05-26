@@ -3,11 +3,11 @@
 The Task Hub is implemented in node using the Express framework and SQLite database. It provides the following features:
 * Processors register with the Hub via HTTP request
 * Processors initiate a session via HTTP request
-* Processors send a request to the Hub start route to initiate
+* Processors send a request to the Hub start route to initiate a Task
 * Synchronization of Tasks across processors
-  * Processors send updates to Hub with an HTTP request
-  * Hub sends updates to all relevant processors via websocket
-    * When a Task is done the Hub sends the nextTask
+  * Processors send Task updates to Hub via HTTP request
+  * The Hub sends Task updates to all relevant processors via websocket
+    * When a Task is done the Hub sends the next Task(s)
     * When a Task contains an error the Hub sends an error Task
 # Start
 This is the Task Hub T@skFlow
