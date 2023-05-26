@@ -140,7 +140,7 @@ async function newTask_async(
     const outputs = await outputStore_async.get(threadId);
 
     if (!newThread && taskCopy.config?.promptTemplate) {
-      console.log("promptTemplate", taskCopy.config.promptTemplate)
+      //console.log("promptTemplate", taskCopy.config.promptTemplate)
       let filledPromptTemplate = "";
       filledPromptTemplate += taskCopy.config.promptTemplate.reduce(function (acc, curr) {
         // Currently this assumes the parts are from the same taskflow, could extend this
@@ -164,7 +164,7 @@ async function newTask_async(
           return acc + curr;
         }
       });
-      console.log("filledPromptTemplate " + filledPromptTemplate)
+      //console.log("filledPromptTemplate " + filledPromptTemplate)
       taskCopy.config.promptTemplate = filledPromptTemplate;
     }
 

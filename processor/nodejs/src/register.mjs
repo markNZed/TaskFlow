@@ -6,6 +6,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { processorId, TASKHUB_URL } from "../config.mjs";
 
+let hubId;
+
 const register_async = async () => {
 
   const requestOptions = {
@@ -33,7 +35,8 @@ const register_async = async () => {
 
   try {
     const data = await response.json();
-    console.log("data", data);
+    //console.log("data", data);
+    hubId = data.hubId;
     return data;
   } catch (error) {
     const statusText = response.statusText; // Text description of the status
@@ -43,4 +46,4 @@ const register_async = async () => {
 
 };
 
-export default register_async;
+export { register_async, hubId };

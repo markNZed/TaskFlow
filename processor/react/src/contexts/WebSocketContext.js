@@ -38,7 +38,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (!m?.task) {
         m["task"] = {}
       }
-      m.task.newDestination = globalState?.hubId
+      m.task.destination = globalState?.hubId
       m.task.sessionId = globalState?.sessionId
       m.task.source = "react" // Could remove this eventually
       m.task.newSource = globalState.processorId;
@@ -70,7 +70,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         return {
           sessionId: globalState?.sessionId,
           updatedAt: currentDateTimeString,
-          newDestination: globalState?.hubId,
+          destination: globalState?.hubId,
         }
       }
       sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});

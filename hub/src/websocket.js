@@ -35,7 +35,7 @@ const wsSendTask = function (task, command = null) {
   if (command) {
     message["command"] = command;
   }
-  let processorId = message.task.newDestination;
+  let processorId = message.task.destination;
   if (message.command !== "pong") {
     console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
@@ -81,7 +81,7 @@ function initWebSocketServer(server) {
                 console.log("Lost websocket for ", id, connections.keys());
               } else {
                 //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
-                j.task.newDestination = id;
+                j.task.destination = id;
                 wsSendTask(j.task, j.command);
               }
             }
@@ -96,7 +96,7 @@ function initWebSocketServer(server) {
         const task = {
           updatedeAt: currentDateTimeString,
           sessionId: j.task?.sessionId, 
-          newDestination: j.task.newSource,
+          destination: j.task.newSource,
         };
         wsSendTask(task, "pong");
         //console.log("Pong " + j.task?.sessionId + " " + j.task.source)

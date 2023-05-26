@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "./../config.mjs";
-import register_async from "./register.mjs";
+import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 
@@ -26,10 +26,7 @@ function wsSendObject(message = {}) {
     if (!message.task?.sessionId && message.command !== "ping") {
       console.log("Missing sessionId", message);
     }
-    // This is just a hack, should be automated by hub
-    if (!message.task?.newDestination) {
-      message.task.newDestination = "react";
-    }
+    message.task.destination = hubId;
     message.task.source = "nodejs";
     message.task.newSource = processorId;
     if (message.command !== "ping") {
@@ -66,7 +63,7 @@ const connectWebSocket = () => {
       let currentDateTimeString = currentDateTime.toString();
       return {
         updatedeAt: currentDateTimeString,
-        newDestination: "hub",
+        destination: "hub",
       }
     }
     wsSendTask(taskPing(), "ping");
