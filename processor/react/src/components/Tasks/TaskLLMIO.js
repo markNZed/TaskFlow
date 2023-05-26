@@ -129,6 +129,7 @@ const TaskLLMIO = (props) => {
   // Sub_task state machine
   // Unique for each component that requires steps
   useEffect(() => {
+    console.log("TaskLLMIO State Machine")
     if (myTaskId && myTaskId === task.id) {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
@@ -173,7 +174,11 @@ const TaskLLMIO = (props) => {
       setMyLastState(myState); // Useful if we want an action only performed once in a state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myState]);
+  }, [leaving, myState, task.response?.updated]);
+
+  useEffect(() => {
+    console.log("task ", task, leaving);
+  }, [task]);
 
   // Align task data with userInput input
   // Could copy this just before sending rather than on every update

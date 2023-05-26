@@ -9,7 +9,14 @@ import { utils } from "../src/utils.mjs";
 const TaskShowResponse_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log("TaskShowResponse name " + T("name"));
+  console.log(
+    "TaskShowResponse name " + T("name") + " state " + T("state.current")
+  );
+
+  if (T("state.current") === undefined) {
+    console.log("TaskShowResponse state.current is undefined");
+    return null
+  }
 
   let response = "";
 
@@ -18,13 +25,13 @@ const TaskShowResponse_async = async function (wsSendTask, task) {
     response += T("config.promptTemplate");
     console.log("Assembled response " + response);
   } else if (T("config.response")) {
-    // Should not pass here if this is an error
     response = T("config.response");
   }
 
   // Ensure we do not overwrite the deltaState on the React Task Processor
   T("state.deltaState", undefined); // Should be centralized?
   T("response.text", response);
+  T("response.updated", true);
   T("updatedAt", Date.now()); // Should be centralized?
   console.log("Returning from TaskShowResponse");
   return task;

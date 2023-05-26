@@ -1,6 +1,10 @@
 /* ToDo
 -------
 Clicking next twice in summary exercise
+  Merging of state might be a problem at the moment
+  Should only send diffs so we only get changes from the processor
+The Task Fuction could be a single JS module that is shared ?
+  Maybe just the state machines
 Not streaming text to summary
   Start streaming after update?
 To get .vscode under version control we should have the taskflow directory as the top.
@@ -183,7 +187,6 @@ Backlog
 
 Notes/Idea
 -----
-  Rename to T@sk, T@ask TaskNet, TaskFlow (but htere is already https://github.com/taskflow/taskflow) T@skFlow
   Possible hierarchy of configuration:
   Defaults
     User (Route)
@@ -201,6 +204,7 @@ Notes/Idea
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
   One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
+  Writing the Hub and a generic Porcessor in Rust 
 
 Architecture
 ------------

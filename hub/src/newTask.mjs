@@ -186,9 +186,9 @@ async function newTask_async(
      // Find all the config variable that end with Template
     for (const [key, template] of Object.entries(taskCopy.config)) {
       if (key.endsWith("Template")) {
-        console.log("Template found", key, template);
+        //console.log("Template found", key, template);
         taskCopy.config[key] = processArrays(template, taskCopy, outputs, threadId);
-        console.log("Processed template", taskCopy.config[key]);
+        //console.log("Processed template", taskCopy.config[key]);
       }
     }
 
@@ -254,6 +254,7 @@ async function newTask_async(
       console.log("Set error from previous task", prevTask.id)
       taskCopy.response.text = response
       taskCopy.environments = prevTask.environments
+      taskCopy.state.current = "error"
       //console.log("Error task", taskCopy)
     }
 

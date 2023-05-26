@@ -50,6 +50,7 @@ router.post("/update", async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
+    task["send"] = false;
     // We intercept tasks that are done.
     if (task.error) {
       let errorTask
@@ -72,7 +73,7 @@ router.post("/update", async (req, res) => {
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else{
-      console.log("Update task " + task.id + " from " + task.source)
+      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
       const activeTask = await activeTasksStore_async.get(task.instanceId)
       if (activeTask) {
         await activeTasksStore_async.set(task.instanceId, task);
