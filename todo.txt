@@ -1,12 +1,8 @@
 /* ToDo
 -------
-Move processors out of activeTasks on hub and into activeProcessors with task instancId key
-
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)
-Rename startTask to newTask
-Remove user validation from nodejs
 We might need multiple levels of session:
   session processor-node
   user session

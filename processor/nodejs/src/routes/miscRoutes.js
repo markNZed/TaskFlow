@@ -5,8 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { REACT_URL } from "../../config.mjs";
-import { utils } from "../utils.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -14,12 +12,7 @@ const router = express.Router();
 
 router.get("/nodejs", async (req, res) => {
   console.log("/nodejs")
-  let userId = utils.getUserId(req);
-  if (userId) {
-    res.send(`Hello, ${userId}!`);
-  } else {
-    res.status(401).send("Unauthorized");
-  }
+  res.send(`Hello!`);
 });
 
 router.get("*", function (req, res) {
