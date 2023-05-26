@@ -25,7 +25,7 @@ function wsSendObject(processorId, message = {}) {
     localTask.newSource = hubId;
     message.task = localTask;
     ws.send(JSON.stringify(message));
-    if (!message.task?.pong) {
+    if (message.command !== "pong") {
       //console.log("wsSendObject ", JSON.stringify(message) )
     }
   }
@@ -39,7 +39,7 @@ const wsSendTask = function (task, command = null) {
     message["command"] = command;
   }
   let processorId = message.task.newDestination;
-  if (!message.task?.pong) {
+  if (message.command !== "pong") {
     console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
   wsSendObject(processorId,message);
@@ -57,10 +57,6 @@ function initWebSocketServer(server) {
     ws.on("message", async (message) => {
 
       const j = JSON.parse(message);
-
-      if (!j?.task?.ping) {
-        //console.log("ws.on message", j)
-      }
 
       if (j?.task) {
         const processorId = j.task.newSource;
@@ -97,13 +93,15 @@ function initWebSocketServer(server) {
         
       }
 
-      if (j?.task?.ping) {
+      if (j?.command === "ping") {
+        let currentDateTime = new Date();
+        let currentDateTimeString = currentDateTime.toString();
         const task = {
-          pong: "ok", 
+          updatedeAt: currentDateTimeString,
           sessionId: j.task?.sessionId, 
           newDestination: j.task.newSource,
         };
-        wsSendTask(task);
+        wsSendTask(task, "pong");
         //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 

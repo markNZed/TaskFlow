@@ -43,8 +43,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       m.task.sessionId = globalState?.sessionId
       m.task.source = "react" // Could remove this eventually
       m.task.newSource = globalState.processorId;
-      if (!m.task.ping) {
-        console.log("Sending " + socketUrl + " " + JSON.stringify(m))
+      if (m.command === "ping") {
+        //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       }
       sendJsonMessage(m);
     };
@@ -70,14 +70,14 @@ export function WebSocketProvider({ children, socketUrl }) {
         let currentDateTimeString = currentDateTime.toString();  
         return {
           sessionId: globalState?.sessionId,
-          ping: currentDateTimeString,
+          updatedAt: currentDateTimeString,
           newDestination: globalState?.hubId,
         }
       }
-      sendJsonMessagePlusRef.current({task: taskPing()});
+      sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({task: taskPing()});
+          sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);
@@ -96,7 +96,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (message?.command) {
         //console.log("App webSocket command", message.command,  message.task);
         webSocketEventEmitter.emit(message?.command, message.task);
-      } else if (!message?.task?.pong) {
+      } else if (message.command === "pong") {
         console.log("App webSocket unexpected message", message);
       }
     },

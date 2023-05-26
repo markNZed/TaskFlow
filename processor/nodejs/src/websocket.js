@@ -23,7 +23,7 @@ function wsSendObject(message = {}) {
     if (!message?.task) {
       message["task"] = {}
     }
-    if (!message.task?.sessionId && !message.task?.ping) {
+    if (!message.task?.sessionId && message.command !== "ping") {
       console.log("Missing sessionId", message);
     }
     // This is just a hack, should be automated by hub
@@ -32,7 +32,7 @@ function wsSendObject(message = {}) {
     }
     message.task.source = "nodejs";
     message.task.newSource = processorId;
-    if (!message.task?.ping) {
+    if (message.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
       //console.log("wsSendObject " + message.command + " " + message.task.id )
       //console.log("wsSendObject ", message )
@@ -65,14 +65,14 @@ const connectWebSocket = () => {
       let currentDateTime = new Date();
       let currentDateTimeString = currentDateTime.toString();
       return {
-        ping: currentDateTimeString,
+        updatedeAt: currentDateTimeString,
         newDestination: "hub",
       }
     }
-    wsSendTask(taskPing());
+    wsSendTask(taskPing(), "ping");
     const intervalId = setInterval(() => {
       if (processorWs.readyState === WebSocket.OPEN) {
-        wsSendTask(taskPing());
+        wsSendTask(taskPing(), "ping");
       } else {
         clearInterval(intervalId);
       }
@@ -92,7 +92,7 @@ const connectWebSocket = () => {
       console.log("processorWs updating activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(null, message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
-    } else if (message?.task?.pong) {
+    } else if (message?.command === "pong") {
       //console.log("ws pong received", message)
     } else {
       console.log("Unexpected message", message)
