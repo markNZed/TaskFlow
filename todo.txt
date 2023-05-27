@@ -1,8 +1,8 @@
 /* ToDo
 -------
 Clicking next twice in summary exercise
-  Merging of state might be a problem at the moment
-  Should only send diffs so we only get changes from the processor
+  state might be the issues
+  error not returned correctly from check4spelling
 The Task Fuction could be a single JS module that is shared ?
   Maybe just the state machines
 Not streaming text to summary

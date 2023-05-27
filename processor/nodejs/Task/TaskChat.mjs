@@ -4,9 +4,9 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TaskLLMIO_async } from "./TaskLLMIO.mjs";
 import { utils } from "../src/utils.mjs";
 import { activeTasksStore_async } from "../src/storage.mjs";
+import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
@@ -14,22 +14,35 @@ import { activeTasksStore_async } from "../src/storage.mjs";
 
 const TaskChat_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
-  console.log("TaskChat name " + T("name"));
+
+  console.log(
+    "TaskChat name " + T("name") + " state " + T("state.current")
+  );
+
+  if (T("state.current") === undefined) {
+    console.log("TaskChat state.current is undefined");
+    return null
+  }
 
   if (T("state.current") === "sending") {
     T("response.text", null); // Avoid using previously stored response
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
+    if (T("request.input")) {
+      T("request.prompt", T("request.input"))
+    }
     // This will update the state on client 
     console.log("TaskChat sending");
     await activeTasksStore_async.set(wsSendTask, task.instanceId, task);
-    task = await TaskLLMIO_async(wsSendTask, task);
+    const subTask = await SubTaskLLM_async(wsSendTask, task);
+    const response_text = await subTask.response.text_promise
+    T("response.text", response_text);
+    T("output.text", response_text);
     T("state.current", "input");
     T("state.deltaState", "input");
-
   }
 
-  console.log("Returning from TaskChat_async");
+  console.log("Returning from TaskChat_async", task.id);
   return task;
 };
 

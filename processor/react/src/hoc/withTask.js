@@ -6,6 +6,7 @@ import {
   hasOnlyResponseKey,
   setNestedProperties,
   deepMerge,
+  checkConflicts,
 } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
@@ -16,6 +17,7 @@ import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
 import useStartWSFilter from "../hooks/useStartWSFilter";
 import useNextWSFilter from "../hooks/useNextWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
+import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -33,6 +35,7 @@ function withTask(Component) {
       local_component_depth = 0;
     }
 
+    const { globalState } = useGlobalStateContext();
     const [prevTask, setPrevTask] = useState();
     const [doneTask, setDoneTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
@@ -52,10 +55,17 @@ function withTask(Component) {
     const { startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
     useUpdateWSFilter(props.task?.instanceId,
-      (updatedTask) => {
-        if (updatedTask.stackPtr === local_component_depth) {
-          //console.log("useUpdateWSFilter", updatedTask);
-          updateTask(updatedTask)
+      (updateDiff) => {
+        if (updateDiff.stackPtr === local_component_depth) {
+          const lastTask = globalState.storageRef.current.get(props.task.instanceId);
+          const currentTaskDiff = getObjectDifference(props.task, lastTask); // favor props.task
+          // ignore differences in source
+          delete currentTaskDiff.source
+          checkConflicts(currentTaskDiff, updateDiff)
+          const mergedTask = deepMerge(props.task, updateDiff);
+          updateTask(mergedTask)
+          globalState.storageRef.current.set(props.task.instanceId, mergedTask);
+          console.log("Storage updated ", props.task.id, props.task.instanceId);
         }
       }
     )

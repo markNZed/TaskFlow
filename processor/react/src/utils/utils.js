@@ -1,9 +1,9 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { deepMerge, getChanges, checkConflicts } from "../shared/utils.mjs"
+import { deepMerge, getChanges, checkConflicts, getObjectDifference } from "../shared/utils.mjs"
 
-export { deepMerge, getChanges, checkConflicts }
+export { deepMerge, getChanges, checkConflicts, getObjectDifference }
 
 export function updateState(setState, update) {
   setState((prevState) => ({ ...prevState, ...update }));
@@ -11,11 +11,6 @@ export function updateState(setState, update) {
 
 // e.g. delta(() => {updateState('input')})
 export const delta = (callback, delay = 0) => setTimeout(callback, delay);
-
-export const getObjectDifference = (obj1, obj2) => {
-  const res = _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]));
-  return _.cloneDeep(res);
-};
 
 export function hasOnlyResponseKey(obj) {
   const keys = Object.keys(obj);

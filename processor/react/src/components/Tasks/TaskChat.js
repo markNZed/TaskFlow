@@ -58,7 +58,7 @@ const TaskChat = (props) => {
 
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
-    updateTask({ stackPtr: component_depth });
+    updateTask({ stackPtr: component_depth, "state.current": "input" });
   }, []);
 
   // Note that socketResponses may not (will not) be updated on every websocket event

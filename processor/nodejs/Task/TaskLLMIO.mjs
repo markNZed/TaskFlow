@@ -31,39 +31,13 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
     return task;
   }
 
-  // Here we assume we are dealing with response state
-
-  let prompt = "";
-  if (T("config.promptTemplate")) {
-    console.log("Found promptTemplate");
-    prompt += T("config.promptTemplate");
-    console.log("Prompt " + prompt)
-  } else {
-    if (T("request.input")) {
-      prompt += T("request.input");
-      console.log("request.input " + prompt)
-    } else {
-      prompt = T("request.prompt");
-      console.log("request.prompt " + prompt)
-    }
-  }
-
-  if (T("config.messagesTemplate")) {
-    console.log("Found messagesTemplate");
-    T("request.messages", T("config.messagesTemplate"))
-    console.log("T('request.messages') " + JSON.stringify(T('request.messages')))
-  }
-
   let response_text = "";
-  if (prompt) {
-    T("request.prompt", prompt);
-    // The response needs to be available for other tasks to point at
-    const subTask = await SubTaskLLM_async(wsSendTask, task); 
-    // Now we always wait for the response
-    response_text = await subTask.response.text_promise
-    T("response.text", response_text);
-    T("output.text", response_text);
-  }
+  // The response needs to be available for other tasks to point at
+  const subTask = await SubTaskLLM_async(wsSendTask, task); 
+  // Now we always wait for the response
+  response_text = await subTask.response.text_promise
+  T("response.text", response_text);
+  T("output.text", response_text);
   //T("response.text", response_text);
   // Make available as an output to other Tasks
   //T("output.text", response_text);

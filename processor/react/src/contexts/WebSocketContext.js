@@ -48,6 +48,14 @@ export function WebSocketProvider({ children, socketUrl }) {
     };
   }, [globalState]);
 
+  const startTaskDB = async (task) => {
+    // We are not using this storage yet
+    // We will need to clean it up
+    globalState.storageRef.current.set(task.instanceId, task);
+    //const value = await storageRef.current.get("a1");
+    console.log("Storage start ", task.id, task.instanceId);
+  };
+
   const { sendJsonMessage, getWebSocket } = useWebSocket(hubSocketUrl, {
     reconnectAttempts: 15,
     //reconnectInterval: 500,
@@ -93,6 +101,9 @@ export function WebSocketProvider({ children, socketUrl }) {
       const message = JSON.parse(e.data);
       if (message?.command && message.command !== "pong") {
         console.log("App webSocket command", message.command,  message.task.instanceId);
+        if (message.command === "start") {
+          startTaskDB(message.task);
+        }
         webSocketEventEmitter.emit(message?.command, message.task);
       } else if (message.command === "pong") {
         //console.log("App webSocket received pong", message);

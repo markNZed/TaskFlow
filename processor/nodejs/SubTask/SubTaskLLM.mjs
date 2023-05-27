@@ -81,6 +81,12 @@ async function chat_prepare_async(task) {
   }
   //console.log("Agent ", modeltemplate)
 
+  if (T("config.promptTemplate")) {
+    console.log("Found promptTemplate");
+    prompt = T("config.promptTemplate");
+    //console.log("Prompt " + prompt)
+  } 
+
   if (T("config.oneThread")) {
     // Prefix with location when it has changed
     if (T("request.newAddress")) {
@@ -148,9 +154,15 @@ async function chat_prepare_async(task) {
       );
     }
 
-    if (T("request.messages")) {
+    let requestMessages = T("request.messages");
+    if (T("config.messagesTemplate")) {
+      console.log("Found messagesTemplate");
+      requestMessages =  T("config.messagesTemplate")
+    }
+
+    if (requestMessages) {
       lastMessageId = await utils.processMessages_async(
-        T("request.messages"),
+        requestMessages,
         messagesStore_async,
         lastMessageId
       );
@@ -160,8 +172,9 @@ async function chat_prepare_async(task) {
           " lastMessageId " +
           lastMessageId
       );
-      //console.log(" T(request.messages)",  T("request.messages"))
+      //console.log("requestMessages",  requestMessages)
     }
+
   }
 
   if (modeltemplate?.systemMessage) {

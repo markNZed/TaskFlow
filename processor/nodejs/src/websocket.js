@@ -9,6 +9,7 @@ import { hubSocketUrl, processorId } from "./../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
+import { utils } from "./utils.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -85,7 +86,18 @@ const connectWebSocket = () => {
     if (message?.command === "update") {
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
-      console.log("processorWs updating activeTasksStore_async", message.task.id, message.task.instanceId)
+      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
+      const currentTaskDiff = utils.getObjectDifference(message.task, lastTask, );  // favour message.task
+      // ignore differences in source
+      delete currentTaskDiff.source
+      utils.checkConflicts(currentTaskDiff, message.task)
+      const mergedTask = utils.deepMerge(lastTask, message.task);
+      //console.log("processorWs updating activeTasksStore_async", mergedTask)
+      console.log("processorWs updating activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
+      await activeTasksStore_async.set(null, message.task.instanceId, mergedTask)
+      await do_task_async(wsSendTask, mergedTask)
+    } else if (message?.command === "start") {
+      console.log("processorWs start activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(null, message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (message?.command === "pong") {

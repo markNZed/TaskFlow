@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 // Without this we cannot make partial updates to objects in the Task
 function deepMerge(prevState, update) {
 
@@ -86,4 +88,9 @@ function checkConflicts(obj1, obj2) {
   });
 }
 
-export { deepMerge, getChanges, checkConflicts };
+function getObjectDifference(obj1, obj2) {
+  const res = _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]));
+  return _.cloneDeep(res);
+};
+
+export { deepMerge, getChanges, checkConflicts, getObjectDifference };

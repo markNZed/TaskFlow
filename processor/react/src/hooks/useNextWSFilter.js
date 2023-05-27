@@ -29,10 +29,10 @@ function useNextWSFilter(instanceId, doneTask, onNext) {
       return;
     }
     //console.log("useNextWSFilter useEffect adding handleNext instanceId", instanceId);
-    webSocketEventEmitter.on("update", handleNext);
+    webSocketEventEmitter.on("start", handleNext);
     return () => {
       //console.log("useNextWSFilter useEffect removing handleNext instanceId", instanceId);
-      webSocketEventEmitter.removeListener("update", handleNext);
+      webSocketEventEmitter.removeListener("start", handleNext);
     };
   }, [instanceId, doneTask]);
   

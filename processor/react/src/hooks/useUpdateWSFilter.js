@@ -7,8 +7,9 @@ function useUpdateWSFilter(instanceId, onUpdate) {
   const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleUpdate = (task) => {
-    //console.log("useUpdateWSFilter handleUpdate", task);
+    //console.log("useUpdateWSFilter handleUpdate", task, instanceId);
     if (instanceId && task.instanceId === instanceId) {
+      console.log("useUpdateWSFilter handleUpdate calling onUpdate", task);
       onUpdate(task);
     }
   };

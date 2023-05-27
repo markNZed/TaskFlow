@@ -29,10 +29,13 @@ function newKeyV(uri, table, setCallback = null) {
   keyv.set = async function(key, value, ttl) {
     // Middleware logic before setting the value
     if (typeof setCallback === 'function') {
-      setCallback(key, value);
+      value = await setCallback(key, value);
       //console.log("Setting table", table, "key", key, "value", value)
     }
-    const result = await originalSet(key, value, ttl);
+    let result = null;
+    if (value !== null) {
+      result = await originalSet(key, value, ttl);
+    }
     return result;
   };
   return keyv;

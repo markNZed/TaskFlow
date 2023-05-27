@@ -9,11 +9,9 @@ function useStartWSFilter(startTaskId, onStart) {
   const handleStart = (task) => {
     //console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
     if (startTaskId 
-      && startTaskId === task.id 
-      && task.prevInstanceId === null
+      && startTaskId === task.id
     ) {
       //console.log("useStartWSFilter handleStart", startTaskId, task);
-      //setStartTaskId(null);
       onStart(task);
     }
   };
@@ -23,10 +21,10 @@ function useStartWSFilter(startTaskId, onStart) {
       return;
     }
     //console.log("useStartWSFilter useEffect adding handleStart taskId", taskId);
-    webSocketEventEmitter.on("update", handleStart);
+    webSocketEventEmitter.on("start", handleStart);
     return () => {
       //console.log("useStartWSFilter useEffect removing handleStart taskId", taskId);
-      webSocketEventEmitter.removeListener("update", handleStart);
+      webSocketEventEmitter.removeListener("start", handleStart);
     };
   }, [startTaskId]);
   
