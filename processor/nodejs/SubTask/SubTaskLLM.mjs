@@ -59,7 +59,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
 
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
-// Also using connections, defaults, modeltemplates, messagesStore_async, users
+// Also using defaults, modeltemplates, messagesStore_async
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 

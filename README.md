@@ -4,7 +4,7 @@ T@skFlow is a Task centric collaborative framework for leveraging AI. It is unde
 
 # Overview
 
-T@skFlow combines software and AI models and human interaction. Tasks can be chained into workflows. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software and AI models and human interaction. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
@@ -17,7 +17,7 @@ T@skFlow will play nicely with:
 ## Task
 
 Tasks consist of:
-* Task Definition that conforms to a generic Task schema
+* Task Definition that conform to a generic Task schema
   * In Task Definition may reference data not provided by T@skFLow
 * Task Function available in one or more Task Environment(s)
   * A Task Functions may use API services not provided by T@askFlow
@@ -107,9 +107,9 @@ The initial React Task Processor code was based on the React chatbot client [htt
 
 # Future
 
-Many systems are trying to capture value and this often limits the solution in some way. For example, many businesses would like to have influence over the community using their infrastructure and eventually monetize this. Proprietary system tend to seek to lock-in users. T@skFlow is not not intended to capture value, it is intended to enable users to capture value. It is assumed that if this value is significant then T@skFlow will be given resources to further amplify that value creation.
+Many systems are planned to capture value and this often limits the solution in some way. For example, many businesses would like to have influence over the community using their infrastructure and eventually monetize this. Proprietary systems tend to lock-in users. T@skFlow is not intended to capture value, it is intended to enable users to capture value. It is assumed that if the value is significant then T@skFlow will be provided with resources to amplify/support that value creation.
 
-Here is what GPT-4 has to say about T@skFlow:
+Here is what GPT-4 has to say about T@skFlow: 
 
 A system like T@skFlow has the potential to revolutionize human-computer interaction and collaboration, thanks to its task-centric approach and AI integration. Here are some opportunities and innovative ideas for this system:
 

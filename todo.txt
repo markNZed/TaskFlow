@@ -1,24 +1,20 @@
 /* ToDo
 -------
-Clicking next twice in summary exercise
-  state might be the issues
-  error not returned correctly from check4spelling
+Move modeltemplates into shared, what about defaults?
+Refactor TaskConversation so we no longer use messagesStore_async in SubTaskLLM
+Check errors are working
+Check default install experience
+Should the Hub command be in the Task?
+  Where can be separate concerns?
 The Task Fuction could be a single JS module that is shared ?
   Maybe just the state machines
-Not streaming text to summary
-  Start streaming after update?
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)
-We might need multiple levels of session:
-  session processor-node
-  user session
-The diff is going to have to deal with deleting members - send diffUpdate and diffRemove
+The diff should deal with deleting members - send diffUpdate and diffRemove
+  taskMerge, taskRemove
 Ideally we want the same code for Task storage on Hub/React/NodeJs
-  Could use @kvs/node-localstorage instead of 
-  The Hub is different because it needs to manage multiple destinations
-React has storage.js where activeTasks are stored using App.js
-  Will need to extend with commands like remove, clear etc  
+  Could use @kvs/node-localstorage
 
 Internal/External IO is an important distinction
   A list of dependenceies/references that are monitored by the processor
@@ -28,37 +24,6 @@ Internal/External IO is an important distinction
     dependencies or not.
 
 Demo of collaborative chat would be good.
-
-Hub as a router rather than proxy
-  The processor should not worry about destination ?
-    It should request the destination as the environment not the processor.
-      Not even  - Hub should update all activeTasks
-    React
-      destination is set in WebSocketContext.js and fetchTask.js
-      Really just need to start or update. After update all copies should be updated.
-      THe Hub needs to keep track of the tasks
-Each processor needs a list of active Tasks
-  Need to be able to push tasks to Processor
-    Websocket commands task.processor.command 
-  First implement on nodejs for: TaskChat
-    React side just behaves as usual
-    Hub has special treatment for TaskChat
-    Nodejs has special treatment for TaskChat
-    When hub receives request from React to start task it should send command to nodejs to also start task
-      Nodejs needs to store active tasks
-      Currently react sends task to nodejs though update
-          Nodejs updates the task, this can hook into the current update function
-          Eventualy the update function is like a kernel that processes tasks
-            Loops over the tasks updating those that have changed.
-              The task that is returned from the Task Function is used to update the Processor copy and send to Hub
-              Hub then creates full task and sends as Update reply to React.
-Refactor where information is stored
-  The Hub knows which processors have which Functions through tasktemplates
-  Hub routes functions then Processor no longer specifies destination
-  At the moment the React TP decides on the destination processor
-    Eventually the Hub should choose the processor based on the environments the Task uses
-
-Hold all Task states at the top of React
 
 Add function to remove last paragraph
   Interesting to explore how that might be done
@@ -70,34 +35,9 @@ Address is just a part of a task request
 We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemnted on the Task Processor. 
   Maybe a field in the Task is for local processor - this makes sense
 
-Eventually do we move to using only web sockets? Maybe harder to debug.
-  Sending Tasks to React will require websocket to at least trigger a request.
-    This can allow things to "popup" into the UI
-
-This argues for Tasks being distributed - different functions.
-  If a Task passes through the Hub then we should track it in a keyv and maintain a distributed object
-    Library called KVS (Key Value Storage) is suitable for both the browser and Node.js environments
-  Only start tracking the task if it is on two or more processors
-    Need to note this in the task
-
-Currently nodejs saves instances of tasks, eventually they will pass through the hub.
-The hub and nodejs should share utils?
-
-When we start a task should we be able to add config info? For example the user.profile
-  Could be added when it goes through the hub ? e.g. task.request.hub.user.profile
 We need to sort out privacy - should only be implemented on the Hub
-The Hub and Processors need to have secure communication, then identification is only controlled on the hub.
+The Hub and Processors need to have secure communication, then identification is managed on the hub.
 
-Task Hub
-  TaskLLMIO_async needs access to instancesStore_async, threadsStore_async
-  SubTaskLLM.mjs needs access to messagesStore_async (only used here)
-    Should this just be in the task and stop using the storage in the API ?
-  SubTaskLLM needs access to the user - should be part of the Task
-    Need to move users data from SubTaskLLM.mjs to the task, then no longer using users in nodejs
-    It is only used for the Dyad text
-    Should probably be a generic templating approach with access to user data
-      Building the system message in the Task
-      Could rework this with the templating
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -112,7 +52,6 @@ Harmonise the Task Processor
 When should we introduce Typescript?
   First try to simplify the code
 Swagger for the API ?
-Privacy feature of Task
 Tests will allow for better code generation
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
@@ -140,7 +79,6 @@ Backlog
   Bugs
   -----
   Scrolling to view suggested_prompts in TaskChat
-  Cleanup the initial authentication experience
 
   Features
   --------
@@ -150,7 +88,6 @@ Backlog
     Use a route for configuring: user, session, taskflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
     Msgs could be loaded from the NodeJS Task Processor. Similar to stepper - both have history.
-    Allow task to start another task on NodeJS Task Processor side (needs functional interface to api/task/start )
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
     When user interacts reset the counter to try to establish websocket on client
 
@@ -237,6 +174,12 @@ Issues
       TaskFunction could run in a docker container
       Each TaskFunction could be a user on Linux
           User could run in a restricted environment e.g. firejail, bubblewrap
+          Difficult to stop information being shared across tasks
+          Also separate by session
+          How to control what information a Task can request from other tasks
+            Currently limited to thread
+            Should not be able to go "up" the Task hierarchy (only explore current branch)
+            Can only read outputs
   Administation/monitoring of T@skFlow, could ping a service that alerts to problems
 
 Comparison with similar systems
@@ -278,8 +221,6 @@ Comparison with similar systems
   Meteor
      Meteor's data synchronization mechanism known as Distributed Data Protocol (DDP).
      Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
-
-
 
 Test Plan
 ---------
