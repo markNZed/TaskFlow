@@ -7,13 +7,15 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 "use strict";
 import { v4 as uuidv4 } from "uuid";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
-import { deepMerge, getChanges, getObjectDifference } from "./shared/utils.mjs";
+import { deepMerge, getChanges, getObjectDifference, flattenObjects } from "./shared/utils.mjs";
 
 const utils = {};
 
+// Shared utils functions
 utils.deepMerge = deepMerge;
 utils.getChanges = getChanges;
 utils.getObjectDifference = getObjectDifference;
+utils.flattenObjects = flattenObjects;
 
 utils.getUserId = function (req) {
   let userId = DEFAULT_USER;
@@ -41,13 +43,7 @@ utils.getUserId = function (req) {
   if (MAP_USER && MAP_USER[userId]) {
     userId = MAP_USER[userId];
   }
-  return userId;
-};
-
-utils.fail = function (msg) {
-  console.error(msg);
-  exit;
-  process.exit(1);
+  return "root." + userId;
 };
 
 utils.formatDateAndTime = function (date) {
@@ -151,18 +147,18 @@ utils.filter_in_list = function (task, filter_list) {
   return taskCopy;
 };
 
-utils.filter_in = function (tasktemplates, tasks, task) {
+utils.filter_in = function (tasktypes, tasks, task) {
   if (!task?.id) {
     console.log("ERROR Task has no id ", task);
   }
   //console.log("BEFORE ", task)
   let filter_list = [];
   let filter_for_react = [];
-  // This assumes the tasktemplates are not expanded - need to do this in dataconfig
+  // This assumes the tasktypes are not expanded - need to do this in dataconfig
   for (const c of task.stack) {
-    filter_list = filter_list.concat(tasktemplates["root." + c].filter_for_react);
+    filter_list = filter_list.concat(tasktypes["root." + c].filter_for_react);
     filter_for_react = filter_list.concat(
-      tasktemplates["root." + c].filter_for_react
+      tasktypes["root." + c].filter_for_react
     );
   }
   if (task?.filter_for_react) {
@@ -200,10 +196,11 @@ utils.authenticatedTask = function (task, userId, groups) {
   let authenticated = false;
   if (task?.permissions) {
     task.permissions.forEach((group_name) => {
-      if (!groups[group_name]) {
-        console.log("Warning: could not find group " + group_name);
+      const full_group_name = "root." + group_name;
+      if (!groups[full_group_name]) {
+        console.log("Warning: could not find group " + full_group_name);
       } else {
-        if (groups[group_name].users.includes(userId)) {
+        if (groups[full_group_name].users.includes(userId)) {
           authenticated = true;
         }
       }

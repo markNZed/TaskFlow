@@ -1,10 +1,10 @@
 # T@skFlow
 
-T@skFlow is a Task centric collaborative framework for leveraging AI. It is under development.
+T@skFlow is a distributed Task framework for leveraging AI. It is under development.
 
 # Overview
 
-T@skFlow combines software and AI models and human interaction. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
@@ -77,7 +77,7 @@ Imagine a new task that will be called TaskNew:
 * Add the license header to the file
 * Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
 * Add the license header to the file
-* Add information about the new Task to NodeJS Task Processor/config/tasktemplates.mjs
+* Add information about the new Task to NodeJS Task Processor/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 

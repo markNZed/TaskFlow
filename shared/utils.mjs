@@ -1,4 +1,5 @@
 import _ from "lodash";
+import assert from 'assert';
 
 // Without this we cannot make partial updates to objects in the Task
 function deepMerge(prevState, update) {
@@ -91,6 +92,36 @@ function checkConflicts(obj1, obj2) {
 function getObjectDifference(obj1, obj2) {
   const res = _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]));
   return _.cloneDeep(res);
-};
+}
 
-export { deepMerge, getChanges, checkConflicts, getObjectDifference };
+// Flatten hierarchical object and copy keys into children
+function flattenObjects(objs) {
+  const res = {};
+  let parent2id = { root: "" };
+  objs.forEach((obj) => {
+    assert(obj.name, "Object missing name");
+    assert(obj.parentType || obj.name === "root", "Object missing parentType");
+    let id;
+    if (obj.name === "root") {
+      id = "root";
+    } else {
+      id = `${parent2id[obj.parentType]}.${obj.name}`;
+    }
+    assert(!res.id, "Object id already in use")
+    obj["id"] = id;
+    const parentId = parent2id[obj.parentType];
+    const parent = res[parentId];
+    obj["parentId"] =parentId;
+    // Copy all the keys in obj[obj["parentId"]] that are not in obj[id] into obj[id]
+    for (const key in parent) {
+      if (!obj[key]) {
+        obj[key] = parent[key];
+      }
+    }
+    parent2id[obj.name] = id
+    res[id] = obj;
+  });
+  return res;
+}
+
+export { deepMerge, getChanges, checkConflicts, getObjectDifference, flattenObjects };

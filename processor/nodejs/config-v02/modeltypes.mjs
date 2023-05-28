@@ -1,11 +1,19 @@
 const currentDate = new Date().toISOString().split("T")[0];
 
-const modeltemplates = {
-  chatgpt: {
-    name: "chatGPT",
+const modeltypes = [
+  {
+    name: "root",
+    langModel : 'gpt-3.5-turbo',
+    temperature : 0,
+    maxTokens : 4000,
+    maxResponseTokens : 1000, // Leave space for context
+  },
+  {
+    name: "chatgpt",
+    parentType: "root",
+    label: "chatGPT",
     system_message: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     /* 
-        dyad: true,
         messages: [
             {
                 role: 'user',
@@ -16,7 +24,7 @@ const modeltemplates = {
                 content: `OK. You made a spelling mistake "amake" `,
             },
         ],
-        */
+    */
   },
-};
-export { modeltemplates };
+];
+export { modeltypes };

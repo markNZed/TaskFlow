@@ -17,12 +17,9 @@ dotenv.config();
 
 // Should we return a promise? Better to be task iin/out ?
 
-var modeltemplates = await utils.load_data_async(CONFIG_DIR, "modeltemplates");
-// Add id to modeltemplates (index in DB)
-utils.add_index(modeltemplates);
-//console.log(JSON.stringify(modeltemplates, null, 2))
-
-var defaults = await utils.load_data_async(CONFIG_DIR, "defaults");
+var modelTypes = await utils.load_data_async(CONFIG_DIR, "modeltypes");
+modelTypes = utils.flattenObjects(modelTypes);
+//console.log(JSON.stringify(modelTypes, null, 2))
 
 const wsDelta = {}
 
@@ -59,7 +56,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
 
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
-// Also using defaults, modeltemplates, messagesStore_async
+// Also using modelTypes, messagesStore_async
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
@@ -70,18 +67,18 @@ async function chat_prepare_async(task) {
   let use_cache = CACHE_ENABLE;
   let noWebsocket = false;
 
-  let langModel = T("request.model") || defaults.langModel;
-  let temperature = T("request.temperature") || defaults.temperature;
-  let maxTokens = T("request.maxTokens") || defaults.maxTokens;
-  let maxResponseTokens = T("request.maxResponseTokens") || defaults.maxResponseTokens;
-
   let prompt = T("request.prompt");
   //console.log("prompt " + prompt);
-  let modeltemplate = modeltemplates[T("request.modeltemplate")];
-  if (!modeltemplate) {
-    console.log("No modeltemplate for ", task);
+  let modelType = modelTypes["root."+T("request.modelType")];
+  if (!modelType) {
+    console.log("No modelType for ", task);
   }
-  //console.log("Agent ", modeltemplate)
+  let langModel = T("request.model") || modelType?.langModel;
+  let temperature = T("request.temperature") || modelType?.temperature;
+  let maxTokens = T("request.maxTokens") || modelType?.maxTokens;
+  let maxResponseTokens = T("request.maxResponseTokens") || modelType?.maxResponseTokens;
+
+  //console.log("Agent ", modelType)
 
   if (T("config.promptTemplate")) {
     console.log("Found promptTemplate");
@@ -105,14 +102,14 @@ async function chat_prepare_async(task) {
     console.log("Task set cache " + use_cache);
   }
 
-  if (typeof modeltemplate?.prepend_prompt !== "undefined") {
-    prompt = modeltemplate.prepend_prompt + prompt;
-    console.log("Prepend modeltemplate prompt " + modeltemplate.prepend_prompt);
+  if (typeof modelType?.prepend_prompt !== "undefined") {
+    prompt = modelType.prepend_prompt + prompt;
+    console.log("Prepend modelType prompt " + modelType.prepend_prompt);
   }
 
-  if (typeof modeltemplate?.append_prompt !== "undefined") {
-    prompt += modeltemplate.append_prompt;
-    console.log("Append modeltemplate prompt " + modeltemplate.append_prompt);
+  if (typeof modelType?.append_prompt !== "undefined") {
+    prompt += modelType.append_prompt;
+    console.log("Append modelType prompt " + modelType.append_prompt);
   }
 
   const environments = T("environments");
@@ -122,7 +119,7 @@ async function chat_prepare_async(task) {
     console.log("Task noWebsocket");
   }
 
-  if (modeltemplate?.forget) {
+  if (modelType?.forget) {
     initializing = true;
     console.log("Agent forget previous messages");
   }
@@ -134,7 +131,7 @@ async function chat_prepare_async(task) {
 
   if (!initializing) {
     lastMessageId = await messagesStore_async.get(
-      T("threadId") + modeltemplate.id + "parentMessageId"
+      T("threadId") + modelType.id + "parentMessageId"
     );
     console.log(
       "!initializing T('threadId') " +
@@ -145,14 +142,14 @@ async function chat_prepare_async(task) {
   }
 
   if (!lastMessageId || initializing) {
-    if (modeltemplate?.messages) {
+    if (modelType?.messages) {
       lastMessageId = await utils.processMessages_async(
-        modeltemplate.messages,
+        modelType.messages,
         messagesStore_async,
         lastMessageId
       );
       console.log(
-        "Initial messages from modeltemplate " + modeltemplate.name + " " + lastMessageId
+        "Initial messages from modelType " + modelType.name + " " + lastMessageId
       );
     }
 
@@ -179,9 +176,9 @@ async function chat_prepare_async(task) {
 
   }
 
-  if (modeltemplate?.systemMessage) {
-    systemMessage = modeltemplate.systemMessage;
-    console.log("Sytem message from modeltemplate " + modeltemplate.name);
+  if (modelType?.systemMessage) {
+    systemMessage = modelType.systemMessage;
+    console.log("Sytem message from modelType " + modelType.name);
   }
 
   // Replace MODEL variables in systemMessageTemplate
@@ -191,10 +188,10 @@ async function chat_prepare_async(task) {
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Using replace with a callback function
     systemMessage = systemMessageTemplate.replace(regex, (match, p1, p2) => {
-      if (!modeltemplate[p2]) {
-        throw new Error("modeltemplate " + p2 + " does not exist");
+      if (!modelType[p2]) {
+        throw new Error("modelType " + p2 + " does not exist");
       }
-      return modeltemplate[p2]
+      return modelType[p2]
     });
     console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
   }
@@ -208,7 +205,7 @@ async function chat_prepare_async(task) {
 
   const threadId = T("threadId");
   const instanceId = T("instanceId");
-  const modeltemplateId = modeltemplate.id;
+  const modelTypeId = modelType.id;
 
   return {
     systemMessage,
@@ -220,7 +217,7 @@ async function chat_prepare_async(task) {
     temperature,
     maxTokens,
     maxResponseTokens,
-    modeltemplateId,
+    modelTypeId,
     threadId,
     instanceId,
     sessionId,
@@ -245,7 +242,7 @@ async function ChatGPTAPI_request_async(params) {
     langModel,
     temperature,
     maxTokens,
-    modeltemplateId,
+    modelTypeId,
     threadId,
     instanceId,
     sessionId,
@@ -308,7 +305,7 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   messagesStore_async.set(
-    threadId + modeltemplateId + "systemMessage",
+    threadId + modelTypeId + "systemMessage",
     messageParams.systemMessage
   );
 
@@ -356,7 +353,7 @@ async function ChatGPTAPI_request_async(params) {
 
   if (cachedValue && cachedValue !== undefined) {
     messagesStore_async.set(
-      threadId + modeltemplateId + "parentMessageId",
+      threadId + modelTypeId + "parentMessageId",
       cachedValue.id
     );
     let text = cachedValue.text;
@@ -392,7 +389,7 @@ async function ChatGPTAPI_request_async(params) {
         .sendMessage(prompt, messageParams)
         .then((response) => {
           messagesStore_async.set(
-            threadId + modeltemplateId + "parentMessageId",
+            threadId + modelTypeId + "parentMessageId",
             response.id
           );
           let text = response.text;

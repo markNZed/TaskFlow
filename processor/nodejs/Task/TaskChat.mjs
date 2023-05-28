@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../src/utils.mjs";
 import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
+import { activeTasksStore_async } from "../src/storage.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
@@ -27,6 +28,8 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("response.text", null); // Avoid using previously stored response
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
+    // Here we update the task which has the effect of setting the state to receiving
+    await activeTasksStore_async.set(wsSendTask, task.instanceId, task)
     if (T("request.input")) {
       T("request.prompt", T("request.input"))
     }

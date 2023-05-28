@@ -1,18 +1,20 @@
 /* ToDo
 -------
-Move modeltemplates into shared, what about defaults?
+Prepending "root." is not cool for configdata like users and groups
 Refactor TaskConversation so we no longer use messagesStore_async in SubTaskLLM
 Check errors are working
+Code review/cleanup - identify refactoring goals
+SubTask should use task for IO
 Check default install experience
 Should the Hub command be in the Task?
   Where can be separate concerns?
-The Task Fuction could be a single JS module that is shared ?
+The Task Function could be a single JS module that is shared ?
   Maybe just the state machines
 To get .vscode under version control we should have the taskflow directory as the top.
   This requires putting the config in the taskflow directory
   Clean up config at same time (move into hub)
-The diff should deal with deleting members - send diffUpdate and diffRemove
-  taskMerge, taskRemove
+The diff should deal with deleting members - set values to null
+  Should the Processor remove null values upon merge ?
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
 

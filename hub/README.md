@@ -9,7 +9,7 @@ The Task Hub is implemented in node using the Express framework and SQLite datab
 * Synchronization of Tasks across processors
   * Processors send Task updates to Hub via HTTP request
   * The Hub sends diffential Task updates to all relevant processors via websocket
-    * The differential support merging of distributed Task state
+    * The differential supports merging of distributed Task state
 * Task interception
   * When a Task is done the Hub sends the next Task(s)
   * When a Task contains an error the Hub sends an error Task
