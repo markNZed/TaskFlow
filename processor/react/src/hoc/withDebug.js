@@ -42,7 +42,7 @@ function withDebug(Component) {
           }
           if (props.task.stackPtr === props.component_depth) {
             log(
-              "Task " + props.task.stackPtr + " " + props.task.id + " changes:",
+              "Task " + props.task.instanceId + " stackPtr " + props.task.stackPtr + " " + props.task.id + " changes:",
               diff
             );
           }

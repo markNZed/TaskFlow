@@ -4,10 +4,10 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TaskLLMIO_async } from "./TaskLLMIO.mjs";
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
 import { utils } from "../src/utils.mjs";
+import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 
 const model = await use.load();
 
@@ -22,16 +22,15 @@ const TaskChoose_async = async function (wsSendTask, task) {
   // First we get the response
   console.log("TaskChoose name " + T("name"));
 
-  // This is not going to work because TaskLLMIO_async is returning immediately
   T("response.text", null); // Avoid using previously stored response
-  let subtask = await TaskLLMIO_async(wsSendTask, task);
-
-  const ST = utils.createTaskValueGetter(subtask);
+  const subTask = await SubTaskLLM_async(wsSendTask, task);
+  const response_text = await subTask.response.text_promise
+  T("response.text", response_text);
 
   const next_responses = Object.keys(T("config.nextStateTemplate"));
   const next_states = Object.values(T("config.nextStateTemplate"));
 
-  const phrases = [ST("response.text"), ...next_responses];
+  const phrases = [T("response.text"), ...next_responses];
 
   //console.log("phrases", phrases)
 

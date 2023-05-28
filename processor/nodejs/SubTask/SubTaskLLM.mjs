@@ -15,6 +15,8 @@ import {
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// Should we return a promise? Better to be task iin/out ?
+
 var modeltemplates = await utils.load_data_async(CONFIG_DIR, "modeltemplates");
 // Add id to modeltemplates (index in DB)
 utils.add_index(modeltemplates);

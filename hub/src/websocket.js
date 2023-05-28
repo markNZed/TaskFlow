@@ -37,7 +37,7 @@ const wsSendTask = function (task, command = null) {
   }
   let processorId = message.task.destination;
   if (message.command !== "pong") {
-    console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
+    //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
   wsSendObject(processorId,message);
 }
@@ -73,7 +73,7 @@ function initWebSocketServer(server) {
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
-          console.log("Forwarding " + j.command + " from " + processorId)
+          //console.log("Forwarding " + j.command + " from " + processorId)
           for (const id of activeProcessors) {
             if (id !== j.task.source) {
               const ws = connections.get(id);

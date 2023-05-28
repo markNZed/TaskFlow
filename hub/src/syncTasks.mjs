@@ -30,7 +30,7 @@ const syncTasks_async = async (key, value) => {
     diff.instanceId = task.instanceId;
     diff.stackPtr = task.stackPtr;
     command = "update"
-    console.log("syncTasks_async diff", diff);
+    //console.log("syncTasks_async diff", diff);
   } else {
     diff = task;
     command = "start"

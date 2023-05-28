@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "../src/utils.mjs";
-import { activeTasksStore_async } from "../src/storage.mjs";
 import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
@@ -33,7 +32,6 @@ const TaskChat_async = async function (wsSendTask, task) {
     }
     // This will update the state on client 
     console.log("TaskChat sending");
-    await activeTasksStore_async.set(wsSendTask, task.instanceId, task);
     const subTask = await SubTaskLLM_async(wsSendTask, task);
     const response_text = await subTask.response.text_promise
     T("response.text", response_text);

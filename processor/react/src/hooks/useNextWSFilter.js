@@ -18,7 +18,7 @@ function useNextWSFilter(instanceId, doneTask, onNext) {
     //if (doneTask && task.threadId === doneTask.threadId ) 
     const processorId = globalState?.processorId
     if (doneTask && task && task.prevInstanceId && task.prevInstanceId[processorId] === doneTask.instanceId ) {
-      //console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, task.prevInstanceId);
+      console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, task.prevInstanceId);
       //console.log("useNextWSFilter handleNext", task);
       onNext(task);
     }
