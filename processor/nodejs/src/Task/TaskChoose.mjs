@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
-import { utils } from "../src/utils.mjs";
+import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
 
 const model = await use.load();

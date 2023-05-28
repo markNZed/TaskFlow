@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
-import { utils } from "../src/utils.mjs";
+import { utils } from "../utils.mjs";
 
 const TaskLLMIO_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);

@@ -6,12 +6,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
-import { utils } from "../src/utils.mjs";
-import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../config.mjs";
+import { utils } from "../utils.mjs";
+import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../../config.mjs";
 import {
   messagesStore_async,
   cacheStore_async,
-} from "../src/storage.mjs";
+} from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 

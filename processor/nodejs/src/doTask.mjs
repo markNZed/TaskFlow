@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { processorId } from "../config.mjs";
-import { taskFunctions } from "../Task/taskFunctions.mjs";
+import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { instancesStore_async, activeTasksStore_async } from "./storage.mjs";
 import { updateTask_async } from "./updateTask.mjs";
 
