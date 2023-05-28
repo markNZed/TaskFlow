@@ -1,7 +1,8 @@
 /* ToDo
 -------
-Prepending "root." is not cool for configdata like users and groups
 Refactor TaskConversation so we no longer use messagesStore_async in SubTaskLLM
+  The message history (without system prompt) should be in the output of TaskChat.
+  Can then get ride of messagesStore_async
 Check errors are working
 Code review/cleanup - identify refactoring goals
 SubTask should use task for IO
@@ -17,6 +18,7 @@ The diff should deal with deleting members - set values to null
   Should the Processor remove null values upon merge ?
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
+Prepending "root." is not cool for configdata like users and groups
 
 Internal/External IO is an important distinction
   A list of dependenceies/references that are monitored by the processor
@@ -26,9 +28,12 @@ Internal/External IO is an important distinction
     dependencies or not.
 
 Demo of collaborative chat would be good.
+Summary of long documents. Probably better to do this in Python.
 
 Add function to remove last paragraph
   Interesting to explore how that might be done
+
+A new conversation button once we have the session restoring.
 
 Address is just a part of a task request
   Raises the idea of a task setting user information on the hub

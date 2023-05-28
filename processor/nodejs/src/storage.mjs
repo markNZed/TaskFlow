@@ -51,10 +51,6 @@ const cacheStore_async = newKeyV(DB_URI, "cache");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const instancesStore_async = newKeyV(DB_URI, "instances");
-// Schema:
-//   Key: instanceId
-//   Value: task object
 const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks_async);
 // Schema:
 //   Key: threadId || taskId + userId || taskId + sessionId || taskId + groupId
@@ -64,7 +60,6 @@ const threadsStore_async = newKeyV(DB_URI, "threads");
 export {
   messagesStore_async,
   cacheStore_async,
-  instancesStore_async,
   activeTasksStore_async,
   threadsStore_async,
   connections,

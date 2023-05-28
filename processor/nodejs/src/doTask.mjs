@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { processorId } from "../config.mjs";
 import { taskFunctions } from "./Task/taskFunctions.mjs";
-import { instancesStore_async, activeTasksStore_async } from "./storage.mjs";
+import { activeTasksStore_async } from "./storage.mjs";
 import { updateTask_async } from "./updateTask.mjs";
 
 export async function do_task_async(wsSendTask, task) {
@@ -40,7 +40,5 @@ export async function do_task_async(wsSendTask, task) {
       console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
       updated_task = task;
     }
-    // Unsure we need the instancestore if we have the activeTasksStore
-    await instancesStore_async.set(task.instanceId, updated_task);
 
 }
