@@ -39,10 +39,6 @@ function newKeyV(uri, table, setCallback = null) {
 
 // We could have one keyv store and use prefix for different tables
 
-// Schema: See ChatGPTAPI
-// For now this is a dedicated store but eventually it
-// should be an interface to the threads + instances
-const messagesStore_async = newKeyV(DB_URI, "messages");
 // Schema:
 //   Key: hash
 //   Value: object
@@ -53,7 +49,6 @@ const cacheStore_async = newKeyV(DB_URI, "cache");
 const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
 
 export {
-  messagesStore_async,
   cacheStore_async,
   activeTasksStore_async,
   connections,

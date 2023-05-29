@@ -9,7 +9,6 @@ import { ChatGPTAPI } from "chatgpt";
 import { utils } from "../utils.mjs";
 import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../../config.mjs";
 import {
-  messagesStore_async,
   cacheStore_async,
 } from "../storage.mjs";
 import * as dotenv from "dotenv";
@@ -56,13 +55,12 @@ async function SubTaskLLM_async(wsSendTask, task) {
 
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
-// Also using modelTypes, messagesStore_async
+// Also using modelTypes
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
   const sessionId = T("sessionId");
   let systemMessage = "";
-  let lastMessageId = null;
   let initializing = false;
   let use_cache = CACHE_ENABLE;
   let noWebsocket = false;
@@ -129,45 +127,26 @@ async function chat_prepare_async(task) {
     console.log("Task forget previous messages", T("request.forget"));
   }
 
-  // We could clear messagesStore_async
-  await messagesStore_async.clear();
-  console.log("Cleared messagesStore_async");
-  //console.log("output.msgs",T("output.msgs")[T("threadId")]);
+  let messages = [];
 
   if (!initializing) {
-    // This is where we restore messages so we can continue the conversation
-    /*
-    lastMessageId = await messagesStore_async.get(
-      T("threadId") + modelType.id + "parentMessageId"
-    );
-    */
     // Structure output.msgs in expected format
-    const messages = T("output.msgs")[T("threadId")].map(msg => ({
+    messages = T("output.msgs")[T("threadId")].map(msg => ({
       role: msg.sender === 'bot' ? 'assistant' : 'user',
-      content: msg.text,
+      text: msg.text,
     }));
-    lastMessageId = await utils.processMessages_async(
-      messages,
-      messagesStore_async,
-      lastMessageId
-    );
     console.log(
       "!initializing T('threadId') " +
-        T("threadId") +
-        " lastMessageId " +
-        lastMessageId
+        T("threadId")
     );
   }
 
-  if (!lastMessageId || initializing) {
+  if (messages.length === 0 || initializing) {
     if (modelType?.messages) {
-      lastMessageId = await utils.processMessages_async(
-        modelType.messages,
-        messagesStore_async,
-        lastMessageId
-      );
+
+      messages = modelType.messages;
       console.log(
-        "Initial messages from modelType " + modelType.name + " " + lastMessageId
+        "Initial messages from modelType " + modelType.name
       );
     }
 
@@ -178,16 +157,11 @@ async function chat_prepare_async(task) {
     }
 
     if (requestMessages) {
-      lastMessageId = await utils.processMessages_async(
-        requestMessages,
-        messagesStore_async,
-        lastMessageId
-      );
+
+      messages = messages.concat(requestMessages);
       console.log(
         "Messages extended from name " +
-          T("name") +
-          " lastMessageId " +
-          lastMessageId
+          T("name")
       );
       //console.log("requestMessages",  requestMessages)
     }
@@ -225,9 +199,16 @@ async function chat_prepare_async(task) {
   const instanceId = T("instanceId");
   const modelTypeId = modelType.id;
 
+  messages = messages.map((message, index) => ({
+    ...message,
+    parentMessageId: index === 0 ? null : (index - 1),
+    id: index
+  }));
+  //console.log("messages", messages);
+
   return {
     systemMessage,
-    lastMessageId,
+    messages,
     noWebsocket,
     prompt,
     use_cache,
@@ -249,11 +230,11 @@ function sleep(ms) {
 // Build the parameters that are specific to ChatGPTAPI
 // Manage cache
 // Return response by websocket and return value
-// Also using process.env.OPENAI_API_KEY, messagesStore_async, cacheStore_async, DUMMY_OPENAI
+// Also using process.env.OPENAI_API_KEY, cacheStore_async, DUMMY_OPENAI
 async function ChatGPTAPI_request_async(params) {
   const {
     systemMessage,
-    lastMessageId,
+    messages,
     noWebsocket,
     prompt,
     use_cache,
@@ -272,6 +253,8 @@ async function ChatGPTAPI_request_async(params) {
   } = params;
 
   const debug = true;
+
+  const lastMessageId = messages.length - 1;
 
   // Need to account for the system message and some margin because the token count may not be exact.
   //console.log("prompt " + prompt + " systemMessage " + systemMessage)
@@ -299,10 +282,16 @@ async function ChatGPTAPI_request_async(params) {
   // https://github.com/transitive-bullshit/chatgpt-api/issues/434
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
+    getMessageById: async (id) => {
+      //console.log("getMessageById", id, messages[id])
+      return messages[id];
+    },
+    upsertMessage: async (id) => {
+      // Not used
+    },
     completionParams: {
       top_p: 1.0,
     },
-    messageStore: messagesStore_async,
     maxResponseTokens: maxResponseTokens,
     maxModelTokens: maxTokens,
     debug: debug,
@@ -322,19 +311,12 @@ async function ChatGPTAPI_request_async(params) {
       SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId);
   }
 
-  messagesStore_async.set(
-    threadId + modelTypeId + "systemMessage",
-    messageParams.systemMessage
-  );
-
   let cachedValue = {};
   let cacheKey = "";
   let cacheKeyText = "";
   if (use_cache) {
-    const messagesText = await utils.messagesText_async(
-      messagesStore_async,
-      lastMessageId
-    );
+    let contents = messages.map(message => message.content);
+    let messagesText = contents.join(' ');
     cacheKeyText = [
       messageParams.systemMessage,
       messageParams.maxResponseTokens,
@@ -370,10 +352,6 @@ async function ChatGPTAPI_request_async(params) {
   let response_text_promise = Promise.resolve("");
 
   if (cachedValue && cachedValue !== undefined) {
-    messagesStore_async.set(
-      threadId + modelTypeId + "parentMessageId",
-      cachedValue.id
-    );
     let text = cachedValue.text;
     const words = text.split(" ");
     // call SendIncrementalWs for pairs of word
@@ -406,10 +384,6 @@ async function ChatGPTAPI_request_async(params) {
       response_text_promise = api
         .sendMessage(prompt, messageParams)
         .then((response) => {
-          messagesStore_async.set(
-            threadId + modelTypeId + "parentMessageId",
-            response.id
-          );
           let text = response.text;
           message_from("API", text, noWebsocket, sessionId, instanceId);
           if (use_cache) {
