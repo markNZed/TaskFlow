@@ -91,7 +91,9 @@ function App() {
   }, [globalState?.processorId]);
 
   useEffect(() => {
+    console.log("Registering processor");
     const registerProcessor = async () => {
+      console.log("Registering processor");
       try {
         const response = await fetch(`${hubUrl}/api/register`, {
           method: "POST",
@@ -114,10 +116,10 @@ function App() {
       }
     };
     // Wait for the processorId to be set
-    if (globalState?.processorId) {
+    if (globalState?.processorId && !globalState?.hubId) {
       registerProcessor();
     }
-  }, [globalState?.processorId, globalState?.hubId]);
+  }, [globalState]);
 
   useEffect(() => {
     const initializeStorage = async () => {

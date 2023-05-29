@@ -69,7 +69,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
-      // This will cause teh App to re-register with the hub
+      // This should cause the App to re-register with the hub
       replaceGlobalState({ hubId: null });
       const taskPing = () => {
         let currentDateTime = new Date();

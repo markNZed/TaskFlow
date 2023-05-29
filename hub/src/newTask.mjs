@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeProcessorsStore_async, sessionsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, sessionsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -320,16 +320,16 @@ async function newTask_async(
     // Record which processors have this task
     // Could convert this into asynchronous form
     let activeTask;
-    if (await activeProcessorsStore_async.has(taskCopy.instanceId)) {
-      let processorIds = await activeProcessorsStore_async.get(taskCopy.instanceId)
+    if (await activeTaskProcessorsStore_async.has(taskCopy.instanceId)) {
+      let processorIds = await activeTaskProcessorsStore_async.get(taskCopy.instanceId)
       taskProcessors.forEach(id => {
         if (processorIds && !processorIds.includes(id)) {
           processorIds.push(id);
         } 
       });
-      activeProcessorsStore_async.set(taskCopy.instanceId, processorIds);
+      activeTaskProcessorsStore_async.set(taskCopy.instanceId, processorIds);
     } else {
-      activeProcessorsStore_async.set(taskCopy.instanceId, taskProcessors);
+      activeTaskProcessorsStore_async.set(taskCopy.instanceId, taskProcessors);
     }
     activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
 

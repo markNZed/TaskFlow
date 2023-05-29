@@ -21,10 +21,21 @@ function withDebug(Component) {
       };
     }, []);
 
+    function removeNullValues(obj) {
+      Object.keys(obj).forEach(key => 
+          (obj[key] && typeof obj[key] === 'object') && removeNullValues(obj[key]) ||
+          (obj[key] === null) && delete obj[key]
+      );
+      return obj;
+    }
+
     // Problem here with response have a lot of updates, will flood the console.
     useEffect(() => {
       if (props?.prevTask) {
         const diff = getObjectDifference(props.task, props.prevTask);
+        delete diff.response;
+        delete diff.output;
+        removeNullValues(diff)
         let show_diff = true;
         if (hasOnlyResponseKey(diff)) {
           if (!props.prevTask.response?.text) {

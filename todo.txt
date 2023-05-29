@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Switching conversations unreliable
 Should we be sending diff to Hub?
 Forget is not removing messages from conversation ?
 Exercise sequencing

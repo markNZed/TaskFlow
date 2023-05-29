@@ -186,7 +186,7 @@ function getObjectDifference(obj1, obj2) {
     }
   });
 
-  return diffObj;
+  return { ...diffObj }; // copy to avoid issues if the return value is modified
 }
 
 // Flatten hierarchical object and copy keys into children
