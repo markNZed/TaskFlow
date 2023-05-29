@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "../utils.mjs";
-import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
+import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 import { updateTask_async } from "../updateTask.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something

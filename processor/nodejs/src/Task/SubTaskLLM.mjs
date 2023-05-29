@@ -129,9 +129,27 @@ async function chat_prepare_async(task) {
     console.log("Task forget previous messages", T("request.forget"));
   }
 
+  // We could clear messagesStore_async
+  await messagesStore_async.clear();
+  console.log("Cleared messagesStore_async");
+  //console.log("output.msgs",T("output.msgs")[T("threadId")]);
+
   if (!initializing) {
+    // This is where we restore messages so we can continue the conversation
+    /*
     lastMessageId = await messagesStore_async.get(
       T("threadId") + modelType.id + "parentMessageId"
+    );
+    */
+    // Structure output.msgs in expected format
+    const messages = T("output.msgs")[T("threadId")].map(msg => ({
+      role: msg.sender === 'bot' ? 'assistant' : 'user',
+      content: msg.text,
+    }));
+    lastMessageId = await utils.processMessages_async(
+      messages,
+      messagesStore_async,
+      lastMessageId
     );
     console.log(
       "!initializing T('threadId') " +

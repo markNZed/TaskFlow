@@ -1,5 +1,37 @@
 /* ToDo
 -------
+TaskChat messagesStore
+  Could build a custom message store from the output.msgs on each request
+    It seems the OpenAI API just needs a list of messages, no requirement for id field.
+    utils.processMessages_async adds messages to the store
+      as a first strategy this seems good
+      just use output.msgs and build with utils.processMessages_async each time
+    eventually might be better to use the index of th emessage in an array with the getMessagebyId function
+  Could provide getMessagebyId and upsertMessage functions
+  messagesStore_async.set(
+            threadId + modelTypeId + "parentMessageId",
+            response.id
+          );
+
+          lastMessageId = await messagesStore_async.get(
+      T("threadId") + modelType.id + "parentMessageId"
+    );
+     lastMessageId = await utils.processMessages_async(
+        modelType.messages,
+        messagesStore_async,
+        lastMessageId
+      );
+      lastMessageId = await utils.processMessages_async(
+        requestMessages,
+        messagesStore_async,
+        lastMessageId
+      );
+      messageStore: messagesStore_async,
+      messagesStore_async.set(
+    threadId + modelTypeId + "systemMessage",
+    messageParams.systemMessage
+  );
+
 Switching conversations unreliable
 Should we be sending diff to Hub?
 Forget is not removing messages from conversation ?
