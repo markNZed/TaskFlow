@@ -55,10 +55,7 @@ export const startTask_async = async (userId, startId, siblingTask) => {
 
   try {
     const task = toTask(JSON.stringify(data.task));
-    // By setting here we do not need to update
-    // Could optimizse by ignoring the update sent by hub
-    // For example the hub does not need to send to the processorID of task.source
-    activeTasksStore_async.set(wsSendTask, task.instanceId, task); // Does not have processor ids as per hub
+    activeTasksStore_async.set(task.instanceId, task);
     return task;
   } catch (error) {
     console.log("Error while converting JSON to Task:", error, data);

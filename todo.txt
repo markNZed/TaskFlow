@@ -1,5 +1,8 @@
 /* ToDo
 -------
+Should we be sending diff to Hub?
+Forget is not removing messages from conversation ?
+Exercise sequencing
 Refactor TaskConversation so we no longer use messagesStore_async in SubTaskLLM
   The message history (without system prompt) should be in the output of TaskChat.
   Can then get ride of messagesStore_async
@@ -7,6 +10,8 @@ Check errors are working
 Code review/cleanup - identify refactoring goals
 SubTask should use task for IO
 Check default install experience
+  The config files need to be restored
+Align usage of utils
 Should the Hub command be in the Task?
   Where can be separate concerns?
 The Task Function could be a single JS module that is shared ?
@@ -19,6 +24,9 @@ The diff should deal with deleting members - set values to null
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
 Prepending "root." is not cool for configdata like users and groups
+
+Tools T@skFLow could leverage:
+  https://github.com/PrefectHQ/marvin
 
 Internal/External IO is an important distinction
   A list of dependenceies/references that are monitored by the processor

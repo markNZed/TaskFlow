@@ -86,19 +86,18 @@ const connectWebSocket = () => {
     if (message?.command === "update") {
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
+      // We do not have a concept of chnages that are in progress like we do in React
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const currentTaskDiff = utils.getObjectDifference(message.task, lastTask, );  // favour message.task
-      // ignore differences in source
-      delete currentTaskDiff.source
-      utils.checkConflicts(currentTaskDiff, message.task)
       const mergedTask = utils.deepMerge(lastTask, message.task);
-      //console.log("processorWs updating activeTasksStore_async", mergedTask)
-      console.log("processorWs updating activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
-      await activeTasksStore_async.set(null, message.task.instanceId, mergedTask)
+      //console.log("processorWs updating activeTasksStore_async mergedTask.output?.msgs", mergedTask.output?.msgs)
+      //console.log("processorWs updating activeTasksStore_async lastTask.output?.msgs", lastTask.output?.msgs)
+      //console.log("processorWs updating activeTasksStore_async message.task.output?.msgs", message.task.output?.msgs)
+      console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
+      await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
     } else if (message?.command === "start") {
       console.log("processorWs start activeTasksStore_async", message.task.id, message.task.instanceId)
-      await activeTasksStore_async.set(null, message.task.instanceId, message.task)
+      await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (message?.command === "pong") {
       //console.log("ws pong received", message)

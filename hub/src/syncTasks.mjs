@@ -5,44 +5,29 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { activeTasksStore_async, activeProcessorsStore_async } from "./storage.mjs";
-import { wsSendObject } from "./websocket.js";
-import { utils } from "./utils.mjs";
+import { wsSendTask } from "./websocket.js";
 
 const syncTasks_async = async (key, value) => {
 
   //console.log("syncTasks_async", key)
 
-  const task = value
+  // So we store excatly what was sent to us
+  const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   const has = await activeTasksStore_async.has(key);
-  let diff = {}
   let command;
   if (has) { 
-    const activeTask = await activeTasksStore_async.get(key);
-    if (activeTask.instanceId !== task.instanceId) {
-      throw new Error("instanceId mismatch " + JSON.stringify(activeTask) + " " + task.instanceId);
-    }
-    //console.log("syncTasks_async activeTask", activeTask, "task", task );
-    diff = utils.getObjectDifference(task, activeTask); // favour task
-    if (Object.keys(diff).length === 0) {
-      console.log("syncTasks_async no diff", diff);
-      return null;
-    }
-    diff.instanceId = task.instanceId;
-    diff.stackPtr = task.stackPtr;
     command = "update"
-    //console.log("syncTasks_async diff", diff);
-  } else {
-    diff = task;
+   } else {
     command = "start"
   }
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeProcessorsStore_async.get(key);
   if (processorIds) {
-    console.log("syncTasks_async task " + task.id + " from " + task.source);
+    console.log("syncTasks_async task " + taskCopy.id + " from " + taskCopy.source);
     for (const processorId of processorIds) {
-      if (processorId !== task.source) {
-        const message = { command: command, task: diff };
-        wsSendObject(processorId, message);
+      if (processorId !== taskCopy.source) {
+        taskCopy.destination = processorId;
+        wsSendTask(taskCopy, command);
         //console.log("syncTasks_async updating", key, processorId);
       } else {
         //console.log("syncTasks_async skipping", key, processorId);

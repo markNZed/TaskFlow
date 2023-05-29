@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { deepCompare, replaceNewlinesWithParagraphs } from "../../utils/utils";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
@@ -61,69 +61,12 @@ const TaskConversation = (props) => {
   }, [startTask]);
 
   useEffect(() => {
-    if (task) {
-      //console.log("In conversation ", task.state.current)
-      // Update msgs
-      if (task.state.current === "receiving" && msgs) {
-        const lastElement = {
-          ...msgs[task.threadId][msgs[task.threadId].length - 1],
-        }; // shallow copy
-        lastElement.text = task.response.text;
-        lastElement.isLoading = false;
-        setMsgs((p) => ({
-          ...p,
-          [task.threadId]: [...p[task.threadId].slice(0, -1), lastElement],
-        }));
-        // Detect change to sending and creaet a slot for new msgs
-      } else if (task.state.deltaState === "sending") {
-        // Should be named delta not deltaState (this ensures we see the event once)
-        // Here we need to create a new slot for the next message
-        // Note we need to add the input too for the user
-        const newMsgArray = [
-          { sender: "user", text: task.request.input, isLoading: false },
-          { sender: "bot", text: "", isLoading: true },
-        ];
-        setMsgs((p) => ({
-          ...p,
-          [task.threadId]: [...p[task.threadId], ...newMsgArray],
-        }));
-      } else if (task.state.deltaState === "input" && msgs[task.threadId]) {
-        // In the case where the response is coming from HTTP not websocket
-        // The state will be set to input by the NodeJS Task Processor
-        const lastElement = {
-          ...msgs[task.threadId][msgs[task.threadId].length - 1],
-        }; // shallow copy
-        lastElement.text = task.response.text;
-        lastElement.isLoading = false;
-        setMsgs((p) => ({
-          ...p,
-          [task.threadId]: [...p[task.threadId].slice(0, -1), lastElement],
-        }));
-        // TaskChat is dealing with input
-      } else if (task.state.current === "input") {
-        //console.log("State input")
+    if (task && task.output.msgs) {
+      if (!deepCompare(msgs, task.output.msgs)) {
+        setMsgs(task.output.msgs);
       }
     }
   }, [task]);
-
-  useEffect(() => {
-    if (task && !msgs[task.threadId]) {
-      let welcomeMessage = task.config?.welcomeMessage || welcomeMessage_default;
-      setMsgs({
-        [task.threadId]: [
-          { sender: "bot", text: welcomeMessage, isLoading: true },
-        ],
-      });
-      setTimeout(() => {
-        setMsgs({
-          [task.threadId]: [
-            { sender: "bot", text: welcomeMessage, isLoading: false },
-          ],
-        });
-      }, 1000);
-      isMountedRef.current = true;
-    }
-  }, [msgs, task]);
 
   useEffect(() => {
     if (isMountedRef.current) {

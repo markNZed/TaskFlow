@@ -19,18 +19,15 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
   const { globalState } = useGlobalStateContext();
   const [updateTaskError, setUpdateTaskError] = useState();
   const { sendJsonMessagePlus } = useWebSocketContext();
-  let snapshot = {}
-
 
   useEffect(() => {
     // This is executing twice
     if (task?.send && task.stackPtr === local_component_depth) {
-      log("useUpdateTask", task.id); // not logging
-      console.log("useUpdateTask", task.id)
+      log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
           const snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-          const updating = { send: false, "response.updating": true, "response.updated": false };
+          const updating = { send: false, "response.updating": true };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           // The setTask prior to sending the result will not have taken effect
@@ -43,6 +40,8 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
             sendJsonMessagePlus({"sessionId" : globalState.sessionId})
             console.log("Set sessionId ", globalState.sessionId);
           }
+          // To stay in sync with the Hub
+          await globalState.storageRef.current.set(snapshot.instanceId, snapshot);
           // fetchTask can change some parameters in Task and then we get conflicts (e.g. destination)
           fetchTask(globalState, "task/update", snapshot);
           // Nothing useful is returned

@@ -2,15 +2,15 @@ import { useEffect, useCallback } from "react";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useUpdateWSFilter(instanceId, onUpdate) {
+function useUpdateWSFilter(task, onUpdate) {
   
   const { webSocketEventEmitter } = useWebSocketContext();
 
-  const handleUpdate = (task) => {
+  const handleUpdate = (taskUpdate) => {
     //console.log("useUpdateWSFilter handleUpdate", task, instanceId);
-    if (instanceId && task.instanceId === instanceId) {
-      console.log("useUpdateWSFilter handleUpdate calling onUpdate", task);
-      onUpdate(task);
+    if (task && task.instanceId && taskUpdate.instanceId === task.instanceId) {
+      //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
+      onUpdate(taskUpdate);
     }
   };
 
@@ -24,7 +24,7 @@ function useUpdateWSFilter(instanceId, onUpdate) {
       //console.log("useUpdateWSFilter useEffect removing handleUpdate instanceId", instanceId);
       webSocketEventEmitter.removeListener("update", handleUpdate);
     };
-  }, []);
+  }, [[task, onUpdate, webSocketEventEmitter]]);
   
 }
 

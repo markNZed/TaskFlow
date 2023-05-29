@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "../SubTask/SubTaskLLM.mjs";
-import { activeTasksStore_async } from "../storage.mjs";
+import { updateTask_async } from "../updateTask.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
@@ -29,13 +29,17 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
     // Here we update the task which has the effect of setting the state to receiving
-    await activeTasksStore_async.set(wsSendTask, task.instanceId, task)
-    if (T("request.input")) {
-      T("request.prompt", T("request.input"))
+    await updateTask_async(task)
+    // Using a copy of the task because we may modify the request and we do not want to send
+    // those changes back.
+    const taskCopy = JSON.parse(JSON.stringify(task)); // deep copy
+    const TC = utils.createTaskValueGetter(taskCopy);
+    if (TC("request.input")) {
+      TC("request.prompt", T("request.input"))
     }
     // This will update the state on client 
     console.log("TaskChat sending");
-    const subTask = await SubTaskLLM_async(wsSendTask, task);
+    const subTask = await SubTaskLLM_async(wsSendTask, taskCopy);
     const response_text = await subTask.response.text_promise
     T("response.text", response_text);
     T("output.text", response_text);

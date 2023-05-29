@@ -18,16 +18,14 @@ export async function do_task_async(wsSendTask, task) {
     }
     if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
       task.source = processorId;
-      updated_task = await taskFunctions[`${task.stack[idx]}_async`](wsSendTask, task);
+      try {
+        updated_task = await taskFunctions[`${task.stack[idx]}_async`](wsSendTask, task);
+      } catch (e) {
+        console.log("do_task_async error", e, task);
+      }
       // Returning null is  away of doing nothing
       if (updated_task !== null) {
-        // This will then trigger the syncTasks_async
-        // Not sure we need to await on this
-        // This will also trigger the ws to send the update I guess
-        // We do not want this because we use the updateTask_async HTTP request
-        //console.log("do_task_async setting activeTasksStore_async");
-        // Pass null instead of wsSendTask to avoid sending update
-        await activeTasksStore_async.set(null, task.instanceId, updated_task)
+        await activeTasksStore_async.set(task.instanceId, updated_task)
         // Send the update request
         // We may not want to do this for all tasks ? 
         // If the task is done then Hub will intercept this

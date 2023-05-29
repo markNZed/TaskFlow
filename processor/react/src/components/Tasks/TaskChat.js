@@ -56,13 +56,23 @@ const TaskChat = (props) => {
   const formRef = useRef();
   const [socketResponses, setSocketResponses] = useState([]);
 
+  let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?";
+  let welcomeMessage_en = "Welcome! How can I assist you today?";
+  let userLanguage = navigator.language.toLowerCase();
+  let welcomeMessage;
+  if (userLanguage.startsWith("fr")) {
+    welcomeMessage = welcomeMessage_default; // French welcome message
+  } else {
+    welcomeMessage = welcomeMessage_en; // English welcome message
+  }
+
   // This is the level where we are going to use the task so set the component_depth
   useEffect(() => {
     updateTask({ stackPtr: component_depth, "state.current": "input" });
   }, []);
 
   // Note that socketResponses may not (will not) be updated on every websocket event
-  // React groups setState operations and I have not undestood the criteria for this
+  // React groups setState operations and I have not understood the criteria for this
   useEffect(() => {
     const processResponses = () => {
       setSocketResponses((prevResponses) => {
@@ -95,6 +105,7 @@ const TaskChat = (props) => {
 
   // I guess the websocket can cause events during rendering
   // Putting this in the HoC causes a warning about setting state during rendering
+  // We could just merge the partialTask?
   usePartialWSFilter(task?.instanceId,
     (partialTask) => {
       //console.log("TaskChat usePartialWSFilter partialTask", partialTask.response);
@@ -102,11 +113,86 @@ const TaskChat = (props) => {
     }
   )
 
+  // Initialize task.output.msgs
+  useEffect(() => {
+    if (!task.output?.msgs || !task.output.msgs[task.threadId]) {
+      let welcomeMessage = task.config?.welcomeMessage || welcomeMessage_default;
+      updateTask({ "output.msgs": 
+        {
+          [task.threadId]: [
+            { sender: "bot", text: welcomeMessage, isLoading: false },
+          ],
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (task && task.output?.msgs) {
+      // Update msgs
+      const msgs = JSON.parse(JSON.stringify(task.output.msgs));
+      if (task.state.current === "receiving" && msgs) {
+        const lastElement = {
+          ...msgs[task.threadId][msgs[task.threadId].length - 1],
+        }; // shallow copy
+        lastElement.text = task.response.text;
+        lastElement.isLoading = false;
+        updateTask({ "output.msgs": 
+          {
+            ...msgs,
+            [task.threadId]: [...msgs[task.threadId].slice(0, -1), lastElement],
+          }
+        });
+        // Detect change to sending and creaet a slot for new msgs
+      } else if (task.state.deltaState === "sending") {
+        // Should be named delta not deltaState (this ensures we see the event once)
+        // Here we need to create a new slot for the next message
+        // Note we need to add the input too for the user
+        const newMsgArray = [
+          { sender: "user", text: task.request.input, isLoading: false  },
+          { sender: "bot", text: "", isLoading: true },
+        ];
+        updateTask({ "output.msgs": 
+          {
+            ...msgs,
+            [task.threadId]: [...msgs[task.threadId], ...newMsgArray],
+          }
+        });
+      } else if (task.state.deltaState === "input" && msgs[task.threadId]) {
+        // In the case where the response is coming from HTTP not websocket
+        // The state will be set to input by the NodeJS Task Processor
+        const lastElement = {
+          ...msgs[task.threadId][msgs[task.threadId].length - 1],
+        }; // shallow copy
+        lastElement.text = task.output.text;
+        lastElement.isLoading = false;
+        updateTask({ "output.msgs": 
+          {
+            ...msgs,
+            [task.threadId]: [...msgs[task.threadId].slice(0, -1), lastElement],
+          }
+        });
+        // TaskChat is dealing with input
+      } else if (task.state.current === "input") {
+        //console.log("State input")
+      }
+    }
+  }, [task]);
+
+  useEffect(() => {
+    if (task) {
+      //console.log("Trace task ", task)
+    }
+  }, [task]);
+
   useEffect(() => {
     if (task.state.deltaState === "input") {
+      //console.log("Resetting input")
       // Reset the request so we can use response.text for partial response
+      // A request should clear the response object?
       updateTask({
         "request.input": "",
+        "response.text": "",
       });
       responseTextRef.current = ""
     }

@@ -27,7 +27,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
     } else {
       T("output.input", "");
     }
-    console.log("Returning task state input " + JSON.stringify(task));
+    //console.log("Returning task state input " + JSON.stringify(task));
     // This is used to trigger the React state machine.
     // Maybe the `sm should be triggered on delta chnages of the state rather than mystate
     T("response.updated", true);

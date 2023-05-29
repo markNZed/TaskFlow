@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import {} from "../config.mjs";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
-import syncTasks_async from "./syncTasks.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -51,7 +50,7 @@ const cacheStore_async = newKeyV(DB_URI, "cache");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks_async);
+const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
 
 export {
   messagesStore_async,

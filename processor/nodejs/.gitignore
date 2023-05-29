@@ -3,6 +3,4 @@ node_modules
 cache.json
 config.dev
 config.prod
-db/*
-!db/.gitignore
 temp.txt

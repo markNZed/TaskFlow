@@ -5,8 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeProcessorsStore_async } from "./storage.mjs";
+import { connections, activeProcessorsStore_async, activeTasksStore_async } from "./storage.mjs";
 import { hubId } from "../config.mjs";
+import { utils } from "./utils.mjs";
 
 function wsSendObject(processorId, message = {}) {
   let ws = connections.get(processorId);
@@ -19,7 +20,6 @@ function wsSendObject(processorId, message = {}) {
     // Need to make a copy so any changes here d onot impact the object 
     let localTask = { ...message.task }
     localTask.hubId = hubId;
-    localTask.source = hubId;
     message.task = localTask;
     ws.send(JSON.stringify(message));
     if (message.command !== "pong") {
@@ -28,12 +28,32 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-const wsSendTask = function (task, command = null) {
+const wsSendTask = async function (task, command = null) {
   //console.log("wsSendTask " + message)
   let message = {}
-  message["task"] = task;
   if (command) {
     message["command"] = command;
+  }
+  if (command === "update") {
+    const activeTask = await activeTasksStore_async.get(task.instanceId);
+    let diff = {}
+    if (activeTask) { 
+      //console.log("wsSendTask task.output.msgs", task.output?.msgs)
+      //console.log("wsSendTask activeTask.output.msgs", activeTask.output?.msgs)
+      diff = utils.getObjectDifference(task, activeTask); // favour task
+      //console.log("wsSendTask diff.output.msgs", diff.output?.msgs)
+      if (Object.keys(diff).length === 0) {
+        console.log("wsSendTask no diff", diff);
+        return null;
+      }
+      diff.instanceId = task.instanceId;
+      diff.stackPtr = task.stackPtr;
+      diff.destination = task.destination;
+      message["task"] = diff;
+      //console.log("wsSendTask diff", diff);
+    }
+  } else {
+    message["task"] = task;
   }
   let processorId = message.task.destination;
   if (message.command !== "pong") {
@@ -66,14 +86,17 @@ function initWebSocketServer(server) {
         const activeProcessors = await activeProcessorsStore_async.get(j.task.instanceId);
         // We have the processor list in activeTasksStore and in sessionsStore
         // Do we need the ssessionsStore?
-        if (j.command === "update" || j.command === "partial") {
+        if (j.command === "update") {throw new Error("update not implemented")}
+        if (j.command === "partial") {
           //console.log("ws update", j.task)
           if (!activeProcessors) {
-            throw new Error("No processors ", j.task);
+            // This can happen if the React processor has not yet registered after a restart of the Hub
+            console.log("No processors for ", j.task.id, j.task.instanceId, " in activeProcessorsStore");
+            return;
+            //throw new Error("No processors ", j.task);
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
-          //console.log("Forwarding " + j.command + " from " + processorId)
           for (const id of activeProcessors) {
             if (id !== j.task.source) {
               const ws = connections.get(id);

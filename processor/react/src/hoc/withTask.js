@@ -54,18 +54,28 @@ function withTask(Component) {
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
 
-    useUpdateWSFilter(props.task?.instanceId,
-      (updateDiff) => {
+    useUpdateWSFilter(props.task,
+      async (updateDiff) => {
         if (updateDiff.stackPtr === local_component_depth) {
-          const lastTask = globalState.storageRef.current.get(props.task.instanceId);
+          const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           const currentTaskDiff = getObjectDifference(props.task, lastTask); // favor props.task
+          //console.log("currentTaskDiff", currentTaskDiff, lastTask);
           // ignore differences in source
           delete currentTaskDiff.source
-          checkConflicts(currentTaskDiff, updateDiff)
+          // Need to think more about how we manage (or not) delta
+          delete currentTaskDiff.state?.deltaState
+          // partial updates to response can cause conflicts
+          // Needs further thought
+          delete currentTaskDiff.response
+          if (checkConflicts(currentTaskDiff, updateDiff)) {
+            console.log("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
+            throw new Error("CONFLICT");
+          }
           const mergedTask = deepMerge(props.task, updateDiff);
+          //console.log("MERGED output.msgs", mergedTask.output?.msgs, updateDiff.output?.msgs, props.task.output?.msgs)
           updateTask(mergedTask)
           globalState.storageRef.current.set(props.task.instanceId, mergedTask);
-          console.log("Storage updated ", props.task.id, props.task.instanceId);
+          console.log("Storage updated ", props.task.id, props.task.instanceId, updateDiff);
         }
       }
     )

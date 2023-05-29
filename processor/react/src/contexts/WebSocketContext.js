@@ -100,7 +100,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       // Should be in try/catch block
       const message = JSON.parse(e.data);
       if (message?.command && message.command !== "pong") {
-        //console.log("App webSocket command", message.command,  message.task.instanceId);
+        //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
         if (message.command === "start") {
           startTaskDB(message.task);
         }
