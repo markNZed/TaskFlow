@@ -32,7 +32,7 @@ function withDebug(Component) {
     // Problem here with response have a lot of updates, will flood the console.
     useEffect(() => {
       if (props?.prevTask) {
-        const diff = getObjectDifference(props.task, props.prevTask);
+        const diff = getObjectDifference(props.prevTask, props.task);
         delete diff.response;
         delete diff.output;
         removeNullValues(diff)

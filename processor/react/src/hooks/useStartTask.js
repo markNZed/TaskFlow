@@ -14,7 +14,7 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
   const [startTaskError, setTaskStartError] = useState();
 
   useEffect(() => {
-    if (!startId) {
+    if (!startId || startTaskError) {
       return;
     }
     const fetchTaskFromAPI = async () => {

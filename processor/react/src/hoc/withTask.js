@@ -58,7 +58,7 @@ function withTask(Component) {
       async (updateDiff) => {
         if (updateDiff.stackPtr === local_component_depth) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-          const currentTaskDiff = getObjectDifference(props.task, lastTask); // favor props.task
+          const currentTaskDiff = getObjectDifference(lastTask, props.task);
           //console.log("currentTaskDiff", currentTaskDiff, lastTask);
           // ignore differences in source
           delete currentTaskDiff.source
@@ -186,7 +186,7 @@ function withTask(Component) {
         }
         let diff;
         if (prevTaskState) {
-          diff = getObjectDifference(state, prevTaskState);
+          diff = getObjectDifference(prevTaskState, state);
         } else {
           diff = state;
         }
@@ -241,7 +241,7 @@ function withTask(Component) {
           const prevTaskState = prevTasksState[i];
           let diff;
           if (prevTaskState) {
-            diff = getObjectDifference(state, prevTaskState);
+            diff = getObjectDifference(prevTaskState, state);
           } else {
             diff = state;
           }

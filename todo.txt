@@ -1,44 +1,13 @@
 /* ToDo
 -------
-TaskChat messagesStore
-  Could build a custom message store from the output.msgs on each request
-    It seems the OpenAI API just needs a list of messages, no requirement for id field.
-    utils.processMessages_async adds messages to the store
-      as a first strategy this seems good
-      just use output.msgs and build with utils.processMessages_async each time
-    eventually might be better to use the index of th emessage in an array with the getMessagebyId function
-  Could provide getMessagebyId and upsertMessage functions
-  messagesStore_async.set(
-            threadId + modelTypeId + "parentMessageId",
-            response.id
-          );
-
-          lastMessageId = await messagesStore_async.get(
-      T("threadId") + modelType.id + "parentMessageId"
-    );
-     lastMessageId = await utils.processMessages_async(
-        modelType.messages,
-        messagesStore_async,
-        lastMessageId
-      );
-      lastMessageId = await utils.processMessages_async(
-        requestMessages,
-        messagesStore_async,
-        lastMessageId
-      );
-      messageStore: messagesStore_async,
-      messagesStore_async.set(
-    threadId + modelTypeId + "systemMessage",
-    messageParams.systemMessage
-  );
-
+Sending task as done but then reusing it in eract processor for exercise seems problematic
+  Might need something like next rahter than done - done indicates deleted from the processor alos?
+Something weird with the stepper and task state interferring. Leaving should not run SM if it does not match.
+Move chat-config repo inside taskflow and load the taskflow dir so we have the root folder under git. This miht fix some issues with git.
 Switching conversations unreliable
 Should we be sending diff to Hub?
 Forget is not removing messages from conversation ?
 Exercise sequencing
-Refactor TaskConversation so we no longer use messagesStore_async in SubTaskLLM
-  The message history (without system prompt) should be in the output of TaskChat.
-  Can then get ride of messagesStore_async
 Check errors are working
 Code review/cleanup - identify refactoring goals
 SubTask should use task for IO

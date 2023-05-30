@@ -40,8 +40,9 @@ const wsSendTask = async function (task, command = null) {
     if (activeTask) { 
       //console.log("wsSendTask task.output.msgs", task.output?.msgs)
       //console.log("wsSendTask activeTask.output.msgs", activeTask.output?.msgs)
-      diff = utils.getObjectDifference(task, activeTask); // favour task
+      diff = utils.getObjectDifference(activeTask, task); // keep the differences in task
       //console.log("wsSendTask diff.output.msgs", diff.output?.msgs)
+      //console.log("wsSendTask diff", diff)
       if (Object.keys(diff).length === 0) {
         console.log("wsSendTask no diff", diff);
         return null;

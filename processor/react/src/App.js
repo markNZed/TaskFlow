@@ -91,9 +91,10 @@ function App() {
   }, [globalState?.processorId]);
 
   useEffect(() => {
-    console.log("Registering processor");
     const registerProcessor = async () => {
       console.log("Registering processor");
+      let hubId = "unknown";
+      mergeGlobalState({ hubId });
       try {
         const response = await fetch(`${hubUrl}/api/register`, {
           method: "POST",
@@ -108,7 +109,7 @@ function App() {
         });
         const data = await response.json();
         if (data?.hubId) {
-          const hubId = data.hubId;
+          hubId = data.hubId;
           mergeGlobalState({ hubId });
         }
       } catch (err) {

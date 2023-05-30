@@ -19,7 +19,7 @@ const useNextTask = (task) => {
   const [nextTaskError, setNextTaskError] = useState(null);
 
   useEffect(() => {
-    if (task && task.state.done) {
+    if (task && task.state.done && !nextTaskError) {
       log("useNextTask", task.id);
       const fetchTaskFromAPI = async () => {
         try {

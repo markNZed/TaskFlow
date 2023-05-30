@@ -6,12 +6,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { deepMerge, getChanges, checkConflicts, getObjectDifference, flattenObjects } from "./shared/utils.mjs";
+import { deepMerge, checkConflicts, getObjectDifference, flattenObjects } from "./shared/utils.mjs";
 
 const utils = {};
 
 utils.deepMerge = deepMerge;
-utils.getChanges = getChanges;
 utils.checkConflicts = checkConflicts;
 utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;

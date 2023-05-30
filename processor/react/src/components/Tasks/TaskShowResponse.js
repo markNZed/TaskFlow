@@ -23,6 +23,7 @@ const TaskShowResponse = (props) => {
   const {
     log,
     leaving,
+    entering,
     task,
     setTask,
     parentTask,
@@ -33,7 +34,6 @@ const TaskShowResponse = (props) => {
 
   const [responseText, setResponseText] = useState("");
   const [myTaskId, setMyTaskId] = useState();
-  const [myState, setMyState] = useState("");
   const [myLastState, setMyLastState] = useState("");
 
   // This is the level where we are going to use the task so set the component_depth
@@ -55,7 +55,7 @@ const TaskShowResponse = (props) => {
         });
         //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
       }
-      setMyState("start");
+      updateState("start");
     }
   }, [task]);
 
@@ -65,13 +65,15 @@ const TaskShowResponse = (props) => {
     if (myTaskId && myTaskId === task.id) {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
-      const nextState = task.config.nextStates[myState];
-      log("myState " + myState)
-      //console.log("task.id " + task.id + " myState " + myState + " nextState " + nextState + " leaving_now " + leaving_now)
-      switch (myState) {
+      const entering_now =
+        entering?.direction === "prev" && entering?.task.name === task.name;
+      const nextState = task.config.nextStates[task.state.current];
+      let newState;
+      log("TaskShowResponse State Machine State " + task.state.current + " nextState " + nextState)
+      switch (task.state.current) {
         case "start":
           // Next state
-          setMyState(nextState);
+          newState =  nextState;
           // Actions
           break;
         case "response":
@@ -82,44 +84,49 @@ const TaskShowResponse = (props) => {
           if (task.response?.text) {
             log("Response cached React Task Processor side");
             // Next state
-            setMyState(nextState);
+            newState =  nextState;
             // Actions
             response_action(task.response.text);
           } else {
             // This effectively waits for the update
             if (task.response.updated) {
-              setMyState(nextState);
+              newState =  nextState;
               let response_text;
               response_text = task.response.text;
               updateTask({ "response.text": response_text });
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);
-            } else if (myLastState !== myState) { // could introduce deltaState but we are managing myState
+            } else if (myLastState !== task.state.current) { // could introduce deltaState
               updateTask({ send: true });
             }
           }
           break;
         case "wait":
-          if (leaving_now) {
+          if (leaving_now && !task.state.done) {
             updateTask({ "state.done": true });
-            setMyState(nextState);
+            newState = nextState;
           }
           break;
         case "stop":
           // We may return to this Task and want to leave it again
-          if (leaving_now) {
-            updateTask({ "state.done": true });
+          if (entering_now) {
+            newState = "wait";
           }
           break;
         default:
-          console.log("ERROR unknown state : " + myState);
+          console.log("ERROR unknown state : " + task.state.current);
       }
-      updateState(myState);
-      //setTask((p) => {return {...p, state: myState}});
-      setMyLastState(myState); // Useful if we want an action only performed once in a state
+      if (task.state.current !== newState) {
+        if (newState) {
+          updateState(newState);
+        }
+        // Could use delta instead?
+        // Useful if we want an action only performed once on entering a state
+        setMyLastState(task.state.current);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myState, task.response?.updated]);
+  }, [leaving, task]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

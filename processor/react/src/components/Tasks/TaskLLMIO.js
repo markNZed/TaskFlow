@@ -46,7 +46,6 @@ const TaskLLMIO = (props) => {
   const paraTopRef = useRef(0);
   const [userInputHeight, setUserInputHeight] = useState(0);
   const [myTaskId, setMyTaskId] = useState();
-  const [myState, setMyState] = useState("");
   const [myLastState, setMyLastState] = useState("");
   const [socketResponses, setSocketResponses] = useState([]);
 
@@ -69,10 +68,10 @@ const TaskLLMIO = (props) => {
       if (!task.config?.nextStates) {
         // Default sequence is to just get response based on prompt text
         updateTask({
-          "config.nextStates": { start: "response", response: "stop" },
+          "config.nextStates": { start: "response", response: "wait", wait: "stop" },
         });
       }
-      setMyState("start");
+      updateState("start");
     }
   }, [task]);
 
@@ -120,7 +119,7 @@ const TaskLLMIO = (props) => {
     if (entering) {
       if (entering.direction === "prev" && entering.task.name === task.name) {
         if (task.config?.reenteringState) {
-          setMyState(task.config.reenteringState)
+          updateState(task.config.reenteringState)
         } 
       }
     }
@@ -129,28 +128,32 @@ const TaskLLMIO = (props) => {
   // Sub_task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    console.log("TaskLLMIO State Machine")
     if (myTaskId && myTaskId === task.id) {
       const leaving_now =
         leaving?.direction === "next" && leaving?.task.name === task.name;
-      const nextState = task.config.nextStates[myState];
-      //console.log("task.id " + task.id + " myState " + myState + " nextState " + nextState + " leaving_now " + leaving_now)
-      log("myState " + myState, task)
-      switch (myState) {
+      const entering_now =
+        entering?.direction === "prev" && entering?.task.name === task.name;
+      const nextState = task.config.nextStates[task.state.current];
+      let newState;
+      //console.log("task.id " + task.id + " nextState " + nextState + " leaving_now " + leaving_now)
+      log("TaskLLMIO State Machine State " + task.state.current + " nextState " + nextState + " leaving_now " + leaving_now)
+      switch (task.state.current) {
         case "start":
           // Next state
-          setMyState(nextState);
+          newState = nextState;
           // Actions
           break;
         case "display":
           setResponseText(task.config.response);
           break;
         case "response":
-          if (myState !== myLastState) {
+          if (task.state.current !== myLastState) {
             updateTask({ send: true });
           } else if (finalResponse) { // waiting for response from websocket to end
             setFinalResponse(false)
-            setMyState(nextState);
+            newState = nextState;
+            // This should not be managed here - it is depending on websocket
+            updateTask({ "response.updated": false, "response.updating": false });
           }
           if (nextState === "input") {
             setShowUserInput(true);
@@ -160,37 +163,45 @@ const TaskLLMIO = (props) => {
           // Actions
           // Wait until leaving then send input and wait for repsonse before going to next state
           if (leaving_now) {
-            updateTask({ send: true });
-            setMyState(nextState);
+            if (!task.response.updating) {
+              // Need to automate management of response.updated (clear on request?)
+              // id per request
+              updateTask({ send: true, "request.input": userInput });
+            } else if (task.response.updated) {
+              newState = nextState;
+            }
+          }
+          break;
+        case "wait":
+          if (leaving_now && !task.state.done) {
+            updateTask({ "state.done": true });
+            newState = nextState;
           }
           break;
         case "stop":
-          if (leaving_now && !task.send) {
-            updateTask({ "state.done": true });
+          // We may return to this Task and want to leave it again
+          if (entering_now) {
+            newState = "wait";
           }
           break;
         default:
-          console.log("ERROR unknown state : " + myState);
+          console.log("ERROR unknown state : ", task.state.current);
       }
-      updateState(myState);
-      //setTask((p) => {return {...p, state: myState}});
-      setMyLastState(myState); // Useful if we want an action only performed once in a state
+      if (task.state.current !== newState) {
+        if (newState) {
+          updateState(newState);
+        }
+        // Could use delta instead?
+        // Useful if we want an action only performed once on entering a state
+        setMyLastState(task.state.current);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, myState, task.response?.updated]);
+  }, [leaving, task]);
 
   useEffect(() => {
-    console.log("task ", task, leaving);
+    //console.log("task", task);
   }, [task]);
-
-  // Align task data with userInput input
-  // Could copy this just before sending rather than on every update
-  useEffect(() => {
-    if (userInput) {
-      updateTask({ "request.input": userInput });
-      //console.log("Updating input " + userInput);
-    }
-  }, [userInput]);
 
   // Adjust userInput input area size when input grows
   useEffect(() => {

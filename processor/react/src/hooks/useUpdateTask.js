@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from "react";
 import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
-import { setNestedProperties, deepMerge, log, getChanges, checkConflicts } from "../utils/utils";
+import { setNestedProperties, deepMerge, log } from "../utils/utils";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 // We have: Start with startId, threadId
@@ -22,7 +22,7 @@ const useUpdateTask = (task, setTask, local_component_depth) => {
 
   useEffect(() => {
     // This is executing twice
-    if (task?.send && task.stackPtr === local_component_depth) {
+    if (task?.send && task.stackPtr === local_component_depth && !updateTaskError) {
       log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {

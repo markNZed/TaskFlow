@@ -45,7 +45,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
   // Make available as an output to other Tasks
   //T("output.text", response_text);
   // Ensure we do not overwrite the deltaState on the React Task Processor
-  T("state.deltaState", undefined);
+  //T("state.deltaState", undefined);
   T("response.updated", true);
   T("updatedAt", Date.now());
   console.log("Returning from TaskLLMIO "); // + response_text)

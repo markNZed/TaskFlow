@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useContext, useState, useEffect } from "react";
 import _, { merge } from "lodash";
+import { getObjectDifference } from "../utils/utils";
 
 const GlobalStateContext = React.createContext();
 
@@ -29,13 +30,9 @@ export function GlobalStateProvider({ children }) {
     }
   }, [globalState]);
 
-  const getObjectDifference = (obj1, obj2) => {
-    return _.pickBy(obj1, (value, key) => !_.isEqual(value, obj2[key]));
-  };
-
   useEffect(() => {
     if (prevGlobalState) {
-      const diff = getObjectDifference(globalState, prevGlobalState);
+      const diff = getObjectDifference(prevGlobalState, globalState,);
       if (Object.keys(diff).length > 0) {
         console.log("globalState changes:", diff);
       }

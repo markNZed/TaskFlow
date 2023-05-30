@@ -311,7 +311,7 @@ async function ChatGPTAPI_request_async(params) {
       SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId);
   }
 
-  let cachedValue = {};
+  let cachedValue = null;
   let cacheKey = "";
   let cacheKeyText = "";
   if (use_cache) {

@@ -73,7 +73,7 @@ function TaskStepper(props) {
       // need a wrapper for this
       setTasksTask((p) => {
         return deepMerge(p, setNestedProperties({ "state.done": false }));
-      });
+      }, tasksIdx);
       setDoneTask(tasks[tasksIdx]); // Will result in nextTask being set
     }
   }, [tasks]);
@@ -94,12 +94,13 @@ function TaskStepper(props) {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({ direction: "next", task: currentTask });
+        setEntering({ direction: undefined, task: undefined });
         // Expect .done to be set in Task, rename leaving to taskLeave
       }
     } else if (action === "back") {
       if (currentTaskData) {
         // By updating leaving this ensure there is an event if next is activated
-        setLeaving({ direction: "prev", task: currentTask });
+        setLeaving({ direction: undefined, task: undefined});
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
         setEntering({ direction: "prev", task: tasks[tasks.length - 2] });
@@ -133,8 +134,8 @@ function TaskStepper(props) {
 
   const isExpanded = (panel) => expanded.includes(panel);
 
-  function setTasksTask(t) {
-    setArrayState(setTasks, tasksIdx, t);
+  function setTasksTask(t, idx) {
+    setArrayState(setTasks, idx, t);
   }
 
   return (
@@ -163,7 +164,7 @@ function TaskStepper(props) {
                   key={instanceId}
                   is={stack[component_depth]}
                   task={tasks[idx]}
-                  setTask={setTasksTask}
+                  setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   leaving={leaving}
                   entering={entering}
                   parentTask={stepperTask}
