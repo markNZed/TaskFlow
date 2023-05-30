@@ -30,7 +30,7 @@ export const updateTask_async = async (task) => {
   };
 
   const apiUrl = `${TASKHUB_URL}/api/task/update`
-  console.log("API updateTask_async call to " + apiUrl)
+  console.log("API updateTask_async fetching " + apiUrl)
 
   const response = await fetch(apiUrl, requestOptions)
     .then(response => {

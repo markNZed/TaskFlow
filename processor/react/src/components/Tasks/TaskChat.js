@@ -92,7 +92,7 @@ const TaskChat = (props) => {
               setResponsePending(false);
               break;
           }
-          //console.log("TaskChat processResponses responseTextRef.current", responseTextRef.current);
+          //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
         }
         updateTask({ "response.text": responseTextRef.current });
         return []; // Clear the processed responses
@@ -116,14 +116,14 @@ const TaskChat = (props) => {
   // Initialize task.output.msgs
   useEffect(() => {
     if (!task.output?.msgs || !task.output.msgs[task.threadId]) {
-      let welcomeMessage = task.config?.welcomeMessage || welcomeMessage_default;
-      updateTask({ "output.msgs": 
-        {
-          [task.threadId]: [
-            { sender: "bot", text: welcomeMessage, isLoading: false },
-          ],
-        }
-      });
+      // The . in the thread Id causes problems for updateTask
+      const msgs = {
+        [task.threadId]: [
+          { sender: "bot", text: welcomeMessage, isLoading: false },
+        ],
+      }
+      console.log("TaskChat useEffect msgs", msgs);
+      updateTask({ "output.msgs": msgs});
     }
   }, []);
 
@@ -145,6 +145,7 @@ const TaskChat = (props) => {
         });
         // Detect change to sending and creaet a slot for new msgs
       } else if (task.state.deltaState === "sending") {
+        console.log("task.state.deltaState === sending", msgs);
         // Should be named delta not deltaState (this ensures we see the event once)
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
@@ -181,7 +182,7 @@ const TaskChat = (props) => {
 
   useEffect(() => {
     if (task) {
-      //console.log("Trace task ", task)
+      console.log("Trace task ", task)
     }
   }, [task]);
 

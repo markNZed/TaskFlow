@@ -28,7 +28,7 @@ const syncTasks_async = async (key, value) => {
       if (processorId !== taskCopy.source) {
         taskCopy.destination = processorId;
         wsSendTask(taskCopy, command);
-        //console.log("syncTasks_async updating", key, processorId);
+        console.log("syncTasks_async", command, key, processorId);
       } else {
         //console.log("syncTasks_async skipping", key, processorId);
       }

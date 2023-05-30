@@ -66,7 +66,7 @@ const TaskConversation = (props) => {
         setMsgs(task.output.msgs);
       }
     }
-  }, [task]);
+  }, [task.output.msgs]);
 
   useEffect(() => {
     if (isMountedRef.current) {

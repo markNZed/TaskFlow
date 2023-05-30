@@ -81,10 +81,10 @@ function withTask(Component) {
     )
 
     useStartWSFilter(startTaskId,
-      (updatedTask) => {
-        //console.log("useStartWSFilter", updatedTask);
+      (newTask) => {
+        console.log("useStartWSFilter", newTask);
         setStartTaskId(null);
-        setStartTaskReturned(updatedTask)
+        setStartTaskReturned(newTask)
       }
     )
 

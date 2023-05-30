@@ -193,12 +193,14 @@ async function newTask_async(
     }
 
     if (taskCopy.config?.oneThread) {
-      const threadId = id + userId;
+      const threadId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
       let instanceIds = await threadsStore_async.get(threadId);
       if (instanceIds) {
         // Returning last so continuing (maybe should return first?)
         const instanceId = instanceIds[instanceIds.length - 1];
         taskCopy = await instancesStore_async.get(instanceId);
+        // Delete so we restart with ful ltask being synchronized
+        await activeTasksStore_async.delete(instanceId);
         console.log(
           "Restarting one_thread " + instanceId + " for " + taskCopy.id
         );
@@ -209,12 +211,14 @@ async function newTask_async(
     }
     
     if (taskCopy.config?.restoreSession) {
-      const threadId = id + sessionId;
+      const threadId = (id + sessionId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
       let instanceIds = await threadsStore_async.get(threadId);
       if (instanceIds) {
         // Returning last so continuing (maybe should return first?)
         const instanceId = instanceIds[instanceIds.length - 1];
         taskCopy = await instancesStore_async.get(instanceId);
+        // Delete so we restart with ful ltask being synchronized
+        await activeTasksStore_async.delete(instanceId);
         console.log("Restarting session " + instanceId + " for " + taskCopy.id);
       } else {
         taskCopy.threadId = threadId
@@ -228,12 +232,14 @@ async function newTask_async(
         // This is a hack for the collaborate feature
         groupId = taskCopy.config.collaborate;
       }
-      const threadId = id + groupId;
+      const threadId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties;
       let instanceIds = await threadsStore_async.get(threadId);
       if (instanceIds) {
         // Returning last so continuing (maybe should return first?)
         const instanceId = instanceIds[instanceIds.length - 1];
         taskCopy = await instancesStore_async.get(instanceId);
+        // Delete so we restart with ful ltask being synchronized
+        await activeTasksStore_async.delete(instanceId);
         console.log(
           "Restarting collaboration " + instanceId + " for " + taskCopy.id
         );
@@ -309,13 +315,16 @@ async function newTask_async(
           }
         }
       }
+      if (!found) {
+        throw new Error("No processor found for environment " + environment);
+      }
     }
 
     if (taskProcessors.length == 0) {
       throw new Error("No processors allocated for task " + taskCopy.id);
     }
 
-    console.log("Allocated new task " + taskCopy.id + " to processors " + taskProcessors);
+    console.log("Allocated new task " + taskCopy.id + " to processors ", taskProcessors);
 
     // Record which processors have this task
     // Could convert this into asynchronous form

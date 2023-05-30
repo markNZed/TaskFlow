@@ -69,9 +69,11 @@ async function chat_prepare_async(task) {
   //console.log("prompt " + prompt);
   let modelType = modelTypes["root."+T("request.modelType")];
   if (!modelType) {
-    console.log("No modelType for ", task);
+    console.log("No modelType for ", task.id);
+  } else {
+    console.log("ModelType for ", task.id, modelType.name);
   }
-  let langModel = T("request.model") || modelType?.langModel;
+  let langModel = T("request.model") || modelType?.model;
   let temperature = T("request.temperature") || modelType?.temperature;
   let maxTokens = T("request.maxTokens") || modelType?.maxTokens;
   let maxResponseTokens = T("request.maxResponseTokens") || modelType?.maxResponseTokens;
@@ -129,7 +131,7 @@ async function chat_prepare_async(task) {
 
   let messages = [];
 
-  if (!initializing) {
+  if (!initializing && T("output.msgs") && T("output.msgs")[T("threadId")]) {
     // Structure output.msgs in expected format
     messages = T("output.msgs")[T("threadId")].map(msg => ({
       role: msg.sender === 'bot' ? 'assistant' : 'user',
@@ -204,7 +206,12 @@ async function chat_prepare_async(task) {
     parentMessageId: index === 0 ? null : (index - 1),
     id: index
   }));
-  //console.log("messages", messages);
+  // ChatGPTAPI is expecting text not content
+  messages = messages.map((message) => ({
+    ...message,
+    text: message.content,
+  }));
+  console.log("messages", messages);
 
   return {
     systemMessage,
