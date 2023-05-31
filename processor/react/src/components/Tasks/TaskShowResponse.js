@@ -29,16 +29,16 @@ const TaskShowResponse = (props) => {
     parentTask,
     updateTask,
     updateState,
-    component_depth,
+    stackPtr,
   } = props;
 
   const [responseText, setResponseText] = useState("");
   const [myTaskId, setMyTaskId] = useState();
   const [myLastState, setMyLastState] = useState("");
 
-  // This is the level where we are going to use the task so set the component_depth
+  // This is the level where we are going to use the task so set the stackPtr
   useEffect(() => {
-    updateTask({ stackPtr: component_depth });
+    updateTask({ stackPtr: stackPtr });
   }, []);
 
   // Reset the task. Allows for the same component to be reused for different tasks.

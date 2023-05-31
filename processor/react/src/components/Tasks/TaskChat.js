@@ -46,7 +46,7 @@ const TaskChat = (props) => {
     updateState,
     task,
     setTask,
-    component_depth,
+    stackPtr,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -66,9 +66,9 @@ const TaskChat = (props) => {
     welcomeMessage = welcomeMessage_en; // English welcome message
   }
 
-  // This is the level where we are going to use the task so set the component_depth
+  // This is the level where we are going to use the task so set the stackPtr
   useEffect(() => {
-    updateTask({ stackPtr: component_depth, "state.current": "input" });
+    updateTask({ "state.current": "input" });
   }, []);
 
   // Note that socketResponses may not (will not) be updated on every websocket event
@@ -113,16 +113,16 @@ const TaskChat = (props) => {
     }
   )
 
-  // Initialize task.output.msgs
+  // Initialize task.output.msgs unless it already exists (e.g. in the case of oneThread)
   useEffect(() => {
-    if (!task.output?.msgs || !task.output.msgs[task.threadId]) {
+    if (task.output && !task.output.msgs) {
       // The . in the thread Id causes problems for updateTask
       const msgs = {
-        [task.threadId]: [
-          { sender: "bot", text: welcomeMessage, isLoading: false },
+        ["conversation"]: [
+          { role: "assistant", text: welcomeMessage, isLoading: false },
         ],
       }
-      console.log("TaskChat useEffect msgs", msgs);
+      //console.log("TaskChat useEffect msgs", msgs);
       updateTask({ "output.msgs": msgs});
     }
   }, []);
@@ -133,14 +133,14 @@ const TaskChat = (props) => {
       const msgs = JSON.parse(JSON.stringify(task.output.msgs));
       if (task.state.current === "receiving" && msgs) {
         const lastElement = {
-          ...msgs[task.threadId][msgs[task.threadId].length - 1],
+          ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
         lastElement.isLoading = false;
         updateTask({ "output.msgs": 
           {
             ...msgs,
-            [task.threadId]: [...msgs[task.threadId].slice(0, -1), lastElement],
+            ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
           }
         });
         // Detect change to sending and creaet a slot for new msgs
@@ -150,27 +150,30 @@ const TaskChat = (props) => {
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
         const newMsgArray = [
-          { sender: "user", text: task.request.input, isLoading: false  },
-          { sender: "bot", text: "", isLoading: true },
+          { role: "user", text: prompt, isLoading: false  },
+          { role: "assistant", text: "", isLoading: true },
         ];
-        updateTask({ "output.msgs": 
-          {
+        // Clear the textbox
+        setPrompt("");
+        updateTask({ 
+          "output.msgs": {
             ...msgs,
-            [task.threadId]: [...msgs[task.threadId], ...newMsgArray],
-          }
+            ["conversation"]: [...msgs["conversation"], ...newMsgArray],
+          },
+          send: true
         });
-      } else if (task.state.deltaState === "input" && msgs[task.threadId]) {
+      } else if (task.state.deltaState === "input" && msgs["conversation"]) {
         // In the case where the response is coming from HTTP not websocket
         // The state will be set to input by the NodeJS Task Processor
         const lastElement = {
-          ...msgs[task.threadId][msgs[task.threadId].length - 1],
+          ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
-        lastElement.text = task.output.text;
+        lastElement.text = task.response.text;
         lastElement.isLoading = false;
         updateTask({ "output.msgs": 
           {
             ...msgs,
-            [task.threadId]: [...msgs[task.threadId].slice(0, -1), lastElement],
+            ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
           }
         });
         // TaskChat is dealing with input
@@ -182,7 +185,7 @@ const TaskChat = (props) => {
 
   useEffect(() => {
     if (task) {
-      console.log("Trace task ", task)
+      //console.log("Trace task ", task)
     }
   }, [task]);
 
@@ -208,9 +211,6 @@ const TaskChat = (props) => {
       setResponsePending(true);
       // Set update to send to NodeJS Task Processor
       updateState("sending");
-      updateTask({ "request.input": prompt, send: true });
-      // Clear the textbox
-      setPrompt("");
     },
     [prompt, setPrompt]
   );

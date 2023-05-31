@@ -9,7 +9,7 @@ import { useGlobalStateContext } from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
-const useStartTask = (startId, threadId = null, component_depth = 0) => {
+const useStartTask = (startId, threadId = null, stackPtr = null) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setTaskStartError] = useState();
 
@@ -19,12 +19,12 @@ const useStartTask = (startId, threadId = null, component_depth = 0) => {
     }
     const fetchTaskFromAPI = async () => {
       try {
-        log("useStartTask", startId);
-        console.log("Starting task ", startId)
-        let task = { id: startId, stackPtr: component_depth };
-        if (threadId) {
-          task["threadId"] = threadId;
-        }
+        log("useStartTask", startId, stackPtr);
+        let task = { 
+          id: startId,
+          ...(stackPtr && { stackPtr: stackPtr }),
+          ...(threadId && { threadId: threadId })
+        };        
         fetchTask(globalState, "task/start", task);
       } catch (error) {
         setTaskStartError(error.message);

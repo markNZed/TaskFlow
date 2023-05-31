@@ -36,7 +36,7 @@ Coding preferences:
   * Prop to update the state in a Task
     * `updateState('input')` is equivalent to `setTask(p => { return {...p, state : 'input'} })`
   * Prop for websocket event that is filtered so only events for the task.id initiating the task arrive
-  * Prop component_depth that presents where in the component stack the component is (starts at 1)
+  * Prop stackPtr that presents where in the component stack the component is (starts at 1)
   * Logging of changes for any Task variable e.g. `const [X, setX] = useTaskState(null,'X')`
 
 ### Debug

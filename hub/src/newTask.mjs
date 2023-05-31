@@ -17,7 +17,7 @@ async function newTask_async(
     processorId,
     sessionId,
     groupId,
-    component_depth = null,
+    stackPtr = null,
     threadId = null,
     siblingTask = null
   ) {
@@ -28,13 +28,14 @@ async function newTask_async(
       "processorId:", processorId, 
       "sessionId:", sessionId, 
       "groupId:", groupId, 
-      "component_depth:", component_depth, 
+      "stackPtr:", stackPtr, 
       "threadId:", threadId
     );
     */    
+    let instanceId = uuidv4();
     let siblingInstanceId;
     let prevInstanceId = null;
-    let newThread = false;
+
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
       threadId = siblingTask.threadId;
@@ -46,9 +47,6 @@ async function newTask_async(
         prevInstanceId = {}
       }
       prevInstanceId[processorId] = siblingTask.instanceId
-    }
-    if (!threadId) {
-      newThread = true;
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
@@ -62,35 +60,116 @@ async function newTask_async(
       return taskCopy;
     }
 
-    if (!taskCopy?.config) {
-      taskCopy["config"] = {};
+    if (typeof stackPtr !== "number") {
+      if (taskCopy.stack) {
+        taskCopy["stackPtr"] = taskCopy.stack.length;
+      }
     }
-    if (!taskCopy?.input) {
-      taskCopy["input"] = {};
+
+    
+    if (taskCopy.config?.oneThread && taskCopy["stackPtr"] === taskCopy.stack.length) {
+      threadId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
+      let instanceIds = await threadsStore_async.get(threadId);
+      // There should be at max one instance
+      if (instanceIds) {
+        if (instanceIds.length > 1) {
+          throw new Error("More than one instance found for oneThread " + threadId)
+        } else {
+          // Returning last so continuing (maybe should return first?)
+          instanceId = instanceIds[0];
+          taskCopy = await instancesStore_async.get(instanceId);
+          taskCopy.state["current"] = undefined
+          // Delete so we restart with full task being synchronized
+          await activeTasksStore_async.delete(instanceId);
+          console.log(
+            "Restarting oneThread " + instanceId + " for " + taskCopy.id
+          )
+        }
+      } else {
+        console.log("Initiating oneThread " + threadId)
+      }
     }
-    if (!taskCopy?.output) {
-      taskCopy["output"] = {};
+
+    if (taskCopy.config?.restoreSession && taskCopy["stackPtr"] === taskCopy.stack.length) {
+      threadId = (id + sessionId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (instanceIds) {
+        if (instanceIds.length > 1) {
+          throw new Error("More than one instance found for restoreSession " + threadId)
+        } else {
+          // Returning last so continuing (maybe should return first?)
+          instanceId = instanceIds[0];
+          taskCopy = await instancesStore_async.get(instanceId);
+          // Delete so we restart with ful ltask being synchronized
+          await activeTasksStore_async.delete(instanceId);
+          console.log("Restarting session " + instanceId + " for " + taskCopy.id);
+        }
+      } else {
+        console.log("Initiating restoreSession thread " + threadId)
+      }
     }
-    if (!taskCopy?.privacy) {
-      taskCopy["privacy"] = {};
+
+    if (taskCopy.config?.collaborate && taskCopy["stackPtr"] === taskCopy.stack.length) {
+      // Taskflow to choose the group (taskflow should include that)
+      if (!groupId) {
+        // This is a hack for the collaborate feature
+        groupId = taskCopy.config.collaborate;
+      }
+      threadId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties;
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (instanceIds) {
+        if (instanceIds.length > 1) {
+          throw new Error("More than one instance found for restoreSession " + threadId)
+        } else {
+          // Returning last so continuing (maybe should return first?)
+          instanceId = instanceIds[0];
+          taskCopy = await instancesStore_async.get(instanceId);
+          // Delete so we restart with ful ltask being synchronized
+          await activeTasksStore_async.delete(instanceId);
+          console.log(
+            "Restarting collaborate " + instanceId + " for " + taskCopy.id
+          );
+        }
+      } else {
+        console.log("Initiating collaborate on " + threadId)
+      }
     }
-    if (!taskCopy?.request) {
-      taskCopy["request"] = {};
+
+    // Must set threadId after oneThread, restoreSession and collaborate
+    if (threadId) {
+      taskCopy["threadId"] = threadId;
+      // If instanceId already exists then do nothing otherwise add instance to thread
+      let instanceIds = await threadsStore_async.get(threadId);
+      if (!instanceIds) {
+        await threadsStore_async.set(taskCopy["threadId"], [instanceId]);
+        console.log("Initiating thread " + taskCopy["threadId"] + " with instanceId: " + instanceId)
+      } else if (instanceIds.length === 1) {
+        instanceId = instanceIds[0]
+        console.log("Already in thread " + taskCopy["threadId"] + " with instanceId: " + instanceId)
+      } else if (!instanceIds.includes(instanceId)) {
+        instanceIds.push(instanceId);
+        await threadsStore_async.set(taskCopy["threadId"], instanceIds);
+        console.log("Adding to thread " + taskCopy["threadId"] + " instanceId: " + instanceId)
+      }
+    } else {
+      taskCopy["threadId"] = instanceId;
     }
-    if (!taskCopy?.response) {
-      taskCopy["response"] = {};
-    }
-    if (!taskCopy?.state) {
-      taskCopy["state"] = {};
-    }
-    taskCopy["prevInstanceId"] = prevInstanceId 
-    taskCopy["userId"] = userId;
-    taskCopy["source"] = hubId;
-    taskCopy["sessionId"] = sessionId;
-    let instanceId = uuidv4();
-    taskCopy["instanceId"] = instanceId;
+
+    taskCopy.config = taskCopy.config || {};
+    taskCopy.input = taskCopy.input || {};
+    taskCopy.output = taskCopy.output || {};
+    taskCopy.privacy = taskCopy.privacy || {};
+    taskCopy.request = taskCopy.request || {};
+    taskCopy.response = taskCopy.response || {};
+    taskCopy.state = taskCopy.state || {};
+
+    taskCopy.prevInstanceId = prevInstanceId;
+    taskCopy.userId = userId;
+    taskCopy.source = hubId;
+    taskCopy.sessionId = sessionId;
+    
     if (siblingInstanceId) {
-      // Should reanme to sibling?
+      // Should rename to sibling?
       taskCopy["parentInstanceId"] = siblingInstanceId;
       let parent = await instancesStore_async.get(siblingInstanceId);
       if (parent.request?.address) {
@@ -100,8 +179,9 @@ async function newTask_async(
         threadId = parent.threadId;
       }
       // We start with the deepest component in the stack
-      if (typeof component_depth === "number") {
-        taskCopy["stackPtr"] = component_depth;
+      // This will not work with how we have stackPtr set earlier
+      if (typeof stackPtr === "number") {
+        taskCopy["stackPtr"] = stackPtr;
       } else if (parent?.stackPtr) {
         taskCopy["stackPtr"] = parent.stackPtr;
       } else if (taskCopy?.stack) {
@@ -115,25 +195,8 @@ async function newTask_async(
       }
       parent.childrenInstances.push(instanceId);
       await instancesStore_async.set(siblingInstanceId, parent);
-    } else if (taskCopy?.stack) {
-      // Note component_depth may be modified in api/task/start
-      taskCopy["stackPtr"] = taskCopy.stack.length;
     }
-    if (threadId) {
-      taskCopy["threadId"] = threadId;
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        instanceIds.push(instanceId);
-      } else {
-        instanceIds = [instanceId];
-      }
-      await threadsStore_async.set(threadId, instanceIds);
-    } else {
-      taskCopy["threadId"] = instanceId;
-      await threadsStore_async.set(instanceId, [instanceId]);
-    }
-    taskCopy["createdAt"] = Date.now();
-    await instancesStore_async.set(instanceId, taskCopy);
+    taskCopy["createdAt"] = taskCopy["createdAt"] || Date.now();
 
     const outputs = await outputStore_async.get(threadId);
     //console.log("outputs", outputs)
@@ -192,62 +255,8 @@ async function newTask_async(
       }
     }
 
-    if (taskCopy.config?.oneThread) {
-      const threadId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        // Returning last so continuing (maybe should return first?)
-        const instanceId = instanceIds[instanceIds.length - 1];
-        taskCopy = await instancesStore_async.get(instanceId);
-        // Delete so we restart with ful ltask being synchronized
-        await activeTasksStore_async.delete(instanceId);
-        console.log(
-          "Restarting one_thread " + instanceId + " for " + taskCopy.id
-        );
-      } else {
-        taskCopy.threadId = threadId
-        console.log("Continuing one_thread " + threadId)
-      }
-    }
-    
-    if (taskCopy.config?.restoreSession) {
-      const threadId = (id + sessionId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        // Returning last so continuing (maybe should return first?)
-        const instanceId = instanceIds[instanceIds.length - 1];
-        taskCopy = await instancesStore_async.get(instanceId);
-        // Delete so we restart with ful ltask being synchronized
-        await activeTasksStore_async.delete(instanceId);
-        console.log("Restarting session " + instanceId + " for " + taskCopy.id);
-      } else {
-        taskCopy.threadId = threadId
-        console.log("Restoring session " + threadId)
-      }
-    }
-
-    if (taskCopy.config?.collaborate) {
-      // Taskflow to choose the group (taskflow should include that)
-      if (!groupId) {
-        // This is a hack for the collaborate feature
-        groupId = taskCopy.config.collaborate;
-      }
-      const threadId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties;
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        // Returning last so continuing (maybe should return first?)
-        const instanceId = instanceIds[instanceIds.length - 1];
-        taskCopy = await instancesStore_async.get(instanceId);
-        // Delete so we restart with ful ltask being synchronized
-        await activeTasksStore_async.delete(instanceId);
-        console.log(
-          "Restarting collaboration " + instanceId + " for " + taskCopy.id
-        );
-      } else {
-        taskCopy.threadId = threadId
-        console.log("Collaborating on " + threadId)
-      }
-    }
+    // Must set instanceId after threadsStore_async
+    taskCopy["instanceId"] = instanceId;
 
     // Build list of processesors that need to be notified about this task
     let taskProcessors = []

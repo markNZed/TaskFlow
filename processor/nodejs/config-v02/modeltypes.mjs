@@ -17,11 +17,11 @@ const modeltypes = [
         messages: [
             {
                 role: 'user',
-                content: `When I amke a spelling mistake tell me.`,
+                text: `When I amke a spelling mistake tell me.`,
             },
             {
                 role: 'assistant',
-                content: `OK. You made a spelling mistake "amake" `,
+                text: `OK. You made a spelling mistake "amake" `,
             },
         ],
     */

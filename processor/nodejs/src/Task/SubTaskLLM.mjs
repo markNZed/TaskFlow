@@ -132,14 +132,8 @@ async function chat_prepare_async(task) {
   let messages = [];
 
   if (!initializing && T("output.msgs") && T("output.msgs")[T("threadId")]) {
-    // Structure output.msgs in expected format
-    messages = T("output.msgs")[T("threadId")].map(msg => ({
-      role: msg.sender === 'bot' ? 'assistant' : 'user',
-      text: msg.text,
-    }));
     console.log(
-      "!initializing T('threadId') " +
-        T("threadId")
+      "!initializing threadId " + T("threadId")
     );
   }
 
@@ -201,17 +195,13 @@ async function chat_prepare_async(task) {
   const instanceId = T("instanceId");
   const modelTypeId = modelType.id;
 
+  //console.log("messages before map of id", messages);
+  // The index starts at 1 so we do not have an id === 0 as this seemed to cause issues in ChatGPTAPI
   messages = messages.map((message, index) => ({
     ...message,
-    parentMessageId: index === 0 ? null : (index - 1),
-    id: index
+    parentMessageId: index === 0 ? null : (index),
+    id: (index + 1)
   }));
-  // ChatGPTAPI is expecting text not content
-  messages = messages.map((message) => ({
-    ...message,
-    text: message.content,
-  }));
-  console.log("messages", messages);
 
   return {
     systemMessage,
@@ -261,7 +251,7 @@ async function ChatGPTAPI_request_async(params) {
 
   const debug = true;
 
-  const lastMessageId = messages.length - 1;
+  const lastMessageId = messages.length;
 
   // Need to account for the system message and some margin because the token count may not be exact.
   //console.log("prompt " + prompt + " systemMessage " + systemMessage)
@@ -290,8 +280,8 @@ async function ChatGPTAPI_request_async(params) {
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
     getMessageById: async (id) => {
-      //console.log("getMessageById", id, messages[id])
-      return messages[id];
+      console.log("getMessageById", id, messages[(id - 1)])
+      return messages[(id - 1)];
     },
     upsertMessage: async (id) => {
       // Not used

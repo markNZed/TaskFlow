@@ -26,7 +26,7 @@ function TaskGrid(props) {
     task,
     setTask,
     useTasksState,
-    component_depth,
+    stackPtr,
     startTaskFn,
     useTaskState,
   } = props;
@@ -35,7 +35,7 @@ function TaskGrid(props) {
   const [gridTask, setGridTask] = useTaskState(null, "gridTask");
 
   useEffect(() => {
-    startTaskFn(task.id, null, component_depth);
+    startTaskFn(task.id, null, stackPtr);
   }, []);
 
   useEffect(() => {
@@ -93,11 +93,11 @@ function TaskGrid(props) {
             {stack && (
               <DynamicComponent
                 key={instanceId}
-                is={stack[component_depth]}
+                is={stack[stackPtr]}
                 task={tasks[idx]}
                 setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                 parentTask={gridTask}
-                component_depth={component_depth}
+                stackPtr={stackPtr}
               />
             )}
           </Grid>

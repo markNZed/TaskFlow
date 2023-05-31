@@ -6,30 +6,30 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React from "react";
 import Avatar from "@mui/material/Avatar";
-import bot from "../../../assets/bot.svg";
+import assistant from "../../../assets/assistant.svg";
 import user from "../../../assets/user.svg";
 
-const Icon = ({ sender }) => {
+const Icon = ({ role }) => {
   //console.log("Icon compoent")
 
-  if (sender === "bot") {
+  if (role === "assistant") {
     return (
       <div className="profile">
-        <img src={bot} alt={sender} />
+        <img src={assistant} alt={role} />
       </div>
     );
   }
 
-  if (sender === "user") {
+  if (role === "user") {
     return (
       <div className="profile">
-        <img src={user} alt={sender} />
+        <img src={user} alt={role} />
       </div>
     );
   }
 
   // impersonation
-  return <Avatar {...stringAvatar(sender)} variant="square" />;
+  return <Avatar {...stringAvatar(role)} variant="square" />;
 };
 
 export default React.memo(Icon);

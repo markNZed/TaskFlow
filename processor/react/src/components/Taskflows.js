@@ -31,7 +31,7 @@ function Taskflows(props) {
     startTaskError,
     startTask,
     startTaskFn,
-    component_depth,
+    stackPtr,
   } = props;
 
   const { globalState } = useGlobalStateContext();
@@ -54,7 +54,7 @@ function Taskflows(props) {
       const start = globalState.selectedTaskId + ".start";
       const index = tasksIds.indexOf(start);
       if (index === -1) {
-        startTaskFn(start, null, component_depth + 1);
+        startTaskFn(start);
       } else {
         setTasksIdx(index);
       }
@@ -66,9 +66,7 @@ function Taskflows(props) {
       );
       const longestKey = sortedKeys[sortedKeys.length - 1];
       startTaskFn(
-        globalState.taskflowsTree[longestKey].id + ".start",
-        null,
-        component_depth + 1
+        globalState.taskflowsTree[longestKey].id + ".start"
       );
       setHideSide(true);
       setDrawWidth(0);
@@ -193,7 +191,7 @@ function Taskflows(props) {
                     task={tasks[idx]}
                     setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
-                    component_depth={component_depth}
+                    stackPtr={stackPtr}
                   />
                 </div>
               )

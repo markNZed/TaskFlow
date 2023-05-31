@@ -34,15 +34,18 @@ const TaskChat_async = async function (wsSendTask, task) {
     // those changes back.
     const taskCopy = JSON.parse(JSON.stringify(task)); // deep copy
     const TC = utils.createTaskValueGetter(taskCopy);
-    if (TC("request.input")) {
-      TC("request.prompt", T("request.input"))
-    }
-    // This will update the state on client 
+    let msgs = TC("output.msgs");
+    //console.log("msgs before", msgs);
+    // Remove the assistant message
+    msgs["conversation"].pop();
+    // Remove the prompt
+    const msgPrompt = msgs["conversation"].pop();
+    TC("request.prompt", msgPrompt.text)
+   // This will update the state on client 
     console.log("TaskChat sending");
     const subTask = await SubTaskLLM_async(wsSendTask, taskCopy);
     const response_text = await subTask.response.text_promise
     T("response.text", response_text);
-    T("output.text", response_text);
     T("state.current", "input");
     T("state.deltaState", "input");
   }

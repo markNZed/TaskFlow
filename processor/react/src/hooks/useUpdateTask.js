@@ -15,14 +15,14 @@ import { useWebSocketContext } from "../contexts/WebSocketContext";
 //          Task with task
 // We should combine these
 
-const useUpdateTask = (task, setTask, local_component_depth) => {
+const useUpdateTask = (task, setTask, local_stackPtr) => {
   const { globalState } = useGlobalStateContext();
   const [updateTaskError, setUpdateTaskError] = useState();
   const { sendJsonMessagePlus } = useWebSocketContext();
 
   useEffect(() => {
     // This is executing twice
-    if (task?.send && task.stackPtr === local_component_depth && !updateTaskError) {
+    if (task?.send && task.stackPtr === local_stackPtr && !updateTaskError) {
       log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {

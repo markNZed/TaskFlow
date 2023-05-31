@@ -1,18 +1,8 @@
 /* ToDo
 -------
-Check . is not used in keys or it breaks setNestedProperties
+Check '.' is not used in keys or it breaks setNestedProperties
 Sending task as done but then reusing it in React processor seems problematic
-  Need something like next rather than done - done indicates deleted from the processor also?
-If a conversation exists then the output.msgs needs to be initialized ? Should already be there.
-Task switching is not great
-  TaskChat is returnig null on start, then no update from node, 
-Still event update of text is not as smooth as I expect.
-Something weird with the stepper and task state interferring. Leaving should not run SM if it does not match.
-Move chat-config repo inside taskflow and load the taskflow dir so we have the root folder under git. This might fix some issues with git.
-Switching conversations unreliable
-Should we be sending diff to Hub?
-Forget is not removing messages from conversation ?
-Exercise sequencing
+  Need something like next rather than done - done indicates deleted from the processor also? 
 Check errors are working
 Code review/cleanup - identify refactoring goals
 SubTask should use task for IO
@@ -133,6 +123,7 @@ Backlog
 
     Low Priority
     ------------
+    Sending diff to Hub? Later
     JWT connection between Task Hub and Processors (currently rely on Cloudflare)
     Move to TypeScript
     Way for tasks to register websocket event handlers

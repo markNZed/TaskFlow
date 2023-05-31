@@ -28,7 +28,7 @@ const TaskConversation = (props) => {
     startTaskError,
     startTask,
     startTaskFn,
-    component_depth,
+    stackPtr,
     useTaskState,
   } = props;
 
@@ -45,13 +45,10 @@ const TaskConversation = (props) => {
     "conversationTask"
   );
 
-  let welcomeMessage_default =
-    "Bienvenue ! Comment puis-je vous aider aujourd'hui ?";
-
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, component_depth);
+    startTaskFn(task.id, task.threadId, stackPtr);
   }, []);
 
   useEffect(() => {
@@ -62,11 +59,9 @@ const TaskConversation = (props) => {
 
   useEffect(() => {
     if (task && task.output.msgs) {
-      if (!deepCompare(msgs, task.output.msgs)) {
-        setMsgs(task.output.msgs);
-      }
+      setMsgs(task.output.msgs);
     }
-  }, [task.output.msgs]);
+  }, [task.output?.msgs]);
 
   useEffect(() => {
     if (isMountedRef.current) {
@@ -115,16 +110,15 @@ const TaskConversation = (props) => {
           maxHeight: `${chatContainermaxHeight}px`,
         }}
       >
-        {task &&
-          msgs[task.threadId] &&
-          msgs[task.threadId].map((msg, index) => {
+        { msgs["conversation"] &&
+          msgs["conversation"].map((msg, index) => {
             return (
               <div
                 key={index}
-                className={`wrapper ${msg.sender === "bot" && "ai"}`}
+                className={`wrapper ${msg.role === "assistant" && "ai"}`}
               >
                 <div className="chat">
-                  <Icon sender={msg.sender} />
+                  <Icon role={msg.role} />
                   {msg.isLoading ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (
@@ -143,11 +137,11 @@ const TaskConversation = (props) => {
         {task && (
           <DynamicComponent
             key={task.id}
-            is={task.stack[component_depth]}
+            is={task.stack[stackPtr]}
             task={task}
             setTask={setTask}
             parentTask={conversationTask}
-            component_depth={props.component_depth}
+            stackPtr={props.stackPtr}
           />
         )}
       </div>

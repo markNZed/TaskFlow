@@ -31,11 +31,11 @@ router.post("/start", async (req, res) => {
     const sessionId = task.sessionId;
     const processorId = task.source;
 
-    const component_depth = task.stackPtr;
+    const stackPtr = task.stackPtr;
 
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await newTask_async(startId, userId, true, processorId, sessionId, task?.groupId, component_depth, threadId, siblingTask);
+      await newTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
       res.json({task: "synchronizing"});
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);
@@ -53,7 +53,7 @@ router.post("/update", async (req, res) => {
   console.log("/hub/api/task/update");
   let userId = utils.getUserId(req);
   if (userId) {
-    //console.log("req.body " + JSON.stringify(req.body))
+    //console.log("req.body", req.body.task.output.msgs)
     let task = req.body.task;
     task["send"] = false;
     // We intercept tasks that are done.

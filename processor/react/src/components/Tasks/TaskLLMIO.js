@@ -30,7 +30,7 @@ const TaskLLMIO = (props) => {
     setTask,
     updateTask,
     updateState,
-    component_depth,
+    stackPtr,
     //socketResponses,
     //setSocketResponses,
   } = props;
@@ -49,10 +49,10 @@ const TaskLLMIO = (props) => {
   const [myLastState, setMyLastState] = useState("");
   const [socketResponses, setSocketResponses] = useState([]);
 
-  // This is the level where we are going to use the task so set the component_depth
+  // This is the level where we are going to use the task so set the stackPtr
   // Could have a setDepth function in withTask
   useEffect(() => {
-    updateTask({ stackPtr: component_depth });
+    updateTask({ stackPtr: stackPtr });
   }, []);
 
   // Reset the task. Allows for the same component to be reused for different tasks.

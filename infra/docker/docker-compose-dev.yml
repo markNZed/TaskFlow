@@ -13,6 +13,9 @@ services:
       - REACT_APP_TASKHUB_URL=http://localhost:5001
       - TASKHUB_URL=http://localhost:5001
       - NODEJS_URL=http://localhost:5000
+    ports:
+      - "127.0.0.1:9229:9229" # debug of hub
+      - "127.0.0.1:9230:9230" # debug of nodejs
     networks:
       - web-proxy
 

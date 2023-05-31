@@ -31,7 +31,7 @@ function TaskStepper(props) {
     task,
     setTask,
     useTasksState,
-    component_depth,
+    stackPtr,
     startTaskError,
     startTask,
     nextTaskError,
@@ -52,7 +52,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, null, component_depth); // will set startTask or startTaskError
+    startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {
@@ -162,13 +162,13 @@ function TaskStepper(props) {
               {stack && (
                 <DynamicComponent
                   key={instanceId}
-                  is={stack[component_depth]}
+                  is={stack[stackPtr]}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   leaving={leaving}
                   entering={entering}
                   parentTask={stepperTask}
-                  component_depth={component_depth}
+                  stackPtr={stackPtr}
                 />
               )}
             </AccordionDetails>

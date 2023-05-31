@@ -4,12 +4,13 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTasksStore_async, activeTaskProcessorsStore_async } from "./storage.mjs";
+import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async } from "./storage.mjs";
 import { wsSendTask } from "./websocket.js";
 
 const syncTasks_async = async (key, value) => {
 
   //console.log("syncTasks_async", key)
+  await instancesStore_async.set(value.instanceId, value);
 
   // So we store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
