@@ -3,13 +3,16 @@
 The Task Hub is implemented in node using the Express framework and SQLite database. It provides the following features:
 * Task flows (i.e., task configurations) are stored
 * Processors register with the Hub via HTTP request
-* Processors initiate a session via HTTP request
+  * Maintain the list of active processors
+* Processors can initiate a sessionId via HTTP request
 * Processors send an HTTP request to the Hub's "start" route to initiate a Task sequence
   * The relevant processor(s) are selected based on the Task's environment definition
 * Synchronization of Tasks across processors
   * Processors send Task updates to Hub via HTTP request
   * The Hub sends diffential Task updates to all relevant processors via websocket
     * The differential supports merging of distributed Task state
+* Manage oneThread configuration (only one instance of the Task per user)
+* manage collaborate configuration (only one instance of the Task per group) 
 * Task interception
   * When a Task is done the Hub sends the next Task(s)
   * When a Task contains an error the Hub sends an error Task

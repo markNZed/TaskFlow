@@ -1,17 +1,9 @@
 /* ToDo
 -------
-Don't have a logout option
-Multiple browsers with oneThread ?
-  The updates should go to all React but only one should interact?
-    Using task.source to filter sending updates
-  When processors starts the task may already exist - then it just adds itself?
-  Sending from anohter processor - it does not recieve the initial message sent to nodejs
-SessionId should not be used or set per processor
 Dealing with concurrent requests?
   Currently hub will send diffs 
   If there is one processor then it could block
-    Could be based on state to being with
-Collaborate example
+    Could be based on state to begin with
 Check '.' is not used in keys or it breaks setNestedProperties
 Time in oneThread messages should be aligned with browser timezone (needs to be filled in by Hub?)
 Sending task as done but then reusing it in React processor seems problematic
@@ -137,7 +129,8 @@ Backlog
 
     Low Priority
     ------------
-    Sending diff to Hub? Later
+    Add a logout option
+    Sending diff to Hub from Processor during update
     JWT connection between Task Hub and Processors (currently rely on Cloudflare)
     Move to TypeScript
     Way for tasks to register websocket event handlers
