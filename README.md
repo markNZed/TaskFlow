@@ -4,11 +4,11 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 # Overview
 
-T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may manage a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may be distributed over many processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
-T@skFlow is intended to provide a flexible infrastructure for human-computer interaction. The configuration of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
+T@skFlow is intended to provide a flexible infrastructure for human-computer interaction. Specific configurations of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 T@skFlow will play nicely with:
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
@@ -18,15 +18,17 @@ T@skFlow will play nicely with:
 
 Tasks consist of:
 * Task Definition that conform to a generic Task schema
-  * In Task Definition may reference data not provided by T@skFLow
+  * A Task may reference data not provided by T@skFLow
 * Task Function available in one or more Task Environment(s)
-  * A Task Functions may use API services not provided by T@askFlow
+  * A Task Functions may use services not provided by T@askFlow
+* Task Data available in one or more Task Environment(s)
+  * Task Data may use services not provided by T@skFlow
 
-For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow can provide any web-based interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to build a workflow.
+For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in teory, be built using T@askFlow).
 
 The concpet of **Task Instance** refers to a particular Task Definition object.
 
-The concept of **Task Context** refers to the data and functionality beyond the Task Definition and Task Function that is used by the Task Instance.  
+The concept of **Task Context** refers to the total data and functionality used by the Task this may be beyond the Task Function and Task Data.  
 
 ## Task Processor
 

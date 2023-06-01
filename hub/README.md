@@ -37,4 +37,5 @@ Then to run: `npm start`
   * Task functions not supported by Processors in the HUb's network are passed up
 * Security/Privacy
   * Filtering of Task content
+* Separation of concerns into a pipeline of Hub Processors 
 
