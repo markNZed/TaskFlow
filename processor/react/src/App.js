@@ -12,7 +12,6 @@ import Taskflows from "./components/Taskflows";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
-import { useWebSocketContext } from "./contexts/WebSocketContext";
 import { hubUrl } from "./config";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +21,6 @@ function App() {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
-  const { webSocketEventEmitter } = useWebSocketContext();
   const storageRef = useRef(null);
 
   useEffect(() => {
@@ -122,6 +120,9 @@ function App() {
     }
   }, [globalState]);
 
+  // This is a workaround for Firefox private browsing mode not supporting IndexedDB
+  // There's an about:config workaround by setting dom.indexedDB.privateBrowsing.enabled to true 
+  // Of course this will forego the privacy guarantees of private browsing...
   useEffect(() => {
     const initializeStorage = async () => {
       const storageInstance = await openStorage();

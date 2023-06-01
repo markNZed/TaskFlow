@@ -1,6 +1,6 @@
 /* ToDo
 -------
-Restarting of oneThread
+Don't have a logout option
 Multiple browsers with oneThread ?
   The updates should go to all React but only one should interact?
     Using task.source to filter sending updates

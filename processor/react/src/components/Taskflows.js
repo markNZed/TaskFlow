@@ -60,7 +60,8 @@ function Taskflows(props) {
       }
       setTitle(globalState.taskflowsTree[globalState.selectedTaskId].label);
     }
-    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1) {
+    // If we only have one start task and the Processor has registered with the hub
+    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && globalState.hubId && globalState.hubId !== "unknown") {
       const sortedKeys = Object.keys(globalState.taskflowsTree).sort(
         (a, b) => a.length - b.length
       );

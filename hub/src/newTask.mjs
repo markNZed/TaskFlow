@@ -97,8 +97,10 @@ async function newTask_async(
         console.log("User not in group", groupId, userId);
         taskCopy["error"] = "User not in group";
         return taskCopy;
+      } else {
+        console.log("User in group", groupId, userId);
       }
-      instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
+      instanceId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
       threadId = instanceId;
       let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
