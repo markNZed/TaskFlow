@@ -40,14 +40,9 @@ async function newTask_async(
       siblingInstanceId = siblingTask.instanceId;
       console.log("sibling instanceId", siblingInstanceId)
       threadId = siblingTask.threadId;
-      // In the case where the thread advances on anohter processor 
+      // In the case where the thread advances on another processor 
       // we still need to be able to find the nextTask 
-      if (siblingTask.prevInstanceId) {
-        prevInstanceId = siblingTask.prevInstanceId
-      } else {
-        prevInstanceId = {}
-      }
-      prevInstanceId[processorId] = siblingTask.instanceId
+      prevInstanceId = siblingTask.instanceId
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)

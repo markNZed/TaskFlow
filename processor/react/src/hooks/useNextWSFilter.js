@@ -17,7 +17,7 @@ function useNextWSFilter(instanceId, doneTask, onNext) {
     // Maybe we need the prevInstance per processor?
     //if (doneTask && task.threadId === doneTask.threadId ) 
     const processorId = globalState?.processorId
-    if (doneTask && task && task.prevInstanceId && task.prevInstanceId[processorId] === doneTask.instanceId ) {
+    if (doneTask && task && task.prevInstanceId && task.prevInstanceId === doneTask.instanceId ) {
       console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, task.prevInstanceId);
       //console.log("useNextWSFilter handleNext", task);
       onNext(task);
