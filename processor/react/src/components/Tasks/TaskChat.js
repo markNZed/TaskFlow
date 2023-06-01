@@ -45,8 +45,7 @@ const TaskChat = (props) => {
     updateTask,
     updateState,
     task,
-    setTask,
-    stackPtr,
+    processorId,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -89,7 +88,6 @@ const TaskChat = (props) => {
             case 'final':
               responseTextRef.current = text;
               updateState("input")
-              setResponsePending(false);
               break;
           }
           //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
@@ -119,7 +117,7 @@ const TaskChat = (props) => {
       // The . in the thread Id causes problems for updateTask
       const msgs = {
         ["conversation"]: [
-          { role: "assistant", text: welcomeMessage, isLoading: false },
+          { role: "assistant", text: welcomeMessage },
         ],
       }
       //console.log("TaskChat useEffect msgs", msgs);
@@ -136,22 +134,22 @@ const TaskChat = (props) => {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
-        lastElement.isLoading = false;
         updateTask({ "output.msgs": 
           {
             ...msgs,
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
-          }
+          },
+          "state.isLoading": false
         });
         // Detect change to sending and creaet a slot for new msgs
       } else if (task.state.deltaState === "sending") {
-        console.log("task.state.deltaState === sending", msgs);
+        //console.log("task.state.deltaState === sending", msgs);
         // Should be named delta not deltaState (this ensures we see the event once)
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
         const newMsgArray = [
-          { role: "user", text: prompt, isLoading: false  },
-          { role: "assistant", text: "", isLoading: true },
+          { role: "user", text: prompt },
+          { role: "assistant", text: "" },
         ];
         // Clear the textbox
         setPrompt("");
@@ -160,6 +158,7 @@ const TaskChat = (props) => {
             ...msgs,
             ["conversation"]: [...msgs["conversation"], ...newMsgArray],
           },
+          "state.isLoading": true,
           send: true
         });
       } else if (task.state.deltaState === "input" && msgs["conversation"]) {
@@ -169,12 +168,21 @@ const TaskChat = (props) => {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
-        lastElement.isLoading = false;
+        // The hub will set task.source
+        let shouldSend = false;
+        if (responsePending) {
+          setResponsePending(false);
+          shouldSend = true;
+        }
+        console.log("Should send", shouldSend, "processorId", processorId);
+        // Send to sync latest outputs via Hub
         updateTask({ "output.msgs": 
           {
             ...msgs,
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
-          }
+          },
+          "state.isLoading": false,
+          send: shouldSend
         });
         // TaskChat is dealing with input
       } else if (task.state.current === "input") {

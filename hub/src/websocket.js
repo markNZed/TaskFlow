@@ -47,11 +47,13 @@ const wsSendTask = async function (task, command = null) {
         console.log("wsSendTask no diff", diff);
         return null;
       }
+       // Because this routes the task but does not change so need to add back in
+       // Points to a class of concern
       diff.instanceId = task.instanceId;
       diff.stackPtr = task.stackPtr;
       diff.destination = task.destination;
       message["task"] = diff;
-      //console.log("wsSendTask diff", diff);
+      //console.log("wsSendTask diff.destination", diff.destination);
     }
   } else {
     message["task"] = task;
@@ -84,21 +86,19 @@ function initWebSocketServer(server) {
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)
         }
-        const activeProcessors = await activeTaskProcessorsStore_async.get(j.task.instanceId);
-        // We have the processor list in activeTasksStore and in sessionsStore
-        // Do we need the ssessionsStore?
+        const activeTaskProcessors = await activeTaskProcessorsStore_async.get(j.task.instanceId);
         if (j.command === "update") {throw new Error("update not implemented")}
         if (j.command === "partial") {
           //console.log("ws update", j.task)
-          if (!activeProcessors) {
+          if (!activeTaskProcessors) {
             // This can happen if the React processor has not yet registered after a restart of the Hub
-            console.log("No processors for ", j.task.id, j.task.instanceId, " in activeProcessorsStore");
+            console.log("No processors for ", j.task.id, j.task.instanceId, " in activeTaskProcessorsStore_async");
             return;
             //throw new Error("No processors ", j.task);
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
-          for (const id of activeProcessors) {
+          for (const id of activeTaskProcessors) {
             if (id !== j.task.source) {
               const ws = connections.get(id);
               if (!ws) {
@@ -119,11 +119,11 @@ function initWebSocketServer(server) {
         let currentDateTimeString = currentDateTime.toString();
         const task = {
           updatedeAt: currentDateTimeString,
-          sessionId: j.task?.sessionId, 
+          sessionId: {[j.task.source]:j.task?.sessionId}, 
           destination: j.task.source,
         };
         wsSendTask(task, "pong");
-        //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
+        //console.log("Pong " + j.task?.sessionId[j.task.source] + " " + j.task.source)
       }
 
     });

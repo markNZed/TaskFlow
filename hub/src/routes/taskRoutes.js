@@ -28,7 +28,7 @@ router.post("/start", async (req, res) => {
 
     const startId = task.id;
     const threadId = task.threadId;
-    const sessionId = task.sessionId;
+    const sessionId = task.sessionId[task.source];
     const processorId = task.source;
 
     const stackPtr = task.stackPtr;

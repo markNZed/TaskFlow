@@ -37,7 +37,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
           snapshot.send = false;
           // Here we could check if the websocket is already open
           if (globalState.sessionId) {
-            sendJsonMessagePlus({"sessionId" : globalState.sessionId})
+            sendJsonMessagePlus({"sessionId" : {[globalState.processorId]: globalState?.sessionId}})
             console.log("Set sessionId ", globalState.sessionId);
           }
           // To stay in sync with the Hub

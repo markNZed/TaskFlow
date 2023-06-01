@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors } from "../storage.mjs";
+import { activeProcessorsStore_async } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
 
   console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments));
     
-  activeProcessors.set(processorId, {environments: environments})
+  activeProcessorsStore_async.set(processorId, {environments: environments})
   
   res.send({
     hubId: hubId,

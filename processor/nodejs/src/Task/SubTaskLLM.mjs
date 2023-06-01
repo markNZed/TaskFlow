@@ -22,13 +22,13 @@ modelTypes = utils.flattenObjects(modelTypes);
 
 const wsDelta = {}
 
-function SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId) {
+function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
   let response;
-  if (wsDelta[sessionId] === undefined) {
-    wsDelta[sessionId] = 0;
+  if (wsDelta[instanceId] === undefined) {
+    wsDelta[instanceId] = 0;
   }
-  if (wsDelta[sessionId] && wsDelta[sessionId] % 20 === 0) {
+  if (wsDelta[instanceId] && wsDelta[instanceId] % 20 === 0) {
     response = { text: partialResponse.text, mode: "partial" };
   } else if (incr) {
     response = { text: partialResponse.delta, mode: "delta" };
@@ -37,10 +37,9 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId) {
     const partialTask = {
       instanceId: instanceId, 
       response: response, 
-      sessionId: sessionId,
     };
     wsSendTask(partialTask, "partial");
-    wsDelta[sessionId] += 1;
+    wsDelta[instanceId] += 1;
   }
   //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
 }
@@ -59,7 +58,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
 async function chat_prepare_async(task) {
   const T = utils.createTaskValueGetter(task);
 
-  const sessionId = T("sessionId");
+  const instanceId = T("instanceId");
   let systemMessage = "";
   let initializing = false;
   let use_cache = CACHE_ENABLE;
@@ -192,7 +191,6 @@ async function chat_prepare_async(task) {
   }
 
   const threadId = T("threadId");
-  const instanceId = T("instanceId");
   const modelTypeId = modelType.id;
 
   //console.log("messages before map of id", messages);
@@ -216,7 +214,6 @@ async function chat_prepare_async(task) {
     modelTypeId,
     threadId,
     instanceId,
-    sessionId,
   };
 }
 
@@ -241,7 +238,6 @@ async function ChatGPTAPI_request_async(params) {
     modelTypeId,
     threadId,
     instanceId,
-    sessionId,
     wsSendTask,
   } = params;
 
@@ -305,7 +301,7 @@ async function ChatGPTAPI_request_async(params) {
 
   if (!noWebsocket) {
     messageParams["onProgress"] = (partialResponse) =>
-      SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId);
+      SendIncrementalWs(wsSendTask, partialResponse, instanceId);
   }
 
   let cachedValue = null;
@@ -331,17 +327,16 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   // Message can be sent from one of multiple sources
-  function message_from(source, text, noWebsocket, sessionId, instanceId) {
+  function message_from(source, text, noWebsocket, instanceId) {
     // Don't add ... when response is fully displayed
     console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
       instanceId: instanceId, 
       response: response, 
-      sessionId: sessionId,
     };
     if (!noWebsocket) {
-      wsDelta[sessionId] = 0
+      wsDelta[instanceId] = 0
       wsSendTask(partialTask, "partial");
     }
   }
@@ -360,10 +355,10 @@ async function ChatGPTAPI_request_async(params) {
       }
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
-      SendIncrementalWs(wsSendTask, partialResponse, instanceId, sessionId);
+      SendIncrementalWs(wsSendTask, partialResponse, instanceId);
       await sleep(80);
     }
-    message_from("cache", text, noWebsocket, sessionId, instanceId);
+    message_from("cache", text, noWebsocket, instanceId);
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
@@ -375,14 +370,14 @@ async function ChatGPTAPI_request_async(params) {
         console.log("Debug: ", cacheKeyText);
       }
       const text = "Dummy text";
-      message_from("Dummy API", text, noWebsocket, sessionId, instanceId);
+      message_from("Dummy API", text, noWebsocket, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {
       response_text_promise = api
         .sendMessage(prompt, messageParams)
         .then((response) => {
           let text = response.text;
-          message_from("API", text, noWebsocket, sessionId, instanceId);
+          message_from("API", text, noWebsocket, instanceId);
           if (use_cache) {
             cacheStore_async.set(cacheKey, response);
             console.log("cache stored key ", cacheKey);
@@ -391,7 +386,7 @@ async function ChatGPTAPI_request_async(params) {
         })
         .catch((error) => {
           let text = "ERROR " + error.message;
-          message_from("API", text, noWebsocket, sessionId);
+          message_from("API", text, noWebsocket, instanceId);
           return text;
         });
     }

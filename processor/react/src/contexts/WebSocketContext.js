@@ -39,7 +39,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         m["task"] = {}
       }
       m.task.destination = globalState?.hubId
-      m.task.sessionId = globalState?.sessionId
+      if (!m.task.sessionId) {
+        m.task.sessionId = {}
+      }
+      m.task.sessionId[globalState.processorId] = globalState?.sessionId
       m.task.source = globalState.processorId;
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
@@ -75,7 +78,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         let currentDateTime = new Date();
         let currentDateTimeString = currentDateTime.toString();  
         return {
-          sessionId: globalState?.sessionId,
+          sessionId: {[globalState.processorId]: globalState?.sessionId},
           updatedAt: currentDateTimeString,
           destination: globalState?.hubId,
         }

@@ -14,7 +14,10 @@ export const fetchTask = async (globalState, end_point, task) => {
     server = nodejsUrl;
   }
 
-  task.sessionId = globalState.sessionId;
+  if (!task.sessionId) {
+    task.sessionId = {};
+  }
+  task["sessionId"][globalState.processorId] = globalState.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
   }

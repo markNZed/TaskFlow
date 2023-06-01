@@ -112,6 +112,7 @@ const TaskConversation = (props) => {
       >
         { msgs["conversation"] &&
           msgs["conversation"].map((msg, index) => {
+            const isLastElement = index === msgs["conversation"].length - 1;
             return (
               <div
                 key={index}
@@ -119,7 +120,7 @@ const TaskConversation = (props) => {
               >
                 <div className="chat">
                   <Icon role={msg.role} />
-                  {msg.isLoading ? (
+                  {task.state.isLoading && isLastElement ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (
                     <div 

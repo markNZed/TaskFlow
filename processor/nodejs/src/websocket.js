@@ -24,9 +24,6 @@ function wsSendObject(message = {}) {
     if (!message?.task) {
       message["task"] = {}
     }
-    if (!message.task?.sessionId && message.command !== "ping") {
-      console.log("Missing sessionId", message);
-    }
     message.task.destination = hubId;
     message.task.source = processorId;
     if (message.command !== "ping") {

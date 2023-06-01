@@ -19,8 +19,8 @@ const TaskChat_async = async function (wsSendTask, task) {
     "TaskChat name " + T("name") + " state " + T("state.current")
   );
 
-  if (T("state.current") === undefined) {
-    console.log("TaskChat state.current is undefined");
+  if (T("state.current") === undefined || T("state.current") === "start") {
+    console.log("Returning null");
     return null
   }
 

@@ -82,8 +82,11 @@
           "type": "boolean"
         },
         "sessionId": {
-          "type": "string"
-        },
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },       
         "source": {
           "type": "string"
         },

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, sessionsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorsStore_async, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -38,6 +38,7 @@ async function newTask_async(
 
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
+      console.log("sibling instanceId", siblingInstanceId)
       threadId = siblingTask.threadId;
       // In the case where the thread advances on anohter processor 
       // we still need to be able to find the nextTask 
@@ -61,51 +62,27 @@ async function newTask_async(
     }
 
     if (typeof stackPtr !== "number") {
-      if (taskCopy.stack) {
-        taskCopy["stackPtr"] = taskCopy.stack.length;
-      }
+      taskCopy["stackPtr"] = taskCopy.stack.length;
+    } else {
+      taskCopy["stackPtr"] = stackPtr;
     }
-
     
     if (taskCopy.config?.oneThread && taskCopy["stackPtr"] === taskCopy.stack.length) {
-      threadId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      let instanceIds = await threadsStore_async.get(threadId);
+      instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
+      threadId = instanceId;
+      let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
-      if (instanceIds) {
-        if (instanceIds.length > 1) {
-          throw new Error("More than one instance found for oneThread " + threadId)
-        } else {
-          // Returning last so continuing (maybe should return first?)
-          instanceId = instanceIds[0];
-          taskCopy = await instancesStore_async.get(instanceId);
-          taskCopy.state["current"] = undefined
-          // Delete so we restart with full task being synchronized
-          await activeTasksStore_async.delete(instanceId);
-          console.log(
-            "Restarting oneThread " + instanceId + " for " + taskCopy.id
-          )
-        }
+      if (instance) {
+        taskCopy = instance
+        taskCopy.state["current"] = "start";
+        // Delete so we restart with full task being synchronized
+        // It would be better to do this only for the new processor
+        await activeTasksStore_async.delete(instanceId);
+        console.log(
+          "Restarting oneThread " + instanceId + " for " + taskCopy.id
+        )
       } else {
-        console.log("Initiating oneThread " + threadId)
-      }
-    }
-
-    if (taskCopy.config?.restoreSession && taskCopy["stackPtr"] === taskCopy.stack.length) {
-      threadId = (id + sessionId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        if (instanceIds.length > 1) {
-          throw new Error("More than one instance found for restoreSession " + threadId)
-        } else {
-          // Returning last so continuing (maybe should return first?)
-          instanceId = instanceIds[0];
-          taskCopy = await instancesStore_async.get(instanceId);
-          // Delete so we restart with ful ltask being synchronized
-          await activeTasksStore_async.delete(instanceId);
-          console.log("Restarting session " + instanceId + " for " + taskCopy.id);
-        }
-      } else {
-        console.log("Initiating restoreSession thread " + threadId)
+        console.log("Initiating oneThread with instanceId " + instanceId)
       }
     }
 
@@ -115,23 +92,26 @@ async function newTask_async(
         // This is a hack for the collaborate feature
         groupId = taskCopy.config.collaborate;
       }
-      threadId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties;
-      let instanceIds = await threadsStore_async.get(threadId);
-      if (instanceIds) {
-        if (instanceIds.length > 1) {
-          throw new Error("More than one instance found for restoreSession " + threadId)
-        } else {
-          // Returning last so continuing (maybe should return first?)
-          instanceId = instanceIds[0];
-          taskCopy = await instancesStore_async.get(instanceId);
-          // Delete so we restart with ful ltask being synchronized
-          await activeTasksStore_async.delete(instanceId);
-          console.log(
-            "Restarting collaborate " + instanceId + " for " + taskCopy.id
-          );
-        }
+      // Check if the user is in the group
+      if (!groups[groupId].users.includes(userId)) {
+        console.log("User not in group", groupId, userId);
+        taskCopy["error"] = "User not in group";
+        return taskCopy;
+      }
+      instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
+      threadId = instanceId;
+      let instance = await instancesStore_async.get(instanceId);
+      // There should be at max one instance
+      if (instance) {
+        taskCopy = instance
+        taskCopy.state["current"] = "start";
+        // Delete so we restart with full task being synchronized
+        await activeTasksStore_async.delete(instanceId);
+        console.log(
+          "Restarting collaborate " + instanceId + " for " + taskCopy.id
+        )
       } else {
-        console.log("Initiating collaborate on " + threadId)
+        console.log("Initiating collaborate with instanceId " + instanceId)
       }
     }
 
@@ -143,13 +123,12 @@ async function newTask_async(
       if (!instanceIds) {
         await threadsStore_async.set(taskCopy["threadId"], [instanceId]);
         console.log("Initiating thread " + taskCopy["threadId"] + " with instanceId: " + instanceId)
-      } else if (instanceIds.length === 1) {
-        instanceId = instanceIds[0]
-        console.log("Already in thread " + taskCopy["threadId"] + " with instanceId: " + instanceId)
       } else if (!instanceIds.includes(instanceId)) {
         instanceIds.push(instanceId);
         await threadsStore_async.set(taskCopy["threadId"], instanceIds);
         console.log("Adding to thread " + taskCopy["threadId"] + " instanceId: " + instanceId)
+      } else {
+        console.log("Instance already in thread " + taskCopy["threadId"] + " instanceId: " + instanceId)
       }
     } else {
       taskCopy["threadId"] = instanceId;
@@ -165,8 +144,11 @@ async function newTask_async(
 
     taskCopy.prevInstanceId = prevInstanceId;
     taskCopy.userId = userId;
-    taskCopy.source = hubId;
-    taskCopy.sessionId = sessionId;
+    taskCopy.source = processorId;
+    if (!taskCopy.sessionId) {
+      taskCopy.sessionId = {};
+    }
+    taskCopy.sessionId[processorId] = sessionId;
     
     if (siblingInstanceId) {
       // Should rename to sibling?
@@ -180,12 +162,14 @@ async function newTask_async(
       }
       // We start with the deepest component in the stack
       // This will not work with how we have stackPtr set earlier
-      if (typeof stackPtr === "number") {
-        taskCopy["stackPtr"] = stackPtr;
-      } else if (parent?.stackPtr) {
-        taskCopy["stackPtr"] = parent.stackPtr;
-      } else if (taskCopy?.stack) {
-        taskCopy["stackPtr"] = taskCopy.stack.length;
+      if (!taskCopy["stackPtr"]) {
+        if (typeof stackPtr === "number") {
+          taskCopy["stackPtr"] = stackPtr;
+        } else if (parent?.stackPtr) {
+          taskCopy["stackPtr"] = parent.stackPtr;
+        } else if (taskCopy?.stack) {
+          taskCopy["stackPtr"] = taskCopy.stack.length;
+        }
       }
       if (
         !parent.hasOwnProperty("childrenInstances") ||
@@ -273,56 +257,32 @@ async function newTask_async(
       //console.log("Error task", taskCopy)
     }
 
-    // Get the list of processors in the session
-    const sessionsStoreId = sessionId + "_processors";
-    let sessionProcessors = [];
-    if (await sessionsStore_async.has(sessionsStoreId)) {
-      sessionProcessors = await sessionsStore_async.get(sessionsStoreId);
-    } else {
-      throw new Error("No processors in session " + sessionId);
-    }
-
     if (!taskCopy.environments) {
       throw new Error("No environments in task " + taskCopy.id);
     }
 
     // Allocate the task to processors that supports the environment(s) requested
+    const sourceProcessorId = taskCopy.source;
+    const sourceProcessor = await activeProcessorsStore_async.get(sourceProcessorId);
     for (const environment of taskCopy.environments) {
-      // All the session processors with this environment should be included
-      // This could deal with multiple browsers in the same session.
-      //console.log("Looking for sessionProcessors with environment ", environment)
+      // Favor the source Processor if we need that environment
       let found = false;
-      if (!found) {
-        for (const sessionProcessorId of sessionProcessors) {
-          //console.log("sessionProcessor ", sessionProcessorId)
-          const activeProcessor = activeProcessors.get(sessionProcessorId)
-          if (activeProcessor) {
-            const environments = activeProcessor.environments;
-            if (environments && environments.includes(environment)) {
-              found = true;
-              taskProcessors.push(sessionProcessorId);
-              //console.log("Adding processor " + sessionProcessorId + " to session")
-            }
-          } else {
-            console.log("No active processor for ", sessionProcessorId)
-          }
-        }
+      if (sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
+        found = true;
+        taskProcessors.push(sourceProcessorId);
+        //console.log("Adding source processor " + sourceProcessorId + " to taskProcessors")
       }
-      // Find an active processor that supports this environment and add it to the session
+      // Find an active processor that supports this environment
       if (!found) {
-        //console.log("sessionProcessors did not match, now looking in activeProcessors")
-        for (let [activeProcessorId, value] of activeProcessors) {
-          //console.log("activeProcessor ", activeProcessorId, value);
+        //console.log("sourceProcessor did not match, now looking in activeProcessorsStore_async")
+        for await (const { key: activeProcessorId, value } of activeProcessorsStore_async.iterate()) {
           const environments = value.environments;
           if (environments && environments.includes(environment)) {
-            sessionProcessors.push(activeProcessorId);
-            //console.log("Adding processor " + activeProcessorId + " to session " + sessionId, sessionProcessors)
-            await sessionsStore_async.set(sessionsStoreId, sessionProcessors);
             found = true;
             taskProcessors.push(activeProcessorId);
-            break
+            break;
           }
-        }
+        }     
       }
       if (!found) {
         throw new Error("No processor found for environment " + environment);
@@ -337,7 +297,6 @@ async function newTask_async(
 
     // Record which processors have this task
     // Could convert this into asynchronous form
-    let activeTask;
     if (await activeTaskProcessorsStore_async.has(taskCopy.instanceId)) {
       let processorIds = await activeTaskProcessorsStore_async.get(taskCopy.instanceId)
       taskProcessors.forEach(id => {

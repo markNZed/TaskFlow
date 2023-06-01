@@ -11,20 +11,31 @@ import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
+  async *iterate() {
+    const selectAll = this.entry.select().toString();
+    const rows = this.db.prepare(selectAll).all();
+    
+    for (const row of rows) {
+      const key = row.key.startsWith('keyv:') ? row.key.substring(5) : row.key;
+      const value = JSON.parse(row.value).value;
+      yield { key, value };
+    }
+  }
+}
+
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
-var activeProcessors = new Map();
 
 // Each keyv store is in a different table
 const DB_URI = "sqlite://db/main.sqlite";
 
 // Allows for middleware
 function newKeyV(uri, table, setCallback = null) {
-  const keyv = new Keyv({
-    store: new KeyvBetterSqlite3({
-      uri: uri,
-      table: table,
-    }),
+  const store = new ExtendedKeyvBetterSqlite3({
+    uri: uri,
+    table: table,
   });
+  const keyv = new Keyv({ store });
   const originalSet = keyv.set.bind(keyv);
   keyv.set = async function(key, value, ttl) {
     // Middleware logic before setting the value
@@ -38,15 +49,13 @@ function newKeyV(uri, table, setCallback = null) {
     }
     return result;
   };
+  // Creating an alias for the getAll method
+  keyv.iterate = store.iterate.bind(store)
   return keyv;
 };
 
 // We could have one keyv store and use prefix for different tables
 
-// Schema:
-//   Key: sessionId || sessionId + 'userId'
-//   Value: object
-const sessionsStore_async = newKeyV(DB_URI, "sessions");
 // Schema:
 //   Key: instanceId
 //   Value: task object
@@ -67,14 +76,17 @@ const activeTaskProcessorsStore_async = newKeyV(DB_URI, "activeTaskProcessors");
 //   Key: threadId + taskId
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(DB_URI, "outputsStore_async");
+// Schema:
+//   Key: processorId
+//   Value: {environments: environments}
+const activeProcessorsStore_async = newKeyV(DB_URI, "activeProcessors");
 
 export {
-  sessionsStore_async,
   instancesStore_async,
   threadsStore_async,
   activeTasksStore_async,
   activeTaskProcessorsStore_async,
+  activeProcessorsStore_async,
   outputStore_async,
   connections,
-  activeProcessors,
 };

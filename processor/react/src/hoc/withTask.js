@@ -43,7 +43,7 @@ function withTask(Component) {
     const [startTaskDepth, setStartTaskDepth] = useState(local_stackPtr);
     // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
-    // Could allow for things like changing condif from an earlier component
+    // Could allow for things like changing config from an earlier component
     const { updateTaskError } = useUpdateTask(
       props.task,
       props.setTask,
@@ -68,8 +68,8 @@ function withTask(Component) {
           // Needs further thought
           delete currentTaskDiff.response
           if (checkConflicts(currentTaskDiff, updateDiff)) {
-            console.log("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
-            throw new Error("CONFLICT");
+            console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
+            //throw new Error("CONFLICT");
           }
           const mergedTask = deepMerge(props.task, updateDiff);
           //console.log("MERGED output.msgs", mergedTask.output?.msgs, updateDiff.output?.msgs, props.task.output?.msgs)
@@ -303,6 +303,7 @@ function withTask(Component) {
       stackPtr: local_stackPtr,
       useTaskState,
       useTasksState,
+      processorId: globalState.processorId,
     };
 
     return <WithDebugComponent {...componentProps} />;
