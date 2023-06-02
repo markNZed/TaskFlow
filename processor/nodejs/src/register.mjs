@@ -29,7 +29,9 @@ const register_async = async () => {
         //console.log('HTTP response headers:', response.headers);
         return response;
     })
-    .catch(error => console.error('Error during fetch:', error));
+    .catch(error => {
+      console.error('Error during fetch:', error)
+    });
 
   // We should check the response - record the hubId
 

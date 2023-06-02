@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /app/taskflow/processor/react
+cd /app/processor/react
 npm install
 screen -d -m npm start
 sleep infinity

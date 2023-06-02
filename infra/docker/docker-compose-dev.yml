@@ -1,18 +1,18 @@
 version: "3.9"
 services:
-  taskflow:
+  taskflow-dev:
     build:
       context: .
       dockerfile: Dockerfile
     image: taskflow:latest
     restart: always
     volumes: 
-      - ..:/app/taskflow
+      - ../..:/app
       - ./root:/root # For SSH and gitconfig
-    environment:
-      - REACT_APP_TASKHUB_URL=http://localhost:5001
-      - TASKHUB_URL=http://localhost:5001
-      - NODEJS_URL=http://localhost:5000
+    #environment:
+      #- REACT_APP_TASKHUB_URL=http://localhost:5001
+      #- TASKHUB_URL=http://localhost:5001/hub
+      #- NODEJS_URL=http://localhost:5000/nodejs
     ports:
       - "127.0.0.1:9229:9229" # debug of hub
       - "127.0.0.1:9230:9230" # debug of nodejs

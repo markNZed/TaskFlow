@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /app/taskflow/hub
+cd /app/hub
 npm install
 screen -d -m npm start
 sleep infinity

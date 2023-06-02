@@ -73,4 +73,4 @@ server.setTimeout(300000);
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5001;
-server.listen(port, () => console.log(appName + " Task Hub started"));
+server.listen(port, () => console.log(appName + " Task Hub started on port " + port));

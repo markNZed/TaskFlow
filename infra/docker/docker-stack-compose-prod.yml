@@ -4,7 +4,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/react:/app/taskflow/processor/react
+      - ../../processor/react:/app/processor/react
     entrypoint: ["/entrypoint-react.sh"]
     environment:
       - REACT_APP_TASKHUB_URL=http://localhost:5001/hub
@@ -17,7 +17,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/nodejs:/app/taskflow/processor/nodejs
+      - ../../processor/nodejs:/app/processor/nodejs
     entrypoint: ["/entrypoint-nodejs.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
@@ -29,7 +29,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../hub:/app/taskflow/hub
+      - ../../hub:/app/hub
     entrypoint: ["/entrypoint-hub.sh"]
     environment:
       - NODEJS_URL=http://localhost:5000/nodejs
