@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  taskflow:
+  taskflow-demo:
     build:
       context: .
       dockerfile: Dockerfile

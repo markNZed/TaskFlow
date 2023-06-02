@@ -26,6 +26,8 @@ const syncTasks_async = async (key, value) => {
   if (processorIds) {
     console.log("syncTasks_async task " + taskCopy.id + " from " + taskCopy.source);
     for (const processorId of processorIds) {
+      // When Hub updates template values it will needs to send back to the source processor
+      // Currently we only do this when creating the task, not during update, so no issue for now
       if (processorId !== taskCopy.source || command === "start") {
         taskCopy.destination = processorId;
         // Need to wait as taskCopy.destination changes

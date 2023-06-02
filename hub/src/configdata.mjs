@@ -17,7 +17,6 @@ var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
 var taskflows = await utils.load_data_async(CONFIG_DIR, "taskflows");
 var tasktypes = await utils.load_data_async(CONFIG_DIR, "tasktypes");
-var processors = await utils.load_data_async(CONFIG_DIR, "processors");
 var tasks = {}; // We will build this from taskflows
 
 // We adopt a DRY strategy in the code and config files
@@ -362,22 +361,4 @@ function flattenTasks(taskflows) {
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
-// Add url for each processor
-for (const key in processors) {
-  if (Object.prototype.hasOwnProperty.call(processors, key)) {
-    if (processors[key].environments) {
-      if (processors[key].environments[0] === "react") {
-        processors[key].url = REACT_URL
-      } else if (processors[key].environments[0] === "nodejs") {
-        processors[key].url = NODEJS_URL
-      } else {
-        console.log("Unknown environment", processors[key].environments)
-      }
-    }
-  }
-}
-
-processors = utils.flattenObjects(processors);
-//console.log(JSON.stringify(processors, null, 2))
-
-export { users, groups, processors, taskflows, tasktypes, tasks };
+export { users, groups, taskflows, tasktypes, tasks };
