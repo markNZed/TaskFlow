@@ -21,7 +21,7 @@ const taskflows = [
       name: "chatgpt",
       parentType: "conversation",
       request: {
-        modeltemplate: "chatgpt",
+        modelType: "chatgpt",
       },
       tasks: {
         start: {
@@ -53,7 +53,7 @@ const taskflows = [
           },
           nextTask: "structure",
           request: {
-            modeltemplate: "chatgpt",
+            modelType: "chatgpt",
             forget: true,
             inputLabel: "Respond here.",
             prompt: "Tell me a story about something random.",
@@ -89,7 +89,7 @@ const taskflows = [
           },
           nextTask: "stop",
           request: {
-            modeltemplate: "chatgpt",
+            modelType: "chatgpt",
             forget: true,
           },
         },
