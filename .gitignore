@@ -2,5 +2,5 @@ PrivateNotes.txt
 dead
 node_modules
 *.swp
-./config
+config/
 
