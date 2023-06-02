@@ -9,5 +9,4 @@ To install the node packages: `npm install`
 
 Then to run: `npm start` 
 
-We can set the port for the websocket server with environment variable WS_PORT (defaults to 5000).
-The React Task Processor URL can be set with environment variable REACT_URL (defauts to "http://localhost:3000")
+We can set the port for the websocket server with environment variable WS_PORT (defaults to 5000)

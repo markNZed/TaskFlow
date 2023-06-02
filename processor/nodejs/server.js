@@ -15,7 +15,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { REACT_URL, appName } from "./config.mjs";
+import { appName } from "./config.mjs";
 import miscRoutes from "./src/routes/miscRoutes.js";
 import { connectWebSocket } from "./src/websocket.js";
 
@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
-let allowedOrigins = [REACT_URL];
+let allowedOrigins = [];
 allowedOrigins = allowedOrigins.map(o => {
   const url = new URL(o);
   return url.origin;

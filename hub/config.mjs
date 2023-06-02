@@ -12,7 +12,8 @@ import path from 'path';
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
+// This is used for the allowedOrigins
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "http://localhost:3000/react";
 
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
@@ -40,4 +41,4 @@ try {
     fs.writeFileSync(hubIdFile, hubId);
 }
 
-export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId };
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId };

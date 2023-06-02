@@ -14,8 +14,6 @@ dotenv.config();
 const TASKHUB_URL = process.env.TASKHUB_URL || "http://localhost:5001/hub";
 const hubSocketUrl = process.env.hubSocketUrl || "ws://localhost:5001/hub/ws";
 
-const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
-
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
@@ -49,4 +47,4 @@ try {
 
 console.log(`Processor ID: ${processorId}`);
 
-export { REACT_URL, DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };
+export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };

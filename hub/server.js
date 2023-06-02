@@ -16,7 +16,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { REACT_URL, appName } from "./config.mjs";
+import { ALLOWED_ORIGINS, appName } from "./config.mjs";
 import sessionRoutes from "./src/routes/sessionRoutes.js";
 import registerRoutes from "./src/routes/registerRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
@@ -29,7 +29,10 @@ app.use(bodyParser.json());
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
-let allowedOrigins = [REACT_URL];
+let allowedOrigins = [];
+if (process.env.ALLOWED_ORIGINS) {
+  allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+}
 allowedOrigins = allowedOrigins.map(o => {
   const url = new URL(o);
   return url.origin;
