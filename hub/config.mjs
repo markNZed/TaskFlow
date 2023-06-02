@@ -14,8 +14,6 @@ dotenv.config();
 
 const REACT_URL = process.env.REACT_URL || "http://localhost:3000/react";
 
-const NODEJS_URL = process.env.NODEJS_URL || "http://localhost:5000/nodejs"; // A hack until we have config
-
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
@@ -44,4 +42,4 @@ try {
     fs.writeFileSync(hubIdFile, hubId);
 }
 
-export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL, NODEJS_URL, hubId };
+export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL, hubId };

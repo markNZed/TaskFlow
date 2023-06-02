@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import { CONFIG_DIR, REACT_URL, NODEJS_URL } from "../config.mjs";
+import { CONFIG_DIR } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import assert from "assert";
