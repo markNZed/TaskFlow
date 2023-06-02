@@ -31,7 +31,7 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const CONFIG_DIR = process.env.CONFIG_DIR || "./../config-v02/";;
+const CONFIG_DIR = process.env.CONFIG_DIR || "./../config/";;
 
 let processorId;
 const processorIdFile = './db/processorId.txt';
