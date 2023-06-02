@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // .env is intended to allow for config that is not under version control
-import { appLabel, appName, appAbbrev, TASKHUB_URL } from "./src/shared/config.mjs"
+import { appLabel, appName, appAbbrev } from "./src/shared/config.mjs"
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -28,8 +28,6 @@ if (process.env.MAP_USER_JSON) {
 
 const CONFIG_DIR = process.env.CONFIG_DIR || path.resolve("./config/");
 
-console.log("TASKHUB_URL", TASKHUB_URL)
-
 let hubId;
 const hubIdFile = './db/hubId.txt';
 try {
@@ -42,4 +40,4 @@ try {
     fs.writeFileSync(hubIdFile, hubId);
 }
 
-export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, TASKHUB_URL, hubId };
+export { REACT_URL, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId };
