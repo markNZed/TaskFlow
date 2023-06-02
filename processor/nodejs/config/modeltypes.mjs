@@ -12,7 +12,7 @@ const modeltypes = [
     name: "chatgpt",
     parentType: "root",
     label: "chatGPT",
-    system_message: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
+    systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     /* 
         messages: [
             {

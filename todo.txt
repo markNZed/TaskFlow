@@ -1,5 +1,8 @@
 /* ToDo
 -------
+The MODEL type should be on the Hub only for templating
+modeltypes.mjs needs to be in hub and nodejs
+Lost websocket for wsSendObject react-c7944090-72f9-484c-a056-c2a2383dadae
 Concept of task hash so the Hub can send an update if the Processor already has the instance. Could just be the updatedAt time.
 Dealing with concurrent requests?
   Currently hub will send diffs

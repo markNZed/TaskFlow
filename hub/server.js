@@ -38,6 +38,7 @@ allowedOrigins = allowedOrigins.map(o => {
   return url.origin;
 });
 allowedOrigins.push("http://localhost:5000");
+allowedOrigins.push("http://localhost:3000");
 console.log("allowedOrigins", allowedOrigins);
 
 app.use(

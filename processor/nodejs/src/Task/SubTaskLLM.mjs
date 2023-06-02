@@ -72,7 +72,7 @@ async function chat_prepare_async(task) {
   } else {
     console.log("ModelType for ", task.id, modelType.name);
   }
-  let langModel = T("request.model") || modelType?.model;
+  let langModel = T("request.langModel") || modelType?.langModel;
   let temperature = T("request.temperature") || modelType?.temperature;
   let maxTokens = T("request.maxTokens") || modelType?.maxTokens;
   let maxResponseTokens = T("request.maxResponseTokens") || modelType?.maxResponseTokens;
