@@ -33,6 +33,7 @@ tasktypes = utils.flattenObjects(tasktypes);
 // We should introduce a concept of appending and prepending
 // e.g. PREPEND_property would prepend the content to content form higher level instead of replacing content
 // Functionality added but not tested
+// Should flatten taskflows then add parent to tasks then flatten tasks (separate generic functions)
 function flattenTaskflows(taskflows) {
   // The default level is named 'root'
   var parent2id = { root: "" };

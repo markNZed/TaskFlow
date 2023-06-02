@@ -14,6 +14,8 @@ COPY entrypoint-react.sh /entrypoint-react.sh
 RUN chmod 755 /entrypoint-react.sh
 COPY entrypoint-nodejs.sh /entrypoint-nodejs.sh
 RUN chmod 755 /entrypoint-nodejs.sh
+COPY entrypoint-nodejs.sh /entrypoint-hub.sh
+RUN chmod 755 /entrypoint-hub.sh
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 

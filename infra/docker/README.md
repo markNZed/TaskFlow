@@ -10,12 +10,20 @@ There have been issues with Firefox and websocket on localhost, if Firefox does 
 
 # Notes
 
+## Dev
+This assumes T@skFlow is running behind a proxy on a docker network:
+
+<br> docker-compose -f docker-compose-dev.yml build
+<br> docker-compose -f docker-compose-dev.yml up -d
+
+SetupVSCode debugging in .vscode/launch.json
+
+docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash
+
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 
 
-!!Should not mount the nodejs dir in the react and vice-versa
-
-Set up a reverse proxy server, to listen on a single port and forward requests to different ports based on the requested URL.
+Assumes there is a reverse proxy server, to listen on a single port and forward requests to different ports based on the requested URL.
 
 <br> docker-compose -f docker-compose-prod.yml build
 <br> docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod
@@ -24,15 +32,4 @@ Remember to purge the cloudflare cache after updating on prod.
 
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-nodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-react") /bin/bash
-
-How do we order the containers so Hub starts first?
-
-## Dev
-This assumes T@skFlow is running behind a proxy on a docker network for dev:
-
-SetupVSCode debugging in .vscode/launch.json
-
-<br> docker-compose -f docker-compose-dev.yml build
-<br> docker-compose -f docker-compose-dev.yml up -d
-
-docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-hub") /bin/bash

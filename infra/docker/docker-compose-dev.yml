@@ -7,7 +7,7 @@ services:
     image: taskflow:latest
     restart: always
     volumes: 
-      - ../..:/app/
+      - ..:/app/taskflow
       - ./root:/root # For SSH and gitconfig
     environment:
       - REACT_APP_TASKHUB_URL=http://localhost:5001

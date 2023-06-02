@@ -4,7 +4,7 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 # Overview
 
-T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may be distributed over many processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may be distributed over many Task Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 

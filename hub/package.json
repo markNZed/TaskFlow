@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "nodemon --watch ../../chat-config --watch ../chat-config --watch . --ignore 'src/shared/task*Schema.json' server",
-    "debug": "nodemon --watch ../../chat-config  --watch . --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9229 server.js"
+    "start": "nodemon --watch ../config --watch . --ignore 'src/shared/task*Schema.json' server",
+    "debug": "nodemon --watch ../config --watch . --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9229 server.js"
   },
   "dependencies": {
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",

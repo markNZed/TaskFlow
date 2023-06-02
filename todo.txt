@@ -1,7 +1,8 @@
 /* ToDo
 -------
+Concept of task hash so the Hub can send an update if the Processor already has the instance. Could just be the updatedAt time.
 Dealing with concurrent requests?
-  Currently hub will send diffs 
+  Currently hub will send diffs
   If there is one processor then it could block
     Could be based on state to begin with
 Check '.' is not used in keys or it breaks setNestedProperties
