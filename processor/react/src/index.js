@@ -10,14 +10,14 @@ import "./styles/index.css";
 import App from "./App";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { GlobalStateProvider } from "./contexts/GlobalStateContext";
-import { socketUrl } from "./config";
+import { hubSocketUrl } from "./config";
 import { BrowserRouter as Router } from "react-router-dom";
 
 function Root() {
   // <React.StrictMode> was causing issues with double loading
   return (
     <GlobalStateProvider>
-      <WebSocketProvider socketUrl={socketUrl}>
+      <WebSocketProvider socketUrl={hubSocketUrl}>
         <Router>
           <App />
         </Router>
