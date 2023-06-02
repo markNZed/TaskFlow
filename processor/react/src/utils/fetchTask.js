@@ -1,18 +1,10 @@
-import { nodejsUrl, hubUrl } from "../config";
+import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { log } from "./utils";
 
 export const fetchTask = async (globalState, end_point, task) => {
 
   let messageJsonString;
-
-  // This does not seem right, maybe need a fetchHub and fetchProcessor
-  let server;
-  if (end_point === "task/start") {
-    server = hubUrl;
-  } else {
-    server = nodejsUrl;
-  }
 
   if (!task.sessionId) {
     task.sessionId = {};
