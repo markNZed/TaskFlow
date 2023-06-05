@@ -1,11 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$ref": "#/definitions/Task",
   "definitions": {
     "Task": {
       "title": "Task Object Definition",
       "type": "object",
       "additionalProperties": {},
+      "$comment": "We do not want the . character in object keys",
+      "propertyNames": {
+        "pattern": "^((?!\\.).)*$"
+      },
       "properties": {
         "baseType": {
           "type": "string"
@@ -109,9 +113,24 @@
           "type": "integer"
         },
         "updatedAt": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": ["date", "timezone"]
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "userId": {
           "type": "string"

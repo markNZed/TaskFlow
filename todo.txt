@@ -1,30 +1,21 @@
 /* ToDo
 -------
-The MODEL type should be on the Hub only for templating
-modeltypes.mjs needs to be in hub and nodejs
 Lost websocket for wsSendObject react-c7944090-72f9-484c-a056-c2a2383dadae
-Concept of task hash so the Hub can send an update if the Processor already has the instance. Could just be the updatedAt time.
 Dealing with concurrent requests?
   Currently hub will send diffs
   If there is one processor then it could block
     Could be based on state to begin with
 Check '.' is not used in keys or it breaks setNestedProperties
-Time in oneThread messages should be aligned with browser timezone (needs to be filled in by Hub?)
 Sending task as done but then reusing it in React processor seems problematic
   Need something like next rather than done - done indicates deleted from the processor also? 
 Check errors are working
 Code review/cleanup - identify refactoring goals
 SubTask should use task for IO
-Check default install experience
-  The config files need to be restored
 Align usage of utils
 Should the Hub command be in the Task?
   Where can we separate concerns?
 The Task Function could be a single JS module that is shared ?
   Maybe just the state machine
-To get .vscode under version control we should have the taskflow directory as the top.
-  This requires putting the config in the taskflow directory
-  Clean up config at same time (move into hub)
 The diff should deal with deleting members - set values to null
   Should the Processor remove null values upon merge ?
 Ideally we want the same code for Task storage on Hub/React/NodeJs
@@ -133,7 +124,8 @@ Backlog
 
     Low Priority
     ------------
-    Add a logout option
+    Time in oneThread messages should be aligned with browser timezone (needs to be filled in by Hub?)
+    Logout option (could just be a route)
     Sending diff to Hub from Processor during update
     JWT connection between Task Hub and Processors (currently rely on Cloudflare)
     Move to TypeScript

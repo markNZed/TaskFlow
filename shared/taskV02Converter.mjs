@@ -203,7 +203,7 @@ const typeMap = {
         { json: "threadId", js: "threadId", typ: u(undefined, "") },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "updateCount", js: "updateCount", typ: u(undefined, 0) },
-        { json: "updatedAt", js: "updatedAt", typ: u(undefined, 0) },
+        { json: "updatedAt", js: "updatedAt", typ: u(undefined, u(a("any"), true, 3.14, 0, null, r("UpdatedAtObject"), "")) },
         { json: "userId", js: "userId", typ: u(undefined, "") },
         { json: "versionExternal", js: "versionExternal", typ: u(undefined, "") },
         { json: "versionInternal", js: "versionInternal", typ: u(undefined, "") },
@@ -214,6 +214,10 @@ const typeMap = {
         { json: "done", js: "done", typ: u(undefined, true) },
         { json: "id", js: "id", typ: u(undefined, "") },
         { json: "nextState", js: "nextState", typ: u(undefined, "") },
+    ], "any"),
+    "UpdatedAtObject": o([
+        { json: "date", js: "date", typ: Date },
+        { json: "timezone", js: "timezone", typ: "" },
     ], "any"),
 };
 

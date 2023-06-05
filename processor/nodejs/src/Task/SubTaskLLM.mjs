@@ -90,9 +90,16 @@ async function chat_prepare_async(task) {
     if (T("request.newAddress")) {
       prompt = "Location: " + T("request.address") + "\n" + prompt;
     }
-    // Prefix prompt with date/time
+    // Prefix prompt with date/time we use UTC to keep things simple
+    // We need to be able to track user's timezone
+    // Could be based on address
     const currentDate = new Date();
-    prompt = "Time: " + utils.formatDateAndTime(currentDate) + "\n" + prompt;
+    const options = {
+      timeZone: "UTC",
+      timeZoneName: "short"
+    };
+    const formattedDate = currentDate.toLocaleString("en-US", options);
+    prompt = "Time: " + formattedDate + "\n" + prompt;
     console.log("oneThread prompt : " + prompt);
   }
 

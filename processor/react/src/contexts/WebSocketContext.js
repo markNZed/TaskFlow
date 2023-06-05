@@ -8,6 +8,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import { useGlobalStateContext } from "./GlobalStateContext";
+import { log, updatedAtString } from "../utils/utils";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -43,6 +44,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.sessionId[globalState.processorId] = globalState?.sessionId
       m.task.source = globalState.processorId;
+      m.task.updatedAt = updatedAtString();
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       }
@@ -78,11 +80,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       // This should cause the App to re-register with the hub
       replaceGlobalState({ hubId: null });
       const taskPing = () => {
-        let currentDateTime = new Date();
-        let currentDateTimeString = currentDateTime.toString();  
         return {
           sessionId: {[globalState.processorId]: globalState?.sessionId},
-          updatedAt: currentDateTimeString,
           destination: globalState?.hubId,
         }
       }

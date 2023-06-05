@@ -117,6 +117,7 @@ v03:
 * error -> an object with type and message and stack (or just a free-form object)
 * APPEND_stack in a leaf task -> taskTemplate (could append to stack still)
 * Hub related config should be in namespace
+* Task processor timezone should be included
 
 ### Task Processor
 The Task processor should:

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { deepMerge, checkConflicts, getObjectDifference, flattenObjects } from "./shared/utils.mjs";
+import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAtString } from "./shared/utils.mjs";
 
 const utils = {};
 
@@ -14,6 +14,7 @@ utils.deepMerge = deepMerge;
 utils.checkConflicts = checkConflicts;
 utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;
+utils.updatedAtString = updatedAtString;
 
 utils.formatDateAndTime = function (date) {
   const options = {

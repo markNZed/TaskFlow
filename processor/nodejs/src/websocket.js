@@ -37,7 +37,8 @@ function wsSendObject(message = {}) {
 
 const wsSendTask = function (task, command = null) {
   //console.log("wsSendTask " + message)
-  let message = {}
+  let message = {}; 
+  task.updatedAt = utils.updatedAtString();
   message["task"] = task;
   if (command) {
     message["command"] = command;

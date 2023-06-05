@@ -6,10 +6,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { TASKHUB_URL } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
+import { utils } from "./utils.mjs";
 
 export const updateTask_async = async (task) => {
 
   let messageJsonString;
+  task.updatedAt = utils.updatedAtString();
 
   try {
     const validatedTaskJsonString = fromTask(task);

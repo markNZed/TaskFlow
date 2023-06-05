@@ -20,9 +20,7 @@ const TaskShowResponse_async = async function (wsSendTask, task) {
 
   // Ensure we do not overwrite the deltaState on the React Task Processor
   T("response.text", T("config.response"));
-  // UpdatedAt could be managed by the Hub
   T("response.updated", true);
-  T("updatedAt", Date.now()); // Should be centralized?
   console.log("Returning from TaskShowResponse", task.id);
   return task;
 };

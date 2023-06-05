@@ -47,7 +47,6 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
   // Ensure we do not overwrite the deltaState on the React Task Processor
   //T("state.deltaState", undefined);
   T("response.updated", true);
-  T("updatedAt", Date.now());
   console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
   return task;

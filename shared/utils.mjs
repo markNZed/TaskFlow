@@ -1,5 +1,7 @@
 import _ from "lodash";
 import assert from 'assert';
+import pkg from 'intl';
+const { DateTimeFormat } = pkg;
 
 // Without this we cannot make partial updates to objects in the Task
 
@@ -191,4 +193,16 @@ function flattenObjects(objs) {
   return res;
 }
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects };
+function updatedAtString() {
+  const currentDateTime = new Date();
+  const utcDateTime = currentDateTime.toISOString();
+  const data = {
+    updatedAt: {
+      date: utcDateTime,
+      timezone: "UTC"
+    }
+  };
+  return JSON.stringify(data);
+}
+
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAtString };
