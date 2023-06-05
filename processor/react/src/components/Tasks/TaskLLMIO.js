@@ -148,7 +148,7 @@ const TaskLLMIO = (props) => {
           break;
         case "response":
           if (task.state.current !== myLastState) {
-            updateTask({ send: true });
+            updateTask({ update: true });
           } else if (finalResponse) { // waiting for response from websocket to end
             setFinalResponse(false)
             newState = nextState;
@@ -166,7 +166,7 @@ const TaskLLMIO = (props) => {
             if (!task.response.updating) {
               // Need to automate management of response.updated (clear on request?)
               // id per request
-              updateTask({ send: true, "request.input": userInput });
+              updateTask({ update: true, "request.input": userInput });
             } else if (task.response.updated) {
               newState = nextState;
             }

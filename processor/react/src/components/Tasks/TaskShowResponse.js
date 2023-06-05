@@ -97,7 +97,7 @@ const TaskShowResponse = (props) => {
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);
             } else if (myLastState !== task.state.current) { // could introduce deltaState
-              updateTask({ send: true });
+              updateTask({ update: true });
             }
           }
           break;

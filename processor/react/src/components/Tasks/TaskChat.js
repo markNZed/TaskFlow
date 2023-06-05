@@ -159,7 +159,7 @@ const TaskChat = (props) => {
             ["conversation"]: [...msgs["conversation"], ...newMsgArray],
           },
           "state.isLoading": true,
-          send: true
+          update: true
         });
       } else if (task.state.deltaState === "input" && msgs["conversation"]) {
         // In the case where the response is coming from HTTP not websocket
@@ -169,12 +169,12 @@ const TaskChat = (props) => {
         }; // shallow copy
         lastElement.text = task.response.text;
         // The hub will set task.source
-        let shouldSend = false;
+        let shouldUpdate = false;
         if (responsePending) {
           setResponsePending(false);
-          shouldSend = true;
+          shouldUpdate = true;
         }
-        console.log("Should send", shouldSend, "processorId", processorId);
+        console.log("Should send", shouldUpdate, "processorId", processorId);
         // Send to sync latest outputs via Hub
         updateTask({ "output.msgs": 
           {
@@ -182,7 +182,7 @@ const TaskChat = (props) => {
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
           },
           "state.isLoading": false,
-          send: shouldSend
+          update: shouldUpdate
         });
         // TaskChat is dealing with input
       } else if (task.state.current === "input") {

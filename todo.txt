@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Rename task.send to update ?
 The diff should deal with deleting members - set values to null
   Should the Processor remove null values upon merge ?
 Dealing with concurrent requests?
@@ -13,6 +12,7 @@ Testing of oneThread and collaborate
 Check errors are working
 Code review/cleanup - identify refactoring goals
   Hub pipeline: a module with function for each step.
+  Concept of Processor/Hub commands
 Align usage of utils
 Should the Hub command be in the Task?
   Where can we separate concerns?
