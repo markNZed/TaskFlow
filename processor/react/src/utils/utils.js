@@ -1,9 +1,9 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAtString } from "../shared/utils.mjs"
+import { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt } from "../shared/utils.mjs"
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAtString }
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt }
 
 export function updateState(setState, update) {
   setState((prevState) => ({ ...prevState, ...update }));

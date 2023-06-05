@@ -8,7 +8,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import { useGlobalStateContext } from "./GlobalStateContext";
-import { log, updatedAtString } from "../utils/utils";
+import { log, updatedAt } from "../utils/utils";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -44,7 +44,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.sessionId[globalState.processorId] = globalState?.sessionId
       m.task.source = globalState.processorId;
-      m.task.updatedAt = updatedAtString();
+      m.task.updatedAt = updatedAt();
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       }

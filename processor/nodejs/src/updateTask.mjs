@@ -11,7 +11,7 @@ import { utils } from "./utils.mjs";
 export const updateTask_async = async (task) => {
 
   let messageJsonString;
-  task.updatedAt = utils.updatedAtString();
+  task.updatedAt = utils.updatedAt();
 
   try {
     const validatedTaskJsonString = fromTask(task);

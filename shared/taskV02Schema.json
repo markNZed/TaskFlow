@@ -61,11 +61,8 @@
         "name": {
           "type": "string"
         },
-        "nextTasks": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "next": {
+          "type": "boolean"
         },
         "nextTask": {
           "type": "string"
@@ -113,24 +110,17 @@
           "type": "integer"
         },
         "updatedAt": {
-          "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "date": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "timezone": {
-                  "type": "string"
-                }
-              },
-              "required": ["date", "timezone"]
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date-time"
             },
-            {
-              "type": "null"
+            "timezone": {
+              "type": "string"
             }
-          ]
+          },
+          "required": ["date", "timezone"]
         },
         "userId": {
           "type": "string"

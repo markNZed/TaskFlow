@@ -193,16 +193,14 @@ function flattenObjects(objs) {
   return res;
 }
 
-function updatedAtString() {
+function updatedAt() {
   const currentDateTime = new Date();
   const utcDateTime = currentDateTime.toISOString();
   const data = {
-    updatedAt: {
-      date: utcDateTime,
-      timezone: "UTC"
-    }
+    date: utcDateTime,
+    timezone: "UTC"
   };
-  return JSON.stringify(data);
+  return data;
 }
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAtString };
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAt };

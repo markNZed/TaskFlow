@@ -1,23 +1,29 @@
 /* ToDo
 -------
-Lost websocket for wsSendObject react-c7944090-72f9-484c-a056-c2a2383dadae
+Sending task as done but then reusing it in React processor seems problematic
+  Need something like next rather than done - done indicates deleted from the processor also?
+  From a Task like TaskLLMIO we cannot know if it is next or done 
+    At the Stepper we should detect done and then set the next
+    If task.next is set but task.nextTask is not then this is equivalent to done.
+Rename task.send to update ?
+The diff should deal with deleting members - set values to null
+  Should the Processor remove null values upon merge ?
 Dealing with concurrent requests?
   Currently hub will send diffs
-  If there is one processor then it could block
-    Could be based on state to begin with
-Check '.' is not used in keys or it breaks setNestedProperties
-Sending task as done but then reusing it in React processor seems problematic
-  Need something like next rather than done - done indicates deleted from the processor also? 
+  Notion of a lock
+    Requires Task to deal with failing to get the lock from the Hub
+    Should there be a queue ? List of processors that will get the lock + timeout to use the lock e.g. 5 seconds
+SubTask should use task for IO
+Testing of oneThread and collaborate
 Check errors are working
 Code review/cleanup - identify refactoring goals
-SubTask should use task for IO
+  Hub pipeline: a module with function for each step.
 Align usage of utils
 Should the Hub command be in the Task?
   Where can we separate concerns?
 The Task Function could be a single JS module that is shared ?
   Maybe just the state machine
-The diff should deal with deleting members - set values to null
-  Should the Processor remove null values upon merge ?
+
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
 Prepending "root." is not cool for configdata like users and groups
@@ -137,6 +143,7 @@ Backlog
     When sending task instance only send diff (React Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps React Task Processor copy)
     Add task type validation to websocket
     Only display menu option if leaf is a real task
+    Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
 
 Notes/Idea
 -----

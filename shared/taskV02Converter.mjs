@@ -183,8 +183,8 @@ const typeMap = {
         { json: "id", js: "id", typ: "" },
         { json: "input", js: "input", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
+        { json: "next", js: "next", typ: u(undefined, true) },
         { json: "nextTask", js: "nextTask", typ: u(undefined, "") },
-        { json: "nextTasks", js: "nextTasks", typ: u(undefined, a("")) },
         { json: "output", js: "output", typ: u(undefined, m("any")) },
         { json: "parentId", js: "parentId", typ: u(undefined, "") },
         { json: "parentInstanceId", js: "parentInstanceId", typ: u(undefined, "") },
@@ -203,7 +203,7 @@ const typeMap = {
         { json: "threadId", js: "threadId", typ: u(undefined, "") },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "updateCount", js: "updateCount", typ: u(undefined, 0) },
-        { json: "updatedAt", js: "updatedAt", typ: u(undefined, u(a("any"), true, 3.14, 0, null, r("UpdatedAtObject"), "")) },
+        { json: "updatedAt", js: "updatedAt", typ: u(undefined, r("UpdatedAt")) },
         { json: "userId", js: "userId", typ: u(undefined, "") },
         { json: "versionExternal", js: "versionExternal", typ: u(undefined, "") },
         { json: "versionInternal", js: "versionInternal", typ: u(undefined, "") },
@@ -215,7 +215,7 @@ const typeMap = {
         { json: "id", js: "id", typ: u(undefined, "") },
         { json: "nextState", js: "nextState", typ: u(undefined, "") },
     ], "any"),
-    "UpdatedAtObject": o([
+    "UpdatedAt": o([
         { json: "date", js: "date", typ: Date },
         { json: "timezone", js: "timezone", typ: "" },
     ], "any"),

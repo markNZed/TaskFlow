@@ -1,6 +1,6 @@
 import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
-import { log, updatedAtString } from "./utils";
+import { log, updatedAt } from "./utils";
 
 export const fetchTask = async (globalState, end_point, task) => {
 
@@ -18,7 +18,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   // The immediate destination of this request
   let destination = `${hubUrl}/api/${end_point}` // using hub routing
   task.destination = globalState.hubId;
-  task.updatedAt = updatedAtString();
+  task.updatedAt = updatedAt();
 
   try {
     const validatedTaskJsonString = fromTask(task);
