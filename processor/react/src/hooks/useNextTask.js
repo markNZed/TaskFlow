@@ -17,9 +17,8 @@ import { log } from "../utils/utils";
 const useNextTask = (task) => {
   const { globalState } = useGlobalStateContext();
   const [nextTaskError, setNextTaskError] = useState(null);
-
   useEffect(() => {
-    if (task && task.state.done && !nextTaskError) {
+    if (task && task.next && !nextTaskError) {
       log("useNextTask", task.id);
       const fetchTaskFromAPI = async () => {
         try {
@@ -32,7 +31,6 @@ const useNextTask = (task) => {
     }
   // eslint-disable-next-line
   }, [task]);
-
   return { nextTaskError };
 };
 

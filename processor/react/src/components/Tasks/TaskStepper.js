@@ -70,11 +70,12 @@ function TaskStepper(props) {
   // When task is done fetch next task
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
-      // need a wrapper for this
+      // We use newTask to ensure setDoneTask will see the changes to Tasks
+      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
       setTasksTask((p) => {
-        return deepMerge(p, setNestedProperties({ "state.done": false }));
+        return newTask;
       }, tasksIdx);
-      setDoneTask(tasks[tasksIdx]); // Will result in nextTask being set
+      setDoneTask(newTask);
     }
   }, [tasks]);
 

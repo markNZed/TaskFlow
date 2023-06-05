@@ -68,10 +68,10 @@ router.post("/update", async (req, res) => {
         errorTask = strArr.join('.');
       }
       task.nextTask = errorTask
-      task.state.done = true
+      task.done = true
       console.log("Task error " + task.id);
     }
-    if (task.state?.done) {
+    if (task.done || task.next) {
       doneTask_async(task) 
       res.json({task: "synchronizing"});
       return;
