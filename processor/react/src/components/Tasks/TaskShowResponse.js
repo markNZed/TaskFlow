@@ -27,7 +27,7 @@ const TaskShowResponse = (props) => {
     task,
     setTask,
     parentTask,
-    updateTask,
+    modifyTask,
     updateState,
     stackPtr,
   } = props;
@@ -38,7 +38,7 @@ const TaskShowResponse = (props) => {
 
   // This is the level where we are going to use the task so set the stackPtr
   useEffect(() => {
-    updateTask({ stackPtr: stackPtr });
+    modifyTask({ stackPtr: stackPtr });
   }, []);
 
   // Reset the task. Allows for the same component to be reused for different tasks.
@@ -50,7 +50,7 @@ const TaskShowResponse = (props) => {
       setResponseText("");
       if (!task.config?.nextStates) {
         // Default sequence is to just get response
-        updateTask({
+        modifyTask({
           "config.nextStates": { start: "response", response: "wait", wait: "stop" },
         });
         //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
@@ -93,17 +93,17 @@ const TaskShowResponse = (props) => {
               newState =  nextState;
               let response_text;
               response_text = task.response.text;
-              updateTask({ "response.text": response_text });
+              modifyTask({ "response.text": response_text });
               //setTask((p) => {return {...p, response: response_text}});
               response_action(response_text);
             } else if (myLastState !== task.state.current) { // could introduce deltaState
-              updateTask({ update: true });
+              modifyTask({ update: true });
             }
           }
           break;
         case "wait":
           if (leaving_now && !task.state.done) {
-            updateTask({ "state.done": true });
+            modifyTask({ "state.done": true });
             newState = nextState;
           }
           break;

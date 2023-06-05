@@ -32,7 +32,7 @@ Coding preferences:
     * nextTask
     * setDoneTask()
   * Prop for updating properties of a Task  
-    * `updateTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
+    * `modifyTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
   * Prop to update the state in a Task
     * `updateState('input')` is equivalent to `setTask(p => { return {...p, state : 'input'} })`
   * Prop for websocket event that is filtered so only events for the task.id initiating the task arrive

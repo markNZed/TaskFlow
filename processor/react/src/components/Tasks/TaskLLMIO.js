@@ -28,7 +28,7 @@ const TaskLLMIO = (props) => {
     leaving,
     task,
     setTask,
-    updateTask,
+    modifyTask,
     updateState,
     stackPtr,
     //socketResponses,
@@ -52,7 +52,7 @@ const TaskLLMIO = (props) => {
   // This is the level where we are going to use the task so set the stackPtr
   // Could have a setDepth function in withTask
   useEffect(() => {
-    updateTask({ stackPtr: stackPtr });
+    modifyTask({ stackPtr: stackPtr });
   }, []);
 
   // Reset the task. Allows for the same component to be reused for different tasks.
@@ -67,7 +67,7 @@ const TaskLLMIO = (props) => {
       setResponseTextWordCount(0);
       if (!task.config?.nextStates) {
         // Default sequence is to just get response based on prompt text
-        updateTask({
+        modifyTask({
           "config.nextStates": { start: "response", response: "wait", wait: "stop" },
         });
       }
@@ -148,12 +148,12 @@ const TaskLLMIO = (props) => {
           break;
         case "response":
           if (task.state.current !== myLastState) {
-            updateTask({ update: true });
+            modifyTask({ update: true });
           } else if (finalResponse) { // waiting for response from websocket to end
             setFinalResponse(false)
             newState = nextState;
             // This should not be managed here - it is depending on websocket
-            updateTask({ "response.updated": false, "response.updating": false });
+            modifyTask({ "response.updated": false, "response.updating": false });
           }
           if (nextState === "input") {
             setShowUserInput(true);
@@ -166,7 +166,7 @@ const TaskLLMIO = (props) => {
             if (!task.response.updating) {
               // Need to automate management of response.updated (clear on request?)
               // id per request
-              updateTask({ update: true, "request.input": userInput });
+              modifyTask({ update: true, "request.input": userInput });
             } else if (task.response.updated) {
               newState = nextState;
             }
@@ -174,7 +174,7 @@ const TaskLLMIO = (props) => {
           break;
         case "wait":
           if (leaving_now && !task.state.done) {
-            updateTask({ "state.done": true });
+            modifyTask({ "state.done": true });
             newState = nextState;
           }
           break;

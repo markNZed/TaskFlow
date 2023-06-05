@@ -42,7 +42,7 @@ ToDo:
 const TaskChat = (props) => {
   const {
     log,
-    updateTask,
+    modifyTask,
     updateState,
     task,
     processorId,
@@ -67,7 +67,7 @@ const TaskChat = (props) => {
 
   // This is the level where we are going to use the task so set the stackPtr
   useEffect(() => {
-    updateTask({ "state.current": "input" });
+    modifyTask({ "state.current": "input" });
   }, []);
 
   // Note that socketResponses may not (will not) be updated on every websocket event
@@ -92,7 +92,7 @@ const TaskChat = (props) => {
           }
           //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
         }
-        updateTask({ "response.text": responseTextRef.current });
+        modifyTask({ "response.text": responseTextRef.current });
         return []; // Clear the processed responses
       });
     };
@@ -114,14 +114,14 @@ const TaskChat = (props) => {
   // Initialize task.output.msgs unless it already exists (e.g. in the case of oneThread)
   useEffect(() => {
     if (task.output && !task.output.msgs) {
-      // The . in the thread Id causes problems for updateTask
+      // The . in the thread Id causes problems for modifyTask
       const msgs = {
         ["conversation"]: [
           { role: "assistant", text: welcomeMessage },
         ],
       }
       //console.log("TaskChat useEffect msgs", msgs);
-      updateTask({ "output.msgs": msgs});
+      modifyTask({ "output.msgs": msgs});
     }
   }, []);
 
@@ -134,7 +134,7 @@ const TaskChat = (props) => {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
-        updateTask({ "output.msgs": 
+        modifyTask({ "output.msgs": 
           {
             ...msgs,
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
@@ -153,7 +153,7 @@ const TaskChat = (props) => {
         ];
         // Clear the textbox
         setPrompt("");
-        updateTask({ 
+        modifyTask({ 
           "output.msgs": {
             ...msgs,
             ["conversation"]: [...msgs["conversation"], ...newMsgArray],
@@ -176,7 +176,7 @@ const TaskChat = (props) => {
         }
         console.log("Should send", shouldUpdate, "processorId", processorId);
         // Send to sync latest outputs via Hub
-        updateTask({ "output.msgs": 
+        modifyTask({ "output.msgs": 
           {
             ...msgs,
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
@@ -202,7 +202,7 @@ const TaskChat = (props) => {
       //console.log("Resetting input")
       // Reset the request so we can use response.text for partial response
       // A request should clear the response object?
-      updateTask({
+      modifyTask({
         "request.input": "",
         "response.text": "",
       });

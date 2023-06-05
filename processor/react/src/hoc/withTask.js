@@ -73,7 +73,7 @@ function withTask(Component) {
           }
           const mergedTask = deepMerge(props.task, updateDiff);
           //console.log("MERGED output.msgs", mergedTask.output?.msgs, updateDiff.output?.msgs, props.task.output?.msgs)
-          updateTask(mergedTask)
+          modifyTask(mergedTask)
           globalState.storageRef.current.set(props.task.instanceId, mergedTask);
           console.log("Storage updated ", props.task.id, props.task.instanceId, updateDiff);
         }
@@ -167,9 +167,9 @@ function withTask(Component) {
       }
     }, [props.task]);
 
-    function updateTask(update) {
+    function modifyTask(update) {
       setNestedProperties(update);
-      //console.log("updateTask", props.task)
+      //console.log("modifyTask", props.task)
       props.setTask((prevState) => {
         const res = deepMerge(prevState, update);
         return res;
@@ -298,7 +298,7 @@ function withTask(Component) {
       nextTask,
       setDoneTask,
       prevTask,
-      updateTask,
+      modifyTask,
       updateState,
       stackPtr: local_stackPtr,
       useTaskState,
