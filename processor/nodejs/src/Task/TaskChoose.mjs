@@ -24,8 +24,7 @@ const TaskChoose_async = async function (wsSendTask, task) {
 
   T("response.text", null); // Avoid using previously stored response
   const subTask = await SubTaskLLM_async(wsSendTask, task);
-  const response_text = await subTask.response.text_promise
-  T("response.text", response_text);
+  T("response.text", subTask.response.text);
 
   const next_responses = Object.keys(T("config.nextStateTemplate"));
   const next_states = Object.values(T("config.nextStateTemplate"));

@@ -22,6 +22,14 @@ modelTypes = utils.flattenObjects(modelTypes);
 
 const wsDelta = {}
 
+async function SubTaskLLM_async(wsSendTask, task) {
+  let params = await chat_prepare_async(task);
+  params["wsSendTask"] = wsSendTask;
+  const res = ChatGPTAPI_request_async(params);
+  task.response.text = await res;
+  return task
+}
+
 function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
   let response;
@@ -42,14 +50,6 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
     wsDelta[instanceId] += 1;
   }
   //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
-}
-
-async function SubTaskLLM_async(wsSendTask, task) {
-  let params = await chat_prepare_async(task);
-  params["wsSendTask"] = wsSendTask;
-  const res = ChatGPTAPI_request_async(params);
-  task.response.text_promise = res;
-  return task
 }
 
 // Prepare the parameters for the chat API request

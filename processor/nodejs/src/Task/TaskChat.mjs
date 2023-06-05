@@ -44,8 +44,7 @@ const TaskChat_async = async function (wsSendTask, task) {
    // This will update the state on client 
     console.log("TaskChat sending");
     const subTask = await SubTaskLLM_async(wsSendTask, taskCopy);
-    const response_text = await subTask.response.text_promise
-    T("response.text", response_text);
+    T("response.text", subTask.response.text);
     T("state.current", "input");
     T("state.deltaState", "input");
   }

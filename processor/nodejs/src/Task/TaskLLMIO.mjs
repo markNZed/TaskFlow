@@ -37,9 +37,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
   let response_text = "";
   // The response needs to be available for other tasks to point at
   const subTask = await SubTaskLLM_async(wsSendTask, task); 
-  // Now we always wait for the response
-  response_text = await subTask.response.text_promise
-  T("response.text", response_text);
+  T("response.text", subTask.response.text);
   T("output.text", response_text);
   //T("response.text", response_text);
   // Make available as an output to other Tasks

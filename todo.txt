@@ -1,13 +1,12 @@
 /* ToDo
 -------
-The diff should deal with deleting members - set values to null
-  Should the Processor remove null values upon merge ?
 Dealing with concurrent requests?
   Currently hub will send diffs
   Notion of a lock
     Requires Task to deal with failing to get the lock from the Hub
     Should there be a queue ? List of processors that will get the lock + timeout to use the lock e.g. 5 seconds
-SubTask should use task for IO
+The diff should deal with deleting members - set values to null
+  Should the Processor remove null values upon merge ?
 Testing of oneThread and collaborate
 Check errors are working
 Code review/cleanup - identify refactoring goals
