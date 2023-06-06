@@ -22,6 +22,7 @@ The Task Hub is implemented in node using the Express framework and SQLite datab
   * The Task tree is built for the available start Tasks (returned with the sessionId request at the moment)
 * Pong command responses to Processor ping commands
 * Error management
+* Task lock (and lockBtpass) so updates do not collide
 # Start
 This is the Task Hub T@skFlow
 1. written in Node JS run-time, Express framework
@@ -43,6 +44,7 @@ Then to run: `npm start`
   * Throttling
   * Authorization
   * Storage
+  * Task locking
   * Task interception
     * Next Task selection
     * Error handling
@@ -52,6 +54,7 @@ Then to run: `npm start`
     * Event generation (Task updates)
     * Complex event processing (CEP)
   * Scheduling
+  * Diff generation
   * Dispatch
   * Privacy filtering
 * Aspects that are orthogonal to the pipeline

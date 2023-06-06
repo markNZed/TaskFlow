@@ -58,6 +58,12 @@
         "id": {
           "type": "string"
         },
+        "lock": { 
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },

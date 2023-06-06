@@ -55,7 +55,27 @@ router.post("/update", async (req, res) => {
   if (userId) {
     //console.log("req.body", req.body.task.output.msgs)
     let task = req.body.task;
-    task["send"] = false;
+    // Check if the task is locked
+    const activeTask = await activeTasksStore_async.get(task.instanceId);
+    if (!activeTask) {
+      return res.status(404).send("Task not found");
+    }
+    if (task.lock) {
+      if (!activeTask.locked) {
+        console.log("Task locked by " + task.source);
+        task.locked = task.source;
+      }
+      task.lock = false;
+    } else if (activeTask.locked && activeTask.locked === task.source) {
+      console.log("Task unlocked by " + task.source);
+      delete task.locked;
+    }
+    if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
+      console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked)
+      return res.status(423).send("Task locked");
+    }
+    delete task.lockBypass;
+    task["update"] = false;
     // We intercept tasks that are done.
     if (task.error) {
       let errorTask
@@ -73,23 +93,15 @@ router.post("/update", async (req, res) => {
     }
     if (task.done || task.next) {
       doneTask_async(task) 
-      res.json({task: "synchronizing"});
-      return;
+      return res.status(200).send("ok");
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
-    } else{
+    } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
-      const activeTask = await activeTasksStore_async.get(task.instanceId)
-      if (activeTask) {
-        await activeTasksStore_async.set(task.instanceId, task);
-        // So we do not return a task anymore. This requires the task synchronization working.
-        res.json({task: "synchronizing"});
-        return;
-      } else {
-        console.log("No active task for " + task.instanceId);
-        res.json({task: "synchronizing error"});
-        return;
-      }
+      await activeTasksStore_async.set(task.instanceId, task);
+      // So we do not return a task anymore. This requires the task synchronization working.
+      res.json({task: "synchronizing"});
+      return;
     }
   } else {
     console.log("No user");

@@ -40,16 +40,17 @@ export const fetchTask = async (globalState, end_point, task) => {
   
   const response = await fetch(destination, requestOptions);
 
-  const data = await response.json();
-
-  if (data.task === "synchronizing") {
-    return data.task;
-  } else {
-    try {
-      const task = toTask(JSON.stringify(data.task));
-      return task;
-    } catch (error) {
-      console.log("Error while converting JSON to Task:", error, data);
+  let result = "ok"
+  if (!response.ok) {
+    if (response.status === 423) {
+      // Resource is locked, handle the situation
+      console.log('Resource is locked, try again later');
+      result = "locked";
+    } else {
+      throw new Error('An error occurred: response status ' + response.status);
     }
   }
+
+  return result;
+  
 };

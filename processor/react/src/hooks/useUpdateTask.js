@@ -26,24 +26,27 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
       const fetchTaskFromAPI = async () => {
         try {
           const snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-          const updating = { update: false, "response.updating": true };
+          const updating = { update: false, "response.updating": true, lock: false };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           // The setTask prior to sending the result will not have taken effect
           // So we align the snapshot with the updated task and send that
           // otherwise send could come back treu and we will get a loop
           snapshot.response.updating = false;
-          snapshot.send = false;
+          snapshot.update = false;
           // Here we could check if the websocket is already open
           if (globalState.sessionId) {
             sendJsonMessagePlus({"sessionId" : {[globalState.processorId]: globalState?.sessionId}})
             console.log("Set sessionId ", globalState.sessionId);
           }
-          // To stay in sync with the Hub
-          await globalState.storageRef.current.set(snapshot.instanceId, snapshot);
           // fetchTask can change some parameters in Task and then we get conflicts (e.g. destination)
-          fetchTask(globalState, "task/update", snapshot);
-          // Nothing useful is returned
+          const response = await fetchTask(globalState, "task/update", snapshot);
+          if (response === "ok") {
+            // To stay in sync with the Hub
+            await globalState.storageRef.current.set(snapshot.instanceId, snapshot);
+          } else {
+            throw new Error(response);
+          }
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);

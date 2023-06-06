@@ -159,6 +159,7 @@ const TaskChat = (props) => {
             ["conversation"]: [...msgs["conversation"], ...newMsgArray],
           },
           "state.isLoading": true,
+          "lock": true,
           update: true
         });
       } else if (task.state.deltaState === "input" && msgs["conversation"]) {
@@ -168,7 +169,6 @@ const TaskChat = (props) => {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
-        // The hub will set task.source
         let shouldUpdate = false;
         if (responsePending) {
           setResponsePending(false);
@@ -185,8 +185,6 @@ const TaskChat = (props) => {
           update: shouldUpdate
         });
         // TaskChat is dealing with input
-      } else if (task.state.current === "input") {
-        //console.log("State input")
       }
     }
   }, [task]);

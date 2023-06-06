@@ -145,4 +145,4 @@ function initWebSocketServer(server) {
   });
 };
 
-export { initWebSocketServer, wsSendObject, wsSendTask };
+export { initWebSocketServer, wsSendTask };

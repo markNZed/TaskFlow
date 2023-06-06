@@ -2,8 +2,8 @@
   "name": "shared",
   "version": "1.0.0",
   "scripts": {
-    "generate-converter-v01": "V=\"V01\" nodemon --watch *.json --exec ./generate-task-converter.sh",
-    "generate-converter-v02": "V=\"V02\" nodemon --watch *.json --exec ./generate-task-converter.sh",
+    "generate-converter-v01": "V=\"V01\" nodemon --watch \"*.json\" --exec ./generate-task-converter.sh",
+    "generate-converter-v02": "V=\"V02\" nodemon --watch \"*.json\" --exec ./generate-task-converter.sh",
     "generate-converter-help": "quicktype --help"
   },
   "devDependencies": {

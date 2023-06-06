@@ -6,7 +6,7 @@ The following is for development where the NodeJS Task Processor and React Task 
 <br> `docker-compose build`
 <br> `docker-compose up`
 <br> Access the React Task Processor at http://localhost:3000 
-There have been issues with Firefox and websocket on localhost, if Firefox does not work, restart or try Chrome.
+WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome.
 
 # Notes
 

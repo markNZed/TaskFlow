@@ -60,8 +60,10 @@ function withTask(Component) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           const currentTaskDiff = getObjectDifference(lastTask, props.task);
           //console.log("currentTaskDiff", currentTaskDiff, lastTask);
-          // ignore differences in source
+          // ignore differences in source & updatedAt & lock
           delete currentTaskDiff.source
+          delete currentTaskDiff.updatedAt
+          delete currentTaskDiff.lock
           // Need to think more about how we manage (or not) delta
           delete currentTaskDiff.state?.deltaState
           // partial updates to response can cause conflicts

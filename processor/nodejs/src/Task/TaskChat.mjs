@@ -28,6 +28,7 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("response.text", null); // Avoid using previously stored response
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
+    T("lockBypass", true);
     // Here we update the task which has the effect of setting the state to receiving
     await updateTask_async(task)
     // Using a copy of the task because we may modify the request and we do not want to send
@@ -47,6 +48,7 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("response.text", subTask.response.text);
     T("state.current", "input");
     T("state.deltaState", "input");
+    T("lockBypass", true);
   }
 
   console.log("Returning from TaskChat_async", task.id);
