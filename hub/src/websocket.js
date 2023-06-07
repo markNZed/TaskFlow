@@ -37,15 +37,14 @@ const wsSendTask = async function (task, command = null) {
   if (command === "update") {
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     let diff = {}
-    let del = {}
     if (activeTask) { 
       //console.log("wsSendTask task.output.msgs", task.output?.msgs)
       //console.log("wsSendTask activeTask.output.msgs", activeTask.output?.msgs)
-      [diff, del] = utils.getObjectDifference(activeTask, task); // keep the differences in task
+      diff = utils.getObjectDifference(activeTask, task); // keep the differences in task
       //console.log("wsSendTask diff.output.msgs", diff.output?.msgs)
       //console.log("wsSendTask diff", diff)
-      if (Object.keys(diff).length === 0 && Object.keys(del).length === 0) {
-        console.log("wsSendTask no diff oe del", diff);
+      if (Object.keys(diff).length === 0) {
+        console.log("wsSendTask no diff", diff);
         return null;
       }
        // Because this routes the task but does not change so need to add back in
@@ -54,7 +53,6 @@ const wsSendTask = async function (task, command = null) {
       diff.stackPtr = task.stackPtr;
       diff.destination = task.destination;
       message["task"] = diff;
-      message["del"] = del;
       //console.log("wsSendTask diff.destination", diff.destination);
     }
   } else {
