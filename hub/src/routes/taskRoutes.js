@@ -71,8 +71,18 @@ router.post("/update", async (req, res) => {
       delete task.locked;
     }
     if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
-      console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked)
-      return res.status(423).send("Task locked");
+      let updatedAt = new Date(task.updatedAt.date); 
+      let now = new Date(); // Current time
+      // Get the difference in minutes
+      let differenceInMinutes = (now - updatedAt) / 1000 / 60;
+      console.log("differenceInMinutes", differenceInMinutes)
+      if (differenceInMinutes > 5) {
+        console.log("Task lock expired for " + task.source + " locked by " + activeTask.locked)
+        delete task.locked;
+      } else {
+        console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked + " on ", task.updatedAt, " now ", now)
+        return res.status(423).send("Task locked");
+      } 
     }
     delete task.lockBypass;
     task["update"] = false;

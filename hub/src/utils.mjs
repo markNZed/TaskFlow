@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 "use strict";
 import { v4 as uuidv4 } from "uuid";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
-import { deepMerge, getObjectDifference, flattenObjects } from "./shared/utils.mjs";
+import { deepMerge, getObjectDifference, flattenObjects, updatedAt } from "./shared/utils.mjs";
 
 const utils = {};
 
@@ -15,6 +15,7 @@ const utils = {};
 utils.deepMerge = deepMerge;
 utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;
+utils.updatedAt = updatedAt;
 
 utils.getUserId = function (req) {
   let userId = DEFAULT_USER;

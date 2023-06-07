@@ -8,9 +8,7 @@ function useStartWSFilter(startTaskId, onStart) {
 
   const handleStart = (task) => {
     //console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
-    if (startTaskId 
-      && startTaskId === task.id
-    ) {
+    if (startTaskId && startTaskId === task.id) {
       //console.log("useStartWSFilter handleStart", startTaskId, task);
       onStart(task);
     }

@@ -44,7 +44,6 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       m.task.sessionId[globalState.processorId] = globalState?.sessionId
       m.task.source = globalState.processorId;
-      m.task.updatedAt = updatedAt();
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
       }

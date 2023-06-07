@@ -11,6 +11,8 @@ import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+var connections = new Map(); // Stores WebSocket instances with unique session IDs
+
 class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
   async *iterate() {
     const selectAll = this.entry.select().toString();
@@ -23,8 +25,6 @@ class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
     }
   }
 }
-
-var connections = new Map(); // Stores WebSocket instances with unique session IDs
 
 // Each keyv store is in a different table
 const DB_URI = "sqlite://db/main.sqlite";

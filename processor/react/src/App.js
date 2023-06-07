@@ -17,14 +17,14 @@ import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
 
-function App() {
+function App({ activeWorkerCount, workerId }) {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const storageRef = useRef(null);
 
   useEffect(() => {
-    let id = localStorage.getItem('processorId');
+    let id = localStorage.getItem('processorId' + workerId);
     if (!id) {
       id = "react-" + uuidv4();
       localStorage.setItem('processorId', id);

@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async } from "./storage.mjs";
 import { wsSendTask } from "./websocket.js";
+import { utils } from "./utils.mjs";
 
 const syncTasks_async = async (key, value) => {
 
@@ -18,6 +19,7 @@ const syncTasks_async = async (key, value) => {
   let command;
   if (has) { 
     command = "update"
+    taskCopy.updated = utils.updatedAt();
    } else {
     command = "start"
   }
