@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { utils } from "../utils.mjs";
-import newTask_async from "../newTask.mjs";
+import startTask_async from "../startTask.mjs";
 import { activeTasksStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -35,7 +35,7 @@ router.post("/start", async (req, res) => {
 
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await newTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
+      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
       res.json({task: "synchronizing"});
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);

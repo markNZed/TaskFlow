@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import { hubId } from "../config.mjs";
 
-async function newTask_async(
+async function startTask_async(
     id,
     userId,
     authenticate,
@@ -312,4 +312,4 @@ async function newTask_async(
     return taskCopy;
   }
 
-  export default newTask_async;
+  export default startTask_async;

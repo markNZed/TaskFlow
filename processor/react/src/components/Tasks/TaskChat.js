@@ -114,6 +114,7 @@ const TaskChat = (props) => {
   // Initialize task.output.msgs unless it already exists (e.g. in the case of oneThread)
   useEffect(() => {
     if (task.output && !task.output.msgs) {
+      welcomeMessage = task.config.welcomeMessage || welcomeMessage;
       // The . in the thread Id causes problems for modifyTask
       const msgs = {
         ["conversation"]: [
