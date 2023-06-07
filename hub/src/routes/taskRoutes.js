@@ -83,7 +83,7 @@ router.post("/update", async (req, res) => {
         console.log("Task lock expired for " + task.source + " locked by " + activeTask.locked)
         delete task.locked;
       } else {
-        console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked + " on ", task.updatedAt, " now ", now)
+        console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked + " " + differenceInMinutes + " minutes ago.")
         return res.status(423).send("Task locked");
       } 
     }

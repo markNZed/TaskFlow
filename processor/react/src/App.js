@@ -27,7 +27,7 @@ function App({ activeWorkerCount, workerId }) {
     let id = localStorage.getItem('processorId' + workerId);
     if (!id) {
       id = "react-" + uuidv4();
-      localStorage.setItem('processorId', id);
+      localStorage.setItem('processorId' + workerId, id);
     }
     replaceGlobalState("processorId", id);
   }, []);
