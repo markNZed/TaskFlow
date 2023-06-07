@@ -36,7 +36,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
           snapshot.update = false;
           // Here we could check if the websocket is already open
           if (globalState.sessionId) {
-            sendJsonMessagePlus({"sessionId" : {[globalState.processorId]: globalState?.sessionId}})
+            sendJsonMessagePlus({"sessionId" : globalState?.sessionId})
             console.log("Set sessionId ", globalState.sessionId);
           }
           // fetchTask can change some parameters in Task and then we get conflicts (e.g. destination)

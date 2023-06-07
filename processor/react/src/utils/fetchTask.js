@@ -6,10 +6,7 @@ export const fetchTask = async (globalState, end_point, task) => {
 
   let messageJsonString;
 
-  if (!task.sessionId) {
-    task.sessionId = {};
-  }
-  task["sessionId"][globalState.processorId] = globalState.sessionId;
+  task["sessionId"] = globalState.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
   }

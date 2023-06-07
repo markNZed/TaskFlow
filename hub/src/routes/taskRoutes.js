@@ -28,7 +28,7 @@ router.post("/start", async (req, res) => {
 
     const startId = task.id;
     const threadId = task.threadId;
-    const sessionId = task.sessionId[task.source];
+    const sessionId = task.sessionId;
     const processorId = task.source;
 
     const stackPtr = task.stackPtr;
@@ -71,12 +71,15 @@ router.post("/update", async (req, res) => {
       delete task.locked;
     }
     if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
-      let updatedAt = new Date(task.updatedAt.date); 
       let now = new Date(); // Current time
+      let updatedAt;
+      if (task.updatedAt) {
+        updatedAt = new Date(task.updatedAt.date); 
+      }
       // Get the difference in minutes
       let differenceInMinutes = (now - updatedAt) / 1000 / 60;
       console.log("differenceInMinutes", differenceInMinutes)
-      if (differenceInMinutes > 5) {
+      if (differenceInMinutes > 5 || updatedAt === undefined) {
         console.log("Task lock expired for " + task.source + " locked by " + activeTask.locked)
         delete task.locked;
       } else {

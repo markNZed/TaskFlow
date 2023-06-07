@@ -19,7 +19,7 @@ const syncTasks_async = async (key, value) => {
   let command;
   if (has) { 
     command = "update"
-    taskCopy.updated = utils.updatedAt();
+    taskCopy.updatedAt = utils.updatedAt();
    } else {
     command = "start"
   }

@@ -119,11 +119,11 @@ function initWebSocketServer(server) {
         let currentDateTimeString = currentDateTime.toString();
         const task = {
           updatedeAt: currentDateTimeString,
-          sessionId: {[j.task.source]:j.task?.sessionId}, 
+          sessionId: j.task?.sessionId, 
           destination: j.task.source,
         };
         wsSendTask(task, "pong");
-        //console.log("Pong " + j.task?.sessionId[j.task.source] + " " + j.task.source)
+        //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 
     });

@@ -197,7 +197,7 @@ const typeMap = {
         { json: "request", js: "request", typ: u(undefined, m("any")) },
         { json: "response", js: "response", typ: u(undefined, m("any")) },
         { json: "send", js: "send", typ: u(undefined, true) },
-        { json: "sessionId", js: "sessionId", typ: u(undefined, m("")) },
+        { json: "sessionId", js: "sessionId", typ: u(undefined, "") },
         { json: "source", js: "source", typ: u(undefined, "") },
         { json: "stack", js: "stack", typ: u(undefined, a("")) },
         { json: "stackPtr", js: "stackPtr", typ: u(undefined, 0) },

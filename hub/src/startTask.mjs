@@ -142,10 +142,7 @@ async function startTask_async(
     taskCopy.prevInstanceId = prevInstanceId;
     taskCopy.userId = userId;
     taskCopy.source = processorId;
-    if (!taskCopy.sessionId) {
-      taskCopy.sessionId = {};
-    }
-    taskCopy.sessionId[processorId] = sessionId;
+    taskCopy.sessionId = sessionId;
     
     if (siblingInstanceId) {
       // Should rename to sibling?

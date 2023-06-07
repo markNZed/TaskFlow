@@ -39,10 +39,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         m["task"] = {}
       }
       m.task.destination = globalState?.hubId
-      if (!m.task.sessionId) {
-        m.task.sessionId = {}
-      }
-      m.task.sessionId[globalState.processorId] = globalState?.sessionId
+      m.task.sessionId = globalState?.sessionId
       m.task.source = globalState.processorId;
       if (m.command === "ping") {
         //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
@@ -80,7 +77,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       replaceGlobalState({ hubId: null });
       const taskPing = () => {
         return {
-          sessionId: {[globalState.processorId]: globalState?.sessionId},
+          sessionId: globalState?.sessionId,
           destination: globalState?.hubId,
         }
       }
