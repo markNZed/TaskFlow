@@ -45,6 +45,13 @@ export const fetchTask = async (globalState, end_point, task) => {
     } else {
       throw new Error('An error occurred: response status ' + response.status);
     }
+  } else if (task.instanceId) {
+    const lastTask = await globalState.storageRef.current.get(task.instanceId);
+    if (lastTask.updatedAt > task.updatedAt) {
+      throw new Error('An error occurred: task was updated by another process ' + task.instanceId);
+    }
+    await globalState.storageRef.current.set(task.instanceId, task);
+    console.log("fetchTask stored task", task.instanceId, "in storageRef");
   }
 
   return result;

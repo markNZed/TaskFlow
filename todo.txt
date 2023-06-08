@@ -1,5 +1,8 @@
 /* ToDo
 -------
+If HUb loses the websocket then maybe it should update activeTaskProcessorsStore_async, activeProcessorsStore_async
+  When do we remove processorId ?
+  ActiveProcessors should not be stored?
 Do we need to have all the sessionIds in the task ?
 Transaction might be a better concept than lock, then don't need bypass.
 We need to re-architect the react Processor to make use of the Service Worker API

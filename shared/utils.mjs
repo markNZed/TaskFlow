@@ -6,7 +6,6 @@ const { DateTimeFormat } = pkg;
 // Without this we cannot make partial updates to objects in the Task
 
 function deepMerge(prevState, update) {
-
   if (prevState === undefined) {
     return update;
   }
@@ -15,42 +14,35 @@ function deepMerge(prevState, update) {
     return prevState;
   }
 
-  let output = _.cloneDeep(prevState); // deep copy using lodash
-
-  if (Array.isArray(output) && Array.isArray(update)) {
-    output = new Array(Math.max(output.length, update.length));
-    // For each index in the new array
-    for (let i = 0; i < output.length; i++) {
-      // If update has a value at this index, use it
-      // Otherwise, use the value from output
-      // Javascript creates sparse arrays in the diff, effectively replacing entries with undefined
-      // JOSN convertes undefined to null, so we can't assume null is actaully intended to replace a value
-      // We could convert arrays to hash for transport
-      if (update[i] !== null && (typeof update[i] === "object" || Array.isArray(update[i]))) {
+  if (Array.isArray(prevState) && Array.isArray(update)) {
+    let output = [...prevState];
+    for (let i = 0; i < update.length; i++) {
+      if (update[i] === null) {
+        delete output[i];
+      } else if (typeof update[i] === "object" || Array.isArray(update[i])) {
         output[i] = deepMerge(output[i], update[i]);
-        //console.log("deepMerge: output[i] 1 ", output[i])
-      } else if (update[i] !== undefined && update[i] !== null) {
-        output[i] = update[i]
-        //console.log("deepMerge: output[i] 2 ", output[i])
       } else {
-        output[i] =  prevState[i]
-        //console.log("deepMerge: output[i] 3 ", output[i])
+        output[i] = update[i] !== undefined ? update[i] : output[i];
       }
     }
-  } else if (typeof output === "object" && output !== null) {
-    // Could error if update is not an object
-    for (const key of Object.keys(update)) {
-      if (update[key] !== null && (typeof update[key] === "object" || Array.isArray(update[key]))) {
-        output[key] = deepMerge(output[key], update[key]);
-      } else {
-        output[key] = update[key];
-      }
-    }
-  } else {
-    output = update;
+    return output;
   }
 
-  return output;
+  if (typeof prevState === "object" && prevState !== null && typeof update === "object") {
+    let output = { ...prevState };
+    for (const key in update) {
+      if (update[key] === null) {
+        delete output[key];
+      } else if (typeof update[key] === "object" || Array.isArray(update[key])) {
+        output[key] = deepMerge(output[key], update[key]);
+      } else {
+        output[key] = update[key] !== undefined ? update[key] : output[key];
+      }
+    }
+    return output;
+  }
+
+  return update;
 }
 
 function deepCompare(obj1, obj2, visitedObjects = new WeakSet()) {
@@ -130,13 +122,11 @@ function getObjectDifference(obj1, obj2) {
   let diffObj = Array.isArray(obj1) ? [] : {};
 
   _.each(obj1, (value, key) => {
-    if (!_.has(obj2, key)) {
-      diffObj[key] = value;
+    if (!_.has(obj2, key) || obj2[key] === null) {
+      diffObj[key] = null;
     } else {
       let diff = getObjectDifference(value, obj2[key]);
-      if (diff !== null){
-        diffObj[key] = diff
-      }
+      diffObj[key] = diff
     }
   });
 
@@ -148,9 +138,7 @@ function getObjectDifference(obj1, obj2) {
   });
   
   _.each(diffObj, (value, key) => {
-    if (Array.isArray(value) && value.length === 1 && value[0] === null) {
-      delete diffObj[key]
-    } else if (Array.isArray(value) && value.length === 0) {
+    if (Array.isArray(value) && value.length === 0) {
       delete diffObj[key]
     } else if (_.isObject(value) && _.isEmpty(value)) {
       //console.log("getObjectDifference", "delete", key, value);

@@ -39,14 +39,9 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
             sendJsonMessagePlus({"sessionId" : globalState?.sessionId})
             console.log("Set sessionId ", globalState.sessionId);
           }
-          // fetchTask can change some parameters in Task and then we get conflicts (e.g. destination)
-          const response = await fetchTask(globalState, "task/update", snapshot);
-          if (response === "ok") {
-            // To stay in sync with the Hub
-            await globalState.storageRef.current.set(snapshot.instanceId, snapshot);
-          } else {
-            throw new Error(response);
-          }
+          // fetchTask can change some parameters in Task 
+          // so we save the task object after those changes in the fetchTask
+          await fetchTask(globalState, "task/update", snapshot);
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);

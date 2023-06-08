@@ -59,7 +59,10 @@ function withTask(Component) {
         if (updateDiff.stackPtr === local_stackPtr) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           const currentTaskDiff = getObjectDifference(lastTask, props.task);
-          //console.log("currentTaskDiff", currentTaskDiff, lastTask);
+          //console.log("currentTaskDiff", currentTaskDiff);
+          //console.log("updateDiff", updateDiff);
+          //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
+          //console.log("currentUpdateDiff", currentUpdateDiff);
           // ignore differences in source & updatedAt & lock
           delete currentTaskDiff.source
           delete currentTaskDiff.updatedAt

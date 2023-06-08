@@ -35,8 +35,8 @@ router.post("/start", async (req, res) => {
 
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
-      res.json({task: "synchronizing"});
+      startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
+      return res.status(200).send("ok");
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);
       res.status(200).json({ error: "Error starting task " + startId + " " + err });
@@ -111,10 +111,10 @@ router.post("/update", async (req, res) => {
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
-      await activeTasksStore_async.set(task.instanceId, task);
+      // Don't await so the return gets back before the websocket update
+      activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.
-      res.json({task: "synchronizing"});
-      return;
+      return res.status(200).send("ok");
     }
   } else {
     console.log("No user");

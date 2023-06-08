@@ -34,7 +34,7 @@ async function startTask_async(
     */    
     let instanceId = uuidv4();
     let siblingInstanceId;
-    let prevInstanceId = null;
+    let prevInstanceId;
 
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
@@ -139,7 +139,9 @@ async function startTask_async(
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
 
-    taskCopy.prevInstanceId = prevInstanceId;
+    if (prevInstanceId !== undefined) {
+      taskCopy.prevInstanceId = prevInstanceId;
+    }
     taskCopy.userId = userId;
     taskCopy.source = processorId;
     taskCopy.sessionId = sessionId;
