@@ -111,7 +111,7 @@ function TaskflowTree({ onClose }) {
     }
   }
 
-  if (!globalState.taskflowsTree) {
+  if (!globalState.taskflowsTree || globalState.hubId === "unknown") {
     return <div>Loading...</div>;
   }
 

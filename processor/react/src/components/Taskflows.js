@@ -34,7 +34,7 @@ function Taskflows(props) {
     stackPtr,
   } = props;
 
-  const { globalState } = useGlobalStateContext();
+  const { globalState, replaceGlobalState } = useGlobalStateContext();
   const [tasks, setTasks] = useTasksState([]);
   // We maintain a list of tasksIds so we can quickly find the relevant task
   // if it has been previousyl created in tasks
@@ -47,18 +47,19 @@ function Taskflows(props) {
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
-    if (
-      (globalState.selectedTaskId && tasksIds.length === 0) ||
-      globalState.selectedTaskId !== tasksIds[tasksIdx]
+    if (globalState.selectedTaskId && 
+        (tasksIds.length === 0 || globalState.selectedTaskId !== tasksIds[tasksIdx])
     ) {
-      const start = globalState.selectedTaskId + ".start";
+      const selectedTaskId = globalState.selectedTaskId
+      const start = selectedTaskId + ".start";
       const index = tasksIds.indexOf(start);
       if (index === -1) {
         startTaskFn(start);
       } else {
         setTasksIdx(index);
       }
-      setTitle(globalState.taskflowsTree[globalState.selectedTaskId].label);
+      setTitle(globalState.taskflowsTree[selectedTaskId].label);
+      replaceGlobalState("selectedTaskId", null);
     }
     // If we only have one start task and the Processor has registered with the hub
     if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && globalState.hubId && globalState.hubId !== "unknown") {

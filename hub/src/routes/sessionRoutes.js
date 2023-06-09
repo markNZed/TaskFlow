@@ -63,6 +63,7 @@ router.post("/", async (req, res) => {
       user: {
         userId: userId,
         interface: users[userId]?.interface,
+        label: users[userId]?.label,
       },
       sessionId: sessionId,
       hubId: hubId,

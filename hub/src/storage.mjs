@@ -12,6 +12,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
+var activeProcessors = new Map();
 
 class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
   async *iterate() {
@@ -76,17 +77,13 @@ const activeTaskProcessorsStore_async = newKeyV(DB_URI, "activeTaskProcessors");
 //   Key: threadId + taskId
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(DB_URI, "outputsStore_async");
-// Schema:
-//   Key: processorId
-//   Value: {environments: environments}
-const activeProcessorsStore_async = newKeyV(DB_URI, "activeProcessors");
 
 export {
   instancesStore_async,
   threadsStore_async,
   activeTasksStore_async,
   activeTaskProcessorsStore_async,
-  activeProcessorsStore_async,
+  activeProcessors,
   outputStore_async,
   connections,
 };

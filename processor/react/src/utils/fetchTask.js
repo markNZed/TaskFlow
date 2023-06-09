@@ -11,6 +11,7 @@ export const fetchTask = async (globalState, end_point, task) => {
     task.request["address"] = globalState.address;
   }
   task.source = globalState.processorId;
+  task.userId = globalState.user.userId;
 
   // The immediate destination of this request
   let destination = `${hubUrl}/api/${end_point}` // using hub routing
@@ -34,6 +35,14 @@ export const fetchTask = async (globalState, end_point, task) => {
     body: messageJsonString,
   };
   
+  // Need to be able to roll back if we are sending an instance
+  let rollback;
+  if (task.instanceId) {
+    rollback = await globalState.storageRef.current.get(task.instanceId);
+    await globalState.storageRef.current.set(task.instanceId, task);
+    //console.log("fetchTask stored task", task.instanceId, "in storageRef", task);
+  }
+
   const response = await fetch(destination, requestOptions);
 
   let result = "ok"
@@ -45,14 +54,11 @@ export const fetchTask = async (globalState, end_point, task) => {
     } else {
       throw new Error('An error occurred: response status ' + response.status);
     }
-  } else if (task.instanceId) {
-    const lastTask = await globalState.storageRef.current.get(task.instanceId);
-    if (lastTask.updatedAt > task.updatedAt) {
-      throw new Error('An error occurred: task was updated by another process ' + task.instanceId);
+    if (task.instanceId) {
+      await globalState.storageRef.current.set(rollback.instanceId, rollback);
+      console.log("fetchTask rolled back task", task.instanceId, "in storageRef", rollback);
     }
-    await globalState.storageRef.current.set(task.instanceId, task);
-    console.log("fetchTask stored task", task.instanceId, "in storageRef");
-  }
+  } 
 
   return result;
   

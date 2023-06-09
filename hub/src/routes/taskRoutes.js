@@ -68,7 +68,7 @@ router.post("/update", async (req, res) => {
       task.lock = false;
     } else if (activeTask.locked && activeTask.locked === task.source) {
       console.log("Task unlocked by " + task.source);
-      delete task.locked;
+      task.locked = false; // has the effect of deleting the entry
     }
     if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
       let now = new Date(); // Current time
@@ -81,14 +81,13 @@ router.post("/update", async (req, res) => {
       console.log("differenceInMinutes", differenceInMinutes)
       if (differenceInMinutes > 5 || updatedAt === undefined) {
         console.log("Task lock expired for " + task.source + " locked by " + activeTask.locked)
-        delete task.locked;
+        task.locked = false; // has the effect of deleting the entry
       } else {
         console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked + " " + differenceInMinutes + " minutes ago.")
         return res.status(423).send("Task locked");
       } 
     }
-    delete task.lockBypass;
-    task["update"] = false;
+    task.lockBypass ? task.lockBypass = false : undefined; // has the effect of deleting the entry
     // We intercept tasks that are done.
     if (task.error) {
       let errorTask

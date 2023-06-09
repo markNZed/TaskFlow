@@ -8,6 +8,7 @@ import React, { useCallback, useState, useRef, useEffect } from "react";
 import { delta } from "../../utils/utils";
 import withTask from "../../hoc/withTask";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
+import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
 
 import PromptDropdown from "./TaskChat/PromptDropdown";
 
@@ -54,6 +55,7 @@ const TaskChat = (props) => {
   const textareaRef = useRef();
   const formRef = useRef();
   const [socketResponses, setSocketResponses] = useState([]);
+  const { globalState } = useGlobalStateContext();
 
   let welcomeMessage_default = "Bienvenue ! Comment puis-je vous aider aujourd'hui ?";
   let welcomeMessage_en = "Welcome! How can I assist you today?";
@@ -118,7 +120,7 @@ const TaskChat = (props) => {
       // The . in the thread Id causes problems for modifyTask
       const msgs = {
         ["conversation"]: [
-          { role: "assistant", text: welcomeMessage },
+          { role: "assistant", text: welcomeMessage, user: "assistant" },
         ],
       }
       //console.log("TaskChat useEffect msgs", msgs);
@@ -126,22 +128,28 @@ const TaskChat = (props) => {
     }
   }, []);
 
+  // Need to be careful setting task in the state machine so it does not loop
+  // Could add a check for this
   useEffect(() => {
     if (task && task.output?.msgs) {
+      //console.log("TaskChat useEffect task.state, responsePending", task.state, responsePending);
       // Update msgs
       const msgs = JSON.parse(JSON.stringify(task.output.msgs));
       if (task.state.current === "receiving" && msgs) {
         const lastElement = {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
-        lastElement.text = task.response.text;
-        modifyTask({ "output.msgs": 
-          {
-            ...msgs,
-            ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
-          },
-          "state.isLoading": false
-        });
+        // Stop looping if state is stuck in receiving
+        if (task.response.text && task.response.text !== lastElement.text) {
+          lastElement.text = task.response.text;
+          modifyTask({ "output.msgs": 
+            {
+              ...msgs,
+              ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
+            },
+            "state.isLoading": false
+          });
+        }
         // Detect change to sending and creaet a slot for new msgs
       } else if (task.state.deltaState === "sending") {
         //console.log("task.state.deltaState === sending", msgs);
@@ -149,8 +157,8 @@ const TaskChat = (props) => {
         // Here we need to create a new slot for the next message
         // Note we need to add the input too for the user
         const newMsgArray = [
-          { role: "user", text: prompt },
-          { role: "assistant", text: "" },
+          { role: "user", text: prompt, user: globalState.user.label },
+          { role: "assistant", text: "", user: "assistant" },
         ];
         // Clear the textbox
         setPrompt("");
@@ -163,48 +171,39 @@ const TaskChat = (props) => {
           "lock": true,
           update: true
         });
-      } else if (task.state.deltaState === "input" && msgs["conversation"]) {
+      } else if (task.state.deltaState === "input" && msgs["conversation"] && responsePending) {
         // In the case where the response is coming from HTTP not websocket
         // The state will be set to input by the NodeJS Task Processor
         const lastElement = {
           ...msgs["conversation"][msgs["conversation"].length - 1],
         }; // shallow copy
         lastElement.text = task.response.text;
-        let shouldUpdate = false;
-        if (responsePending) {
-          setResponsePending(false);
-          shouldUpdate = true;
-        }
-        console.log("Should send", shouldUpdate, "processorId", processorId);
-        // Send to sync latest outputs via Hub
+        setResponsePending(false);
+        // Send to sync latest outputs via Hub, should also unlock
         modifyTask({ "output.msgs": 
           {
             ...msgs,
             ["conversation"]: [...msgs["conversation"].slice(0, -1), lastElement],
           },
           "state.isLoading": false,
-          update: shouldUpdate
+          update: true
         });
-        // TaskChat is dealing with input
+        console.log("Updating msgs in input state")
       }
     }
   }, [task]);
 
+  /*
   useEffect(() => {
     if (task) {
-      //console.log("Trace task ", task)
+      console.log("------------------------------------------------")
+      console.log("TRACE task?.state.current ", task?.state.current, task)
     }
-  }, [task]);
+  }, [task?.state.current]);
+  */
 
   useEffect(() => {
     if (task.state.deltaState === "input") {
-      //console.log("Resetting input")
-      // Reset the request so we can use response.text for partial response
-      // A request should clear the response object?
-      modifyTask({
-        "request.input": "",
-        "response.text": "",
-      });
       responseTextRef.current = ""
     }
   }, [task]);

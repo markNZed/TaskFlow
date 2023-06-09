@@ -19,11 +19,7 @@ const TaskChat_async = async function (wsSendTask, task) {
     "TaskChat name " + T("name") + " state " + T("state.current")
   );
 
-  if (T("state.current") === undefined || T("state.current") === "start") {
-    console.log("Returning null");
-    return null
-  }
-
+  // Could return msgs instead of response.text
   if (T("state.current") === "sending") {
     T("response.text", null); // Avoid using previously stored response
     T("state.current", "receiving");
@@ -42,13 +38,16 @@ const TaskChat_async = async function (wsSendTask, task) {
     // Remove the prompt
     const msgPrompt = msgs["conversation"].pop();
     TC("request.prompt", msgPrompt.text)
-   // This will update the state on client 
+     // This will update the state on client 
     console.log("TaskChat sending");
     const subTask = await SubTaskLLM_async(wsSendTask, taskCopy);
     T("response.text", subTask.response.text);
     T("state.current", "input");
     T("state.deltaState", "input");
     T("lockBypass", true);
+  } else {
+    console.log("Returning null");
+    return null;
   }
 
   console.log("Returning from TaskChat_async", task.id);

@@ -283,7 +283,7 @@ async function ChatGPTAPI_request_async(params) {
   const api = new ChatGPTAPI({
     apiKey: process.env.OPENAI_API_KEY,
     getMessageById: async (id) => {
-      console.log("getMessageById", id, messages[(id - 1)])
+      //console.log("getMessageById", id, messages[(id - 1)])
       return messages[(id - 1)];
     },
     upsertMessage: async (id) => {
@@ -376,7 +376,8 @@ async function ChatGPTAPI_request_async(params) {
       if (debug) {
         console.log("Debug: ", cacheKeyText);
       }
-      const text = "Dummy text";
+      const text = "Dummy text ".repeat(10) + new Date().toISOString();
+      //const text = "Dummy text ";;
       message_from("Dummy API", text, noWebsocket, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {

@@ -85,13 +85,15 @@ const connectWebSocket = () => {
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
+      //console.log("lastTask", lastTask?.output?.msgs);
       const mergedTask = utils.deepMerge(lastTask, message.task);
-      console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
+      //console.log("mergedTask", mergedTask?.output?.msgs);
+      //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
         console.log("processorWs updating activeTasksStore_async lastTask", lastTask)
         console.log("processorWs updating activeTasksStore_async message.task", message.task)
         console.log("processorWs updating activeTasksStore_async mergedTask", mergedTask)
-      throw new Error("Problem with merging")
+        throw new Error("Problem with merging")
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
@@ -101,6 +103,8 @@ const connectWebSocket = () => {
       await do_task_async(wsSendTask, message.task)
     } else if (message?.command === "pong") {
       //console.log("ws pong received", message)
+    } else if (message?.command === "register") {
+      console.log("ws register received", message) 
     } else {
       console.log("Unexpected message", message)
     }

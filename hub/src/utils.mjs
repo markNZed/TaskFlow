@@ -110,6 +110,7 @@ utils.processMessages_async = async function (
     const id = uuidv4();
     const chatMessage = {
       role: message.role,
+      user: message?.user,
       id: id,
       parentMessageId: lastMessageId,
       text: message.content,

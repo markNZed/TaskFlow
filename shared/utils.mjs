@@ -14,29 +14,48 @@ function deepMerge(prevState, update) {
     return prevState;
   }
 
-  if (Array.isArray(prevState) && Array.isArray(update)) {
-    let output = [...prevState];
-    for (let i = 0; i < update.length; i++) {
-      if (update[i] === null) {
-        delete output[i];
+  if (Array.isArray(update)) {
+    //console.log("deepMerge array", update)
+    let output = [];
+    const maxLength = update.length;
+  
+    for (let i = 0; i < maxLength; i++) {
+      // Null is treated as a placeholder in the case of arrays
+      if (i >= prevState.length) {
+        //console.log("deepMerge length", prevState[i]);
+        output.push(update[i]);
+      } else if (update[i] === null) {
+        //console.log("deepMerge null", prevState[i]);
+        output.push(prevState[i]);
       } else if (typeof update[i] === "object" || Array.isArray(update[i])) {
-        output[i] = deepMerge(output[i], update[i]);
+        const merge = deepMerge(prevState[i], update[i]);
+        //console.log("deepMerge merge", merge);
+        if (merge === null) {
+          output.push(prevState[i]);
+        } else {
+          output.push(merge);
+        }
       } else {
-        output[i] = update[i] !== undefined ? update[i] : output[i];
+        //console.log("deepMerge other", update[i]);
+        output.push(update[i]);
       }
     }
     return output;
   }
 
-  if (typeof prevState === "object" && prevState !== null && typeof update === "object") {
+  if (typeof update === "object") {
+    //console.log("deepMerge object", update)
     let output = { ...prevState };
     for (const key in update) {
+      // Null is treated as a deletion in the case of objects
       if (update[key] === null) {
         delete output[key];
+      } else if (output[key] === undefined) {
+        output[key] = update[key];
       } else if (typeof update[key] === "object" || Array.isArray(update[key])) {
         output[key] = deepMerge(output[key], update[key]);
       } else {
-        output[key] = update[key] !== undefined ? update[key] : output[key];
+        output[key] = update[key];
       }
     }
     return output;
@@ -115,25 +134,23 @@ function getObjectDifference(obj1, obj2) {
     return obj2;
   }
 
-  if (!_.isObject(obj1)) {
-    return obj1;
-  }
-
-  let diffObj = Array.isArray(obj1) ? [] : {};
-
-  _.each(obj1, (value, key) => {
-    if (!_.has(obj2, key) || obj2[key] === null) {
-      diffObj[key] = null;
-    } else {
-      let diff = getObjectDifference(value, obj2[key]);
-      diffObj[key] = diff
-    }
-  });
+  let diffObj = Array.isArray(obj2) ? [] : {};
 
   _.each(obj2, (value, key) => {
-    // Note that is allows obj2 to replace the value of obj1 with null
-    if (!_.has(obj1, key) || obj2[key] === null) {
-      diffObj[key] = value;  // Maintain original value from obj2
+    if (obj2[key] === null) {
+      Array.isArray(diffObj) ? diffObj.push(null) : diffObj[key] = null;
+    } else if (obj1[key] === null || obj1[key] === undefined) {
+      Array.isArray(diffObj) ? diffObj.push(value) : diffObj[key] = value;
+    } else {
+      let diff = getObjectDifference(obj1[key], value);
+      if (diff === null) {
+        // Null treated as a placeholder in the case of arrays
+        Array.isArray(diffObj) ? diffObj.push(null) : undefined;
+      } else if (!_.isObject(diff) || (_.isObject(diff) && !_.isEmpty(diff))) {
+        Array.isArray(diffObj) ? diffObj.push(diff) : diffObj[key] = diff;
+      } else {
+        Array.isArray(diffObj) ? diffObj.push(null) : undefined;
+      }
     }
   });
   
@@ -148,7 +165,7 @@ function getObjectDifference(obj1, obj2) {
     }
   });
 
-  return { ...diffObj }; // copy to avoid issues if the return value is modified
+  return diffObj; // copy to avoid issues if the return value is modified
 }
 
 // Flatten hierarchical object and copy keys into children

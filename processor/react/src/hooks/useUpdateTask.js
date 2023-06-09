@@ -33,7 +33,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
           // So we align the snapshot with the updated task and send that
           // otherwise send could come back treu and we will get a loop
           snapshot.response.updating = false;
-          snapshot.update = false;
+          snapshot.update = false; // This might be looked after at hub
           // Here we could check if the websocket is already open
           if (globalState.sessionId) {
             sendJsonMessagePlus({"sessionId" : globalState?.sessionId})

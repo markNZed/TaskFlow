@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeTasksStore_async } from "./storage.mjs";
+import { connections, activeTaskProcessorsStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { hubId } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
@@ -52,6 +52,8 @@ const wsSendTask = async function (task, command = null) {
       diff.instanceId = task.instanceId;
       diff.stackPtr = task.stackPtr;
       diff.destination = task.destination;
+      diff.update = false; // otherwise other processors will try to update 
+      diff.lock = false; // otherwise other processors will try to lock
       message["task"] = diff;
       //console.log("wsSendTask diff.destination", diff.destination);
     }
@@ -80,6 +82,18 @@ function initWebSocketServer(server) {
 
       if (j?.task) {
         const processorId = j.task.source;
+        if (!activeProcessors.has(processorId)) {
+          // Need to register again
+          let currentDateTime = new Date();
+          let currentDateTimeString = currentDateTime.toString();
+          const task = {
+            updatedeAt: currentDateTimeString,
+            sessionId: j.task?.sessionId, 
+            destination: j.task.source,
+          };
+          wsSendTask(task, "register");
+          return;
+        }
         //console.log("processorId", processorId)
         if (ws.data["processorId"] !== processorId) {
           connections.set(processorId, ws);
@@ -132,6 +146,7 @@ function initWebSocketServer(server) {
       console.log("ws processorId " + ws.data.processorId + " is closed with code: " + code + " reason: ", reason);
       if (ws.data.processorId) {
         connections.delete(ws.data.processorId);
+        activeProcessors.delete(ws.data.processorId);
       }
     });
 
@@ -139,6 +154,7 @@ function initWebSocketServer(server) {
       console.error("Websocket error: ", error);
       if (ws.data.processorId) {
         connections.delete(ws.data.processorId);
+        activeProcessors.delete(ws.data.processorId);
       }
     });
 

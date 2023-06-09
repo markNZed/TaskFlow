@@ -4,40 +4,63 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async } from "./storage.mjs";
+import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, activeProcessors } from "./storage.mjs";
 import { wsSendTask } from "./websocket.js";
 import { utils } from "./utils.mjs";
 
 const syncTasks_async = async (key, value) => {
 
   //console.log("syncTasks_async", key)
-  await instancesStore_async.set(value.instanceId, value);
+  await instancesStore_async.set(key, value);
 
   // So we store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   const has = await activeTasksStore_async.has(key);
   let command;
-  if (has) { 
-    command = "update"
-    taskCopy.updatedAt = utils.updatedAt();
+  if (has) {
+    if (taskCopy.join) {
+      command = "join"
+      taskCopy.lockBypass = true;
+      delete value.join; // should not be using task for internal Hub communication
+      delete taskCopy.join
+    } else {
+      command = "update"
+      taskCopy.updatedAt = utils.updatedAt();
+    }
    } else {
     command = "start"
   }
   // foreach processorId in processorIds send the task to the processor
+  // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {
     console.log("syncTasks_async task " + taskCopy.id + " from " + taskCopy.source);
+    let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
     for (const processorId of processorIds) {
-      // When Hub updates template values it will needs to send back to the source processor
-      // Currently we only do this when creating the task, not during update, so no issue for now
-      if (processorId !== taskCopy.source || command === "start") {
-        taskCopy.destination = processorId;
-        // Need to wait as taskCopy.destination changes
-        await wsSendTask(taskCopy, command);
-        console.log("syncTasks_async", command, key, processorId);
+      const processorData = activeProcessors.get(processorId);
+      if (processorData) {
+        if ((processorId !== taskCopy.source && command !== "join") 
+            || command === "start"
+            || command === "join" && processorId === taskCopy.source
+        ) {
+          taskCopy.destination = processorId;
+          let realCommand = command;
+          if (realCommand === "join") {
+            realCommand = "start";
+          }
+          await wsSendTask(taskCopy, realCommand);
+          console.log("syncTasks_async", realCommand, key, processorId);
+        } else {
+          //console.log("syncTasks_async skipping", key, processorId);
+        }
       } else {
-        //console.log("syncTasks_async skipping", key, processorId);
+        updatedProcessorIds = updatedProcessorIds.filter(id => id !== processorId);
+        console.log(`Processor ${processorId} not found in active processors. It will be removed from activeTaskProcessorsStore_async`);
       }
+    }
+    // Update activeTaskProcessorsStore_async with the updatedProcessorIds only if the processors have changed
+    if (processorIds.length !== updatedProcessorIds.length) {
+      await activeTaskProcessorsStore_async.set(key, updatedProcessorIds);
     }
   } else {
     console.log("syncTasks_async no processorIds", key, value);

@@ -62,7 +62,14 @@
           "type": "boolean"
         },
         "locked": {
-          "type": "string"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "name": {
           "type": "string"

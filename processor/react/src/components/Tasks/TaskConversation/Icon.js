@@ -7,9 +7,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React from "react";
 import Avatar from "@mui/material/Avatar";
 import assistant from "../../../assets/assistant.svg";
-import user from "../../../assets/user.svg";
+import userSvg from "../../../assets/user.svg";
 
-const Icon = ({ role }) => {
+const Icon = ({ role, user }) => {
   //console.log("Icon compoent")
 
   if (role === "assistant") {
@@ -20,16 +20,20 @@ const Icon = ({ role }) => {
     );
   }
 
+  if (user) {
+    return <Avatar {...stringAvatar(user)} variant="square" />;
+  }
+
   if (role === "user") {
     return (
       <div className="profile">
-        <img src={user} alt={role} />
+        <img src={userSvg} alt={role} />
       </div>
     );
   }
 
-  // impersonation
   return <Avatar {...stringAvatar(role)} variant="square" />;
+
 };
 
 export default React.memo(Icon);

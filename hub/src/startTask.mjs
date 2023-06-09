@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorsStore_async, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -68,14 +68,23 @@ async function startTask_async(
       let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
       if (instance) {
-        taskCopy = instance
-        taskCopy.state["current"] = "start";
-        // Delete so we restart with full task being synchronized
-        // It would be better to do this only for the new processor
-        await activeTasksStore_async.delete(instanceId);
-        console.log(
-          "Restarting oneThread " + instanceId + " for " + taskCopy.id
-        )
+        // Check if the task is already active
+        let activeTask = await activeTasksStore_async.get(instanceId);
+        if (activeTask) {
+          console.log("Task already active", instanceId);
+          taskCopy = activeTask
+          taskCopy["join"] = true;
+          console.log("Joining oneThread for " + taskCopy.id)
+        } else {
+          taskCopy = instance
+          taskCopy.state["current"] = "start";
+          // Delete so we restart with full task being synchronized
+          // It would be better to do this only for the new processor
+          await activeTasksStore_async.delete(instanceId);
+          console.log(
+            "Restarting oneThread " + instanceId + " for " + taskCopy.id
+          )
+        }
       } else {
         console.log("Initiating oneThread with instanceId " + instanceId)
       }
@@ -100,13 +109,22 @@ async function startTask_async(
       let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
       if (instance) {
-        taskCopy = instance
-        taskCopy.state["current"] = "start";
-        // Delete so we restart with full task being synchronized
-        await activeTasksStore_async.delete(instanceId);
-        console.log(
-          "Restarting collaborate " + instanceId + " for " + taskCopy.id
-        )
+        // Check if the task is already active
+        let activeTask = await activeTasksStore_async.get(instanceId);
+        if (activeTask) {
+          console.log("Task already active", instanceId);
+          taskCopy = activeTask
+          taskCopy["join"] = true;
+          console.log("Joining collaborate for " + taskCopy.id)
+        } else {
+          taskCopy = instance
+          taskCopy.state["current"] = "start";
+          // Delete so we restart with full task being synchronized
+          await activeTasksStore_async.delete(instanceId);
+          console.log(
+            "Restarting collaborate " + instanceId + " for " + taskCopy.id
+          )
+        }
       } else {
         console.log("Initiating collaborate with instanceId " + instanceId)
       }
@@ -259,26 +277,26 @@ async function startTask_async(
 
     // Allocate the task to processors that supports the environment(s) requested
     const sourceProcessorId = taskCopy.source;
-    const sourceProcessor = await activeProcessorsStore_async.get(sourceProcessorId);
+    const sourceProcessor = activeProcessors.get(sourceProcessorId);
     for (const environment of taskCopy.environments) {
       // Favor the source Processor if we need that environment
       let found = false;
-      if (sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
+      if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
         found = true;
         taskProcessors.push(sourceProcessorId);
         //console.log("Adding source processor " + sourceProcessorId + " to taskProcessors")
       }
       // Find an active processor that supports this environment
       if (!found) {
-        //console.log("sourceProcessor did not match, now looking in activeProcessorsStore_async")
-        for await (const { key: activeProcessorId, value } of activeProcessorsStore_async.iterate()) {
+        //console.log("sourceProcessor did not match, now looking in activeProcessors")
+        for (const [activeProcessorId, value] of activeProcessors.entries()) {
           const environments = value.environments;
           if (environments && environments.includes(environment)) {
-            found = true;
-            taskProcessors.push(activeProcessorId);
-            break;
+              found = true;
+              taskProcessors.push(activeProcessorId);
+              break;
           }
-        }     
+        }       
       }
       if (!found) {
         throw new Error("No processor found for environment " + environment);

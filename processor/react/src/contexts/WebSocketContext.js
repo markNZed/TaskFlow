@@ -74,7 +74,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       let ws = getWebSocket();
       setWebSocket(ws);
       // This should cause the App to re-register with the hub
-      replaceGlobalState({ hubId: null });
+      replaceGlobalState("hubId", null);
       const taskPing = () => {
         return {
           sessionId: globalState?.sessionId,

@@ -1,11 +1,14 @@
 /* ToDo
 -------
-If HUb loses the websocket then maybe it should update activeTaskProcessorsStore_async, activeProcessorsStore_async
-  When do we remove processorId ?
-  ActiveProcessors should not be stored?
-Do we need to have all the sessionIds in the task ?
+Typewrite broken on joining session?
+Need to be able to force a task to restart (Hub command?) Could be a forget button.
+log not working in Chrome
+updatedAt is losing the TimeZone - why?
+Is there one state machine that is synchronised across all tasks?
+  Seems the best approach but need to be careful that processors not initiating transitons will be effected
+Maybe ok to have conflict in state.current
 Transaction might be a better concept than lock, then don't need bypass.
-We need to re-architect the react Processor to make use of the Service Worker API
+Re-architect the react Processor to make use of the Service Worker API
   Progressive Web Apps
   https://developer.chrome.com/docs/workbox/
   ServiceWorker will intercept any HTTP request from a client except WebSocket upgrade requests
@@ -35,11 +38,6 @@ Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
-Because we are using ProcessorId instead of sessionId Tabs are sharing the same ProcessorId
-  Each tab should have it's own processorId? No Browser = Processor seems OK
-    The websocket needs to be per session, if that is set
-The diff should deal with deleting members - set values to null
-  Should the Processor remove null values upon merge ?
 Testing of oneThread and collaborate
 Check errors are working
 Code review/cleanup - identify refactoring goals
@@ -57,7 +55,7 @@ Prepending "root." is not cool for configdata like users and groups
   If there is no parent then consider to be root ? Then do not require root.
 
 Tools T@skFLow could leverage:
-  https://github.com/PrefectHQ/marvin
+  https://github.com/PrefectHQ/marvin a batteries-included library for building AI-powered software. Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
 
 Internal/External IO is an important distinction
   A list of dependenceies/references that are monitored by the processor
@@ -78,10 +76,10 @@ Address is just a part of a task request
   Raises the idea of a task setting user information on the hub
     Or should there be a Task to do that?
             
-We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemnted on the Task Processor. 
+We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemented on the Task Processor. 
   Maybe a field in the Task is for local processor - this makes sense
 
-We need to sort out privacy - should only be implemented on the Hub
+Sort out privacy - should only be implemented on the Hub
 The Hub and Processors need to have secure communication, then identification is managed on the hub.
 
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.

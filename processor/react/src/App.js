@@ -9,6 +9,7 @@ import { Routes, Route } from "react-router-dom";
 import "./styles/App.css";
 import "./styles/normal.css";
 import Taskflows from "./components/Taskflows";
+import NotFound from "./components/NotFound";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import { useGlobalStateContext } from "./contexts/GlobalStateContext";
@@ -24,13 +25,15 @@ function App({ activeWorkerCount, workerId }) {
   const storageRef = useRef(null);
 
   useEffect(() => {
-    let id = localStorage.getItem('processorId' + workerId);
-    if (!id) {
-      id = "react-" + uuidv4();
-      localStorage.setItem('processorId' + workerId, id);
+    if (globalState.processorId === undefined && workerId) {
+      let id = localStorage.getItem('processorId' + workerId);
+      if (!id) {
+        id = "react-" + uuidv4();
+        localStorage.setItem('processorId' + workerId, id);
+      }
+      replaceGlobalState("processorId", id);
     }
-    replaceGlobalState("processorId", id);
-  }, []);
+  }, [workerId]);
 
   //debug.disable();
   // This gives us a central place to control debug
@@ -115,7 +118,7 @@ function App({ activeWorkerCount, workerId }) {
       }
     };
     // Wait for the processorId to be set
-    if (globalState?.processorId && !globalState?.hubId) {
+    if (globalState?.processorId && (!globalState?.hubId || globalState.hubId === null)) {
       registerProcessor();
     }
   }, [globalState]);
@@ -137,6 +140,7 @@ function App({ activeWorkerCount, workerId }) {
     <Routes>
       <Route exact path="/" element={<Taskflows />} />
       <Route exact path="/db" element={<IndexedDBViewer />} />
+      <Route exact path="*" element={<NotFound />} />
     </Routes>
   );
 }

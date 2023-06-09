@@ -58,7 +58,13 @@ function withTask(Component) {
       async (updateDiff) => {
         if (updateDiff.stackPtr === local_stackPtr) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-          const currentTaskDiff = getObjectDifference(lastTask, props.task);
+          //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
+          //console.log("lastTask", lastTask)
+          // If the resource has been locked then ignore whatever was done locally
+          let currentTaskDiff = {};
+          if (lastTask.locked === globalState.processorId) {
+            currentTaskDiff = getObjectDifference(lastTask, props.task);
+          }
           //console.log("currentTaskDiff", currentTaskDiff);
           //console.log("updateDiff", updateDiff);
           //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
@@ -67,20 +73,23 @@ function withTask(Component) {
           delete currentTaskDiff.source
           delete currentTaskDiff.updatedAt
           delete currentTaskDiff.lock
-          // Need to think more about how we manage (or not) delta
-          delete currentTaskDiff.state?.deltaState
           // partial updates to response can cause conflicts
           // Needs further thought
           delete currentTaskDiff.response
+          if (lastTask.locked === globalState.processorId) {
+            // Priority to local changes
+            delete updateDiff.update;
+          }
           if (checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
             //throw new Error("CONFLICT");
           }
-          const mergedTask = deepMerge(props.task, updateDiff);
-          //console.log("MERGED output.msgs", mergedTask.output?.msgs, updateDiff.output?.msgs, props.task.output?.msgs)
-          modifyTask(mergedTask)
-          globalState.storageRef.current.set(props.task.instanceId, mergedTask);
-          console.log("Storage updated ", props.task.id, props.task.instanceId, updateDiff);
+          modifyTask(updateDiff);
+          // Important we record updateDiff as it was sent to keep in sync with Hub
+          await globalState.storageRef.current.set(props.task.instanceId, deepMerge(lastTask, updateDiff));
+          const newTask = await globalState.storageRef.current.get(props.task.instanceId);
+          console.log("Storage update ", props.task.id, props.task.instanceId, updateDiff);
+          //console.log("Storage task ", props.task.id, props.task.instanceId, mergedTask);
         }
       }
     )

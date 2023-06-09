@@ -45,11 +45,14 @@ export function GlobalStateProvider({ children }) {
   };
 
   const replaceGlobalState = (key, value) => {
+    if (value === undefined) {
+      console.warning("replaceGlobalState: value is undefined");
+    }
     setGlobalState((prevState) => ({
       ...prevState,
       [key]: value,
     }));
-    //console.log("replaceGlobalState" )
+    //console.log("replaceGlobalState ", key, value )
   };
 
   return (

@@ -59,6 +59,7 @@ const TaskConversation = (props) => {
 
   useEffect(() => {
     if (task && task.output.msgs) {
+      //console.log("task.output.msgs", task.output.msgs);
       setMsgs(task.output.msgs);
     }
   }, [task.output?.msgs]);
@@ -91,7 +92,6 @@ const TaskConversation = (props) => {
     const chatInputRect = chatInputRef.current.getBoundingClientRect();
     setChatContainermaxHeight(chatInputRect.top - chatContainerRect.top)
   }, [chatContainerRef, chatInputRef]); // chatInputRef detects mobile screen rotation changes
- 
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
@@ -119,7 +119,7 @@ const TaskConversation = (props) => {
                 className={`wrapper ${msg.role === "assistant" && "ai"}`}
               >
                 <div className="chat">
-                  <Icon role={msg.role} />
+                  <Icon role={msg.role} user={msg.user} />
                   {task.state.isLoading && isLastElement ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (

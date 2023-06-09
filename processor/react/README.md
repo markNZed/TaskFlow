@@ -52,6 +52,8 @@ The TaskStepper and TaskGrid also hold an array of Tasks
 The Task state may be updated by a lower level component that receives events such as the websocket. This should not impact the
 result of Taskflows rendering but it will be sensitive to changes made to Tasks.
 
+Currently we are using a shared worker to set a unique processorId per browser tab. This is not the intended architecture where the processorId would be unique for the browser. Ultimately we will have a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Hub.
+
 ## Cloudflare
 Be careful of cloudflare caching.
 
