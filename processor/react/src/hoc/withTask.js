@@ -17,7 +17,7 @@ import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
 import useStartWSFilter from "../hooks/useStartWSFilter";
 import useNextWSFilter from "../hooks/useNextWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
-import { useGlobalStateContext } from "../contexts/GlobalStateContext";
+import useGlobalStateContext from "../contexts/GlobalStateContext";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -39,6 +39,7 @@ function withTask(Component) {
     const [prevTask, setPrevTask] = useState();
     const [doneTask, setDoneTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
+    const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
     const [startTaskDepth, setStartTaskDepth] = useState(local_stackPtr);
     // By passing the stackPtr we know which layer is sending the task
@@ -52,7 +53,7 @@ function withTask(Component) {
     const [nextTask, setNextTask] = useState();
     const { nextTaskError } = useNextTask(doneTask);
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError } = useStartTask(startTaskId, startTaskThreadId, startTaskDepth);
+    const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
 
     useUpdateWSFilter(props.task,
       async (updateDiff) => {
@@ -94,10 +95,10 @@ function withTask(Component) {
       }
     )
 
-    useStartWSFilter(startTaskId,
+    useStartWSFilter(lastStartTaskId,
       (newTask) => {
         console.log("useStartWSFilter", newTask);
-        setStartTaskId(null);
+        setLastStartTaskId(null);
         setStartTaskReturned(newTask)
       }
     )
@@ -129,12 +130,12 @@ function withTask(Component) {
       depth = null
     ) {
       setStartTaskId(startId);
+      setLastStartTaskId(startId); // used by the useStartWSFilter
       setStartTaskThreadId(threadId);
       setStartTaskDepth(depth);
     }
 
-    function updateState(state) {
-      // change to updateState
+    function modifyState(state) {
       props.setTask((p) =>
         deepMerge(
           p,
@@ -313,7 +314,7 @@ function withTask(Component) {
       setDoneTask,
       prevTask,
       modifyTask,
-      updateState,
+      modifyState,
       stackPtr: local_stackPtr,
       useTaskState,
       useTasksState,

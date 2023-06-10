@@ -8,12 +8,11 @@ To run locally: `npm start`
 
 Running on localhost set the port for the React React Task Processor server in package.json where PORT=3000. Specify the port of the websocket NodeJS Task Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
 
-Coding preferences:
-* ES6 Javascript
-* React functional component style (not class component style)
-* Wrap components withDebug and use the log function passed in as a prop
-* Configure which log messages are displayed in App.js using debug.enable
-* Hooks deal with cross-cutting concerns in the React functional style
+## Features
+* Queue for updates to maintain order
+* Rollback of Task store if fetchTask fails
+* 404 route
+* Shared worker for allocating processorId
 
 ## Task Conventions
 * If a component receives a Task the parent manages the Task state
@@ -53,6 +52,13 @@ The Task state may be updated by a lower level component that receives events su
 result of Taskflows rendering but it will be sensitive to changes made to Tasks.
 
 Currently we are using a shared worker to set a unique processorId per browser tab. This is not the intended architecture where the processorId would be unique for the browser. Ultimately we will have a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Hub.
+
+## Coding preferences:
+* ES6 Javascript
+* React functional component style (not class component style)
+* Wrap components withDebug and use the log function passed in as a prop
+* Configure which log messages are displayed in App.js using debug.enable
+* Hooks deal with cross-cutting concerns in the React functional style
 
 ## Cloudflare
 Be careful of cloudflare caching.

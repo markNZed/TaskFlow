@@ -5,10 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { useState, useEffect } from "react";
-import { useGlobalStateContext } from "../contexts/GlobalStateContext";
+import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { setNestedProperties, deepMerge, log } from "../utils/utils";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
+import useWebSocketContext from "../contexts/WebSocketContext";
 
 // We have: Start with startId, threadId
 //          State with task

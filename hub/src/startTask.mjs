@@ -203,9 +203,10 @@ async function startTask_async(
     function isAllCaps(str) {
       return /^[A-Z\s]+$/.test(str);
     }
-    function processArrays(obj, taskCopy, outputs, threadId) {
+    function processTemplateArrays(obj, taskCopy, outputs, threadId) {
       // Do substitution on arrays of strings and return a string
       if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
+        const user = users[taskCopy.userId];
         return obj.reduce(function (acc, curr) {
           // Substitute variables with previous outputs
           const regex = /^([^\s.]+)\.([^\s.]+)$/;
@@ -225,7 +226,6 @@ async function startTask_async(
             const regex = /^(USER)\.([^\s.]+)$/;
             const matches = regex.exec(curr);
             if (matches) {
-              let user = users[taskCopy.userId];
               // Substitute variables with user data
               return acc.concat(user[matches[2]])
             } else {
@@ -236,19 +236,39 @@ async function startTask_async(
       } else {
         for (const key in obj) {
           if (Array.isArray(obj[key])) {
-            obj[key] = processArrays(obj[key], taskCopy, outputs, threadId);
+            obj[key] = processTemplateArrays(obj[key], taskCopy, outputs, threadId);
           } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-            processArrays(obj[key], taskCopy, outputs, threadId);
+            processTemplateArrays(obj[key], taskCopy, outputs, threadId);
           }
         }
       }
       return obj
     }
+
+    
+    const user = users[taskCopy.userId];
+    const language = user.language || "EN";
+    // Rename all the language specific configs
+    for (const [key, value] of Object.entries(taskCopy.config)) {
+      if (key.endsWith("_" + language.toUpperCase())) {
+        const newKey = key.replace(/_\w{2}$/, "");
+        if (taskCopy.config[newKey] === undefined) {
+          taskCopy.config[newKey] = value;
+          delete taskCopy.config[key];
+        }
+      }
+      // Strip out the configs that do not have the right language
+      const match = key.match(/_(\w{2})$/);
+      if (match && match[1] !== language.toUpperCase()) {
+        delete taskCopy.config[key];
+      }
+    }
+
      // Find all the config variable that end with Template
     for (const [key, template] of Object.entries(taskCopy.config)) {
       if (key.endsWith("Template")) {
         //console.log("Template found", key, template);
-        taskCopy.config[key] = processArrays(template, taskCopy, outputs, threadId);
+        taskCopy.config[key] = processTemplateArrays(template, taskCopy, outputs, threadId);
         //console.log("Processed template", taskCopy.config[key]);
       }
     }

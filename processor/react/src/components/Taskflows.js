@@ -17,7 +17,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
-import { useGlobalStateContext } from "../contexts/GlobalStateContext";
+import useGlobalStateContext from "../contexts/GlobalStateContext";
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
 import { setArrayState } from "../utils/utils";
@@ -62,7 +62,7 @@ function Taskflows(props) {
       replaceGlobalState("selectedTaskId", null);
     }
     // If we only have one start task and the Processor has registered with the hub
-    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && globalState.hubId && globalState.hubId !== "unknown") {
+    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
       const sortedKeys = Object.keys(globalState.taskflowsTree).sort(
         (a, b) => a.length - b.length
       );

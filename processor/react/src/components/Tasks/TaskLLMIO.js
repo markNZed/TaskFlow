@@ -29,7 +29,7 @@ const TaskLLMIO = (props) => {
     task,
     setTask,
     modifyTask,
-    updateState,
+    modifyState,
     stackPtr,
     //socketResponses,
     //setSocketResponses,
@@ -71,7 +71,7 @@ const TaskLLMIO = (props) => {
           "config.nextStates": { start: "response", response: "wait", wait: "stop" },
         });
       }
-      updateState("start");
+      modifyState("start");
     }
   }, [task]);
 
@@ -119,7 +119,7 @@ const TaskLLMIO = (props) => {
     if (entering) {
       if (entering.direction === "prev" && entering.task.name === task.name) {
         if (task.config?.reenteringState) {
-          updateState(task.config.reenteringState)
+          modifyState(task.config.reenteringState)
         } 
       }
     }
@@ -189,7 +189,7 @@ const TaskLLMIO = (props) => {
       }
       if (task.state.current !== newState) {
         if (newState) {
-          updateState(newState);
+          modifyState(newState);
         }
         // Could use delta instead?
         // Useful if we want an action only performed once on entering a state

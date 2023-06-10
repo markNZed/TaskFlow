@@ -12,7 +12,7 @@ import Taskflows from "./components/Taskflows";
 import NotFound from "./components/NotFound";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
-import { useGlobalStateContext } from "./contexts/GlobalStateContext";
+import useGlobalStateContext from "./contexts/GlobalStateContext";
 import { hubUrl } from "./config";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
@@ -20,6 +20,7 @@ import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const storageRef = useRef(null);
@@ -91,12 +92,12 @@ function App({ activeWorkerCount, workerId }) {
     }
   }, [globalState?.processorId]);
 
+  // For reasons I don't understand, React hot update keeps the old globalState upon page reload
   useEffect(() => {
     const registerProcessor = async () => {
-      console.log("Registering processor");
-      let hubId = "unknown";
-      mergeGlobalState({ hubId });
+      setRegistering(true);
       try {
+        const language = navigator?.language?.toLowerCase() ?? 'en';
         const response = await fetch(`${hubUrl}/api/register`, {
           method: "POST",
           credentials: "include",
@@ -105,20 +106,23 @@ function App({ activeWorkerCount, workerId }) {
           },
           body: JSON.stringify({
              processorId: globalState.processorId,
-             environments: ["react"]
+             environments: ["react"],
+             language: language,
           }),
         });
         const data = await response.json();
+        console.log("Registered processor: ", data);
         if (data?.hubId) {
-          hubId = data.hubId;
-          mergeGlobalState({ hubId });
+          replaceGlobalState("hubId", data.hubId);
         }
       } catch (err) {
+        console.log("Registered processor error ");
         console.log(err.message);
       }
+      setRegistering(false);
     };
     // Wait for the processorId to be set
-    if (globalState?.processorId && (!globalState?.hubId || globalState.hubId === null)) {
+    if (!registering && globalState?.processorId && !globalState?.hubId) {
       registerProcessor();
     }
   }, [globalState]);

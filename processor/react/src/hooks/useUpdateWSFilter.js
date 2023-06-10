@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
+import useWebSocketContext from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
 function useUpdateWSFilter(task, onUpdate) {
@@ -11,7 +11,7 @@ function useUpdateWSFilter(task, onUpdate) {
   const handleUpdate = (taskUpdate) => {
     //console.log("useUpdateWSFilter handleUpdate", task, instanceId);
     if (task && task.instanceId && taskUpdate.instanceId === task.instanceId) {
-      console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
+      //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
       setEventQueue((prev) => [...prev, taskUpdate]);
     }
   };

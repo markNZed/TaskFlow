@@ -215,11 +215,7 @@ function flattenTaskflows(taskflows) {
               for (const key2 in tasktypes[tasktemplate]) {
                 if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
                   //console.log("Adding " + key2, tasktypes[tasktemplate][key2])
-                  // !!! We should to deep merge if the key already exists
-                  if (!taskflow.tasks[taskkey][key2]) {
-                    //console.log("Adding taskkey " + taskkey + " key2 " + key2, tasktypes[tasktemplate][key2])
-                    taskflow.tasks[taskkey][key2] = tasktypes[tasktemplate][key2]
-                  }
+                  taskflow.tasks[taskkey][key2] =  utils.deepMerge(taskflow.tasks[taskkey][key2], tasktypes[tasktemplate][key2])
                 }
               }
             } else {

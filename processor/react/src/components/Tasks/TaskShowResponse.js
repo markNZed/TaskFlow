@@ -28,7 +28,7 @@ const TaskShowResponse = (props) => {
     setTask,
     parentTask,
     modifyTask,
-    updateState,
+    modifyState,
     stackPtr,
   } = props;
 
@@ -55,7 +55,7 @@ const TaskShowResponse = (props) => {
         });
         //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
       }
-      updateState("start");
+      modifyState("start");
     }
   }, [task]);
 
@@ -118,7 +118,7 @@ const TaskShowResponse = (props) => {
       }
       if (task.state.current !== newState) {
         if (newState) {
-          updateState(newState);
+          modifyState(newState);
         }
         // Could use delta instead?
         // Useful if we want an action only performed once on entering a state

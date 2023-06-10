@@ -8,6 +8,7 @@ const users = [
       parentType: "root",
       profile: "A student",
       interface: "simple",
+      language: "en",
     },
   ];
   export { users };

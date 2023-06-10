@@ -1,45 +1,34 @@
 /* ToDo
 -------
+In default config assign a random user label so we can demo multiparty chat
+Provide sample of nginx proxy config
+updatedAt is losing the TimeZone - why?
 Typewrite broken on joining session?
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome
-updatedAt is losing the TimeZone - why?
 Is there one state machine that is synchronised across all tasks?
   Seems the best approach but need to be careful that processors not initiating transitons will be effected
-Maybe ok to have conflict in state.current
 Transaction might be a better concept than lock, then don't need bypass.
 Re-architect the react Processor to make use of the Service Worker API
-  Progressive Web Apps
-  https://developer.chrome.com/docs/workbox/
+  Progressive Web Apps https://developer.chrome.com/docs/workbox/
   ServiceWorker will intercept any HTTP request from a client except WebSocket upgrade requests
-  The shared worker will use the same session in each tab. 
-    So all of your tabs or windows will have the same worker and same Web Socket connection to work with
-  Until then what do we do with multiple tabs?
-    The thread could be limited to a session
-      If the Processor has an activeTask then it will only allow start from the same thread
-        Need to shutdown active sessions (when websocket disconnects)
-          Track activeSessions
-  Workbox is built into Create React App (CRA) with a default configuration that precaches all the static assets in your application with every build.
+  Workbox is built into Create React App (CRA) with a default configuration that precaches all the static assets.
     "react-scripts": "5.0.1"
-  Redux State Sync might provide much of these benefits
+  Redux State Sync might provide many of these benefits
     Have one tab that is "master" and others as slaves that pass requests to master.
     https://www.howtogeek.com/devops/how-to-sync-a-redux-store-across-browser-tabs/
     This is a different architecture in that all tabs communicate with the server and Redux is synchronized
   Could detect when more than one tab is open then route websocket from one master tab to shared worker then on to slave tabs
-    https://github.com/pubkey/broadcast-channel seems better because it gives us LeaderElection
+    https://github.com/pubkey/broadcast-channel seems good - it provides LeaderElection
     Basically the leader broadcasts what it receives on websocket and forwards what it received on the channel
       The websocket context just needs to decide which to use (depending on whether it is the leader)
       It seems OK to let the HTTP requests go through, eventaully the session could be managed by the Processor
         Then just use the thread to allow different tabs to have the same task
-  At this stage is might be easier to treat different tabs as different processors.
-    Could use the activeWorkerCount as an index into localStorage
-      Create a new entry when count gets higher
 Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
-Testing of oneThread and collaborate
-Check errors are working
+Testing of oneThread, collaborate, errors.
 Code review/cleanup - identify refactoring goals
   Hub pipeline: a module with function for each step.
   Concept of Processor/Hub commands

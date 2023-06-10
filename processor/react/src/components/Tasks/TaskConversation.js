@@ -110,9 +110,9 @@ const TaskConversation = (props) => {
           maxHeight: `${chatContainermaxHeight}px`,
         }}
       >
-        { msgs["conversation"] &&
-          msgs["conversation"].map((msg, index) => {
-            const isLastElement = index === msgs["conversation"].length - 1;
+        { msgs && msgs.length > 0 &&
+          msgs.map((msg, index) => {
+            const isLastElement = index === msgs.length - 1;
             return (
               <div
                 key={index}

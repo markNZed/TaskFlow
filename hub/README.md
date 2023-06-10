@@ -10,9 +10,13 @@ The Task Hub is implemented in node using the Express framework and SQLite datab
 * Synchronization of Tasks across processors
   * Processors send Task updates to Hub via HTTP request
   * The Hub sends diffential Task updates to all relevant processors via websocket
-    * The difference supports merging of distributed Task state
+    * Supports merging of distributed Task state
+    * Supports deletion of object keys (set to null)
+    * Supports unchanged array elements (set to null)
 * Manage oneThread configuration (only one instance of the Task per user)
-* manage collaborate configuration (only one instance of the Task per group) 
+  * Additional processors join rather than start
+* manage collaborate configuration (only one instance of the Task per group)
+  * Additional processors join rather than start
 * Task interception
   * When a Task is done the Hub sends the next Task(s)
   * When a Task contains an error the Hub sends an error Task
@@ -22,7 +26,8 @@ The Task Hub is implemented in node using the Express framework and SQLite datab
   * The Task tree is built for the available start Tasks (returned with the sessionId request at the moment)
 * Pong command responses to Processor ping commands
 * Error management
-* Task lock (and lockBtpass) so updates do not collide
+* Task lock (and lockBypass) so updates do not collide
+* UpdateAt timestamp
 # Start
 This is the Task Hub T@skFlow
 1. written in Node JS run-time, Express framework

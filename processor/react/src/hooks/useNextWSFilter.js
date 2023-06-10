@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from "react";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
-import { useGlobalStateContext } from "../contexts/GlobalStateContext";
+import useWebSocketContext from "../contexts/WebSocketContext";
+import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { log } from "../utils/utils";
 
 function useNextWSFilter(instanceId, doneTask, onNext) {

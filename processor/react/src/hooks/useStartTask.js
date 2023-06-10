@@ -5,11 +5,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { useState, useEffect, useRef } from "react";
-import { useGlobalStateContext } from "../contexts/GlobalStateContext";
+import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
-const useStartTask = (startId, threadId = null, stackPtr = null) => {
+const useStartTask = (startId, setStartId, threadId = null, stackPtr = null) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setTaskStartError] = useState();
 
@@ -29,6 +29,8 @@ const useStartTask = (startId, threadId = null, stackPtr = null) => {
       } catch (error) {
         setTaskStartError(error.message);
       }
+      // If start fails then we can try again for the same task if it is cleared
+      setStartId(null);
     };
 
     fetchTaskFromAPI();

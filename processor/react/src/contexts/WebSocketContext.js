@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
-import { useGlobalStateContext } from "./GlobalStateContext";
+import useGlobalStateContext from "./GlobalStateContext";
 import { log, updatedAt } from "../utils/utils";
 
 class WebSocketEventEmitter extends EventEmitter {}
@@ -16,7 +16,7 @@ const WebSocketContext = React.createContext();
 
 export const webSocketEventEmitter = new WebSocketEventEmitter();
 
-export function useWebSocketContext() {
+export default function useWebSocketContext() {
   return useContext(WebSocketContext);
 }
 
@@ -48,18 +48,6 @@ export function WebSocketProvider({ children, socketUrl }) {
     };
   }, [globalState]);
 
-  const startTaskDB = async (task) => {
-    // We are not using this storage yet
-    // We will need to clean it up
-    if (globalState.storageRef) {
-      globalState.storageRef.current.set(task.instanceId, task);
-      //const value = await storageRef.current.get("a1");
-      console.log("Storage start ", task.id, task.instanceId);
-    } else {
-      console.log("Storage not ready ", task.id, task.instanceId);
-    }
-  };
-
   const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
     reconnectAttempts: 15,
     //reconnectInterval: 500,
@@ -73,8 +61,11 @@ export function WebSocketProvider({ children, socketUrl }) {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
       setWebSocket(ws);
-      // This should cause the App to re-register with the hub
-      replaceGlobalState("hubId", null);
+      if (!globalState?.hubId) {
+        // This should cause the App to re-register with the hub
+        // Reassigning te same value will create an event 
+        replaceGlobalState("hubId", null);
+      }
       const taskPing = () => {
         return {
           sessionId: globalState?.sessionId,
@@ -102,9 +93,6 @@ export function WebSocketProvider({ children, socketUrl }) {
       const message = JSON.parse(e.data);
       if (message?.command && message.command !== "pong") {
         //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
-        if (message.command === "start") {
-          startTaskDB(message.task);
-        }
         webSocketEventEmitter.emit(message?.command, message.task);
       } else if (message.command === "pong") {
         //console.log("App webSocket received pong", message);
@@ -120,6 +108,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (ws.pingIntervalId) {
         clearInterval(ws.pingIntervalId);
       }
+      // This should cause the App to re-register with the hub
+      replaceGlobalState("hubId", null);
     },
     onerror: (e) => {
       console.log("App webSocket closed with error", e);

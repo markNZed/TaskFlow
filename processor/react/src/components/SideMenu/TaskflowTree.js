@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { TreeView, TreeItem } from "@mui/lab";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
+import useGlobalStateContext from "../../contexts/GlobalStateContext";
 
 function TaskflowTree({ onClose }) {
   const { globalState, replaceGlobalState } = useGlobalStateContext();
@@ -111,7 +111,7 @@ function TaskflowTree({ onClose }) {
     }
   }
 
-  if (!globalState.taskflowsTree || globalState.hubId === "unknown") {
+  if (!globalState.taskflowsTree || !globalState?.hubId) {
     return <div>Loading...</div>;
   }
 

@@ -25,23 +25,24 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
     T("lockBypass", true);
+    console.log("TaskChat setting state to receiving");
     // Here we update the task which has the effect of setting the state to receiving
     await updateTask_async(task)
     // Using a copy of the task because we may modify the request and we do not want to send
     // those changes back.
-    const taskCopy = JSON.parse(JSON.stringify(task)); // deep copy
-    const TC = utils.createTaskValueGetter(taskCopy);
-    let msgs = TC("output.msgs");
-    //console.log("msgs before", msgs);
-    // Remove the assistant message
-    msgs["conversation"].pop();
-    // Remove the prompt
-    const msgPrompt = msgs["conversation"].pop();
-    TC("request.prompt", msgPrompt.text)
+    let msgs = T("output.msgs");
+    // Extract the prompt
+    const msgPrompt = msgs[msgs.length - 2];
+    //console.log("TaskChat msgs", msgs);
+    T("request.prompt", msgPrompt.text)
      // This will update the state on client 
-    console.log("TaskChat sending");
-    const subTask = await SubTaskLLM_async(wsSendTask, taskCopy);
-    T("response.text", subTask.response.text);
+    const subTask = await SubTaskLLM_async(wsSendTask, task);
+    const lastElement = {
+      ...msgs[msgs.length - 1],
+    }; // shallow copy
+    lastElement.text = subTask.response.text
+    // Send to sync latest outputs via Hub, should also unlock
+    T("output.msgs", [...msgs.slice(0, -1), lastElement]);
     T("state.current", "input");
     T("state.deltaState", "input");
     T("lockBypass", true);

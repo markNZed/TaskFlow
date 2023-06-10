@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useCallback, useState, useEffect } from "react";
-import { useGlobalStateContext } from "../../contexts/GlobalStateContext";
+import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import { AVAILABLE_MODELS } from "../../utils/constants";
 import SliderBox from "./SliderBox";
 import SelectBox from "./SelectBox";

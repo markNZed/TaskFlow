@@ -10,7 +10,7 @@ import { getObjectDifference } from "../utils/utils";
 
 const GlobalStateContext = React.createContext();
 
-export function useGlobalStateContext() {
+export default function useGlobalStateContext() {
   return useContext(GlobalStateContext);
 }
 

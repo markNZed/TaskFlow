@@ -5,11 +5,7 @@ import { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt 
 
 export { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt }
 
-export function updateState(setState, update) {
-  setState((prevState) => ({ ...prevState, ...update }));
-}
-
-// e.g. delta(() => {updateState('input')})
+// e.g. delta(() => {modifyState('input')})
 export const delta = (callback, delay = 0) => setTimeout(callback, delay);
 
 export function hasOnlyResponseKey(obj) {

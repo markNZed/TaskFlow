@@ -1,8 +1,15 @@
 # Task Processor
 
-* Set Task's updatedAt when requesting to hub's update route
+* 
 
-We want a notion of a Task event. For example, React could be sensitive to changes in the Task. The taskChange is the event. These can be numbered if wéneed to ensure the event is processed once (the effect may be sensitive to other signals). It would be possible to use Javascript events to in the case of React so we can ensure delivery and consumption. The processor can provide event filtering so effects are insensitive to the order of events e.g., taskEvent("a && b") 
+## Future
+Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
+* Filter execution
+* Diff generation
+* Template filling
+* Throttling
+
+ We want a notion of a Task event. For example, React could be sensitive to changes in the Task. The taskChange is the event. These can be numbered if wé need to ensure the event is processed once (the effect may be sensitive to other signals). It would be possible to use Javascript events to in the case of React so we can ensure delivery and consumption. The processor can provide event filtering so effects are insensitive to the order of events e.g., taskEvent("a && b") 
 
 ```javascript
 // The expression will evaluate to true upon the event that completes the expression
@@ -17,13 +24,3 @@ function taskEvent(expression, taskChange, task) {
     // return math.evaluate(modifiedExpression, {taskChange, task}) 
 }
 ```
-
-
-## Future
-Hub functionality that can be pushed to the Processor should be puhsed to the processor e.g.,
-* Filter execution
-* Diff generation
-* Template filling
-* Throttling
-
- 

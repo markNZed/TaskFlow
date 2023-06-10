@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { useWebSocketContext } from "../contexts/WebSocketContext";
+import useWebSocketContext from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
 function usePartialWSFilter(instanceId, onMessage) {
