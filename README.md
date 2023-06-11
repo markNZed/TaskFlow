@@ -66,9 +66,9 @@ For developers T@skFlow could become a personal assistant that runs on your comp
 
 To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the docker directory.
 
-To learn more about the NodeJS Task Processor, see [README.md](NodeJS Task Processor/README.md) in the NodeJS Task Processor directory.
+To learn more about the NodeJS Task Processor, see [README.md](processor/nodejs/README.md) in the NodeJS Task Processor directory.
 
-To learn more about the React Task Processor, see [README.md](React Task Processor/README.md) in the React Task Processor directory.
+To learn more about the React Task Processor, see [README.md](processor/react/README.md) in the React Task Processor directory.
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
