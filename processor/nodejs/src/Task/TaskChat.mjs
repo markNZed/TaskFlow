@@ -22,6 +22,7 @@ const TaskChat_async = async function (wsSendTask, task) {
   // Could return msgs instead of response.text
   if (T("state.current") === "sending") {
     T("response.text", null); // Avoid using previously stored response
+    T("state.last", T("state.current"));
     T("state.current", "receiving");
     T("state.deltaState", "receiving");
     T("lockBypass", true);
@@ -43,6 +44,7 @@ const TaskChat_async = async function (wsSendTask, task) {
     lastElement.text = subTask.response.text
     // Send to sync latest outputs via Hub, should also unlock
     T("output.msgs", [...msgs.slice(0, -1), lastElement]);
+    T("state.last", T("state.current"));
     T("state.current", "input");
     T("state.deltaState", "input");
     T("unlock", true);

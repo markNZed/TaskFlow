@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
-import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 
@@ -36,14 +35,16 @@ ToDo:
 const TaskChat = (props) => {
   const {
     log,
+    task,
     modifyTask,
     modifyState,
-    task,
-    processorId,
+    transition,
+    transitionTo, 
+    transitionFrom, 
+    user,
   } = props;
 
   const [prompt, setPrompt] = useState("");
-  const [myLastState, setMyLastState] = useState("");
   const [submitForm, setSubmitForm] = useState(false);
   const [submittingForm, setSubmittingForm] = useState(false);
   const [responseText, setResponseText] = useState("");
@@ -51,7 +52,6 @@ const TaskChat = (props) => {
   const textareaRef = useRef();
   const formRef = useRef();
   const [socketResponses, setSocketResponses] = useState([]);
-  const { globalState } = useGlobalStateContext();
 
   // Note that socketResponses may not (will not) be updated on every websocket event
   // React groups setState operations and I have not understood the exact criteria for this
@@ -91,18 +91,6 @@ const TaskChat = (props) => {
     }
   )
 
-  function transitionTo(state) {
-      return (task.state.current === state && myLastState !== state)
-  }
-
-  function transitionFrom(state) {
-    return (task.state.current !== state && myLastState === state)
-  }
-
-  function transition() {
-    return (task.state.current !== myLastState)
-  }
-
   // Task state machine
   // Need to be careful setting task in the state machine so it does not loop
   // Could add a check for this
@@ -111,60 +99,53 @@ const TaskChat = (props) => {
       let nextState;
       if (transition()) { log("TaskChat State Machine State " + task.state.current) }
       const msgs = JSON.parse(JSON.stringify(task.output.msgs)); // deep copy
-      if (task.state.current === "receiving") {
-        const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
-        // Avoid looping dur to modifyTask by checking if the text has changed
-        if (responseText && responseText !== lastElement.text) {
-          lastElement.text = responseText;
-          modifyTask({ "output.msgs": [...msgs.slice(0, -1), lastElement],
-            "state.isLoading": false
-          });
-        }
-      // Detect change to sending and create a slot for new msgs
-      } else if (transitionTo("sending")) {
-        // Should be named delta not deltaState (this ensures we see the event once)
-        // Create a new slot for the next message
-        // Add the input too for the user
-        const newMsgArray = [
-          { role: "user", text: prompt, user: globalState.user.label },
-          { role: "assistant", text: "", user: "assistant" },
-        ];
-        //console.log("Sending newMsgArray", newMsgArray, prompt);
-        // Lock so users cannot send at same time. NodeJS will unlock on final response.
-        modifyTask({ 
-          "output.msgs": [...msgs, ...newMsgArray],
-          "state.isLoading": true,
-          "lock": true,
-          update: true
-        });
-        setSubmittingForm(false);
-        setPrompt("");
-      } else if (transitionTo("input") && transitionFrom("receiving")) {
-        responseTextRef.current = "";
-      } else if (task.state.current === "input") {
-        if (submittingForm) {
-          nextState = "sending";
-        }
+      switch (task.state.current) {
+        case "input":
+          if (transitionFrom("receiving")) {
+            responseTextRef.current = "";
+          }
+          if (submittingForm) {
+            nextState = "sending";
+          }
+          break;
+        case "sending":
+          // Create a slot for new msgs
+          if (transitionTo("sending")) {
+            // Create a new slot for the next message
+            // Add the input too for the user
+            const newMsgArray = [
+              { role: "user", text: prompt, user: user.label },
+              { role: "assistant", text: "", user: "assistant" },
+            ];
+            //console.log("Sending newMsgArray", newMsgArray, prompt);
+            // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+            modifyTask({ 
+              "output.msgs": [...msgs, ...newMsgArray],
+              "lock": true,
+              "update": true
+            });
+            setSubmittingForm(false);
+          }
+          break;
+        case "receiving":
+          if (transitionTo("receiving")) {
+            setPrompt("");
+          }
+          const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+          // Avoid looping dur to modifyTask by checking if the text has changed
+          if (responseText && responseText !== lastElement.text) {
+            lastElement.text = responseText;
+            modifyTask({
+              "output.msgs": [...msgs.slice(0, -1), lastElement],
+            });
+          }
+          break;
       }
-      if (task.state.current !== nextState) {
-        if (nextState) {
-          modifyState(nextState);
-        }
-        // Used by transitionTo && transitionFrom
-        setMyLastState(task.state.current);
-      }
+      // Manage state.current and state.last
+      modifyState(nextState);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, submittingForm, responseText]);
-
-  /*
-  useEffect(() => {
-    if (task) {
-      console.log("------------------------------------------------")
-      console.log("TRACE task?.state.current ", task?.state.current, task)
-    }
-  }, [task?.state.current]);
-  */
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -173,7 +154,7 @@ const TaskChat = (props) => {
         setSubmittingForm(true);
       }
     },
-    [prompt, setPrompt]
+    [prompt]
   );
 
   useEffect(() => {

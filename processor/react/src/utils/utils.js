@@ -115,6 +115,5 @@ export function replaceNewlinesWithParagraphs(text) {
     // Wrap each line in <p> tags
     html = lines.map(line => `<p>${line}</p>`).join('');
   }
-
   return html;
 }

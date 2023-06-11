@@ -123,7 +123,7 @@ const TaskConversation = (props) => {
               >
                 <div className="chat">
                   <Icon role={msg.role} user={msg.user} />
-                  {task.state.isLoading && isLastElement ? (
+                  {task.state.current === "sending" && isLastElement ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (
                     <div 

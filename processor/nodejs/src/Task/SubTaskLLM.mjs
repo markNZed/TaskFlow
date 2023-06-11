@@ -378,6 +378,19 @@ async function ChatGPTAPI_request_async(params) {
       }
       const text = "Dummy text ".repeat(10) + new Date().toISOString();
       //const text = "Dummy text ";;
+      const words = text.split(" ");
+      // call SendIncrementalWs for pairs of word
+      let partialText = "";
+      for (let i = 0; i < words.length; i += 2) {
+        let delta = words[i] + " ";
+        if (words[i + 1]) {
+          delta += words[i + 1] + " ";
+        }
+        partialText += delta;
+        const partialResponse = { delta: delta, text: partialText };
+        SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+        await sleep(80);
+      }
       message_from("Dummy API", text, noWebsocket, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {

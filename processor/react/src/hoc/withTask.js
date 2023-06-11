@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   log,
   logWithComponent,
@@ -54,6 +54,7 @@ function withTask(Component) {
     const { nextTaskError } = useNextTask(doneTask);
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
+    const lastStateRef = useRef("");
 
     useUpdateWSFilter(props.task,
       async (updateDiff) => {
@@ -135,16 +136,25 @@ function withTask(Component) {
       setStartTaskDepth(depth);
     }
 
+    // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
+    // This issp ecific to how React handles setState 
     function modifyState(state) {
-      props.setTask((p) =>
-        deepMerge(
-          p,
-          setNestedProperties({
-            "state.current": state,
-            "state.deltaState": state,
-          })
-        )
-      );
+      //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
+      lastStateRef.current = props.task.state.current;
+      if (state) {
+        props.setTask((p) =>
+          deepMerge(
+            p,
+            setNestedProperties({
+              "state.current": state,
+              "state.last": p.state.current,
+              "state.deltaState": state,
+            })
+          )
+        );
+      } else if (props.task.state.current != props.task.state.last) {
+        props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
+      }
     }
   
     // Allow detection of new state
@@ -298,6 +308,19 @@ function withTask(Component) {
       return [states, setTasksState];
     }
 
+    const transitionTo = (state) => {
+      return (props.task.state.current === state && lastStateRef.current !== state)
+    };
+  
+    const transitionFrom = (state) => {
+      return (props.task.state.current !== state && lastStateRef.current === state)
+    };
+  
+    const transition = () => {
+      //console.log("transition", props.task.state.current, lastStateRef.current)
+      return (props.task.state.current !== lastStateRef.current)
+    };
+
     // Tracing
     useEffect(() => {
       //console.log("Tracing prevTask ", prevTask)
@@ -319,6 +342,10 @@ function withTask(Component) {
       useTaskState,
       useTasksState,
       processorId: globalState.processorId,
+      transition,
+      transitionTo,
+      transitionFrom,
+      user: globalState.user,
     };
 
     return <WithDebugComponent {...componentProps} />;
