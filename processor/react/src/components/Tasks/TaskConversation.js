@@ -39,7 +39,7 @@ const TaskConversation = (props) => {
   const [chatContainermaxHeight, setChatContainermaxHeight] = useState();
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
-  const [msgs, setMsgs] = useState({});
+  const [msgs, setMsgs] = useState([]);
   const [conversationTask, setConversationTask] = useTaskState(
     null,
     "conversationTask"
@@ -58,9 +58,12 @@ const TaskConversation = (props) => {
   }, [startTask]);
 
   useEffect(() => {
-    if (task && task.output.msgs) {
-      //console.log("task.output.msgs", task.output.msgs);
-      setMsgs(task.output.msgs);
+    if (task) {
+      // The welcome message is not included as part of the Task msgs sent to the LLM
+      const welcomeMessage = { role: "assistant", text: task.config?.welcomeMessage, user: "assistant" };
+      const taskMessages = task.output?.msgs || [];
+      //console.log("setMsgs", [welcomeMessage, ...taskMessages]);
+      setMsgs([welcomeMessage, ...taskMessages]);
     }
   }, [task.output?.msgs]);
 

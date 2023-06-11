@@ -1,5 +1,7 @@
 /* ToDo
 -------
+Maybe a key feature for Loic would be remembering the system messages for Vierge
+Show websocket connection status with traffic light icon
 In default config assign a random user label so we can demo multiparty chat
 Provide sample of nginx proxy config
 updatedAt is losing the TimeZone - why?

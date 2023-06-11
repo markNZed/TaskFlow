@@ -125,7 +125,7 @@ const TaskLLMIO = (props) => {
     }
   }, [entering]);
 
-  // Sub_task state machine
+  // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
     if (myTaskId && myTaskId === task.id) {

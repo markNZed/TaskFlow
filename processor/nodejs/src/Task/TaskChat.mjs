@@ -45,7 +45,7 @@ const TaskChat_async = async function (wsSendTask, task) {
     T("output.msgs", [...msgs.slice(0, -1), lastElement]);
     T("state.current", "input");
     T("state.deltaState", "input");
-    T("lockBypass", true);
+    T("unlock", true);
   } else {
     console.log("Returning null");
     return null;

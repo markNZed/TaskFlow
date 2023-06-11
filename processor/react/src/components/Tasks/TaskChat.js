@@ -30,7 +30,6 @@ ToDo:
     To allow this we need to append dom elements. 
     In chatGPT they have the same problem inside the active <p> 
     but once rendered the <p></p> can be copied
-  Code the SM as per TaskLLMIO
   Max width for suggested prompts with wrapping possible?
 */
 
@@ -45,10 +44,9 @@ const TaskChat = (props) => {
 
   const [prompt, setPrompt] = useState("");
   const [myLastState, setMyLastState] = useState("");
-  const [responsePending, setResponsePending] = useState(false);
-  const [responseFinal, setResponseFinal] = useState(false);
   const [submitForm, setSubmitForm] = useState(false);
   const [submittingForm, setSubmittingForm] = useState(false);
+  const [responseText, setResponseText] = useState("");
   const responseTextRef = useRef("");
   const textareaRef = useRef();
   const formRef = useRef();
@@ -68,15 +66,13 @@ const TaskChat = (props) => {
               responseTextRef.current += text;
               break;
             case 'partial':
-              responseTextRef.current = text;
-              break;
             case 'final':
               responseTextRef.current = text;
-              //setResponseFinal(true);
               break;
           }
           //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
         }
+        setResponseText(responseTextRef.current);
         modifyTask({ "response.text": responseTextRef.current });
         return []; // Clear the processed socketResponses
       });
@@ -95,45 +91,37 @@ const TaskChat = (props) => {
     }
   )
 
-  // Initialize task.output.msgs unless it already exists (e.g. in the case of oneThread)
-  useEffect(() => {
-    if (task.output && !task.output.msgs) {
-      const welcomeMessage = task.config.welcomeMessage;
-      // The . in the thread Id causes problems for modifyTask
-      const msgs = [
-          { role: "assistant", text: welcomeMessage, user: "assistant" },
-      ];
-      //console.log("TaskChat useEffect msgs", msgs);
-      modifyTask({ "output.msgs": msgs});
-    }
-  }, []);
+  function transitionTo(state) {
+      return (task.state.current === state && myLastState !== state)
+  }
 
+  function transitionFrom(state) {
+    return (task.state.current !== state && myLastState === state)
+  }
+
+  function transition() {
+    return (task.state.current !== myLastState)
+  }
+
+  // Task state machine
   // Need to be careful setting task in the state machine so it does not loop
   // Could add a check for this
   useEffect(() => {
-    if (task && task.output?.msgs) {
-      //console.log("TaskChat useEffect task.state, responsePending", task.state, responsePending);
-      // Update msgs
+    if (task) {
+      let nextState;
+      if (transition()) { log("TaskChat State Machine State " + task.state.current) }
       const msgs = JSON.parse(JSON.stringify(task.output.msgs)); // deep copy
       if (task.state.current === "receiving") {
-        if (responseFinal) {
-          modifyState("input");
-          responseTextRef.current = "";
-        } 
-        if (msgs) {
-          const lastElement = {
-            ...msgs[msgs.length - 1],
-          }; // shallow copy
-          // Stop looping if state is stuck in receiving by checking if the text has changed
-          if (task.response.text && task.response.text !== lastElement.text) {
-            lastElement.text = task.response.text;
-            modifyTask({ "output.msgs": [...msgs.slice(0, -1), lastElement],
-              "state.isLoading": false
-            });
-          }
+        const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+        // Avoid looping dur to modifyTask by checking if the text has changed
+        if (responseText && responseText !== lastElement.text) {
+          lastElement.text = responseText;
+          modifyTask({ "output.msgs": [...msgs.slice(0, -1), lastElement],
+            "state.isLoading": false
+          });
         }
-      // Detect change to sending and creaet a slot for new msgs
-      } else if (task.state.current === "sending" && myLastState !== "sending") {
+      // Detect change to sending and create a slot for new msgs
+      } else if (transitionTo("sending")) {
         // Should be named delta not deltaState (this ensures we see the event once)
         // Create a new slot for the next message
         // Add the input too for the user
@@ -142,7 +130,7 @@ const TaskChat = (props) => {
           { role: "assistant", text: "", user: "assistant" },
         ];
         //console.log("Sending newMsgArray", newMsgArray, prompt);
-        // Clear the textbox
+        // Lock so users cannot send at same time. NodeJS will unlock on final response.
         modifyTask({ 
           "output.msgs": [...msgs, ...newMsgArray],
           "state.isLoading": true,
@@ -150,23 +138,24 @@ const TaskChat = (props) => {
           update: true
         });
         setSubmittingForm(false);
-        setResponsePending(true);
         setPrompt("");
-      } else if (task.state.deltaState === "input" && msgs.length && responsePending) {
-        setResponsePending(false);
-        // Send to sync latest outputs via Hub, should also unlock
-        modifyTask({
-          update: true
-        });
+      } else if (transitionTo("input") && transitionFrom("receiving")) {
+        responseTextRef.current = "";
       } else if (task.state.current === "input") {
-        setResponseFinal(false);
         if (submittingForm) {
-          modifyState("sending");
+          nextState = "sending";
         }
       }
+      if (task.state.current !== nextState) {
+        if (nextState) {
+          modifyState(nextState);
+        }
+        // Used by transitionTo && transitionFrom
+        setMyLastState(task.state.current);
+      }
     }
-    setMyLastState(task.state.current);
-  }, [task, responseFinal, submittingForm]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task, submittingForm, responseText]);
 
   /*
   useEffect(() => {
@@ -180,11 +169,9 @@ const TaskChat = (props) => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!prompt) {
-        return;
+      if (prompt) {
+        setSubmittingForm(true);
       }
-      // Set update to send to NodeJS Task Processor
-      setSubmittingForm(true);
     },
     [prompt, setPrompt]
   );
@@ -197,11 +184,14 @@ const TaskChat = (props) => {
   }, [prompt]);
 
   const handleDropdownSelect = (selectedPrompt) => {
-    // Append to existing prompt text, might be better just to replace
-    setPrompt((prevPrompt) => prevPrompt + selectedPrompt);
+    // Prepend to existing prompt, might be better just to replace
+    setPrompt((prevPrompt) => selectedPrompt + prevPrompt );
     setSubmitForm(true);
   }
 
+  // Allow programmatic submission of the form 
+  // Set submitForm to true to submit
+  // Maybe events would be better
   useEffect(() => {
     if (!submitForm) {
       const formNode = formRef.current;
@@ -211,7 +201,7 @@ const TaskChat = (props) => {
     }
   }, [submitForm]);
 
-  const sendReady = responsePending ? "not-ready" : "ready"
+  const sendReady = task.state.current === "sending" ? "not-ready" : "ready"
 
   return (
     <form onSubmit={handleSubmit} ref={formRef} className="msg-form">
@@ -244,7 +234,7 @@ const TaskChat = (props) => {
         />
         <button
           type="submit"
-          disabled={responsePending}
+          disabled={sendReady === "not-ready"}
           className={"send-button " + sendReady}
         >
           {/* The key stops React double loading the image */}
