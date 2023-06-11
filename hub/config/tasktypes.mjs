@@ -10,6 +10,18 @@ const tasktypes = [
     websocket: true,
     // If multiple environments then it will be synchronized
     environments: ["react", "nodejs"],
+    config: { 
+      welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
+      welcomeMessage_EN: "Welcome! How can I assist you today?",
+      promptPlaceholder_FR: "Écrivez votre prompt ici.",
+      promptPlaceholder_EN: "Write your prompt here."
+    },
+    state: {
+      current: "input",
+    },
+    output: {
+      msgs: [],
+    }
   },
   {
     name: "TaskConversation",
