@@ -11,7 +11,7 @@ const TaskStepper_async = async function (wsSendTask, task) {
 
   console.log("Returning from TaskStepper_async");
 
-  return task;
+  return null;
 };
 
 export { TaskStepper_async };

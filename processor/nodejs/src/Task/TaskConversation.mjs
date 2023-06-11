@@ -10,7 +10,7 @@ const TaskConversation_async = async function (wsSendTask, task) {
 
   console.log("Returning from TaskConversation_async");
 
-  return task;
+  return null;
 };
 
 export { TaskConversation_async };

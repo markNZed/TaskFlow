@@ -32,7 +32,7 @@ export async function do_task_async(wsSendTask, task) {
         //console.log("do_task_async final task", updated_task)
         await updateTask_async(updated_task)
       } else {
-        console.log("do_task_async null task " + task.id);
+        console.log("do_task_async null " + task.id);
       }
     } else {
       console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
