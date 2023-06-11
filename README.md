@@ -76,17 +76,13 @@ To learn more about the Task object, see [README.md](shared/README.md) in the sh
 
 Imagine a new task that will be called TaskNew:
 * Create React Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
-* Add the license header to the file
 * Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
-* Add the license header to the file
 * Add information about the new Task to NodeJS Task Processor/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 
   * add it directly to NodeJS Task Processor/config/taskflows.mjs
 * If the sequence is complicated/long then 
-  * create a file in NodeJS Task Processor/config/taskflow/TaskNewFlow.mjs (copy the structure of an existing file)
-  * Add the license header to the file
   * edit NodeJS Task Processor/config/taskflows.mjs to import and include TaskNewFlow.mjs
 
 ### Task Patterns
