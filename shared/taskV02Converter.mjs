@@ -178,6 +178,7 @@ const typeMap = {
         { json: "createdAt", js: "createdAt", typ: u(undefined, 0) },
         { json: "destination", js: "destination", typ: u(undefined, "") },
         { json: "error", js: "error", typ: u(undefined, u(null, "")) },
+        { json: "exit", js: "exit", typ: u(undefined, true) },
         { json: "groupId", js: "groupId", typ: u(undefined, "") },
         { json: "hubId", js: "hubId", typ: u(undefined, "") },
         { json: "id", js: "id", typ: "" },
@@ -212,9 +213,9 @@ const typeMap = {
     ], "any"),
     "State": o([
         { json: "current", js: "current", typ: u(undefined, "") },
-        { json: "deltaState", js: "deltaState", typ: u(undefined, "") },
         { json: "done", js: "done", typ: u(undefined, true) },
         { json: "id", js: "id", typ: u(undefined, "") },
+        { json: "last", js: "last", typ: u(undefined, "") },
         { json: "nextState", js: "nextState", typ: u(undefined, "") },
     ], "any"),
     "UpdatedAt": o([

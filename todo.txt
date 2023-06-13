@@ -1,18 +1,19 @@
 /* ToDo
 -------
+Show websocket connection status with traffic light icon
 The websocket as context is a bad idea because it causes re-rendering
   Could add memo to app 
   Still need to be sensitive to global
+  Maybe it can provide an event interface - should look more into this feature.
 Global should change rarely e.g. pass the menu slection with something else  
   Will be a Task eventually
+  Maybe a callback ?
 Maybe start can be missed like update
   Get all the WS working this was
   Add queue to other React WS filters
 Maybe next feature for would be remembering the system messages for Vierge
-Show websocket connection status with traffic light icon
 In default config assign a random user label so we can demo multiparty chat
 Provide sample of nginx proxy config
-updatedAt is losing the TimeZone - why?
 Typewrite broken on joining session?
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome

@@ -43,6 +43,9 @@
             }
           ]
         },
+        "exit":{ 
+          "type": "boolean"
+        },
         "permissions": {
           "type": "array",
           "items": {

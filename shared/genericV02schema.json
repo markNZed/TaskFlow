@@ -39,7 +39,7 @@
         "current": {
           "type": "string"
         },
-        "deltaState": {
+        "last": {
           "type": "string"
         },
         "done": {

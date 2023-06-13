@@ -28,12 +28,13 @@ function withTask(Component) {
   const componentName = WithDebugComponent.displayName; // So we get the Component that was wrapped by withDebug
 
   function TaskComponent(props) {
-    let local_stackPtr;
+
+    const local_stackPtr = useRef();
     if (typeof props.stackPtr === "number") {
-      local_stackPtr = props.stackPtr + 1;
+      local_stackPtr.current = props.stackPtr + 1;
     } else {
       //console.log("Defaulting to stackPtr 0")
-      local_stackPtr = 0;
+      local_stackPtr.current = 0;
     }
 
     const { globalState } = useGlobalStateContext();
@@ -43,14 +44,14 @@ function withTask(Component) {
     const [startTaskId, setStartTaskId] = useState();
     const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
-    const [startTaskDepth, setStartTaskDepth] = useState(local_stackPtr);
+    const [startTaskDepth, setStartTaskDepth] = useState(local_stackPtr.current);
     // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing config from an earlier component
     const { updateTaskError } = useUpdateTask(
       props.task,
       props.setTask,
-      local_stackPtr
+      local_stackPtr.current
     );
     const [nextTask, setNextTask] = useState();
     const { nextTaskError } = useNextTask(doneTask);
@@ -67,8 +68,8 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMounted, local_stackPtr, props.task,
       async (updateDiff) => {
-        console.log("useUpdateWSFilter updateDiff.stackPtr === local_stackPtr", updateDiff.stackPtr, local_stackPtr);
-        if (updateDiff.stackPtr === local_stackPtr) {
+        console.log("useUpdateWSFilter updateDiff.stackPtr === local_stackPtr", updateDiff.stackPtr, local_stackPtr.current);
+        if (updateDiff.stackPtr === local_stackPtr.current) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
           //console.log("lastTask", lastTask)
@@ -116,9 +117,9 @@ function withTask(Component) {
 
     useNextWSFilter(useGlobalStateContext, props.task?.instanceId, doneTask,
       (updatedTask) => {
-        console.log("useNextWSFilter before setNextTask local_stackPtr", local_stackPtr, updatedTask);
+        console.log("useNextWSFilter before setNextTask local_stackPtr.current", local_stackPtr.current, updatedTask);
         //if (doneTask !== null && doneTask !== undefined) {
-          //console.log("useNextWSFilter setNextTask local_stackPtr", local_stackPtr);
+          //console.log("useNextWSFilter setNextTask local_stackPtr.current", local_stackPtr.current);
           setDoneTask(null)
           setNextTask(updatedTask)
         //}
@@ -180,14 +181,14 @@ function withTask(Component) {
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.stackPtr === local_stackPtr) {
+      if (task && task.stackPtr === local_stackPtr.current) {
         setPrevTask(task);
       }
     }, []);
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.stackPtr === local_stackPtr) {
+      if (task && task.stackPtr === local_stackPtr.current) {
         if (prevTask !== task) {
           setPrevTask(props.task);
         }
@@ -229,7 +230,7 @@ function withTask(Component) {
           console.log("Unexpected: Task without id ", state);
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if (state.stackPtr === local_stackPtr) {
+          if (state.stackPtr === local_stackPtr.current) {
             logWithComponent(
               componentName,
               name + " " + state.id + " changes:",
@@ -284,7 +285,7 @@ function withTask(Component) {
             console.log("Unexpected: Task without id ", state);
           }
           if (show_diff && Object.keys(diff).length > 0) {
-            if (state.stackPtr === local_stackPtr) {
+            if (state.stackPtr === local_stackPtr.current) {
               logWithComponent(
                 componentName,
                 name + " " + state.id + " changes:",
@@ -340,7 +341,7 @@ function withTask(Component) {
       prevTask,
       modifyTask,
       modifyState,
-      stackPtr: local_stackPtr,
+      stackPtr: local_stackPtr.current,
       useTaskState,
       useTasksState,
       processorId: globalState.processorId,
