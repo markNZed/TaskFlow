@@ -22,111 +22,56 @@ ToDo:
 const TaskShowResponse = (props) => {
   const {
     log,
-    leaving,
-    entering,
     task,
-    setTask,
-    parentTask,
     modifyTask,
     modifyState,
-    stackPtr,
+    transition,
+    onDidMount,
   } = props;
 
   const [responseText, setResponseText] = useState("");
-  const [myTaskId, setMyTaskId] = useState();
-  const [myLastState, setMyLastState] = useState("");
 
-  // This is the level where we are going to use the task so set the stackPtr
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
+
+  // Each time this component is mounted then we reset the task state
   useEffect(() => {
-    modifyTask({ stackPtr: stackPtr });
+    // This can write over the update
+    task.state.current = "start";
   }, []);
 
-  // Reset the task. Allows for the same component to be reused for different tasks.
-  // Probably always better to associate a component with a single task.
-  useEffect(() => {
-    //console.log("task ", task)
-    if (task && !myTaskId) {
-      setMyTaskId(task.id);
-      setResponseText("");
-      if (!task.config?.nextStates) {
-        // Default sequence is to just get response
-        modifyTask({
-          "config.nextStates": { start: "response", response: "wait", wait: "stop" },
-        });
-        //setTask((p) => {return { ...p, steps: {'start' : 'response', 'response' : 'stop'} }});
-      }
-      modifyState("start");
-    }
-  }, [task]);
-
-  // Sub_task state machine
+  // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    if (myTaskId && myTaskId === task.id) {
-      const leaving_now =
-        leaving?.direction === "next" && leaving?.task.name === task.name;
-      const entering_now =
-        entering?.direction === "prev" && entering?.task.name === task.name;
-      const nextState = task.config.nextStates[task.state.current];
-      let newState;
-      log("TaskShowResponse State Machine State " + task.state.current + " nextState " + nextState)
+    if (task) {
+      let nextState;
+      if (transition()) { log("TaskShowResponse State Machine State " + task.state.current) }
       switch (task.state.current) {
         case "start":
-          // Next state
-          newState =  nextState;
-          // Actions
+          if (task.response.text) {
+            log("Response cached React Task Processor side");
+            nextState = "response";
+          }
           break;
         case "response":
-          function response_action(text) {
-            setResponseText(text);
+          if (responseText !== task.response.text) {
+            setResponseText(task.response.text);
           }
-          // We cache the response React Task Processor side
-          if (task.response?.text) {
-            log("Response cached React Task Processor side");
-            // Next state
-            newState =  nextState;
-            // Actions
-            response_action(task.response.text);
-          } else {
-            // This effectively waits for the update
-            if (task.response.updated) {
-              newState =  nextState;
-              let response_text;
-              response_text = task.response.text;
-              modifyTask({ "response.text": response_text });
-              //setTask((p) => {return {...p, response: response_text}});
-              response_action(response_text);
-            } else if (myLastState !== task.state.current) { // could introduce deltaState
-              modifyTask({ update: true });
-            }
-          }
-          break;
-        case "wait":
-          if (leaving_now && !task.state.done) {
+          if (task.exit) {
             modifyTask({ "state.done": true });
-            newState = nextState;
+            nextState = "exit";
           }
           break;
-        case "stop":
-          // We may return to this Task and want to leave it again
-          if (entering_now) {
-            newState = "wait";
-          }
-          break;
+        case "exit":
+          break
         default:
           console.log("ERROR unknown state : " + task.state.current);
       }
-      if (task.state.current !== newState) {
-        if (newState) {
-          modifyState(newState);
-        }
-        // Could use delta instead?
-        // Useful if we want an action only performed once on entering a state
-        setMyLastState(task.state.current);
-      }
+      // Manage state.current and state.last
+      modifyState(nextState);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, task]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

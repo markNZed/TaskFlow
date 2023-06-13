@@ -12,7 +12,7 @@ import { utils } from "./utils.mjs";
 function wsSendObject(processorId, message = {}) {
   let ws = connections.get(processorId);
   if (!ws) {
-    console.log("Lost websocket for wsSendObject", processorId);
+    console.log("Lost websocket for wsSendObject", processorId, connections);
   } else {
     if (!message?.task) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));

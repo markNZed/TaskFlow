@@ -42,7 +42,8 @@ async function startTask_async(
       threadId = siblingTask.threadId;
       // In the case where the thread advances on another processor 
       // we still need to be able to find the nextTask 
-      prevInstanceId = siblingTask.instanceId
+      prevInstanceId = siblingTask.prevInstanceId
+      prevInstanceId[processorId] = siblingTask.instanceId
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
@@ -156,6 +157,7 @@ async function startTask_async(
     taskCopy.request = taskCopy.request || {};
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
+    taskCopy.prevInstanceId = taskCopy.prevInstanceId || {};
 
     if (prevInstanceId !== undefined) {
       taskCopy.prevInstanceId = prevInstanceId;

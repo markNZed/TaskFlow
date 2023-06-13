@@ -350,7 +350,7 @@ async function ChatGPTAPI_request_async(params) {
 
   let response_text_promise = Promise.resolve("");
 
-  if (cachedValue && cachedValue !== undefined) {
+  if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
     let text = cachedValue.text;
     const words = text.split(" ");
     // call SendIncrementalWs for pairs of word

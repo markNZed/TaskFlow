@@ -15,6 +15,9 @@ export default function useGlobalStateContext() {
 }
 
 export function GlobalStateProvider({ children }) {
+
+  console.log("--------- GlobalStateProvider ---------");
+
   const globalStatInit = {
     langModel: "gpt-3.5-turbo",
     temperature: 0,

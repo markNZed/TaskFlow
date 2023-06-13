@@ -18,6 +18,7 @@ import useStartWSFilter from "../hooks/useStartWSFilter";
 import useNextWSFilter from "../hooks/useNextWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
+import useWebSocketContext from "../contexts/WebSocketContext";
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -36,6 +37,7 @@ function withTask(Component) {
     }
 
     const { globalState } = useGlobalStateContext();
+    const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
     const [doneTask, setDoneTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
@@ -56,8 +58,16 @@ function withTask(Component) {
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
 
-    useUpdateWSFilter(props.task,
+    const handleChildDidMount = () => {
+      // This is called during the rendering of the Task and even though
+      // this is a HoC w get warnings for changing state during rendering
+      // So adding this delay will update outside of the rendering of Task
+      setTimeout(() => setIsMounted(true), 0);
+    }
+
+    useUpdateWSFilter(isMounted, local_stackPtr, props.task,
       async (updateDiff) => {
+        console.log("useUpdateWSFilter updateDiff.stackPtr === local_stackPtr", updateDiff.stackPtr, local_stackPtr);
         if (updateDiff.stackPtr === local_stackPtr) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
@@ -96,7 +106,7 @@ function withTask(Component) {
       }
     )
 
-    useStartWSFilter(lastStartTaskId,
+    useStartWSFilter(useGlobalStateContext, lastStartTaskId,
       (newTask) => {
         console.log("useStartWSFilter", newTask);
         setLastStartTaskId(null);
@@ -104,9 +114,9 @@ function withTask(Component) {
       }
     )
 
-    useNextWSFilter(props.task?.instanceId, doneTask,
+    useNextWSFilter(useGlobalStateContext, props.task?.instanceId, doneTask,
       (updatedTask) => {
-        //console.log("useNextWSFilter before setNextTask local_stackPtr", local_stackPtr, updatedTask);
+        console.log("useNextWSFilter before setNextTask local_stackPtr", local_stackPtr, updatedTask);
         //if (doneTask !== null && doneTask !== undefined) {
           //console.log("useNextWSFilter setNextTask local_stackPtr", local_stackPtr);
           setDoneTask(null)
@@ -148,7 +158,6 @@ function withTask(Component) {
             setNestedProperties({
               "state.current": state,
               "state.last": p.state.current,
-              "state.deltaState": state,
             })
           )
         );
@@ -156,13 +165,6 @@ function withTask(Component) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }
-  
-    // Allow detection of new state
-    useEffect(() => {
-      if (props.task && props.task.state?.current && props.task.state.current === props.task.state.deltaState) {
-        props.setTask(p => ({...p, state: {...p.state, deltaState: ''}}))
-      }
-    }, [props.task]);
 
     useEffect(() => {
       if (startTaskError) {
@@ -346,6 +348,8 @@ function withTask(Component) {
       transitionTo,
       transitionFrom,
       user: globalState.user,
+      onDidMount: handleChildDidMount,
+      useWebSocketContext,
     };
 
     return <WithDebugComponent {...componentProps} />;

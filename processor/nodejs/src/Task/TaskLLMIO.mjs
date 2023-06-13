@@ -5,6 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 import { utils } from "../utils.mjs";
+import { updateTask_async } from "../updateTask.mjs";
 
 const TaskLLMIO_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
@@ -13,38 +14,38 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
     "TaskLLMIO name " + T("name") + " state " + T("state.current")
   );
 
-  if (T("state.current") === undefined) {
-    console.log("TaskLLMIO state.current is undefined");
-    return null
+  switch (task.state.current) {
+    case "input":
+      // Make user input available to other tasks an output of this task
+      if (T("request.input")) {
+        T("output.input", T("request.input"));
+      }
+      //console.log("Returning task state input " + JSON.stringify(task));
+      T("state.last", T("state.current"));
+      T("state.current", "stop");
+      return task;
+    case "response":
+      T("state.last", T("state.current"));
+      T("state.current", "receiving");
+      // Here we update the task which has the effect of setting the state to receiving
+      await updateTask_async(task)
+      // The response needs to be available for other tasks to point at
+      const subTask = await SubTaskLLM_async(wsSendTask, task); 
+      T("response.text", subTask.response.text);
+      T("output.text", subTask.response.text);
+      T("state.last", T("state.current"));
+      T("state.current", "received");
+      break;
+    case "start":
+    case "received":
+    case "display":
+    case "wait":
+    case "stop":
+    default:
+      console.log("WARNING unknown state : " + task.state.current);
+      return null;
   }
 
-  // We have two potential steps: ['response', 'input']
-  // We want to receive the task object from the React Task Processor and from the NodeJS Task Processor
-  if (T("state.current") === "input") {
-    // Make available to other tasks an output of this task
-    if (T("request.input")) {
-      T("output.input", T("request.input"));
-    } else {
-      T("output.input", "");
-    }
-    //console.log("Returning task state input " + JSON.stringify(task));
-    // This is used to trigger the React state machine.
-    // Maybe the `sm should be triggered on delta chnages of the state rather than mystate
-    T("response.updated", true);
-    return task;
-  }
-
-  let response_text = "";
-  // The response needs to be available for other tasks to point at
-  const subTask = await SubTaskLLM_async(wsSendTask, task); 
-  T("response.text", subTask.response.text);
-  T("output.text", response_text);
-  //T("response.text", response_text);
-  // Make available as an output to other Tasks
-  //T("output.text", response_text);
-  // Ensure we do not overwrite the deltaState on the React Task Processor
-  //T("state.deltaState", undefined);
-  T("response.updated", true);
   console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
   return task;

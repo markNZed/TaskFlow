@@ -8,6 +8,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
+
 import { log, updatedAt } from "../utils/utils";
 
 class WebSocketEventEmitter extends EventEmitter {}
@@ -20,12 +21,19 @@ export default function useWebSocketContext() {
   return useContext(WebSocketContext);
 }
 
+export let messageQueue = {};
+export let messageQueueIdx = 0;
+
+// Because useWebSocket includes state it will cause a re-render of 
+// WebSocketProvider after each message is received
+// This is not ideal but it is not clear how to avoid it
 export function WebSocketProvider({ children, socketUrl }) {
+
+  //console.log("--------- WebSocketProvider ---------");
 
   const [webSocket, setWebSocket] = useState(null);
   const { globalState, replaceGlobalState } = useGlobalStateContext();
-
-  const sendJsonMessagePlusRef = useRef(); // add this line
+  const sendJsonMessagePlusRef = useRef();
 
   // The default is 10 but we have at least 3 listeners per task
   // There is also the listener for partial results
@@ -33,20 +41,18 @@ export function WebSocketProvider({ children, socketUrl }) {
   webSocketEventEmitter.setMaxListeners(100);
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
-  useEffect(() => {
-    sendJsonMessagePlusRef.current = function (m) {
-      if (!m?.task) {
-        m["task"] = {}
-      }
-      m.task.destination = globalState?.hubId
-      m.task.sessionId = globalState?.sessionId
-      m.task.source = globalState.processorId;
-      if (m.command === "ping") {
-        //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
-      }
-      sendJsonMessage(m);
-    };
-  }, [globalState]);
+  sendJsonMessagePlusRef.current = function (m) {
+    if (!m?.task) {
+      m["task"] = {}
+    }
+    m.task.destination = globalState.hubId
+    m.task.sessionId = globalState.sessionId
+    m.task.source = globalState.processorId;
+    if (m.command === "ping") {
+      //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
+    }
+    sendJsonMessage(m);
+  };
 
   const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
     reconnectAttempts: 15,
@@ -60,16 +66,16 @@ export function WebSocketProvider({ children, socketUrl }) {
     onOpen: (e) => {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
-      setWebSocket(ws);
-      if (!globalState?.hubId) {
+      //setWebSocket(ws);
+      if (!globalState.hubId) {
         // This should cause the App to re-register with the hub
         // Reassigning te same value will create an event 
-        replaceGlobalState("hubId", null);
+        //replaceGlobalState("hubId", null);
       }
       const taskPing = () => {
         return {
-          sessionId: globalState?.sessionId,
-          destination: globalState?.hubId,
+          sessionId: globalState.sessionId,
+          destination: globalState.hubId,
         }
       }
       sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});
@@ -93,6 +99,12 @@ export function WebSocketProvider({ children, socketUrl }) {
       const message = JSON.parse(e.data);
       if (message?.command && message.command !== "pong") {
         //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
+        //Could strcuture as messageQueue[message.command][messageQueueIdx]
+        if (message.command === "update") {
+          messageQueue[messageQueueIdx] = message;
+          messageQueueIdx = messageQueueIdx + 1;
+        }
+        // Could eventaully just emit the index
         webSocketEventEmitter.emit(message?.command, message.task);
       } else if (message.command === "pong") {
         //console.log("App webSocket received pong", message);
@@ -109,13 +121,14 @@ export function WebSocketProvider({ children, socketUrl }) {
         clearInterval(ws.pingIntervalId);
       }
       // This should cause the App to re-register with the hub
-      replaceGlobalState("hubId", null);
+      //replaceGlobalState("hubId", null);
     },
     onerror: (e) => {
       console.log("App webSocket closed with error", e);
     }
   });
 
+  /*
   const connectionStatus = webSocket
     ? {
         [WebSocket.CONNECTING]: "Connecting",
@@ -124,13 +137,15 @@ export function WebSocketProvider({ children, socketUrl }) {
         [WebSocket.CLOSED]: "Closed",
       }[webSocket.readyState]
     : "Uninstantiated";
+  */
 
   return (
     <WebSocketContext.Provider
       value={{ 
-        connectionStatus, 
-        webSocketEventEmitter, 
-        sendJsonMessagePlus: (...args) => sendJsonMessagePlusRef.current(...args),
+        //connectionStatus, 
+        //webSocketEventEmitter, 
+        //sendJsonMessagePlus: (...args) => sendJsonMessagePlusRef.current(...args),
+        //messageQueue,
       }}
     >
       {children}

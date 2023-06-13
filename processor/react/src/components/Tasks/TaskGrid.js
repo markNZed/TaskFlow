@@ -29,10 +29,14 @@ function TaskGrid(props) {
     stackPtr,
     startTaskFn,
     useTaskState,
+    onDidMount,
   } = props;
 
   const [tasks, setTasks] = useTasksState([]);
   const [gridTask, setGridTask] = useTaskState(null, "gridTask");
+
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
 
   useEffect(() => {
     startTaskFn(task.id, null, stackPtr);

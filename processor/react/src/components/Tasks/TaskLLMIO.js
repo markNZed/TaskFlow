@@ -27,53 +27,35 @@ const TaskLLMIO = (props) => {
     entering,
     leaving,
     task,
-    setTask,
     modifyTask,
     modifyState,
-    stackPtr,
-    //socketResponses,
-    //setSocketResponses,
+    onDidMount,
+    transition,
+    transitionTo, 
+    transitionFrom,
   } = props;
 
   const [responseText, setResponseText] = useState("");
-  const [finalResponse, setFinalResponse] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [showUserInput, setShowUserInput] = useState(false);
   const [userInputWordCount, setUserInputWordCount] = useState(0);
   const [responseTextWordCount, setResponseTextWordCount] = useState(0);
   const userInputRef = useRef(null);
   const responseTextRef = useRef(null);
+  const responseTextRectRef = useRef(null);
   const paraTopRef = useRef(0);
+  const waitRef = useRef(false);
   const [userInputHeight, setUserInputHeight] = useState(0);
-  const [myTaskId, setMyTaskId] = useState();
-  const [myLastState, setMyLastState] = useState("");
   const [socketResponses, setSocketResponses] = useState([]);
 
-  // This is the level where we are going to use the task so set the stackPtr
-  // Could have a setDepth function in withTask
-  useEffect(() => {
-    modifyTask({ stackPtr: stackPtr });
-  }, []);
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
 
-  // Reset the task. Allows for the same component to be reused for different tasks.
-  // Probably always better to associate a component with a single task.
+  // Each time this component is mounted then we reset the task state
   useEffect(() => {
-    if (task && !myTaskId) {
-      log("Resetting", task.id)
-      setMyTaskId(task.id);
-      setResponseText("");
-      setUserInput("");
-      setUserInputWordCount(0);
-      setResponseTextWordCount(0);
-      if (!task.config?.nextStates) {
-        // Default sequence is to just get response based on prompt text
-        modifyTask({
-          "config.nextStates": { start: "response", response: "wait", wait: "stop" },
-        });
-      }
-      modifyState("start");
-    }
-  }, [task]);
+    // This can write over the update
+    task.state.current = "start";
+  }, []);
 
   // This is asynchronous to the rendering so there may be conflicts where
   // state is updated during rendering and this impacts the parent
@@ -86,18 +68,16 @@ const TaskLLMIO = (props) => {
           const mode = response.mode;
           switch (mode) {
             case 'delta':
-              setResponseText((prevResponse) => prevResponse + text);
+              responseTextRef.current += text;
               break;
             case 'partial':
-              setResponseText(text);
-              break;
             case 'final':
+              responseTextRef.current = text;
               setResponseText(text);
-              setFinalResponse(true)
               break;
           }
-          //console.log("response", response)
         }
+        setResponseText(responseTextRef.current);
         return []; // Clear the processed responses
       });
     };
@@ -115,89 +95,71 @@ const TaskLLMIO = (props) => {
     }
   )
 
-  useEffect(() => {
-    if (entering) {
-      if (entering.direction === "prev" && entering.task.name === task.name) {
-        if (task.config?.reenteringState) {
-          modifyState(task.config.reenteringState)
-        } 
-      }
-    }
-  }, [entering]);
-
   // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    if (myTaskId && myTaskId === task.id) {
-      const leaving_now =
-        leaving?.direction === "next" && leaving?.task.name === task.name;
-      const entering_now =
-        entering?.direction === "prev" && entering?.task.name === task.name;
-      const nextState = task.config.nextStates[task.state.current];
-      let newState;
-      //console.log("task.id " + task.id + " nextState " + nextState + " leaving_now " + leaving_now)
-      log("TaskLLMIO State Machine State " + task.state.current + " nextState " + nextState + " leaving_now " + leaving_now)
+    if (task) {
+      const nextConfigState = task.config.nextStates[task.state.current];
+      let nextState;
+      if (transition()) { log("TaskLLMIO State Machine State " + task.state.current + " nextConfigState " + nextConfigState) }
+      // A simple way to wait for a transition (set waitRef.current to true and use as a condition)
+      if (transition()) { waitRef.current = false; }
       switch (task.state.current) {
         case "start":
-          // Next state
-          newState = nextState;
-          // Actions
+          nextState = nextConfigState;
           break;
         case "display":
           setResponseText(task.config.response);
           break;
         case "response":
-          if (task.state.current !== myLastState) {
+          // Don't fetch if we already have the output
+          if (task.output?.text) {
+            setResponseText(task.output.text);
+            nextState = "received";
+          } else if (transition()) {
             modifyTask({ update: true });
-          } else if (finalResponse) { // waiting for response from websocket to end
-            setFinalResponse(false)
-            newState = nextState;
-            // This should not be managed here - it is depending on websocket
-            modifyTask({ "response.updated": false, "response.updating": false });
-          }
-          if (nextState === "input") {
+          } 
+        case "receiving":
+          // NodeJS should be streaming the response
+          // When it has finished it will set the state to received
+          break;
+        case "received":
+          nextState = nextConfigState;
+          if (nextConfigState === "input") {
             setShowUserInput(true);
           }
           break;
         case "input":
-          // Actions
-          // Wait until leaving then send input and wait for repsonse before going to next state
-          if (leaving_now) {
-            if (!task.response.updating) {
-              // Need to automate management of response.updated (clear on request?)
-              // id per request
-              modifyTask({ update: true, "request.input": userInput });
-            } else if (task.response.updated) {
-              newState = nextState;
-            }
+          // Show any previous input stored
+          if (task.output?.input) {
+            setUserInput(task.output.input);
+          }
+          // Wait until leaving then send input
+          // We could have a submit button but this is more natural
+          if (task.exit && !waitRef.current) {
+            modifyTask({ update: true, "request.input": userInput });
+            waitRef.current = true;
           }
           break;
         case "wait":
-          if (leaving_now && !task.state.done) {
-            modifyTask({ "state.done": true });
-            newState = nextState;
+          // If not collecting input we are in the wait state before exiting
+          if (task.exit) {
+            nextState = nextConfigState;
           }
           break;
         case "stop":
-          // We may return to this Task and want to leave it again
-          if (entering_now) {
-            newState = "wait";
+          if (transition()) {
+            modifyTask({ "state.done": true });
           }
           break;
         default:
           console.log("ERROR unknown state : ", task.state.current);
       }
-      if (task.state.current !== newState) {
-        if (newState) {
-          modifyState(newState);
-        }
-        // Could use delta instead?
-        // Useful if we want an action only performed once on entering a state
-        setMyLastState(task.state.current);
-      }
+      // Manage state.current and state.last
+      modifyState(nextState);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leaving, task]);
+  }, [task]);
 
   useEffect(() => {
     //console.log("task", task);
@@ -214,7 +176,7 @@ const TaskLLMIO = (props) => {
   }, [userInput, responseText]);
 
   useEffect(() => {
-    const rect = responseTextRef.current?.getBoundingClientRect()
+    const rect = responseTextRectRef.current?.getBoundingClientRect()
     // Avoid decreasing so it does not jitter
     if (rect?.top >= paraTopRef.current && rect.height > 100) {
       paraTopRef.current = rect.top;
@@ -253,7 +215,7 @@ const TaskLLMIO = (props) => {
               textAlign: "justify",
               padding: "16px",
             }}
-            ref={responseTextRef}
+            ref={responseTextRectRef}
           >
             {responseText.split("\\n").map((line, index) => (
               <Typography 

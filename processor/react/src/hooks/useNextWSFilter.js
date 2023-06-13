@@ -1,26 +1,18 @@
 import { useEffect, useCallback, useState } from "react";
-import useWebSocketContext from "../contexts/WebSocketContext";
-import useGlobalStateContext from "../contexts/GlobalStateContext";
+import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useNextWSFilter(instanceId, doneTask, onNext) {
+function useNextWSFilter(useGlobalStateContext, instanceId, doneTask, onNext) {
   
-  const { webSocketEventEmitter } = useWebSocketContext();
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
   const [working, setWorking] = useState(false);
 
   const handleNext = (task) => {
     //console.log("useNextWSFilter handleNext", doneTask, task);
-    //if (doneTask && task.prevInstanceId === doneTask.instanceId ) 
-    // This means we can only have one nextTask
-    // The problem is that an instance may move to a next instance on another processor
-    // then we do not know how to find the next
-    // Maybe we need the prevInstance per processor?
-    //if (doneTask && task.threadId === doneTask.threadId ) 
     const processorId = globalState?.processorId
-    if (doneTask && task && task.prevInstanceId && task.prevInstanceId === doneTask.instanceId ) {
-      console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, task.prevInstanceId);
+    if (doneTask && task && task.prevInstanceId[processorId] === doneTask.instanceId ) {
+      //console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, doneTask.instanceId);
       //console.log("useNextWSFilter handleNext", task);
       setEventQueue((prev) => [...prev, task]);
     }

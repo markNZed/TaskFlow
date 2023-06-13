@@ -90,7 +90,7 @@
           "type": "string"
         },
         "prevInstanceId": {
-          "type": ["null", "string"]
+          "type": ["null", "object"]
         },        
         "send": {
           "type": "boolean"

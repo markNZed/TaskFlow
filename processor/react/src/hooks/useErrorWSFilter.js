@@ -1,10 +1,8 @@
 import { useEffect, useCallback } from "react";
-import useWebSocketContext from "../contexts/WebSocketContext";
+import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
 function useErrorWSFilter(threadId, onError) {
-  
-  const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleError = (task) => {
     if (threadId && task.threadId === threadId && task.error ) {

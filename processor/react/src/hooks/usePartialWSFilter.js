@@ -1,10 +1,8 @@
 import { useEffect, useCallback } from "react";
-import useWebSocketContext from "../contexts/WebSocketContext";
+import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
 function usePartialWSFilter(instanceId, onMessage) {
-  
-  const { webSocketEventEmitter } = useWebSocketContext();
 
   const handleMessage = (task) => {
     //console.log("usePartialWSFilter handleMessage", task);

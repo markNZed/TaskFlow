@@ -13,14 +13,19 @@ const TaskShowResponse_async = async function (wsSendTask, task) {
     "TaskShowResponse name " + T("name") + " state " + T("state.current")
   );
 
-  if (T("state.current") === undefined) {
-    console.log("TaskShowResponse state.current is undefined");
-    return null
+  switch (task.state.current) {
+    case undefined:
+      console.log("TaskShowResponse state.current is undefined");
+      return null
+    case "start":
+      T("response.text", T("config.response"));
+      T("state.last", T("state.current"));
+      T("state.current", "response");
+      break;
+    default:
+      console.log("ERROR unknown state : " + task.state.current);
   }
 
-  // Ensure we do not overwrite the deltaState on the React Task Processor
-  T("response.text", T("config.response"));
-  T("response.updated", true);
   console.log("Returning from TaskShowResponse", task.id);
   return task;
 };

@@ -14,10 +14,16 @@ dotenv.config();
 const TASKHUB_URL = process.env.TASKHUB_URL || "http://localhost:5001/hub";
 const hubSocketUrl = process.env.hubSocketUrl || "ws://localhost:5001/hub/ws";
 
-const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
+let CACHE_ENABLE = true;
+if (process.env.CACHE_ENABLE !== undefined) {
+  CACHE_ENABLE = process.env.CACHE_ENABLE === "true"
+}
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
-let DUMMY_OPENAI = process.env.CACHE_ENABLE === "true" || false;
+let DUMMY_OPENAI = false;
+if (process.env.DUMMY_OPENAI !== undefined) {
+  DUMMY_OPENAI = process.env.DUMMY_OPENAI === "true"
+}
 if (process.env.OPENAI_API_KEY === "") {
   DUMMY_OPENAI = true;
 }

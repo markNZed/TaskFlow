@@ -1,11 +1,9 @@
 import { useEffect, useCallback, useState } from "react";
-import useWebSocketContext from "../contexts/WebSocketContext";
-import useGlobalStateContext from "../contexts/GlobalStateContext";
+import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useStartWSFilter(startTaskId, onStart) {
+function useStartWSFilter(useGlobalStateContext, startTaskId, onStart) {
   
-  const { webSocketEventEmitter } = useWebSocketContext();
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
   const [working, setWorking] = useState(false);
@@ -48,10 +46,10 @@ function useStartWSFilter(startTaskId, onStart) {
     if (!webSocketEventEmitter) {
       return;
     }
-    //console.log("useStartWSFilter useEffect adding handleStart taskId", taskId);
+    //console.log("useStartWSFilter useEffect adding handleStart startTaskId", startTaskId);
     webSocketEventEmitter.on("start", handleStart);
     return () => {
-      //console.log("useStartWSFilter useEffect removing handleStart taskId", taskId);
+      //console.log("useStartWSFilter useEffect removing handleStart startTaskId", startTaskId);
       webSocketEventEmitter.removeListener("start", handleStart);
     };
   }, [startTaskId]);

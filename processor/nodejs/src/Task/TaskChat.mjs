@@ -20,31 +20,32 @@ const TaskChat_async = async function (wsSendTask, task) {
   );
 
   // Could return msgs instead of response.text
-  if (T("state.current") === "sending") {
-    T("state.last", T("state.current"));
-    T("state.current", "receiving");
-    T("state.deltaState", "receiving");
-    T("lockBypass", true);
-    // Here we update the task which has the effect of setting the state to receiving
-    await updateTask_async(task)
-    let msgs = T("output.msgs");
-    // Extract the prompt
-    const msgPrompt = msgs[msgs.length - 2];
-    T("request.prompt", msgPrompt.text)
-    const subTask = await SubTaskLLM_async(wsSendTask, task);
-    const lastElement = {
-      ...msgs[msgs.length - 1],
-    }; // shallow copy
-    lastElement.text = subTask.response.text
-    // Send to sync latest outputs via Hub, should also unlock
-    T("output.msgs", [...msgs.slice(0, -1), lastElement]);
-    T("state.last", T("state.current"));
-    T("state.current", "input");
-    T("state.deltaState", "input");
-    T("unlock", true);
-  } else {
-    return null;
-  }
+  switch (task.state.current) {
+    case "sending":
+      T("state.last", T("state.current"));
+      T("state.current", "receiving");
+      T("lockBypass", true);
+      // Here we update the task which has the effect of setting the state to receiving
+      await updateTask_async(task)
+      let msgs = T("output.msgs");
+      // Extract the prompt
+      const msgPrompt = msgs[msgs.length - 2];
+      T("request.prompt", msgPrompt.text)
+      const subTask = await SubTaskLLM_async(wsSendTask, task);
+      const lastElement = {
+        ...msgs[msgs.length - 1],
+      }; // shallow copy
+      lastElement.text = subTask.response.text
+      // Send to sync latest outputs via Hub, should also unlock
+      T("output.msgs", [...msgs.slice(0, -1), lastElement]);
+      T("state.last", T("state.current"));
+      T("state.current", "input");
+      T("unlock", true);
+      break;
+    default:
+      console.log("WARNING unknown state : " + task.state.current);
+      return null;
+    }
 
   console.log("Returning from TaskChat_async", task.id);
   return task;

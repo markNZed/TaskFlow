@@ -30,6 +30,7 @@ const TaskConversation = (props) => {
     startTaskFn,
     stackPtr,
     useTaskState,
+    onDidMount,
   } = props;
 
   const chatContainerRef = useRef(null);
@@ -44,6 +45,10 @@ const TaskConversation = (props) => {
     null,
     "conversationTask"
   );
+
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
+
 
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation

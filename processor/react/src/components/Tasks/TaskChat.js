@@ -42,6 +42,7 @@ const TaskChat = (props) => {
     transitionTo, 
     transitionFrom, 
     user,
+    onDidMount,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -52,6 +53,9 @@ const TaskChat = (props) => {
   const textareaRef = useRef();
   const formRef = useRef();
   const [socketResponses, setSocketResponses] = useState([]);
+
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
 
   // Note that socketResponses may not (will not) be updated on every websocket event
   // React groups setState operations and I have not understood the exact criteria for this
@@ -73,7 +77,6 @@ const TaskChat = (props) => {
           //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
         }
         setResponseText(responseTextRef.current);
-        modifyTask({ "response.text": responseTextRef.current });
         return []; // Clear the processed socketResponses
       });
     };
@@ -98,11 +101,14 @@ const TaskChat = (props) => {
     if (task) {
       let nextState;
       if (transition()) { log("TaskChat State Machine State " + task.state.current) }
-      const msgs = JSON.parse(JSON.stringify(task.output.msgs)); // deep copy
+      // Deep copy because we are going to modify the msgs array which is part of a React state
+      // so it should only be modified with modifyTask
+      const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
       switch (task.state.current) {
         case "input":
           if (transitionFrom("receiving")) {
             responseTextRef.current = "";
+            setResponseText(responseTextRef.current);
           }
           if (submittingForm) {
             nextState = "sending";

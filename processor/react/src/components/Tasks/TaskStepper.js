@@ -39,9 +39,11 @@ function TaskStepper(props) {
     setDoneTask,
     startTaskFn,
     useTaskState,
+    onDidMount,
   } = props;
 
   const [tasks, setTasks] = useTasksState([]);
+  const [keys, setKeys] = useTasksState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [leaving, setLeaving] = useState();
   const [entering, setEntering] = useState();
@@ -49,10 +51,13 @@ function TaskStepper(props) {
   const [expanded, setExpanded] = useState(["start"]);
   const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
 
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
+
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
+    //startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {
@@ -63,8 +68,10 @@ function TaskStepper(props) {
 
   // The first step is the task that was passed in
   useEffect(() => {
+    //setTask(p => p.stackPtr = stackPtr + 1); 
     setTasks([task]);
     setPrevTaskName(task.name);
+    setKeys([task.instanceId + tasksIdx]);
   }, []);
 
   // When task is done fetch next task
@@ -75,9 +82,19 @@ function TaskStepper(props) {
       setTasksTask((p) => {
         return newTask;
       }, tasksIdx);
+      setKeys(p => [...p, newTask.instanceId + tasksIdx]);
       setDoneTask(newTask);
     }
   }, [tasks]);
+
+  function fetchTask() {
+    // We use newTask to ensure setDoneTask will see the changes to Tasks
+    const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
+    setTasksTask((p) => {
+      return newTask;
+    }, tasksIdx);
+    setDoneTask(newTask);
+  }
 
   // Detect when new task has been fetched
   useEffect(() => {
@@ -96,6 +113,10 @@ function TaskStepper(props) {
         // Give control to the active Task which will call taskDone to transition to next state
         setLeaving({ direction: "next", task: currentTask });
         setEntering({ direction: undefined, task: undefined });
+        setTasksTask((p) => {
+          return { ...p, exit: true}
+        }, tasksIdx);
+        //fetchTask();
         // Expect .done to be set in Task, rename leaving to taskLeave
       }
     } else if (action === "back") {
@@ -104,7 +125,21 @@ function TaskStepper(props) {
         setLeaving({ direction: undefined, task: undefined});
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
-        setEntering({ direction: "prev", task: tasks[tasks.length - 2] });
+        const newIdx = tasks.length - 2;
+        setEntering({ direction: "prev", task: tasks[newIdx] });
+        setTasksTask((p) => {
+          return { ...p, exit: false}
+        }, newIdx);
+        // By changing the key we force the component to re-mount
+        // This is like a reset in some ways
+        setKeys(prevKeys => {
+          // Create a copy of prevKeys
+          let newKeys = [...prevKeys];
+          // Update the specific element
+          newKeys[newIdx] += newIdx;
+          // Return the new array
+          return newKeys;
+        });
       }
     }
   }
@@ -162,7 +197,7 @@ function TaskStepper(props) {
             <AccordionDetails>
               {stack && (
                 <DynamicComponent
-                  key={instanceId}
+                  key={keys[idx]}
                   is={stack[stackPtr]}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
