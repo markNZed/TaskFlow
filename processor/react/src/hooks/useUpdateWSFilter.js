@@ -6,7 +6,7 @@ import { log } from "../utils/utils";
 // loses the state, so can't remember the task
 
 // We pass in isMounted so the update does not get overwritten by Task initializations
-function useUpdateWSFilter(isMounted, local_stackPtr, initialTask, onUpdate) {
+function useUpdateWSFilter(isMounted, stackPtrRef, initialTask, onUpdate) {
 
   //console.log("------------ useUpdateWSFilter ---------------", initialTask);
 
@@ -25,7 +25,7 @@ function useUpdateWSFilter(isMounted, local_stackPtr, initialTask, onUpdate) {
       //console.log("message", message, key);
       if (message && message?.command && message.command === "update") {
         //console.log("useUpdateWSFilter handleUpdate update key", key);
-        if (message.task.instanceId === initialTask.instanceId && message.task.stackPtr === local_stackPtr) {
+        if (message.task.instanceId === initialTask.instanceId && message.task.stackPtr === stackPtrRef.current) {
           //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP

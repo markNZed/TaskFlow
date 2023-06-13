@@ -13,6 +13,7 @@ import NotFound from "./components/NotFound";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
+import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
 import { hubUrl } from "./config";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
@@ -42,6 +43,13 @@ function App({ activeWorkerCount, workerId }) {
   //debug.enable(`${appAbbrev}:TaskChat*`);
   //debug.enable(`${appAbbrev}:TaskConversation*`);
   debug.enable(`*`);
+
+  useRegisterWSFilter(
+    (registerTask) => {
+      console.log("registerTask", registerTask);
+      replaceGlobalState("hubId", null);
+    }
+  )
   
   useEffect(() => {
     if (globalState?.use_address && !enableGeolocation) {

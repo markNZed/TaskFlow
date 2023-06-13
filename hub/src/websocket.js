@@ -12,7 +12,7 @@ import { utils } from "./utils.mjs";
 function wsSendObject(processorId, message = {}) {
   let ws = connections.get(processorId);
   if (!ws) {
-    console.log("Lost websocket for wsSendObject", processorId, connections);
+    console.log("Lost websocket for wsSendObject", processorId, message.task);
   } else {
     if (!message?.task) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
@@ -80,8 +80,14 @@ function initWebSocketServer(server) {
 
       const j = JSON.parse(message);
 
-      if (j?.task) {
+      if (j?.task?.source) {
         const processorId = j.task.source;
+        //console.log("processorId", processorId)
+        if (ws.data["processorId"] !== processorId) {
+          connections.set(processorId, ws);
+          ws.data["processorId"] = processorId;
+          console.log("Websocket processorId", processorId)
+        }
         if (!activeProcessors.has(processorId)) {
           // Need to register again
           let currentDateTime = new Date();
@@ -91,15 +97,13 @@ function initWebSocketServer(server) {
             sessionId: j.task?.sessionId, 
             destination: j.task.source,
           };
+          console.log("Request for registering " + processorId)
           wsSendTask(task, "register");
           return;
         }
-        //console.log("processorId", processorId)
-        if (ws.data["processorId"] !== processorId) {
-          connections.set(processorId, ws);
-          ws.data["processorId"] = processorId;
-          console.log("Websocket processorId", processorId)
-        }
+      }
+
+      if (j?.task) {
         const activeTaskProcessors = await activeTaskProcessorsStore_async.get(j.task.instanceId);
         if (j.command === "update") {throw new Error("update not implemented")}
         if (j.command === "partial") {
@@ -136,8 +140,8 @@ function initWebSocketServer(server) {
           sessionId: j.task?.sessionId, 
           destination: j.task.source,
         };
+        console.log("Pong " + j.task.source)
         wsSendTask(task, "pong");
-        //console.log("Pong " + j.task?.sessionId + " " + j.task.source)
       }
 
     });

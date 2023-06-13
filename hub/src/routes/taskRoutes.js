@@ -35,7 +35,7 @@ router.post("/start", async (req, res) => {
 
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
+      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
       return res.status(200).send("ok");
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);

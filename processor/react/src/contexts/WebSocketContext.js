@@ -49,7 +49,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     m.task.sessionId = globalState.sessionId
     m.task.source = globalState.processorId;
     if (m.command === "ping") {
-      //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
+      console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     sendJsonMessage(m);
   };
@@ -72,16 +72,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         // Reassigning te same value will create an event 
         //replaceGlobalState("hubId", null);
       }
-      const taskPing = () => {
-        return {
-          sessionId: globalState.sessionId,
-          destination: globalState.hubId,
-        }
-      }
-      sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});
+      sendJsonMessagePlusRef.current({task: {}, command: "ping"});
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({task: taskPing(), command: "ping"});
+          sendJsonMessagePlusRef.current({task: {}, command: "ping"});
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);

@@ -104,7 +104,8 @@ const connectWebSocket = () => {
     } else if (message?.command === "pong") {
       //console.log("ws pong received", message)
     } else if (message?.command === "register") {
-      console.log("ws register received", message) 
+      console.log("ws register received", message)
+      register_async();
     } else {
       console.log("Unexpected message", message)
     }
