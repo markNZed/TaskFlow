@@ -29,7 +29,6 @@ function TaskStepper(props) {
   const {
     log,
     task,
-    setTask,
     useTasksState,
     stackPtr,
     startTaskError,
@@ -45,8 +44,6 @@ function TaskStepper(props) {
   const [tasks, setTasks] = useTasksState([]);
   const [keys, setKeys] = useTasksState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
-  const [leaving, setLeaving] = useState();
-  const [entering, setEntering] = useState();
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
   const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
@@ -57,7 +54,7 @@ function TaskStepper(props) {
   // We are not using stepperTask but potentially it is the task that
   // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    //startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
+    startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {
@@ -101,7 +98,6 @@ function TaskStepper(props) {
     if (nextTask) {
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
-      setEntering({ direction: "next", task: nextTask });
     }
   }, [nextTask]);
 
@@ -111,33 +107,25 @@ function TaskStepper(props) {
     if (action === "next") {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
-        setLeaving({ direction: "next", task: currentTask });
-        setEntering({ direction: undefined, task: undefined });
         setTasksTask((p) => {
           return { ...p, exit: true}
         }, tasksIdx);
-        //fetchTask();
-        // Expect .done to be set in Task, rename leaving to taskLeave
+        // Expect .done to be set in Task
       }
     } else if (action === "back") {
       if (currentTaskData) {
         // By updating leaving this ensure there is an event if next is activated
-        setLeaving({ direction: undefined, task: undefined});
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
         const newIdx = tasks.length - 2;
-        setEntering({ direction: "prev", task: tasks[newIdx] });
         setTasksTask((p) => {
           return { ...p, exit: false}
         }, newIdx);
         // By changing the key we force the component to re-mount
         // This is like a reset in some ways
         setKeys(prevKeys => {
-          // Create a copy of prevKeys
           let newKeys = [...prevKeys];
-          // Update the specific element
-          newKeys[newIdx] += newIdx;
-          // Return the new array
+           newKeys[newIdx] += newIdx;
           return newKeys;
         });
       }
@@ -201,8 +189,6 @@ function TaskStepper(props) {
                   is={stack[stackPtr]}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
-                  leaving={leaving}
-                  entering={entering}
                   parentTask={stepperTask}
                   stackPtr={stackPtr}
                 />

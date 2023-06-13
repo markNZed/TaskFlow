@@ -49,7 +49,6 @@ const TaskConversation = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
-
   // We are not using this but potentially it is the task that
   // manages a meta-level related to the conversation
   useEffect(() => {

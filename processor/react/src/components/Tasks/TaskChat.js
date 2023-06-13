@@ -138,7 +138,7 @@ const TaskChat = (props) => {
             setPrompt("");
           }
           const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
-          // Avoid looping dur to modifyTask by checking if the text has changed
+          // Avoid looping due to modifyTask by checking if the text has changed
           if (responseText && responseText !== lastElement.text) {
             lastElement.text = responseText;
             modifyTask({
