@@ -43,11 +43,26 @@ const tasktypes = [
     parentType: "root",
     websocket: true,
     environments: ["react", "nodejs"],
+    config: {
+      nextStates: {
+        start:     "response", 
+        response:  "receiving",
+        receiving: "received",
+        received:  "wait", 
+        wait:      "stop" 
+      },
+    },
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskShowResponse",
     parentType: "root",
     environments: ["react", "nodejs"],
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskChoose",
