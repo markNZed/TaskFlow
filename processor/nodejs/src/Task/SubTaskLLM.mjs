@@ -72,10 +72,11 @@ async function chat_prepare_async(task) {
   } else {
     console.log("ModelType for ", task.id, modelType.name);
   }
-  let langModel = T("request.langModel") || modelType?.model;
+  let langModel = T("request.model") || modelType?.model;
   let temperature = T("request.temperature") || modelType?.temperature;
   let maxTokens = T("request.maxTokens") || modelType?.maxTokens;
   let maxResponseTokens = T("request.maxResponseTokens") || modelType?.maxResponseTokens;
+  console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " langModel " + langModel);
 
   //console.log("Agent ", modelType)
 
@@ -276,6 +277,11 @@ async function ChatGPTAPI_request_async(params) {
   console.log(
     "Tokens maxTokens " + maxTokens + " maxResponseTokens " + maxResponseTokens
   );
+
+  // Could have a parameter for this
+  if (maxResponseTokens < 100) {
+    throw new Error("maxResponseTokens too low " + maxResponseTokens);
+  }
 
   // This is a hack to get parameters into the API
   // We should be able to change this on the fly, I requested a feature

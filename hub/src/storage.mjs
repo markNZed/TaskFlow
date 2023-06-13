@@ -14,6 +14,9 @@ dotenv.config();
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();
 
+// This extends KeyvBetterSqlite3 to allow for iteration
+// I was using it but then refactored it out.
+// Still seems like a good idea to keep it around.
 class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
   async *iterate() {
     const selectAll = this.entry.select().toString();
@@ -30,7 +33,7 @@ class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
 // Each keyv store is in a different table
 const DB_URI = "sqlite://db/main.sqlite";
 
-// Allows for middleware
+// Allows for middleware intercepting set calls to the DB
 function newKeyV(uri, table, setCallback = null) {
   const store = new ExtendedKeyvBetterSqlite3({
     uri: uri,

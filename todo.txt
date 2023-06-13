@@ -1,17 +1,29 @@
 /* ToDo
 -------
+Code review/cleanup 
+  configdata
+  Refactoring
+    Hub pipeline: a module with function for each step.
+    Concept of Processor/Hub commands
+      command+args fields in the Task
+      processor field in the Task
+        command+args fields in the processor field
+      hub field in the Task
+        command+args fields in the hub field
+      Hub should only send the relevant processor field
+        e.g. processor[processorId] = {} on the Hub but processor on the processor
 Show websocket connection status with traffic light icon
 The websocket as context is a bad idea because it causes re-rendering
   Could add memo to app 
   Still need to be sensitive to global
   Maybe it can provide an event interface - should look more into this feature.
-Global should change rarely e.g. pass the menu slection with something else  
+Global should change rarely e.g. pass the menu selection with something else  
   Will be a Task eventually
   Maybe a callback ?
 Maybe start can be missed like update
   Get all the WS working this was
   Add queue to other React WS filters
-Maybe next feature for would be remembering the system messages for Vierge
+Maybe next feature is remembering the system messages for Vierge
 In default config assign a random user label so we can demo multiparty chat
 Provide sample of nginx proxy config
 Typewrite broken on joining session?
@@ -39,15 +51,9 @@ Make some basic commands available in the console (add function to window)
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
 Testing of oneThread, collaborate, errors.
-Code review/cleanup - identify refactoring goals
-  Simplify Task Function code
-  Hub pipeline: a module with function for each step.
-  Concept of Processor/Hub commands
 Align usage of utils
 Should the Hub command be in the Task?
   Where can we separate concerns?
-The Task Function could be a single JS module that is shared ?
-  Maybe just the state machine
 
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage

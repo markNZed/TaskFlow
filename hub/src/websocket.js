@@ -140,7 +140,7 @@ function initWebSocketServer(server) {
           sessionId: j.task?.sessionId, 
           destination: j.task.source,
         };
-        console.log("Pong " + j.task.source)
+        //console.log("Pong " + j.task.source)
         wsSendTask(task, "pong");
       }
 

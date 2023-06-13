@@ -20,7 +20,7 @@ import miscRoutes from "./src/routes/miscRoutes.js";
 import { connectWebSocket } from "./src/websocket.js";
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '1mb' }));
 
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests

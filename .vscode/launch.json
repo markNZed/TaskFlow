@@ -8,8 +8,8 @@
             "name": "Hub",
             "address": "localhost",
             "port": 9229,
-            "localRoot": "/app/taskflow/hub",
-            "remoteRoot": "/app/taskflow/hub"
+            "localRoot": "/app/hub",
+            "remoteRoot": "/app/hub"
         },
         {
             "type": "node",
@@ -17,8 +17,8 @@
             "name": "NodeJS Processsor",
             "address": "localhost",
             "port": 9230,
-            "localRoot": "/app/taskflow/processor/nodejs",
-            "remoteRoot": "/app/taskflow/processor/nodejs"
+            "localRoot": "/app/processor/nodejs",
+            "remoteRoot": "/app/processor/nodejs"
         }
     ],
     "compounds": [
