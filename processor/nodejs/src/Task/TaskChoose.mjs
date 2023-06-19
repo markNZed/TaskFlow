@@ -16,7 +16,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-const TaskChoose_async = async function (wsSendTask, task) {
+const TaskChoose_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   // First we get the response

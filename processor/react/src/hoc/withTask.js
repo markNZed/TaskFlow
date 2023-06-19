@@ -44,6 +44,7 @@ function withTask(Component) {
     const [startTaskId, setStartTaskId] = useState();
     const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
+    const [childTask, setChildTask] = useState();
     const [startTaskDepth, setStartTaskDepth] = useState(localStackPtrRef.current);
     // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
@@ -66,9 +67,38 @@ function withTask(Component) {
       setTimeout(() => setIsMounted(true), 0);
     }
 
+    // React does not seem to gaurantee this is called in the parent before the child
+    useEffect(() => {
+      // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
+      if (localStackPtrRef.current > 0) {
+        const spawn = props.task.config?.spawn === false ? false : true;
+        if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
+          let startTaskId = props.stackTaskId[localStackPtrRef.current]
+          const newPtr = localStackPtrRef.current + 1;
+          startTaskFn(startTaskId, props.task.threadId, newPtr);
+          console.log("startTaskFn", startTaskId, newPtr)
+        }
+        //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
+        //modifyTask({stackPtr: localStackPtrRef.current});
+      }
+    }, []);
+
+    useEffect(() => {
+      // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
+      if (localStackPtrRef.current > 0) {
+        const spawn = props.task.config?.spawn === false ? false : true;
+        if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
+          if (startTaskReturned) {
+            setChildTask(startTaskReturned)
+            console.log("setChildTask", startTaskReturned.id)
+          }
+        }
+      }
+    }, [startTaskReturned]);
+
     useUpdateWSFilter(isMounted, localStackPtrRef, props.task,
       async (updateDiff) => {
-        console.log("useUpdateWSFilter updateDiff.stackPtr === localStackPtrRef", updateDiff.stackPtr, localStackPtrRef.current);
+        //console.log("useUpdateWSFilter updateDiff.stackPtr === localStackPtrRef", updateDiff.stackPtr, localStackPtrRef.current);
         if (updateDiff.stackPtr === localStackPtrRef.current) {
           const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
           //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
@@ -115,13 +145,14 @@ function withTask(Component) {
       }
     )
 
-    useNextWSFilter(useGlobalStateContext, props.task?.instanceId, doneTask,
+    useNextWSFilter(useGlobalStateContext, doneTask,
       (updatedTask) => {
         console.log("useNextWSFilter before setNextTask localStackPtrRef.current", localStackPtrRef.current, updatedTask);
         //if (doneTask !== null && doneTask !== undefined) {
           //console.log("useNextWSFilter setNextTask localStackPtrRef.current", localStackPtrRef.current);
           setDoneTask(null)
           setNextTask(updatedTask)
+          // How do we clear this?
         //}
       }
     )
@@ -331,6 +362,8 @@ function withTask(Component) {
 
     const componentProps = {
       ...props,
+      task: props.task,
+      setTask: props.setTask,
       updateTaskError,
       startTaskError,
       startTask: startTaskReturned,
@@ -351,6 +384,9 @@ function withTask(Component) {
       user: globalState.user,
       onDidMount: handleChildDidMount,
       useWebSocketContext,
+      componentName: props?.task?.stack[localStackPtrRef.current - 1],
+      childTask,
+      setChildTask
     };
 
     return <WithDebugComponent {...componentProps} />;

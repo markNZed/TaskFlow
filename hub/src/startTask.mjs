@@ -79,6 +79,7 @@ async function startTask_async(
         } else {
           taskCopy = instance
           taskCopy.state["current"] = "start";
+          taskCopy["updateCount"] = 0;
           // Delete so we restart with full task being synchronized
           // It would be better to do this only for the new processor
           await activeTasksStore_async.delete(instanceId);
@@ -120,6 +121,7 @@ async function startTask_async(
         } else {
           taskCopy = instance
           taskCopy.state["current"] = "start";
+          taskCopy["updateCount"] = 0;
           // Delete so we restart with full task being synchronized
           await activeTasksStore_async.delete(instanceId);
           console.log(
@@ -129,6 +131,10 @@ async function startTask_async(
       } else {
         console.log("Initiating collaborate with instanceId " + instanceId)
       }
+    }
+
+    if (!taskCopy.updateCount) {
+      taskCopy["updateCount"] = 0;
     }
 
     // Must set threadId after oneThread, restoreSession and collaborate
@@ -211,11 +217,18 @@ async function startTask_async(
         const user = users[taskCopy.userId];
         return obj.reduce(function (acc, curr) {
           // Substitute variables with previous outputs
-          const regex = /^([^\s.]+)\.([^\s.]+)$/;
+          const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
           const matches = regex.exec(curr);
           //console.log("curr ", curr, " matches", matches)
+          //root.collaborate.clientgenerator.conversation.chat.clientgenerator
           if (matches && !isAllCaps(matches[1])) {
-            const outputPath = taskCopy.parentId + "." + matches[1]
+            const path = curr.split('.');
+            let outputPath;
+            if (path[0] === "root") {
+              outputPath = curr.replace(/\.[^.]+$/, '');
+            } else {
+              outputPath = taskCopy.parentId + "." + matches[1];
+            }
             if (outputs[outputPath] === undefined) {
               throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
             }
@@ -270,7 +283,9 @@ async function startTask_async(
     for (const [key, template] of Object.entries(taskCopy.config)) {
       if (key.endsWith("Template")) {
         //console.log("Template found", key, template);
-        taskCopy.config[key] = processTemplateArrays(template, taskCopy, outputs, threadId);
+        const strippedKey = key.replace("Template", "");
+        const templateCopy = JSON.parse(JSON.stringify(template)); // deep copy
+        taskCopy.config[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, threadId);
         //console.log("Processed template", taskCopy.config[key]);
       }
     }

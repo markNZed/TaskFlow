@@ -12,39 +12,16 @@ import send from "../../assets/send.svg";
 
 /*
 Task Process
-  Present textarea and dropdown for user to enter a prompt
-  When prompt is submitted state.current -> sending
-  NodeJS sends incemental text responses by websocket updating task.response.text
-  NodeJS sends final text and terminates HTTP request with state.current=input
-  Parent component is expected to:
-    Display updates to task.output.msgs
 
 Task States
-  input: get user prompt
-  sending: sending user prmopt to NodeJS Task Processor
-  receiving: receiving websocket response from NodeJS Task Processor
   
 ToDo:
-  Allow copy/paste while receiving
-    To allow this we need to append dom elements. 
-    In chatGPT they have the same problem inside the active <p> 
-    but once rendered the <p></p> can be copied
-  Max width for suggested prompts with wrapping possible?
+
 */
 
-const TaskChat = (props) => {
+function TaskCollaborate(props) {
   const {
-    log,
-    task,
-    stackPtr,
-    modifyTask,
-    modifyState,
-    transition,
-    transitionTo, 
-    transitionFrom, 
-    user,
-    onDidMount,
-    componentName,
+    log, task, modifyTask, modifyState, transition, transitionTo, transitionFrom, user, onDidMount,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -64,7 +41,6 @@ const TaskChat = (props) => {
   useEffect(() => {
     const processResponses = () => {
       setSocketResponses((prevResponses) => {
-        //console.log("prevResponses.lenght", prevResponses.length);
         for (const response of prevResponses) {
           const text = response.text;
           const mode = response.mode;
@@ -77,8 +53,8 @@ const TaskChat = (props) => {
               responseTextRef.current = text;
               break;
           }
+          //console.log("TaskCollaborate processResponses responseTextRef.current:", responseTextRef.current);
         }
-        //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
         setResponseText(responseTextRef.current);
         return []; // Clear the processed socketResponses
       });
@@ -92,10 +68,10 @@ const TaskChat = (props) => {
   // Putting this in the HoC causes a warning about setting state during rendering
   usePartialWSFilter(task,
     (partialTask) => {
-      //console.log("TaskChat usePartialWSFilter partialTask", partialTask.response);
+      //console.log("TaskCollaborate usePartialWSFilter partialTask", partialTask.response);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
-  )
+  );
 
   // Task state machine
   // Need to be careful setting task in the state machine so it does not loop
@@ -103,10 +79,10 @@ const TaskChat = (props) => {
   useEffect(() => {
     if (task) {
       let nextState;
-      if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
+      if (transition()) { log("TaskCollaborate State Machine State " + task.state.current); }
       // Deep copy because we are going to modify the msgs array which is part of a React state
       // so it should only be modified with modifyTask
-      const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
+      const msgs = JSON.parse(JSON.stringify(task.output.msgs));
       switch (task.state.current) {
         case "input":
           if (transitionFrom("receiving")) {
@@ -128,7 +104,7 @@ const TaskChat = (props) => {
             ];
             //console.log("Sending newMsgArray", newMsgArray, prompt);
             // Lock task so users cannot send at same time. NodeJS will unlock on final response.
-            modifyTask({ 
+            modifyTask({
               "output.msgs": [...msgs, ...newMsgArray],
               "lock": true,
               "update": true
@@ -141,10 +117,10 @@ const TaskChat = (props) => {
             setPrompt("");
           }
           const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+
           // Avoid looping due to modifyTask by checking if the text has changed
           if (responseText && responseText !== lastElement.text) {
             lastElement.text = responseText;
-            //console.log("modifyTask")
             modifyTask({
               "output.msgs": [...msgs.slice(0, -1), lastElement],
             });
@@ -154,7 +130,7 @@ const TaskChat = (props) => {
       // Manage state.current and state.last
       modifyState(nextState);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, submittingForm, responseText]);
 
   const handleSubmit = useCallback(
@@ -172,13 +148,13 @@ const TaskChat = (props) => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
     textarea.placeholder = task?.config?.promptPlaceholder;
-  }, [prompt, task?.config?.promptPlaceholder]);
+  }, [prompt]);
 
   const handleDropdownSelect = (selectedPrompt) => {
     // Prepend to existing prompt, might be better just to replace
-    setPrompt((prevPrompt) => selectedPrompt + prevPrompt );
+    setPrompt((prevPrompt) => selectedPrompt + prevPrompt);
     setSubmitForm(true);
-  }
+  };
 
   // Allow programmatic submission of the form 
   // Set submitForm to true to submit
@@ -192,16 +168,15 @@ const TaskChat = (props) => {
     }
   }, [submitForm]);
 
-  const sendReady = (!task || task.state.current === "sending") ? "not-ready" : "ready"
+  const sendReady = task.state.current === "sending" ? "not-ready" : "ready";
 
   return (
     <form onSubmit={handleSubmit} ref={formRef} className="msg-form">
-      {task && task.config?.suggestedPrompts ? (
+      {task.config?.suggestedPrompts ? (
         <div style={{ textAlign: "left" }}>
           <PromptDropdown
             prompts={task.config.suggestedPrompts}
-            onSelect={handleDropdownSelect}
-          />
+            onSelect={handleDropdownSelect} />
         </div>
       ) : (
         ""
@@ -215,14 +190,13 @@ const TaskChat = (props) => {
           cols="1"
           onChange={(e) => {
             setPrompt(e.target.value);
-          }}
+          } }
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey === false) {
               e.preventDefault();
               handleSubmit(e);
             }
-          }}
-        />
+          } } />
         <button
           type="submit"
           disabled={sendReady === "not-ready"}
@@ -232,12 +206,11 @@ const TaskChat = (props) => {
           <img
             key={send}
             src={send}
-            className={"send-" + sendReady}
-          />
+            className={"send-" + sendReady} />
         </button>
       </div>
     </form>
   );
-};
+}
 
-export default withTask(TaskChat);
+export default withTask(TaskCollaborate);

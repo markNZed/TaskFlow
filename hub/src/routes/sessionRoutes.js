@@ -47,13 +47,27 @@ router.post("/", async (req, res) => {
     if (wf?.config?.label) {
       wf['label'] = wf.config.label;
     }
-    const initiator = authorised_taskflows[key]?.tasks?.start ? true : false
-    wf['initiator'] = initiator;
+    if (wf.initiator === undefined) {
+      const hasStart = authorised_taskflows[key]?.tasks?.start ? true : false
+      let initiator;
+      if (hasStart) {
+        if (authorised_taskflows[key].tasks.start.initiator === false) {
+          initiator = false;
+        } else {
+          initiator = true;
+          // This seems very hacky
+          wf.stackTaskId = wf.tasks.start.stackTaskId;
+        }
+      }
+      wf['initiator'] = initiator;
+    }
     taskflowsTree[key] = utils.filter_in_list(wf, [
       "id",
       "children",
       "label",
       "initiator",
+      "menu",
+      "stackTaskId"
     ]);
   }
   //console.log("taskflowsTree ", taskflowsTree)

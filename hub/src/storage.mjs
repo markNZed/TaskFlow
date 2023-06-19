@@ -77,7 +77,7 @@ const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks);
 //   Value: array of processorIds
 const activeTaskProcessorsStore_async = newKeyV(DB_URI, "activeTaskProcessors");
 // Schema:
-//   Key: threadId + taskId
+//   Key: threadId
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(DB_URI, "outputsStore_async");
 

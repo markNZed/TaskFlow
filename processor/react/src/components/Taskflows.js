@@ -39,6 +39,7 @@ function Taskflows(props) {
   // We maintain a list of tasksIds so we can quickly find the relevant task
   // if it has been previousyl created in tasks
   const [tasksIds, setTasksIds] = useState([]);
+  const [tasksStackId, setTasksStackId] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel);
   const [hideSide, setHideSide] = useState(false);
@@ -54,7 +55,11 @@ function Taskflows(props) {
       const start = selectedTaskId + ".start";
       const index = tasksIds.indexOf(start);
       if (index === -1) {
-        startTaskFn(start);
+        // Could/should us the stackTaskId
+        const taskStackId = globalState.taskflowsTree[selectedTaskId].stackTaskId;
+        startTaskFn(taskStackId[0], null, 1);
+        setTasksStackId((p) => [...p, taskStackId]);
+        console.log("Taskflows startTaskFn", taskStackId)
       } else {
         setTasksIdx(index);
       }
@@ -194,6 +199,7 @@ function Taskflows(props) {
                     setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
                     stackPtr={stackPtr}
+                    stackTaskId={tasksStackId[idx]}
                   />
                 </div>
               )

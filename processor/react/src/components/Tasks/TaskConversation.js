@@ -25,6 +25,8 @@ const TaskConversation = (props) => {
   const {
     task,
     setTask,
+    childTask,
+    setChildTask,
     startTaskError,
     startTask,
     startTaskFn,
@@ -41,35 +43,45 @@ const TaskConversation = (props) => {
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState([]);
-  const [conversationTask, setConversationTask] = useTaskState(
-    null,
-    "conversationTask"
-  );
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
-  // We are not using this but potentially it is the task that
-  // manages a meta-level related to the conversation
+  /*
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, stackPtr);
+    let startTaskId = task.id
+    if (task.stackTaskId.length > 0) {
+      startTaskId = task.stackTaskId[stackPtr]
+    }
+    startTaskFn(startTaskId, task.threadId, stackPtr + 1);
   }, []);
 
   useEffect(() => {
     if (startTask) {
-      setConversationTask(startTask);
+      setChatTask(startTask);
     }
   }, [startTask]);
+  */
+
+  // Either we use the task we received or we pass it down and start a task for this stackPtr level
 
   useEffect(() => {
-    if (task) {
+    if (childTask) {
+      const taskMessages = childTask.output?.msgs || [];
       // The welcome message is not included as part of the Task msgs sent to the LLM
-      const welcomeMessage = { role: "assistant", text: task.config?.welcomeMessage, user: "assistant" };
-      const taskMessages = task.output?.msgs || [];
-      //console.log("setMsgs", [welcomeMessage, ...taskMessages]);
-      setMsgs([welcomeMessage, ...taskMessages]);
+      if (childTask.config?.welcomeMessage && childTask.config?.welcomeMessage !== "") {
+        const welcomeMessage = { role: "assistant", text: childTask.config?.welcomeMessage, user: "assistant" };
+        //console.log("setMsgs", [welcomeMessage, ...taskMessages]);
+        setMsgs([welcomeMessage, ...taskMessages]);
+      } else {
+        setMsgs(taskMessages);
+      }
     }
-  }, [task.output?.msgs]);
+  }, [childTask?.output?.msgs]);
+
+  useEffect(() => {
+    //console.log("childTask",childTask)
+  }, [childTask]);
 
   useEffect(() => {
     if (isMountedRef.current) {
@@ -97,7 +109,8 @@ const TaskConversation = (props) => {
   useEffect(() => {
     const chatContainerRect = chatContainerRef.current.getBoundingClientRect();
     const chatInputRect = chatInputRef.current.getBoundingClientRect();
-    setChatContainermaxHeight(chatInputRect.top - chatContainerRect.top)
+    const maxHeight = Math.max(chatInputRect.top - chatContainerRect.top, 100)
+    setChatContainermaxHeight(maxHeight)
   }, [chatContainerRef, chatInputRef]); // chatInputRef detects mobile screen rotation changes
 
   useEffect(() => {
@@ -127,7 +140,7 @@ const TaskConversation = (props) => {
               >
                 <div className="chat">
                   <Icon role={msg.role} user={msg.user} />
-                  {task.state.current === "sending" && isLastElement ? (
+                  {childTask.state.current === "sending" && isLastElement ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (
                     <div 
@@ -142,14 +155,15 @@ const TaskConversation = (props) => {
         <div ref={messagesEndRef} style={{ height: "5px" }} />
       </div>
       <div id="chat-input" ref={chatInputRef}>
-        {task && (
+        {childTask && (
           <DynamicComponent
-            key={task.id}
-            is={task.stack[stackPtr]}
-            task={task}
-            setTask={setTask}
-            parentTask={conversationTask}
-            stackPtr={props.stackPtr}
+            key={childTask.id}
+            is={childTask.stack[stackPtr]}
+            task={childTask}
+            setTask={setChildTask}
+            parentTask={task}
+            stackPtr={stackPtr}
+            stackTaskId={props.stackTaskId}
           />
         )}
       </div>

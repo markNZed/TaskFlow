@@ -113,6 +113,12 @@
         "stackPtr": {
           "type": "integer"
         },
+        "stackTaskId": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },        
         "threadId": {
           "type": "string"
         },

@@ -1,11 +1,11 @@
 const taskflows = [
     {
-      initiator: false,
       name: "root",
       stack: [],
+      stackTaskId: [],
+      menu: true,
     },
     {
-      initiator: true,
       name: "exercices",
       parentType: "root",
     },

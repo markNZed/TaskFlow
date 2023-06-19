@@ -19,7 +19,7 @@ export async function do_task_async(wsSendTask, task) {
     if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
       task.source = processorId;
       try {
-        updated_task = await taskFunctions[`${task.stack[idx]}_async`](wsSendTask, task);
+        updated_task = await taskFunctions[`${task.stack[idx]}_async`](task.stack[idx], wsSendTask, task);
       } catch (e) {
         console.log("do_task_async error", e, task);
       }

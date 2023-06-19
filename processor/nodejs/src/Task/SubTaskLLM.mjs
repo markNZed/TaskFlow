@@ -48,6 +48,9 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
     };
     wsSendTask(partialTask, "partial");
     wsDelta[instanceId] += 1;
+    //console.log(partialResponse.delta);
+    //process.stdout.write(wsDelta[instanceId]);
+    //process.stdout.write("\r");
   }
   //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
 }
@@ -82,7 +85,7 @@ async function chat_prepare_async(task) {
 
   if (T("config.promptTemplate")) {
     console.log("Found promptTemplate");
-    prompt = T("config.promptTemplate");
+    prompt = T("config.prompt");
     //console.log("Prompt " + prompt)
   } 
 
@@ -104,7 +107,7 @@ async function chat_prepare_async(task) {
     console.log("oneThread prompt : " + prompt);
   }
 
-  if (T("request.use_cache")) {
+  if (T("request.use_cache") !== undefined) {
     use_cache = T("request.use_cache");
     console.log("Task set cache " + use_cache);
   }
@@ -123,7 +126,12 @@ async function chat_prepare_async(task) {
   // If the task is running on the nodejs processor we do not use websocket
   if (environments.length === 1 && environments[0] === "nodejs") {
     noWebsocket = true;
-    console.log("Task noWebsocket");
+    console.log("Environment noWebsocket");
+  }
+
+  if (T("request.noWebsocket") !== undefined) {
+    noWebsocket = T("request.noWebsocket");
+    console.log("Request noWebsocket");
   }
 
   if (modelType?.forget) {
@@ -131,44 +139,33 @@ async function chat_prepare_async(task) {
     console.log("Agent forget previous messages");
   }
 
-  if (T("request.forget")) {
-    initializing = true;
+  if (T("request.forget") !== undefined) {
+    initializing = T("request.forget")
     console.log("Task forget previous messages", T("request.forget"));
   }
 
   let messages = [];
 
-  if (!initializing && T("output.msgs") && T("output.msgs")[T("threadId")]) {
+  if (modelType?.messages) {
+    messages.push(...modelType.messages)
     console.log(
-      "!initializing threadId " + T("threadId")
+      "Initial messages from modelType " + modelType.name
     );
   }
 
-  if (messages.length === 0 || initializing) {
-    if (modelType?.messages) {
+  let requestMessages = T("request.messages");
+  if (T("config.messagesTemplate")) {
+    messages.push(...T("config.messages"))
+    console.log("Found messagesTemplate");
+  }
 
-      messages = modelType.messages;
-      console.log(
-        "Initial messages from modelType " + modelType.name
-      );
-    }
-
-    let requestMessages = T("request.messages");
-    if (T("config.messagesTemplate")) {
-      console.log("Found messagesTemplate");
-      requestMessages =  T("config.messagesTemplate")
-    }
-
-    if (requestMessages) {
-
-      messages = messages.concat(requestMessages);
-      console.log(
-        "Messages extended from name " +
-          T("name")
-      );
-      //console.log("requestMessages",  requestMessages)
-    }
-
+  // This is assuming the structure usd in TaskChat
+  if (T("output.msgs")) {
+    console.log("Initializing messages from output.msgs");
+    messages.push(...T("output.msgs"));
+    // Remove the empty response holder and the prompt
+    messages.pop();
+    messages.pop();
   }
 
   if (modelType?.systemMessage) {
@@ -177,8 +174,8 @@ async function chat_prepare_async(task) {
   }
 
   // Replace MODEL variables in systemMessageTemplate
-  let systemMessageTemplate = T("config.systemMessageTemplate");
-  if (systemMessageTemplate) {
+  if (T("config.systemMessageTemplate")) {
+    let systemMessageTemplate = T("config.systemMessage");
     console.log("systemMessageTemplate " + systemMessageTemplate);
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Using replace with a callback function
@@ -198,7 +195,6 @@ async function chat_prepare_async(task) {
     console.log("Sytem message from task " + T("id"));
   }
 
-  const threadId = T("threadId");
   const modelTypeId = modelType.id;
 
   //console.log("messages before map of id", messages);
@@ -220,7 +216,6 @@ async function chat_prepare_async(task) {
     maxTokens,
     maxResponseTokens,
     modelTypeId,
-    threadId,
     instanceId,
   };
 }
@@ -244,7 +239,6 @@ async function ChatGPTAPI_request_async(params) {
     temperature,
     maxTokens,
     modelTypeId,
-    threadId,
     instanceId,
     wsSendTask,
   } = params;
@@ -259,8 +253,11 @@ async function ChatGPTAPI_request_async(params) {
 
   // Need to account for the system message and some margin because the token count may not be exact.
   //console.log("prompt " + prompt + " systemMessage " + systemMessage)
-  if (!prompt) {
-    console.log("ERROR: expect prompt to calculate tokens");
+  let promptTokenLength = 0;
+  if (prompt) {
+    promptTokenLength = encode(prompt).length
+  } else {
+    console.log("WARNING: no prompt");
   }
   if (!systemMessage) {
     console.log(
@@ -270,7 +267,7 @@ async function ChatGPTAPI_request_async(params) {
   const availableTokens =
     maxTokens -
     Math.floor(maxTokens * 0.1) -
-    encode(prompt).length -
+    promptTokenLength -
     encode(systemMessage).length;
   maxResponseTokens =
     availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens;
@@ -342,7 +339,7 @@ async function ChatGPTAPI_request_async(params) {
   // Message can be sent from one of multiple sources
   function message_from(source, text, noWebsocket, instanceId) {
     // Don't add ... when response is fully displayed
-    console.log("Response from " + source + " : " + text.slice(0, 20) + " ...");
+    console.log("Response from " + source + " : " + text.slice(0, 80) + " ...");
     const response = { text: text, mode: "final" };
     const partialTask = {
       instanceId: instanceId, 
@@ -369,7 +366,7 @@ async function ChatGPTAPI_request_async(params) {
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
       SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-      await sleep(80);
+      //await sleep(80);
     }
     message_from("cache", text, noWebsocket, instanceId);
     if (debug) {

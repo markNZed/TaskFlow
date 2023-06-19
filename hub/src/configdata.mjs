@@ -41,6 +41,8 @@ function flattenTaskflows(taskflows) {
   var taskflowLookup = {};
   taskflows.forEach(function (taskflow) {
     //console.log("Taskflow: " + taskflow?.name)
+    let debug = false;
+    //if (taskflow.name === "conversation") {debug = true;}
     if (!taskflow?.name) {
       throw new Error("Error: Taskflow missing name");
     }
@@ -109,10 +111,16 @@ function flattenTaskflows(taskflows) {
     if (!taskflow.config?.label) {
       taskflow.config["label"] = utils.capitalizeFirstLetter(taskflow.name);
     }
+    // In the case we are stacking taskflows we need the ids
+    if (taskflow["APPEND_stack"] && taskflow["tasks"]) {
+      const start = id + ".start";
+      const componentCount = taskflow["APPEND_stack"].length;
+      taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
+    }
     taskflow["id"] = id;
     taskflow["parentId"] = parent2id[taskflow.parentType];
     // Copy all the keys from the parentType that are not in the current taskflow
-    // Could create functions here for PREPEND_ and APPEND_
+    // Could create functions for PREPEND_ and APPEND_
     const parentTaskflow = taskflowLookup[taskflow["parentId"]];
     for (const key in parentTaskflow) {
       if (parentTaskflow.hasOwnProperty(key)) {
@@ -145,10 +153,18 @@ function flattenTaskflows(taskflows) {
         }
       }
     }
+    if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", taskflow)}
     // Copy all the keys from the taskflow that are not in the current tasks
     if (taskflow?.tasks) {
       for (const taskkey in taskflow.tasks) {
         if (taskflow.tasks.hasOwnProperty(taskkey)) {
+          const APPEND_stack = taskflow.tasks[taskkey]["APPEND_stack"]
+          if (APPEND_stack) {
+            // loop over APPEND_stack array
+            const start = id + ".start";
+            const componentCount = APPEND_stack.length;
+            taskflow.tasks[taskkey]["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
+          }
           for (const taskflowkey in taskflow) {
             if (taskflow.hasOwnProperty(taskflowkey)) {
               // Will not override, need to merge?
@@ -202,27 +218,37 @@ function flattenTaskflows(taskflows) {
 
           // APPEND_stack should be the tasktemplate name
           // We will copy the tasktemplate into the task
-          if (taskflow.tasks[taskkey]["APPEND_stack"]) {
+          if (taskflow.tasks[taskkey]["stack"]) {
+            /*
             if (taskflow.tasks[taskkey]["APPEND_stack"].length !== 1) {
               console.log("APPEND_stack should be an array of length 1");
             }
-            const tasktemplate = "root." + taskflow.tasks[taskkey]["APPEND_stack"][0];
-            if (tasktypes[tasktemplate]) {
-              taskflow.tasks[taskkey]
-              // for each taskkey in the tasktemplate copy it into this task
-              // Should detect conflices if there is a conflict
-              // Should be merging not looping
-              for (const key2 in tasktypes[tasktemplate]) {
-                if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
-                  //console.log("Adding " + key2, tasktypes[tasktemplate][key2])
-                  taskflow.tasks[taskkey][key2] =  utils.deepMerge(tasktypes[tasktemplate][key2], taskflow.tasks[taskkey][key2])
+            */
+           // Perhaps only need to do this for the last addition to the stack
+           // But needs a rule that we add one level per taskflow/task
+            //for (const component of taskflow.tasks[taskkey]["stack"]) {
+            const stack = taskflow.tasks[taskkey]["stack"];
+            const component = stack[stack.length - 1];
+              // Need to deal with a list of components
+              const tasktemplatename = "root." + component;
+              if (tasktypes[tasktemplatename]) {
+                taskflow.tasks[taskkey]
+                // for each taskkey in the tasktemplatename copy it into this task
+                // Should detect conflicts
+                for (const key2 in tasktypes[tasktemplatename]) {
+                  if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
+                    //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
+                    taskflow.tasks[taskkey][key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], taskflow.tasks[taskkey][key2])
+                  }
                 }
+              } else {
+                console.log("Count not find task template", tasktemplatename)
               }
-            } else {
-              console.log("Count not find task template", tasktemplate)
-            }
+            //}
           } else {
-            console.log("Should have APPEND_stack in every task?")
+            // No longer true because we can have APPEND_stack in the taskflow
+            // This allows a hierarchy of taskflow
+            //console.log("Should have APPEND_stack in every task?")
           }
 
         }

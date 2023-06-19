@@ -25,7 +25,7 @@ ToDo:
   Maybe tasksIdx is just a ref?
 */
 
-function TaskStepper(props) {
+function TaskCollaborate(props) {
   const {
     log,
     task,
@@ -42,7 +42,7 @@ function TaskStepper(props) {
   } = props;
 
   const [tasks, setTasks] = useTasksState([]);
-  const [keys, setKeys] = useState([]);
+  const [keys, setKeys] = useTasksState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
@@ -51,17 +51,25 @@ function TaskStepper(props) {
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
+  // We are not using stepperTask but potentially it is the task that
+  // manages a meta-level related to the stepper (not the actual steps/tasks in the stepper)
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, stackPtr + 1); // will set startTask or startTaskError
+    startTaskFn(task.id, null, stackPtr); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {
     if (startTask) {
-      setTasks([startTask]);
-      setPrevTaskName(startTask.name);
-      setKeys([startTask.instanceId + tasksIdx]);
+      setStepperTask(startTask);
     }
   }, [startTask]);
+
+  // The first step is the task that was passed in
+  useEffect(() => {
+    //setTask(p => p.stackPtr = stackPtr + 1); 
+    setTasks([task]);
+    setPrevTaskName(task.name);
+    setKeys([task.instanceId + tasksIdx]);
+  }, []);
 
   // When task is done fetch next task
   useEffect(() => {
@@ -76,13 +84,18 @@ function TaskStepper(props) {
     }
   }, [tasks]);
 
+  function fetchTask() {
+    // We use newTask to ensure setDoneTask will see the changes to Tasks
+    const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
+    setTasksTask((p) => {
+      return newTask;
+    }, tasksIdx);
+    setDoneTask(newTask);
+  }
+
   // Detect when new task has been fetched
   useEffect(() => {
     if (nextTask) {
-      // Clearing next here is not ideal
-      setTasksTask((p) => {
-        return { ...p, next: false}
-      }, tasksIdx);
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
     }
@@ -160,7 +173,7 @@ function TaskStepper(props) {
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, stack, stackTaskId, nextTask: metaNextTask, instanceId }, idx) => (
+        ({ name, label, stack, nextTask: metaNextTask, instanceId }, idx) => (
           <Accordion
             key={name}
             expanded={isExpanded(name)}
@@ -178,7 +191,6 @@ function TaskStepper(props) {
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   parentTask={stepperTask}
                   stackPtr={stackPtr}
-                  stackTaskId={stackTaskId}
                 />
               )}
             </AccordionDetails>
@@ -215,4 +227,4 @@ function TaskStepper(props) {
   );
 }
 
-export default withTask(TaskStepper);
+export default withTask(TaskCollaborate);

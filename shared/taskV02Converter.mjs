@@ -202,6 +202,7 @@ const typeMap = {
         { json: "source", js: "source", typ: u(undefined, "") },
         { json: "stack", js: "stack", typ: u(undefined, a("")) },
         { json: "stackPtr", js: "stackPtr", typ: u(undefined, 0) },
+        { json: "stackTaskId", js: "stackTaskId", typ: u(undefined, a("")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },
         { json: "threadId", js: "threadId", typ: u(undefined, "") },
         { json: "type", js: "type", typ: u(undefined, "") },

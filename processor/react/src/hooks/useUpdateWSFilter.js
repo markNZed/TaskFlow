@@ -32,7 +32,7 @@ function useUpdateWSFilter(isMounted, stackPtrRef, initialTask, onUpdate) {
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
           delete messageQueue[key];
           await onUpdate(taskCopy);
-          console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
+          //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
         }
       }
     }
@@ -56,7 +56,7 @@ function useUpdateWSFilter(isMounted, stackPtrRef, initialTask, onUpdate) {
     //console.log("useUpdateWSFilter useEffect adding handleUpdate");
     webSocketEventEmitter.on("update", handleUpdate);
     if (Object.keys(messageQueue).length > 0) {
-      console.log("useUpdateWSFilter useEffect messageQueue", Object.keys(messageQueue).length);
+      //console.log("useUpdateWSFilter useEffect messageQueue", Object.keys(messageQueue).length);
       handleUpdate();
     }
     // The return is called each time prior to the effect

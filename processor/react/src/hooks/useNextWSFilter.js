@@ -2,17 +2,18 @@ import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useNextWSFilter(useGlobalStateContext, instanceId, doneTask, onNext) {
+function useNextWSFilter(useGlobalStateContext, doneTask, onNext) {
   
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
   const [working, setWorking] = useState(false);
+  const [instanceId, setInstanceId] = useState();
 
   const handleNext = (task) => {
     //console.log("useNextWSFilter handleNext", doneTask, task);
     const processorId = globalState?.processorId
-    if (doneTask && task && task.prevInstanceId[processorId] === doneTask.instanceId ) {
-      //console.log("useNextWSFilter handleNext doneTask.instanceId ", doneTask.instanceId, doneTask.instanceId);
+    if (task && instanceId && task.prevInstanceId[processorId] === instanceId ) {
+      //console.log("useNextWSFilter handleNext instanceId ", instanceId);
       //console.log("useNextWSFilter handleNext", task);
       setEventQueue((prev) => [...prev, task]);
     }
@@ -30,6 +31,14 @@ function useNextWSFilter(useGlobalStateContext, instanceId, doneTask, onNext) {
     };
     nextTask();
   }, [eventQueue, working]);
+
+  // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
+  // just this (not initialTask)
+  useEffect(() => {
+    if (doneTask?.instanceId) {
+      setInstanceId(doneTask.instanceId);
+    }
+  }, [doneTask]);
 
   useEffect(() => {
     if (!webSocketEventEmitter) {

@@ -33,6 +33,7 @@ const TaskLLMIO = (props) => {
     transition,
     transitionTo, 
     transitionFrom,
+    componentName,
   } = props;
 
   const [responseText, setResponseText] = useState("");
@@ -41,7 +42,7 @@ const TaskLLMIO = (props) => {
   const [userInputWordCount, setUserInputWordCount] = useState(0);
   const [responseTextWordCount, setResponseTextWordCount] = useState(0);
   const userInputRef = useRef(null);
-  const responseTextRef = useRef(null);
+  const responseTextRef = useRef("");
   const responseTextRectRef = useRef(null);
   const paraTopRef = useRef(0);
   const waitRef = useRef(false);
@@ -77,6 +78,7 @@ const TaskLLMIO = (props) => {
               break;
           }
         }
+        //console.log(`${componentName} processResponses responseTextRef.current:`, responseTextRef.current);
         setResponseText(responseTextRef.current);
         return []; // Clear the processed responses
       });
@@ -88,9 +90,9 @@ const TaskLLMIO = (props) => {
 
   // I guess the websocket can cause events during rendering
   // Putting this in the HoC causes a warning about setting state during rendering
-  usePartialWSFilter(task?.instanceId,
+  usePartialWSFilter(task,
     (partialTask) => {
-      //console.log("TaskLLMIO usePartialWSFilter partialTask", partialTask.response);
+      //console.log(`${componentName} usePartialWSFilter partialTask`, partialTask.response);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   )
@@ -101,7 +103,7 @@ const TaskLLMIO = (props) => {
     if (task) {
       const nextConfigState = task.config.nextStates[task.state.current];
       let nextState;
-      if (transition()) { log("TaskLLMIO State Machine State " + task.state.current + " nextConfigState " + nextConfigState) }
+      if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
       // A simple way to wait for a transition (set waitRef.current to true and use as a condition)
       if (transition()) { waitRef.current = false; }
       switch (task.state.current) {
@@ -125,13 +127,14 @@ const TaskLLMIO = (props) => {
           break;
         case "received":
           nextState = nextConfigState;
+          setResponseText(task.output.text);
           if (nextConfigState === "input") {
             setShowUserInput(true);
           }
           break;
         case "input":
           // Show any previous input stored
-          if (task.output?.input) {
+          if (task.output?.input && !userInput) {
             setUserInput(task.output.input);
           }
           // Wait until leaving then send input
@@ -150,6 +153,8 @@ const TaskLLMIO = (props) => {
         case "stop":
           if (transition()) {
             modifyTask({ "state.done": true });
+          } else if (task.state.done) {
+            modifyTask({ "state.done": false });
           }
           break;
         default:

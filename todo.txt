@@ -1,10 +1,24 @@
 /* ToDo
 -------
+The stack of components for React should not be mixed with a stack of Tasks.
+  Maybe the stack of components should be in the task.config
+Changes:
+  Using task.stackTaskId array and chaining the creation of Tasks starting from the topmost
+  Allow taskflows under taskflows
+  Added menu boolean for display in menu.
+  Added initiator boolean to disable taskflows for starting when they have a start task
+  Implemented updateCount
+  Allow absolute paths in template variables
+  Pass Task name to Task Function
+  Added TaskGeneratePersona, TaskBrainstorm, TaskCollaborate, TaskDiverge, TaskFacilitate
+  Performance of websocket improved
+chatContainermaxHeight in TaskConversation scrolling?
+Search feature could be a micro-service provided by the Hub?
 Code review/cleanup 
   configdata
   Refactoring
     Hub pipeline: a module with function for each step.
-    Concept of Processor/Hub commands
+    Concept of Processor/Hub commands (set/reset is not obvious)
       command+args fields in the Task
       processor field in the Task
         command+args fields in the processor field
@@ -12,21 +26,16 @@ Code review/cleanup
         command+args fields in the hub field
       Hub should only send the relevant processor field
         e.g. processor[processorId] = {} on the Hub but processor on the processor
+Modify the partial text update so it is incremental. This will better allow for selection.
+Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
-The websocket as context is a bad idea because it causes re-rendering
-  Could add memo to app 
-  Still need to be sensitive to global
-  Maybe it can provide an event interface - should look more into this feature.
-Global should change rarely e.g. pass the menu selection with something else  
-  Will be a Task eventually
-  Maybe a callback ?
+Integrate https://rapidapi.com/products/api-hub/
 Maybe start can be missed like update
   Get all the WS working this was
   Add queue to other React WS filters
 Maybe next feature is remembering the system messages for Vierge
 In default config assign a random user label so we can demo multiparty chat
 Provide sample of nginx proxy config
-Typewrite broken on joining session?
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome
 Transaction might be a better concept than lock, then don't need bypass.
@@ -50,10 +59,7 @@ Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
-Testing of oneThread, collaborate, errors.
 Align usage of utils
-Should the Hub command be in the Task?
-  Where can we separate concerns?
 
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
@@ -275,6 +281,8 @@ Comparison with similar systems
   Meteor
      Meteor's data synchronization mechanism known as Distributed Data Protocol (DDP).
      Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
+  https://github.com/ParisNeo/lollms-webui
+    This project aims to provide a user-friendly interface to access and utilize various LLM models for a wide range of tasks. Whether you need help with writing, coding, organizing data, generating images, or seeking answers to your questions, LoLLMS WebUI has got you covered.
 
 Test Plan
 ---------

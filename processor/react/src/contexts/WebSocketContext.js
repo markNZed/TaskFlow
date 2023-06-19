@@ -29,7 +29,7 @@ export let messageQueueIdx = 0;
 // This is not ideal but it is not clear how to avoid it
 export function WebSocketProvider({ children, socketUrl }) {
 
-  //console.log("--------- WebSocketProvider ---------");
+  console.log("--------- WebSocketProvider ---------");
 
   const [webSocket, setWebSocket] = useState(null);
   const { globalState, replaceGlobalState } = useGlobalStateContext();
@@ -119,7 +119,11 @@ export function WebSocketProvider({ children, socketUrl }) {
     },
     onerror: (e) => {
       console.log("App webSocket closed with error", e);
-    }
+    },
+    // This makes a huge improvement to performance because it disables the state update inside useWebSocket and avoids re-rendering
+    filter: (message) => {
+      return false
+    },
   });
 
   /*

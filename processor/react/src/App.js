@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Routes, Route } from "react-router-dom";
 import "./styles/App.css";
 import "./styles/normal.css";
@@ -147,6 +147,8 @@ function App({ activeWorkerCount, workerId }) {
 
     initializeStorage();
   }, []);
+
+  const MemoizedTaskflows = React.memo(Taskflows);
 
   return (
     <Routes>

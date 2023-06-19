@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import startTask_async from "../startTask.mjs";
-import { activeTasksStore_async } from "../storage.mjs";
+import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
@@ -107,6 +107,12 @@ router.post("/update", async (req, res) => {
       task.done = true
       console.log("Task error " + task.id);
     }
+    let output = await outputStore_async.get(task.threadId);
+    if (!output) {
+      output = {};
+    }
+    output[task.id] = task.output;
+    await outputStore_async.set(task.threadId, output);
     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
@@ -114,6 +120,7 @@ router.post("/update", async (req, res) => {
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
+      task.updateCount = task.updateCount + 1;
       // Don't await so the return gets back before the websocket update
       activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.

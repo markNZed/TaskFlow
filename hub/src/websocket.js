@@ -83,7 +83,7 @@ function initWebSocketServer(server) {
       if (j?.task?.source) {
         const processorId = j.task.source;
         //console.log("processorId", processorId)
-        if (ws.data["processorId"] !== processorId) {
+        if (!connections.get(processorId)) {
           connections.set(processorId, ws);
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)

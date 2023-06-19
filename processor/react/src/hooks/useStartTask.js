@@ -9,7 +9,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
-const useStartTask = (startId, setStartId, threadId = null, stackPtr = null) => {
+const useStartTask = (startId, setStartId, threadId, stackPtr) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setTaskStartError] = useState();
 

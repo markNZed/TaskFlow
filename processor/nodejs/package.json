@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "nodemon --watch ../config --watch . --watch .env --ignore 'src/shared/task*Schema.json' server",
-    "debug": "nodemon --watch ../config --watch . --watch .env --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9230 server.js"
+    "start": "nodemon --watch ../../config/modeltypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' server",
+    "debug": "nodemon --watch ../../config/modeltypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9230 server.js"
   },
   "dependencies": {
     "@kvs/node-localstorage": "^2.1.3",

@@ -12,7 +12,7 @@ import { updateTask_async } from "../updateTask.mjs";
 
 // state === sending : this processor has control
 
-const TaskChat_async = async function (wsSendTask, task) {
+const TaskChat_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(
