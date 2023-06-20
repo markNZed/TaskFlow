@@ -10,13 +10,13 @@ import { utils } from "./utils.mjs";
 
 const syncTasks_async = async (key, value) => {
 
-  //console.log("syncTasks_async", key)
+  //console.log("syncTasks_async", key, value.processor)
   await instancesStore_async.set(key, value);
 
   // So we store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   const has = await activeTasksStore_async.has(key);
-  let command = taskCopy.processor.command
+  let command = taskCopy.processor[taskCopy.source].command
   if (has) {
     if (command === "join") {
       taskCopy.lockBypass = true;
@@ -40,6 +40,10 @@ const syncTasks_async = async (key, value) => {
             || (command === "join" && processorId === taskCopy.source)
         ) {
           taskCopy.destination = processorId;
+          if (!taskCopy.processor[processorId]) {
+            console.log("command taskCopy ", command, taskCopy, processorId );
+          }
+          taskCopy.processor[processorId]["command"] = command;
           await wsSendTask(taskCopy, command);
           console.log("syncTasks_async", command, key, processorId);
         } else {
@@ -57,7 +61,7 @@ const syncTasks_async = async (key, value) => {
   } else {
     console.log("syncTasks_async no processorIds", key, value);
   }
-  //console.log("syncTasks_async", key, value);
+  //console.log("syncTasks_async after", key, value.processor);
   return value;
 
 };

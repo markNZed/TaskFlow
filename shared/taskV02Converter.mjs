@@ -194,7 +194,6 @@ const typeMap = {
         { json: "parentInstanceId", js: "parentInstanceId", typ: u(undefined, "") },
         { json: "parentType", js: "parentType", typ: u(undefined, "") },
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
-        { json: "prevInstanceId", js: "prevInstanceId", typ: u(undefined, u(m("any"), null)) },
         { json: "privacy", js: "privacy", typ: u(undefined, m("any")) },
         { json: "processor", js: "processor", typ: u(undefined, m("any")) },
         { json: "request", js: "request", typ: u(undefined, m("any")) },

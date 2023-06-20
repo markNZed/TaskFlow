@@ -21,18 +21,17 @@ router.post("/start", async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
+    if (task?.processor) {
+      task.processor[task.source] = JSON.parse(JSON.stringify(task.processor));
+    }
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
-
     //console.log("task", task);
-
     const startId = task.id;
     const threadId = task.threadId;
     const sessionId = task.sessionId;
     const processorId = task.source;
-
     const stackPtr = task.stackPtr;
-
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
       await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
@@ -53,7 +52,7 @@ router.post("/update", async (req, res) => {
   console.log("/hub/api/task/update");
   let userId = utils.getUserId(req);
   if (userId) {
-    //console.log("req.body", req.body.task.output.msgs)
+    //console.log("req.body.task.processor", req.body.task.processor)
     let task = req.body.task;
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
@@ -113,6 +112,10 @@ router.post("/update", async (req, res) => {
     }
     output[task.id] = task.output;
     await outputStore_async.set(task.threadId, output);
+    // Restore the other processors
+    const processor = activeTask.processor;
+    processor[task.source] = JSON.parse(JSON.stringify(task.processor));
+    task.processor = processor;
     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
@@ -122,7 +125,7 @@ router.post("/update", async (req, res) => {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
       task.updateCount = task.updateCount + 1;
       // Don't await so the return gets back before the websocket update
-      task.processor.command = "update";
+      task.processor[task.source].command = "update";
       // Middleware will send the update
       activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.
@@ -141,8 +144,12 @@ router.post("/next", async (req, res) => {
   if (userId) {
     //console.log("req.body", req.body.task.output.msgs)
     let task = req.body.task;
-    // Check if the task is locked
+    //deep copy
     const activeTask = await activeTasksStore_async.get(task.instanceId);
+    // Restore the other processors
+    const processor = activeTask.processor;
+    processor[task.source] = JSON.parse(JSON.stringify(task.processor));
+    task.processor = processor;
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }

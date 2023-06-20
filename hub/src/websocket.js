@@ -17,7 +17,7 @@ function wsSendObject(processorId, message = {}) {
     if (!message?.task) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
-    // Need to make a copy so any changes here d onot impact the object 
+    // Need to make a copy so any changes here do not impact the object 
     let localTask = { ...message.task }
     localTask.hubId = hubId;
     message.task = localTask;
@@ -30,6 +30,7 @@ function wsSendObject(processorId, message = {}) {
 
 const wsSendTask = async function (task, command = null) {
   //console.log("wsSendTask", task)
+  task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
   if (command) {
     message["command"] = command;
@@ -61,6 +62,13 @@ const wsSendTask = async function (task, command = null) {
     message["task"] = task;
   }
   let processorId = message.task.destination;
+  if (message.task?.processor && message.task.processor[processorId]) {
+    //deep copy
+    message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
+  } else {
+    console.log("wsSendTask processorId not found in task.processor", processorId, message.task.processor)
+    message.task.processor = {};
+  }
   if (message.command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }

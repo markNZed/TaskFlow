@@ -80,7 +80,9 @@ const connectWebSocket = () => {
       return
     }
     const message = JSON.parse(e.data);
+    //console.log("processorWs.onMessage", message?.command, message?.task.processor);
     if (message?.command === "update") {
+      message.task.processor.command = null;
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
@@ -98,7 +100,8 @@ const connectWebSocket = () => {
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
     } else if (message?.command === "start" || message?.command === "join" || message?.command === "next") {
-      console.log("processorWs start activeTasksStore_async", message.task.id, message.task.instanceId)
+      console.log("processorWs " + message?.command + " activeTasksStore_async", message.task.id, message.task.instanceId)
+      message.task.processor.command = null;
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (message?.command === "pong") {

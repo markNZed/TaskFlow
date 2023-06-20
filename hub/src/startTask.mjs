@@ -37,6 +37,7 @@ async function startTask_async(
     let instanceId = uuidv4();
     let siblingInstanceId;
     let prevInstanceId;
+    let processor = {}
 
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
@@ -44,8 +45,12 @@ async function startTask_async(
       threadId = siblingTask.threadId;
       // In the case where the thread advances on another processor 
       // we still need to be able to find the nextTask 
-      prevInstanceId = siblingTask.prevInstanceId
-      prevInstanceId[processorId] = siblingTask.instanceId
+      prevInstanceId = siblingTask.instanceId
+      // Need to fetch processors from sibling for prevInstance
+      let instance = await instancesStore_async.get(prevInstanceId);
+      processor = instance.processor;
+      processor[processorId]["command"] = null;
+      console.log("sibling processor", processor);
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
@@ -77,7 +82,7 @@ async function startTask_async(
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["join"] = true;
-          taskCopy["processor"]["command"] = "join";
+          taskCopy["processor"][processorId]["command"] = "join";
           console.log("Joining oneThread for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -120,7 +125,7 @@ async function startTask_async(
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["join"] = true;
-          taskCopy["processor"]["command"] = "join";
+          taskCopy["processor"][processorId]["command"] = "join";
           console.log("Joining collaborate for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -164,20 +169,24 @@ async function startTask_async(
     taskCopy.input = taskCopy.input || {};
     taskCopy.output = taskCopy.output || {};
     taskCopy.privacy = taskCopy.privacy || {};
-    taskCopy.processor = taskCopy.processor || {};
+    taskCopy.processor = taskCopy.processor || processor;;
     taskCopy.request = taskCopy.request || {};
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
-    taskCopy.prevInstanceId = taskCopy.prevInstanceId || {};
 
-    if (next) {
-      taskCopy.processor.command = "next";
-    } else {
-      taskCopy.processor.command = "start";
+    if (!taskCopy["processor"][processorId]) {
+      taskCopy["processor"][processorId] = {};
+    }
+    if (!taskCopy["processor"][processorId]["command"]) {
+      if (next) {
+        taskCopy.processor[processorId]["command"] = "next";
+      } else {
+        taskCopy.processor[processorId]["command"] = "start";
+      }
     }
 
     if (prevInstanceId !== undefined) {
-      taskCopy.prevInstanceId = prevInstanceId;
+      taskCopy.processor[processorId].prevInstanceId = prevInstanceId;
     }
     taskCopy.userId = userId;
     taskCopy.source = processorId;
@@ -342,6 +351,9 @@ async function startTask_async(
           if (environments && environments.includes(environment)) {
               found = true;
               taskProcessors.push(activeProcessorId);
+              if (!taskCopy.processor[activeProcessorId]) {
+                taskCopy.processor[activeProcessorId] = {};
+              }
               break;
           }
         }       
@@ -372,7 +384,7 @@ async function startTask_async(
     }
     activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
 
-    //console.log("New task ", taskCopy)
+    //console.log("New task processor ", taskCopy.processor)
     console.log("New task id " + taskCopy.id);
     return taskCopy;
   }

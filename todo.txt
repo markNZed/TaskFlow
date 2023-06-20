@@ -1,7 +1,7 @@
 /* ToDo
 -------
 Do we want a join route on Hub for symmetry?
-Mapping of processor[processorId]
+Processor ->  processor[processorId] on Hub
 Add a updatedRate (updates per minute, could reset basd on updatedAt time)
 The stack of components for React should not be mixed with a stack of Tasks.
   Maybe the stack of components should be in the task.config

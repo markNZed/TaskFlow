@@ -8,6 +8,7 @@ import { processorId } from "../config.mjs";
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { updateTask_async } from "./updateTask.mjs";
+import { nextTask_async } from "./nextTask.mjs";
 
 export async function do_task_async(wsSendTask, task) {
     let updated_task = {};
@@ -30,7 +31,15 @@ export async function do_task_async(wsSendTask, task) {
         // We may not want to do this for all tasks ? 
         // If the task is done then Hub will intercept this
         //console.log("do_task_async final task", updated_task)
-        await updateTask_async(updated_task)
+        if (updated_task.processor.command === "next") {
+          await nextTask_async(updated_task);
+        } else if (updated_task.processor.command === "start") {
+          // This is not working/used yet
+          await startTask_async(userId, startId, siblingTask);
+        } else {
+          // default to update
+          await updateTask_async(updated_task);
+        }
       } else {
         console.log("do_task_async null " + task.id);
       }

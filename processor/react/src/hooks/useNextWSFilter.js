@@ -24,9 +24,8 @@ function useNextWSFilter(useGlobalStateContext, stackPtrRef, doneTask, onNext) {
       // We should add a "next" command perhaps
       if (message && message?.command && message.command === "next") {
         //console.log("useUpdateWSFilter handleUpdate update key", key);
-        //console.log("message.task.prevInstanceId[processorId]", message.task.prevInstanceId[processorId], instanceId);
-        //console.log("stackPtrRef.current", stackPtrRef.current, stackPtr);
-        if (message.task.prevInstanceId[processorId] === instanceId && stackPtrRef.current === stackPtr ) {
+         //console.log("stackPtrRef.current", stackPtrRef.current, stackPtr);
+        if (message.task.processor.prevInstanceId === instanceId && stackPtrRef.current === stackPtr ) {
           //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP

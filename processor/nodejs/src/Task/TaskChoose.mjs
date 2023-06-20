@@ -65,7 +65,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
 
     // Need to go to next state, can stay on NodeJS Task Processor side
     T("nextTask", next_states[maxIndex]);
-    T("done", true);
+    T("processor.command", "next");
   } catch (error) {
     // Handle the error here
     console.log("An error occurred:", error);

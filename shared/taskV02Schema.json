@@ -94,10 +94,7 @@
         },
         "parentType": {
           "type": "string"
-        },
-        "prevInstanceId": {
-          "type": ["null", "object"]
-        },        
+        },       
         "send": {
           "type": "boolean"
         },
