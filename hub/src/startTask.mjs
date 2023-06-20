@@ -19,7 +19,8 @@ async function startTask_async(
     groupId,
     stackPtr = null,
     threadId = null,
-    siblingTask = null
+    siblingTask = null,
+    next = null, // indicated by presence of sbiling
   ) {
     /*
     console.log(
@@ -29,7 +30,8 @@ async function startTask_async(
       "sessionId:", sessionId, 
       "groupId:", groupId, 
       "stackPtr:", stackPtr, 
-      "threadId:", threadId
+      "threadId:", threadId,
+      "next:", next
     );
     */    
     let instanceId = uuidv4();
@@ -75,6 +77,7 @@ async function startTask_async(
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["join"] = true;
+          taskCopy["processor"]["command"] = "join";
           console.log("Joining oneThread for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -117,6 +120,7 @@ async function startTask_async(
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["join"] = true;
+          taskCopy["processor"]["command"] = "join";
           console.log("Joining collaborate for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -160,10 +164,17 @@ async function startTask_async(
     taskCopy.input = taskCopy.input || {};
     taskCopy.output = taskCopy.output || {};
     taskCopy.privacy = taskCopy.privacy || {};
+    taskCopy.processor = taskCopy.processor || {};
     taskCopy.request = taskCopy.request || {};
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
     taskCopy.prevInstanceId = taskCopy.prevInstanceId || {};
+
+    if (next) {
+      taskCopy.processor.command = "next";
+    } else {
+      taskCopy.processor.command = "start";
+    }
 
     if (prevInstanceId !== undefined) {
       taskCopy.prevInstanceId = prevInstanceId;

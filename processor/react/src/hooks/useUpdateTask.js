@@ -21,19 +21,18 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
   const { sendJsonMessagePlus } = useWebSocketContext();
 
   useEffect(() => {
-    if (task && task.update && task.stackPtr === local_stackPtr && !updateTaskError) {
+    if (task && task.processor?.command === "update" && task.stackPtr === local_stackPtr && !updateTaskError) {
       log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
-          const snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-          const updating = { update: false, "response.updating": true, lock: false };
+          let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
+          const updating = { "processor.command": null, "response.updating": true, lock: false };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           // The setTask prior to sending the result will not have taken effect
           // So we align the snapshot with the updated task and send that
-          // otherwise send could come back treu and we will get a loop
-          snapshot.response.updating = false;
-          snapshot.update = false; // This might be looked after at hub
+          // otherwise send could come back true and we will get a loop
+          snapshot = deepMerge(snapshot, updating)
           // fetchTask can change some parameters in Task 
           // so we save the task object after those changes in the fetchTask
           await fetchTask(globalState, "task/update", snapshot);

@@ -48,9 +48,11 @@ function useStartWSFilter(useGlobalStateContext, startTaskId, onStart) {
     }
     //console.log("useStartWSFilter useEffect adding handleStart startTaskId", startTaskId);
     webSocketEventEmitter.on("start", handleStart);
+    webSocketEventEmitter.on("join", handleStart);
     return () => {
       //console.log("useStartWSFilter useEffect removing handleStart startTaskId", startTaskId);
       webSocketEventEmitter.removeListener("start", handleStart);
+      webSocketEventEmitter.removeListener("join", handleStart);
     };
   }, [startTaskId]);
   

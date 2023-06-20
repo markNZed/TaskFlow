@@ -22,6 +22,11 @@
       "additionalProperties": true,
       "title": "Configuration"
     },
+    "Processor": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Processor"
+    },    
     "Request": {
       "type": "object",
       "additionalProperties": true,

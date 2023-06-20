@@ -35,7 +35,6 @@ function TaskCollaborate(props) {
     startTask,
     nextTaskError,
     nextTask,
-    setDoneTask,
     startTaskFn,
     useTaskState,
     onDidMount,
@@ -75,23 +74,13 @@ function TaskCollaborate(props) {
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
       // We use newTask to ensure setDoneTask will see the changes to Tasks
-      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
+      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "processor.command": "next" }));
       setTasksTask((p) => {
         return newTask;
       }, tasksIdx);
       setKeys(p => [...p, newTask.instanceId + tasksIdx]);
-      setDoneTask(newTask);
     }
   }, [tasks]);
-
-  function fetchTask() {
-    // We use newTask to ensure setDoneTask will see the changes to Tasks
-    const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
-    setTasksTask((p) => {
-      return newTask;
-    }, tasksIdx);
-    setDoneTask(newTask);
-  }
 
   // Detect when new task has been fetched
   useEffect(() => {
@@ -101,14 +90,13 @@ function TaskCollaborate(props) {
     }
   }, [nextTask]);
 
-  // Instead of leaving we could have a task.exit ?
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = tasks[tasksIdx];
     if (action === "next") {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setTasksTask((p) => {
-          return { ...p, exit: true}
+          return { ...p, command: "exit"}
         }, tasksIdx);
         // Expect .done to be set in Task
       }
@@ -118,9 +106,6 @@ function TaskCollaborate(props) {
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
         const newIdx = tasks.length - 2;
-        setTasksTask((p) => {
-          return { ...p, exit: false}
-        }, newIdx);
         // By changing the key we force the component to re-mount
         // This is like a reset in some ways
         setKeys(prevKeys => {

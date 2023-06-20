@@ -1,42 +1,57 @@
 import { useEffect, useCallback, useState } from "react";
-import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
+import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useNextWSFilter(useGlobalStateContext, doneTask, onNext) {
+function useNextWSFilter(useGlobalStateContext, stackPtrRef, doneTask, onNext) {
   
   const { globalState } = useGlobalStateContext();
-  const [eventQueue, setEventQueue] = useState([]);
-  const [working, setWorking] = useState(false);
   const [instanceId, setInstanceId] = useState();
+  const [stackPtr, setStackPtr] = useState();
 
-  const handleNext = (task) => {
-    //console.log("useNextWSFilter handleNext", doneTask, task);
-    const processorId = globalState?.processorId
-    if (task && instanceId && task.prevInstanceId[processorId] === instanceId ) {
-      //console.log("useNextWSFilter handleNext instanceId ", instanceId);
-      //console.log("useNextWSFilter handleNext", task);
-      setEventQueue((prev) => [...prev, task]);
+  const handleNext = async (taskUpdate) => {
+    if (instanceId === undefined || stackPtr === undefined) {
+      return;
     }
-  };
-
-  useEffect(() => {
-    const nextTask = async () => {
-      if (eventQueue.length && !working) {
-        setWorking(true);
-        await onNext(eventQueue[0]);
-        //pop the first task from eventQueue
-        setEventQueue((prev) => prev.slice(1));
-        setWorking(false);
+    const processorId = globalState?.processorId
+    // messageQueue is an object not an array so we can delete from the object during iteration
+    const keys = Object.keys(messageQueue);
+    // sort the keyys so we process the oldest first
+    keys.sort();
+    //console.log("keys", keys);
+    for (let key of keys) {
+      const message = messageQueue[key];
+      //console.log("message", message, key);
+      // We should add a "next" command perhaps
+      if (message && message?.command && message.command === "next") {
+        //console.log("useUpdateWSFilter handleUpdate update key", key);
+        //console.log("message.task.prevInstanceId[processorId]", message.task.prevInstanceId[processorId], instanceId);
+        //console.log("stackPtrRef.current", stackPtrRef.current, stackPtr);
+        if (message.task.prevInstanceId[processorId] === instanceId && stackPtrRef.current === stackPtr ) {
+          //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
+          // Important to wait so that the task is saved to storage before it is retrieved again
+          // We copy it so w can delete it ASAP
+          const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
+          delete messageQueue[key];
+          await onNext(taskCopy);
+          //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
+        }
       }
-    };
-    nextTask();
-  }, [eventQueue, working]);
+    }
+    //console.log("useUpdateWSFilter useEffect after messageQueue", messageQueue);
+  };
 
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
   useEffect(() => {
-    if (doneTask?.instanceId) {
-      setInstanceId(doneTask.instanceId);
+    if (doneTask && doneTask.processor?.command === "receiveNext") {
+      const i = doneTask.processor.commandArgs?.instanceId;
+      if (i && instanceId !== i) {
+        setInstanceId(i);
+      }
+      const s = doneTask.processor.commandArgs?.stackPtr
+      if (s && stackPtr !== s) {
+        setStackPtr(s);
+      }
     }
   }, [doneTask]);
 
@@ -45,12 +60,12 @@ function useNextWSFilter(useGlobalStateContext, doneTask, onNext) {
       return;
     }
     //console.log("useNextWSFilter useEffect adding handleNext instanceId", instanceId);
-    webSocketEventEmitter.on("start", handleNext);
+    webSocketEventEmitter.on("next", handleNext);
     return () => {
       //console.log("useNextWSFilter useEffect removing handleNext instanceId", instanceId);
-      webSocketEventEmitter.removeListener("start", handleNext);
+      webSocketEventEmitter.removeListener("next", handleNext);
     };
-  }, [instanceId, doneTask]);
+  }, [instanceId, stackPtr]);
   
 }
 

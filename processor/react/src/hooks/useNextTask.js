@@ -7,22 +7,29 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
-import { log } from "../utils/utils";
+import { setNestedProperties, deepMerge, log } from "../utils/utils";
 
 // We have: Start with startId, threadId
 //          State with task
 //          Task with task
 // We should combine these
 
-const useNextTask = (task) => {
+const useNextTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
   const [nextTaskError, setNextTaskError] = useState(null);
   useEffect(() => {
-    if (task && task.next && !nextTaskError) {
+    if (task && task.processor?.command === "next" && !nextTaskError) {
       log("useNextTask", task.id);
+      let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
+      const updating = { "processor.command": null };
+      setNestedProperties(updating);
+      setTask((p) => deepMerge(p, updating));
+      // The setTask prior to sending the result will not have taken effect
+      // So we align the snapshot with the updated task and send that
+      snapshot = deepMerge(snapshot, updating)
       const fetchTaskFromAPI = async () => {
         try {
-          fetchTask(globalState, "task/update", task);
+          fetchTask(globalState, "task/next", snapshot);
         } catch (error) {
           setNextTaskError(error.message);
         }

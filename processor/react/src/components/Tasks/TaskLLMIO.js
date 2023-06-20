@@ -34,6 +34,7 @@ const TaskLLMIO = (props) => {
     transitionTo, 
     transitionFrom,
     componentName,
+    isCommand,
   } = props;
 
   const [responseText, setResponseText] = useState("");
@@ -45,7 +46,6 @@ const TaskLLMIO = (props) => {
   const responseTextRef = useRef("");
   const responseTextRectRef = useRef(null);
   const paraTopRef = useRef(0);
-  const waitRef = useRef(false);
   const [userInputHeight, setUserInputHeight] = useState(0);
   const [socketResponses, setSocketResponses] = useState([]);
 
@@ -104,8 +104,6 @@ const TaskLLMIO = (props) => {
       const nextConfigState = task.config.nextStates[task.state.current];
       let nextState;
       if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
-      // A simple way to wait for a transition (set waitRef.current to true and use as a condition)
-      if (transition()) { waitRef.current = false; }
       switch (task.state.current) {
         case "start":
           nextState = nextConfigState;
@@ -119,7 +117,7 @@ const TaskLLMIO = (props) => {
             setResponseText(task.output.text);
             nextState = "received";
           } else if (transition()) {
-            modifyTask({ update: true });
+            modifyTask({ "processor.command": "update" });
           } 
         case "receiving":
           // NodeJS should be streaming the response
@@ -139,14 +137,13 @@ const TaskLLMIO = (props) => {
           }
           // Wait until leaving then send input
           // We could have a submit button but this is more natural
-          if (task.exit && !waitRef.current) {
-            modifyTask({ update: true, "request.input": userInput });
-            waitRef.current = true;
+          if (isCommand("exit")) {
+            modifyTask({ "processor.command": "update", "request.input": userInput });
           }
           break;
         case "wait":
           // If not collecting input we are in the wait state before exiting
-          if (task.exit) {
+          if (isCommand("exit")) {
             nextState = nextConfigState;
           }
           break;

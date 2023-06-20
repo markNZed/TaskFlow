@@ -91,10 +91,16 @@ export function WebSocketProvider({ children, socketUrl }) {
       //console.log("App webSocket message received:", e);
       // Should be in try/catch block
       const message = JSON.parse(e.data);
+      let command = message?.command
+      if (message?.task?.processor?.command) {
+        message["command"] = message?.task?.processor?.command;
+        message.task.processor.command = null;
+      }
       if (message?.command && message.command !== "pong") {
-        //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
+        console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
         //Could strcuture as messageQueue[message.command][messageQueueIdx]
-        if (message.command === "update") {
+        //Eventually use task.processor.command (this gives us next)
+        if (message.command === "update" || message.command === "next") {
           messageQueue[messageQueueIdx] = message;
           messageQueueIdx = messageQueueIdx + 1;
         }

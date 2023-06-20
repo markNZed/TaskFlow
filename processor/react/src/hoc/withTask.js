@@ -40,7 +40,6 @@ function withTask(Component) {
     const { globalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
-    const [doneTask, setDoneTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
     const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
@@ -55,7 +54,11 @@ function withTask(Component) {
       localStackPtrRef.current
     );
     const [nextTask, setNextTask] = useState();
-    const { nextTaskError } = useNextTask(doneTask);
+    // Note we pass in doneTask in this way the nextWSFilter will match to the stackPtr level where doneTask was set
+    const { nextTaskError } = useNextTask(
+      props.task,
+      props.setTask
+    );
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
@@ -145,14 +148,11 @@ function withTask(Component) {
       }
     )
 
-    useNextWSFilter(useGlobalStateContext, doneTask,
+    useNextWSFilter(useGlobalStateContext, localStackPtrRef, props.task,
       (updatedTask) => {
         console.log("useNextWSFilter before setNextTask localStackPtrRef.current", localStackPtrRef.current, updatedTask);
-        //if (doneTask !== null && doneTask !== undefined) {
           //console.log("useNextWSFilter setNextTask localStackPtrRef.current", localStackPtrRef.current);
-          setDoneTask(null)
           setNextTask(updatedTask)
-          // How do we clear this?
         //}
       }
     )
@@ -235,6 +235,24 @@ function withTask(Component) {
       });
     }
 
+    // Check for a command and clear it if it is set
+    function isCommand(command) {
+      if (props.task.command === command) {
+        props.setTask((prevState) => ({...prevState, command: null}));
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    useEffect(() => {
+      const c = props?.task?.command;
+      const pc = prevTask?.command;
+      if (c && pc && c !== pc) {
+        throw new Error("Unexpected command change " + c + " " + pc);
+      }
+    }, [props.task]);  
+
     function useTaskState(initialValue, name = "task") {
       const [state, setState] = useState(initialValue);
       const [prevTaskState, setPrevTaskState] = useState({});
@@ -282,7 +300,6 @@ function withTask(Component) {
           setState(newState);
         }
       };
-
       return [state, setTaskState];
     }
 
@@ -370,7 +387,6 @@ function withTask(Component) {
       startTaskFn,
       nextTaskError,
       nextTask,
-      setDoneTask,
       prevTask,
       modifyTask,
       modifyState,
@@ -386,7 +402,8 @@ function withTask(Component) {
       useWebSocketContext,
       componentName: props?.task?.stack[localStackPtrRef.current - 1],
       childTask,
-      setChildTask
+      setChildTask,
+      isCommand,
     };
 
     return <WithDebugComponent {...componentProps} />;

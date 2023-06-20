@@ -27,6 +27,7 @@ const TaskShowResponse = (props) => {
     modifyState,
     transition,
     onDidMount,
+    isCommand,
   } = props;
 
   const [responseText, setResponseText] = useState("");
@@ -57,7 +58,7 @@ const TaskShowResponse = (props) => {
           if (responseText !== task.response.text) {
             setResponseText(task.response.text);
           }
-          if (task.exit) {
+          if (isCommand("exit")) {
             modifyTask({ "state.done": true });
             nextState = "exit";
           }

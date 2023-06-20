@@ -97,7 +97,7 @@ const connectWebSocket = () => {
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
-    } else if (message?.command === "start") {
+    } else if (message?.command === "start" || message?.command === "join" || message?.command === "next") {
       console.log("processorWs start activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
@@ -107,7 +107,7 @@ const connectWebSocket = () => {
       console.log("ws register request received")
       register_async();
     } else {
-      console.log("Unexpected message", message)
+      console.log("Unexpected message command ", message.command)
     }
   };
 

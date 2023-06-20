@@ -29,13 +29,13 @@ function TaskStepper(props) {
   const {
     log,
     task,
+    modifyTask,
     useTasksState,
     stackPtr,
     startTaskError,
     startTask,
     nextTaskError,
     nextTask,
-    setDoneTask,
     startTaskFn,
     useTaskState,
     onDidMount,
@@ -66,38 +66,46 @@ function TaskStepper(props) {
   // When task is done fetch next task
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
-      // We use newTask to ensure setDoneTask will see the changes to Tasks
-      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "next": true }));
+      // There are two commands happening here:
+      // 1. The chid task is requesting the next task
+      // 2. The stepper is receiving the next task
+      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+        "state.done": false, 
+        "processor.command": "next"
+      }));
       setTasksTask((p) => {
         return newTask;
       }, tasksIdx);
+      // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
+      modifyTask({
+        "processor.command": "receiveNext",
+        "processor.commandArgs": {
+          stackPtr: stackPtr, 
+          instanceId: tasks[tasksIdx].instanceId
+        }
+      });
       setKeys(p => [...p, newTask.instanceId + tasksIdx]);
-      setDoneTask(newTask);
     }
   }, [tasks]);
 
-  // Detect when new task has been fetched
+  // Detect when next task has been fetched
   useEffect(() => {
+    console.log("TaskStepper nextTask", nextTask);
     if (nextTask) {
-      // Clearing next here is not ideal
-      setTasksTask((p) => {
-        return { ...p, next: false}
-      }, tasksIdx);
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
     }
   }, [nextTask]);
 
-  // Instead of leaving we could have a task.exit ?
   function handleStepperNavigation(currentTask, action) {
     const currentTaskData = tasks[tasksIdx];
     if (action === "next") {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
         setTasksTask((p) => {
-          return { ...p, exit: true}
+          return { ...p, command: "exit"}
         }, tasksIdx);
-        // Expect .done to be set in Task
+        // Expect task.state.done to be set in Task
       }
     } else if (action === "back") {
       if (currentTaskData) {
@@ -105,9 +113,6 @@ function TaskStepper(props) {
         setTasksIdx(tasks.length - 2);
         setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
         const newIdx = tasks.length - 2;
-        setTasksTask((p) => {
-          return { ...p, exit: false}
-        }, newIdx);
         // By changing the key we force the component to re-mount
         // This is like a reset in some ways
         setKeys(prevKeys => {

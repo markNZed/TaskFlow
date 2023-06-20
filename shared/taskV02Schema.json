@@ -20,6 +20,12 @@
             "type": "string"
           }
         },
+        "command": {
+          "type": ["null", "object"]
+        },
+        "commandArgs": {
+          "type": "object"
+        },
         "completedAt": {
           "type": "integer",
           "minimum": 0,
@@ -42,9 +48,6 @@
               "type": "string"
             }
           ]
-        },
-        "exit":{ 
-          "type": "boolean"
         },
         "permissions": {
           "type": "array",
@@ -164,6 +167,9 @@
         },
         "state": {
           "$ref": "./genericV02schema.json#/definitions/State"
+        },
+        "processor": {
+          "$ref": "./genericV02schema.json#/definitions/Processor"
         },
         "request": {
           "$ref": "./genericV02schema.json#/definitions/Request"

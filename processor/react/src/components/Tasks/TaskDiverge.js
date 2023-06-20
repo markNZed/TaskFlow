@@ -107,7 +107,7 @@ function TaskCollaborate(props) {
             modifyTask({
               "output.msgs": [...msgs, ...newMsgArray],
               "lock": true,
-              "update": true
+              "processor.command": "update",
             });
             setSubmittingForm(false);
           }

@@ -122,10 +122,53 @@ router.post("/update", async (req, res) => {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
       task.updateCount = task.updateCount + 1;
       // Don't await so the return gets back before the websocket update
+      task.processor.command = "update";
+      // Middleware will send the update
       activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.
       return res.status(200).send("ok");
     }
+  } else {
+    console.log("No user");
+    // Clean up all the HTTP IDs used on routes
+    res.status(200).json({ error: "No user" });
+  }
+});
+
+router.post("/next", async (req, res) => {
+  console.log("/hub/api/task/next");
+  let userId = utils.getUserId(req);
+  if (userId) {
+    //console.log("req.body", req.body.task.output.msgs)
+    let task = req.body.task;
+    // Check if the task is locked
+    const activeTask = await activeTasksStore_async.get(task.instanceId);
+    if (!activeTask) {
+      return res.status(404).send("Task not found");
+    }
+    if (task.error) {
+      let errorTask
+      if (task.config?.errorTask) {
+        errorTask = task.config.errorTask
+      } else {
+        // Assumes there is a default errorTask named error
+        const strArr = task.id.split('.');
+        strArr[strArr.length - 1] = "error";
+        errorTask = strArr.join('.');
+      }
+      task.nextTask = errorTask
+      task.done = true
+      console.log("Task error " + task.id);
+    }
+    let output = await outputStore_async.get(task.threadId);
+    if (!output) {
+      output = {};
+    }
+    output[task.id] = task.output;
+    await outputStore_async.set(task.threadId, output);
+    task.next = true; // We probably don't need this but doneTask_async is using it
+    doneTask_async(task) 
+    return res.status(200).send("ok");
   } else {
     console.log("No user");
     // Clean up all the HTTP IDs used on routes
