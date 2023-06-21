@@ -3,6 +3,8 @@
 Information for the Processor is held in the task.processor object.
 
 The Processor strips the task.hub object before forwarding to a Task Function.
+
+The Task Function communicates with the Task Processor using the object task.processor which includes fields: command, commandArgs, config. 
 ## Future
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
 * Filter execution

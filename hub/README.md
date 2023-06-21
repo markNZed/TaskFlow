@@ -2,7 +2,7 @@
 
 The Task Hub is implemented in node using the Express framework and SQLite database. 
 
-Information for the hub is held in the task.hub object.
+Information for the hub is held in the task.hub object. The Task Processor communicates with the Task Hub using the object task.hub which includes fields: command, commandArgs, config. 
 
 The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored

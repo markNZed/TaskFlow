@@ -10,6 +10,7 @@ import "./styles/index.css";
 import App from "./App";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { GlobalStateProvider } from "./contexts/GlobalStateContext";
+import { EventSourceProvider } from './contexts/EventSourceContext';
 import { hubSocketUrl } from "./config";
 import { BrowserRouter as Router } from "react-router-dom";
 
@@ -91,9 +92,11 @@ function Root() {
   return (
     <GlobalStateProvider>
       <WebSocketProvider socketUrl={hubSocketUrl}>
-        <Router>
-          <App activeWorkerCount={workerCount} workerId={workerId} />
-        </Router>
+        <EventSourceProvider>
+          <Router>
+            <App activeWorkerCount={workerCount} workerId={workerId} />
+          </Router>
+        </EventSourceProvider>
       </WebSocketProvider>
     </GlobalStateProvider>
   );

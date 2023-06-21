@@ -19,6 +19,7 @@ import useNextWSFilter from "../hooks/useNextWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
+import { useEventSource } from '../contexts/EventSourceContext';
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -62,6 +63,65 @@ function withTask(Component) {
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
+    const { subscribe, unsubscribe, publish, initialized } = useEventSource();
+    const [threadId, setThreadId] = useState();
+    const publishedRef = useRef("");
+    const [threadDiff, setThreadDiff] = useState();
+
+    /*
+    // Example of how to use the threadDiff
+    // The child should enable this by modifyTask({"processor.config.threadDiff": true});
+    useEffect(() => {
+      if (!props?.task?.processor?.config?.threadDiff && props.task) {
+        modifyTask({"processor.config.threadDiff": true});
+      }
+      if (threadDiff) {
+        console.log('Received a task change in ' + props.task.id, threadDiff);
+      }
+    }, [threadDiff]); 
+    */ 
+
+    const handleTaskUpdate = (event) => {
+      //console.log('Received a task change', event.detail);
+      // Intended to monitor other tasks not itself
+      if (event.detail.instanceId !== props.task.instanceId) {
+        setThreadDiff(event.detail);
+      }
+    };
+
+    // We publish diffs of Task as events to a threadId
+    useEffect(() => {
+      if (!threadId) {return;}
+      if (initialized) {
+        subscribe('taskChange-' + threadId, handleTaskUpdate);
+      }
+      // Unsubscribe when the component unmounts
+      return () => {
+        if (initialized) {
+          unsubscribe('taskChange-' + threadId, handleTaskUpdate);
+        }
+      };
+    }, [subscribe, unsubscribe, threadId]);
+
+    useEffect(() => {
+      // Only need one watcher per task, use the active stackPtr level
+      if (threadId && localStackPtrRef.current === props.task.stackPtr) {
+        let diff;
+        if (prevTask && publishedRef.current) {
+          diff = getObjectDifference(prevTask, props.task);
+        } else {
+          diff = props.task;
+        }
+        publish('taskChange-' + threadId, {taskdiff: diff, id: props.task.id, instanceId: props.task.instanceId, stackPtr: props.task.stackPtr});
+        publishedRef.current = true;
+      }
+    }, [props.task]);
+
+    useEffect(() => {
+      if (!threadId && props.task && props.task.processor?.config?.threadDiff) {
+        setThreadId(props.task.threadId);
+      }
+    }, [props.task]);
 
     const handleChildDidMount = () => {
       // This is called during the rendering of the Task and even though
@@ -404,6 +464,8 @@ function withTask(Component) {
       childTask,
       setChildTask,
       isCommand,
+      handleTaskUpdate,
+      threadDiff,
     };
 
     return <WithDebugComponent {...componentProps} />;
