@@ -16,13 +16,15 @@ import {
   setNestedProperties,
 } from "../../utils/utils";
 
+// PLACEHOLDER - under development and not working
+
 /*
 Task Process
   Present a sequence of tasks in an Accordian component
   We have an array of tasks stored here that are passed to the next component in the stack
   
 ToDo:
-  Maybe tasksIdx is just a ref?
+  
 */
 
 function TaskCollaborate(props) {

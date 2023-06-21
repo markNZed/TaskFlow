@@ -10,6 +10,8 @@ import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 
+// PLACEHOLDER - under development and not working
+
 /*
 Task Process
 
