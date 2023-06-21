@@ -29,7 +29,7 @@ const useNextTask = (task, setTask) => {
       snapshot = deepMerge(snapshot, updating)
       const fetchTaskFromAPI = async () => {
         try {
-          fetchTask(globalState, "task/next", snapshot);
+          fetchTask(globalState, "next", snapshot);
         } catch (error) {
           setNextTaskError(error.message);
         }

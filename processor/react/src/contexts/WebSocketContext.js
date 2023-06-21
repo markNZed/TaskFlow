@@ -96,6 +96,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         message["command"] = message?.task?.processor?.command;
         message.task.processor.command = null;
       }
+      if (message?.task) {
+        // The processor strips hub specific info because the Task Function should pass through the processor
+        delete message.task.hub;
+      }  
       if (message?.command && message.command !== "pong") {
         //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
         //Could strcuture as messageQueue[message.command][messageQueueIdx]

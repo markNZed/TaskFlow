@@ -118,10 +118,11 @@ function flattenTaskflows(taskflows) {
       taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
     }
     taskflow["id"] = id;
-    taskflow["parentId"] = parent2id[taskflow.parentType];
+    taskflow["meta"] = {};
+    taskflow.meta["parentId"] = parent2id[taskflow.parentType];
     // Copy all the keys from the parentType that are not in the current taskflow
     // Could create functions for PREPEND_ and APPEND_
-    const parentTaskflow = taskflowLookup[taskflow["parentId"]];
+    const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
     for (const key in parentTaskflow) {
       if (parentTaskflow.hasOwnProperty(key)) {
         if (
@@ -257,10 +258,10 @@ function flattenTaskflows(taskflows) {
     taskflowLookup[id] = taskflow;
     parent2id[taskflow.name] = id;
     // Build children data
-    if (children[taskflow["parentId"]]) {
-      children[taskflow["parentId"]].push(taskflow.id);
+    if (children[taskflow.meta["parentId"]]) {
+      children[taskflow.meta["parentId"]].push(taskflow.id);
     } else {
-      children[taskflow["parentId"]] = [taskflow.id];
+      children[taskflow.meta["parentId"]] = [taskflow.id];
     }
   });
 
@@ -370,7 +371,7 @@ function flattenTasks(taskflows) {
               console.log("taskID not set " + taskKey + " " + taskflowKey);
             }
             tasks[taskId] = task;
-            tasks[taskId]["parentId"] = taskflowKey;
+            tasks[taskId]["meta"]["parentId"] = taskflowKey;
             //tasks[taskId]['filter_for_react'] = taskflows[taskflowKey].filter_for_react;
           }
         }

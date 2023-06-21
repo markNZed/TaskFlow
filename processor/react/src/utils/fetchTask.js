@@ -2,9 +2,15 @@ import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { log, updatedAt } from "./utils";
 
-export const fetchTask = async (globalState, end_point, task) => {
+export const fetchTask = async (globalState, command, task) => {
 
   let messageJsonString;
+
+  if (task.hub === undefined) {
+    task.hub = {};
+  }
+
+  task.hub.command = command;
 
   task["sessionId"] = globalState.sessionId;
   if ( globalState?.address && task.request ) {
@@ -14,7 +20,7 @@ export const fetchTask = async (globalState, end_point, task) => {
   task.userId = globalState.user.userId;
 
   // The immediate destination of this request
-  let destination = `${hubUrl}/api/${end_point}` // using hub routing
+  let fetchUrl = `${hubUrl}/api/task/${command}` // using hub routing
   task.destination = globalState.hubId;
 
   try {
@@ -43,7 +49,7 @@ export const fetchTask = async (globalState, end_point, task) => {
     //console.log("fetchTask stored task", task.instanceId, "in storageRef", task);
   }
 
-  const response = await fetch(destination, requestOptions);
+  const response = await fetch(fetchUrl, requestOptions);
 
   let result = "ok"
   if (!response.ok) {

@@ -35,7 +35,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
           snapshot = deepMerge(snapshot, updating)
           // fetchTask can change some parameters in Task 
           // so we save the task object after those changes in the fetchTask
-          await fetchTask(globalState, "task/update", snapshot);
+          await fetchTask(globalState, "update", snapshot);
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);

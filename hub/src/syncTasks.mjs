@@ -23,7 +23,7 @@ const syncTasks_async = async (key, value) => {
       delete value.join; // should not be using task for internal Hub communication
       delete taskCopy.join
     } else if (command === "update") {
-      taskCopy.updatedAt = utils.updatedAt();
+      taskCopy.meta.updatedAt = utils.updatedAt();
     }
    }
   // foreach processorId in processorIds send the task to the processor

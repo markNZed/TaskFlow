@@ -24,6 +24,10 @@ router.post("/start", async (req, res) => {
     if (task?.processor) {
       task.processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     }
+    // We are not using this yet, could have a single API endpoint
+    if (task?.hub) {
+      task.hub.command = null;
+    }
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
@@ -54,6 +58,10 @@ router.post("/update", async (req, res) => {
   if (userId) {
     //console.log("req.body.task.processor", req.body.task.processor)
     let task = req.body.task;
+    // We are not using this yet, could have a single API endpoint
+    if (task?.hub) {
+      task.hub.command = null;
+    }
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
@@ -76,8 +84,8 @@ router.post("/update", async (req, res) => {
     if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
       let now = new Date(); // Current time
       let updatedAt;
-      if (task.updatedAt) {
-        updatedAt = new Date(task.updatedAt.date); 
+      if (task.meta.updatedAt) {
+        updatedAt = new Date(task.meta.updatedAt.date); 
       }
       // Get the difference in minutes
       let differenceInMinutes = (now - updatedAt) / 1000 / 60;
@@ -123,7 +131,7 @@ router.post("/update", async (req, res) => {
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
-      task.updateCount = task.updateCount + 1;
+      task.meta.updateCount = task.meta.updateCount + 1;
       // Don't await so the return gets back before the websocket update
       task.processor[task.source].command = "update";
       // Middleware will send the update
@@ -150,6 +158,10 @@ router.post("/next", async (req, res) => {
     const processor = activeTask.processor;
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
+    // We are not using this yet, could have a single API endpoint
+    if (task?.hub) {
+      task.hub.command = null;
+    }
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }

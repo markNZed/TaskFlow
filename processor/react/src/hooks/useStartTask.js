@@ -25,7 +25,7 @@ const useStartTask = (startId, setStartId, threadId, stackPtr) => {
           ...(stackPtr && { stackPtr: stackPtr }),
           ...(threadId && { threadId: threadId })
         };        
-        fetchTask(globalState, "task/start", task);
+        fetchTask(globalState, "start", task);
       } catch (error) {
         setTaskStartError(error.message);
       }

@@ -1,7 +1,8 @@
 # Task Processor
 
-* 
+Information for the Processor is held in the task.processor object.
 
+The Processor strips the task.hub object before forwarding to a Task Function.
 ## Future
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
 * Filter execution

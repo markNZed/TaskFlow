@@ -11,9 +11,14 @@ import { wsSendTask } from "./websocket.js";
 
 export const startTask_async = async (userId, startId, siblingTask) => {
 
-  let task = { id: startId, source: "nodejs" };
+  let task = { id: startId, source: "nodejs", hub: {}};
 
   let messageJsonString;
+
+  if (task.hub === undefined) {
+    task.hub = {};
+  }
+  task.hub.command = "start";
 
   try {
     const validatedTaskJsonString = fromTask(task);

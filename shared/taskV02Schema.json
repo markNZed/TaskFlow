@@ -26,16 +26,6 @@
         "commandArgs": {
           "type": "object"
         },
-        "completedAt": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
-        },
-        "createdAt": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)"
-        },
         "destination": {
           "type": "string"
         },
@@ -80,24 +70,12 @@
         "name": {
           "type": "string"
         },
-        "next": {
-          "type": "boolean"
-        },
         "nextTask": {
-          "type": "string"
-        },
-        "parentId": {
-          "type": "string"
-        },
-        "parentInstanceId": {
           "type": "string"
         },
         "parentType": {
           "type": "string"
         },       
-        "send": {
-          "type": "boolean"
-        },
         "sessionId": {
           "type": "string"
         },       
@@ -125,22 +103,6 @@
         "type": {
           "type": "string"
         },
-        "updateCount": {
-          "type": "integer"
-        },
-        "updatedAt": {
-          "type": "object",
-          "properties": {
-            "date": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "timezone": {
-              "type": "string"
-            }
-          },
-          "required": ["date", "timezone"]
-        },
         "userId": {
           "type": "string"
         },
@@ -156,6 +118,9 @@
         "input": {
           "$ref": "./genericV02schema.json#/definitions/Input"
         },
+        "meta": {
+          "$ref": "./genericV02schema.json#/definitions/Meta"
+        },
         "output": {
           "$ref": "./genericV02schema.json#/definitions/Output"
         },
@@ -167,6 +132,9 @@
         },
         "processor": {
           "$ref": "./genericV02schema.json#/definitions/Processor"
+        },
+        "hub": {
+          "$ref": "./genericV02schema.json#/definitions/Hub"
         },
         "request": {
           "$ref": "./genericV02schema.json#/definitions/Request"

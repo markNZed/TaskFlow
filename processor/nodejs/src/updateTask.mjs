@@ -12,6 +12,11 @@ export const updateTask_async = async (task) => {
 
   let messageJsonString;
 
+  if (task.hub === undefined) {
+    task.hub = {};
+  }
+  task.hub.command = "update";
+
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);

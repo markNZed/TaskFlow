@@ -1,7 +1,13 @@
 # Task Hub
 
-The Task Hub is implemented in node using the Express framework and SQLite database. It provides the following features:
+The Task Hub is implemented in node using the Express framework and SQLite database. 
+
+Information for the hub is held in the task.hub object.
+
+The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored
+* The Hub maintains Processor information in the task.processor object
+  * This is simplified when communicating with a specific processor by replacing task.processor with task.processor[processorId]
 * Processors register with the Hub via HTTP request
   * Maintain the list of active processors
 * Processors can initiate a sessionId via HTTP request
@@ -26,8 +32,8 @@ The Task Hub is implemented in node using the Express framework and SQLite datab
   * The Task tree is built for the available start Tasks (returned with the sessionId request at the moment)
 * Pong command responses to Processor ping commands
 * Error management
-* Task lock (and lockBypass) so updates do not collide
-* UpdateAt timestamp
+* task.lock (and task.lockBypass) so updates do not collide
+* task.meta.updateAt timestamp
 # Start
 This is the Task Hub T@skFlow
 1. written in Node JS run-time, Express framework
@@ -40,7 +46,8 @@ Then to run: `npm start`
 # Future
 * Hierarchy
   * Many Task Hubs that can be coordinated by a Task Hub.
-  * Task functions not supported by Processors in the HUb's network are passed up
+    * Extend task.hub to task.hub[hubId] (Processor should still see task.hub)
+  * Task functions not supported by Processors in the Hub's processors are passed up
 * Security/Privacy
   * Filtering of Task content
 * Separation of concerns into a pipeline
@@ -71,4 +78,5 @@ Then to run: `npm start`
   * Disaster recovery
   * Security
   * Documentation
+
 

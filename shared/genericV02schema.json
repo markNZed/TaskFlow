@@ -12,6 +12,44 @@
       "additionalProperties": true,
       "title": "Input"
     },
+    "Meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Meta",
+      "completedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "parentId": {
+        "type": "string"
+      },
+      "parentInstanceId": {
+        "type": "string"
+      },
+      "updateCount": {
+        "type": "integer"
+      },
+      "updateRate": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": ["date", "timezone"]
+      }
+    },
     "Output": {
       "type": "object",
       "additionalProperties": true,
@@ -26,6 +64,11 @@
       "type": "object",
       "additionalProperties": true,
       "title": "Processor"
+    },    
+    "Hub": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Hub"
     },    
     "Request": {
       "type": "object",

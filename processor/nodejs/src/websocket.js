@@ -81,6 +81,10 @@ const connectWebSocket = () => {
     }
     const message = JSON.parse(e.data);
     //console.log("processorWs.onMessage", message?.command, message?.task.processor);
+    if (message?.task) {
+      // The processor strips hub specific info because the Task Function should pass through the processor
+      delete message.task.hub;
+    }
     if (message?.command === "update") {
       message.task.processor.command = null;
       // If we receive this task we don't want to send it back to the hub

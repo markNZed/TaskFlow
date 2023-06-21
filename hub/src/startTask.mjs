@@ -87,7 +87,7 @@ async function startTask_async(
         } else {
           taskCopy = instance
           taskCopy.state["current"] = "start";
-          taskCopy["updateCount"] = 0;
+          taskCopy.meta["updateCount"] = 0;
           // Delete so we restart with full task being synchronized
           // It would be better to do this only for the new processor
           await activeTasksStore_async.delete(instanceId);
@@ -130,7 +130,7 @@ async function startTask_async(
         } else {
           taskCopy = instance
           taskCopy.state["current"] = "start";
-          taskCopy["updateCount"] = 0;
+          taskCopy.meta["updateCount"] = 0;
           // Delete so we restart with full task being synchronized
           await activeTasksStore_async.delete(instanceId);
           console.log(
@@ -142,8 +142,8 @@ async function startTask_async(
       }
     }
 
-    if (!taskCopy.updateCount) {
-      taskCopy["updateCount"] = 0;
+    if (!taskCopy.meta.updateCount) {
+      taskCopy.meta["updateCount"] = 0;
     }
 
     // Must set threadId after oneThread, restoreSession and collaborate
@@ -167,9 +167,11 @@ async function startTask_async(
 
     taskCopy.config = taskCopy.config || {};
     taskCopy.input = taskCopy.input || {};
+    taskCopy.meta = taskCopy.meta || {};
     taskCopy.output = taskCopy.output || {};
     taskCopy.privacy = taskCopy.privacy || {};
-    taskCopy.processor = taskCopy.processor || processor;;
+    taskCopy.processor = taskCopy.processor || processor;
+    taskCopy.hub = taskCopy.hub || {};
     taskCopy.request = taskCopy.request || {};
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
@@ -194,7 +196,7 @@ async function startTask_async(
     
     if (siblingInstanceId) {
       // Should rename to sibling?
-      taskCopy["parentInstanceId"] = siblingInstanceId;
+      taskCopy.meta["parentInstanceId"] = siblingInstanceId;
       let parent = await instancesStore_async.get(siblingInstanceId);
       if (parent.request?.address) {
         taskCopy.request["address"] = parent.request.address;
@@ -222,7 +224,7 @@ async function startTask_async(
       parent.childrenInstances.push(instanceId);
       await instancesStore_async.set(siblingInstanceId, parent);
     }
-    taskCopy["createdAt"] = taskCopy["createdAt"] || Date.now();
+    taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
 
     const outputs = await outputStore_async.get(threadId);
     //console.log("outputs", outputs)
@@ -247,7 +249,7 @@ async function startTask_async(
             if (path[0] === "root") {
               outputPath = curr.replace(/\.[^.]+$/, '');
             } else {
-              outputPath = taskCopy.parentId + "." + matches[1];
+              outputPath = taskCopy.meta.parentId + "." + matches[1];
             }
             if (outputs[outputPath] === undefined) {
               throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
@@ -319,7 +321,7 @@ async function startTask_async(
     // Deal with errors
     if (taskCopy.id.endsWith(".error")) {
       // Fetch the previous task
-      const prevTask = await instancesStore_async.get(taskCopy.parentInstanceId)
+      const prevTask = await instancesStore_async.get(taskCopy.meta.parentInstanceId)
       const response = "ERROR: " + prevTask.error
       console.log("Set error from previous task", prevTask.id)
       taskCopy.response.text = response

@@ -10,9 +10,7 @@ T@skFlow combines software, AI models, and human interaction in a unique way. A 
 
 T@skFlow is intended to provide a flexible infrastructure for human-computer interaction. Specific configurations of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
-T@skFlow will play nicely with:
-* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
-* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)
+Data sent between Hub(s) and Processor(s) is managed within the Task object (fields task.processor and task.hub). Information is stored relative to the destination, for example, a Processor sends task.hub.command to the Hub and receives task.processor.command from the Hub.
 
 ## Task
 
@@ -71,6 +69,10 @@ To learn more about the NodeJS Task Processor, see [README.md](processor/nodejs/
 To learn more about the React Task Processor, see [README.md](processor/react/README.md) in the React Task Processor directory.
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
+
+T@skFlow will play nicely with other libraries such as:
+* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
+* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)
 
 ## Creating a New Task
 
