@@ -17,10 +17,6 @@ function wsSendObject(processorId, message = {}) {
     if (!message?.task) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
-    // Need to make a copy so any changes here do not impact the object 
-    let localTask = { ...message.task }
-    localTask.hubId = hubId;
-    message.task = localTask;
     ws.send(JSON.stringify(message));
     if (message.command !== "pong") {
       //console.log("wsSendObject ", JSON.stringify(message) )
