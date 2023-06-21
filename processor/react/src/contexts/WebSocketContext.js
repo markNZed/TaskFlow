@@ -45,7 +45,6 @@ export function WebSocketProvider({ children, socketUrl }) {
     if (!m?.task) {
       m["task"] = {}
     }
-    m.task.destination = globalState.hubId
     m.task.sessionId = globalState.sessionId
     m.task.source = globalState.processorId;
     if (m.command === "ping") {

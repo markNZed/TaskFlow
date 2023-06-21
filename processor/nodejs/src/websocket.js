@@ -24,7 +24,6 @@ function wsSendObject(message = {}) {
     if (!message?.task) {
       message["task"] = {}
     }
-    message.task.destination = hubId;
     message.task.source = processorId;
     if (message.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
@@ -60,7 +59,6 @@ const connectWebSocket = () => {
       let currentDateTimeString = currentDateTime.toString();
       return {
         updatedeAt: currentDateTimeString,
-        destination: "hub",
       }
     }
     wsSendTask(taskPing(), "ping");

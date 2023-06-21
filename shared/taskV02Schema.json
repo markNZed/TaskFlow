@@ -26,9 +26,6 @@
         "commandArgs": {
           "type": "object"
         },
-        "destination": {
-          "type": "string"
-        },
         "error": {
           "anyOf": [
             {

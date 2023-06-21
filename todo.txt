@@ -8,7 +8,9 @@ Task Functions communicate with request/response
     Synced through the hub with events?
       Place a filter an received events into a queue?
         Not saved into the Task (like delta updates?)
-  
+taskCopy.destination from hub must be processor at th emoment
+  Put this into the processor field as processorId or is this side data in hub?
+
 "nextTask" to task.processor.commandArgs & task.hub.commandArgs
 source into task.hub ?
 The destination of the command is the parameter  e.g. task.processor task.hub
@@ -23,6 +25,7 @@ Code review/cleanup
   Refactoring
     Hub pipeline: a module with function for each step
     Single place where NodeJS provides fetchTask (like in React)
+    Remove message.command and use task.processor and task.hub only
 Modify the partial text update so it is incremental. This will better allow for selection.
 Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon

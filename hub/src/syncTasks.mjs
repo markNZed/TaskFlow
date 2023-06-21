@@ -39,12 +39,11 @@ const syncTasks_async = async (key, value) => {
             || command === "start" || command === "next"
             || (command === "join" && processorId === taskCopy.source)
         ) {
-          taskCopy.destination = processorId;
           if (!taskCopy.processor[processorId]) {
             console.log("command taskCopy ", command, taskCopy, processorId );
           }
           taskCopy.processor[processorId]["command"] = command;
-          await wsSendTask(taskCopy, command);
+          await wsSendTask(taskCopy, command, processorId);
           console.log("syncTasks_async", command, key, processorId);
         } else {
           //console.log("syncTasks_async skipping", key, processorId);

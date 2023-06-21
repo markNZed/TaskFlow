@@ -28,7 +28,7 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-const wsSendTask = async function (task, command = null) {
+const wsSendTask = async function (task, command = null, destination = null) {
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
@@ -52,16 +52,14 @@ const wsSendTask = async function (task, command = null) {
        // Points to a class of concern
       diff.instanceId = task.instanceId;
       diff.stackPtr = task.stackPtr;
-      diff.destination = task.destination;
       diff.update = false; // otherwise other processors will try to update 
       diff.lock = false; // otherwise other processors will try to lock
       message["task"] = diff;
-      //console.log("wsSendTask diff.destination", diff.destination);
     }
   } else {
     message["task"] = task;
   }
-  let processorId = message.task.destination;
+  let processorId = destination;
   if (message.task?.processor && message.task.processor[processorId]) {
     //deep copy
     message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
@@ -102,11 +100,10 @@ function initWebSocketServer(server) {
           let currentDateTimeString = currentDateTime.toString();
           const task = {
             updatedeAt: currentDateTimeString,
-            sessionId: j.task?.sessionId, 
-            destination: j.task.source,
+            sessionId: j.task?.sessionId,
           };
           console.log("Request for registering " + processorId)
-          wsSendTask(task, "register");
+          wsSendTask(task, "register", j.task.source);
           return;
         }
       }
@@ -131,8 +128,7 @@ function initWebSocketServer(server) {
                 console.log("Lost websocket for ", id, connections.keys());
               } else {
                 //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
-                j.task.destination = id;
-                wsSendTask(j.task, j.command);
+                wsSendTask(j.task, j.command, id);
               }
             }
           }
@@ -146,10 +142,9 @@ function initWebSocketServer(server) {
         const task = {
           updatedeAt: currentDateTimeString,
           sessionId: j.task?.sessionId, 
-          destination: j.task.source,
         };
         //console.log("Pong " + j.task.source)
-        wsSendTask(task, "pong");
+        wsSendTask(task, "pong", j.task.source);
       }
 
     });
