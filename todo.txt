@@ -1,16 +1,22 @@
 /* ToDo
 -------
-Lock needs some thought
-  Task sends task.processor.commandArgs.lock on update?
-  Procssor sends task.hub.commandArgs.lock?
 Task Functions communicate with request/response
   What about between tasks that are not on the same processor?
     Synced through the hub with events?
       Place a filter an received events into a queue?
         Not saved into the Task (like delta updates?)
-taskCopy.destination from hub must be processor at th emoment
-  Put this into the processor field as processorId or is this side data in hub?
-
+Lock needs some thought
+  Task sends task.processor.commandArgs.lock on update?
+  Procssor sends task.hub.commandArgs.lock?
+It seems sessionId is not used - can w remove this?
+  At the moment a session is a processor is a tab
+  Seems like we can
+taskCopy.source is used by syncTasks also usd by websocket to get processorId
+  Should we have a task.processor.id field ?
+  Seems like we should not trust that - how can the WS know the processorID?
+    Should be setup at time of registering?
+Do we want task.identification object (why do we need groupId?)
+Should permissions by an object in the task?
 "nextTask" to task.processor.commandArgs & task.hub.commandArgs
 source into task.hub ?
 The destination of the command is the parameter  e.g. task.processor task.hub
