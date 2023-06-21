@@ -1,34 +1,28 @@
 /* ToDo
 -------
+Lock needs some thought
+  Task sends task.processor.commandArgs.lock on update?
+  Procssor sends task.hub.commandArgs.lock?
+Task Functions communicate with request/response
+  What about between tasks that are not on the same processor?
+    Synced through the hub with events?
+      Place a filter an received events into a queue?
+        Not saved into the Task (like delta updates?)
+  
+"nextTask" to task.processor.commandArgs & task.hub.commandArgs
+source into task.hub ?
+The destination of the command is the parameter  e.g. task.processor task.hub
 Do we want a join route on Hub for symmetry?
-Processor ->  processor[processorId] on Hub
 Add a updatedRate (updates per minute, could reset basd on updatedAt time)
 The stack of components for React should not be mixed with a stack of Tasks.
   Maybe the stack of components should be in the task.config
-Changes:
-  Using task.stackTaskId array and chaining the creation of Tasks starting from the topmost
-  Allow taskflows under taskflows
-  Added menu boolean for display in menu.
-  Added initiator boolean to disable taskflows for starting when they have a start task
-  Implemented updateCount
-  Allow absolute paths in template variables
-  Pass Task name to Task Function
-  Added TaskGeneratePersona, TaskBrainstorm, TaskCollaborate, TaskDiverge, TaskFacilitate
-  Performance of websocket improved
 chatContainermaxHeight in TaskConversation scrolling?
 Search feature could be a micro-service provided by the Hub?
 Code review/cleanup 
   configdata
   Refactoring
-    Hub pipeline: a module with function for each step.
-    Concept of Processor/Hub commands (set/reset is not obvious)
-      command+args fields in the Task
-      processor field in the Task
-        command+args fields in the processor field
-      hub field in the Task
-        command+args fields in the hub field
-      Hub should only send the relevant processor field
-        e.g. processor[processorId] = {} on the Hub but processor on the processor
+    Hub pipeline: a module with function for each step
+    Single place where NodeJS provides fetchTask (like in React)
 Modify the partial text update so it is incremental. This will better allow for selection.
 Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
