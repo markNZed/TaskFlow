@@ -4,7 +4,13 @@ Information for the Processor is held in the task.processor object.
 
 The Processor strips the task.hub object before forwarding to a Task Function.
 
-The Task Function communicates with the Task Processor using the object task.processor which includes fields: command, commandArgs, config. 
+The Task Function mainly communicates with the Task Processor using the object task.processor which includes fields: command, commandArgs, config. The Task Processor can use language specific side-channels to communicate with the Tsak Function e.g., events, callbacks, promises, etc. The principle is that the Task Function is implemented for each environment raher than being agnostic, the JSON schema of the Task allows for synchronizatsion across environments.
+
+task.processor.command maybe be one of 
+  * partial
+  * update
+  * start
+  * next
 ## Future
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
 * Filter execution

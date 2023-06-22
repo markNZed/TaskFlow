@@ -66,8 +66,11 @@ const TaskChat = (props) => {
       setSocketResponses((prevResponses) => {
         //console.log("prevResponses.lenght", prevResponses.length);
         for (const response of prevResponses) {
-          const text = response.text;
-          const mode = response.mode;
+          if (!response.partial) {
+            continue;
+          }
+          const text = response.partial.text;
+          const mode = response.partial.mode;
           switch (mode) {
             case 'delta':
               responseTextRef.current += text;

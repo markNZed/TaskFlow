@@ -65,8 +65,8 @@ const TaskLLMIO = (props) => {
     const processResponses = () => {
       setSocketResponses((prevResponses) => {
         for (const response of prevResponses) {
-          const text = response.text;
-          const mode = response.mode;
+          const text = response.partial.text;
+          const mode = response.partial.mode;
           switch (mode) {
             case 'delta':
               responseTextRef.current += text;

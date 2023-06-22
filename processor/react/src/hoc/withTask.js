@@ -64,28 +64,28 @@ function withTask(Component) {
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
-    const [familyId, setThreadId] = useState();
+    const [familyId, setFamilyId] = useState();
     const publishedRef = useRef("");
-    const [threadDiff, setThreadDiff] = useState();
+    const [familyTaskDiff, setFamilyTaskDiff] = useState();
 
     /*
-    // Example of how to use the threadDiff
-    // The child should enable this by modifyTask({"processor.config.threadDiff": true});
+    // Example of how to use the familyTaskDiff
+    // The child should enable this by modifyTask({"processor.config.familyTaskDiff": true});
     useEffect(() => {
-      if (!props?.task?.processor?.config?.threadDiff && props.task) {
-        modifyTask({"processor.config.threadDiff": true});
+      if (!props?.task?.processor?.config?.familyTaskDiff && props.task) {
+        modifyTask({"processor.config.familyTaskDiff": true});
       }
-      if (threadDiff) {
-        console.log('Received a task change in ' + props.task.id, threadDiff);
+      if (familyTaskDiff) {
+        console.log('Received a task change in ' + props.task.id, familyTaskDiff);
       }
-    }, [threadDiff]); 
+    }, [familyTaskDiff]); 
     */ 
 
     const handleTaskUpdate = (event) => {
       //console.log('Received a task change', event.detail);
       // Intended to monitor other tasks not itself
       if (event.detail.instanceId !== props.task.instanceId) {
-        setThreadDiff(event.detail);
+        setFamilyTaskDiff(event.detail);
       }
     };
 
@@ -118,8 +118,8 @@ function withTask(Component) {
     }, [props.task]);
 
     useEffect(() => {
-      if (!familyId && props.task && props.task.processor?.config?.threadDiff) {
-        setThreadId(props.task.familyId);
+      if (!familyId && props.task && props.task.processor?.config?.familyTaskDiff) {
+        setFamilyId(props.task.familyId);
       }
     }, [props.task]);
 
@@ -465,7 +465,7 @@ function withTask(Component) {
       setChildTask,
       isCommand,
       handleTaskUpdate,
-      threadDiff,
+      familyTaskDiff,
     };
 
     return <WithDebugComponent {...componentProps} />;
