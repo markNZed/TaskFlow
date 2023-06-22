@@ -1,5 +1,15 @@
 /* ToDo
 -------
+processor task filter config is per thread - list of therad I guess?
+  Processor should set threadDiff in Task not as prop ?
+  Should review all the props to see what should be in task
+  Maybe it is OK for the processor to provide features that don;t go via the task object.
+Should be able to sent to other Tasks in sme Thread
+If we have a TaskFilter this rasies the question of how to configure/program it.
+  Detects an event and passes information.
+    Filter -> action
+      Action is to update another task ?
+        How to inform another task
 Task Functions communicate with request/response
   What about between tasks that are not on the same processor?
     Synced through the hub with events?

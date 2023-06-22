@@ -14,9 +14,9 @@ export async function doneTask_async(task) {
   }
   console.log("Task " + task.id + " done " + task.done + " next " + task.nextTask);
   instancesStore_async.set(task.instanceId, task);
-  let outputs = await outputStore_async.get(task.threadId) || {};
+  let outputs = await outputStore_async.get(task.familyId) || {};
   outputs[task.id] = task.output;
-  await outputStore_async.set(task.threadId, outputs); // Wait so available in startTask_async
+  await outputStore_async.set(task.familyId, outputs); // Wait so available in startTask_async
   // It iś possible that the Processor holds on to the Done task while requesting the next task
   // In this case task.next is set instead of task.done
   if (task.done) {

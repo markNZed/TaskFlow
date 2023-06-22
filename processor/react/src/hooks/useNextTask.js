@@ -9,7 +9,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { setNestedProperties, deepMerge, log } from "../utils/utils";
 
-// We have: Start with startId, threadId
+// We have: Start with startId, familyId
 //          State with task
 //          Task with task
 // We should combine these

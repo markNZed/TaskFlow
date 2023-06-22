@@ -9,7 +9,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
-const useStartTask = (startId, setStartId, threadId, stackPtr) => {
+const useStartTask = (startId, setStartId, familyId, stackPtr) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setTaskStartError] = useState();
 
@@ -23,7 +23,7 @@ const useStartTask = (startId, setStartId, threadId, stackPtr) => {
         let task = { 
           id: startId,
           ...(stackPtr && { stackPtr: stackPtr }),
-          ...(threadId && { threadId: threadId })
+          ...(familyId && { familyId: familyId })
         };        
         fetchTask(globalState, "start", task);
       } catch (error) {

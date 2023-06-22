@@ -10,7 +10,7 @@ import { fetchTask } from "../utils/fetchTask";
 import { setNestedProperties, deepMerge, log } from "../utils/utils";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
-// We have: Start with startId, threadId
+// We have: Start with startId, familyId
 //          State with task
 //          Task with task
 // We should combine these

@@ -91,7 +91,7 @@
             "type": "string"
           }
         },        
-        "threadId": {
+        "familyId": {
           "type": "string"
         },
         "type": {

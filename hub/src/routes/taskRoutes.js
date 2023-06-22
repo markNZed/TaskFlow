@@ -32,13 +32,13 @@ router.post("/start", async (req, res) => {
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
     const startId = task.id;
-    const threadId = task.threadId;
+    const familyId = task.familyId;
     const sessionId = task.sessionId;
     const processorId = task.source;
     const stackPtr = task.stackPtr;
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, threadId, siblingTask);
+      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, familyId, siblingTask);
       return res.status(200).send("ok");
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);
@@ -114,12 +114,12 @@ router.post("/update", async (req, res) => {
       task.done = true
       console.log("Task error " + task.id);
     }
-    let output = await outputStore_async.get(task.threadId);
+    let output = await outputStore_async.get(task.familyId);
     if (!output) {
       output = {};
     }
     output[task.id] = task.output;
-    await outputStore_async.set(task.threadId, output);
+    await outputStore_async.set(task.familyId, output);
     // Restore the other processors
     const processor = activeTask.processor;
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
@@ -179,12 +179,12 @@ router.post("/next", async (req, res) => {
       task.done = true
       console.log("Task error " + task.id);
     }
-    let output = await outputStore_async.get(task.threadId);
+    let output = await outputStore_async.get(task.familyId);
     if (!output) {
       output = {};
     }
     output[task.id] = task.output;
-    await outputStore_async.set(task.threadId, output);
+    await outputStore_async.set(task.familyId, output);
     task.next = true; // We probably don't need this but doneTask_async is using it
     doneTask_async(task) 
     return res.status(200).send("ok");

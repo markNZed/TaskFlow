@@ -18,7 +18,7 @@ async function startTask_async(
     sessionId,
     groupId,
     stackPtr = null,
-    threadId = null,
+    familyId = null,
     siblingTask = null,
     next = null, // indicated by presence of sbiling
   ) {
@@ -30,7 +30,7 @@ async function startTask_async(
       "sessionId:", sessionId, 
       "groupId:", groupId, 
       "stackPtr:", stackPtr, 
-      "threadId:", threadId,
+      "familyId:", familyId,
       "next:", next
     );
     */    
@@ -42,7 +42,7 @@ async function startTask_async(
     if (siblingTask) {
       siblingInstanceId = siblingTask.instanceId;
       console.log("sibling instanceId", siblingInstanceId)
-      threadId = siblingTask.threadId;
+      familyId = siblingTask.familyId;
       // In the case where the thread advances on another processor 
       // we still need to be able to find the nextTask 
       prevInstanceId = siblingTask.instanceId
@@ -72,7 +72,7 @@ async function startTask_async(
     
     if (taskCopy.config?.oneThread && taskCopy["stackPtr"] === taskCopy.stack.length) {
       instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      threadId = instanceId;
+      familyId = instanceId;
       let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
       if (instance) {
@@ -115,7 +115,7 @@ async function startTask_async(
         console.log("User in group", groupId, userId);
       }
       instanceId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      threadId = instanceId;
+      familyId = instanceId;
       let instance = await instancesStore_async.get(instanceId);
       // There should be at max one instance
       if (instance) {
@@ -146,23 +146,23 @@ async function startTask_async(
       taskCopy.meta["updateCount"] = 0;
     }
 
-    // Must set threadId after oneThread, restoreSession and collaborate
-    if (threadId) {
-      taskCopy["threadId"] = threadId;
+    // Must set familyId after oneThread, restoreSession and collaborate
+    if (familyId) {
+      taskCopy["familyId"] = familyId;
       // If instanceId already exists then do nothing otherwise add instance to thread
-      let instanceIds = await threadsStore_async.get(threadId);
+      let instanceIds = await threadsStore_async.get(familyId);
       if (!instanceIds) {
-        await threadsStore_async.set(taskCopy["threadId"], [instanceId]);
-        console.log("Initiating thread " + taskCopy["threadId"] + " with instanceId: " + instanceId)
+        await threadsStore_async.set(taskCopy["familyId"], [instanceId]);
+        console.log("Initiating thread " + taskCopy["familyId"] + " with instanceId: " + instanceId)
       } else if (!instanceIds.includes(instanceId)) {
         instanceIds.push(instanceId);
-        await threadsStore_async.set(taskCopy["threadId"], instanceIds);
-        console.log("Adding to thread " + taskCopy["threadId"] + " instanceId: " + instanceId)
+        await threadsStore_async.set(taskCopy["familyId"], instanceIds);
+        console.log("Adding to thread " + taskCopy["familyId"] + " instanceId: " + instanceId)
       } else {
-        console.log("Instance already in thread " + taskCopy["threadId"] + " instanceId: " + instanceId)
+        console.log("Instance already in thread " + taskCopy["familyId"] + " instanceId: " + instanceId)
       }
     } else {
-      taskCopy["threadId"] = instanceId;
+      taskCopy["familyId"] = instanceId;
     }
 
     taskCopy.config = taskCopy.config || {};
@@ -201,8 +201,8 @@ async function startTask_async(
       if (parent.request?.address) {
         taskCopy.request["address"] = parent.request.address;
       }
-      if (!threadId) {
-        threadId = parent.threadId;
+      if (!familyId) {
+        familyId = parent.familyId;
       }
       // We start with the deepest component in the stack
       // This will not work with how we have stackPtr set earlier
@@ -226,14 +226,14 @@ async function startTask_async(
     }
     taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
 
-    const outputs = await outputStore_async.get(threadId);
+    const outputs = await outputStore_async.get(familyId);
     //console.log("outputs", outputs)
 
     // Templating functionality
     function isAllCaps(str) {
       return /^[A-Z\s]+$/.test(str);
     }
-    function processTemplateArrays(obj, taskCopy, outputs, threadId) {
+    function processTemplateArrays(obj, taskCopy, outputs, familyId) {
       // Do substitution on arrays of strings and return a string
       if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
         const user = users[taskCopy.userId];
@@ -252,10 +252,10 @@ async function startTask_async(
               outputPath = taskCopy.meta.parentId + "." + matches[1];
             }
             if (outputs[outputPath] === undefined) {
-              throw new Error("outputStore " + threadId + " " + outputPath + " does not exist")
+              throw new Error("outputStore " + familyId + " " + outputPath + " does not exist")
             }
             if (outputs[outputPath][matches[2]] === undefined) {
-              throw new Error("outputStore " + threadId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
+              throw new Error("outputStore " + familyId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
             }
             //console.log("Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
             return acc.concat(outputs[outputPath][matches[2]]);
@@ -273,9 +273,9 @@ async function startTask_async(
       } else {
         for (const key in obj) {
           if (Array.isArray(obj[key])) {
-            obj[key] = processTemplateArrays(obj[key], taskCopy, outputs, threadId);
+            obj[key] = processTemplateArrays(obj[key], taskCopy, outputs, familyId);
           } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-            processTemplateArrays(obj[key], taskCopy, outputs, threadId);
+            processTemplateArrays(obj[key], taskCopy, outputs, familyId);
           }
         }
       }
@@ -307,7 +307,7 @@ async function startTask_async(
         //console.log("Template found", key, template);
         const strippedKey = key.replace("Template", "");
         const templateCopy = JSON.parse(JSON.stringify(template)); // deep copy
-        taskCopy.config[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, threadId);
+        taskCopy.config[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, familyId);
         //console.log("Processed template", taskCopy.config[key]);
       }
     }

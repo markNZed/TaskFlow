@@ -53,7 +53,7 @@ const TaskConversation = (props) => {
     if (task.stackTaskId.length > 0) {
       startTaskId = task.stackTaskId[stackPtr]
     }
-    startTaskFn(startTaskId, task.threadId, stackPtr + 1);
+    startTaskFn(startTaskId, task.familyId, stackPtr + 1);
   }, []);
 
   useEffect(() => {

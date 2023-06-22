@@ -52,7 +52,7 @@ function TaskStepper(props) {
   onDidMount();
 
   useEffect(() => {
-    startTaskFn(task.id, task.threadId, stackPtr + 1); // will set startTask or startTaskError
+    startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
   }, []);
 
   useEffect(() => {

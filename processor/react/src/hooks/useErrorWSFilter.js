@@ -2,10 +2,10 @@ import { useEffect, useCallback } from "react";
 import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useErrorWSFilter(threadId, onError) {
+function useErrorWSFilter(familyId, onError) {
 
   const handleError = (task) => {
-    if (threadId && task.threadId === threadId && task.error ) {
+    if (familyId && task.familyId === familyId && task.error ) {
       //console.log("useErrorWSFilter handleError", task);
       onError(task);
     }
@@ -15,13 +15,13 @@ function useErrorWSFilter(threadId, onError) {
     if (!webSocketEventEmitter) {
       return;
     }
-    //console.log("useErrorWSFilter useEffect adding handleError threadId", threadId);
+    //console.log("useErrorWSFilter useEffect adding handleError familyId", familyId);
     webSocketEventEmitter.on("update", handleError);
     return () => {
-      //console.log("useErrorWSFilter useEffect removing handleError threadId", threadId);
+      //console.log("useErrorWSFilter useEffect removing handleError familyId", familyId);
       webSocketEventEmitter.removeListener("update", handleError);
     };
-  }, [threadId]);
+  }, [familyId]);
   
 }
 

@@ -64,7 +64,7 @@ function withTask(Component) {
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
-    const [threadId, setThreadId] = useState();
+    const [familyId, setThreadId] = useState();
     const publishedRef = useRef("");
     const [threadDiff, setThreadDiff] = useState();
 
@@ -89,37 +89,37 @@ function withTask(Component) {
       }
     };
 
-    // We publish diffs of Task as events to a threadId
+    // We publish diffs of Task as events to a familyId
     useEffect(() => {
-      if (!threadId) {return;}
+      if (!familyId) {return;}
       if (initialized) {
-        subscribe('taskChange-' + threadId, handleTaskUpdate);
+        subscribe('taskChange-' + familyId, handleTaskUpdate);
       }
       // Unsubscribe when the component unmounts
       return () => {
         if (initialized) {
-          unsubscribe('taskChange-' + threadId, handleTaskUpdate);
+          unsubscribe('taskChange-' + familyId, handleTaskUpdate);
         }
       };
-    }, [subscribe, unsubscribe, threadId]);
+    }, [subscribe, unsubscribe, familyId]);
 
     useEffect(() => {
       // Only need one watcher per task, use the active stackPtr level
-      if (threadId && localStackPtrRef.current === props.task.stackPtr) {
+      if (familyId && localStackPtrRef.current === props.task.stackPtr) {
         let diff;
         if (prevTask && publishedRef.current) {
           diff = getObjectDifference(prevTask, props.task);
         } else {
           diff = props.task;
         }
-        publish('taskChange-' + threadId, {taskdiff: diff, id: props.task.id, instanceId: props.task.instanceId, stackPtr: props.task.stackPtr});
+        publish('taskChange-' + familyId, {taskdiff: diff, id: props.task.id, instanceId: props.task.instanceId, stackPtr: props.task.stackPtr});
         publishedRef.current = true;
       }
     }, [props.task]);
 
     useEffect(() => {
-      if (!threadId && props.task && props.task.processor?.config?.threadDiff) {
-        setThreadId(props.task.threadId);
+      if (!familyId && props.task && props.task.processor?.config?.threadDiff) {
+        setThreadId(props.task.familyId);
       }
     }, [props.task]);
 
@@ -138,7 +138,7 @@ function withTask(Component) {
         if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
           let startTaskId = props.stackTaskId[localStackPtrRef.current]
           const newPtr = localStackPtrRef.current + 1;
-          startTaskFn(startTaskId, props.task.threadId, newPtr);
+          startTaskFn(startTaskId, props.task.familyId, newPtr);
           console.log("startTaskFn", startTaskId, newPtr)
         }
         //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
@@ -217,7 +217,7 @@ function withTask(Component) {
       }
     )
     
-    useErrorWSFilter(props.task?.threadId,
+    useErrorWSFilter(props.task?.familyId,
       (updatedTask) => {
         console.log("useErrorWSFilter", updatedTask.id, updatedTask.response.text);
         // We do not have a plan for dealing with errors here yet
@@ -229,12 +229,12 @@ function withTask(Component) {
 
     function startTaskFn(
       startId,
-      threadId = null,
+      familyId = null,
       depth = null
     ) {
       setStartTaskId(startId);
       setLastStartTaskId(startId); // used by the useStartWSFilter
-      setStartTaskThreadId(threadId);
+      setStartTaskThreadId(familyId);
       setStartTaskDepth(depth);
     }
 
