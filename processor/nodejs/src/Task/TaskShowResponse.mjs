@@ -27,6 +27,7 @@ const TaskShowResponse_async = async function (taskName, wsSendTask, task) {
   }
 
   console.log("Returning from TaskShowResponse", task.id);
+  T("processor.command", "update");
   return task;
 };
 

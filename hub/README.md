@@ -16,7 +16,6 @@ The Hub provides the following features:
   * This is simplified when communicating with a specific processor by replacing task.processor with task.processor[processorId]
 * Processors register with the Hub via HTTP request
   * Maintain the list of active processors
-* Processors can initiate a sessionId via HTTP request
 * Processors send an HTTP request to the Hub's "start" route to initiate a Task sequence
   * The relevant processor(s) are selected based on the Task's environment definition
 * Synchronization of Tasks across processors

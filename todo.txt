@@ -1,32 +1,26 @@
 /* ToDo
 -------
+task.processor is being set by hub and task, unsure about this.
+  Another rule could be that only the hub writes to task.hub only the processor to task.processor task to task.command
+  This might be better, currently the destination of the command is the parameter  e.g. task.processor task.hub
+hub.command is not used yet because we have distinct routes
+Maybe processor does not need to be a hash and could just have id
+  Allow sfor different task.processor.config
+    Might be useful for filtering
 Could have a task.family entry which allows for broadcast and config
   Hub could look after converting family command into instance command
 Could be valuable to communicate with an instance on a subset of environments
-Should be able to send to other Tasks in same Thread
-Restructure partialTask:
-  { text: partialResponse.delta, mode: "delta" };
-    task.response.partial.mode
-    task.response.partial.text
-If we have a TaskFilter this rasies the question of how to configure/program it.
+If we have a TaskFilter this raises the question of how to configure/program it.
   Detects an event and passes information.
     Filter -> action
       Action is to update another task ?
         How to inform another task
         If we do want a DSL the Lua might be a good option for language indepedence
           https://github.com/fengari-lua/fengari-web
-Task Functions communicate with request/response
-  What about between tasks that are not on the same processor?
-    Synced through the hub with events?
-      Place a filter an received events into a queue?
-        Not saved into the Task (like delta updates?)
 Lock needs some thought
   Task sends task.processor.commandArgs.lock on update?
   Procssor sends task.hub.commandArgs.lock?
-It seems sessionId is not used - can w remove this?
-  At the moment a session is a processor is a tab
-  Seems like we can
-taskCopy.source is used by syncTasks also usd by websocket to get processorId
+taskCopy.source is used by syncTasks also used by websocket to get processorId
   Should we have a task.processor.id field ?
   Seems like we should not trust that - how can the WS know the processorID?
     Should be setup at time of registering?
@@ -34,7 +28,6 @@ Do we want task.identification object (why do we need groupId?)
 Should permissions by an object in the task?
 "nextTask" to task.processor.commandArgs & task.hub.commandArgs
 source into task.hub ?
-The destination of the command is the parameter  e.g. task.processor task.hub
 Do we want a join route on Hub for symmetry?
 Add a updatedRate (updates per minute, could reset basd on updatedAt time)
 The stack of components for React should not be mixed with a stack of Tasks.

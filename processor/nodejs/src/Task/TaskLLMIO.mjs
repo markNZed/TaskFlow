@@ -49,6 +49,7 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
 
   console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
+  T("processor.command", "update");
   return task;
 };
 

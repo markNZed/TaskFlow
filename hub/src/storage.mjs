@@ -65,7 +65,7 @@ function newKeyV(uri, table, setCallback = null) {
 //   Value: task object
 const instancesStore_async = newKeyV(DB_URI, "instances");
 // Schema:
-//   Key: familyId || taskId + userId || taskId + sessionId || taskId + groupId
+//   Key: familyId || taskId + userId || taskId + groupId
 //   Value: array of instanceId
 const threadsStore_async = newKeyV(DB_URI, "threads");
 // Schema:

@@ -18,19 +18,20 @@ function wsSendObject(processorId, message = {}) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
     ws.send(JSON.stringify(message));
-    if (message.command !== "pong") {
+    if (message.task.processor.command !== "pong") {
       //console.log("wsSendObject ", JSON.stringify(message) )
     }
   }
 }
 
-const wsSendTask = async function (task, command = null, destination = null) {
+const wsSendTask = async function (task, processorId = null) {
+  if (!task?.processor || !task?.processor[processorId]) {
+    throw new Error("Missing processor.command in wsSendTask" + JSON.stringify(task));
+  }
+  let command = task.processor[processorId].command;
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
-  if (command) {
-    message["command"] = command;
-  }
   if (command === "update") {
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     let diff = {}
@@ -50,20 +51,20 @@ const wsSendTask = async function (task, command = null, destination = null) {
       diff.stackPtr = task.stackPtr;
       diff.update = false; // otherwise other processors will try to update 
       diff.lock = false; // otherwise other processors will try to lock
+      diff.processor = {[processorId]: task.processor[processorId]};
       message["task"] = diff;
     }
   } else {
     message["task"] = task;
   }
-  let processorId = destination;
   if (message.task?.processor && message.task.processor[processorId]) {
     //deep copy
     message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
   } else {
-    console.log("wsSendTask processorId not found in task.processor", processorId, message.task.processor)
-    message.task.processor = {};
+    throw new Error("wsSendTask processorId not found in task.processor" + JSON.stringify(message.task) + " " + processorId);
+    //message.task.processor = {};
   }
-  if (message.command !== "pong") {
+  if (command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
   wsSendObject(processorId,message);
@@ -96,35 +97,47 @@ function initWebSocketServer(server) {
           let currentDateTimeString = currentDateTime.toString();
           const task = {
             updatedeAt: currentDateTimeString,
-            sessionId: j.task?.sessionId,
+            processor: {[j.task.source]: { command: "register"}},
           };
           console.log("Request for registering " + processorId)
-          wsSendTask(task, "register", j.task.source);
+          wsSendTask(task, j.task.source);
           return;
         }
       }
 
       if (j?.task) {
-        const activeTaskProcessors = await activeTaskProcessorsStore_async.get(j.task.instanceId);
-        if (j.command === "update") {throw new Error("update not implemented")}
-        if (j.command === "partial") {
-          //console.log("ws update", j.task)
+        const task = j.task;
+        const command = task.hub?.command;
+        delete task.hub;
+        if (!command) {
+          throw new Error("Missing command in task.hub " + JSON.stringify(task));
+        }
+        const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
+        if (command === "update") {throw new Error("update not implemented")}
+        if (command === "partial") {
+          //console.log("ws update", task)
           if (!activeTaskProcessors) {
             // This can happen if the React processor has not yet registered after a restart of the Hub
-            console.log("No processors for ", j.task.id, j.task.instanceId, " in activeTaskProcessorsStore_async");
+            console.log("No processors for ", task.id, task.instanceId, " in activeTaskProcessorsStore_async");
             return;
-            //throw new Error("No processors ", j.task);
+            //throw new Error("No processors ", task);
           } else {
             //console.log("Number of processors " + activeTask.processorIds.length)
           }
+          const activeTask = await activeTasksStore_async.get(task.instanceId);
+          // Restore the other processors
+          const processor = activeTask.processor;
+          //console.log("processor", processor);
+          task.processor = processor;
           for (const id of activeTaskProcessors) {
-            if (id !== j.task.source) {
+            if (id !== task.source) {
               const ws = connections.get(id);
               if (!ws) {
                 console.log("Lost websocket for ", id, connections.keys());
               } else {
+                task.processor[id].command = command;
                 //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
-                wsSendTask(j.task, j.command, id);
+                wsSendTask(task, id);
               }
             }
           }
@@ -137,10 +150,10 @@ function initWebSocketServer(server) {
         let currentDateTimeString = currentDateTime.toString();
         const task = {
           updatedeAt: currentDateTimeString,
-          sessionId: j.task?.sessionId, 
+          processor: {[j.task.source]: { command: "pong"}},
         };
         //console.log("Pong " + j.task.source)
-        wsSendTask(task, "pong", j.task.source);
+        wsSendTask(task, j.task.source);
       }
 
     });

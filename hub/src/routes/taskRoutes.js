@@ -25,20 +25,20 @@ router.post("/start", async (req, res) => {
       task.processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     }
     // We are not using this yet, could have a single API endpoint
-    if (task?.hub) {
-      task.hub.command = null;
+    if (!task.hub) {
+      throw new Error("Missing task.hub in /hub/api/task/start");
     }
+    task.hub.command = null;
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
     const startId = task.id;
     const familyId = task.familyId;
-    const sessionId = task.sessionId;
     const processorId = task.source;
     const stackPtr = task.stackPtr;
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await startTask_async(startId, userId, true, processorId, sessionId, task?.groupId, stackPtr, familyId, siblingTask);
+      await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
       return res.status(200).send("ok");
     } catch (err) {
       console.log("Error starting task " + startId + " " + err);
@@ -59,9 +59,10 @@ router.post("/update", async (req, res) => {
     //console.log("req.body.task.processor", req.body.task.processor)
     let task = req.body.task;
     // We are not using this yet, could have a single API endpoint
-    if (task?.hub) {
-      task.hub.command = null;
+    if (!task.hub) {
+      throw new Error("Missing task.hub in /hub/api/task/start");
     }
+    task.hub.command = null;
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
@@ -124,6 +125,7 @@ router.post("/update", async (req, res) => {
     const processor = activeTask.processor;
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
+    task.processor[task.source].command = "update";
     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
@@ -133,7 +135,7 @@ router.post("/update", async (req, res) => {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
       task.meta.updateCount = task.meta.updateCount + 1;
       // Don't await so the return gets back before the websocket update
-      task.processor[task.source].command = "update";
+      //task.processor[task.source].command = "update";
       // Middleware will send the update
       activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.
@@ -159,9 +161,10 @@ router.post("/next", async (req, res) => {
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
     // We are not using this yet, could have a single API endpoint
-    if (task?.hub) {
-      task.hub.command = null;
+    if (!task.hub) {
+      throw new Error("Missing task.hub in /hub/api/task/start");
     }
+    task.hub.command = null;
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }

@@ -25,9 +25,9 @@ function wsSendObject(message = {}) {
       message["task"] = {}
     }
     message.task.source = processorId;
-    if (message.command !== "ping") {
+    if (message.task.hub.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
-      //console.log("wsSendObject " + message.command + " " + message.task.id )
+      //console.log("wsSendObject " + message.task.hub.command + " " + message.task.id )
       //console.log("wsSendObject ", message )
     }
     processorWs.send(JSON.stringify(message));
@@ -38,8 +38,12 @@ const wsSendTask = function (task, command = null) {
   //console.log("wsSendTask " + message)
   let message = {}; 
   message["task"] = task;
-  if (command) {
-    message["command"] = command;
+  if (task.processor?.command) {
+    task["hub"] = {};
+    task.hub["command"] = task.processor.command;
+    if (task.processor?.commandArgs) {
+      task.hub["commandArgs"] = task.processor.commandArgs;
+    }
   }
   wsSendObject(message);
 }
@@ -59,6 +63,7 @@ const connectWebSocket = () => {
       let currentDateTimeString = currentDateTime.toString();
       return {
         updatedeAt: currentDateTimeString,
+        hub: {command: "ping"},
       }
     }
     wsSendTask(taskPing(), "ping");
@@ -78,13 +83,18 @@ const connectWebSocket = () => {
       return
     }
     const message = JSON.parse(e.data);
-    //console.log("processorWs.onMessage", message?.command, message?.task.processor);
+    //console.log("processorWs.onMessage", message?.task.processor.command);
+    let command;
     if (message?.task) {
       // The processor strips hub specific info because the Task Function should pass through the processor
       delete message.task.hub;
-    }
-    if (message?.command === "update") {
+      command = message.task.processor.command;
       message.task.processor.command = null;
+      if (message.task.processor?.commandArgs) {
+        message.task.processor.commandArgs = null;
+      }
+    }
+    if (command === "update") {
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
@@ -101,18 +111,17 @@ const connectWebSocket = () => {
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
-    } else if (message?.command === "start" || message?.command === "join" || message?.command === "next") {
-      console.log("processorWs " + message?.command + " activeTasksStore_async", message.task.id, message.task.instanceId)
-      message.task.processor.command = null;
+    } else if (command === "start" || command === "join" || command === "next") {
+      console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
-    } else if (message?.command === "pong") {
+    } else if (command === "pong") {
       //console.log("ws pong received", message)
-    } else if (message?.command === "register") {
+    } else if (command === "register") {
       console.log("ws register request received")
       register_async();
     } else {
-      console.log("Unexpected message command ", message.command)
+      console.log("Unexpected message command ", command)
     }
   };
 

@@ -72,6 +72,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
     T("error", error.message);
   }
   console.log("Returning from TaskChoose");
+  T("processor.command", "update");
   return task;
 };
 

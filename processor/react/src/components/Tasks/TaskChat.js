@@ -64,11 +64,8 @@ const TaskChat = (props) => {
   useEffect(() => {
     const processResponses = () => {
       setSocketResponses((prevResponses) => {
-        //console.log("prevResponses.lenght", prevResponses.length);
+        //console.log("prevResponses.length", prevResponses.length);
         for (const response of prevResponses) {
-          if (!response.partial) {
-            continue;
-          }
           const text = response.partial.text;
           const mode = response.partial.mode;
           switch (mode) {

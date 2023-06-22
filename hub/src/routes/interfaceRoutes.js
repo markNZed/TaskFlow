@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { v4 as uuidv4 } from "uuid";
 import { utils } from "../utils.mjs";
 import { users, groups, taskflows } from "../configdata.mjs";
 import { hubId } from "../../config.mjs";
@@ -15,9 +14,8 @@ dotenv.config();
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  console.log("/hub/api/session");
+  console.log("/hub/api/interface");
   let userId = utils.getUserId(req);
-  const sessionId = uuidv4();
   let authorised_taskflows = {};
   for (const key in taskflows) {
     if (utils.authenticatedTask(taskflows[key], userId, groups)) {
@@ -72,14 +70,13 @@ router.post("/", async (req, res) => {
   }
   //console.log("taskflowsTree ", taskflowsTree)
   if (userId) {
-    console.log("Creating session for ", userId);
+    console.log("Send Task tree ", userId);
     res.send({
       user: {
         userId: userId,
         interface: users[userId]?.interface,
         label: users[userId]?.label,
       },
-      sessionId: sessionId,
       hubId: hubId,
       taskflowsTree: taskflowsTree,
     });

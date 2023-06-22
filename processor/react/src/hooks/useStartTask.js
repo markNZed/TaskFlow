@@ -23,7 +23,7 @@ const useStartTask = (startId, setStartId, familyId, stackPtr) => {
         let task = { 
           id: startId,
           ...(stackPtr && { stackPtr: stackPtr }),
-          ...(familyId && { familyId: familyId })
+          ...(familyId && { familyId: familyId }),
         };        
         fetchTask(globalState, "start", task);
       } catch (error) {

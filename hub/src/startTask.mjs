@@ -15,7 +15,6 @@ async function startTask_async(
     userId,
     authenticate,
     processorId,
-    sessionId,
     groupId,
     stackPtr = null,
     familyId = null,
@@ -27,7 +26,6 @@ async function startTask_async(
       "id:", id, 
       "userId:", userId, 
       "processorId:", processorId, 
-      "sessionId:", sessionId, 
       "groupId:", groupId, 
       "stackPtr:", stackPtr, 
       "familyId:", familyId,
@@ -192,7 +190,6 @@ async function startTask_async(
     }
     taskCopy.userId = userId;
     taskCopy.source = processorId;
-    taskCopy.sessionId = sessionId;
     
     if (siblingInstanceId) {
       // Should rename to sibling?

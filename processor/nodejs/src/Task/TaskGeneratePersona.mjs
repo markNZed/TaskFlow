@@ -36,7 +36,7 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
   }
 
   console.log(`Returning from ${taskName}`);
-
+  T("processor.command", "update");
   return task;
 };
 

@@ -11,6 +11,10 @@ task.processor.command maybe be one of
   * update
   * start
   * next
+  * receiveNext
+  * ping
+  * pong
+  * register
 ## Future
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
 * Filter execution

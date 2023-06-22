@@ -45,7 +45,6 @@ export function WebSocketProvider({ children, socketUrl }) {
     if (!m?.task) {
       m["task"] = {}
     }
-    m.task.sessionId = globalState.sessionId
     m.task.source = globalState.processorId;
     if (m.command === "ping") {
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
@@ -71,10 +70,10 @@ export function WebSocketProvider({ children, socketUrl }) {
         // Reassigning te same value will create an event 
         //replaceGlobalState("hubId", null);
       }
-      sendJsonMessagePlusRef.current({task: {}, command: "ping"});
+      sendJsonMessagePlusRef.current({task: {hub: {command: "ping"}}, command: "ping"});
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({task: {}, command: "ping"});
+          sendJsonMessagePlusRef.current({task: {hub: {command: "ping"}}, command: "ping"});
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);
@@ -90,26 +89,29 @@ export function WebSocketProvider({ children, socketUrl }) {
       //console.log("App webSocket message received:", e);
       // Should be in try/catch block
       const message = JSON.parse(e.data);
-      let command = message?.command
-      if (message?.task?.processor?.command) {
-        message["command"] = message?.task?.processor?.command;
-        message.task.processor.command = null;
-      }
+      let command;
       if (message?.task) {
-        // The processor strips hub specific info because the Task Function should pass through the processor
+        // The processor strips hub specific info because the Task Function should only use the processor
         delete message.task.hub;
-      }  
-      if (message?.command && message.command !== "pong") {
-        //console.log("App webSocket command", message.command,  message.task.instanceId, message.task);
-        //Could strcuture as messageQueue[message.command][messageQueueIdx]
+        command = message.task.processor.command;
+        message.task.processor.command = null;
+        if (message.task.processor?.commandArgs) {
+          message.task.processor.commandArgs = null;
+        }
+      }
+      if (command !== "pong") {
+        //console.log("App webSocket command", command,  message.task.instanceId, message.task);
+        //Could strcuture as messageQueue[command][messageQueueIdx]
         //Eventually use task.processor.command (this gives us next)
-        if (message.command === "update" || message.command === "next") {
+        if (command === "update" || command === "next") {
+          // Need to include this here because we have cleared message.task.processor.command by here
+          message.command = command;
           messageQueue[messageQueueIdx] = message;
           messageQueueIdx = messageQueueIdx + 1;
         }
         // Could eventaully just emit the index
-        webSocketEventEmitter.emit(message?.command, message.task);
-      } else if (message.command === "pong") {
+        webSocketEventEmitter.emit(command, message.task);
+      } else if (command === "pong") {
         //console.log("App webSocket received pong", message);
       } else {
         console.log("App webSocket unexpected message", message);

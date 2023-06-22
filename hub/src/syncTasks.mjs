@@ -43,8 +43,8 @@ const syncTasks_async = async (key, value) => {
             console.log("command taskCopy ", command, taskCopy, processorId );
           }
           taskCopy.processor[processorId]["command"] = command;
-          await wsSendTask(taskCopy, command, processorId);
-          console.log("syncTasks_async", command, key, processorId);
+          //console.log("syncTasks_async", command, key, processorId, taskCopy.processor);
+          await wsSendTask(taskCopy, processorId);
         } else {
           //console.log("syncTasks_async skipping", key, processorId);
         }

@@ -12,7 +12,6 @@ export const fetchTask = async (globalState, command, task) => {
 
   task.hub.command = command;
 
-  task["sessionId"] = globalState.sessionId;
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;
   }

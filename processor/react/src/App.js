@@ -67,7 +67,7 @@ function App({ activeWorkerCount, workerId }) {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await fetch(`${hubUrl}/api/session`, {
+        const response = await fetch(`${hubUrl}/api/interface`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -81,11 +81,6 @@ function App({ activeWorkerCount, workerId }) {
         const user = data.user;
         mergeGlobalState({ user });
         console.log("Set user: ", user);
-        if (!globalState?.sessionId) {
-          const sessionId = data.sessionId;
-          mergeGlobalState({ sessionId });
-          console.log("Set sessionId ", sessionId);
-        }
         // Should have a separate API
         if (data?.taskflowsTree) {
           const taskflowsTree = data.taskflowsTree;
