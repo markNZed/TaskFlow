@@ -27,7 +27,6 @@ const TaskShowResponse = (props) => {
     modifyState,
     transition,
     onDidMount,
-    isCommand,
   } = props;
 
   const [responseText, setResponseText] = useState("");

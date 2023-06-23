@@ -1,15 +1,13 @@
 /* ToDo
 -------
-How to set state of child?
-  Needs to use the child's modifyState becaus of ref
-  
-task.processor is being set by hub and task, unsure about this.
-  Another rule could be that only the hub writes to task.hub only the processor to task.processor task to task.command
-  This might be better, currently the destination of the command is the parameter  e.g. task.processor task.hub
+remove isCommand ?
+taskCopy.source is used by syncTasks also used by websocket to get processorId
+  Should we have a task.processor.id field ?
+  Seems like we should not trust that - how can the WS know the processorID?
+    Should be setup at time of registering?
+  source into task.hub ?
+"nextTask" to task.processor.commandArgs & task.hub.commandArgs
 hub.command is not used yet because we have distinct routes
-Maybe processor does not need to be a hash and could just have id
-  Allow sfor different task.processor.config
-    Might be useful for filtering
 Could have a task.family entry which allows for broadcast and config
   Hub could look after converting family command into instance command
 Could be valuable to communicate with an instance on a subset of environments
@@ -23,20 +21,15 @@ If we have a TaskFilter this raises the question of how to configure/program it.
 Lock needs some thought
   Task sends task.processor.commandArgs.lock on update?
   Procssor sends task.hub.commandArgs.lock?
-taskCopy.source is used by syncTasks also used by websocket to get processorId
-  Should we have a task.processor.id field ?
-  Seems like we should not trust that - how can the WS know the processorID?
-    Should be setup at time of registering?
 Do we want task.identification object (why do we need groupId?)
 Should permissions by an object in the task?
-"nextTask" to task.processor.commandArgs & task.hub.commandArgs
-source into task.hub ?
 Do we want a join route on Hub for symmetry?
-Add a updatedRate (updates per minute, could reset basd on updatedAt time)
+  Create a single task route and use task.processor.command to call out to relevant function
 The stack of components for React should not be mixed with a stack of Tasks.
   Maybe the stack of components should be in the task.config
 chatContainermaxHeight in TaskConversation scrolling?
-Search feature could be a micro-service provided by the Hub?
+Task search feature could be a micro-service provided by the Hub?
+ For example user can search personal history
 Code review/cleanup 
   configdata
   Refactoring

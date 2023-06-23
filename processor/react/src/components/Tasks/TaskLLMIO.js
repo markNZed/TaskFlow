@@ -34,7 +34,6 @@ const TaskLLMIO = (props) => {
     transitionTo, 
     transitionFrom,
     componentName,
-    isCommand,
   } = props;
 
   const [responseText, setResponseText] = useState("");

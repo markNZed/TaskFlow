@@ -313,16 +313,6 @@ function withTask(Component) {
       });
     }
 
-    // Check for a command and clear it if it is set
-    function isCommand(command) {
-      if (props.task.command === command) {
-        props.setTask((prevState) => ({...prevState, command: null}));
-        return true;
-      } else {
-        return false;
-      }
-    }
-
     useEffect(() => {
       const c = props?.task?.command;
       const pc = prevTask?.command;
@@ -481,7 +471,6 @@ function withTask(Component) {
       componentName: props?.task?.stack[localStackPtrRef.current - 1],
       childTask,
       setChildTask,
-      isCommand,
       handleTaskUpdate,
       familyTaskDiff,
       handleChildmodifyState,

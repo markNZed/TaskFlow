@@ -16,6 +16,7 @@ The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored
 * The Hub maintains Processor information in the task.processor object
   * This is simplified when communicating with a specific processor by replacing task.processor with task.processor[processorId]
+    * This could allow for Processor specific task.processor[processorId].config
 * Processors register with the Hub via HTTP request
   * Maintain the list of active processors
 * Processors send an HTTP request to the Hub's "start" route to initiate a Task sequence
