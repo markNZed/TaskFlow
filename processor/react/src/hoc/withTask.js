@@ -68,7 +68,6 @@ function withTask(Component) {
     const publishedRef = useRef("");
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
     const handleChildmodifyStateRef = useRef(null);
-    const taskStateRef = useRef(null);
 
     /*
     // Example of how to use the familyTaskDiff
@@ -246,7 +245,6 @@ function withTask(Component) {
       //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
       if (state) {
-        taskStateRef.current = state;
         props.setTask((p) =>
           deepMerge(
             p,
@@ -257,17 +255,9 @@ function withTask(Component) {
           )
         );
       } else if (props.task.state.current != props.task.state.last) {
-        taskStateRef.current = state;
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }
-
-    // For example the state could be updated by another Processor
-    useEffect(() => {
-      if (props.task?.state?.current && props.task.state.current !== taskStateRef.current) {
-        taskStateRef.current = props.task.state.current;
-      }
-    }, [props?.task?.state]);
 
     // If the parent wants to be able to modify the child state is passes this prop
     if (props.handleChildmodifyState) {
@@ -483,7 +473,6 @@ function withTask(Component) {
       familyTaskDiff,
       handleChildmodifyState,
       modifyChildState,
-      taskStateRef,
     };
 
     return <WithDebugComponent {...componentProps} />;

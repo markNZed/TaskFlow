@@ -33,7 +33,6 @@ function TaskStepper(props) {
     task,
     modifyTask,
     modifyState,
-    taskStateRef,
     transition,
     useTasksState,
     stackPtr,
@@ -57,12 +56,22 @@ function TaskStepper(props) {
   const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
+  const [stepDone, setStepDone] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
+  useEffect(() => {
+    if (tasks && tasks[tasksIdx].state?.done) {
+      setStepDone(true);
+    } else if (stepDone) {
+      setStepDone(false);
+    }
+  }, [tasksIdx, tasks]);
+      
   // Task state machine
   // Unique for each component that requires steps
+  // Would it be better to capitalize state names?
   useEffect(() => {
     if (task && task.state.current) {
       const nextConfigState = task?.config?.nextStates?.[task.state.current]
@@ -105,7 +114,7 @@ function TaskStepper(props) {
           }                 
           break;
         case "waitForDone":
-          if (tasks[tasksIdx].state.done) {
+          if (stepDone) {
             // There are two commands happening here:
             // 1. The chid task is requesting the next task
             // 2. The stepper is receiving the next task
@@ -152,7 +161,7 @@ function TaskStepper(props) {
       modifyState(nextState);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, tasks]);
+  }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, stepDone]);
 
   // Close previous task and open next task in stepper
   useEffect(() => {
