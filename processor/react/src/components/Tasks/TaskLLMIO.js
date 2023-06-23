@@ -55,6 +55,7 @@ const TaskLLMIO = (props) => {
   useEffect(() => {
     // This can write over the update
     task.state.current = "start";
+    task.state.done = false;
   }, []);
 
   // This is asynchronous to the rendering so there may be conflicts where
@@ -100,7 +101,7 @@ const TaskLLMIO = (props) => {
   // Unique for each component that requires steps
   useEffect(() => {
     if (task) {
-      const nextConfigState = task.config.nextStates[task.state.current];
+      const nextConfigState = task?.config?.nextStates?.[task.state.current]
       let nextState;
       if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
       switch (task.state.current) {
@@ -148,8 +149,6 @@ const TaskLLMIO = (props) => {
         case "stop":
           if (transition()) {
             modifyTask({ "state.done": true });
-          } else if (task.state.done) {
-            modifyTask({ "state.done": false });
           }
           break;
         default:

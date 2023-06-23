@@ -1,6 +1,5 @@
 /* ToDo
 -------
-remove isCommand ?
 taskCopy.source is used by syncTasks also used by websocket to get processorId
   Should we have a task.processor.id field ?
   Seems like we should not trust that - how can the WS know the processorID?

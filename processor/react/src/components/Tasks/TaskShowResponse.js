@@ -38,6 +38,7 @@ const TaskShowResponse = (props) => {
   useEffect(() => {
     // This can write over the update
     task.state.current = "start";
+    task.state.done = false;
   }, []);
 
   // Task state machine
@@ -61,8 +62,6 @@ const TaskShowResponse = (props) => {
         case "exit":
           if (transition()) {
             modifyTask({ "state.done": true });
-          } else if (task.state.done) {
-            modifyTask({ "state.done": false });
           }
           break
         default:

@@ -4,12 +4,14 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Stepper, Step, StepLabel, Typography, Button } from "@mui/material";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import ModalComponent from '../Generic/ModalComponent';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
+
 import {
   setArrayState,
   deepMerge,
@@ -30,6 +32,9 @@ function TaskStepper(props) {
     log,
     task,
     modifyTask,
+    modifyState,
+    taskStateRef,
+    transition,
     useTasksState,
     stackPtr,
     startTaskError,
@@ -41,6 +46,7 @@ function TaskStepper(props) {
     onDidMount,
     modifyChildState,
     handleChildmodifyState,
+    componentName,
   } = props;
 
   const [tasks, setTasks] = useTasksState([]);
@@ -49,87 +55,104 @@ function TaskStepper(props) {
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
   const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
+  const [modalInfo, setModalInfo] = useState({title: null, description: null});
+  const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
+  // Task state machine
+  // Unique for each component that requires steps
   useEffect(() => {
-    startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
-  }, []);
-
-  useEffect(() => {
-    if (startTask) {
-      setTasks([startTask]);
-      setPrevTaskName(startTask.name);
-      setKeys([startTask.instanceId + tasksIdx]);
-    }
-  }, [startTask]);
-
-  // When task is done fetch next task
-  useEffect(() => {
-    if (tasks.length && tasks[tasksIdx].state?.done) {
-      // There are two commands happening here:
-      // 1. The chid task is requesting the next task
-      // 2. The stepper is receiving the next task
-      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
-        "state.done": false, 
-        "command": "next"
-      }));
-      setTasksTask((p) => {
-        return newTask;
-      }, tasksIdx);
-      // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
-      // Add a delay so the udateTask can clear command before setting it again here
-      // We only allow one command at a time. Would be better to enforce a lock.
-      setTimeout(() => 
-        modifyTask({
-          "command": "receiveNext",
-          "commandArgs": {
-            stackPtr: stackPtr, 
-            instanceId: tasks[tasksIdx].instanceId
+    if (task && task.state.current) {
+      const nextConfigState = task?.config?.nextStates?.[task.state.current]
+      let nextState;
+      if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
+      switch (task.state.current) {
+        case "start":
+          startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
+          nextState = "waitForStart"
+          break;
+        case "waitForStart":
+          if (startTaskError) {
+            nextState = "error";
+          } else if (startTask) {
+            setTasks([startTask]);
+            setPrevTaskName(startTask.name);
+            setKeys([startTask.instanceId + tasksIdx]);
+            nextState = "navigate";
           }
-        })
-      , 0);
-      setKeys(p => [...p, newTask.instanceId + tasksIdx]);
-    }
-  }, [tasks]);
-
-  // Detect when next task has been fetched
-  useEffect(() => {
-    console.log("TaskStepper nextTask", nextTask);
-    if (nextTask) {
-      setTasksIdx(tasks.length);
-      setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
-    }
-  }, [nextTask]);
-
-  function handleStepperNavigation(currentTask, action) {
-    const currentTaskData = tasks[tasksIdx];
-    if (action === "next") {
-      if (currentTaskData && currentTaskData.nextTask) {
-        // Give control to the active Task which will call taskDone to transition to next state
-        modifyChildState("exit")
-        //setTasksTask((p) => {
-        //  return { ...p, command: "exit"}
-        //}, tasksIdx);
-        // Expect task.state.done to be set in Task
+          break;
+        case "navigate":
+          if (stepperNavigation.task) {
+            if (stepperNavigation.direction === "forward") {
+              modifyChildState("exit");
+              setStepperNavigation({task: null, direction: null})
+              nextState = "waitForDone";
+            } else if (stepperNavigation.direction === "back") {
+              setTasksIdx(tasks.length - 2);
+              setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
+              const newIdx = tasks.length - 2;
+              // By changing the key we force the component to re-mount. This is like a reset in some ways
+              setKeys(prevKeys => {
+                let newKeys = [...prevKeys];
+                 newKeys[newIdx] += newIdx;
+                return newKeys;
+              });
+              setStepperNavigation({task: null, direction: null})
+              nextState = "navigate";
+            }
+          }                 
+          break;
+        case "waitForDone":
+          if (tasks[tasksIdx].state.done) {
+            // There are two commands happening here:
+            // 1. The chid task is requesting the next task
+            // 2. The stepper is receiving the next task
+            const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+              "state.done": false, 
+              "command": "next"
+            }));
+            setTasksTask((p) => {
+              return newTask;
+            }, tasksIdx);
+            setKeys(p => [...p, newTask.instanceId + tasksIdx]);
+            nextState = "receiveNext";
+          }
+          break;
+        case "receiveNext":  
+          // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
+          modifyTask({
+            "command": "receiveNext",
+            "commandArgs": {
+              stackPtr: stackPtr, 
+              instanceId: tasks[tasksIdx].instanceId
+            }
+          })
+          nextState = "waitForNext";
+          break;
+        case "waitForNext":
+          if (nextTaskError) {
+            nextState = "error";
+          // Check the instanceId because it is possible for the state machine to rerun prior to the state updating
+          // Also nextTask is not cleared so we need to check that it is not the same as the current task
+          } else if (nextTask && nextTask.instanceId !== tasks[tasksIdx].instanceId) {
+            console.log("TaskStepper nextTask", nextTask);
+            setTasksIdx(tasks.length);
+            setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
+            nextState = "navigate";
+          }
+          break;
+        case "error":
+          setModalInfo({title: "Error", description: "An error occurred"});
+        default:
+          console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
       }
-    } else if (action === "back") {
-      if (currentTaskData) {
-        // By updating leaving this ensure there is an event if next is activated
-        setTasksIdx(tasks.length - 2);
-        setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
-        const newIdx = tasks.length - 2;
-        // By changing the key we force the component to re-mount
-        // This is like a reset in some ways
-        setKeys(prevKeys => {
-          let newKeys = [...prevKeys];
-           newKeys[newIdx] += newIdx;
-          return newKeys;
-        });
-      }
+      // Manage state.current and state.last
+      modifyState(nextState);
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, tasks]);
 
   // Close previous task and open next task in stepper
   useEffect(() => {
@@ -162,7 +185,11 @@ function TaskStepper(props) {
   }
 
   return (
+    
     <div>
+      <ModalComponent
+        modalInfo={modalInfo}
+      />
       <Stepper activeStep={tasksIdx}>
         {tasks.map(({ name, label }) => (
           <Step key={`task-${name}`}>
@@ -199,8 +226,8 @@ function TaskStepper(props) {
               {tasks[tasksIdx].name !== "start" &&
                 tasks[tasksIdx].name === name && (
                   <Button
-                    onClick={() =>
-                      handleStepperNavigation(tasks[tasksIdx], "back")
+                    onClick={() => 
+                      setStepperNavigation({task: tasks[tasksIdx], direction: "back"})
                     }
                     variant="contained"
                     color="primary"
@@ -212,7 +239,7 @@ function TaskStepper(props) {
                 tasks[tasksIdx].name === name && (
                   <Button
                     onClick={() =>
-                      handleStepperNavigation(tasks[tasksIdx], "next")
+                      setStepperNavigation({task: tasks[tasksIdx], direction: "forward"})
                     }
                     variant="contained"
                     color="primary"
