@@ -21,7 +21,7 @@ ToDo:
 
 */
 
-function TaskCollaborate(props) {
+function TaskFacilitate(props) {
   const {
     log, task, modifyTask, modifyState, transition, transitionTo, transitionFrom, user, onDidMount,
   } = props;
@@ -55,7 +55,7 @@ function TaskCollaborate(props) {
               responseTextRef.current = text;
               break;
           }
-          //console.log("TaskCollaborate processResponses responseTextRef.current:", responseTextRef.current);
+          //console.log("TaskFacilitate processResponses responseTextRef.current:", responseTextRef.current);
         }
         setResponseText(responseTextRef.current);
         return []; // Clear the processed socketResponses
@@ -70,7 +70,7 @@ function TaskCollaborate(props) {
   // Putting this in the HoC causes a warning about setting state during rendering
   usePartialWSFilter(task,
     (partialTask) => {
-      //console.log("TaskCollaborate usePartialWSFilter partialTask", partialTask.response);
+      //console.log("TaskFacilitate usePartialWSFilter partialTask", partialTask.response);
       setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
     }
   );
@@ -81,7 +81,7 @@ function TaskCollaborate(props) {
   useEffect(() => {
     if (task) {
       let nextState;
-      if (transition()) { log("TaskCollaborate State Machine State " + task.state.current); }
+      if (transition()) { log("TaskFacilitate State Machine State " + task.state.current); }
       // Deep copy because we are going to modify the msgs array which is part of a React state
       // so it should only be modified with modifyTask
       const msgs = JSON.parse(JSON.stringify(task.output.msgs));
@@ -215,4 +215,4 @@ function TaskCollaborate(props) {
   );
 }
 
-export default withTask(TaskCollaborate);
+export default withTask(TaskFacilitate);

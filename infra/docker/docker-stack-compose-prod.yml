@@ -36,6 +36,20 @@ services:
     entrypoint: ["/entrypoint-hub.sh"]
     networks:
       - web-proxy
+#  mongodb:
+#    image: mongodb/mongodb-community-server:latest
+#    ports:
+#      - '127.0.0.1:27017:27017'
+#    environment:
+#      - MONGO_INITDB_ROOT_USERNAME=user
+#      - MONGO_INITDB_ROOT_PASSWORD=pass
+#    volumes:
+#      - dbdata:/data/db
+#    networks:
+#      - web-proxy
+
+volumes:
+  dbdata:
 
 networks:
   web-proxy:

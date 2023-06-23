@@ -47,9 +47,14 @@ const cacheStore_async = newKeyV(DB_URI, "cache");
 //   Key: instanceId
 //   Value: task object
 const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
+// Schema:
+//   Key: task.id
+//   Value: data object
+const taskDataStore_async = newKeyV(DB_URI, "taskData");
 
 export {
   cacheStore_async,
   activeTasksStore_async,
+  taskDataStore_async,
   connections,
 };
