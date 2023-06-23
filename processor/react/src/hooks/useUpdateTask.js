@@ -21,12 +21,12 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
   const { sendJsonMessagePlus } = useWebSocketContext();
 
   useEffect(() => {
-    if (task && task.processor?.command === "update" && task.stackPtr === local_stackPtr && !updateTaskError) {
+    if (task && task?.command === "update" && task.stackPtr === local_stackPtr && !updateTaskError) {
       log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-          const updating = { "processor.command": null, "response.updating": true, lock: false };
+          const updating = { "command": null, "response.updating": true, lock: false };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           // The setTask prior to sending the result will not have taken effect

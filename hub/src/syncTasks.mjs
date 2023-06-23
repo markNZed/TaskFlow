@@ -16,12 +16,13 @@ const syncTasks_async = async (key, value) => {
   // So we store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   const has = await activeTasksStore_async.has(key);
-  let command = taskCopy.processor[taskCopy.source].command
+  if (!taskCopy?.hub?.command) {
+    throw new Error("syncTasks_async missing command" + JSON.stringify(taskCopy));
+  }
+  let command = taskCopy.hub.command
   if (has) {
     if (command === "join") {
       taskCopy.lockBypass = true;
-      delete value.join; // should not be using task for internal Hub communication
-      delete taskCopy.join
     } else if (command === "update") {
       taskCopy.meta.updatedAt = utils.updatedAt();
     }
@@ -40,9 +41,8 @@ const syncTasks_async = async (key, value) => {
             || (command === "join" && processorId === taskCopy.source)
         ) {
           if (!taskCopy.processor[processorId]) {
-            console.log("command taskCopy ", command, taskCopy, processorId );
+            console.log("command taskCopy missing processor", command, taskCopy, processorId );
           }
-          taskCopy.processor[processorId]["command"] = command;
           //console.log("syncTasks_async", command, key, processorId, taskCopy.processor);
           await wsSendTask(taskCopy, processorId);
         } else {

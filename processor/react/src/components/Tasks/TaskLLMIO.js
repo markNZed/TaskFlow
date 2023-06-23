@@ -117,7 +117,7 @@ const TaskLLMIO = (props) => {
             setResponseText(task.output.text);
             nextState = "received";
           } else if (transition()) {
-            modifyTask({ "processor.command": "update" });
+            modifyTask({ "command": "update" });
           } 
         case "receiving":
           // NodeJS should be streaming the response
@@ -135,17 +135,16 @@ const TaskLLMIO = (props) => {
           if (task.output?.input && !userInput) {
             setUserInput(task.output.input);
           }
-          // Wait until leaving then send input
-          // We could have a submit button but this is more natural
-          if (isCommand("exit")) {
-            modifyTask({ "processor.command": "update", "request.input": userInput });
+          break;
+        case "exit":
+          if (transitionFrom("input")) {
+            modifyTask({ "command": "update", "request.input": userInput });
+          } else {
+            nextState = "stop"
           }
           break;
         case "wait":
           // If not collecting input we are in the wait state before exiting
-          if (isCommand("exit")) {
-            nextState = nextConfigState;
-          }
           break;
         case "stop":
           if (transition()) {

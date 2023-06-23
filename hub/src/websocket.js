@@ -18,17 +18,18 @@ function wsSendObject(processorId, message = {}) {
       throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
     ws.send(JSON.stringify(message));
-    if (message.task.processor.command !== "pong") {
+    if (message.task.hub.command !== "pong") {
       //console.log("wsSendObject ", JSON.stringify(message) )
     }
   }
 }
 
 const wsSendTask = async function (task, processorId = null) {
-  if (!task?.processor || !task?.processor[processorId]) {
-    throw new Error("Missing processor.command in wsSendTask" + JSON.stringify(task));
+  if (!task?.hub?.command) {
+    throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
-  let command = task.processor[processorId].command;
+  let command = task.hub.command;
+  let commandArgs = task.hub?.commandArgs;
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
@@ -51,7 +52,9 @@ const wsSendTask = async function (task, processorId = null) {
       diff.stackPtr = task.stackPtr;
       diff.update = false; // otherwise other processors will try to update 
       diff.lock = false; // otherwise other processors will try to lock
-      diff.processor = {[processorId]: task.processor[processorId]};
+      diff["hub"] = {};
+      diff.hub["command"] = command;
+      diff.hub["commandArgs"] = commandArgs;
       message["task"] = diff;
     }
   } else {
@@ -60,9 +63,6 @@ const wsSendTask = async function (task, processorId = null) {
   if (message.task?.processor && message.task.processor[processorId]) {
     //deep copy
     message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
-  } else {
-    throw new Error("wsSendTask processorId not found in task.processor" + JSON.stringify(message.task) + " " + processorId);
-    //message.task.processor = {};
   }
   if (command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
@@ -97,7 +97,7 @@ function initWebSocketServer(server) {
           let currentDateTimeString = currentDateTime.toString();
           const task = {
             updatedeAt: currentDateTimeString,
-            processor: {[j.task.source]: { command: "register"}},
+            hub: {command: "register"},
           };
           console.log("Request for registering " + processorId)
           wsSendTask(task, j.task.source);
@@ -107,8 +107,10 @@ function initWebSocketServer(server) {
 
       if (j?.task) {
         const task = j.task;
-        const command = task.hub?.command;
-        delete task.hub;
+        const command = task.processor?.command;
+        const commandArgs = task.processor?.commandArgs;
+        delete task.processor.command;
+        delete task.processor.commandArgs;
         if (!command) {
           throw new Error("Missing command in task.hub " + JSON.stringify(task));
         }
@@ -129,13 +131,18 @@ function initWebSocketServer(server) {
           const processor = activeTask.processor;
           //console.log("processor", processor);
           task.processor = processor;
+          task.hub = activeTask.hub;
+          task.hub["command"] = "next";      
           for (const id of activeTaskProcessors) {
             if (id !== task.source) {
               const ws = connections.get(id);
               if (!ws) {
                 console.log("Lost websocket for ", id, connections.keys());
               } else {
-                task.processor[id].command = command;
+                task.hub.command = command;
+                if (commandArgs) {
+                  task.hub.commandArgs = commandArgs;
+                }
                 //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
                 wsSendTask(task, id);
               }
@@ -145,12 +152,12 @@ function initWebSocketServer(server) {
         
       }
 
-      if (j?.command === "ping") {
+      if (j?.task?.processor?.command === "ping") {
         let currentDateTime = new Date();
         let currentDateTimeString = currentDateTime.toString();
         const task = {
           updatedeAt: currentDateTimeString,
-          processor: {[j.task.source]: { command: "pong"}},
+          hub: {command: "pong"},
         };
         //console.log("Pong " + j.task.source)
         wsSendTask(task, j.task.source);

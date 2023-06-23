@@ -21,7 +21,7 @@
           }
         },
         "command": {
-          "type": ["null", "object"]
+          "type": ["null", "string"]
         },
         "commandArgs": {
           "type": "object"

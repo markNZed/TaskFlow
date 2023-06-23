@@ -18,10 +18,10 @@ const useNextTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
   const [nextTaskError, setNextTaskError] = useState(null);
   useEffect(() => {
-    if (task && task.processor?.command === "next" && !nextTaskError) {
+    if (task && task?.command === "next" && !nextTaskError) {
       log("useNextTask", task.id);
       let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-      const updating = { "processor.command": null };
+      const updating = { "command": null };
       setNestedProperties(updating);
       setTask((p) => deepMerge(p, updating));
       // The setTask prior to sending the result will not have taken effect

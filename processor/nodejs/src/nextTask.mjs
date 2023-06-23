@@ -12,10 +12,17 @@ export const nextTask_async = async (task) => {
 
   let messageJsonString;
 
-  if (task.hub === undefined) {
-    task.hub = {};
+  if (!task.processor) {
+    throw new Error("Missing task.processor in nextTask_async" + JSON.stringify(task));
   }
-  task.hub.command = "next";
+
+  task.processor["command"] = "next";
+  // Clear down task commands as we do not want these coming back from the hub
+  task["command"] = null;
+  if (task.commandArgs) {
+    task.commandArgs = null;
+  }
+  
 
   try {
     const validatedTaskJsonString = fromTask(task);

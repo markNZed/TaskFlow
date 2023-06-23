@@ -46,7 +46,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       m["task"] = {}
     }
     m.task.source = globalState.processorId;
-    if (m.command === "ping") {
+    if (m.task?.command === "ping") {
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     sendJsonMessage(m);
@@ -70,10 +70,18 @@ export function WebSocketProvider({ children, socketUrl }) {
         // Reassigning te same value will create an event 
         //replaceGlobalState("hubId", null);
       }
-      sendJsonMessagePlusRef.current({task: {hub: {command: "ping"}}, command: "ping"});
+      const taskPing = () => {
+        let currentDateTime = new Date();
+        let currentDateTimeString = currentDateTime.toString();
+        return {
+          updatedeAt: currentDateTimeString,
+          processor: {command: "ping"},
+        }
+      }
+      sendJsonMessagePlusRef.current({task: taskPing()});
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({task: {hub: {command: "ping"}}, command: "ping"});
+          sendJsonMessagePlusRef.current({task: taskPing()});
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);
@@ -90,21 +98,19 @@ export function WebSocketProvider({ children, socketUrl }) {
       // Should be in try/catch block
       const message = JSON.parse(e.data);
       let command;
+      let commandArgs;
       if (message?.task) {
-        // The processor strips hub specific info because the Task Function should only use the processor
+        // The processor strips hub specific info because the Task Function should not interact with the Hub
+        command = message.task.hub.command;
+        commandArgs = message.task.hub?.commandArgs;
         delete message.task.hub;
-        command = message.task.processor.command;
-        message.task.processor.command = null;
-        if (message.task.processor?.commandArgs) {
-          message.task.processor.commandArgs = null;
-        }
       }
       if (command !== "pong") {
         //console.log("App webSocket command", command,  message.task.instanceId, message.task);
         //Could strcuture as messageQueue[command][messageQueueIdx]
-        //Eventually use task.processor.command (this gives us next)
+        //Eventually use task.command (this gives us next)
         if (command === "update" || command === "next") {
-          // Need to include this here because we have cleared message.task.processor.command by here
+          // Need to include this here because we have cleared message.task.command by here
           message.command = command;
           messageQueue[messageQueueIdx] = message;
           messageQueueIdx = messageQueueIdx + 1;

@@ -109,7 +109,7 @@ function TaskBrainstorm(props) {
             modifyTask({
               "output.msgs": [...msgs, ...newMsgArray],
               "lock": true,
-              "processor.command": "update",
+              "command": "update",
             });
             setSubmittingForm(false);
           }

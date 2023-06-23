@@ -1,5 +1,8 @@
 /* ToDo
 -------
+How to set state of child?
+  Needs to use the child's modifyState becaus of ref
+  
 task.processor is being set by hub and task, unsure about this.
   Another rule could be that only the hub writes to task.hub only the processor to task.processor task to task.command
   This might be better, currently the destination of the command is the parameter  e.g. task.processor task.hub

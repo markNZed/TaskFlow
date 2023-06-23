@@ -24,6 +24,7 @@ const useStartTask = (startId, setStartId, familyId, stackPtr) => {
           id: startId,
           ...(stackPtr && { stackPtr: stackPtr }),
           ...(familyId && { familyId: familyId }),
+          processor: {},
         };        
         fetchTask(globalState, "start", task);
       } catch (error) {

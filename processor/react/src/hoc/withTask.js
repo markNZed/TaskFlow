@@ -67,6 +67,7 @@ function withTask(Component) {
     const [familyId, setFamilyId] = useState();
     const publishedRef = useRef("");
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
+    const handleChildmodifyStateRef = useRef(null);
 
     /*
     // Example of how to use the familyTaskDiff
@@ -240,7 +241,7 @@ function withTask(Component) {
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
     // This issp ecific to how React handles setState 
-    function modifyState(state) {
+    const modifyState = (state) => {
       //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
       if (state) {
@@ -257,6 +258,23 @@ function withTask(Component) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }
+
+    // If the parent wants to be able to modify the child state is passes this prop
+    if (props.handleChildmodifyState) {
+      props.handleChildmodifyState(modifyState)
+    }
+
+    // This is the implementation that is passd to the parent as a prop that will be passed to the child
+    const handleChildmodifyState = (modifyStateFunction) => {
+      handleChildmodifyStateRef.current = modifyStateFunction;  
+    }
+
+    // This is what the parent calls to modify the state of the child
+    const modifyChildState = (state) => {
+      handleChildmodifyStateRef.current(state);
+    }
+
+
 
     useEffect(() => {
       if (startTaskError) {
@@ -466,6 +484,8 @@ function withTask(Component) {
       isCommand,
       handleTaskUpdate,
       familyTaskDiff,
+      handleChildmodifyState,
+      modifyChildState
     };
 
     return <WithDebugComponent {...componentProps} />;

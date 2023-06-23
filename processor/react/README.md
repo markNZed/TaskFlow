@@ -37,6 +37,8 @@ Running on localhost set the port for the React React Task Processor server in p
   * Prop for websocket event that is filtered so only events for the task.id initiating the task arrive
   * Prop stackPtr that presents where in the component stack the component is (starts at 1)
   * Logging of changes for any Task variable e.g. `const [X, setX] = useTaskState(null,'X')`
+  * A parent Task can modify the state of a child through modifyChildState, this is the preferred method for commanding the child Task.
+  * The task.command field is intended to send commands to the Task Processor.
 
 ### Debug
 * The HOC withTask also wraps the Task component with the HOC withDebug

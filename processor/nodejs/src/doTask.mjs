@@ -31,9 +31,9 @@ export async function do_task_async(wsSendTask, task) {
         // We may not want to do this for all tasks ? 
         // If the task is done then Hub will intercept this
         //console.log("do_task_async final task", updated_task)
-        if (updated_task.processor.command === "next") {
+        if (updated_task?.command === "next") {
           await nextTask_async(updated_task);
-        } else if (updated_task.processor.command === "start") {
+        } else if (updated_task?.command === "start") {
           // This is not working/used yet
           await startTask_async(userId, startId, siblingTask);
         } else {

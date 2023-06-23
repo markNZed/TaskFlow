@@ -17,15 +17,22 @@ let connectionAttempts = 0;
 let maxAttempts = 100;
 let processorWs;
 
-function wsSendObject(message = {}) {
+function wsSendObject(message) {
   if (!processorWs) {
     console.log("Lost websocket for wsSendObject", message);
   } else {
     if (!message?.task) {
       message["task"] = {}
     }
+    if (!message.task.processor?.command && message.task?.command) {
+      if (!message.task.processor) {
+        throw new Error("Missing task.processor in wsSendObject" + JSON.stringify(message));
+      }
+      message.task.processor.command = message.task.command;
+      delete message.task.command;
+    }
     message.task.source = processorId;
-    if (message.task.hub.command !== "ping") {
+    if (message.task.processor.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
       //console.log("wsSendObject " + message.task.hub.command + " " + message.task.id )
       //console.log("wsSendObject ", message )
@@ -38,13 +45,6 @@ const wsSendTask = function (task, command = null) {
   //console.log("wsSendTask " + message)
   let message = {}; 
   message["task"] = task;
-  if (task.processor?.command) {
-    task["hub"] = {};
-    task.hub["command"] = task.processor.command;
-    if (task.processor?.commandArgs) {
-      task.hub["commandArgs"] = task.processor.commandArgs;
-    }
-  }
   wsSendObject(message);
 }
 
@@ -63,13 +63,13 @@ const connectWebSocket = () => {
       let currentDateTimeString = currentDateTime.toString();
       return {
         updatedeAt: currentDateTimeString,
-        hub: {command: "ping"},
+        processor: {command: "ping"},
       }
     }
-    wsSendTask(taskPing(), "ping");
+    wsSendTask(taskPing());
     const intervalId = setInterval(() => {
       if (processorWs.readyState === WebSocket.OPEN) {
-        wsSendTask(taskPing(), "ping");
+        wsSendTask(taskPing());
       } else {
         clearInterval(intervalId);
       }
@@ -85,14 +85,12 @@ const connectWebSocket = () => {
     const message = JSON.parse(e.data);
     //console.log("processorWs.onMessage", message?.task.processor.command);
     let command;
+    let commandArgs;
     if (message?.task) {
-      // The processor strips hub specific info because the Task Function should pass through the processor
+      // The processor strips hub specific info because the Task Function should not interact with the Hub
+      command = message.task.hub.command;
+      commandArgs = message.task.hub?.commandArgs;
       delete message.task.hub;
-      command = message.task.processor.command;
-      message.task.processor.command = null;
-      if (message.task.processor?.commandArgs) {
-        message.task.processor.commandArgs = null;
-      }
     }
     if (command === "update") {
       // If we receive this task we don't want to send it back to the hub

@@ -39,6 +39,8 @@ function TaskStepper(props) {
     startTaskFn,
     useTaskState,
     onDidMount,
+    modifyChildState,
+    handleChildmodifyState,
   } = props;
 
   const [tasks, setTasks] = useTasksState([]);
@@ -71,19 +73,23 @@ function TaskStepper(props) {
       // 2. The stepper is receiving the next task
       const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
         "state.done": false, 
-        "processor.command": "next"
+        "command": "next"
       }));
       setTasksTask((p) => {
         return newTask;
       }, tasksIdx);
       // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
-      modifyTask({
-        "processor.command": "receiveNext",
-        "processor.commandArgs": {
-          stackPtr: stackPtr, 
-          instanceId: tasks[tasksIdx].instanceId
-        }
-      });
+      // Add a delay so the udateTask can clear command before setting it again here
+      // We only allow one command at a time. Would be better to enforce a lock.
+      setTimeout(() => 
+        modifyTask({
+          "command": "receiveNext",
+          "commandArgs": {
+            stackPtr: stackPtr, 
+            instanceId: tasks[tasksIdx].instanceId
+          }
+        })
+      , 0);
       setKeys(p => [...p, newTask.instanceId + tasksIdx]);
     }
   }, [tasks]);
@@ -102,9 +108,10 @@ function TaskStepper(props) {
     if (action === "next") {
       if (currentTaskData && currentTaskData.nextTask) {
         // Give control to the active Task which will call taskDone to transition to next state
-        setTasksTask((p) => {
-          return { ...p, command: "exit"}
-        }, tasksIdx);
+        modifyChildState("exit")
+        //setTasksTask((p) => {
+        //  return { ...p, command: "exit"}
+        //}, tasksIdx);
         // Expect task.state.done to be set in Task
       }
     } else if (action === "back") {
@@ -184,6 +191,7 @@ function TaskStepper(props) {
                   parentTask={stepperTask}
                   stackPtr={stackPtr}
                   stackTaskId={stackTaskId}
+                  handleChildmodifyState={props.handleChildmodifyState}
                 />
               )}
             </AccordionDetails>

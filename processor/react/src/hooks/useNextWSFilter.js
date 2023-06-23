@@ -42,12 +42,12 @@ function useNextWSFilter(useGlobalStateContext, stackPtrRef, doneTask, onNext) {
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
   useEffect(() => {
-    if (doneTask && doneTask.processor?.command === "receiveNext") {
-      const i = doneTask.processor.commandArgs?.instanceId;
+    if (doneTask && doneTask?.command === "receiveNext") {
+      const i = doneTask.commandArgs?.instanceId;
       if (i && instanceId !== i) {
         setInstanceId(i);
       }
-      const s = doneTask.processor.commandArgs?.stackPtr
+      const s = doneTask.commandArgs?.stackPtr
       if (s && stackPtr !== s) {
         setStackPtr(s);
       }

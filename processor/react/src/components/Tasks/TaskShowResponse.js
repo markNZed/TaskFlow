@@ -58,12 +58,13 @@ const TaskShowResponse = (props) => {
           if (responseText !== task.response.text) {
             setResponseText(task.response.text);
           }
-          if (isCommand("exit")) {
-            modifyTask({ "state.done": true });
-            nextState = "exit";
-          }
           break;
         case "exit":
+          if (transition()) {
+            modifyTask({ "state.done": true });
+          } else if (task.state.done) {
+            modifyTask({ "state.done": false });
+          }
           break
         default:
           console.log("ERROR unknown state : " + task.state.current);

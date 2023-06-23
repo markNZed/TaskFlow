@@ -26,7 +26,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("state.current", "receiving");
       T("lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
-      T("processor.command", "update");
+      T("command", "update");
       await updateTask_async(task)
       let msgs = T("output.msgs");
       // Extract the prompt
@@ -49,7 +49,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     }
 
   console.log("Returning from TaskChat_async", task.id);
-  T("processor.command", "update");
+  T("command", "update");
   return task;
 };
 

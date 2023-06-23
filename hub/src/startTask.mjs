@@ -79,8 +79,7 @@ async function startTask_async(
         if (activeTask) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
-          taskCopy["join"] = true;
-          taskCopy["processor"][processorId]["command"] = "join";
+          taskCopy["hub"]["command"] = "join";
           console.log("Joining oneThread for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -122,8 +121,7 @@ async function startTask_async(
         if (activeTask) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
-          taskCopy["join"] = true;
-          taskCopy["processor"][processorId]["command"] = "join";
+          taskCopy["hub"]["command"] = "join";
           console.log("Joining collaborate for " + taskCopy.id)
         } else {
           taskCopy = instance
@@ -177,11 +175,11 @@ async function startTask_async(
     if (!taskCopy["processor"][processorId]) {
       taskCopy["processor"][processorId] = {};
     }
-    if (!taskCopy["processor"][processorId]["command"]) {
+    if (!taskCopy.hub?.command) {
       if (next) {
-        taskCopy.processor[processorId]["command"] = "next";
+        taskCopy.hub.command = "next";
       } else {
-        taskCopy.processor[processorId]["command"] = "start";
+        taskCopy.hub.command = "start";
       }
     }
 

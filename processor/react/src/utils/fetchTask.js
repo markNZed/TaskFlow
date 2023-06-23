@@ -6,11 +6,16 @@ export const fetchTask = async (globalState, command, task) => {
 
   let messageJsonString;
 
-  if (task.hub === undefined) {
-    task.hub = {};
+  if (!task.processor) {
+    throw new Error("Missing task.processor in fetchTask" + JSON.stringify(task));
   }
 
-  task.hub.command = command;
+  task.processor["command"] = command;
+  // Clear down task commands as we do not want these coming back from the hub
+  task["command"] = null;
+  if (task.commandArgs) {
+    task.commandArgs = null;
+  }
 
   if ( globalState?.address && task.request ) {
     task.request["address"] = globalState.address;

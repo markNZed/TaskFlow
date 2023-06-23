@@ -45,9 +45,10 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
     const partialTask = {
       instanceId: instanceId, 
       response: response, 
-      processor: {command: "partial"},
+      command: "partial",
+      processor: {},
     };
-    wsSendTask(partialTask, "partial");
+    wsSendTask(partialTask);
     wsDelta[instanceId] += 1;
     //console.log(partialResponse.delta);
     //process.stdout.write(wsDelta[instanceId]);
@@ -345,11 +346,12 @@ async function ChatGPTAPI_request_async(params) {
     const partialTask = {
       instanceId: instanceId, 
       response: response,
-      processor: {command: "partial"},
+      command: "partial",
+      processor: {},
     };
     if (!noWebsocket) {
       wsDelta[instanceId] = 0
-      wsSendTask(partialTask, "partial");
+      wsSendTask(partialTask);
     }
   }
 

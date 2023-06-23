@@ -25,10 +25,13 @@ router.post("/start", async (req, res) => {
       task.processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     }
     // We are not using this yet, could have a single API endpoint
-    if (!task.hub) {
-      throw new Error("Missing task.hub in /hub/api/task/start");
+    if (!task.processor) {
+      throw new Error("Missing task.processor in /hub/api/task/start");
     }
-    task.hub.command = null;
+    const command = task.processor?.command;
+    const commandArgs = task.processor?.commandArgs;
+    delete task.processor.command;
+    delete task.processor.commandArgs;
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
@@ -36,6 +39,8 @@ router.post("/start", async (req, res) => {
     const familyId = task.familyId;
     const processorId = task.source;
     const stackPtr = task.stackPtr;
+    task["hub"] = {};
+    task["hub"]["command"] = "start";
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
       await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
@@ -59,10 +64,14 @@ router.post("/update", async (req, res) => {
     //console.log("req.body.task.processor", req.body.task.processor)
     let task = req.body.task;
     // We are not using this yet, could have a single API endpoint
-    if (!task.hub) {
-      throw new Error("Missing task.hub in /hub/api/task/start");
+    // We are not using this yet, could have a single API endpoint
+    if (!task.processor) {
+      throw new Error("Missing task.processor in /hub/api/task/start");
     }
-    task.hub.command = null;
+    const command = task.processor?.command;
+    const commandArgs = task.processor?.commandArgs;
+    delete task.processor.command;
+    delete task.processor.commandArgs;
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
@@ -115,6 +124,33 @@ router.post("/update", async (req, res) => {
       task.done = true
       console.log("Task error " + task.id);
     }
+    if (task.config?.maxUpdateCount && task?.meta?.updateCount > task.config.maxUpdateCount) {
+      return res.status(409).json({ error: "Task update count exceeded" });
+    }
+    const currentDate = new Date()
+    const resetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentDate.getHours(), currentDate.getMinutes());
+    if (!task.meta) {
+      task.meta = {
+        updatesThisMinute: 0,
+        updatedAt: null,
+      };
+    }
+    // If task has been updated before
+    if (task.meta.updatedAt) {
+      const updatedAt = new Date(task.meta.updatedAt);
+
+      // If the last update happened within the current minute
+      if (updatedAt >= resetDate) {
+        // If updates this minute is more than the max rate, cannot update
+        if (task.meta.updatesThisMinute >= maxUpdateRate) {
+          return res.status(409).json({ error: "Task update rate exceeded" });
+        }
+      } else {
+        // If the last update was not in the current minute, reset the counter
+        task.meta.updatesThisMinute = 0;
+      }
+    }
+    task.meta.updatesThisMinute++;
     let output = await outputStore_async.get(task.familyId);
     if (!output) {
       output = {};
@@ -125,7 +161,8 @@ router.post("/update", async (req, res) => {
     const processor = activeTask.processor;
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
-    task.processor[task.source].command = "update";
+    task.hub = activeTask.hub;
+    task.hub["command"] = "update";
     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
@@ -161,10 +198,16 @@ router.post("/next", async (req, res) => {
     processor[task.source] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
     // We are not using this yet, could have a single API endpoint
-    if (!task.hub) {
-      throw new Error("Missing task.hub in /hub/api/task/start");
+    // We are not using this yet, could have a single API endpoint
+    if (!task.processor) {
+      throw new Error("Missing task.processor in /hub/api/task/start");
     }
-    task.hub.command = null;
+    const command = task.processor?.command;
+    const commandArgs = task.processor?.commandArgs;
+    delete task.processor.command;
+    delete task.processor.commandArgs;
+    task.hub = activeTask.hub;
+    task.hub["command"] = "next";
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }
