@@ -1,5 +1,8 @@
 /* ToDo
 -------
+Can we inherit/build on Task Function?
+move task.request to task.state.request (internal communication)
+Requests from other tasks would be via: task.processor.task.request ?
 taskCopy.source is used by syncTasks also used by websocket to get processorId
   Should we have a task.processor.id field ?
   Seems like we should not trust that - how can the WS know the processorID?

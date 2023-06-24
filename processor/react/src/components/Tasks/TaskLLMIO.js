@@ -243,7 +243,7 @@ const TaskLLMIO = (props) => {
       {showUserInput ? (
         <div>
           <TextareaAutosize
-            placeholder={props.task.request?.inputLabel}
+            placeholder={props.task.config?.inputLabel}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             style={{ marginTop: "16px" }}
