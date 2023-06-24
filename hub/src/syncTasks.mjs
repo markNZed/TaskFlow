@@ -43,7 +43,7 @@ const syncTasks_async = async (key, value) => {
           if (!taskCopy.processor[processorId]) {
             console.log("command taskCopy missing processor", command, taskCopy, processorId );
           }
-          //console.log("syncTasks_async", command, key, processorId, taskCopy.processor);
+          console.log("syncTasks_async", command, key, processorId);
           await wsSendTask(taskCopy, processorId);
         } else {
           //console.log("syncTasks_async skipping", key, processorId);

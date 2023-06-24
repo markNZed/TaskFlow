@@ -138,7 +138,7 @@ const TaskLLMIO = (props) => {
           break;
         case "exit":
           if (transitionFrom("input")) {
-            modifyTask({ "command": "update", "request.input": userInput });
+            modifyTask({ "command": "update", "output.input": userInput });
           } else {
             nextState = "stop"
           }

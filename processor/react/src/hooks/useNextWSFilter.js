@@ -9,6 +9,7 @@ function useNextWSFilter(useGlobalStateContext, stackPtrRef, doneTask, onNext) {
   const [stackPtr, setStackPtr] = useState();
 
   const handleNext = async (taskUpdate) => {
+    //console.log("useUpdateWSFilter handleNext called", taskUpdate);
     if (instanceId === undefined || stackPtr === undefined) {
       return;
     }

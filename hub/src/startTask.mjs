@@ -340,6 +340,17 @@ async function startTask_async(
         taskProcessors.push(sourceProcessorId);
         //console.log("Adding source processor " + sourceProcessorId + " to taskProcessors")
       }
+      // If there are already processor entries then favor these
+      // This is the case when using next command
+      if (!found && taskCopy.processor) {
+        for (let id in taskCopy.processor) {
+          const processor = activeProcessors.get(id);
+          if (processor && processor.environments && processor.environments.includes(environment)) {
+            found = true;
+            taskProcessors.push(id);
+          }
+        }
+      }
       // Find an active processor that supports this environment
       if (!found) {
         //console.log("sourceProcessor did not match, now looking in activeProcessors")
@@ -382,7 +393,7 @@ async function startTask_async(
     activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
 
     //console.log("New task processor ", taskCopy.processor)
-    console.log("New task id " + taskCopy.id);
+    console.log("Started task id " + taskCopy.id);
     return taskCopy;
   }
 
