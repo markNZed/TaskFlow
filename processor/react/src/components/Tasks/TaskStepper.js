@@ -28,39 +28,31 @@ ToDo:
 */
 
 function TaskStepper(props) {
+  // props that are use a lot are given local names
   const {
     log,
     task,
     modifyTask,
-    modifyState,
-    transition,
-    checkIfStateReady,
-    useTasksState,
     stackPtr,
-    startTaskFn,
     startTaskError,
     startTask,
     nextTaskError,
     nextTask,
-    clearNextTask,
-    useTaskState,
-    onDidMount,
-    modifyChildState,
     componentName,
   } = props;
 
-  const [tasks, setTasks] = useTasksState([]);
+  const [tasks, setTasks] = props.useTasksState([]);
   const [keys, setKeys] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
-  const [stepperTask, setStepperTask] = useTaskState(null, "stepperTask");
+  const [stepperTask, setStepperTask] = props.useTaskState(null, "stepperTask");
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
   const [stepDone, setStepDone] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // Rather than making the state machine sensitive to tasks we create an event
   useEffect(() => {
@@ -72,13 +64,13 @@ function TaskStepper(props) {
   // Task state machine
   useEffect(() => {
     // modifyState may have been called by not yet updated test.state.current
-    if (!checkIfStateReady()) {return}
+    if (!props.checkIfStateReady()) {return}
     let nextState; 
     // Log each transition, other events may cause looping over a state
-    if (transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
+    if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
+        props.startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
         nextState = "waitForStart"
         break;
       case "waitForStart":
@@ -94,7 +86,7 @@ function TaskStepper(props) {
       case "navigate":
         if (stepperNavigation.task) {
           if (stepperNavigation.direction === "forward") {
-            modifyChildState("exit");
+            props.modifyChildState("exit");
             setStepperNavigation({task: null, direction: null})
             nextState = "waitForDone";
           } else if (stepperNavigation.direction === "back") {
@@ -147,7 +139,7 @@ function TaskStepper(props) {
           setTasksIdx(tasks.length);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
           // Could have a getNextTask that could look after clearing it when it returns
-          clearNextTask(); // So we only use it once.
+          props.clearNextTask(); // So we only use it once.
           nextState = "navigate";
         }
         break;
@@ -157,7 +149,7 @@ function TaskStepper(props) {
         console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
     }
     // Manage state.current and state.last
-    modifyState(nextState);
+    props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, stepDone]);
 
