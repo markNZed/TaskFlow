@@ -17,9 +17,6 @@ export const fetchTask = async (globalState, command, task) => {
     task.commandArgs = null;
   }
 
-  if ( globalState?.address && task.request ) {
-    task.request["address"] = globalState.address;
-  }
   task.source = globalState.processorId;
   task.userId = globalState.user.userId;
 

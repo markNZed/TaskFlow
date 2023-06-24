@@ -91,11 +91,7 @@ async function chat_prepare_async(task) {
     //console.log("Prompt " + prompt)
   } 
 
-  if (T("config.oneThread")) {
-    // Prefix with location when it has changed
-    if (T("request.newAddress")) {
-      prompt = "Location: " + T("request.address") + "\n" + prompt;
-    }
+  if (T("config.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address

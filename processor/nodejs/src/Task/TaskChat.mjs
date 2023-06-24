@@ -21,6 +21,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
 
   // Could return msgs instead of response.text
   switch (task.state.current) {
+    case "mentionAddress":
     case "sending":
       T("state.last", T("state.current"));
       T("state.current", "receiving");

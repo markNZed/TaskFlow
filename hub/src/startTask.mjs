@@ -193,8 +193,11 @@ async function startTask_async(
       // Should rename to sibling?
       taskCopy.meta["parentInstanceId"] = siblingInstanceId;
       let parent = await instancesStore_async.get(siblingInstanceId);
-      if (parent.request?.address) {
-        taskCopy.request["address"] = parent.request.address;
+      if (parent.state?.address) {
+        taskCopy.state["address"] = parent.state.address;
+      }
+      if (parent.state?.lastAddress) {
+        taskCopy.state["lastAddress"] = parent.state.lastAddress;
       }
       if (!familyId) {
         familyId = parent.familyId;

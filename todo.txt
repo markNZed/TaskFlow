@@ -96,7 +96,7 @@ Add function to remove last paragraph
 
 A new conversation button once we have the session restoring.
 
-Address is just a part of a task request
+Address is just a part of a task state
   Raises the idea of a task setting user information on the hub
     Or should there be a Task to do that?
             

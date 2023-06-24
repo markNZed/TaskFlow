@@ -116,6 +116,27 @@ const TaskChat = (props) => {
           if (submittingForm) {
             nextState = "sending";
           }
+          if (task.state?.lastAddress !== task.state?.address) {
+            nextState = "mentionAddress";
+          }
+          break;
+        case "mentionAddress":
+          if (transitionTo("mentionAddress")) {
+            // Add the input too for the user
+            const prompt = "Location: " + task.state?.address;
+            const newMsgArray = [
+              { role: "user", text: prompt, user: user.label },
+              { role: "assistant", text: "", user: "assistant" },
+            ];
+            //console.log("Sending newMsgArray", newMsgArray, prompt);
+            // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+            modifyTask({ 
+              "output.msgs": [...msgs, ...newMsgArray],
+              "lock": true,
+              "command": "update",
+              "state.lastAddress": task.state.address,
+            });
+          }
           break;
         case "sending":
           // Create a slot for new msgs

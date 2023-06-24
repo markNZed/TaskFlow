@@ -38,7 +38,7 @@ function withTask(Component) {
       localStackPtrRef.current = 0;
     }
 
-    const { globalState } = useGlobalStateContext();
+    const { globalState, mergeGlobalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
@@ -69,6 +69,21 @@ function withTask(Component) {
     const publishedRef = useRef("");
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
     const handleChildmodifyStateRef = useRef(null);
+
+    useEffect(() => {
+      const useAddress = props.task?.config?.useAddress;
+      if (useAddress && useAddress !== globalState?.useAddress) {
+        mergeGlobalState({useAddress});
+      }
+    }, [props.task]);
+
+    useEffect(() => {
+      const useAddress = props.task?.config?.useAddress;
+      const address = props.task?.state?.address;
+      if (useAddress && globalState?.address && address !== globalState.address) {
+        modifyTask({"state.address": globalState.address, "state.lastAddress": address});
+      }
+    }, [globalState]);
 
     /*
     // Example of how to use the familyTaskDiff

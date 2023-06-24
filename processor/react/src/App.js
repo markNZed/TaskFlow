@@ -52,7 +52,7 @@ function App({ activeWorkerCount, workerId }) {
   )
   
   useEffect(() => {
-    if (globalState?.use_address && !enableGeolocation) {
+    if (globalState?.useAddress && !enableGeolocation) {
       setEnableGeolocation(true);
       console.log("Enabling use of address");
     }

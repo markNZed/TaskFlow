@@ -32,7 +32,7 @@ export function useGeolocation(enable) {
         console.log(msg);
       }
     }
-  }, []);
+  }, [enable]);
 
   useEffect(() => {
     if (location.latitude) {
