@@ -63,6 +63,7 @@ function withTask(Component) {
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
     const lastStateRef = useRef("");
+    const stateRef = useRef(null);
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
     const [familyId, setFamilyId] = useState();
     const publishedRef = useRef("");
@@ -217,6 +218,10 @@ function withTask(Component) {
         //}
       }
     )
+
+    function clearNextTask() {
+      setNextTask(null);
+    }
     
     useErrorWSFilter(props.task?.familyId,
       (updatedTask) => {
@@ -240,11 +245,12 @@ function withTask(Component) {
     }
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
-    // This issp ecific to how React handles setState 
+    // This is specific to how React handles setState 
     const modifyState = (state) => {
       //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
-      if (state) {
+      if (state && state !== props.task.state.current) {
+        stateRef.current = state;
         props.setTask((p) =>
           deepMerge(
             p,
@@ -258,6 +264,37 @@ function withTask(Component) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }
+
+    // Detect changes to the task.state.current that are not caused by modifyState
+    // Perhaps state machine would miss the change in this case
+    useEffect(() => {
+      const current = props?.task?.state?.current;
+      if (current && current !== stateRef.current) {
+        stateRef.current = current;
+      }
+    }, [props.task]);
+
+    /**
+     * Check if the task state is ready for processing.
+     *
+     * The purpose of this function is to handle a potential race condition in the state machine.
+     * Specifically, there's a risk that modifyState is called at the end of the state machine but
+     * the state is not yet updated when another event triggers the state machine again. This would
+     * cause the "previous" state to be re-executed.
+     *
+     * By using a ref, we can check that pending state changes are applied before we process the current state.
+     * We also consider a scenario where the state is directly modified by a parent Task, as we don't want to miss that event.
+     */
+    const checkIfStateReady = () => {
+      const currentState = props?.task?.state?.current;
+      if (!currentState) return false;
+
+      const isStateAlignedWithModifyState = currentState === stateRef.current;
+      const isStateUpdatedDirectly = stateRef.current === lastStateRef.current;
+
+      // Return true if the state is aligned with the last modifyState call OR if the state has been updated directly.
+      return isStateAlignedWithModifyState || isStateUpdatedDirectly;
+    };
 
     // If the parent wants to be able to modify the child state is passes this prop
     if (props.handleChildmodifyState) {
@@ -453,6 +490,7 @@ function withTask(Component) {
       startTaskFn,
       nextTaskError,
       nextTask,
+      clearNextTask,
       prevTask,
       modifyTask,
       modifyState,
@@ -473,6 +511,7 @@ function withTask(Component) {
       familyTaskDiff,
       handleChildmodifyState,
       modifyChildState,
+      checkIfStateReady,
     };
 
     return <WithDebugComponent {...componentProps} />;

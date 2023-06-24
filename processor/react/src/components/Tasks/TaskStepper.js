@@ -34,17 +34,18 @@ function TaskStepper(props) {
     modifyTask,
     modifyState,
     transition,
+    checkIfStateReady,
     useTasksState,
     stackPtr,
+    startTaskFn,
     startTaskError,
     startTask,
     nextTaskError,
     nextTask,
-    startTaskFn,
+    clearNextTask,
     useTaskState,
     onDidMount,
     modifyChildState,
-    handleChildmodifyState,
     componentName,
   } = props;
 
@@ -61,105 +62,102 @@ function TaskStepper(props) {
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
+  // Rather than making the state machine sensitive to tasks we create an event
   useEffect(() => {
-    if (tasks && tasks[tasksIdx].state?.done) {
-      setStepDone(true);
-    } else if (stepDone) {
-      setStepDone(false);
+    if (tasks.length && tasks[tasksIdx].state?.done !== stepDone) {
+      setStepDone(tasks[tasksIdx].state.done);
     }
   }, [tasksIdx, tasks]);
       
   // Task state machine
-  // Unique for each component that requires steps
-  // Would it be better to capitalize state names?
   useEffect(() => {
-    if (task && task.state.current) {
-      const nextConfigState = task?.config?.nextStates?.[task.state.current]
-      let nextState;
-      if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
-      switch (task.state.current) {
-        case "start":
-          startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
-          nextState = "waitForStart"
-          break;
-        case "waitForStart":
-          if (startTaskError) {
-            nextState = "error";
-          } else if (startTask) {
-            setTasks([startTask]);
-            setPrevTaskName(startTask.name);
-            setKeys([startTask.instanceId + tasksIdx]);
+    // modifyState may have been called by not yet updated test.state.current
+    if (!checkIfStateReady()) {return}
+    let nextState; 
+    // Log each transition, other events may cause looping over a state
+    if (transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
+    switch (task.state.current) {
+      case "start":
+        startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
+        nextState = "waitForStart"
+        break;
+      case "waitForStart":
+        if (startTaskError) {
+          nextState = "error";
+        } else if (startTask) {
+          setTasks([startTask]);
+          setPrevTaskName(startTask.name);
+          setKeys([startTask.instanceId + tasksIdx]);
+          nextState = "navigate";
+        }
+        break;
+      case "navigate":
+        if (stepperNavigation.task) {
+          if (stepperNavigation.direction === "forward") {
+            modifyChildState("exit");
+            setStepperNavigation({task: null, direction: null})
+            nextState = "waitForDone";
+          } else if (stepperNavigation.direction === "back") {
+            setTasksIdx(tasks.length - 2);
+            setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
+            const newIdx = tasks.length - 2;
+            // By changing the key we force the component to re-mount. This is like a reset in some ways
+            setKeys(prevKeys => {
+              let newKeys = [...prevKeys];
+                newKeys[newIdx] += newIdx;
+              return newKeys;
+            });
+            setStepperNavigation({task: null, direction: null})
             nextState = "navigate";
           }
-          break;
-        case "navigate":
-          if (stepperNavigation.task) {
-            if (stepperNavigation.direction === "forward") {
-              modifyChildState("exit");
-              setStepperNavigation({task: null, direction: null})
-              nextState = "waitForDone";
-            } else if (stepperNavigation.direction === "back") {
-              setTasksIdx(tasks.length - 2);
-              setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
-              const newIdx = tasks.length - 2;
-              // By changing the key we force the component to re-mount. This is like a reset in some ways
-              setKeys(prevKeys => {
-                let newKeys = [...prevKeys];
-                 newKeys[newIdx] += newIdx;
-                return newKeys;
-              });
-              setStepperNavigation({task: null, direction: null})
-              nextState = "navigate";
-            }
-          }                 
-          break;
-        case "waitForDone":
-          if (stepDone) {
-            // There are two commands happening here:
-            // 1. The chid task is requesting the next task
-            // 2. The stepper is receiving the next task
-            const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
-              "state.done": false, 
-              "command": "next"
-            }));
-            setTasksTask((p) => {
-              return newTask;
-            }, tasksIdx);
-            setKeys(p => [...p, newTask.instanceId + tasksIdx]);
-            nextState = "receiveNext";
+        }                 
+        break;
+      case "waitForDone":
+        if (stepDone) {
+          // There are two commands happening here:
+          // 1. The chid task is requesting the next task
+          // 2. The stepper is receiving the next task
+          const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+            "state.done": false, 
+            "command": "next"
+          }));
+          setTasksTask((p) => {
+            return newTask;
+          }, tasksIdx);
+          setKeys(p => [...p, newTask.instanceId + tasksIdx]);
+          nextState = "receiveNext";
+        }
+        break;
+      case "receiveNext":  
+        // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
+        modifyTask({
+          "command": "receiveNext",
+          "commandArgs": {
+            stackPtr: stackPtr, 
+            instanceId: tasks[tasksIdx].instanceId
           }
-          break;
-        case "receiveNext":  
-          // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
-          modifyTask({
-            "command": "receiveNext",
-            "commandArgs": {
-              stackPtr: stackPtr, 
-              instanceId: tasks[tasksIdx].instanceId
-            }
-          })
-          nextState = "waitForNext";
-          break;
-        case "waitForNext":
-          if (nextTaskError) {
-            nextState = "error";
-          // Check the instanceId because it is possible for the state machine to rerun prior to the state updating
-          // Also nextTask is not cleared so we need to check that it is not the same as the current task
-          } else if (nextTask && nextTask.instanceId !== tasks[tasksIdx].instanceId) {
-            console.log("TaskStepper nextTask", nextTask);
-            setTasksIdx(tasks.length);
-            setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
-            nextState = "navigate";
-          }
-          break;
-        case "error":
-          setModalInfo({title: "Error", description: "An error occurred"});
-        default:
-          console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+        })
+        nextState = "waitForNext";
+        break;
+      case "waitForNext":
+        if (nextTaskError) {
+          nextState = "error";
+        } else if (nextTask) {
+          console.log("TaskStepper nextTask", nextTask);
+          setTasksIdx(tasks.length);
+          setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
+          // Could have a getNextTask that could look after clearing it when it returns
+          clearNextTask(); // So we only use it once.
+          nextState = "navigate";
+        }
+        break;
+      case "error":
+        setModalInfo({title: "Error", description: "An error occurred"});
+      default:
+        console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
     }
+    // Manage state.current and state.last
+    modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, stepDone]);
 
