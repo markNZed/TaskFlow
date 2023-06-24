@@ -46,7 +46,6 @@ function TaskStepper(props) {
   const [tasksIdx, setTasksIdx] = useState(0);
   const [prevTaskName, setPrevTaskName] = useState();
   const [expanded, setExpanded] = useState(["start"]);
-  const [stepperTask, setStepperTask] = props.useTaskState(null, "stepperTask");
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
   const [stepDone, setStepDone] = useState();
@@ -214,7 +213,7 @@ function TaskStepper(props) {
                   is={stack[stackPtr]}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
-                  parentTask={stepperTask}
+                  parentTask={task}
                   stackPtr={stackPtr}
                   stackTaskId={stackTaskId}
                   handleChildmodifyState={props.handleChildmodifyState}
