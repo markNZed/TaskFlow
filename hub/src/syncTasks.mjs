@@ -13,8 +13,12 @@ const syncTasks_async = async (key, value) => {
   //console.log("syncTasks_async", key, value.processor)
   await instancesStore_async.set(key, value);
 
-  // So we store excatly what was sent to us
+  // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
+  const sourceProcessorId = taskCopy.hub.sourceProcessorId;
+  if (!sourceProcessorId) {
+    throw new Error("syncTasks_async missing sourceProcessorId" + JSON.stringify(taskCopy));
+  }
   const has = await activeTasksStore_async.has(key);
   if (!taskCopy?.hub?.command) {
     throw new Error("syncTasks_async missing command" + JSON.stringify(taskCopy));
@@ -31,14 +35,14 @@ const syncTasks_async = async (key, value) => {
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {
-    console.log("syncTasks_async task " + taskCopy.id + " from " + taskCopy.source);
+    //console.log("syncTasks_async task " + taskCopy.id + " from " + sourceProcessorId);
     let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
     for (const processorId of processorIds) {
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
-        if ((processorId !== taskCopy.source && command !== "join") 
+        if ((processorId !== sourceProcessorId && command !== "join") 
             || command === "start" || command === "next"
-            || (command === "join" && processorId === taskCopy.source)
+            || (command === "join" && processorId === sourceProcessorId)
         ) {
           if (!taskCopy.processor[processorId]) {
             console.log("command taskCopy missing processor", command, taskCopy, processorId );

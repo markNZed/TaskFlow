@@ -48,7 +48,6 @@ async function startTask_async(
       let instance = await instancesStore_async.get(prevInstanceId);
       processor = instance.processor;
       processor[processorId]["command"] = null;
-      console.log("sibling processor", processor);
     }
     if (!tasks[id]) {
       console.log("ERROR could not find task with id", id)
@@ -138,10 +137,6 @@ async function startTask_async(
       }
     }
 
-    if (!taskCopy.meta.updateCount) {
-      taskCopy.meta["updateCount"] = 0;
-    }
-
     // Must set familyId after oneThread, restoreSession and collaborate
     if (familyId) {
       taskCopy["familyId"] = familyId;
@@ -172,9 +167,16 @@ async function startTask_async(
     taskCopy.response = taskCopy.response || {};
     taskCopy.state = taskCopy.state || {};
 
+    if (!taskCopy.meta.updateCount) {
+      taskCopy.meta["updateCount"] = 0;
+    }
+    taskCopy.meta["updatesThisMinute"] = 0;
+
     if (!taskCopy["processor"][processorId]) {
       taskCopy["processor"][processorId] = {};
     }
+    taskCopy["processor"][processorId]["id"] = processorId;
+
     if (!taskCopy.hub?.command) {
       if (next) {
         taskCopy.hub.command = "next";
@@ -182,12 +184,12 @@ async function startTask_async(
         taskCopy.hub.command = "start";
       }
     }
+    taskCopy.hub["sourceProcessorId"] = processorId;
 
     if (prevInstanceId !== undefined) {
-      taskCopy.processor[processorId].prevInstanceId = prevInstanceId;
+      taskCopy.processor[processorId]["prevInstanceId"] = prevInstanceId;
     }
     taskCopy.userId = userId;
-    taskCopy.source = processorId;
     
     if (siblingInstanceId) {
       // Should rename to sibling?
@@ -340,7 +342,7 @@ async function startTask_async(
     }
 
     // Allocate the task to processors that supports the environment(s) requested
-    const sourceProcessorId = taskCopy.source;
+    const sourceProcessorId = processorId;
     const sourceProcessor = activeProcessors.get(sourceProcessorId);
     for (const environment of taskCopy.environments) {
       // Favor the source Processor if we need that environment

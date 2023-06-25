@@ -45,8 +45,8 @@ export function WebSocketProvider({ children, socketUrl }) {
     if (!m?.task) {
       m["task"] = {}
     }
-    m.task.source = globalState.processorId;
-    if (m.task?.command === "ping") {
+    m.task.processor["id"] = globalState.processorId;
+    if (m.task?.processor?.command === "ping") {
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     sendJsonMessage(m);

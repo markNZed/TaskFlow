@@ -193,7 +193,6 @@ function withTask(Component) {
           //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
           //console.log("currentUpdateDiff", currentUpdateDiff);
           // ignore differences in source & updatedAt & lock
-          delete currentTaskDiff.source
           delete currentTaskDiff.updatedAt
           delete currentTaskDiff.lock
           // partial updates to response can cause conflicts

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TASKHUB_URL } from "../config.mjs";
+import { TASKHUB_URL, processorId } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { utils } from "./utils.mjs";
 
@@ -17,12 +17,13 @@ export const nextTask_async = async (task) => {
   }
 
   task.processor["command"] = "next";
+  task.processor["id"] = processorId;
+
   // Clear down task commands as we do not want these coming back from the hub
   task["command"] = null;
   if (task.commandArgs) {
     task.commandArgs = null;
   }
-  
 
   try {
     const validatedTaskJsonString = fromTask(task);

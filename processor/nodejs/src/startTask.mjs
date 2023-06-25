@@ -4,14 +4,14 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TASKHUB_URL } from "../config.mjs";
+import { TASKHUB_URL, processorId } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { activeTasksStore_async } from "../storage.mjs";
 import { wsSendTask } from "./websocket.js";
 
 export const startTask_async = async (userId, startId, siblingTask) => {
 
-  let task = { id: startId, source: "nodejs", hub: {}};
+  let task = { id: startId, hub: {}};
 
   let messageJsonString;
 
@@ -20,6 +20,8 @@ export const startTask_async = async (userId, startId, siblingTask) => {
   }
 
   task.processor["command"] = "start";
+  task.processor["id"] = processorId;
+
   // Clear down task commands as we do not want these coming back from the hub
   task["command"] = null;
   if (task.commandArgs) {

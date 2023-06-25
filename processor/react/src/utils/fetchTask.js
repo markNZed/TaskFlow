@@ -11,13 +11,14 @@ export const fetchTask = async (globalState, command, task) => {
   }
 
   task.processor["command"] = command;
+  task.processor["id"] = globalState.processorId;
+
   // Clear down task commands as we do not want these coming back from the hub
   task["command"] = null;
   if (task.commandArgs) {
     task.commandArgs = null;
   }
 
-  task.source = globalState.processorId;
   task.userId = globalState.user.userId;
 
   // The immediate destination of this request

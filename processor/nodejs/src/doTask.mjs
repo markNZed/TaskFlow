@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { processorId } from "../config.mjs";
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { updateTask_async } from "./updateTask.mjs";
@@ -18,7 +17,6 @@ export async function do_task_async(wsSendTask, task) {
       console.log("Component ", task.stack, " idx ", idx);
     }
     if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
-      task.source = processorId;
       try {
         updated_task = await taskFunctions[`${task.stack[idx]}_async`](task.stack[idx], wsSendTask, task);
       } catch (e) {

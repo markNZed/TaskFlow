@@ -19,7 +19,7 @@ function wsSendObject(processorId, message = {}) {
     }
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
-      //console.log("wsSendObject ", JSON.stringify(message) )
+      //console.log("wsSendObject ", processorId, JSON.stringify(message.task.processor) )
     }
   }
 }
@@ -30,6 +30,7 @@ const wsSendTask = async function (task, processorId = null) {
   }
   let command = task.hub.command;
   let commandArgs = task.hub?.commandArgs;
+  let processor = task.processor;
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
@@ -55,6 +56,7 @@ const wsSendTask = async function (task, processorId = null) {
       diff["hub"] = {};
       diff.hub["command"] = command;
       diff.hub["commandArgs"] = commandArgs;
+      diff.processor = processor;
       message["task"] = diff;
     }
   } else {
@@ -83,8 +85,8 @@ function initWebSocketServer(server) {
 
       const j = JSON.parse(message);
 
-      if (j?.task?.source) {
-        const processorId = j.task.source;
+      if (j?.task?.processor?.id) {
+        const processorId = j.task.processor.id;
         //console.log("processorId", processorId)
         if (!connections.get(processorId)) {
           connections.set(processorId, ws);
@@ -100,15 +102,16 @@ function initWebSocketServer(server) {
             hub: {command: "register"},
           };
           console.log("Request for registering " + processorId)
-          wsSendTask(task, j.task.source);
+          wsSendTask(task, processorId);
           return;
         }
       }
 
       if (j?.task) {
         const task = j.task;
-        const command = task.processor?.command;
+        const command = task.processor.command;
         const commandArgs = task.processor?.commandArgs;
+        const processorId = task.processor.id;
         delete task.processor.command;
         delete task.processor.commandArgs;
         if (!command) {
@@ -132,9 +135,10 @@ function initWebSocketServer(server) {
           //console.log("processor", processor);
           task.processor = processor;
           task.hub = activeTask.hub;
-          task.hub["command"] = "next";      
+          task.hub["command"] = "next";
+          task.hub["sourceProcessorId"] = processorId;     
           for (const id of activeTaskProcessors) {
-            if (id !== task.source) {
+            if (id !== processorId) {
               const ws = connections.get(id);
               if (!ws) {
                 console.log("Lost websocket for ", id, connections.keys());
@@ -159,8 +163,8 @@ function initWebSocketServer(server) {
           updatedeAt: currentDateTimeString,
           hub: {command: "pong"},
         };
-        //console.log("Pong " + j.task.source)
-        wsSendTask(task, j.task.source);
+        //console.log("Pong " + j.task.processor.id)
+        wsSendTask(task, j.task.processor.id);
       }
 
     });

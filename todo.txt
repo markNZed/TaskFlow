@@ -1,15 +1,11 @@
 /* ToDo
 -------
-Refactoring with jscodeshift
-Can we inherit/build on Task Function?
-move task.request to task.state.request (internal communication)
-  Should have task.config.model object?
+task.update?
+Refactoring with jscodeshift, see example in config repository
+Can we inherit/build on React or NodeJS Task Function?
 Requests from other tasks would be via: task.processor.task.request ?
-taskCopy.source is used by syncTasks also used by websocket to get processorId
-  Should we have a task.processor.id field ?
-  Seems like we should not trust that - how can the WS know the processorID?
-    Should be setup at time of registering?
-  source into task.hub ?
+  We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
+    On the other side it would be received via task.processor.request and task.processor.response
 "nextTask" to task.processor.commandArgs & task.hub.commandArgs
 hub.command is not used yet because we have distinct routes
 Could have a task.family entry which allows for broadcast and config
@@ -39,9 +35,8 @@ Code review/cleanup
   Refactoring
     Hub pipeline: a module with function for each step
     Single place where NodeJS provides fetchTask (like in React)
-    Remove message.command and use task.processor and task.hub only
-Modify the partial text update so it is incremental. This will better allow for selection.
-Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
+Modify the partial text update so it is incremental. This will better allow for text selection.
+  Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
 Integrate https://rapidapi.com/products/api-hub/
 Maybe start can be missed like update

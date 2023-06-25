@@ -31,7 +31,7 @@ function wsSendObject(message) {
       message.task.processor.command = message.task.command;
       delete message.task.command;
     }
-    message.task.source = processorId;
+    message.task.processor["id"] = processorId;
     if (message.task.processor.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
       //console.log("wsSendObject " + message.task.hub.command + " " + message.task.id )

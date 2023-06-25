@@ -21,26 +21,22 @@ router.post("/start", async (req, res) => {
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
     let task = req.body.task;
-    if (task?.processor) {
-      task.processor[task.source] = JSON.parse(JSON.stringify(task.processor));
-    }
     // We are not using this yet, could have a single API endpoint
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task/start");
     }
-    const command = task.processor?.command;
+    const command = task.processor.command;
     const commandArgs = task.processor?.commandArgs;
+    const processorId = task.processor.id;
     delete task.processor.command;
     delete task.processor.commandArgs;
+    task.processor[processorId] = JSON.parse(JSON.stringify(task.processor));
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
     const startId = task.id;
     const familyId = task.familyId;
-    const processorId = task.source;
     const stackPtr = task.stackPtr;
-    task["hub"] = {};
-    task["hub"]["command"] = "start";
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
       await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
@@ -68,8 +64,9 @@ router.post("/update", async (req, res) => {
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task/start");
     }
-    const command = task.processor?.command;
+    const command = task.processor.command;
     const commandArgs = task.processor?.commandArgs;
+    const processorId = task.processor.id;
     delete task.processor.command;
     delete task.processor.commandArgs;
     // Check if the task is locked
@@ -79,19 +76,19 @@ router.post("/update", async (req, res) => {
     }
     if (task.lock) {
       if (!activeTask.locked) {
-        console.log("Task locked by " + task.source);
-        task.locked = task.source;
+        console.log("Task locked by " + processorId);
+        task.locked = processorId;
       }
       task.lock = false;
-    } else if (activeTask.locked && activeTask.locked === task.source) {
-      console.log("Task unlocked by " + task.source);
+    } else if (activeTask.locked && activeTask.locked === processorId) {
+      console.log("Task unlocked by " + processorId);
       task.locked = false;
     }
     if (task.unlock) {
       task.locked = false;
       task.locked = false;
     }
-    if (activeTask.locked && activeTask.locked !== task.source && !task.lockBypass) {
+    if (activeTask.locked && activeTask.locked !== processorId && !task.lockBypass) {
       let now = new Date(); // Current time
       let updatedAt;
       if (task.meta.updatedAt) {
@@ -101,10 +98,10 @@ router.post("/update", async (req, res) => {
       let differenceInMinutes = (now - updatedAt) / 1000 / 60;
       console.log("differenceInMinutes", differenceInMinutes)
       if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log("Task lock expired for " + task.source + " locked by " + activeTask.locked)
+        console.log("Task lock expired for " + processorId + " locked by " + activeTask.locked)
         task.locked = false;
       } else {
-        console.log("Task lock conflict with " + task.source + " locked by " + activeTask.locked + " " + differenceInMinutes + " minutes ago.")
+        console.log("Task lock conflict with " + processorId + " locked by " + activeTask.locked + " " + differenceInMinutes + " minutes ago.")
         return res.status(423).send("Task locked");
       } 
     }
@@ -127,29 +124,25 @@ router.post("/update", async (req, res) => {
     if (task.config?.maxUpdateCount && task?.meta?.updateCount > task.config.maxUpdateCount) {
       return res.status(409).json({ error: "Task update count exceeded" });
     }
-    const currentDate = new Date()
-    const resetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), currentDate.getHours(), currentDate.getMinutes());
-    if (!task.meta) {
-      task.meta = {
-        updatesThisMinute: 0,
-        updatedAt: null,
-      };
-    }
+    const currentDate = new Date(); // Will be local time
+    const resetDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate(), currentDate.getUTCHours(), currentDate.getUTCMinutes());
     // If task has been updated before
+    const maxUpdateRate = 30; // per minute
     if (task.meta.updatedAt) {
-      const updatedAt = new Date(task.meta.updatedAt);
-
+      const updatedAt = new Date(task.meta.updatedAt.date);
       // If the last update happened within the current minute
       if (updatedAt >= resetDate) {
         // If updates this minute is more than the max rate, cannot update
         if (task.meta.updatesThisMinute >= maxUpdateRate) {
-          return res.status(409).json({ error: "Task update rate exceeded" });
+          return res.status(409).json({ error: "Task update rate exceeded " + maxUpdateRate + " per minute"});
         }
       } else {
         // If the last update was not in the current minute, reset the counter
+        //console.log("task.meta.updatesThisMinute = 0")
         task.meta.updatesThisMinute = 0;
       }
     }
+    //console.log("task.meta.updatesThisMinute", task.meta.updatesThisMinute)
     task.meta.updatesThisMinute++;
     let output = await outputStore_async.get(task.familyId);
     if (!output) {
@@ -159,20 +152,21 @@ router.post("/update", async (req, res) => {
     await outputStore_async.set(task.familyId, output);
     // Restore the other processors
     const processor = activeTask.processor;
-    processor[task.source] = JSON.parse(JSON.stringify(task.processor));
+    processor[processorId] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
     task.hub = activeTask.hub;
     task.hub["command"] = "update";
+    task.hub["sourceProcessorId"] = processorId; 
     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
     // Pass on tasks that are not done
     // Eventually this will go as we will not send tasks but rely on data synchronization across clients
     } else {
-      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + task.source)
+      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId)
       task.meta.updateCount = task.meta.updateCount + 1;
       // Don't await so the return gets back before the websocket update
-      //task.processor[task.source].command = "update";
+      //task.processor[processorId].command = "update";
       // Middleware will send the update
       activeTasksStore_async.set(task.instanceId, task);
       // So we do not return a task anymore. This requires the task synchronization working.
@@ -189,25 +183,26 @@ router.post("/next", async (req, res) => {
   console.log("/hub/api/task/next");
   let userId = utils.getUserId(req);
   if (userId) {
-    //console.log("req.body", req.body.task.output.msgs)
+    //console.log("req.body.task.processor", req.body.task.processor)
     let task = req.body.task;
-    //deep copy
-    const activeTask = await activeTasksStore_async.get(task.instanceId);
-    // Restore the other processors
-    const processor = activeTask.processor;
-    processor[task.source] = JSON.parse(JSON.stringify(task.processor));
-    task.processor = processor;
     // We are not using this yet, could have a single API endpoint
     // We are not using this yet, could have a single API endpoint
-    if (!task.processor) {
-      throw new Error("Missing task.processor in /hub/api/task/start");
+    if (!task?.processor?.id) {
+      throw new Error("Missing task.processor.id in /hub/api/task/next " + JSON.stringify(task));
     }
     const command = task.processor?.command;
     const commandArgs = task.processor?.commandArgs;
+    const processorId = task.processor.id;
     delete task.processor.command;
     delete task.processor.commandArgs;
+    const activeTask = await activeTasksStore_async.get(task.instanceId);
+    // Restore the other processors
+    const processor = activeTask.processor;
+    task.processor = processor;
+    processor[processorId] = JSON.parse(JSON.stringify(task.processor));
     task.hub = activeTask.hub;
     task.hub["command"] = "next";
+    task.hub["sourceProcessorId"] = processorId; 
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }
