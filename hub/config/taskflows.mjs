@@ -53,13 +53,11 @@ const taskflows = [
             model: {
               type: "chatgpt",
               forget: true,
+              prompt: "Tell me a story about something random.",
             },
             inputLabel: "Respond here.",
           },
           nextTask: "structure",
-          request: {
-            prompt: "Tell me a story about something random.",
-          },
           response: {
             text: "",
             userInput: "",

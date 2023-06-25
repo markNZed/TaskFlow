@@ -299,16 +299,23 @@ async function startTask_async(
       }
     }
 
-     // Find all the config variable that end with Template
-    for (const [key, template] of Object.entries(taskCopy.config)) {
-      if (key.endsWith("Template")) {
-        //console.log("Template found", key, template);
-        const strippedKey = key.replace("Template", "");
-        const templateCopy = JSON.parse(JSON.stringify(template)); // deep copy
-        taskCopy.config[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, familyId);
-        //console.log("Processed template", taskCopy.config[key]);
+    function processDeepTemplates(obj, outputs, familyId) {
+      // Traverse every key-value pair in the object
+      for (const [key, value] of Object.entries(obj)) {
+          // If the value is an object, then recurse
+          if (typeof value === 'object' && value !== null) {
+              processDeepTemplates(value, outputs, familyId);
+          }
+  
+          // If the key ends with "Template", process it
+          if (key.endsWith('Template')) {
+              const strippedKey = key.replace('Template', '');
+              const templateCopy = JSON.parse(JSON.stringify(value));
+              obj[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, familyId);
+          }
       }
     }
+    processDeepTemplates(taskCopy.config, outputs, familyId);
 
     // Must set instanceId after threadsStore_async
     taskCopy["instanceId"] = instanceId;

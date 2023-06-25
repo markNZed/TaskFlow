@@ -66,10 +66,10 @@ async function chat_prepare_async(task) {
   const instanceId = T("instanceId");
   let systemMessage = "";
   let initializing = false;
-  let use_cache = CACHE_ENABLE;
+  let useCache = CACHE_ENABLE;
   let noWebsocket = false;
 
-  let prompt = T("request.prompt");
+  let prompt = T("request.prompt") || T("config.model.prompt");
   //console.log("prompt " + prompt);
   let type = T("request.model.type") || T("config.model.type");
   let modelType = modelTypes["root."+type];
@@ -106,9 +106,14 @@ async function chat_prepare_async(task) {
     console.log("oneThread prompt : " + prompt);
   }
 
-  if (T("request.use_cache") !== undefined) {
-    use_cache = T("request.use_cache");
-    console.log("Task set cache " + use_cache);
+  if (T("config.model.useCache") !== undefined) {
+    useCache = T("config.model.useCache");
+    console.log("Task config set cache " + useCache);
+  }
+
+  if (T("request.model.useCache") !== undefined) {
+    useCache = T("request.model.useCache");
+    console.log("Task request set cache " + useCache);
   }
 
   if (typeof modelType?.prepend_prompt !== "undefined") {
@@ -138,9 +143,14 @@ async function chat_prepare_async(task) {
     console.log("Agent forget previous messages");
   }
 
+  if (T("config.model.forget") !== undefined) {
+    initializing = T("rconfig.model.forget")
+    console.log("Task config forget previous messages", T("config.model.forget"));
+  }
+
   if (T("request.forget") !== undefined) {
     initializing = T("request.forget")
-    console.log("Task forget previous messages", T("request.forget"));
+    console.log("Task rquest forget previous messages", T("request.forget"));
   }
 
   let messages = [];
@@ -152,10 +162,14 @@ async function chat_prepare_async(task) {
     );
   }
 
-  let requestMessages = T("request.messages");
-  if (T("config.messagesTemplate")) {
-    messages.push(...T("config.messages"))
-    console.log("Found messagesTemplate");
+  if (T("config.model.messages")) {
+    messages.push(...T("config.model.messages"))
+    console.log("Found config messages");
+  }
+
+  if (T("request.model.messages")) {
+    messages.push(...T("request.model.messages"))
+    console.log("Found request messages");
   }
 
   // This is assuming the structure usd in TaskChat
@@ -209,7 +223,7 @@ async function chat_prepare_async(task) {
     messages,
     noWebsocket,
     prompt,
-    use_cache,
+    useCache,
     baseModel,
     temperature,
     maxTokens,
@@ -233,7 +247,7 @@ async function ChatGPTAPI_request_async(params) {
     messages,
     noWebsocket,
     prompt,
-    use_cache,
+    useCache,
     baseModel,
     temperature,
     maxTokens,
@@ -316,7 +330,7 @@ async function ChatGPTAPI_request_async(params) {
   let cachedValue = null;
   let cacheKey = "";
   let cacheKeyText = "";
-  if (use_cache) {
+  if (useCache) {
     let contents = messages.map(message => message.content);
     let messagesText = contents.join(' ');
     cacheKeyText = [
@@ -403,7 +417,7 @@ async function ChatGPTAPI_request_async(params) {
         .then((response) => {
           let text = response.text;
           message_from("API", text, noWebsocket, instanceId);
-          if (use_cache) {
+          if (useCache) {
             cacheStore_async.set(cacheKey, response);
             console.log("cache stored key ", cacheKey);
           }
