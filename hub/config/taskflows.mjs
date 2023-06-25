@@ -17,12 +17,12 @@ const taskflows = [
     {
       config: {
         label: "chatGPT",
-      },
+        model: {
+          type: "chatgpt",
+        },
+    },
       name: "chatgpt",
       parentType: "conversation",
-      request: {
-        modelType: "chatgpt",
-      },
       tasks: {
         start: {
           APPEND_stack: ["TaskChat"],
@@ -50,12 +50,14 @@ const taskflows = [
           APPEND_stack: ["TaskLLMIO"],
           config: {
             instruction: "Tell the user what to do",
+            model: {
+              type: "chatgpt",
+              forget: true,
+            },
+            inputLabel: "Respond here.",
           },
           nextTask: "structure",
           request: {
-            modelType: "chatgpt",
-            forget: true,
-            inputLabel: "Respond here.",
             prompt: "Tell me a story about something random.",
           },
           response: {
@@ -88,8 +90,8 @@ const taskflows = [
             ],
           },
           nextTask: "stop",
-          request: {
-            modelType: "chatgpt",
+          model: {
+            type: "chatgpt",
             forget: true,
           },
         },

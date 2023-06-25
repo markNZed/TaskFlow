@@ -1,7 +1,9 @@
 /* ToDo
 -------
+Refactoring with jscodeshift
 Can we inherit/build on Task Function?
 move task.request to task.state.request (internal communication)
+  Should have task.config.model object?
 Requests from other tasks would be via: task.processor.task.request ?
 taskCopy.source is used by syncTasks also used by websocket to get processorId
   Should we have a task.processor.id field ?

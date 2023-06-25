@@ -71,17 +71,18 @@ async function chat_prepare_async(task) {
 
   let prompt = T("request.prompt");
   //console.log("prompt " + prompt);
-  let modelType = modelTypes["root."+T("request.modelType")];
+  let type = T("request.model.type") || T("config.model.type");
+  let modelType = modelTypes["root."+type];
   if (!modelType) {
     console.log("No modelType for ", task.id);
   } else {
     console.log("ModelType for ", task.id, modelType.name);
   }
-  let langModel = T("request.model") || modelType?.model;
-  let temperature = T("request.temperature") || modelType?.temperature;
-  let maxTokens = T("request.maxTokens") || modelType?.maxTokens;
-  let maxResponseTokens = T("request.maxResponseTokens") || modelType?.maxResponseTokens;
-  console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " langModel " + langModel);
+  let baseModel = T("request.model.base") || T("config.model.base") || modelType?.base;
+  let temperature = T("request.model.temperature") || T("config.model.temperature") || modelType?.temperature;
+  let maxTokens = T("request.model.maxTokens") || T("config.model.maxTokens") || modelType?.maxTokens;
+  let maxResponseTokens = T("request.model.maxResponseTokens") || T("config.model.maxResponseTokens") || modelType?.maxResponseTokens;
+  console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " base " + baseModel);
 
   //console.log("Agent ", modelType)
 
@@ -209,7 +210,7 @@ async function chat_prepare_async(task) {
     noWebsocket,
     prompt,
     use_cache,
-    langModel,
+    baseModel,
     temperature,
     maxTokens,
     maxResponseTokens,
@@ -233,7 +234,7 @@ async function ChatGPTAPI_request_async(params) {
     noWebsocket,
     prompt,
     use_cache,
-    langModel,
+    baseModel,
     temperature,
     maxTokens,
     modelTypeId,
@@ -300,7 +301,7 @@ async function ChatGPTAPI_request_async(params) {
 
   const messageParams = {
     completionParams: {
-      model: langModel,
+      model: baseModel,
       temperature: temperature,
     },
     parentMessageId: lastMessageId,
