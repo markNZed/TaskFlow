@@ -1,15 +1,11 @@
 /* ToDo
 -------
-task.update?
-Refactoring with jscodeshift, see example in config repository
-Can we inherit/build on React or NodeJS Task Function?
-Requests from other tasks would be via: task.processor.task.request ?
-  We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
-    On the other side it would be received via task.processor.request and task.processor.response
 "nextTask" to task.processor.commandArgs & task.hub.commandArgs
 hub.command is not used yet because we have distinct routes
-Could have a task.family entry which allows for broadcast and config
-  Hub could look after converting family command into instance command
+
+Requests from other tasks via: task.processor.task.request
+  We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
+    On the other side it would be received via task.processor.request and task.processor.response
 Could be valuable to communicate with an instance on a subset of environments
 If we have a TaskFilter this raises the question of how to configure/program it.
   Detects an event and passes information.
@@ -137,6 +133,8 @@ Consider how we would add a radio select box to a component
   Standard way of mapping this to response. Make these available as variable in next Task (or state?)
 Can we have the same React component present a new Task? I guess it does that automatically (carry the previous output along)
   In this case the patterns of display then input or input then display should be enough. TaskIO
+Refactoring with jscodeshift, see example in config repository
+
 
 Backlog
 -------
@@ -210,7 +208,12 @@ Notes/Idea
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
   One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
-  Writing the Hub and a generic Porcessor in Rust 
+  Writing the Hub and a generic Porcessor in Rust
+  Can we inherit/build on React or NodeJS Task Function?
+  No easy way to do this with React in the functional style
+    In te distant future we could build components on the fly
+  Could have a task.family entry which allows for broadcast and config
+  Hub could look after converting family command into instance command
 
 Architecture
 ------------

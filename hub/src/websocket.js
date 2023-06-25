@@ -51,7 +51,6 @@ const wsSendTask = async function (task, processorId = null) {
        // Points to a class of concern
       diff.instanceId = task.instanceId;
       diff.stackPtr = task.stackPtr;
-      diff.update = false; // otherwise other processors will try to update 
       diff.lock = false; // otherwise other processors will try to lock
       diff["hub"] = {};
       diff.hub["command"] = command;

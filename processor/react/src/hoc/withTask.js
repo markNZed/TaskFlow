@@ -198,10 +198,6 @@ function withTask(Component) {
           // partial updates to response can cause conflicts
           // Needs further thought
           delete currentTaskDiff.response
-          if (lastTask.locked === globalState.processorId) {
-            // Priority to local changes
-            delete updateDiff.update;
-          }
           if (checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
             //throw new Error("CONFLICT");
