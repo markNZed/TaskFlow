@@ -69,7 +69,7 @@ async function chat_prepare_async(task) {
   let useCache = CACHE_ENABLE;
   let noWebsocket = false;
 
-  let prompt = T("request.prompt") || T("config.model.prompt");
+  let prompt = T("request.model.prompt") || T("config.model.prompt");
   //console.log("prompt " + prompt);
   let type = T("request.model.type") || T("config.model.type");
   let modelType = modelTypes["root."+type];
@@ -133,8 +133,8 @@ async function chat_prepare_async(task) {
     console.log("Environment noWebsocket");
   }
 
-  if (T("request.noWebsocket") !== undefined) {
-    noWebsocket = T("request.noWebsocket");
+  if (T("request.model.noWebsocket") !== undefined) {
+    noWebsocket = T("request.model.noWebsocket");
     console.log("Request noWebsocket");
   }
 
@@ -147,10 +147,14 @@ async function chat_prepare_async(task) {
     initializing = T("rconfig.model.forget")
     console.log("Task config forget previous messages", T("config.model.forget"));
   }
+  if (T("config.model.forget") !== undefined) {
+    initializing = T("config.model.forget")
+    console.log("Task config forget previous messages", T("config.model.forget"));
+  }
 
-  if (T("request.forget") !== undefined) {
-    initializing = T("request.forget")
-    console.log("Task rquest forget previous messages", T("request.forget"));
+  if (T("request.model.forget") !== undefined) {
+    initializing = T("request.model.forget")
+    console.log("Task request forget previous messages", T("request.model.forget"));
   }
 
   let messages = [];
@@ -203,8 +207,8 @@ async function chat_prepare_async(task) {
 
   // If we can have PREPEND and APPEND then we could replace T('request.dyad') with something general
   // This allows for user defined system messages
-  if (T("request.systemMessage")) {
-    systemMessage = T("request.systemMessage");
+  if (T("request.model.systemMessage")) {
+    systemMessage = T("request.model.systemMessage");
     console.log("Sytem message from task " + T("id"));
   }
 
