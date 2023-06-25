@@ -84,6 +84,12 @@
       "type": "object",
       "additionalProperties": {},
       "properties": {
+        "request": {
+          "type": "object"
+        },
+        "response": {
+          "type": "object"
+        },
         "current": {
           "type": "string"
         },

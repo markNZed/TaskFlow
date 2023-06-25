@@ -194,8 +194,6 @@ const typeMap = {
         { json: "processor", js: "processor", typ: u(undefined, m("any")) },
         { json: "request", js: "request", typ: u(undefined, m("any")) },
         { json: "response", js: "response", typ: u(undefined, m("any")) },
-        { json: "sessionId", js: "sessionId", typ: u(undefined, "") },
-        { json: "source", js: "source", typ: u(undefined, "") },
         { json: "stack", js: "stack", typ: u(undefined, a("")) },
         { json: "stackPtr", js: "stackPtr", typ: u(undefined, 0) },
         { json: "stackTaskId", js: "stackTaskId", typ: u(undefined, a("")) },
@@ -211,6 +209,8 @@ const typeMap = {
         { json: "id", js: "id", typ: u(undefined, "") },
         { json: "last", js: "last", typ: u(undefined, "") },
         { json: "nextState", js: "nextState", typ: u(undefined, "") },
+        { json: "request", js: "request", typ: u(undefined, m("any")) },
+        { json: "response", js: "response", typ: u(undefined, m("any")) },
     ], "any"),
 };
 

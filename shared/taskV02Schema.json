@@ -70,12 +70,6 @@
         "parentType": {
           "type": "string"
         },       
-        "sessionId": {
-          "type": "string"
-        },       
-        "source": {
-          "type": "string"
-        },
         "stack": {
           "type": "array",
           "items": {
