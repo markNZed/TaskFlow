@@ -17,10 +17,6 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
 
   switch (task.state.current) {
     case "input":
-      // Make user input available to other tasks an output of this task
-      if (T("request.input")) {
-        T("output.input", T("request.input"));
-      }
       //console.log("Returning task state input " + JSON.stringify(task));
       T("state.last", T("state.current"));
       T("state.current", "stop");

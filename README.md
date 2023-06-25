@@ -26,7 +26,9 @@ For example, a chat application is a simple Task (receive user input, return lan
 
 The concpet of **Task Instance** refers to a particular Task Definition object.
 
-The concept of **Task Context** refers to the total data and functionality used by the Task this may be beyond the Task Function and Task Data.  
+The concept of **Task Context** refers to the total data and functionality used by the Task this may be beyond the Task Function and Task Data. 
+
+A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task.state object (in particular task.state.request and task.state.response). The Task Function sends commands to the Task Processor using task.command and task.commandArgs Only the Task Function writes to task.command
 
 ## Task Processor
 

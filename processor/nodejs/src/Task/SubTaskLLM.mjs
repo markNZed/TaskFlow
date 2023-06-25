@@ -69,19 +69,19 @@ async function chat_prepare_async(task) {
   let useCache = CACHE_ENABLE;
   let noWebsocket = false;
 
-  let prompt = T("request.model.prompt") || T("config.model.prompt");
+  let prompt = T("state.request.model.prompt") || T("config.model.prompt");
   //console.log("prompt " + prompt);
-  let type = T("request.model.type") || T("config.model.type");
+  let type = T("state.request.model.type") || T("config.model.type");
   let modelType = modelTypes["root."+type];
   if (!modelType) {
     console.log("No modelType for ", task.id);
   } else {
     console.log("ModelType for ", task.id, modelType.name);
   }
-  let baseModel = T("request.model.base") || T("config.model.base") || modelType?.base;
-  let temperature = T("request.model.temperature") || T("config.model.temperature") || modelType?.temperature;
-  let maxTokens = T("request.model.maxTokens") || T("config.model.maxTokens") || modelType?.maxTokens;
-  let maxResponseTokens = T("request.model.maxResponseTokens") || T("config.model.maxResponseTokens") || modelType?.maxResponseTokens;
+  let baseModel = T("state.request.model.base") || T("config.model.base") || modelType?.base;
+  let temperature = T("state.request.model.temperature") || T("config.model.temperature") || modelType?.temperature;
+  let maxTokens = T("state.request.model.maxTokens") || T("config.model.maxTokens") || modelType?.maxTokens;
+  let maxResponseTokens = T("state.request.model.maxResponseTokens") || T("config.model.maxResponseTokens") || modelType?.maxResponseTokens;
   console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " base " + baseModel);
 
   //console.log("Agent ", modelType)
@@ -111,8 +111,8 @@ async function chat_prepare_async(task) {
     console.log("Task config set cache " + useCache);
   }
 
-  if (T("request.model.useCache") !== undefined) {
-    useCache = T("request.model.useCache");
+  if (T("state.request.model.useCache") !== undefined) {
+    useCache = T("state.request.model.useCache");
     console.log("Task request set cache " + useCache);
   }
 
@@ -133,8 +133,8 @@ async function chat_prepare_async(task) {
     console.log("Environment noWebsocket");
   }
 
-  if (T("request.model.noWebsocket") !== undefined) {
-    noWebsocket = T("request.model.noWebsocket");
+  if (T("state.request.model.noWebsocket") !== undefined) {
+    noWebsocket = T("state.request.model.noWebsocket");
     console.log("Request noWebsocket");
   }
 
@@ -152,9 +152,9 @@ async function chat_prepare_async(task) {
     console.log("Task config forget previous messages", T("config.model.forget"));
   }
 
-  if (T("request.model.forget") !== undefined) {
-    initializing = T("request.model.forget")
-    console.log("Task request forget previous messages", T("request.model.forget"));
+  if (T("state.request.model.forget") !== undefined) {
+    initializing = T("state.request.model.forget")
+    console.log("Task request forget previous messages", T("state.request.model.forget"));
   }
 
   let messages = [];
@@ -171,8 +171,8 @@ async function chat_prepare_async(task) {
     console.log("Found config messages");
   }
 
-  if (T("request.model.messages")) {
-    messages.push(...T("request.model.messages"))
+  if (T("state.request.model.messages")) {
+    messages.push(...T("state.request.model.messages"))
     console.log("Found request messages");
   }
 
@@ -205,10 +205,9 @@ async function chat_prepare_async(task) {
     console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
   }
 
-  // If we can have PREPEND and APPEND then we could replace T('request.dyad') with something general
   // This allows for user defined system messages
-  if (T("request.model.systemMessage")) {
-    systemMessage = T("request.model.systemMessage");
+  if (T("state.request.model.systemMessage")) {
+    systemMessage = T("state.request.model.systemMessage");
     console.log("Sytem message from task " + T("id"));
   }
 
