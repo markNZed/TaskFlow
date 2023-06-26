@@ -61,9 +61,13 @@ const wsSendTask = async function (task, processorId = null) {
   } else {
     message["task"] = task;
   }
-  if (message.task?.processor && message.task.processor[processorId]) {
-    //deep copy
+  if (message.task?.processor) {
+    //deep copy because we are going to edit the object
     message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
+    delete message.task.processor.command;
+    if (message.task.processor?.commandArgs) {
+      delete message.task.processor.commandArgs;
+    }
   }
   if (command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)

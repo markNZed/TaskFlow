@@ -22,13 +22,14 @@ function wsSendObject(message) {
     console.log("Lost websocket for wsSendObject", message);
   } else {
     if (!message?.task) {
-      message["task"] = {}
+      throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
     }
-    if (!message.task.processor?.command && message.task?.command) {
-      if (!message.task.processor) {
-        throw new Error("Missing task.processor in wsSendObject" + JSON.stringify(message));
-      }
+    // This is used when sending a partial response from SubTaskLLM.mjs
+    if (message.task?.command) {
       message.task.processor.command = message.task.command;
+      if (message.task.commandArgs) {
+        message.task.processor.commandArgs = message.task.commandArgs;
+      }
       delete message.task.command;
     }
     message.task.processor["id"] = processorId;

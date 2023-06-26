@@ -1,7 +1,23 @@
 /* ToDo
 -------
-"nextTask" to task.processor.commandArgs & task.hub.commandArgs
+task.nextTask might be better in task.commandArgs but it still needs to be stored in the task.config
+  Currently task.nextTask is used on th ehub
+When task is sent by procssor we should delete task.command and task.commandArgs - Done
+When task is sent by hub we should delete task.processor.command and task.processor.commandArgs
 hub.command is not used yet because we have distinct routes
+Lock needs some thought
+  Task task.commandArgs.lock on update?
+    Procssor copies to task.processor.commandArgs.lock
+The stack of components for React should not be mixed with a stack of Tasks.
+  Stack of components should be in the task.config
+Code review/cleanup 
+  configdata
+    Prepending "root." is not cool for configdata like users and groups
+      If there is no parent then consider to be root ? Then do not require root.
+  Refactoring
+    Hub pipeline: a module with function for each step
+    Single place where NodeJS provides fetchTask (like in React)
+  Align usage of utils
 
 Requests from other tasks via: task.processor.task.request
   We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
@@ -14,32 +30,17 @@ If we have a TaskFilter this raises the question of how to configure/program it.
         How to inform another task
         If we do want a DSL the Lua might be a good option for language indepedence
           https://github.com/fengari-lua/fengari-web
-Lock needs some thought
-  Task sends task.processor.commandArgs.lock on update?
-  Procssor sends task.hub.commandArgs.lock?
-Do we want task.identification object (why do we need groupId?)
-Should permissions by an object in the task?
 Do we want a join route on Hub for symmetry?
   Create a single task route and use task.processor.command to call out to relevant function
-The stack of components for React should not be mixed with a stack of Tasks.
-  Maybe the stack of components should be in the task.config
 chatContainermaxHeight in TaskConversation scrolling?
-Task search feature could be a micro-service provided by the Hub?
- For example user can search personal history
-Code review/cleanup 
-  configdata
-  Refactoring
-    Hub pipeline: a module with function for each step
-    Single place where NodeJS provides fetchTask (like in React)
 Modify the partial text update so it is incremental. This will better allow for text selection.
   Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
 Integrate https://rapidapi.com/products/api-hub/
 Maybe start can be missed like update
-  Get all the WS working this was
+  Get all the WS working this way
   Add queue to other React WS filters
-Maybe next feature is remembering the system messages for Vierge
-In default config assign a random user label so we can demo multiparty chat
+Possible next feature is remembering the system messages for Vierge
 Provide sample of nginx proxy config
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome
@@ -64,41 +65,18 @@ Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
-Align usage of utils
-
 Ideally we want the same code for Task storage on Hub/React/NodeJs
   Could use @kvs/node-localstorage
-Prepending "root." is not cool for configdata like users and groups
-  If there is no parent then consider to be root ? Then do not require root.
-
-Tools T@skFLow could leverage:
-  https://github.com/PrefectHQ/marvin a batteries-included library for building AI-powered software. Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
-
-Internal/External IO is an important distinction
-  A list of dependenceies/references that are monitored by the processor
-    External outputs are monitored 
-    What happens when a task is done - depends if monitoring the thread or instance
-    Maybe the nextTask becomes available on the output then the monitoring task can decide to include this in 
-    dependencies or not.
-
 Demo of collaborative chat would be good.
-Summary of long documents. Probably better to do this in Python.
-
+  In default config assign a random user label so we can demo multiparty chat
 Add function to remove last paragraph
   Interesting to explore how that might be done
-
 A new conversation button once we have the session restoring.
-
 Address is just a part of a task state
   Raises the idea of a task setting user information on the hub
     Or should there be a Task to do that?
-            
-We don't want all the Task data to be synchronized only the relevant data for the Task Function that is implemented on the Task Processor. 
-  Maybe a field in the Task is for local processor - this makes sense
-
-Sort out privacy - should only be implemented on the Hub
-The Hub and Processors need to have secure communication, then identification is managed on the hub.
-
+Privacy - should only be implemented on the Hub
+  Hub and Processors need to have secure communication, then identification is managed on the hub.
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -109,10 +87,9 @@ Harmonise the Task Processor
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
-      React adds the concept of address/location.
+      React Processor adds the concept of address/location.
 When should we introduce Typescript?
   First try to simplify the code
-Swagger for the API ?
 Tests will allow for better code generation
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
@@ -133,8 +110,6 @@ Consider how we would add a radio select box to a component
   Standard way of mapping this to response. Make these available as variable in next Task (or state?)
 Can we have the same React component present a new Task? I guess it does that automatically (carry the previous output along)
   In this case the patterns of display then input or input then display should be enough. TaskIO
-Refactoring with jscodeshift, see example in config repository
-
 
 Backlog
 -------
@@ -214,6 +189,14 @@ Notes/Idea
     In te distant future we could build components on the fly
   Could have a task.family entry which allows for broadcast and config
   Hub could look after converting family command into instance command
+  Task search feature could be a micro-service provided by the Hub?
+    For example user can search personal history
+  Tools T@skFLow could leverage:
+    https://github.com/PrefectHQ/marvin 
+      a batteries-included library for building AI-powered software. 
+      Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
+  Swagger for the API ?
+  Refactoring with jscodeshift, see example in config repository
 
 Architecture
 ------------
