@@ -20,13 +20,15 @@ const taskflows = [
         model: {
           type: "chatgpt",
         },
-    },
+      },
       name: "chatgpt",
       parentType: "conversation",
       tasks: {
         start: {
           APPEND_stack: ["TaskChat"],
-          nextTask: "start",
+          config: {
+            nextTask: "start",
+          },
         },
       },
     },
@@ -41,14 +43,15 @@ const taskflows = [
       tasks: {
         start: {
           APPEND_stack: ["TaskShowResponse"],
-          nextTask: "summarize",
           config: {
-            text: "Hello",
+            nextTask: "summarize",
+            response: "Hello",
           },
         },
         summarize: {
           APPEND_stack: ["TaskLLMIO"],
           config: {
+            nextTask: "structure",
             instruction: "Tell the user what to do",
             model: {
               type: "chatgpt",
@@ -57,7 +60,6 @@ const taskflows = [
             },
             inputLabel: "Respond here.",
           },
-          nextTask: "structure",
           response: {
             text: "",
             userInput: "",
@@ -66,6 +68,7 @@ const taskflows = [
         structure: {
           APPEND_stack: ["TaskLLMIO"],
           config: {
+            nextTask: "stop",
             instruction: "This is what I think of your response",
             messagesTemplate: [
               {
@@ -87,7 +90,6 @@ const taskflows = [
               '"',
             ],
           },
-          nextTask: "stop",
           model: {
             type: "chatgpt",
             forget: true,

@@ -49,6 +49,7 @@ router.post("/start", async (req, res) => {
       await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
       return res.status(200).send("ok");
     } catch (err) {
+      throw err;
       console.log("Error starting task " + startId + " " + err);
       res.status(200).json({ error: "Error starting task " + startId + " " + err });
     }
@@ -127,7 +128,9 @@ router.post("/update", async (req, res) => {
         strArr[strArr.length - 1] = "error";
         errorTask = strArr.join('.');
       }
-      task.nextTask = errorTask
+      // Should be using command here?
+      task.hub["command"] = "next";
+      task.hub["commandArgs"] = {"nextTask": errorTask};
       task.done = true
       console.log("Task error " + task.id);
     }
@@ -137,8 +140,8 @@ router.post("/update", async (req, res) => {
     const currentDate = new Date(); // Will be local time
     const resetDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate(), currentDate.getUTCHours(), currentDate.getUTCMinutes());
     // If task has been updated before
-    const maxUpdateRate = 30; // per minute
-    if (task.meta.updatedAt) {
+    const maxUpdateRate = task.config?.maxUpdateRate; // per minute
+    if (task.meta.updatedAt && maxUpdateRate) {
       const updatedAt = new Date(task.meta.updatedAt.date);
       // If the last update happened within the current minute
       if (updatedAt >= resetDate) {
@@ -231,7 +234,9 @@ router.post("/next", async (req, res) => {
         strArr[strArr.length - 1] = "error";
         errorTask = strArr.join('.');
       }
-      task.nextTask = errorTask
+      // Should be using command here?
+      task.hub["command"] = "next";
+      task.hub["commandArgs"] = {"nextTask": errorTask};
       task.done = true
       console.log("Task error " + task.id);
     }

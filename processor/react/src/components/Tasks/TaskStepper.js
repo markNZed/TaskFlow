@@ -110,7 +110,10 @@ function TaskStepper(props) {
           // 2. The stepper is receiving the next task
           const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
-            "command": "next"
+            "command": "next",
+            "commandArgs": { 
+              "nextTask": task.config.nextTask 
+            } 
           }));
           setTasksTask((p) => {
             return newTask;

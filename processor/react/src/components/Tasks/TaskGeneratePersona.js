@@ -97,6 +97,7 @@ const TaskGeneratePersona = (props) => {
         case "generated":
           //setResponseText(p => {return p + task.response.text});
           //setResponseText(p => {return p + "Done."});
+          setResponseText(task.output.summary);
           startTaskFn(props.stackTaskId[stackPtr], task.familyId, stackPtr + 1);
           nextState = "wait";
         case "wait":

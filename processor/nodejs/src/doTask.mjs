@@ -30,7 +30,6 @@ export async function do_task_async(wsSendTask, task) {
         // If the task is done then Hub will intercept this
         //console.log("do_task_async final task", updated_task)
         if (updated_task?.command === "next") {
-          updated_task["commandArgs"]["nextTask"] = updated_task.nextTask;
           await nextTask_async(updated_task);
         } else if (updated_task?.command === "start") {
           // This is not working/used yet
@@ -44,6 +43,7 @@ export async function do_task_async(wsSendTask, task) {
       }
     } else {
       console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
+      console.log("taskFunctions", taskFunctions);
       updated_task = task;
     }
 

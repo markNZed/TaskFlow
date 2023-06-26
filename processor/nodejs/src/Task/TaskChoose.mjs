@@ -64,7 +64,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
     embeddingsData.dispose();
 
     // Need to go to next state, can stay on NodeJS Task Processor side
-    T("nextTask", next_states[maxIndex]);
+    T("commandArgs", {"nextTask": next_states[maxIndex]});
     T("command", "next");
   } catch (error) {
     // Handle the error here

@@ -76,7 +76,13 @@ function TaskCollaborate(props) {
   useEffect(() => {
     if (tasks.length && tasks[tasksIdx].state?.done) {
       // We use newTask to ensure setDoneTask will see the changes to Tasks
-      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ "state.done": false, "command": "next" }));
+      const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+        "state.done": false, 
+        "command": "next", 
+        "commandArgs": { 
+          "nextTask": task.config.nextTask 
+        } 
+      }));
       setTasksTask((p) => {
         return newTask;
       }, tasksIdx);

@@ -138,7 +138,8 @@ function initWebSocketServer(server) {
           //console.log("processor", processor);
           task.processor = processor;
           task.hub = activeTask.hub;
-          task.hub["command"] = "next";
+          task.hub["command"] = command;
+          task.hub["commandArgs"] = commandArgs;
           task.hub["sourceProcessorId"] = processorId;     
           for (const id of activeTaskProcessors) {
             if (id !== processorId) {
@@ -146,10 +147,6 @@ function initWebSocketServer(server) {
               if (!ws) {
                 console.log("Lost websocket for ", id, connections.keys());
               } else {
-                task.hub.command = command;
-                if (commandArgs) {
-                  task.hub.commandArgs = commandArgs;
-                }
                 //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
                 wsSendTask(task, id);
               }

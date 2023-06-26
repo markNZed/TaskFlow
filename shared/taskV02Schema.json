@@ -64,9 +64,6 @@
         "name": {
           "type": "string"
         },
-        "nextTask": {
-          "type": "string"
-        },
         "parentType": {
           "type": "string"
         },       

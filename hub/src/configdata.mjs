@@ -42,7 +42,8 @@ function flattenTaskflows(taskflows) {
   taskflows.forEach(function (taskflow) {
     //console.log("Taskflow: " + taskflow?.name)
     let debug = false;
-    //if (taskflow.name === "conversation") {debug = true;}
+    //if (taskflow.name.includes("conversation")) {debug = true;}
+    if (debug) {console.log("Taskflow: " + taskflow?.name)}
     if (!taskflow?.name) {
       throw new Error("Error: Taskflow missing name");
     }
@@ -83,11 +84,12 @@ function flattenTaskflows(taskflows) {
           }
           // Convert relative task references to absolute
           if (
-            taskflow.tasks[key]["nextTask"] &&
-            !taskflow.tasks[key]["nextTask"].includes(".")
+            taskflow.tasks[key]["config"] &&
+            taskflow.tasks[key]["config"]["nextTask"] &&
+            !taskflow.tasks[key]["config"]["nextTask"].includes(".")
           ) {
-            taskflow.tasks[key]["nextTask"] =
-              id + "." + taskflow.tasks[key]["nextTask"];
+            taskflow.tasks[key]["config"]["nextTask"] =
+              id + "." + taskflow.tasks[key]["config"]["nextTask"];
           }
           if (
             taskflow.tasks[key]["config"] &&
@@ -125,7 +127,14 @@ function flattenTaskflows(taskflows) {
     const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
     for (const key in parentTaskflow) {
       if (parentTaskflow.hasOwnProperty(key)) {
-        if (
+        if (key === "tasks") {continue;}
+        if (taskflow.hasOwnProperty(key) &&
+          !key.startsWith("APPEND_") &&
+          !key.startsWith("PREPEND_")
+        ) {
+          // Will not override, need to merge
+          taskflow[key] = utils.deepMerge(parentTaskflow[key], taskflow[key])
+        } else if (
           !taskflow.hasOwnProperty(key) &&
           !key.startsWith("APPEND_") &&
           !key.startsWith("PREPEND_")
@@ -154,22 +163,30 @@ function flattenTaskflows(taskflows) {
         }
       }
     }
-    if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", taskflow)}
+    if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", JSON.stringify(taskflow, null, 2))}
     // Copy all the keys from the taskflow that are not in the current tasks
     if (taskflow?.tasks) {
       for (const taskkey in taskflow.tasks) {
         if (taskflow.tasks.hasOwnProperty(taskkey)) {
           const APPEND_stack = taskflow.tasks[taskkey]["APPEND_stack"]
           if (APPEND_stack) {
-            // loop over APPEND_stack array
+            // for each entry in  APPEND_stack create an entry to start in APPEND_stackTaskId
             const start = id + ".start";
-            const componentCount = APPEND_stack.length;
+            let componentCount = APPEND_stack.length 
+            if (taskflow?.stack) {
+              componentCount = componentCount + taskflow.stack.length;
+            }
             taskflow.tasks[taskkey]["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
           }
           for (const taskflowkey in taskflow) {
             if (taskflow.hasOwnProperty(taskflowkey)) {
-              // Will not override, need to merge?
-              if (
+              if (taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
+                !taskflowkey.startsWith("APPEND_") &&
+                !taskflowkey.startsWith("PREPEND_")
+              ) {
+                // Will not override, need to merge
+                taskflow.tasks[taskkey][taskflowkey] =  utils.deepMerge(taskflow[taskflowkey], taskflow.tasks[taskkey][taskflowkey]);
+              } else if (
                 !taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
                 taskflowkey !== "tasks" &&
                 !taskflowkey.startsWith("APPEND_") &&
@@ -383,5 +400,7 @@ function flattenTasks(taskflows) {
 
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
+
+console.log(JSON.stringify(tasks["root.collaborate.clientgenerator.conversation.start"], null, 2));
 
 export { users, groups, taskflows, tasktypes, tasks };

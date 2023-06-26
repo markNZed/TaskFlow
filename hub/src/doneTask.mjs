@@ -12,7 +12,8 @@ export async function doneTask_async(task) {
   if (!task.done && !task.next) {
     throw new Error("Called doneTask_async on a task that is not done");
   }
-  console.log("Task " + task.id + " done " + task.done + " next " + task.nextTask);
+  const nextTask = task.hub?.commandArgs?.nextTask;
+  console.log("Task " + task.id + " done " + task.done + " next " + nextTask);
   instancesStore_async.set(task.instanceId, task);
   let outputs = await outputStore_async.get(task.familyId) || {};
   outputs[task.id] = task.output;
@@ -24,12 +25,12 @@ export async function doneTask_async(task) {
     // !!!
     activeTasksStore_async.delete(task.instanceId);
     activeTaskProcessorsStore_async.delete(task.instanceId);
-  } else if (!task.nextTask) {
+  } else if (!nextTask) {
     throw new Error("Called doneTask_async on a task that is not done and has no next task");
   }
   // Fetch from the Task Hub
-  if (task.nextTask) {
-    await startTask_async(task.nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, task.nextTask, task, task.next);
+  if (nextTask) {
+    await startTask_async(nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTask, task, task.next);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
   }
 }

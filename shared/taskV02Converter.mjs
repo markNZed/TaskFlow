@@ -186,7 +186,6 @@ const typeMap = {
         { json: "locked", js: "locked", typ: u(undefined, u(true, "")) },
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
-        { json: "nextTask", js: "nextTask", typ: u(undefined, "") },
         { json: "output", js: "output", typ: u(undefined, m("any")) },
         { json: "parentType", js: "parentType", typ: u(undefined, "") },
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
