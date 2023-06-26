@@ -10,14 +10,17 @@ export const fetchTask = async (globalState, command, task) => {
     throw new Error("Missing task.processor in fetchTask" + JSON.stringify(task));
   }
 
-  task.processor["command"] = command;
-  task.processor["id"] = globalState.processorId;
+  const processorId = globalState.processorId;
 
   // Clear down task commands as we do not want these coming back from the hub
+  task.processor["command"] = command;
   task["command"] = null;
   if (task.commandArgs) {
+    // Deep copy because we are going to clear
+    task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
     task.commandArgs = null;
   }
+  task.processor["id"] = processorId;  
 
   task.userId = globalState.user.userId;
 

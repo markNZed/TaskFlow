@@ -42,9 +42,6 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
-    if (!m?.task) {
-      m["task"] = {}
-    }
     m.task.processor["id"] = globalState.processorId;
     if (m.task?.processor?.command === "ping") {
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))

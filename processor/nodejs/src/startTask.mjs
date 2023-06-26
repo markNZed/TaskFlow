@@ -19,14 +19,15 @@ export const startTask_async = async (userId, startId, siblingTask) => {
     throw new Error("Missing task.processor in startTask_async" + JSON.stringify(task));
   }
 
-  task.processor["command"] = "start";
-  task.processor["id"] = processorId;
-
   // Clear down task commands as we do not want these coming back from the hub
+  task.processor["command"] = "start";
   task["command"] = null;
   if (task.commandArgs) {
+    // Deep copy because we are going to clear
+    task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
     task.commandArgs = null;
   }
+  task.processor["id"] = processorId;  
 
   try {
     const validatedTaskJsonString = fromTask(task);

@@ -27,10 +27,12 @@ function wsSendObject(message) {
     // This is used when sending a partial response from SubTaskLLM.mjs
     if (message.task?.command) {
       message.task.processor.command = message.task.command;
+      message.task.command = null;
       if (message.task.commandArgs) {
-        message.task.processor.commandArgs = message.task.commandArgs;
+        // Deep copy because we are going to clear
+        message.task.processor.commandArgs = JSON.parse(JSON.stringify(message.task.commandArgs));
+        message.task.commandArgs = null;
       }
-      delete message.task.command;
     }
     message.task.processor["id"] = processorId;
     if (message.task.processor.command !== "ping") {
