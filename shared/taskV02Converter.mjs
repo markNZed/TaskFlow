@@ -174,7 +174,7 @@ const typeMap = {
         { json: "baseType", js: "baseType", typ: u(undefined, "") },
         { json: "children", js: "children", typ: u(undefined, a("")) },
         { json: "command", js: "command", typ: u(undefined, u(null, "")) },
-        { json: "commandArgs", js: "commandArgs", typ: u(undefined, m("any")) },
+        { json: "commandArgs", js: "commandArgs", typ: u(undefined, u(m("any"), null)) },
         { json: "config", js: "config", typ: u(undefined, m("any")) },
         { json: "error", js: "error", typ: u(undefined, u(null, "")) },
         { json: "familyId", js: "familyId", typ: u(undefined, "") },

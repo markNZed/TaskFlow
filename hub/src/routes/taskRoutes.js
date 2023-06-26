@@ -26,11 +26,18 @@ router.post("/start", async (req, res) => {
       throw new Error("Missing task.processor in /hub/api/task/start");
     }
     const command = task.processor.command;
-    const commandArgs = task.processor?.commandArgs;
+    task.processor.command = null;
+    let commandArgs;
+    if (task.processor?.commandArgs) {
+      commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
+      task.processor.commandArgs = null;
+    }
     const processorId = task.processor.id;
-    delete task.processor.command;
-    delete task.processor.commandArgs;
     task.processor[processorId] = JSON.parse(JSON.stringify(task.processor));
+    task.hub = {};
+    task.hub["command"] = command;
+    task.hub["commandArgs"] = commandArgs;
+    task.hub["sourceProcessorId"] = processorId; 
     const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
@@ -65,10 +72,13 @@ router.post("/update", async (req, res) => {
       throw new Error("Missing task.processor in /hub/api/task/start");
     }
     const command = task.processor.command;
-    const commandArgs = task.processor?.commandArgs;
+    task.processor.command = null;
+    let commandArgs;
+    if (task.processor?.commandArgs) {
+      commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
+      task.processor.commandArgs = null;
+    }
     const processorId = task.processor.id;
-    delete task.processor.command;
-    delete task.processor.commandArgs;
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
@@ -155,9 +165,10 @@ router.post("/update", async (req, res) => {
     processor[processorId] = JSON.parse(JSON.stringify(task.processor));
     task.processor = processor;
     task.hub = activeTask.hub;
-    task.hub["command"] = "update";
+    task.hub["command"] = command;
+    task.hub["commandArgs"] = commandArgs;
     task.hub["sourceProcessorId"] = processorId; 
-    if (task.done || task.next) {
+     if (task.done || task.next) {
       doneTask_async(task) 
       return res.status(200).send("ok");
     // Pass on tasks that are not done
@@ -190,18 +201,22 @@ router.post("/next", async (req, res) => {
     if (!task?.processor?.id) {
       throw new Error("Missing task.processor.id in /hub/api/task/next " + JSON.stringify(task));
     }
-    const command = task.processor?.command;
-    const commandArgs = task.processor?.commandArgs;
+    const command = task.processor.command;
+    task.processor.command = null;
+    let commandArgs;
+    if (task.processor?.commandArgs) {
+      commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
+      task.processor.commandArgs = null;
+    }
     const processorId = task.processor.id;
-    delete task.processor.command;
-    delete task.processor.commandArgs;
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     // Restore the other processors
     const processor = activeTask.processor;
     task.processor = processor;
     processor[processorId] = JSON.parse(JSON.stringify(task.processor));
     task.hub = activeTask.hub;
-    task.hub["command"] = "next";
+    task.hub["command"] = command;
+    task.hub["commandArgs"] = commandArgs;
     task.hub["sourceProcessorId"] = processorId; 
     if (!activeTask) {
       return res.status(404).send("Task not found");

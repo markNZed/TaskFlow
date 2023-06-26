@@ -19,14 +19,16 @@ const useStartTask = (startId, setStartId, familyId, stackPtr) => {
     }
     const fetchTaskFromAPI = async () => {
       try {
-        log("useStartTask", startId, stackPtr);
+        const command = "start";
+        const commandArgs = null;
+            log("useStartTask", startId, stackPtr);
         let task = { 
           id: startId,
           ...(stackPtr && { stackPtr: stackPtr }),
           ...(familyId && { familyId: familyId }),
           processor: {},
         };        
-        fetchTask(globalState, "start", task);
+        fetchTask(globalState, command, commandArgs, task);
       } catch (error) {
         setTaskStartError(error.message);
       }

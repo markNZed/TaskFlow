@@ -1,7 +1,8 @@
 /* ToDo
 -------
+We transfer siblingTask - should we use the stored copy on the Hub?
 task.nextTask might be better in task.commandArgs but it still needs to be stored in the task.config
-  Currently task.nextTask is used on th ehub
+  Currently task.nextTask is used on the hub
 When task is sent by procssor we should delete task.command and task.commandArgs - Done
 When task is sent by hub we should delete task.processor.command and task.processor.commandArgs - Done
 

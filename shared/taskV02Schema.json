@@ -24,7 +24,7 @@
           "type": ["null", "string"]
         },
         "commandArgs": {
-          "type": "object"
+          "type": ["null", "object"]
         },
         "error": {
           "anyOf": [

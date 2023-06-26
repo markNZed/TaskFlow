@@ -2,7 +2,7 @@ import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { log, updatedAt } from "./utils";
 
-export const fetchTask = async (globalState, command, task) => {
+export const fetchTask = async (globalState, command, commandArgs, task) => {
 
   let messageJsonString;
 
@@ -14,12 +14,7 @@ export const fetchTask = async (globalState, command, task) => {
 
   // Clear down task commands as we do not want these coming back from the hub
   task.processor["command"] = command;
-  task["command"] = null;
-  if (task.commandArgs) {
-    // Deep copy because we are going to clear
-    task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
-    task.commandArgs = null;
-  }
+  task.processor["commandArgs"] = commandArgs;
   task.processor["id"] = processorId;  
 
   task.userId = globalState.user.userId;
