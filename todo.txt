@@ -3,7 +3,8 @@
 task.nextTask might be better in task.commandArgs but it still needs to be stored in the task.config
   Currently task.nextTask is used on th ehub
 When task is sent by procssor we should delete task.command and task.commandArgs - Done
-When task is sent by hub we should delete task.processor.command and task.processor.commandArgs
+When task is sent by hub we should delete task.processor.command and task.processor.commandArgs - Done
+
 hub.command is not used yet because we have distinct routes
 Lock needs some thought
   Task task.commandArgs.lock on update?
