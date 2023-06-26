@@ -49,7 +49,7 @@ router.post("/start", async (req, res) => {
       await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
       return res.status(200).send("ok");
     } catch (err) {
-      throw err;
+      //throw err;
       console.log("Error starting task " + startId + " " + err);
       res.status(200).json({ error: "Error starting task " + startId + " " + err });
     }

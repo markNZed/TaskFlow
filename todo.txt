@@ -1,15 +1,9 @@
 /* ToDo
 -------
-We transfer siblingTask - should we use the stored copy on the Hub?
-task.nextTask might be better in task.commandArgs but it still needs to be stored in the task.config
-  Currently task.nextTask is used on the hub
-When task is sent by procssor we should delete task.command and task.commandArgs - Done
-When task is sent by hub we should delete task.processor.command and task.processor.commandArgs - Done
-
 hub.command is not used yet because we have distinct routes
 Lock needs some thought
   Task task.commandArgs.lock on update?
-    Procssor copies to task.processor.commandArgs.lock
+    Processor copies to task.processor.commandArgs.lock
 The stack of components for React should not be mixed with a stack of Tasks.
   Stack of components should be in the task.config
 Code review/cleanup 
@@ -19,8 +13,9 @@ Code review/cleanup
   Refactoring
     Hub pipeline: a module with function for each step
     Single place where NodeJS provides fetchTask (like in React)
-  Align usage of utils
+    Align usage of utils
 
+We transfer siblingTask - should we use the stored copy on the Hub?
 Requests from other tasks via: task.processor.task.request
   We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
     On the other side it would be received via task.processor.request and task.processor.response

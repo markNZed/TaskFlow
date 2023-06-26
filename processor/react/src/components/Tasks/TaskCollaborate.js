@@ -80,7 +80,7 @@ function TaskCollaborate(props) {
         "state.done": false, 
         "command": "next", 
         "commandArgs": { 
-          "nextTask": task.config.nextTask 
+          "nextTask": tasks[tasksIdx].config.nextTask 
         } 
       }));
       setTasksTask((p) => {
