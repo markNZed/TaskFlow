@@ -9,7 +9,7 @@ import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { activeTasksStore_async } from "../storage.mjs";
 import { wsSendTask } from "./websocket.js";
 
-export const startTask_async = async (userId, startId, siblingTask) => {
+export const startTask_async = async (userId, startId) => {
 
   let task = { id: startId, hub: {}};
 
@@ -32,11 +32,8 @@ export const startTask_async = async (userId, startId, siblingTask) => {
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
-    const validatedSiblingTaskJsonString = fromTask(siblingTask);
-    const validatedSiblingTask = JSON.parse(validatedSiblingTaskJsonString);
     const messageObject = {
       task: validatedTaskObject,
-      siblingTask: validatedSiblingTask,
       userId: userId,
     };
     messageJsonString = JSON.stringify(messageObject);

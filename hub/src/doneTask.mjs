@@ -30,7 +30,7 @@ export async function doneTask_async(task) {
   }
   // Fetch from the Task Hub
   if (nextTask) {
-    await startTask_async(nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTask, task, task.next);
+    await startTask_async(nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTask, task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
   }
 }

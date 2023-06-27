@@ -33,7 +33,7 @@ export async function do_task_async(wsSendTask, task) {
           await nextTask_async(updated_task);
         } else if (updated_task?.command === "start") {
           // This is not working/used yet
-          await startTask_async(userId, startId, siblingTask);
+          await startTask_async(userId, startId);
         } else {
           // default to update
           await updateTask_async(updated_task);

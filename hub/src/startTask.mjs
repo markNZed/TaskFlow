@@ -18,8 +18,7 @@ async function startTask_async(
     groupId,
     stackPtr = null,
     familyId = null,
-    siblingTask = null,
-    next = null, // indicated by presence of sbiling
+    prevInstanceId = null,
   ) {
     /*
     console.log(
@@ -29,23 +28,19 @@ async function startTask_async(
       "groupId:", groupId, 
       "stackPtr:", stackPtr, 
       "familyId:", familyId,
-      "next:", next
+      "prevInstanceId:", prevInstanceId,
     );
     */    
     let instanceId = uuidv4();
-    let siblingInstanceId;
-    let prevInstanceId;
     let processor = {}
 
-    if (siblingTask) {
-      siblingInstanceId = siblingTask.instanceId;
-      console.log("sibling instanceId", siblingInstanceId)
-      familyId = siblingTask.familyId;
+    if (prevInstanceId) {
+      console.log("prevInstanceId", prevInstanceId)
       // In the case where the thread advances on another processor 
       // we still need to be able to find the nextTask 
-      prevInstanceId = siblingTask.instanceId
-      // Need to fetch processors from sibling for prevInstance
+      // Need to fetch processors from prevInstance
       let instance = await instancesStore_async.get(prevInstanceId);
+      familyId = instance.familyId;
       processor = instance.processor;
       processor[processorId]["command"] = null;
     }
@@ -200,7 +195,7 @@ async function startTask_async(
     taskCopy["processor"][processorId]["id"] = processorId;
 
     if (!taskCopy.hub?.command) {
-      if (next) {
+      if (prevInstanceId) {
         taskCopy.hub.command = "next";
       } else {
         taskCopy.hub.command = "start";
@@ -213,18 +208,15 @@ async function startTask_async(
     }
     taskCopy.userId = userId;
     
-    if (siblingInstanceId) {
+    if (prevInstanceId) {
       // Should rename to sibling?
-      taskCopy.meta["parentInstanceId"] = siblingInstanceId;
-      let parent = await instancesStore_async.get(siblingInstanceId);
+      taskCopy.meta["parentInstanceId"] = prevInstanceId;
+      let parent = await instancesStore_async.get(prevInstanceId);
       if (parent.state?.address) {
         taskCopy.state["address"] = parent.state.address;
       }
       if (parent.state?.lastAddress) {
         taskCopy.state["lastAddress"] = parent.state.lastAddress;
-      }
-      if (!familyId) {
-        familyId = parent.familyId;
       }
       // We start with the deepest component in the stack
       // This will not work with how we have stackPtr set earlier
@@ -244,7 +236,7 @@ async function startTask_async(
         parent.childrenInstances = [];
       }
       parent.childrenInstances.push(instanceId);
-      await instancesStore_async.set(siblingInstanceId, parent);
+      await instancesStore_async.set(prevInstanceId, parent);
     }
     taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
 

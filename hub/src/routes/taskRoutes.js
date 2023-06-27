@@ -16,6 +16,13 @@ import { less } from "@tensorflow/tfjs";
 
 const router = express.Router();
 
+router.post("/", async (req, res) => {
+  console.log("/hub/api/task");
+  let userId = utils.getUserId(req);
+  if (userId) {
+  }
+});
+
 router.post("/start", async (req, res) => {
   console.log("/hub/api/task/start");
   let userId = utils.getUserId(req);
@@ -39,7 +46,6 @@ router.post("/start", async (req, res) => {
     task.hub["command"] = command;
     task.hub["commandArgs"] = commandArgs;
     task.hub["sourceProcessorId"] = processorId; 
-    const siblingTask = req.body?.siblingTask;
     //const ip = req.ip || req.connection.remoteAddress;
     //console.log("task", task);
     const startId = task.id;
@@ -47,7 +53,7 @@ router.post("/start", async (req, res) => {
     const stackPtr = task.stackPtr;
     try {
       // Just set initial task values and pass that in instead of a long list of arguments?
-      await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, siblingTask);
+      await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId);
       return res.status(200).send("ok");
     } catch (err) {
       //throw err;
