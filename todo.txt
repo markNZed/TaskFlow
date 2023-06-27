@@ -1,9 +1,6 @@
 /* ToDo
 -------
 Not being removed form activeTask 
-Lock needs some thought
-  Task task.commandArgs.lock on update?
-    Processor copies to task.processor.commandArgs.lock
 hub.command is not used yet because we have distinct routes
 Code review/cleanup 
   configdata
@@ -147,7 +144,7 @@ Backlog
 
     Low Priority
     ------------
-    Time in oneThread messages should be aligned with browser timezone (needs to be filled in by Hub?)
+    Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
     Logout option (could just be a route)
     Sending diff to Hub from Processor during update
     JWT connection between Task Hub and Processors (currently rely on Cloudflare)
@@ -331,7 +328,7 @@ A list of features that are manually tested
             nextTask X
             instruction X
             nextStates X
-            oneThread X
+            oneFamily X
             label X
             reentering
           request

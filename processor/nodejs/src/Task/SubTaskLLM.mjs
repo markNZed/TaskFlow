@@ -103,7 +103,7 @@ async function chat_prepare_async(task) {
     };
     const formattedDate = currentDate.toLocaleString("en-US", options);
     prompt = "Time: " + formattedDate + "\n" + prompt;
-    console.log("oneThread prompt : " + prompt);
+    console.log("oneFamily prompt : " + prompt);
   }
 
   if (T("config.model.useCache") !== undefined) {

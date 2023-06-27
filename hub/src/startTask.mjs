@@ -67,7 +67,7 @@ async function startTask_async(
       taskCopy["stackPtr"] = stackPtr;
     }
     
-    if (taskCopy.config?.oneThread && taskCopy["stackPtr"] === taskCopy.stack.length) {
+    if (taskCopy.config?.oneFamily && taskCopy["stackPtr"] === taskCopy.stack.length) {
       instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
       familyId = instanceId;
       let instance = await instancesStore_async.get(instanceId);
@@ -75,12 +75,21 @@ async function startTask_async(
       if (instance) {
         // Check if the task is already active
         let activeTask = await activeTasksStore_async.get(instanceId);
-        let activeTaskProcessors = await activeTaskProcessorsStore_async.has(instanceId)
-        if (activeTask && activeTaskProcessors) {
+        let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
+        let doesContain = false;
+        if (activeTaskProcessors) {
+          for (let key of activeProcessors.keys()) {
+              if (activeTaskProcessors.includes(key)) {
+                  doesContain = true;
+                  break;
+              }
+          }
+        }
+        if (activeTask && doesContain) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["hub"]["command"] = "join";
-          console.log("Joining oneThread for " + taskCopy.id)
+          console.log("Joining oneFamily for " + taskCopy.id)
         } else {
           taskCopy = instance
           taskCopy.state["current"] = "start";
@@ -90,19 +99,19 @@ async function startTask_async(
           // It would be better to do this only for the new processor
           await activeTasksStore_async.delete(instanceId);
           console.log(
-            "Restarting oneThread " + instanceId + " for " + taskCopy.id
+            "Restarting oneFamily " + instanceId + " for " + taskCopy.id
           )
         }
       } else {
-        console.log("Initiating oneThread with instanceId " + instanceId)
+        console.log("Initiating oneFamily with instanceId " + instanceId)
       }
     }
 
-    if (taskCopy.config?.collaborate && taskCopy["stackPtr"] === taskCopy.stack.length) {
+    if (taskCopy.config?.collaborateGroupId && taskCopy["stackPtr"] === taskCopy.stack.length) {
       // Taskflow to choose the group (taskflow should include that)
       if (!groupId) {
         // This is a hack for the collaborate feature
-        groupId = taskCopy.config.collaborate;
+        groupId = taskCopy.config.collaborateGroupId;
       }
       // Check if the user is in the group
       if (!groups[groupId].users.includes(userId)) {
@@ -119,8 +128,17 @@ async function startTask_async(
       if (instance) {
         // Check if the task is already active
         let activeTask = await activeTasksStore_async.get(instanceId);
-        let activeTaskProcessors = await activeTaskProcessorsStore_async.has(instanceId)
-        if (activeTask && activeTaskProcessors) {
+        let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
+        let doesContain = false;
+        if (activeTaskProcessors) {
+          for (let key of activeProcessors.keys()) {
+              if (activeTaskProcessors.includes(key)) {
+                  doesContain = true;
+                  break;
+              }
+          }
+        }
+        if (activeTask && doesContain) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["hub"]["command"] = "join";
@@ -141,7 +159,7 @@ async function startTask_async(
       }
     }
 
-    // Must set familyId after oneThread, restoreSession and collaborate
+    // Must set familyId after oneFamily, restoreSession and collaborate
     if (familyId) {
       taskCopy["familyId"] = familyId;
       // If instanceId already exists then do nothing otherwise add instance to thread

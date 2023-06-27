@@ -173,6 +173,8 @@ function initWebSocketServer(server) {
       if (ws.data.processorId) {
         connections.delete(ws.data.processorId);
         activeProcessors.delete(ws.data.processorId);
+        // In theory we should clean up activeTaskProcessorsStore_async
+        // This probably means tracking a mapping from processorId to instanceId to avoid iterating over all activeTasks
       }
     });
 

@@ -27,7 +27,7 @@ The Hub provides the following features:
     * Supports merging of distributed Task state
     * Supports deletion of object keys (set to null)
     * Supports unchanged array elements (set to null)
-* Manage oneThread configuration (only one instance of the Task per user)
+* Manage oneFamily configuration (only one instance of the Task per user)
   * Additional processors join rather than start
 * manage collaborate configuration (only one instance of the Task per group)
   * Additional processors join rather than start
