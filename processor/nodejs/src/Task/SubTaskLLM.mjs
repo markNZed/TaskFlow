@@ -147,10 +147,6 @@ async function chat_prepare_async(task) {
     initializing = T("rconfig.model.forget")
     console.log("Task config forget previous messages", T("config.model.forget"));
   }
-  if (T("config.model.forget") !== undefined) {
-    initializing = T("config.model.forget")
-    console.log("Task config forget previous messages", T("config.model.forget"));
-  }
 
   if (T("state.request.model.forget") !== undefined) {
     initializing = T("state.request.model.forget")
