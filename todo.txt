@@ -1,18 +1,18 @@
 /* ToDo
 -------
-Single place where NodeJS provides fetchTask (like in React)
-Code review/cleanup 
+Code refactoring
+  Single place where NodeJS provides fetchTask (like in React)
   configdata
     Prepending "root." is not cool for configdata like users and groups
       If there is no parent then consider to be root ? Then do not require root.
-  Refactoring
-    Hub pipeline: a module with function for each step
+  Hub pipeline: a module with function for each step
+    Will help for filtering
+Review of READMEs
 
 The stack of components for React should not be mixed with a stack of Tasks.
   Stack of components should be in the task.config
 Requests from other tasks via: task.processor.task.request
-  We have not implemented this yet, would need a task.command e.g. request would send task.request and response would send task.response 
-    On the other side it would be received via task.processor.request and task.processor.response
+  See notes
 Could be valuable to communicate with an instance on a subset of environments
 If we have a TaskFilter this raises the question of how to configure/program it.
   Detects an event and passes information.
@@ -21,8 +21,7 @@ If we have a TaskFilter this raises the question of how to configure/program it.
         How to inform another task
         If we do want a DSL the Lua might be a good option for language indepedence
           https://github.com/fengari-lua/fengari-web
-Do we want a join route on Hub for symmetry?
-  Create a single task route and use task.processor.command to call out to relevant function
+Do we want a join route on Hub for symmetry? Join is internal to the hub?
 chatContainermaxHeight in TaskConversation scrolling?
 Modify the partial text update so it is incremental. This will better allow for text selection.
   Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
@@ -31,7 +30,7 @@ Integrate https://rapidapi.com/products/api-hub/
 Maybe start can be missed like update
   Get all the WS working this way
   Add queue to other React WS filters
-Possible next feature is remembering the system messages for Vierge
+Possible next feature: remembering the system messages for Vierge
 Provide sample of nginx proxy config
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome

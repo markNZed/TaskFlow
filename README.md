@@ -32,11 +32,13 @@ A Task Function may be distributed across multiple Task Environments, intra-task
 
 ## Task Processor
 
-Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and React Task Processor. The NodeJS Task Processor runs Node and the React Task Processor runs React in a web browser. The NodeJS Task Processor and React Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
+Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and React Task Processor. The NodeJS Task Processor runs Node on a server and the React Task Processor runs React in a web browser. The NodeJS Task Processor and React Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
 
-On the NodeJS Task Processor side, T@skFlow provides a kernel for evaluating Task functions, storing history, and initiating new Tasks. Tasks are asynchronous. Some Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node Javascript and the Express framework.
+The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Some Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node Javascript and the Express framework.
 
-On the React Task Processor (user interface) side, T@skFlow provides Tasks with storage, NodeJS Task Processor communication, and generic functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The React Task Processor runs in a web browser using the React Javascript library with MUI user interface components. Server communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
+The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The React Task Processor runs in a web browser using the React Javascript library with MUI user interface components. 
+
+Task Processor communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
 
 ### Task Environment
 
