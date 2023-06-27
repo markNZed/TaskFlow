@@ -1,15 +1,12 @@
 /* ToDo
 -------
-siblingTask ussed in doneTask_async
-hub.command is not used yet because we have distinct routes
+Single place where NodeJS provides fetchTask (like in React)
 Code review/cleanup 
   configdata
     Prepending "root." is not cool for configdata like users and groups
       If there is no parent then consider to be root ? Then do not require root.
   Refactoring
     Hub pipeline: a module with function for each step
-    Single place where NodeJS provides fetchTask (like in React)
-    Align usage of utils
 
 The stack of components for React should not be mixed with a stack of Tasks.
   Stack of components should be in the task.config
@@ -123,6 +120,24 @@ Backlog
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
     When user interacts reset the counter to try to establish websocket on client
 
+    Low Priority
+    ------------
+    Align usage of utils
+    Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
+    Logout option (could just be a route)
+    Sending diff to Hub from Processor during update
+    JWT connection between Task Hub and Processors (currently rely on Cloudflare)
+    Move to TypeScript
+    Way for tasks to register websocket event handlers
+    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for React Task Processor
+    Defensive programming + logging
+    Websocket for tasks (so NodeJS Task Processor can drive) just send incremental info for the task
+    Replace globalState with Redux
+    When sending task instance only send diff (React Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps React Task Processor copy)
+    Add task type validation to websocket
+    Only display menu option if leaf is a real task
+    Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
+
     Tasks
     ----------
     MyAssistant -> MyAssistantConversation
@@ -140,23 +155,6 @@ Backlog
         Syntax check as code is produced? 
         Fix for syntax errors
     Fetch prompt suggestion
-
-    Low Priority
-    ------------
-    Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
-    Logout option (could just be a route)
-    Sending diff to Hub from Processor during update
-    JWT connection between Task Hub and Processors (currently rely on Cloudflare)
-    Move to TypeScript
-    Way for tasks to register websocket event handlers
-    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for React Task Processor
-    Defensive programming + logging
-    Websocket for tasks (so NodeJS Task Processor can drive) just send incremental info for the task
-    Replace globalState with Redux
-    When sending task instance only send diff (React Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps React Task Processor copy)
-    Add task type validation to websocket
-    Only display menu option if leaf is a real task
-    Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
 
 Notes/Idea
 -----

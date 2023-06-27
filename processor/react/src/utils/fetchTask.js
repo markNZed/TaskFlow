@@ -20,7 +20,7 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   task.userId = globalState.user.userId;
 
   // The immediate destination of this request
-  let fetchUrl = `${hubUrl}/api/task/${command}` // using hub routing
+  let fetchUrl = `${hubUrl}/api/task/`; // using hub routing
 
   try {
     const validatedTaskJsonString = fromTask(task);

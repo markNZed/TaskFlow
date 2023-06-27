@@ -10,21 +10,12 @@ import startTask_async from "../startTask.mjs";
 import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
-import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 import { doneTask_async } from "../doneTask.mjs";
-import { less } from "@tensorflow/tfjs";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   console.log("/hub/api/task");
-  let userId = utils.getUserId(req);
-  if (userId) {
-  }
-});
-
-router.post("/start", async (req, res) => {
-  console.log("/hub/api/task/start");
   let userId = utils.getUserId(req);
   if (userId) {
     //console.log("req.body " + JSON.stringify(req.body))
@@ -35,7 +26,7 @@ router.post("/start", async (req, res) => {
     }
     const command = task.processor.command;
     task.processor.command = null;
-    let commandArgs;
+    let commandArgs = {};
     if (task.processor?.commandArgs) {
       commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
       task.processor.commandArgs = null;
@@ -45,79 +36,37 @@ router.post("/start", async (req, res) => {
     task.hub = {};
     task.hub["command"] = command;
     task.hub["commandArgs"] = commandArgs;
-    task.hub["sourceProcessorId"] = processorId; 
-    //const ip = req.ip || req.connection.remoteAddress;
-    //console.log("task", task);
-    const startId = task.id;
-    const familyId = task.familyId;
-    const stackPtr = task.stackPtr;
-    try {
-      // Just set initial task values and pass that in instead of a long list of arguments?
-      await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId);
-      return res.status(200).send("ok");
-    } catch (err) {
-      //throw err;
-      console.log("Error starting task " + startId + " " + err);
-      res.status(200).json({ error: "Error starting task " + startId + " " + err });
-    }
-    return;
-
-  } else {
-    console.log("No user");
-    res.status(200).json({ error: "No user" });
-  }
-});
-
-router.post("/update", async (req, res) => {
-  console.log("/hub/api/task/update");
-  let userId = utils.getUserId(req);
-  if (userId) {
-    //console.log("req.body.task.processor", req.body.task.processor)
-    let task = req.body.task;
-    // We are not using this yet, could have a single API endpoint
-    // We are not using this yet, could have a single API endpoint
-    if (!task.processor) {
-      throw new Error("Missing task.processor in /hub/api/task/start");
-    }
-    const command = task.processor.command;
-    task.processor.command = null;
-    let commandArgs;
-    let lock = false;
-    let unlock = false;
-    let lockBypass = false;
-    if (task.processor?.commandArgs) {
-      commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
-      if (commandArgs.lock !== undefined) {
-        lock = commandArgs.lock;
-      }
-      if (commandArgs.unlock !== undefined) {
-        unlock = commandArgs.unlock;
-      }
-      if (commandArgs.lockBypass !== undefined) {
-        lockBypass = commandArgs.lockBypass;
-      }
-      task.processor.commandArgs = null;
-    }
-    const processorId = task.processor.id;
+    task.hub["sourceProcessorId"] = processorId;
+    let lock = commandArgs.lock || false;
+    let unlock = commandArgs.unlock || false;
+    let lockBypass = commandArgs.lockBypass || false;
     // Check if the task is locked
     const activeTask = await activeTasksStore_async.get(task.instanceId);
-    if (!activeTask) {
-      return res.status(404).send("Task not found");
+    if (activeTask) {
+      // Restore the other processors
+      const processor = activeTask.processor;
+      processor[processorId] = JSON.parse(JSON.stringify(task.processor));
+      task.processor = processor;
     }
     if (unlock) {
       task.meta["locked"] = null;
       console.log("Task forced unlock by " + processorId);
     }
     if (lock) {
-      if (!activeTask.meta.locked) {
+      if (activeTask && !activeTask.meta.locked) {
         console.log("Task locked by " + processorId);
         task.meta["locked"] = processorId;
       }
-    } else if (activeTask.meta.locked && activeTask.meta.locked === processorId) {
+    } else if (activeTask && activeTask.meta.locked && activeTask.meta.locked === processorId) {
       console.log("Task unlocked by " + processorId);
       task.meta.locked = null;
     }
-    if (activeTask.meta.locked && activeTask.meta.locked !== processorId && !lockBypass &&!unlock) {
+    if (
+      activeTask && 
+      activeTask.meta.locked && 
+      activeTask.meta.locked !== processorId && 
+      !lockBypass &&!unlock
+    ) {
       let now = new Date(); // Current time
       let updatedAt;
       if (task.meta.updatedAt) {
@@ -133,31 +82,12 @@ router.post("/update", async (req, res) => {
         return res.status(423).send("Task locked");
       } 
     }
-    // We intercept tasks that are done.
-    if (task.error) {
-      let errorTask
-      if (task.config?.errorTask) {
-        errorTask = task.config.errorTask
-      } else {
-        // Assumes there is a default errorTask named error
-        const strArr = task.id.split('.');
-        strArr[strArr.length - 1] = "error";
-        errorTask = strArr.join('.');
-      }
-      // Should be using command here?
-      task.hub["command"] = "next";
-      task.hub["commandArgs"] = {"nextTask": errorTask};
-      task.done = true
-      console.log("Task error " + task.id);
-    }
-    if (task.config?.maxUpdateCount && task?.meta?.updateCount > task.config.maxUpdateCount) {
-      return res.status(409).json({ error: "Task update count exceeded" });
-    }
+    // Control API rate
     const currentDate = new Date(); // Will be local time
     const resetDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate(), currentDate.getUTCHours(), currentDate.getUTCMinutes());
     // If task has been updated before
-    const maxUpdateRate = task.config?.maxUpdateRate; // per minute
-    if (task.meta.updatedAt && maxUpdateRate) {
+    const maxUpdateRate = task?.config?.maxUpdateRate; // per minute
+    if (maxUpdateRate && task.meta.updatedAt) {
       const updatedAt = new Date(task.meta.updatedAt.date);
       // If the last update happened within the current minute
       if (updatedAt >= resetDate) {
@@ -170,76 +100,13 @@ router.post("/update", async (req, res) => {
         //console.log("task.meta.updatesThisMinute = 0")
         task.meta.updatesThisMinute = 0;
       }
+      task.meta.updatesThisMinute++;
     }
-    //console.log("task.meta.updatesThisMinute", task.meta.updatesThisMinute)
-    task.meta.updatesThisMinute++;
-    let output = await outputStore_async.get(task.familyId);
-    if (!output) {
-      output = {};
+    const maxUpdateCount = task?.config?.maxUpdateCount;
+    if (maxUpdateCount && task.meta.updateCount > maxUpdateCount) {
+      return res.status(409).json({ error: "Task update count exceeded" });
     }
-    output[task.id] = task.output;
-    await outputStore_async.set(task.familyId, output);
-    // Restore the other processors
-    const processor = activeTask.processor;
-    processor[processorId] = JSON.parse(JSON.stringify(task.processor));
-    task.processor = processor;
-    task.hub = activeTask.hub;
-    task.hub["command"] = command;
-    task.hub["commandArgs"] = commandArgs;
-    task.hub["sourceProcessorId"] = processorId; 
-     if (task.done || task.next) {
-      doneTask_async(task) 
-      return res.status(200).send("ok");
-    // Pass on tasks that are not done
-    // Eventually this will go as we will not send tasks but rely on data synchronization across clients
-    } else {
-      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId)
-      task.meta.updateCount = task.meta.updateCount + 1;
-      // Don't await so the return gets back before the websocket update
-      //task.processor[processorId].command = "update";
-      // Middleware will send the update
-      activeTasksStore_async.set(task.instanceId, task);
-      // So we do not return a task anymore. This requires the task synchronization working.
-      return res.status(200).send("ok");
-    }
-  } else {
-    console.log("No user");
-    // Clean up all the HTTP IDs used on routes
-    res.status(200).json({ error: "No user" });
-  }
-});
-
-router.post("/next", async (req, res) => {
-  console.log("/hub/api/task/next");
-  let userId = utils.getUserId(req);
-  if (userId) {
-    //console.log("req.body.task.processor", req.body.task.processor)
-    let task = req.body.task;
-    // We are not using this yet, could have a single API endpoint
-    // We are not using this yet, could have a single API endpoint
-    if (!task?.processor?.id) {
-      throw new Error("Missing task.processor.id in /hub/api/task/next " + JSON.stringify(task));
-    }
-    const command = task.processor.command;
-    task.processor.command = null;
-    let commandArgs;
-    if (task.processor?.commandArgs) {
-      commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
-      task.processor.commandArgs = null;
-    }
-    const processorId = task.processor.id;
-    const activeTask = await activeTasksStore_async.get(task.instanceId);
-    // Restore the other processors
-    const processor = activeTask.processor;
-    task.processor = processor;
-    processor[processorId] = JSON.parse(JSON.stringify(task.processor));
-    task.hub = activeTask.hub;
-    task.hub["command"] = command;
-    task.hub["commandArgs"] = commandArgs;
-    task.hub["sourceProcessorId"] = processorId; 
-    if (!activeTask) {
-      return res.status(404).send("Task not found");
-    }
+    // Catch errors
     if (task.error) {
       let errorTask
       if (task.config?.errorTask) {
@@ -256,20 +123,72 @@ router.post("/next", async (req, res) => {
       task.done = true
       console.log("Task error " + task.id);
     }
-    let output = await outputStore_async.get(task.familyId);
-    if (!output) {
-      output = {};
+    if (task.output) {
+      let output = await outputStore_async.get(task.familyId);
+      if (!output) {
+        output = {};
+      }
+      output[task.id] = task.output;
+      await outputStore_async.set(task.familyId, output);
     }
-    output[task.id] = task.output;
-    await outputStore_async.set(task.familyId, output);
-    task.next = true; // We probably don't need this but doneTask_async is using it
-    doneTask_async(task) 
-    return res.status(200).send("ok");
+    // Switch to function based on task.hub["command"]
+    switch (task.hub["command"]) {
+      case "start":
+        return await start_async(res, userId, processorId, command, commandArgs, task)
+      case "update":
+        return await update_async(res, userId, processorId, command, commandArgs, task, activeTask)
+      case "next":
+        return await next_async(res, userId, processorId, command, commandArgs, task, activeTask)
+      default:
+        throw new Error("Unknown command " + task.hub["command"]);
+    }
   } else {
     console.log("No user");
-    // Clean up all the HTTP IDs used on routes
     res.status(200).json({ error: "No user" });
   }
 });
 
+
+async function start_async(res, userId, processorId, command, commandArgs, task) {
+  const startId = task.id;
+  const familyId = task.familyId;
+  const stackPtr = task.stackPtr;
+  try {
+    // Just set initial task values and pass that in instead of a long list of arguments?
+    await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId);
+    res.status(200).send("ok");
+  } catch (err) {
+    //throw err;
+    console.log("Error starting task " + startId + " " + err);
+    res.status(200).json({ error: "Error starting task " + startId + " " + err });
+  }
+}
+
+async function update_async(res, userId, processorId, command, commandArgs, task, activeTask) {
+  // We intercept tasks that are done.
+  if (task.done) {
+    doneTask_async(task) 
+    return res.status(200).send("ok");
+  // Pass on tasks that are not done
+  } else {
+    console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId)
+    task.meta.updateCount = task.meta.updateCount + 1;
+    // Don't await so the return gets back before the websocket update
+    // Middleware will send the update
+    activeTasksStore_async.set(task.instanceId, task);
+    // So we do not return a task anymore. This requires the task synchronization working.
+    res.status(200).send("ok");
+  }
+}
+
+async function next_async(res, userId, processorId, command, commandArgs, task, activeTask) {
+  if (!activeTask) {
+    return res.status(404).send("Task not found");
+  }
+  doneTask_async(task) 
+  return res.status(200).send("ok");
+}
+
 export default router;
+
+

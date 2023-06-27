@@ -44,7 +44,7 @@ export const nextTask_async = async (task) => {
     body: messageJsonString,
   };
 
-  const apiUrl = `${TASKHUB_URL}/api/task/next`
+  const apiUrl = `${TASKHUB_URL}/api/task`
   console.log("API nextTask_async fetching " + apiUrl)
 
   const response = await fetch(apiUrl, requestOptions)

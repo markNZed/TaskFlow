@@ -51,7 +51,7 @@ export const startTask_async = async (userId, startId) => {
     body: messageJsonString,
   };
 
-  const apiUrl = `${TASKHUB_URL}/api/task/start`
+  const apiUrl = `${TASKHUB_URL}/api/task`
   console.log("API startTask_async call to " + apiUrl)
 
   const response = await fetch(apiUrl, requestOptions)

@@ -9,15 +9,12 @@ import startTask_async from "./startTask.mjs";
 
 export async function doneTask_async(task) {
   // Should be an assertion
-  if (!task.done && !task.next) {
+  if (task.done) {
     throw new Error("Called doneTask_async on a task that is not done");
   }
-  const nextTask = task.hub?.commandArgs?.nextTask;
+  const nextTask = task.hub.commandArgs?.nextTask;
   console.log("Task " + task.id + " done " + task.done + " next " + nextTask);
-  instancesStore_async.set(task.instanceId, task);
-  let outputs = await outputStore_async.get(task.familyId) || {};
-  outputs[task.id] = task.output;
-  await outputStore_async.set(task.familyId, outputs); // Wait so available in startTask_async
+  await instancesStore_async.set(task.instanceId, task);
   // It iś possible that the Processor holds on to the Done task while requesting the next task
   // In this case task.next is set instead of task.done
   if (task.done) {
