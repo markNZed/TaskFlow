@@ -75,7 +75,8 @@ async function startTask_async(
       if (instance) {
         // Check if the task is already active
         let activeTask = await activeTasksStore_async.get(instanceId);
-        if (activeTask) {
+        let activeTaskProcessors = await activeTaskProcessorsStore_async.has(instanceId)
+        if (activeTask && activeTaskProcessors) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["hub"]["command"] = "join";
@@ -84,6 +85,7 @@ async function startTask_async(
           taskCopy = instance
           taskCopy.state["current"] = "start";
           taskCopy.meta["updateCount"] = 0;
+          taskCopy.meta["locked"] = null;
           // Delete so we restart with full task being synchronized
           // It would be better to do this only for the new processor
           await activeTasksStore_async.delete(instanceId);
@@ -117,7 +119,8 @@ async function startTask_async(
       if (instance) {
         // Check if the task is already active
         let activeTask = await activeTasksStore_async.get(instanceId);
-        if (activeTask) {
+        let activeTaskProcessors = await activeTaskProcessorsStore_async.has(instanceId)
+        if (activeTask && activeTaskProcessors) {
           console.log("Task already active", instanceId);
           taskCopy = activeTask
           taskCopy["hub"]["command"] = "join";
@@ -126,6 +129,7 @@ async function startTask_async(
           taskCopy = instance
           taskCopy.state["current"] = "start";
           taskCopy.meta["updateCount"] = 0;
+          taskCopy.meta["locked"] = null;
           // Delete so we restart with full task being synchronized
           await activeTasksStore_async.delete(instanceId);
           console.log(

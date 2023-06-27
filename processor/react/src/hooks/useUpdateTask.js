@@ -28,7 +28,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
-          const updating = { "command": null, "commandArgs": null, "response.updating": true, lock: false };
+          const updating = { "command": null, "commandArgs": null, "response.updating": true };
           setNestedProperties(updating);
           setTask((p) => deepMerge(p, updating));
           // The setTask prior to sending the result will not have taken effect

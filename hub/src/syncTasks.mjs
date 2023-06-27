@@ -23,10 +23,11 @@ const syncTasks_async = async (key, value) => {
   if (!taskCopy?.hub?.command) {
     throw new Error("syncTasks_async missing command" + JSON.stringify(taskCopy));
   }
-  let command = taskCopy.hub.command
+  let command = taskCopy.hub.command;
+  let commandArgs = taskCopy.hub.commandArgs;
   if (has) {
     if (command === "join") {
-      taskCopy.lockBypass = true;
+      commandArgs = { ...commandArgs, ...{ lockBypass: true } };
     } else if (command === "update") {
       taskCopy.meta.updatedAt = utils.updatedAt();
     }

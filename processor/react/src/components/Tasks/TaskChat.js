@@ -108,6 +108,7 @@ const TaskChat = (props) => {
       // so it should only be modified with modifyTask
       const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
       switch (task.state.current) {
+        case "start":
         case "input":
           if (transitionFrom("receiving")) {
             responseTextRef.current = "";
@@ -116,7 +117,7 @@ const TaskChat = (props) => {
           if (submittingForm) {
             nextState = "sending";
           }
-          if (task.state?.lastAddress !== task.state?.address) {
+          if (task.state?.address && task.state?.lastAddress !== task.state.address) {
             nextState = "mentionAddress";
           }
           break;
@@ -132,7 +133,7 @@ const TaskChat = (props) => {
             // Lock task so users cannot send at same time. NodeJS will unlock on final response.
             modifyTask({ 
               "output.msgs": [...msgs, ...newMsgArray],
-              "lock": true,
+              "commandArgs": { "lock": true },
               "command": "update",
               "state.lastAddress": task.state.address,
             });
@@ -140,7 +141,7 @@ const TaskChat = (props) => {
           break;
         case "sending":
           // Create a slot for new msgs
-          if (transitionTo("sending")) {
+          if (transitionTo("sending") && !task.meta?.locked) {
             // Create a new slot for the next message
             // Add the input too for the user
             const newMsgArray = [
@@ -151,7 +152,7 @@ const TaskChat = (props) => {
             // Lock task so users cannot send at same time. NodeJS will unlock on final response.
             modifyTask({ 
               "output.msgs": [...msgs, ...newMsgArray],
-              "lock": true,
+              "commandArgs": { "lock": true },
               "command": "update",
             });
             setSubmittingForm(false);

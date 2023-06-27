@@ -182,8 +182,6 @@ const typeMap = {
         { json: "hub", js: "hub", typ: u(undefined, m("any")) },
         { json: "id", js: "id", typ: "" },
         { json: "input", js: "input", typ: u(undefined, m("any")) },
-        { json: "lock", js: "lock", typ: u(undefined, true) },
-        { json: "locked", js: "locked", typ: u(undefined, u(true, "")) },
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
         { json: "output", js: "output", typ: u(undefined, m("any")) },

@@ -185,7 +185,7 @@ function withTask(Component) {
           //console.log("lastTask", lastTask)
           // If the resource has been locked then ignore whatever was done locally
           let currentTaskDiff = {};
-          if (lastTask.locked === globalState.processorId) {
+          if (lastTask.meta.locked === globalState.processorId) {
             currentTaskDiff = getObjectDifference(lastTask, props.task);
           }
           //console.log("currentTaskDiff", currentTaskDiff);
@@ -193,8 +193,6 @@ function withTask(Component) {
           //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
           //console.log("currentUpdateDiff", currentUpdateDiff);
           // ignore differences in source & updatedAt & lock
-          delete currentTaskDiff.updatedAt
-          delete currentTaskDiff.lock
           // partial updates to response can cause conflicts
           // Needs further thought
           delete currentTaskDiff.response

@@ -12,6 +12,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { toTask, fromTask } from "../taskConverterWrapper.mjs";
 import { doneTask_async } from "../doneTask.mjs";
+import { less } from "@tensorflow/tfjs";
 
 const router = express.Router();
 
@@ -75,8 +76,20 @@ router.post("/update", async (req, res) => {
     const command = task.processor.command;
     task.processor.command = null;
     let commandArgs;
+    let lock = false;
+    let unlock = false;
+    let lockBypass = false;
     if (task.processor?.commandArgs) {
       commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs));
+      if (commandArgs.lock !== undefined) {
+        lock = commandArgs.lock;
+      }
+      if (commandArgs.unlock !== undefined) {
+        unlock = commandArgs.unlock;
+      }
+      if (commandArgs.lockBypass !== undefined) {
+        lockBypass = commandArgs.lockBypass;
+      }
       task.processor.commandArgs = null;
     }
     const processorId = task.processor.id;
@@ -85,21 +98,20 @@ router.post("/update", async (req, res) => {
     if (!activeTask) {
       return res.status(404).send("Task not found");
     }
-    if (task.lock) {
-      if (!activeTask.locked) {
+    if (unlock) {
+      task.meta["locked"] = null;
+      console.log("Task forced unlock by " + processorId);
+    }
+    if (lock) {
+      if (!activeTask.meta.locked) {
         console.log("Task locked by " + processorId);
-        task.locked = processorId;
+        task.meta["locked"] = processorId;
       }
-      task.lock = false;
-    } else if (activeTask.locked && activeTask.locked === processorId) {
+    } else if (activeTask.meta.locked && activeTask.meta.locked === processorId) {
       console.log("Task unlocked by " + processorId);
-      task.locked = false;
+      task.meta.locked = null;
     }
-    if (task.unlock) {
-      task.locked = false;
-      task.locked = false;
-    }
-    if (activeTask.locked && activeTask.locked !== processorId && !task.lockBypass) {
+    if (activeTask.meta.locked && activeTask.meta.locked !== processorId && !lockBypass &&!unlock) {
       let now = new Date(); // Current time
       let updatedAt;
       if (task.meta.updatedAt) {
@@ -109,14 +121,12 @@ router.post("/update", async (req, res) => {
       let differenceInMinutes = (now - updatedAt) / 1000 / 60;
       console.log("differenceInMinutes", differenceInMinutes)
       if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log("Task lock expired for " + processorId + " locked by " + activeTask.locked)
-        task.locked = false;
+        console.log("Task lock expired for " + processorId + " locked by " + activeTask.meta.locked)
       } else {
-        console.log("Task lock conflict with " + processorId + " locked by " + activeTask.locked + " " + differenceInMinutes + " minutes ago.")
+        console.log("Task lock conflict with " + processorId + " locked by " + activeTask.meta.locked + " " + differenceInMinutes + " minutes ago.")
         return res.status(423).send("Task locked");
       } 
     }
-    task.lockBypass ? task.lockBypass = false : undefined;
     // We intercept tasks that are done.
     if (task.error) {
       let errorTask

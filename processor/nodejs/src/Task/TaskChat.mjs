@@ -25,7 +25,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     case "sending":
       T("state.last", T("state.current"));
       T("state.current", "receiving");
-      T("lockBypass", true);
+      T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
       await updateTask_async(task)
@@ -42,7 +42,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("output.msgs", [...msgs.slice(0, -1), lastElement]);
       T("state.last", T("state.current"));
       T("state.current", "input");
-      T("unlock", true);
+      T("commandArgs.unlock", true);
       break;
     default:
       console.log("WARNING unknown state : " + task.state.current);

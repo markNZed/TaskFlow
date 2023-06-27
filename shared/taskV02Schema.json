@@ -48,19 +48,6 @@
         "id": {
           "type": "string"
         },
-        "lock": { 
-          "type": "boolean"
-        },
-        "locked": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
         "name": {
           "type": "string"
         },

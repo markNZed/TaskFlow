@@ -108,7 +108,7 @@ function TaskBrainstorm(props) {
             // Lock task so users cannot send at same time. NodeJS will unlock on final response.
             modifyTask({
               "output.msgs": [...msgs, ...newMsgArray],
-              "lock": true,
+              "commandArgs": { "lock": true },
               "command": "update",
             });
             setSubmittingForm(false);
