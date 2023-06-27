@@ -8,6 +8,7 @@ Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
 Review of READMEs
+Evaluate Codeium 
 
 The stack of components for React should not be mixed with a stack of Tasks.
   Stack of components should be in the task.config

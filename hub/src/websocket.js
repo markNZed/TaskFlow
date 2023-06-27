@@ -9,17 +9,24 @@ import { connections, activeTaskProcessorsStore_async, activeTasksStore_async, a
 import { hubId } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
+/**
+ * Sends an object through the WebSocket connection identified by the given processor ID.
+ *
+ * @param {string} processorId - The ID of the WebSocket connection to use.
+ * @param {Object} [message={}] - The object to send through the connection.
+ * @throws {Error} If the message object does not have a task property.
+ */
 function wsSendObject(processorId, message = {}) {
-  let ws = connections.get(processorId);
+  const ws = connections.get(processorId);
   if (!ws) {
-    console.log("Lost websocket for wsSendObject", processorId, message.task);
+    console.error(`Lost websocket for wsSendObject with processorId ${processorId} and message task ${message.task}`);
   } else {
     if (!message?.task) {
-      throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
+      throw new Error(`Missing task in wsSendObject: ${JSON.stringify(message)}`);
     }
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
-      //console.log("wsSendObject ", processorId, JSON.stringify(message.task.processor) )
+      // console.log("wsSendObject ", processorId, JSON.stringify(message.task.processor) )
     }
   }
 }
@@ -174,7 +181,7 @@ function initWebSocketServer(server) {
         connections.delete(ws.data.processorId);
         activeProcessors.delete(ws.data.processorId);
         // In theory we should clean up activeTaskProcessorsStore_async
-        // This probably means tracking a mapping from processorId to instanceId to avoid iterating over all activeTasks
+        // This probably means tracking a mapping from processorId to instanceId to avoid iterating over all activeTasks        
       }
     });
 

@@ -144,7 +144,7 @@ router.post("/", async (req, res) => {
     }
   } else {
     console.log("No user");
-    res.status(200).json({ error: "No user" });
+    res.status(500).json({ error: "No user" });
   }
 });
 
@@ -160,7 +160,7 @@ async function start_async(res, userId, processorId, command, commandArgs, task)
   } catch (err) {
     //throw err;
     console.log("Error starting task " + startId + " " + err);
-    res.status(200).json({ error: "Error starting task " + startId + " " + err });
+    res.status(500).json({ error: "Error starting task " + startId + " " + err });
   }
 }
 
