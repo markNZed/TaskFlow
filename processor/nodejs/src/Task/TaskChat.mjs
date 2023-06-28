@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
-import { updateTask_async } from "../updateTask.mjs";
+import { fetchTask_async } from "../fetchTask.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
@@ -28,7 +28,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
-      await updateTask_async(task)
+      await fetchTask_async(task)
       let msgs = T("output.msgs");
       // Extract the prompt
       const msgPrompt = msgs[msgs.length - 2];
@@ -43,6 +43,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("state.last", T("state.current"));
       T("state.current", "input");
       T("commandArgs.unlock", true);
+      T("command", "update");
       break;
     default:
       console.log("WARNING unknown state : " + task.state.current);
@@ -50,7 +51,6 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     }
 
   console.log("Returning from TaskChat_async", task.id);
-  T("command", "update");
   return task;
 };
 

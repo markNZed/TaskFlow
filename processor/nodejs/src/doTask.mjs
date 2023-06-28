@@ -6,8 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
-import { updateTask_async } from "./updateTask.mjs";
-import { nextTask_async } from "./nextTask.mjs";
+import { fetchTask_async } from "./fetchTask.mjs";
 
 export async function do_task_async(wsSendTask, task) {
     let updated_task = {};
@@ -25,25 +24,27 @@ export async function do_task_async(wsSendTask, task) {
       // Returning null is  away of doing nothing
       if (updated_task !== null) {
         await activeTasksStore_async.set(task.instanceId, updated_task)
-        // Send the update request
-        // We may not want to do this for all tasks ? 
-        // If the task is done then Hub will intercept this
-        //console.log("do_task_async final task", updated_task)
-        if (updated_task?.command === "next") {
-          await nextTask_async(updated_task);
-        } else if (updated_task?.command === "start") {
+        if (updated_task?.command === "start") {
           // This is not working/used yet
-          await startTask_async(userId, startId);
+          const task = {
+            userId: updated_task.userId,
+            startId: updated_task.commandArgs.startId,
+            hub: {},
+            command: "start",
+          }
+          await fetchTask_async(task);
         } else {
-          // default to update
-          await updateTask_async(updated_task);
+          if (!updated_task?.command) {
+            throw new Error("Missing command in updated_task");
+          }
+          await fetchTask_async(updated_task);
         }
       } else {
         console.log("do_task_async null " + task.id);
       }
     } else {
       console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
-      console.log("taskFunctions", taskFunctions);
+      //console.log("taskFunctions", taskFunctions);
       updated_task = task;
     }
 

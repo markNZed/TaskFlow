@@ -1,14 +1,12 @@
 /* ToDo
 -------
 Code refactoring
-  Single place where NodeJS provides fetchTask (like in React)
   configdata
     Prepending "root." is not cool for configdata like users and groups
       If there is no parent then consider to be root ? Then do not require root.
   Hub pipeline: a module with function for each step
     Will help for filtering
 Review of READMEs
-Evaluate Codeium 
 
 The stack of components for React should not be mixed with a stack of Tasks.
   Stack of components should be in the task.config

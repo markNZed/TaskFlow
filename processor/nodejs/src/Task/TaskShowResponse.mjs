@@ -21,13 +21,13 @@ const TaskShowResponse_async = async function (taskName, wsSendTask, task) {
       T("response.text", T("config.response"));
       T("state.last", T("state.current"));
       T("state.current", "response");
+      T("command", "update");
       break;
     default:
       console.log("ERROR unknown state : " + task.state.current);
   }
 
   console.log("Returning from TaskShowResponse", task.id);
-  T("command", "update");
   return task;
 };
 

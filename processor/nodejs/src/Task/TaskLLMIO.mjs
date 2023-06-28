@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "../utils.mjs";
-import { updateTask_async } from "../updateTask.mjs";
+import { fetchTask_async } from "../fetchTask.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
 const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
@@ -24,14 +24,16 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
     case "response":
       T("state.last", T("state.current"));
       T("state.current", "receiving");
+      T("command", "update");
       // Here we update the task which has the effect of setting the state to receiving
-      await updateTask_async(task)
+      await fetchTask_async(task)
       // The response needs to be available for other tasks to point at
       const subTask = await SubTaskLLM_async(wsSendTask, task); 
       T("response.text", subTask.response.text);
       T("output.text", subTask.response.text);
       T("state.last", T("state.current"));
       T("state.current", "received");
+      T("command", "update");
       break;
     case "start":
     case "received":
@@ -45,7 +47,6 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
 
   console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", "Testing an error");
-  T("command", "update");
   return task;
 };
 

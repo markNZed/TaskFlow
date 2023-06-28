@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
     let task = req.body.task;
     // We are not using this yet, could have a single API endpoint
     if (!task.processor) {
-      throw new Error("Missing task.processor in /hub/api/task/start");
+      throw new Error("Missing task.processor in /hub/api/task");
     }
     const command = task.processor.command;
     task.processor.command = null;

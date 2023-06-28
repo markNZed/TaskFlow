@@ -200,7 +200,7 @@ function TaskStepper(props) {
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, stack, stackTaskId, nextTask: metaNextTask, instanceId }, idx) => (
+        ({ name, label, stack, stackTaskId, config: {nextTask: metaNextTask}, instanceId }, idx) => (
           <Accordion
             key={name}
             expanded={isExpanded(name)}

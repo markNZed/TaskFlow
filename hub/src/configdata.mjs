@@ -42,7 +42,7 @@ function flattenTaskflows(taskflows) {
   taskflows.forEach(function (taskflow) {
     //console.log("Taskflow: " + taskflow?.name)
     let debug = false;
-    //if (taskflow.name.includes("conversation")) {debug = true;}
+    //if (taskflow.name.includes("resume")) {debug = true;}
     if (debug) {console.log("Taskflow: " + taskflow?.name)}
     if (!taskflow?.name) {
       throw new Error("Error: Taskflow missing name");
@@ -118,6 +118,7 @@ function flattenTaskflows(taskflows) {
       const start = id + ".start";
       const componentCount = taskflow["APPEND_stack"].length;
       taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
+      if (debug) {console.log("taskflow[\"APPEND_stackTaskId\"] ", taskflow["APPEND_stackTaskId"])}
     }
     taskflow["id"] = id;
     taskflow["meta"] = {};
@@ -163,20 +164,21 @@ function flattenTaskflows(taskflows) {
         }
       }
     }
-    if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", JSON.stringify(taskflow, null, 2))}
+    //if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", JSON.stringify(taskflow, null, 2))}
     // Copy all the keys from the taskflow that are not in the current tasks
     if (taskflow?.tasks) {
       for (const taskkey in taskflow.tasks) {
+        if (taskkey == "start") {debug = debug && true;}
         if (taskflow.tasks.hasOwnProperty(taskkey)) {
           const APPEND_stack = taskflow.tasks[taskkey]["APPEND_stack"]
           if (APPEND_stack) {
             // for each entry in  APPEND_stack create an entry to start in APPEND_stackTaskId
             const start = id + ".start";
             let componentCount = APPEND_stack.length 
-            if (taskflow?.stack) {
-              componentCount = componentCount + taskflow.stack.length;
-            }
             taskflow.tasks[taskkey]["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
+            if (debug) {
+              console.log("Copy from taskflow APPEND_stackTaskId ", taskflow.tasks[taskkey]["APPEND_stackTaskId"])
+            }
           }
           for (const taskflowkey in taskflow) {
             if (taskflow.hasOwnProperty(taskflowkey)) {
@@ -401,6 +403,6 @@ function flattenTasks(taskflows) {
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
-//console.log(JSON.stringify(tasks["root.collaborate.clientgenerator.conversation.start"], null, 2));
+//console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2));
 
 export { users, groups, taskflows, tasktypes, tasks };

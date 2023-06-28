@@ -152,6 +152,7 @@ function withTask(Component) {
       // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
       if (localStackPtrRef.current > 0) {
         const spawn = props.task.config?.spawn === false ? false : true;
+        console.log("localStackPtrRef.current < props.stackTaskId.length && spawn", localStackPtrRef.current, props.stackTaskId.length, spawn)
         if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
           let startTaskId = props.stackTaskId[localStackPtrRef.current]
           const newPtr = localStackPtrRef.current + 1;

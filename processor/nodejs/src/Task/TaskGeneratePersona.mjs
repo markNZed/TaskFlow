@@ -29,13 +29,13 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
       T("state.request", {}); // clear - do we need to do this here?
       T("state.last", T("state.current"));
       T("state.current", "generated");
+      T("command", "update");
       break;
     default:
       console.log("ERROR unknown state : " + task.state.current);
   }
 
   console.log(`Returning from ${taskName}`);
-  T("command", "update");
   return task;
 };
 

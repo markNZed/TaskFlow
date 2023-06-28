@@ -91,6 +91,7 @@ const connectWebSocket = () => {
     let commandArgs;
     if (message?.task) {
       // The processor strips hub specific info because the Task Function should not interact with the Hub
+      // Should copy to task.processor.command
       command = message.task.hub.command;
       commandArgs = message.task.hub?.commandArgs;
       delete message.task.hub;
