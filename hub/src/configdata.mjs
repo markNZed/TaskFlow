@@ -9,6 +9,8 @@ import { CONFIG_DIR } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import assert from "assert";
+import { validateTaskflows } from "./validateTaskflows.mjs";
+import { validateTasks } from "./validateTasks.mjs";
 
 // For now we use JS data structures instead of a DB
 // Removes need for an admin interface during dev
@@ -27,6 +29,13 @@ var tasks = {}; // We will build this from taskflows
 tasktypes = utils.flattenObjects(tasktypes);
 //console.log(JSON.stringify(tasktypes, null, 2))
 
+try {
+  await validateTaskflows(taskflows);
+} catch (e) {
+  console.error("Error validating taskflows", e);
+  throw new Error("Error validating taskflows");
+}
+
 // Not that this has huge side-effects
 // Transform taskflows array into flattened taskflows hash
 // We should introduce a concept of appending and prepending
@@ -40,10 +49,13 @@ function flattenTaskflows(taskflows) {
   const regex_lowercase = /^[a-z]+$/;
   var taskflowLookup = {};
   taskflows.forEach(function (taskflow) {
-    //console.log("Taskflow: " + taskflow?.name)
+    // Debug option 
     let debug = false;
     //if (taskflow.name.includes("resume")) {debug = true;}
     if (debug) {console.log("Taskflow: " + taskflow?.name)}
+
+    // Defensive programming
+    // Could use a schema ?j
     if (!taskflow?.name) {
       throw new Error("Error: Taskflow missing name");
     }
@@ -79,8 +91,11 @@ function flattenTaskflows(taskflows) {
           taskflow.tasks[key]["name"] = key;
           taskflow.tasks[key]["id"] = id + "." + key;
           // Avoid the task inheriting the label from the Taskflow
-          if (!taskflow.tasks[key]["label"]) {
-            taskflow.tasks[key]["label"] = "";
+          if (!taskflow.tasks[key]?.config) {
+            taskflow.tasks[key]["config"] = {};
+          }
+          if (!taskflow.tasks[key].config?.label) {
+            taskflow.tasks[key]["config"]["label"] = "";
           }
           // Convert relative task references to absolute
           if (
@@ -175,6 +190,9 @@ function flattenTaskflows(taskflows) {
             // for each entry in  APPEND_stack create an entry to start in APPEND_stackTaskId
             const start = id + ".start";
             let componentCount = APPEND_stack.length 
+            if (taskflow?.stack) {
+              componentCount = componentCount + taskflow.stack.length;
+            }
             taskflow.tasks[taskkey]["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
             if (debug) {
               console.log("Copy from taskflow APPEND_stackTaskId ", taskflow.tasks[taskkey]["APPEND_stackTaskId"])
@@ -312,7 +330,7 @@ for (const userKey in users) {
     continue;
   }
   if (users.hasOwnProperty(userKey)) {
-    console.log("Creating group for user " + userKey)
+    //console.log("Creating group for user " + userKey)
     if (!groups[userKey]) {
       const group = {
         name: users[userKey].name,
@@ -404,5 +422,13 @@ tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2));
+
+// It would be better to use the JSON validation instead for task
+try {
+  await validateTasks(tasks);
+} catch (e) {
+  console.error("Error validating tasks", e);
+  throw new Error("Error validating tasks");
+}
 
 export { users, groups, taskflows, tasktypes, tasks };

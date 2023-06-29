@@ -73,14 +73,14 @@ const taskflows = [
             messagesTemplate: [
               {
                 role: "user",
-                content: [
+                text: [
                   "This is a response from an earlier message",
                   "summarize.response",
                 ],
               },
               {
                 role: "assistant",
-                content: "OK. Thank you. What would you like me to do?",
+                text: "OK. Thank you. What would you like me to do?",
               },
             ],
             promptTemplate: [

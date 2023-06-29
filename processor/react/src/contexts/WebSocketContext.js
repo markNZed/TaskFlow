@@ -122,7 +122,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     },
     onClose: (e) => {
       console.log(
-        `App webSocket closed with code ${e.code} and reason '${e.reason}'`
+        `App webSocket closed with code ${e.code} and reason '${e.reason}' and error ${e}`
       );
       let ws = getWebSocket();
       if (ws.pingIntervalId) {

@@ -150,6 +150,7 @@ router.post("/", async (req, res) => {
 
 
 async function start_async(res, userId, processorId, command, commandArgs, task) {
+  console.log("start_async " + task.id);
   const startId = task.id;
   const familyId = task.familyId;
   const stackPtr = task.stackPtr;
@@ -165,6 +166,7 @@ async function start_async(res, userId, processorId, command, commandArgs, task)
 }
 
 async function update_async(res, userId, processorId, command, commandArgs, task, activeTask) {
+  console.log("update_async " + task.id);
   // We intercept tasks that are done.
   if (task.done) {
     doneTask_async(task) 
@@ -182,6 +184,7 @@ async function update_async(res, userId, processorId, command, commandArgs, task
 }
 
 async function next_async(res, userId, processorId, command, commandArgs, task, activeTask) {
+  console.log("next_async " + task.id);
   if (!activeTask) {
     return res.status(404).send("Task not found");
   }
