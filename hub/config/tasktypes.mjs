@@ -1,5 +1,3 @@
-// Get rid of the parentType and root node
-
 const tasktypes = [
   {
     name: "root"
@@ -55,6 +53,10 @@ const tasktypes = [
     state: {
       current: "start",
     },
+    output: {
+      userInput: "",
+      LLMtext: "",
+    }
   },
   {
     name: "TaskShowResponse",
@@ -63,12 +65,24 @@ const tasktypes = [
     state: {
       current: "start",
     },
+    output: {
+      response: "",
+    }
   },
   {
     name: "TaskChoose",
     parentType: "root",
     environments: ["nodejs"],
   }
+  ,
+  {
+    name: "TaskGeneratePersona",
+    parentType: "root",
+    environments: ["react", "nodejs"],
+    state: {
+      current: "start",
+    },
+  },
 ];
 
 export { tasktypes };
