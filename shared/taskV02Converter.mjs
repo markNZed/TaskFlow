@@ -185,6 +185,7 @@ const typeMap = {
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
         { json: "output", js: "output", typ: u(undefined, m("any")) },
+        { json: "parentId", js: "parentId", typ: u(undefined, "") },
         { json: "parentType", js: "parentType", typ: u(undefined, "") },
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
         { json: "privacy", js: "privacy", typ: u(undefined, m("any")) },

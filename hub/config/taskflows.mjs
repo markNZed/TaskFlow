@@ -60,10 +60,6 @@ const taskflows = [
             },
             inputLabel: "Respond here.",
           },
-          response: {
-            text: "",
-            userInput: "",
-          },
         },
         structure: {
           APPEND_stack: ["TaskLLMIO"],

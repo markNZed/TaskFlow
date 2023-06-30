@@ -108,6 +108,9 @@ async function startTask_async(
         // This is a hack for the collaborate feature
         groupId = taskCopy.config.collaborateGroupId;
       }
+      if (!groups[groupId]?.users) {
+        throw new Error("No users in group " + groupId);
+      }
       // Check if the user is in the group
       if (!groups[groupId].users.includes(userId)) {
         console.log("User not in group", groupId, userId);

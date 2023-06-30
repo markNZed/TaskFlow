@@ -54,6 +54,9 @@
         "parentType": {
           "type": "string"
         },       
+        "parentId": {
+          "type": "string"
+        },       
         "stack": {
           "type": "array",
           "items": {

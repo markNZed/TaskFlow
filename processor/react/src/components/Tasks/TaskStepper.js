@@ -69,7 +69,7 @@ function TaskStepper(props) {
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        props.startTaskFn(task.id, task.familyId, stackPtr + 1); // will set startTask or startTaskError
+        props.startTaskFn(props.stackTaskId[stackPtr], task.familyId, stackPtr + 1); // will set startTask or startTaskError
         nextState = "waitForStart"
         break;
       case "waitForStart":

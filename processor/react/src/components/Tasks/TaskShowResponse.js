@@ -49,14 +49,14 @@ const TaskShowResponse = (props) => {
       if (transition()) { log("TaskShowResponse State Machine State " + task.state.current) }
       switch (task.state.current) {
         case "start":
-          if (task.response.text) {
+          if (task.output.response) {
             log("Response cached React Task Processor side");
             nextState = "response";
           }
           break;
         case "response":
-          if (responseText !== task.response.text) {
-            setResponseText(task.response.text);
+          if (responseText !== task.output.response) {
+            setResponseText(task.output.response);
           }
           break;
         case "exit":

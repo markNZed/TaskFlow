@@ -168,28 +168,28 @@ function getObjectDifference(obj1, obj2) {
   return diffObj; // copy to avoid issues if the return value is modified
 }
 
-// Flatten hierarchical object and copy keys into children
+// Flatten hierarchical object and merge keys into children
 function flattenObjects(objs) {
   const res = {};
   let parent2id = { root: "" };
   objs.forEach((obj) => {
     assert(obj.name, "Object missing name");
-    assert(obj.parentType || obj.name === "root", "Object missing parentType");
     let id;
     if (obj.name === "root") {
       id = "root";
     } else {
-      id = `${parent2id[obj.parentType]}.${obj.name}`;
-    }
-    assert(!res.id, "Object id already in use")
-    obj["id"] = id;
-    const parentId = parent2id[obj.parentType];
-    const parent = res[parentId];
-    obj["parentId"] =parentId;
-    // Copy all the keys in obj[obj["parentId"]] that are not in obj[id] into obj[id]
-    for (const key in parent) {
-      if (!obj[key]) {
-        obj[key] = parent[key];
+      if (!obj.parentType) {
+        id = obj.name;
+        //console.log("flattenObjects object is at root of tree", obj.name);
+      } else {
+        const parentId = parent2id[obj.parentType];
+        id = `${parentId}.${obj.name}`;
+        assert(!res[id], "Object id already in use");
+        obj["id"] = id;
+        obj["parentId"] = parentId;
+        // Merge all the objects of obj[id] into obj[obj["parentId"]]
+        const parent = res[parentId];
+        obj = deepMerge(parent, obj);
       }
     }
     parent2id[obj.name] = id

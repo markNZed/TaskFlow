@@ -18,7 +18,7 @@ const TaskShowResponse_async = async function (taskName, wsSendTask, task) {
       console.log("TaskShowResponse state.current is undefined");
       return null
     case "start":
-      T("response.text", T("config.response"));
+      T("output.response", T("config.response"));
       T("state.last", T("state.current"));
       T("state.current", "response");
       T("command", "update");

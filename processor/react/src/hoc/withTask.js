@@ -62,8 +62,8 @@ function withTask(Component) {
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
-    const lastStateRef = useRef("");
-    const stateRef = useRef(null);
+    const lastStateRef = useRef();
+    const stateRef = useRef();
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
     const [familyId, setFamilyId] = useState();
     const publishedRef = useRef("");
@@ -151,13 +151,13 @@ function withTask(Component) {
     useEffect(() => {
       // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
       if (localStackPtrRef.current > 0) {
-        const spawn = props.task.config?.spawn === false ? false : true;
-        console.log("localStackPtrRef.current < props.stackTaskId.length && spawn", localStackPtrRef.current, props.stackTaskId.length, spawn)
-        if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
+        const spawnTask = props.task.config?.spawnTask === false ? false : true;
+        console.log("localStackPtrRef.current < props.stackTaskId.length && spawnTask", localStackPtrRef.current, props.stackTaskId.length, spawnTask)
+        if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
           let startTaskId = props.stackTaskId[localStackPtrRef.current]
           const newPtr = localStackPtrRef.current + 1;
           startTaskFn(startTaskId, props.task.familyId, newPtr);
-          console.log("startTaskFn", startTaskId, newPtr)
+          console.log("startTaskFn from withTask", startTaskId, newPtr)
         }
         //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
         //modifyTask({stackPtr: localStackPtrRef.current});
@@ -167,8 +167,8 @@ function withTask(Component) {
     useEffect(() => {
       // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
       if (localStackPtrRef.current > 0) {
-        const spawn = props.task.config?.spawn === false ? false : true;
-        if (localStackPtrRef.current < props.stackTaskId.length && spawn) {
+        const spawnTask = props.task.config?.spawnTask === false ? false : true;
+        if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
           if (startTaskReturned) {
             setChildTask(startTaskReturned)
             console.log("setChildTask", startTaskReturned.id)
@@ -298,6 +298,13 @@ function withTask(Component) {
       const currentState = props?.task?.state?.current;
       if (!currentState) return false;
 
+      // The currentState may be initialized and the stateRef.current and lastStateRef.current have not been initialized
+      if (stateRef.current === undefined) {
+        stateRef.current = currentState
+      }
+      if (lastStateRef.current === undefined) {
+        lastStateRef.current = currentState
+      }
       const isStateAlignedWithModifyState = currentState === stateRef.current;
       const isStateUpdatedDirectly = stateRef.current === lastStateRef.current;
 

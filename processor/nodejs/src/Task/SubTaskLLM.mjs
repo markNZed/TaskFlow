@@ -74,9 +74,9 @@ async function chat_prepare_async(task) {
   let type = T("state.request.model.type") || T("config.model.type");
   let modelType = modelTypes["root."+type];
   if (!modelType) {
-    console.log("No modelType for ", task.id);
+    console.log("No modelType for ", task.id, type);
   } else {
-    console.log("ModelType for ", task.id, modelType.name);
+    console.log("ModelType for ", task.id, modelType.name, modelType.base);
   }
   let baseModel = T("state.request.model.base") || T("config.model.base") || modelType?.base;
   let temperature = T("state.request.model.temperature") || T("config.model.temperature") || modelType?.temperature;

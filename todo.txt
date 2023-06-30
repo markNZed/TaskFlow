@@ -1,9 +1,6 @@
 /* ToDo
 -------
 Code refactoring
-  configdata
-    Prepending "root." is not cool for configdata like users and groups
-      If there is no parent then consider to be root ? Then do not require root.
   Hub pipeline: a module with function for each step
     Will help for filtering
 Review of READMEs
@@ -25,7 +22,6 @@ chatContainermaxHeight in TaskConversation scrolling?
 Modify the partial text update so it is incremental. This will better allow for text selection.
   Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
-Integrate https://rapidapi.com/products/api-hub/
 Maybe start can be missed like update
   Get all the WS working this way
   Add queue to other React WS filters
@@ -153,6 +149,7 @@ Backlog
         Syntax check as code is produced? 
         Fix for syntax errors
     Fetch prompt suggestion
+    Integrate https://rapidapi.com/products/api-hub/
 
 Notes/Idea
 -----

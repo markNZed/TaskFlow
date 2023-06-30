@@ -59,6 +59,7 @@ router.post("/", async (req, res) => {
       }
       wf['initiator'] = initiator;
     }
+    wf['children'] = wf.meta.children;
     taskflowsTree[key] = utils.filter_in_list(wf, [
       "id",
       "children",

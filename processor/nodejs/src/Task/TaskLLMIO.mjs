@@ -17,7 +17,6 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
 
   switch (task.state.current) {
     case "input":
-      //console.log("Returning task state input " + JSON.stringify(task));
       T("state.last", T("state.current"));
       T("state.current", "stop");
       return task;
@@ -29,8 +28,7 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
       await fetchTask_async(task)
       // The response needs to be available for other tasks to point at
       const subTask = await SubTaskLLM_async(wsSendTask, task); 
-      T("response.text", subTask.response.text);
-      T("output.text", subTask.response.text);
+      T("output.LLMtext", subTask.response.text);
       T("state.last", T("state.current"));
       T("state.current", "received");
       T("command", "update");

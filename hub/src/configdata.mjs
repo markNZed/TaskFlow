@@ -10,7 +10,9 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import assert from "assert";
 import { validateTaskflows } from "./validateTaskflows.mjs";
-import { validateTasks } from "./validateTasks.mjs";
+import { fromTask } from "./taskConverterWrapper.mjs";
+import fs from 'fs/promises'; // Use promises variant of fs for async/await style
+import jsonDiff from 'json-diff'; // You need to install this package: npm install json-diff
 
 // For now we use JS data structures instead of a DB
 // Removes need for an admin interface during dev
@@ -36,45 +38,109 @@ try {
   throw new Error("Error validating taskflows");
 }
 
+function mergeTasks(childTask, tasksObj, id, addStackTaskId = false) {
+  if (addStackTaskId) {
+    if (childTask.name === "start") {
+      childTask["APPEND_stackTaskId"] = [id + "." + childTask.name];
+    }
+    if (childTask["APPEND_stack"]) {
+      const componentCount = childTask["APPEND_stack"].length;
+      childTask["APPEND_stackTaskId"] = new Array(componentCount).fill(id + "." + childTask.name);
+    }
+  }
+  for (const key in tasksObj) {
+    if (tasksObj.hasOwnProperty(key)) {
+      if (key === "tasks" || key === "label") {continue;}
+
+      if (childTask.hasOwnProperty(key) &&
+        !key.startsWith("APPEND_") &&
+        !key.startsWith("PREPEND_")
+      ) {
+        childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
+      } else if (
+        !childTask.hasOwnProperty(key) &&
+        !key.startsWith("APPEND_") &&
+        !key.startsWith("PREPEND_")
+      ){
+        childTask[key] = tasksObj[key];
+      }
+
+      if (childTask.hasOwnProperty("PREPEND_" + key)) {
+        childTask[key] = prependOperation(childTask, key, tasksObj);
+      }
+
+      if (childTask.hasOwnProperty("APPEND_" + key)) {
+        childTask[key] = appendOperation(childTask, key, tasksObj);
+      }
+
+    }
+  }
+  if (childTask["stack"].length) {
+    const stack = childTask["stack"];
+    const stackLength = stack.length;
+    const component = stack[stackLength - 1];
+    // Need to deal with a list of components
+    const tasktemplatename = "root." + component;
+    if (tasktypes[tasktemplatename]) {
+      // for each taskkey in the tasktemplatename copy it into this task
+      // Should detect conflicts
+      for (const key2 in tasktypes[tasktemplatename]) {
+        if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
+          //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
+          if (key2 === "config") {
+            // ChildTask has priority
+            childTask[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], childTask[key2])
+          } else {
+            childTask[key2] =  utils.deepMerge(childTask[key2], tasktypes[tasktemplatename][key2])
+          }
+        }
+      }
+    } else {
+      console.log("Count not find task template", tasktemplatename)
+    }
+  }
+  
+}
+
+function prependOperation(taskflow, key, tasksObj) {
+  if (Array.isArray(taskflow["PREPEND_" + key])) {
+    return taskflow["PREPEND_" + key].concat(tasksObj[key]);
+  } else {
+    return taskflow["PREPEND_" + key] + tasksObj[key];
+  }
+}
+
+function appendOperation(taskflow, key, tasksObj) {
+  if (Array.isArray(taskflow["APPEND_" + key])) {
+    return tasksObj[key].concat(taskflow["APPEND_" + key]);
+  } else {
+    return tasksObj[key] + taskflow["APPEND_" + key];
+  }
+}
+
 // Not that this has huge side-effects
 // Transform taskflows array into flattened taskflows hash
-// We should introduce a concept of appending and prepending
-// e.g. PREPEND_property would prepend the content to content form higher level instead of replacing content
-// Functionality added but not tested
 // Should flatten taskflows then add parent to tasks then flatten tasks (separate generic functions)
 function flattenTaskflows(taskflows) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
-  const regex_lowercase = /^[a-z]+$/;
   var taskflowLookup = {};
   taskflows.forEach(function (taskflow) {
     // Debug option 
     let debug = false;
-    //if (taskflow.name.includes("resume")) {debug = true;}
+    //if (taskflow.name.includes("chatgptzeroshot")) {debug = true;}
     if (debug) {console.log("Taskflow: " + taskflow?.name)}
 
     // Defensive programming
-    // Could use a schema ?j
-    if (!taskflow?.name) {
-      throw new Error("Error: Taskflow missing name");
-    }
-    if (!taskflow?.parentType && taskflow.name !== "root") {
-      throw new Error("Error: Taskflow missing parentType " + taskflow.name);
-    }
-    /* Removed so we can have component names
-    if (!regex_lowercase.test(taskflow.name)) {
-      throw new Error('Error: Taskflow name should only include lowercase characters ' + taskflow.name)
-    }
-    */
-    if (!parent2id[taskflow.parentType] && taskflow.name !== "root") {
+    if (taskflow.name !== "root" && !parent2id[taskflow.parentType]) {
       throw new Error(
         "Error: Taskflow parentType " +
           taskflow.parentType +
-          " does not exist in " +
-          taskflow.name
-      );
+          " does not exist in parent2id");
     }
+    
+    // Add id
     var id;
     if (taskflow.name === "root") {
       id = "root";
@@ -84,214 +150,62 @@ function flattenTaskflows(taskflows) {
     if (taskflowLookup[id]) {
       throw new Error("Error: Duplicate taskflow " + id);
     }
-    // Add id to each task
-    if (taskflow?.tasks) {
-      for (const key in taskflow.tasks) {
-        if (taskflow.tasks.hasOwnProperty(key)) {
-          taskflow.tasks[key]["name"] = key;
-          taskflow.tasks[key]["id"] = id + "." + key;
-          // Avoid the task inheriting the label from the Taskflow
-          if (!taskflow.tasks[key]?.config) {
-            taskflow.tasks[key]["config"] = {};
-          }
-          if (!taskflow.tasks[key].config?.label) {
-            taskflow.tasks[key]["config"]["label"] = "";
-          }
-          // Convert relative task references to absolute
-          if (
-            taskflow.tasks[key]["config"] &&
-            taskflow.tasks[key]["config"]["nextTask"] &&
-            !taskflow.tasks[key]["config"]["nextTask"].includes(".")
-          ) {
-            taskflow.tasks[key]["config"]["nextTask"] =
-              id + "." + taskflow.tasks[key]["config"]["nextTask"];
-          }
-          if (
-            taskflow.tasks[key]["config"] &&
-            taskflow.tasks[key]["config"]["nextStateTemplate"]
-          ) {
-            let nt = taskflow.tasks[key]["config"]["nextStateTemplate"];
-            for (const key in nt) {
-              if (nt.hasOwnProperty(key)) {
-                if (!nt[key].includes(".")) {
-                  nt[key] = id + "." + nt[key];
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    taskflow["id"] = id;
+
     if (!taskflow.config) {
       taskflow['config'] = {}
     }
     if (!taskflow.config?.label) {
       taskflow.config["label"] = utils.capitalizeFirstLetter(taskflow.name);
     }
-    // In the case we are stacking taskflows we need the ids
-    if (taskflow["APPEND_stack"] && taskflow["tasks"]) {
-      const start = id + ".start";
-      const componentCount = taskflow["APPEND_stack"].length;
-      taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
-      if (debug) {console.log("taskflow[\"APPEND_stackTaskId\"] ", taskflow["APPEND_stackTaskId"])}
-    }
-    taskflow["id"] = id;
     taskflow["meta"] = {};
-    taskflow.meta["parentId"] = parent2id[taskflow.parentType];
-    // Copy all the keys from the parentType that are not in the current taskflow
-    // Could create functions for PREPEND_ and APPEND_
-    const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
-    for (const key in parentTaskflow) {
-      if (parentTaskflow.hasOwnProperty(key)) {
-        if (key === "tasks") {continue;}
-        if (taskflow.hasOwnProperty(key) &&
-          !key.startsWith("APPEND_") &&
-          !key.startsWith("PREPEND_")
-        ) {
-          // Will not override, need to merge
-          taskflow[key] = utils.deepMerge(parentTaskflow[key], taskflow[key])
-        } else if (
-          !taskflow.hasOwnProperty(key) &&
-          !key.startsWith("APPEND_") &&
-          !key.startsWith("PREPEND_")
-        ) {
-          taskflow[key] = parentTaskflow[key];
-        }
-        if (taskflow.hasOwnProperty("PREPEND_" + key)) {
-          if (Array.isArray(taskflow["PREPEND_" + key])) {
-            taskflow[key] = taskflow["PREPEND_" + key].concat(
-              parentTaskflow[key]
-            );
-          } else {
-            taskflow[key] = taskflow["PREPEND_" + key] + parentTaskflow[key];
-          }
-          //console.log("Taskflow " + taskflow.id + " PREPEND_ ", taskflow['PREPEND_' + key], " to " + key)
-        }
-        if (taskflow.hasOwnProperty("APPEND_" + key)) {
-          if (Array.isArray(taskflow["APPEND_" + key])) {
-            taskflow[key] = parentTaskflow[key].concat(
-              taskflow["APPEND_" + key]
-            );
-          } else {
-            taskflow[key] = parentTaskflow[key] + taskflow["APPEND_" + key];
-          }
-          //console.log("Taskflow " + taskflow.id + " APPEND_ ", taskflow['APPEND_' + key], " to " + key)
-        }
-      }
+    if (taskflow.name !== "root") {
+      taskflow.meta["parentId"] = parent2id[taskflow.parentType];
     }
-    //if (debug) {console.log("Copy all the keys from the parentType that are not in the current taskflow", JSON.stringify(taskflow, null, 2))}
-    // Copy all the keys from the taskflow that are not in the current tasks
+
+    // It might poossible to specify a stack with a list but we do not use this
+    if (taskflow["APPEND_stack"]) {
+      const componentCount = taskflow["APPEND_stack"].length;
+      taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(id);
+    }
+    
+    // Copy keys from the parentType
+    const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
+    mergeTasks(taskflow, parentTaskflow, id);
+
+    // This should be separated so we deal only with flattening taskflows here
+    // The best approach may be to stop distinguishing between taskflow and task
+    // Then can either specify hierarchically or using the array format
+    // Copy keys from the taskflow that are not in the current tasks
     if (taskflow?.tasks) {
       for (const taskkey in taskflow.tasks) {
-        if (taskkey == "start") {debug = debug && true;}
         if (taskflow.tasks.hasOwnProperty(taskkey)) {
-          const APPEND_stack = taskflow.tasks[taskkey]["APPEND_stack"]
-          if (APPEND_stack) {
-            // for each entry in  APPEND_stack create an entry to start in APPEND_stackTaskId
-            const start = id + ".start";
-            let componentCount = APPEND_stack.length 
-            if (taskflow?.stack) {
-              componentCount = componentCount + taskflow.stack.length;
-            }
-            taskflow.tasks[taskkey]["APPEND_stackTaskId"] = new Array(componentCount).fill(start);
-            if (debug) {
-              console.log("Copy from taskflow APPEND_stackTaskId ", taskflow.tasks[taskkey]["APPEND_stackTaskId"])
-            }
+          taskflow.tasks[taskkey]["name"] = taskkey;
+          taskflow.tasks[taskkey]["id"] = id + "." + taskkey;
+          if (!taskflow.tasks[taskkey]?.meta) {
+            taskflow.tasks[taskkey]["meta"] = {};
           }
-          for (const taskflowkey in taskflow) {
-            if (taskflow.hasOwnProperty(taskflowkey)) {
-              if (taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
-                !taskflowkey.startsWith("APPEND_") &&
-                !taskflowkey.startsWith("PREPEND_")
-              ) {
-                // Will not override, need to merge
-                taskflow.tasks[taskkey][taskflowkey] =  utils.deepMerge(taskflow[taskflowkey], taskflow.tasks[taskkey][taskflowkey]);
-              } else if (
-                !taskflow.tasks[taskkey].hasOwnProperty(taskflowkey) &&
-                taskflowkey !== "tasks" &&
-                !taskflowkey.startsWith("APPEND_") &&
-                !taskflowkey.startsWith("PREPEND_")
-              ) {
-                taskflow.tasks[taskkey][taskflowkey] = taskflow[taskflowkey];
-                if (
-                  taskflow.tasks[taskkey].hasOwnProperty(
-                    "PREPEND_" + taskflowkey
-                  )
-                ) {
-                  if (
-                    Array.isArray(
-                      taskflow.tasks[taskkey]["PREPEND_" + taskflowkey]
-                    )
-                  ) {
-                    taskflow.tasks[taskkey][taskflowkey] = taskflow.tasks[
-                      taskkey
-                    ]["PREPEND_" + taskflowkey].concat(taskflow[taskflowkey]);
-                  } else {
-                    taskflow.tasks[taskkey][taskflowkey] =
-                      taskflow.tasks[taskkey]["PREPEND_" + taskflowkey] +
-                      taskflow[taskflowkey];
-                  }
-                } else if (
-                  taskflow.tasks[taskkey].hasOwnProperty(
-                    "APPEND_" + taskflowkey
-                  )
-                ) {
-                  if (
-                    Array.isArray(
-                      taskflow.tasks[taskkey]["APPEND_" + taskflowkey]
-                    )
-                  ) {
-                    taskflow.tasks[taskkey][taskflowkey] = taskflow[
-                      taskflowkey
-                    ].concat(taskflow.tasks[taskkey]["APPEND_" + taskflowkey]);
-                  } else {
-                    taskflow.tasks[taskkey][taskflowkey] =
-                      taskflow[taskflowkey] +
-                      taskflow.tasks[taskkey]["APPEND_" + taskflowkey];
-                  }
+          taskflow.tasks[taskkey]["meta"]["parentId"] = taskflow.id;
+          // Convert relative task references to absolute
+          const nextTask = taskflow.tasks[taskkey]?.config?.nextTask;
+          if (nextTask && !nextTask.includes(".")) {
+            taskflow.tasks[taskkey].config.nextTask = id + "." + nextTask;
+          }
+          const nextStateTemplate = taskflow.tasks[taskkey]?.config?.nextStateTemplate;
+          if (nextStateTemplate) {
+            for (const key in nextStateTemplate) {
+              if (nextStateTemplate.hasOwnProperty(key)) {
+                if (!nextStateTemplate[key].includes(".")) {
+                  nextStateTemplate[key] = id + "." + nextStateTemplate[key];
                 }
               }
             }
           }
-
-          // APPEND_stack should be the tasktemplate name
-          // We will copy the tasktemplate into the task
-          if (taskflow.tasks[taskkey]["stack"]) {
-            /*
-            if (taskflow.tasks[taskkey]["APPEND_stack"].length !== 1) {
-              console.log("APPEND_stack should be an array of length 1");
-            }
-            */
-           // Perhaps only need to do this for the last addition to the stack
-           // But needs a rule that we add one level per taskflow/task
-            //for (const component of taskflow.tasks[taskkey]["stack"]) {
-            const stack = taskflow.tasks[taskkey]["stack"];
-            const component = stack[stack.length - 1];
-              // Need to deal with a list of components
-              const tasktemplatename = "root." + component;
-              if (tasktypes[tasktemplatename]) {
-                taskflow.tasks[taskkey]
-                // for each taskkey in the tasktemplatename copy it into this task
-                // Should detect conflicts
-                for (const key2 in tasktypes[tasktemplatename]) {
-                  if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
-                    //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
-                    taskflow.tasks[taskkey][key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], taskflow.tasks[taskkey][key2])
-                  }
-                }
-              } else {
-                console.log("Count not find task template", tasktemplatename)
-              }
-            //}
-          } else {
-            // No longer true because we can have APPEND_stack in the taskflow
-            // This allows a hierarchy of taskflow
-            //console.log("Should have APPEND_stack in every task?")
-          }
-
+          mergeTasks(taskflow.tasks[taskkey], taskflow, id, true);
         }
       }
     }
+
     taskflowLookup[id] = taskflow;
     parent2id[taskflow.name] = id;
     // Build children data
@@ -302,12 +216,10 @@ function flattenTaskflows(taskflows) {
     }
   });
 
-  //console.log(JSON.stringify(taskflowLookup, null, 2))
-
   // For the menu building
   taskflows.forEach(function (taskflow) {
     if (children[taskflow.id]) {
-      taskflowLookup[taskflow.id]["children"] = children[taskflow.id];
+      taskflowLookup[taskflow.id]["meta"]["children"] = children[taskflow.id];
     }
   });
 
@@ -326,33 +238,14 @@ users = utils.flattenObjects(users);
 
 //Create a group for each user
 for (const userKey in users) {
-  if (userKey === "root") {
-    continue;
-  }
   if (users.hasOwnProperty(userKey)) {
     //console.log("Creating group for user " + userKey)
     if (!groups[userKey]) {
       const group = {
         name: users[userKey].name,
-        parentType: "root",
         users: [userKey],
       }
       groups.push(group)
-    }
-  }
-}
-
-//prepend root to all users in users of group
-for (const groupKey in groups) {
-  if (groups.hasOwnProperty(groupKey)) {
-    const group = groups[groupKey];
-    if (group.hasOwnProperty("users")) {
-      group.users = group.users.map(function (userId) {
-        if (!userId.startsWith("root.")) {
-          userId = "root." + userId;
-        }
-        return userId;
-      });
     }
   }
 }
@@ -363,16 +256,9 @@ groups = utils.flattenObjects(groups);
 //Add list of groups to each user (a view in a DB)
 for (const groupKey in groups) {
   if (groups.hasOwnProperty(groupKey)) {
-    if (groupKey === "root") {
-      continue;
-    }
     const group = groups[groupKey];
     assert(group.hasOwnProperty("users"), "Group " + groupKey + " has no users");
     group.users.forEach(function (userId) {
-      if (!userId.startsWith("root.")) {
-        userId = "root." + userId;
-
-      }
       // Groups may have users that do not exist
       if (!users[userId]) {
         console.log(
@@ -398,6 +284,14 @@ function flattenTasks(taskflows) {
   const tasks = {};
   for (const taskflowKey in taskflows) {
     if (Object.prototype.hasOwnProperty.call(taskflows, taskflowKey)) {
+      const taskflow = taskflows[taskflowKey];
+      const taskflowId = taskflow.id;
+      tasks[taskflowId] = {};
+      for (const key in taskflow) {
+        if (key !== "tasks") {
+          tasks[taskflowId][key] = taskflows[taskflowKey][key];
+        }
+      }
       const taskflowTasks = taskflows[taskflowKey].tasks;
       if (taskflowTasks) {
         for (const taskKey in taskflowTasks) {
@@ -408,7 +302,7 @@ function flattenTasks(taskflows) {
               console.log("taskID not set " + taskKey + " " + taskflowKey);
             }
             tasks[taskId] = task;
-            tasks[taskId]["meta"]["parentId"] = taskflowKey;
+            //tasks[taskId]["meta"]["parentId"] = taskflowKey;
             //tasks[taskId]['filter_for_react'] = taskflows[taskflowKey].filter_for_react;
           }
         }
@@ -421,14 +315,48 @@ function flattenTasks(taskflows) {
 tasks = flattenTasks(taskflows);
 //console.log(JSON.stringify(tasks, null, 2))
 
+/**
+ * Save tasks to a file if the file does not exist.
+ * If the file exists then perform a diff.
+ * This is useful during refactoring to make sure intentional changes are made.
+ *
+ * @param {Array} tasks - An array of tasks to be saved.
+ * @return {Promise<void>} A promise that resolves when the tasks are saved successfully.
+ */
+async function saveTasks(tasks) {
+  const tasksJson = JSON.stringify(tasks, null, 2);
+  let existingTasks;
+
+  try {
+    const data = await fs.readFile('/tmp/tasks.json', 'utf8');
+    existingTasks = JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') { // file does not exist
+      await fs.writeFile('/tmp/tasks.json', tasksJson);
+      console.log('Successfully wrote tasks to file');
+      return;
+    } else {
+      console.error('Error reading file', error);
+      return;
+    }
+  }
+
+  const diff = jsonDiff.diffString(existingTasks, tasks);
+  if (diff) {
+    console.log('Differences between the existing tasks and the new tasks:', diff);
+  } else {
+    console.log('No differences found');
+  }
+}
+//await saveTasks(tasks);
+
+//console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2));
 
-// It would be better to use the JSON validation instead for task
-try {
-  await validateTasks(tasks);
-} catch (e) {
-  console.error("Error validating tasks", e);
-  throw new Error("Error validating tasks");
-}
+// For each task in tasks run fromTask to validate the task
+Object.keys(tasks).forEach(key => {
+  const task = tasks[key];
+  fromTask(task);
+});
 
 export { users, groups, taskflows, tasktypes, tasks };

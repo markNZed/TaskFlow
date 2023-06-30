@@ -43,7 +43,7 @@ utils.getUserId = function (req) {
   if (MAP_USER && MAP_USER[userId]) {
     userId = MAP_USER[userId];
   }
-  return "root." + userId;
+  return userId;
 };
 
 utils.formatDateAndTime = function (date) {
@@ -197,18 +197,16 @@ utils.authenticatedTask = function (task, userId, groups) {
   let authenticated = false;
   if (task?.permissions) {
     task.permissions.forEach((group_name) => {
-      const full_group_name = "root." + group_name;
-      if (!groups[full_group_name]) {
-        console.log("Warning: could not find group " + full_group_name);
-      } else {
-        if (groups[full_group_name].users.includes(userId)) {
-          authenticated = true;
-        }
+      if (!groups[group_name]?.users) {
+        console.log("Group " + group_name + " has no users", groups[group_name]);
+      } else if (groups[group_name].users.includes(userId)) {
+        authenticated = true;
       }
     });
   } else {
     authenticated = true;
   }
+  //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
   return authenticated;
 };
 

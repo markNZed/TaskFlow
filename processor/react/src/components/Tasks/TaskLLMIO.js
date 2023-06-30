@@ -113,8 +113,8 @@ const TaskLLMIO = (props) => {
           break;
         case "response":
           // Don't fetch if we already have the output
-          if (task.output?.text) {
-            setResponseText(task.output.text);
+          if (task.output?.LLMtext) {
+            setResponseText(task.output.LLMtext);
             nextState = "received";
           } else if (transition()) {
             modifyTask({ "command": "update" });
@@ -125,20 +125,20 @@ const TaskLLMIO = (props) => {
           break;
         case "received":
           nextState = nextConfigState;
-          setResponseText(task.output.text);
+          setResponseText(task.output.LLMtext);
           if (nextConfigState === "input") {
             setShowUserInput(true);
           }
           break;
         case "input":
           // Show any previous input stored
-          if (task.output?.input && !userInput) {
-            setUserInput(task.output.input);
+          if (task.output?.userInput && !userInput) {
+            setUserInput(task.output.userInput);
           }
           break;
         case "exit":
           if (transitionFrom("input")) {
-            modifyTask({ "command": "update", "output.input": userInput });
+            modifyTask({ "command": "update", "output.userInput": userInput });
           } else {
             nextState = "stop"
           }
