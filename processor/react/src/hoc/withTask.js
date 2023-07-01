@@ -149,7 +149,12 @@ function withTask(Component) {
         if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
           let startTaskId = props.stackTaskId[localStackPtrRef.current]
           const newPtr = localStackPtrRef.current + 1;
-          startTaskFn(startTaskId, props.task.familyId, newPtr);
+          const initTask = {
+            id: startTaskId,
+            familyId: props.task.familyId,
+            stackPtr: newPtr
+          }
+          startTaskFn(initTask);
           console.log("startTaskFn from withTask", startTaskId, newPtr)
         }
         //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
@@ -219,18 +224,13 @@ function withTask(Component) {
       }
     )
 
-    function startTaskFn(
-      startId,
-      familyId = null,
-      depth = null,
-      prevInstanceId = null,
-    ) {
+    function startTaskFn(initTask) {
       setStartTaskReturned(null);
-      setStartTaskId(startId);
-      setLastStartTaskId(startId); // used by the useStartWSFilter
-      setStartTaskPrevInstanceId(prevInstanceId); // used by the useStartWSFilter
-      setStartTaskThreadId(familyId);
-      setStartTaskDepth(depth);
+      setStartTaskId(initTask.id);
+      setLastStartTaskId(initTask.id); // used by the useStartWSFilter
+      setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
+      setStartTaskThreadId(initTask.familyId);
+      setStartTaskDepth(initTask.stackPtr);
     }
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated

@@ -18,7 +18,7 @@ Task Process
   The Task is passed on to the TaskChat component
   
 ToDo:
-  startTaskFn could return the task ?
+  
 */
 
 const TaskConversation = (props) => {
@@ -27,9 +27,6 @@ const TaskConversation = (props) => {
     setTask,
     childTask,
     setChildTask,
-    startTaskError,
-    startTask,
-    startTaskFn,
     stackPtr,
     useTaskState,
     onDidMount,
@@ -46,24 +43,6 @@ const TaskConversation = (props) => {
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
-
-  /*
-  useEffect(() => {
-    let startTaskId = task.id
-    if (task.stackTaskId.length > 0) {
-      startTaskId = task.stackTaskId[stackPtr]
-    }
-    startTaskFn(startTaskId, task.familyId, stackPtr + 1);
-  }, []);
-
-  useEffect(() => {
-    if (startTask) {
-      setChatTask(startTask);
-    }
-  }, [startTask]);
-  */
-
-  // Either we use the task we received or we pass it down and start a task for this stackPtr level
 
   useEffect(() => {
     if (childTask) {

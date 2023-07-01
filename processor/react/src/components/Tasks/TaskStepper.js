@@ -67,7 +67,12 @@ function TaskStepper(props) {
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        props.startTaskFn(props.stackTaskId[stackPtr], task.familyId, stackPtr + 1); // will set startTask or startTaskError
+        const initTask = {
+          id: props.stackTaskId[stackPtr],
+          familyId: task.familyId,
+          stackPtr: stackPtr + 1,
+        };
+        props.startTaskFn(initTask); // will set startTask or startTaskError
         nextState = "waitForStart"
         break;
       case "waitForStart":
@@ -104,7 +109,13 @@ function TaskStepper(props) {
       case "waitForDone":
         if (stepDone) {
           // The stepper requests a new Task
-          props.startTaskFn(tasks[tasksIdx].config.nextTask, task.familyId, stackPtr + 1, tasks[tasksIdx].instanceId);
+          const initTask = {
+            id: tasks[tasksIdx].config.nextTask,
+            familyId: task.familyId,
+            stackPtr: stackPtr + 1,
+            commandArgs: {prevInstanceId: tasks[tasksIdx].instanceId},
+          }
+          props.startTaskFn(initTask); // will set startTask or startTaskError
           const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
           }));

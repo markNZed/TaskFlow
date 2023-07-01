@@ -39,10 +39,6 @@ function TaskGrid(props) {
   onDidMount();
 
   useEffect(() => {
-    startTaskFn(task.id, null, stackPtr);
-  }, []);
-
-  useEffect(() => {
     if (task) {
       setGridTask(task);
     }

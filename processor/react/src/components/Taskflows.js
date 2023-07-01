@@ -57,7 +57,11 @@ function Taskflows(props) {
       if (index === -1) {
         // Could/should us the stackTaskId
         const taskStackId = globalState.taskflowsTree[selectedTaskId].stackTaskId;
-        startTaskFn(taskStackId[0], null, 1);
+        const initTask = {
+          id: taskStackId[0],
+          stackPtr: 1,
+        }
+        startTaskFn(initTask);
         setTasksStackId((p) => [...p, taskStackId]);
         console.log("Taskflows startTaskFn", taskStackId)
       } else {
@@ -72,9 +76,11 @@ function Taskflows(props) {
         (a, b) => a.length - b.length
       );
       const longestKey = sortedKeys[sortedKeys.length - 1];
-      startTaskFn(
-        globalState.taskflowsTree[longestKey].id + ".start"
-      );
+      const initTask = {
+        id: globalState.taskflowsTree[longestKey].id + ".start",
+        stackPtr: 1,
+      };
+      startTaskFn(initTask);
       setHideSide(true);
       setDrawWidth(0);
     }
