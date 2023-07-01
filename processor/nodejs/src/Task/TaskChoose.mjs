@@ -26,10 +26,10 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
   const subTask = await SubTaskLLM_async(wsSendTask, task);
   T("response.text", subTask.response.text);
 
-  const next_responses = Object.keys(T("config.nextTaskTemplate"));
-  const next_states = Object.values(T("config.nextTaskTemplate"));
+  const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
+  const nextTaskIds = Object.values(T("config.nextTaskTemplate"));
 
-  const phrases = [T("response.text"), ...next_responses];
+  const phrases = [T("response.text"), ...nextTaskKeys];
 
   //console.log("phrases", phrases)
 
@@ -58,13 +58,13 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
     console.log("Max similarity:", maxSimilarity);
     console.log("Index of max similarity:", maxIndex);
 
-    console.log("response is" + next_states[maxIndex]);
+    console.log("response is" + nextTaskIds[maxIndex]);
 
     // Remember to clean up tensors to prevent memory leaks
     embeddingsData.dispose();
 
     // Need to go to next state, can stay on NodeJS Task Processor side
-    T("commandArgs", {"nextTaskId": next_states[maxIndex], "done": true});
+    T("commandArgs", {"nextTaskId": nextTaskIds[maxIndex], "done": true});
     T("command", "update");
   } catch (error) {
     // Handle the error here

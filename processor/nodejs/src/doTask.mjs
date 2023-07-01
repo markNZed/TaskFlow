@@ -26,6 +26,7 @@ export async function do_task_async(wsSendTask, task) {
         await activeTasksStore_async.set(task.instanceId, updated_task)
         if (updated_task?.command === "start") {
           // This is not working/used yet
+          throw new Error("start not implemented yet");
           const task = {
             userId: updated_task.userId,
             startId: updated_task.commandArgs.startId,

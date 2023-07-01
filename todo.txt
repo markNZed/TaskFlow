@@ -3,21 +3,6 @@
 children -> meta
 Replace startTaskFn with task.command "start"
   Should the processor return via task.processor.response with task
-  There is no task when initializing
-    Could create task 
-      task.id
-      userId, 
-      true, processorId, task?.groupId, stackPtr, familyId
-
- id,
-    userId,
-    authenticate,
-    processorId,
-    groupId,
-    stackPtr = null,
-    familyId = null,
-    prevInstanceId = null,
-
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering

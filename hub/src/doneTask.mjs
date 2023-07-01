@@ -22,7 +22,14 @@ export async function doneTask_async(task) {
   activeTaskProcessorsStore_async.delete(task.instanceId);
   // Fetch from the Task Hub
   if (nextTaskId) {
-    await startTask_async(nextTaskId, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTaskId, task.instanceId);
+    const initTask = {
+      id: nextTaskId,
+      userId: task.userId,
+      groupId: task?.groupId,
+      stackPtr: task.stackPtr,
+      familyId: task.familyId,
+    }
+    await startTask_async(initTask, false, task.hub["sourceProcessorId"], task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
   }
 }

@@ -230,7 +230,7 @@ function withTask(Component) {
       setInitTask(initTask);
       //setStartTaskId(initTask.id);
       setLastStartTaskId(initTask.id); // used by the useStartWSFilter
-      //setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
+      setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
       //setStartTaskThreadId(initTask.familyId);
       //setStartTaskDepth(initTask.stackPtr);
     }

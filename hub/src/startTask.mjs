@@ -11,27 +11,24 @@ import { utils } from "./utils.mjs";
 import { hubId } from "../config.mjs";
 
 async function startTask_async(
-    id,
-    userId,
+    initTask,
     authenticate,
     processorId,
-    groupId,
-    stackPtr = null,
-    familyId = null,
     prevInstanceId = null,
   ) {
     /*
     console.log(
-      "id:", id, 
-      "userId:", userId, 
+      "initTask:", initTask, 
       "authenticate:", authenticate,
       "processorId:", processorId, 
-      "groupId:", groupId, 
-      "stackPtr:", stackPtr, 
-      "familyId:", familyId,
       "prevInstanceId:", prevInstanceId,
     );
     */    
+    let id = initTask.id;
+    let userId = initTask.userId;
+    let groupId = initTask.groupId;
+    let stackPtr = initTask.stackPtr;
+    let familyId = initTask.familyId;  
     let instanceId = uuidv4();
     let processor = {}
 

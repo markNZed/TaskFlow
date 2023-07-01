@@ -133,9 +133,9 @@ router.post("/", async (req, res) => {
     // Switch to function based on task.hub["command"]
     switch (task.hub["command"]) {
       case "start":
-        return await start_async(res, userId, processorId, command, commandArgs, task)
+        return await start_async(res, processorId, commandArgs, task)
       case "update":
-        return await update_async(res, userId, processorId, command, commandArgs, task, activeTask)
+        return await update_async(res, processorId, commandArgs, task)
       default:
         throw new Error("Unknown command " + task.hub["command"]);
     }
@@ -145,12 +145,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-async function start_async(res, userId, processorId, command, commandArgs, task) {
+async function start_async(res, processorId, commandArgs, task) {
   console.log("start_async " + task.id);
-  console.log("start_async task", task);
+  //console.log("start_async task", task);
   try {
     // Just set initial task values and pass that in instead of a long list of arguments?
-    await startTask_async(task.id, task.userId, true, task.processor.id, task?.groupId, task.stackPtr, task.familyId, commandArgs?.prevInstanceId);
+    await startTask_async(task, true, processorId, commandArgs?.prevInstanceId);
     res.status(200).send("ok");
   } catch (err) {
     //throw err;
@@ -159,7 +159,7 @@ async function start_async(res, userId, processorId, command, commandArgs, task)
   }
 }
 
-async function update_async(res, userId, processorId, command, commandArgs, task, activeTask) {
+async function update_async(res, processorId, commandArgs, task) {
   console.log("update_async " + task.id);
   // We intercept tasks that are done.
   if (commandArgs?.done) {
