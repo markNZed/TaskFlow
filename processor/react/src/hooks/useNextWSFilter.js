@@ -40,10 +40,12 @@ function useNextWSFilter(useGlobalStateContext, stackPtrRef, doneTask, onNext) {
     //console.log("useUpdateWSFilter useEffect after messageQueue", messageQueue);
   };
 
+  // This allows a task at another stackPtr level to request a new task and a Task at
+  // this levle to pick it up. Not sure we need/want this.
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
   useEffect(() => {
-    if (doneTask && doneTask?.command === "receiveNext") {
+    if (doneTask && doneTask?.command === "next") {
       const i = doneTask.commandArgs?.instanceId;
       if (i && instanceId !== i) {
         setInstanceId(i);
