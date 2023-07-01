@@ -7,34 +7,42 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect, useRef } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
-import { log } from "../utils/utils";
+import { setNestedProperties, deepMerge, log } from "../utils/utils";
 
-const useStartTask = (initTask, setInitTask) => {
+const useStartTask = (task, setTask, local_stackPtr) => {
   const { globalState } = useGlobalStateContext();
-  const [startTaskError, setTaskStartError] = useState();
+  const [startTaskError, setStartTaskError] = useState();
 
   useEffect(() => {
-    if (!initTask?.id || startTaskError) {
+    const command = task?.command;
+    const commandArgs = task?.commandArgs;
+    if (command !== "start" || startTaskError || task.stackPtr !== local_stackPtr) {
       return;
     }
     const fetchTaskFromAPI = async () => {
       try {
+        const initTask = {
+          id: commandArgs.id,
+          stackPtr: commandArgs.stackPtr,
+          familyId: commandArgs?.familyId,
+          processor: {},
+        }
         let snapshot = JSON.parse(JSON.stringify(initTask)); // deep copy
-        const command = "start";
-        const commandArgs = {prevInstanceId: initTask.commandArgs?.prevInstanceId};
+        const updating = { "command": null, "commandArgs": null };
+        setNestedProperties(updating);
+        setTask((p) => deepMerge(p, updating));
+        snapshot = deepMerge(snapshot, updating)
         log("useStartTask", snapshot.id, snapshot.stackPtr);
-        snapshot["processor"] = {};    
         fetchTask(globalState, command, commandArgs, snapshot);
       } catch (error) {
-        setTaskStartError(error.message);
+        console.log(error)
+        setStartTaskError(error.message);
       }
-      // If start fails then we can try again for the same task if it is cleared
-      setInitTask(null);
     };
 
     fetchTaskFromAPI();
   // eslint-disable-next-line
-  }, [initTask]);
+  }, [task]);
 
   return { startTaskError };
 };

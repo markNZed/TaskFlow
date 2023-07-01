@@ -67,12 +67,14 @@ function TaskStepper(props) {
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        const initTask = {
-          id: props.stackTaskId[stackPtr],
-          familyId: task.familyId,
-          stackPtr: stackPtr + 1,
-        };
-        props.startTaskFn(initTask); // will set startTask or startTaskError
+        modifyTask({
+          "command": "start",
+          "commandArgs": {
+            id: props.stackTaskId[stackPtr],
+            familyId: task.familyId,
+            stackPtr: stackPtr + 1,
+          }
+        });
         nextState = "waitForStart"
         break;
       case "waitForStart":
@@ -109,13 +111,16 @@ function TaskStepper(props) {
       case "waitForDone":
         if (stepDone) {
           // The stepper requests a new Task
-          const initTask = {
-            id: tasks[tasksIdx].config.nextTask,
-            familyId: task.familyId,
-            stackPtr: stackPtr + 1,
-            commandArgs: {prevInstanceId: tasks[tasksIdx].instanceId},
-          }
-          props.startTaskFn(initTask); // will set startTask or startTaskError
+          // will set startTask or startTaskError
+          modifyTask({
+            "command": "start",
+            "commandArgs": {
+              id: tasks[tasksIdx].config.nextTask,
+              familyId: task.familyId,
+              stackPtr: stackPtr + 1,
+              prevInstanceId: tasks[tasksIdx].instanceId,
+            }
+          });
           const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
           }));
@@ -129,7 +134,10 @@ function TaskStepper(props) {
       case "waitForNext":
         if (startTaskError) {
           nextState = "error";
-        } else if (startTask) {
+        // Need to check that this is the start task we are expecting as we may have 
+        // previously started another task. It would be better to clear this down.
+        // But I'm not sure how to automate that
+        } else if (startTask.id === tasks[tasksIdx].config.nextTask) {
           console.log("TaskStepper nextTask", startTask);
           setTasksIdx(tasks.length);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);

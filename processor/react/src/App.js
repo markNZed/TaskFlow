@@ -25,6 +25,7 @@ function App({ activeWorkerCount, workerId }) {
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const storageRef = useRef(null);
+  const [task, setTask] = useState(); // So Taskflows.js can use the withTask pattern
 
   useEffect(() => {
     if (globalState.processorId === undefined && workerId) {
@@ -147,7 +148,7 @@ function App({ activeWorkerCount, workerId }) {
 
   return (
     <Routes>
-      <Route exact path="/" element={<Taskflows />} />
+      <Route exact path="/" element={<Taskflows task={task} setTask={setTask} />} />
       <Route exact path="/db" element={<IndexedDBViewer />} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>

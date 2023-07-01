@@ -2,11 +2,13 @@ import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useStartWSFilter(useGlobalStateContext, startTaskId, startPrevInstanceId, onStart) {
+function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
   
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
   const [working, setWorking] = useState(false);
+  const [startTaskId, setStartTaskId] = useState();
+  const [startPrevInstanceId, setStartPrevInstanceId] = useState();
 
   const startTaskDB = async (task) => {
     // We are not using this storage yet
@@ -42,6 +44,13 @@ function useStartWSFilter(useGlobalStateContext, startTaskId, startPrevInstanceI
     };
     startTask();
   }, [eventQueue, working]);
+
+  useEffect(() => {
+    if (initialTask?.command === "start") {
+      setStartTaskId(initialTask.commandArgs.id);
+      setStartPrevInstanceId(initialTask?.id);
+    }
+  }, [initialTask]);
 
   useEffect(() => {
     if (!webSocketEventEmitter) {

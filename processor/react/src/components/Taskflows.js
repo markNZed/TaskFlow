@@ -27,10 +27,10 @@ import { appLabel } from "../config";
 
 function Taskflows(props) {
   const {
+    setTask,
     useTasksState,
     startTaskError,
     startTask,
-    startTaskFn,
     stackPtr,
   } = props;
 
@@ -57,13 +57,16 @@ function Taskflows(props) {
       if (index === -1) {
         // Could/should us the stackTaskId
         const taskStackId = globalState.taskflowsTree[selectedTaskId].stackTaskId;
-        const initTask = {
-          id: taskStackId[0],
-          stackPtr: 1,
-        }
-        startTaskFn(initTask);
+        setTask({
+          stackPtr: 0,
+          command: "start",
+          commandArgs: {
+            id: taskStackId[0],
+            stackPtr: 1,
+          }
+        });
         setTasksStackId((p) => [...p, taskStackId]);
-        console.log("Taskflows startTaskFn", taskStackId)
+        console.log("Taskflows start", taskStackId)
       } else {
         setTasksIdx(index);
       }
@@ -76,11 +79,14 @@ function Taskflows(props) {
         (a, b) => a.length - b.length
       );
       const longestKey = sortedKeys[sortedKeys.length - 1];
-      const initTask = {
-        id: globalState.taskflowsTree[longestKey].id + ".start",
-        stackPtr: 1,
-      };
-      startTaskFn(initTask);
+      setTask({
+        stackPtr: 0,
+        command: "start",
+        commandArgs: {
+          id: globalState.taskflowsTree[longestKey].id + ".start",
+          stackPtr: 1,
+        }
+      });
       setHideSide(true);
       setDrawWidth(0);
     }

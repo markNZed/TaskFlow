@@ -40,22 +40,22 @@ function withTask(Component) {
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
-    const [startTaskId, setStartTaskId] = useState();
-    const [lastStartTaskId, setLastStartTaskId] = useState();
-    const [startTaskThreadId, setStartTaskThreadId] = useState();
     const [startTaskPrevInstanceId, setStartTaskPrevInstanceId] = useState();
     const [childTask, setChildTask] = useState();
-    const [startTaskDepth, setStartTaskDepth] = useState(localStackPtrRef.current);
     // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing config from an earlier component
     const { updateTaskError } = useUpdateTask(
       props.task,
       props.setTask,
-      localStackPtrRef.current
+      localStackPtrRef.current,
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError } = useStartTask(initTask, setInitTask);
+    const { startTaskError } = useStartTask(
+      props.task, 
+      props.setTask,
+      localStackPtrRef.current,
+    );
     const lastStateRef = useRef();
     const stateRef = useRef();
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
@@ -150,13 +150,15 @@ function withTask(Component) {
         if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
           let startTaskId = props.stackTaskId[localStackPtrRef.current]
           const newPtr = localStackPtrRef.current + 1;
-          const initTask = {
-            id: startTaskId,
-            familyId: props.task.familyId,
-            stackPtr: newPtr
-          }
-          startTaskFn(initTask);
-          console.log("startTaskFn from withTask", startTaskId, newPtr)
+          modifyTask({
+            "command": "start",
+            "commandArgs": {
+              id: startTaskId,
+              familyId: props.task.familyId,
+              stackPtr: newPtr
+            }
+          });
+          console.log("Start from withTask", startTaskId, newPtr)
         }
         //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
         //modifyTask({stackPtr: localStackPtrRef.current});
@@ -210,11 +212,11 @@ function withTask(Component) {
       }
     )
 
-    useStartWSFilter(useGlobalStateContext, lastStartTaskId, startTaskPrevInstanceId, 
+    useStartWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
         console.log("useStartWSFilter", newTask);
-        setLastStartTaskId(null);
-        setStartTaskReturned(newTask)
+        setInitTask(null);
+        setStartTaskReturned(newTask);
       }
     )
     
@@ -224,16 +226,6 @@ function withTask(Component) {
         // We do not have a plan for dealing with errors here yet
       }
     )
-
-    function startTaskFn(initTask) {
-      setStartTaskReturned(null);
-      setInitTask(initTask);
-      //setStartTaskId(initTask.id);
-      setLastStartTaskId(initTask.id); // used by the useStartWSFilter
-      setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
-      //setStartTaskThreadId(initTask.familyId);
-      //setStartTaskDepth(initTask.stackPtr);
-    }
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
     // This is specific to how React handles setState 
@@ -482,7 +474,6 @@ function withTask(Component) {
       updateTaskError,
       startTaskError,
       startTask: startTaskReturned,
-      startTaskFn,
       prevTask,
       modifyTask,
       modifyState,
@@ -496,7 +487,7 @@ function withTask(Component) {
       user: globalState.user,
       onDidMount: handleChildDidMount,
       useWebSocketContext,
-      componentName: props?.task?.stack[localStackPtrRef.current - 1],
+      componentName: props?.task?.stack && props?.task?.stack[localStackPtrRef.current - 1],
       childTask,
       setChildTask,
       handleTaskUpdate,

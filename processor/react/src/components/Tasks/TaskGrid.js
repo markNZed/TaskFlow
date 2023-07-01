@@ -27,7 +27,6 @@ function TaskGrid(props) {
     setTask,
     useTasksState,
     stackPtr,
-    startTaskFn,
     useTaskState,
     onDidMount,
   } = props;

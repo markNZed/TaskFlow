@@ -1,8 +1,5 @@
 /* ToDo
 -------
-children -> meta
-Replace startTaskFn with task.command "start"
-  Should the processor return via task.processor.response with task
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
@@ -104,6 +101,10 @@ Backlog
   Bugs
   -----
   Scrolling to view suggested_prompts in TaskChat
+
+  Refactoring
+  -----------
+  children -> meta.children (used for tree)
 
   Features
   --------

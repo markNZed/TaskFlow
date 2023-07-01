@@ -26,7 +26,6 @@ const TaskGeneratePersona = (props) => {
     setTask,
     startTaskError,
     startTask,
-    startTaskFn,
     stackPtr,
     modifyTask,
     useTaskState,
@@ -95,12 +94,14 @@ const TaskGeneratePersona = (props) => {
         break;
       case "generated":
         setResponseText(task.output.summary);
-        const initTask = {
-          id: props.stackTaskId[stackPtr],
-          familyId: task.familyId,
-          stackPtr: stackPtr + 1,
-        }
-        startTaskFn(initTask);
+        modifyTask({
+          "command": "start",
+          "commandArgs": {
+            id: props.stackTaskId[stackPtr],
+            familyId: task.familyId,
+            stackPtr: stackPtr + 1,
+          }
+        });
         nextState = "wait";
       case "wait":
       default:
