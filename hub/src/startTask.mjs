@@ -199,11 +199,7 @@ async function startTask_async(
     taskCopy["processor"][processorId]["id"] = processorId;
 
     if (!taskCopy.hub?.command) {
-      if (prevInstanceId) {
-        taskCopy.hub.command = "next";
-      } else {
-        taskCopy.hub.command = "start";
-      }
+      taskCopy.hub.command = "start";
     }
     taskCopy.hub["sourceProcessorId"] = processorId;
 
@@ -371,7 +367,6 @@ async function startTask_async(
         //console.log("Adding source processor " + sourceProcessorId + " to taskProcessors")
       }
       // If there are already processor entries then favor these
-      // This is the case when using next command
       if (!found && taskCopy.processor) {
         for (let id in taskCopy.processor) {
           const processor = activeProcessors.get(id);

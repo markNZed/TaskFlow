@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
-function useStartWSFilter(useGlobalStateContext, startTaskId, onStart) {
+function useStartWSFilter(useGlobalStateContext, startTaskId, startPrevInstanceId, onStart) {
   
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
@@ -22,7 +22,8 @@ function useStartWSFilter(useGlobalStateContext, startTaskId, onStart) {
 
   const handleStart = (task) => {
     //console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
-    if (startTaskId && startTaskId === task.id) {
+    if (startTaskId && startTaskId === task.id ||
+      startPrevInstanceId && startPrevInstanceId === task.processor?.prevInstanceId) {
       console.log("useStartWSFilter handleStart", startTaskId, task);
       setEventQueue((prev) => [...prev, task]);
     }

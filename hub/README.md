@@ -8,7 +8,6 @@ Information for the hub is held in the `task.hub` object. Only the Task Hub writ
   * partial
   * update
   * start
-  * next
   * register
   * pong
 
@@ -32,7 +31,6 @@ The Hub provides the following features:
 * Manage `task.config.collaborate` - only one instance of the Task per group
   * Additional processors join rather than start
 * Task interception
-  * When a Task sets `task.done` to `true` the Hub sends the next Task(s)
   * When a Task sets `task.error` the Hub sends an error Task
 * Insertion of user data into Task config template variables
 * Insertion of previous Task outputs into Task config template variables
@@ -67,7 +65,6 @@ Then to run: `npm start`
   * Storage
   * Task locking
   * Task interception
-    * Next Task selection
     * Error handling
   * Templating filling
     * Storage

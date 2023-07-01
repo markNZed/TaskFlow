@@ -26,7 +26,7 @@ function wsSendObject(processorId, message = {}) {
     }
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
-      console.log("wsSendObject ", processorId, JSON.stringify(message.task) )
+      //console.log("wsSendObject ", processorId, JSON.stringify(message.task) )
     }
   }
 }

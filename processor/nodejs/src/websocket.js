@@ -113,7 +113,7 @@ const connectWebSocket = () => {
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       await do_task_async(wsSendTask, mergedTask)
-    } else if (command === "start" || command === "join" || command === "next") {
+    } else if (command === "start" || command === "join") {
       console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)

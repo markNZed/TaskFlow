@@ -23,9 +23,6 @@ Running on localhost set the port for the React React Task Processor server in p
     * startTaskError
     * startTask
     * startTaskFn()
-  * Props for getting the next Task
-    * nextTaskError
-    * nextTask
   * Prop for updating properties of a Task  
     * `modifyTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
   * Prop to update the state in a Task

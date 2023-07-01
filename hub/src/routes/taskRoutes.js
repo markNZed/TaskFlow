@@ -118,8 +118,8 @@ router.post("/", async (req, res) => {
         errorTask = strArr.join('.');
       }
       // Should be using command here?
-      task.hub["command"] = "next";
-      task.hub["commandArgs"] = {"nextTask": errorTask};
+      task.hub["command"] = "error";
+      task.hub["commandArgs"] = {"errorTask": errorTask};
       task.done = true
       console.log("Task error " + task.id);
     }
@@ -137,8 +137,6 @@ router.post("/", async (req, res) => {
         return await start_async(res, userId, processorId, command, commandArgs, task)
       case "update":
         return await update_async(res, userId, processorId, command, commandArgs, task, activeTask)
-      case "next":
-        return await next_async(res, userId, processorId, command, commandArgs, task, activeTask)
       default:
         throw new Error("Unknown command " + task.hub["command"]);
     }
@@ -155,7 +153,7 @@ async function start_async(res, userId, processorId, command, commandArgs, task)
   const stackPtr = task.stackPtr;
   try {
     // Just set initial task values and pass that in instead of a long list of arguments?
-    await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId);
+    await startTask_async(startId, userId, true, processorId, task?.groupId, stackPtr, familyId, commandArgs?.prevInstanceId);
     res.status(200).send("ok");
   } catch (err) {
     //throw err;
@@ -180,15 +178,6 @@ async function update_async(res, userId, processorId, command, commandArgs, task
     // So we do not return a task anymore. This requires the task synchronization working.
     res.status(200).send("ok");
   }
-}
-
-async function next_async(res, userId, processorId, command, commandArgs, task, activeTask) {
-  console.log("next_async " + task.id);
-  if (!activeTask) {
-    return res.status(404).send("Task not found");
-  }
-  doneTask_async(task) 
-  return res.status(200).send("ok");
 }
 
 export default router;

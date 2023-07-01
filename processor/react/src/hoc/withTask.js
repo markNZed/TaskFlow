@@ -10,12 +10,10 @@ import {
 } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
-import useNextTask from "../hooks/useNextTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
 import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
 import useStartWSFilter from "../hooks/useStartWSFilter";
-import useNextWSFilter from "../hooks/useNextWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
@@ -44,6 +42,7 @@ function withTask(Component) {
     const [startTaskId, setStartTaskId] = useState();
     const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
+    const [startTaskPrevInstanceId, setStartTaskPrevInstanceId] = useState();
     const [childTask, setChildTask] = useState();
     const [startTaskDepth, setStartTaskDepth] = useState(localStackPtrRef.current);
     // By passing the stackPtr we know which layer is sending the task
@@ -54,14 +53,8 @@ function withTask(Component) {
       props.setTask,
       localStackPtrRef.current
     );
-    const [nextTask, setNextTask] = useState();
-    // Note we pass in doneTask in this way the nextWSFilter will match to the stackPtr level where doneTask was set
-    const { nextTaskError } = useNextTask(
-      props.task,
-      props.setTask
-    );
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth);
+    const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth, startTaskPrevInstanceId);
     const lastStateRef = useRef();
     const stateRef = useRef();
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
@@ -211,45 +204,31 @@ function withTask(Component) {
       }
     )
 
-    useStartWSFilter(useGlobalStateContext, lastStartTaskId,
+    useStartWSFilter(useGlobalStateContext, lastStartTaskId, startTaskPrevInstanceId, 
       (newTask) => {
         console.log("useStartWSFilter", newTask);
         setLastStartTaskId(null);
         setStartTaskReturned(newTask)
       }
     )
-
-    useNextWSFilter(useGlobalStateContext, localStackPtrRef, props.task,
-      (updatedTask) => {
-        console.log("useNextWSFilter before setNextTask localStackPtrRef.current", localStackPtrRef.current, updatedTask);
-          //console.log("useNextWSFilter setNextTask localStackPtrRef.current", localStackPtrRef.current);
-          setNextTask(updatedTask)
-        //}
-      }
-    )
-
-    function clearNextTask() {
-      setNextTask(null);
-    }
     
     useErrorWSFilter(props.task?.familyId,
       (updatedTask) => {
         console.log("useErrorWSFilter", updatedTask.id, updatedTask.response.text);
         // We do not have a plan for dealing with errors here yet
-        // Currently an error task is returned so it can work if 
-        // we are waiting on useStartWSFilter or useNextWSFilter
-        // update will not see the error Task because the instanceId is different
       }
     )
 
     function startTaskFn(
       startId,
       familyId = null,
-      depth = null
+      depth = null,
+      prevInstanceId = null,
     ) {
       setStartTaskReturned(null);
       setStartTaskId(startId);
       setLastStartTaskId(startId); // used by the useStartWSFilter
+      setStartTaskPrevInstanceId(prevInstanceId); // used by the useStartWSFilter
       setStartTaskThreadId(familyId);
       setStartTaskDepth(depth);
     }
@@ -332,13 +311,10 @@ function withTask(Component) {
       if (startTaskError) {
         log("startTaskError", startTaskError);
       }
-      if (nextTaskError) {
-        log("nextTaskError", nextTaskError);
-      }
       if (updateTaskError) {
         log("updateTaskError", updateTaskError);
       }
-    }, [startTaskError, nextTaskError, updateTaskError]);
+    }, [startTaskError, updateTaskError]);
 
     useEffect(() => {
       const { task } = props;
@@ -505,9 +481,6 @@ function withTask(Component) {
       startTaskError,
       startTask: startTaskReturned,
       startTaskFn,
-      nextTaskError,
-      nextTask,
-      clearNextTask,
       prevTask,
       modifyTask,
       modifyState,

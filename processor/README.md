@@ -9,14 +9,12 @@ The Task Function mainly communicates with the Task Processor using the object `
 `task.command` maybe be one of:
   * update
   * start
-  * next
 
 The Task Processor communicates with the Hub using the object `task.processor` Only the Task Processor write to `task.processor`.
 
 `task.processor.command` may be be one of:
   * update
   * start
-  * next
   * ping
   * register
 

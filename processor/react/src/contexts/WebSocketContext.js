@@ -105,8 +105,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (command !== "pong") {
         //console.log("App webSocket command", command,  message.task.instanceId, message.task);
         //Could strcuture as messageQueue[command][messageQueueIdx]
-        //Eventually use task.command (this gives us next)
-        if (command === "update" || command === "next") {
+        if (command === "update") {
           // Need to include this here because we have cleared message.task.command by here
           message.command = command;
           messageQueue[messageQueueIdx] = message;

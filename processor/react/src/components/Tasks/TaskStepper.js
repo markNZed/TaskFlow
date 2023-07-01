@@ -36,8 +36,6 @@ function TaskStepper(props) {
     stackPtr,
     startTaskError,
     startTask,
-    nextTaskError,
-    nextTask,
     componentName,
   } = props;
 
@@ -106,7 +104,7 @@ function TaskStepper(props) {
       case "waitForDone":
         if (stepDone) {
           // The stepper requests a new Task
-          props.startTaskFn(tasks[tasksIdx].config.nextTask, task.familyId, stackPtr + 1);
+          props.startTaskFn(tasks[tasksIdx].config.nextTask, task.familyId, stackPtr + 1, tasks[tasksIdx].instanceId);
           const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
           }));
@@ -135,7 +133,7 @@ function TaskStepper(props) {
     // Manage state.current and state.last
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, startTask, startTaskError, stepperNavigation, nextTask, nextTaskError, stepDone]);
+  }, [task, startTask, startTaskError, stepperNavigation, stepDone]);
 
   // Close previous task and open next task in stepper
   useEffect(() => {

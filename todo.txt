@@ -1,6 +1,6 @@
 /* ToDo
 -------
-Do we need next at all?
+task.done -> task.command ? Maybe commandArgs
 Replace startTaskFn with task.command "start"
   Should the processor return via task.processor.response with task
   There is no task when initializing

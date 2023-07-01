@@ -41,9 +41,9 @@ const syncTasks_async = async (key, value) => {
     for (const processorId of processorIds) {
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
-        if ((processorId !== sourceProcessorId && command !== "join") 
-            || command === "start" || command === "next"
-            || (command === "join" && processorId === sourceProcessorId)
+        if ((processorId !== sourceProcessorId && command !== "join") ||
+            command === "start" ||
+            (command === "join" && processorId === sourceProcessorId)
         ) {
           if (!taskCopy.processor[processorId]) {
             console.log("command taskCopy missing processor", command, taskCopy, processorId );
