@@ -9,23 +9,17 @@ import startTask_async from "./startTask.mjs";
 
 export async function doneTask_async(task) {
   // Should be an assertion
-  if (!task.done) {
+  if (!task.hub.commandArgs?.done) {
     console.log("task", task);
     throw new Error("Called doneTask_async on a task that is not done");
   }
   const nextTask = task.hub.commandArgs?.nextTask;
-  console.log("Task " + task.id + " done " + task.done + " next " + nextTask);
+  console.log("Task " + task.id + " done, next " + nextTask);
   await instancesStore_async.set(task.instanceId, task);
-  // It iś possible that the Processor holds on to the Done task while requesting the next task
-  if (task.done) {
-    // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
-    // !!!
-    activeTasksStore_async.delete(task.instanceId);
-    activeTaskProcessorsStore_async.delete(task.instanceId);
-  } else if (!nextTask) {
-    console.log("task", task);
-    throw new Error("Called doneTask_async on a task that is not done and has no next task");
-  }
+  // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
+  // !!!
+  activeTasksStore_async.delete(task.instanceId);
+  activeTaskProcessorsStore_async.delete(task.instanceId);
   // Fetch from the Task Hub
   if (nextTask) {
     await startTask_async(nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTask, task.instanceId);

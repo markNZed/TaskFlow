@@ -119,8 +119,7 @@ router.post("/", async (req, res) => {
       }
       // Should be using command here?
       task.hub["command"] = "error";
-      task.hub["commandArgs"] = {"errorTask": errorTask};
-      task.done = true
+      task.hub["commandArgs"] = {"errorTask": errorTask, "done": true};
       console.log("Task error " + task.id);
     }
     if (task.output) {
@@ -165,7 +164,7 @@ async function start_async(res, userId, processorId, command, commandArgs, task)
 async function update_async(res, userId, processorId, command, commandArgs, task, activeTask) {
   console.log("update_async " + task.id);
   // We intercept tasks that are done.
-  if (task.done) {
+  if (commandArgs?.done) {
     doneTask_async(task) 
     return res.status(200).send("ok");
   // Pass on tasks that are not done
