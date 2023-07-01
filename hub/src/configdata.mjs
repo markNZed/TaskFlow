@@ -191,12 +191,12 @@ function flattenTaskflows(taskflows) {
           if (nextTask && !nextTask.includes(".")) {
             taskflow.tasks[taskkey].config.nextTask = id + "." + nextTask;
           }
-          const nextStateTemplate = taskflow.tasks[taskkey]?.config?.nextStateTemplate;
-          if (nextStateTemplate) {
-            for (const key in nextStateTemplate) {
-              if (nextStateTemplate.hasOwnProperty(key)) {
-                if (!nextStateTemplate[key].includes(".")) {
-                  nextStateTemplate[key] = id + "." + nextStateTemplate[key];
+          const nextTaskTemplate = taskflow.tasks[taskkey]?.config?.nextTaskTemplate;
+          if (nextTaskTemplate) {
+            for (const key in nextTaskTemplate) {
+              if (nextTaskTemplate.hasOwnProperty(key)) {
+                if (!nextTaskTemplate[key].includes(".")) {
+                  nextTaskTemplate[key] = id + "." + nextTaskTemplate[key];
                 }
               }
             }

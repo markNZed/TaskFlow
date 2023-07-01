@@ -1,5 +1,6 @@
 /* ToDo
 -------
+children -> meta
 Replace startTaskFn with task.command "start"
   Should the processor return via task.processor.response with task
   There is no task when initializing

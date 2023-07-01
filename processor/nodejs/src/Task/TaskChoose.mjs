@@ -26,8 +26,8 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
   const subTask = await SubTaskLLM_async(wsSendTask, task);
   T("response.text", subTask.response.text);
 
-  const next_responses = Object.keys(T("config.nextStateTemplate"));
-  const next_states = Object.values(T("config.nextStateTemplate"));
+  const next_responses = Object.keys(T("config.nextTaskTemplate"));
+  const next_states = Object.values(T("config.nextTaskTemplate"));
 
   const phrases = [T("response.text"), ...next_responses];
 
@@ -64,7 +64,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
     embeddingsData.dispose();
 
     // Need to go to next state, can stay on NodeJS Task Processor side
-    T("commandArgs", {"nextTask": next_states[maxIndex], "done": true});
+    T("commandArgs", {"nextTaskId": next_states[maxIndex], "done": true});
     T("command", "update");
   } catch (error) {
     // Handle the error here

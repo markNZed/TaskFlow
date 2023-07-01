@@ -13,16 +13,16 @@ export async function doneTask_async(task) {
     console.log("task", task);
     throw new Error("Called doneTask_async on a task that is not done");
   }
-  const nextTask = task.hub.commandArgs?.nextTask;
-  console.log("Task " + task.id + " done, next " + nextTask);
+  const nextTaskId = task.hub.commandArgs?.nextTaskId;
+  console.log("Task " + task.id + " done, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
   // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
   // !!!
   activeTasksStore_async.delete(task.instanceId);
   activeTaskProcessorsStore_async.delete(task.instanceId);
   // Fetch from the Task Hub
-  if (nextTask) {
-    await startTask_async(nextTask, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTask, task.instanceId);
+  if (nextTaskId) {
+    await startTask_async(nextTaskId, task.userId, false, task.hub["sourceProcessorId"], task?.groupId, task.stackPtr, nextTaskId, task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
   }
 }

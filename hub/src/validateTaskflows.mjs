@@ -29,7 +29,7 @@ export const configSchema = yup.object()
   collaborateGroupId: yup.string(),
   spawnTask: yup.boolean(),
   nextStates: yup.object(),
-  nextStateTemplate: yup.object(),
+  nextTaskTemplate: yup.object(),
   responseTemplate: stringOrArrayOfStrings,
   model: yup.object({
     base: yup.string(),
