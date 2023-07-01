@@ -24,6 +24,7 @@ async function startTask_async(
     console.log(
       "id:", id, 
       "userId:", userId, 
+      "authenticate:", authenticate,
       "processorId:", processorId, 
       "groupId:", groupId, 
       "stackPtr:", stackPtr, 
@@ -190,7 +191,7 @@ async function startTask_async(
     if (!taskCopy.meta.updateCount) {
       taskCopy.meta["updateCount"] = 0;
     }
-    taskCopy.meta["updatesThisMinute"] = 0;
+    taskCopy.meta["requestsThisMinute"] = 0;
 
     if (!taskCopy["processor"][processorId]) {
       taskCopy["processor"][processorId] = {};

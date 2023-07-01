@@ -247,6 +247,7 @@ function withTask(Component) {
       familyId = null,
       depth = null
     ) {
+      setStartTaskReturned(null);
       setStartTaskId(startId);
       setLastStartTaskId(startId); // used by the useStartWSFilter
       setStartTaskThreadId(familyId);

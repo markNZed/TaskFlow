@@ -4,13 +4,13 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 # Overview
 
-T@skFlow combines software, AI models, and human interaction in a unique way. A developer creates a Task's functionality, a Task may be distributed over many Task Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow.
+T@skFlow combines software, AI models, and human interaction in a unique way. A software developer creates a Task's functionality, a Task may be distributed over many Task Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow.
 
 ![T@skFlow Diagram](Task.drawio.svg)
 
-T@skFlow is intended to provide a flexible infrastructure for human-computer interaction. Specific configurations of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of individual Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
+T@skFlow provides a flexible infrastructure for human-computer interaction. Specific configurations of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
-Data sent between Hub(s) and Processor(s) is managed within the Task object (fields task.processor and task.hub). Information is stored relative to the destination, for example, a Processor sends task.hub.command to the Hub and receives task.processor.command from the Hub.
+Information sent between Hub(s) and Processor(s) is managed within the Task object (fields `task.hub` and `task.processor`). A Processor sends `task.processor.command` to the Hub and receives `task.hub.command` from the Hub.
 
 ## Task
 
@@ -18,37 +18,39 @@ Tasks consist of:
 * Task Definition that conform to a generic Task schema
   * A Task may reference data not provided by T@skFLow
 * Task Function available in one or more Task Environment(s)
-  * A Task Functions may use services not provided by T@askFlow
+  * A Task Function may use services not provided by T@askFlow
 * Task Data available in one or more Task Environment(s)
   * Task Data may use services not provided by T@skFlow
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
 
-The concpet of **Task Instance** refers to a particular Task Definition object.
+The concept of **Task Instance** refers to a particular object confirming to the Task Definition.
 
-The concept of **Task Context** refers to the total data and functionality used by the Task this may be beyond the Task Function and Task Data. 
+The concept of **Task Context** refers to the total data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
 
-A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task.state object (in particular task.state.request and task.state.response). The Task Function sends commands to the Task Processor using task.command and task.commandArgs Only the Task Function writes to task.command
+A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task.state object (in particular `task.state.request` and `task.state.response`). The Task Function sends commands to the Task Processor using task.command and `task.commandArgs` Only the Task Function writes to `task.command`
+
+The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide support features for this.
 
 ## Task Processor
 
-Tasks are processed by Task Processors, there are two Task Processors implemented in T@skFlow: NodeJS Task Processor and React Task Processor. The NodeJS Task Processor runs Node on a server and the React Task Processor runs React in a web browser. The NodeJS Task Processor and React Task Processor communicate using websockets or REST style HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
+Tasks are processed by Task Processors, currently there are two Task Processors implemented in T@skFlow. The NodeJS Task Processor runs Node on a server and the React Task Processor runs React in a web browser. The NodeJS Task Processor and React Task Processor communicate with the Hub using websocket and HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
 
-The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Some Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node Javascript and the Express framework.
+The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node and the Express framework.
 
-The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). Tasks may use user input to decide on the next Task to start. The React Task Processor runs in a web browser using the React Javascript library with MUI user interface components. 
+The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Task Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
 
-Task Processor communication uses either websockets (e.g., for real-time interaction) or REST style HTTP API.
+Task Processor communication uses either websockets (e.g., for real-time interaction) or HTTP API.
 
 ### Task Environment
 
-The Task Processor provides a Task Environment for the Task to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. Eventually the Task Environment will be decoupled from the Task Processor so a Task Processor can provide multiple Task Environments.
+The Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The Task Environment could be decoupled from the Task Processor so a Task Processor could provide multiple Task Environments.
 
 ### SubTask
 
-A SubTask expects to be passed a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the response field could include a promise in Javascript.
+A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the `task.response` field could include a promise in Javascript.
 
-There may be side-effects from a SubTask, for example, it may return results to a Task on another Task Processor using a WebSocket.
+There may be side-effects from a SubTask, for example, it may return results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
 
 ## Task Hub
 
@@ -62,7 +64,7 @@ The purpose of T@skFlow is to explore new ways of building and interacting with 
 
 T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the NodeJS Task Processor side Tasks are first class citizens - they have full access to the NodeJS Task Processor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
 
-For developers T@skFlow could become a personal assistant that runs on your computer keeping your data local.
+For developers T@skFlow could implement a personal assistant that runs on your computer keeping your data local.
 
 # Getting Started
 
@@ -83,19 +85,19 @@ T@skFlow will play nicely with other libraries such as:
 Imagine a new task that will be called TaskNew:
 * Create React Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
-* Add information about the new Task to NodeJS Task Processor/config/tasktypes.mjs
+* Add information about the new Task to hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
 * If the seqeunce is simple then 
-  * add it directly to NodeJS Task Processor/config/taskflows.mjs
+  * add it directly to hub/config/taskflows.mjs
 * If the sequence is complicated/long then 
-  * edit NodeJS Task Processor/config/taskflows.mjs to import and include TaskNewFlow.mjs
+  * edit hub/config/taskflows.mjs to import TaskNewFlow.mjs
 
 ### Task Patterns
 
 **How to reference values from previous Tasks ?**
 
-Available in the "output" object of the previous Task Instance. Another option is to provide data from previous tasks in the "input" object. In either case the data could be a reference rather than the values. 
+Available in the `task.output` object of the previous Task Instance. In either case the data could be a reference rather than the values. 
 
 # Coding Guidelines
 

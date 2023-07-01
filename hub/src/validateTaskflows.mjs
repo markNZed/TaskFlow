@@ -17,8 +17,8 @@ const templateSchema = yup.object({
 
 export const configSchema = yup.object()
   .shape({
-  maxUpdateCount: yup.number(),
-  maxUpdateRate: yup.number(),
+  maxRequestCount: yup.number(),
+  maxRequestRate: yup.number(),
   label: yup.string(),
   nextTask: yup.string(),
   instruction: yup.string(),

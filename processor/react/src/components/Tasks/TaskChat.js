@@ -38,7 +38,6 @@ const TaskChat = (props) => {
     task,
     stackPtr,
     modifyTask,
-    modifyState,
     transition,
     transitionTo, 
     transitionFrom, 
@@ -101,81 +100,80 @@ const TaskChat = (props) => {
   // Need to be careful setting task in the state machine so it does not loop
   // Could add a check for this
   useEffect(() => {
-    if (task) {
-      let nextState;
-      if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
-      // Deep copy because we are going to modify the msgs array which is part of a React state
-      // so it should only be modified with modifyTask
-      const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
-      switch (task.state.current) {
-        case "start":
-        case "input":
-          if (transitionFrom("receiving")) {
-            responseTextRef.current = "";
-            setResponseText(responseTextRef.current);
-          }
-          if (submittingForm) {
-            nextState = "sending";
-          }
-          if (task.state?.address && task.state?.lastAddress !== task.state.address) {
-            nextState = "mentionAddress";
-          }
-          break;
-        case "mentionAddress":
-          if (transitionTo("mentionAddress")) {
-            // Add the input too for the user
-            const prompt = "Location: " + task.state?.address;
-            const newMsgArray = [
-              { role: "user", text: prompt, user: user.label },
-              { role: "assistant", text: "", user: "assistant" },
-            ];
-            //console.log("Sending newMsgArray", newMsgArray, prompt);
-            // Lock task so users cannot send at same time. NodeJS will unlock on final response.
-            modifyTask({ 
-              "output.msgs": [...msgs, ...newMsgArray],
-              "commandArgs": { "lock": true },
-              "command": "update",
-              "state.lastAddress": task.state.address,
-            });
-          }
-          break;
-        case "sending":
-          // Create a slot for new msgs
-          if (transitionTo("sending") && !task.meta?.locked) {
-            // Create a new slot for the next message
-            // Add the input too for the user
-            const newMsgArray = [
-              { role: "user", text: prompt, user: user.label },
-              { role: "assistant", text: "", user: "assistant" },
-            ];
-            //console.log("Sending newMsgArray", newMsgArray, prompt);
-            // Lock task so users cannot send at same time. NodeJS will unlock on final response.
-            modifyTask({ 
-              "output.msgs": [...msgs, ...newMsgArray],
-              "commandArgs": { "lock": true },
-              "command": "update",
-            });
-            setSubmittingForm(false);
-          }
-          break;
-        case "receiving":
-          if (transitionTo("receiving")) {
-            setPrompt("");
-          }
-          const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
-          // Avoid looping due to modifyTask by checking if the text has changed
-          if (responseText && responseText !== lastElement.text) {
-            lastElement.text = responseText;
-            //console.log("modifyTask")
-            modifyTask({
-              "output.msgs": [...msgs.slice(0, -1), lastElement],
-            });
-          }
-          break;
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+    if (!props.checkIfStateReady()) {return}
+    let nextState;
+    if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
+    // Deep copy because we are going to modify the msgs array which is part of a React state
+    // so it should only be modified with modifyTask
+    const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
+    switch (task.state.current) {
+      case "start":
+      case "input":
+        if (transitionFrom("receiving")) {
+          responseTextRef.current = "";
+          setResponseText(responseTextRef.current);
+        }
+        if (submittingForm) {
+          nextState = "sending";
+        }
+        if (task.state?.address && task.state?.lastAddress !== task.state.address) {
+          nextState = "mentionAddress";
+        }
+        break;
+      case "mentionAddress":
+        if (transitionTo("mentionAddress")) {
+          // Add the input too for the user
+          const prompt = "Location: " + task.state?.address;
+          const newMsgArray = [
+            { role: "user", text: prompt, user: user.label },
+            { role: "assistant", text: "", user: "assistant" },
+          ];
+          //console.log("Sending newMsgArray", newMsgArray, prompt);
+          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+          modifyTask({ 
+            "output.msgs": [...msgs, ...newMsgArray],
+            "commandArgs": { "lock": true },
+            "command": "update",
+            "state.lastAddress": task.state.address,
+          });
+        }
+        break;
+      case "sending":
+        // Create a slot for new msgs
+        if (transitionTo("sending") && !task.meta?.locked) {
+          // Create a new slot for the next message
+          // Add the input too for the user
+          const newMsgArray = [
+            { role: "user", text: prompt, user: user.label },
+            { role: "assistant", text: "", user: "assistant" },
+          ];
+          //console.log("Sending newMsgArray", newMsgArray, prompt);
+          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+          modifyTask({ 
+            "output.msgs": [...msgs, ...newMsgArray],
+            "commandArgs": { "lock": true },
+            "command": "update",
+          });
+          setSubmittingForm(false);
+        }
+        break;
+      case "receiving":
+        if (transitionTo("receiving")) {
+          setPrompt(""); // Not so good for collaborative interface
+        }
+        const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+        // Avoid looping due to modifyTask by checking if the text has changed
+        if (responseText && responseText !== lastElement.text) {
+          lastElement.text = responseText;
+          //console.log("modifyTask")
+          modifyTask({
+            "output.msgs": [...msgs.slice(0, -1), lastElement],
+          });
+        }
+        break;
     }
+    // Manage state.current and state.last
+    props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, submittingForm, responseText]);
 

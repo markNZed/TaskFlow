@@ -105,43 +105,25 @@ function TaskStepper(props) {
         break;
       case "waitForDone":
         if (stepDone) {
-          // There are two commands happening here:
-          // 1. The chid task is requesting the next task
-          // 2. The stepper is receiving the next task
-          const newTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+          // The stepper requests a new Task
+          props.startTaskFn(tasks[tasksIdx].config.nextTask, task.familyId, stackPtr + 1);
+          const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
-            "command": "next",
-            "commandArgs": { 
-              "nextTask": tasks[tasksIdx].config.nextTask 
-            } 
           }));
           setTasksTask((p) => {
-            return newTask;
+            return modifiedTask;
           }, tasksIdx);
-          setKeys(p => [...p, newTask.instanceId + tasksIdx]);
-          nextState = "receiveNext";
+          setKeys(p => [...p, modifiedTask.instanceId + tasksIdx]);
+          nextState = "waitForNext";
         }
         break;
-      case "receiveNext":  
-        // Need to set stackPtr so we know which component level requested the next task (may not be the same as the task's stackPtr)
-        modifyTask({
-          "command": "receiveNext",
-          "commandArgs": {
-            stackPtr: stackPtr, 
-            instanceId: tasks[tasksIdx].instanceId
-          }
-        })
-        nextState = "waitForNext";
-        break;
       case "waitForNext":
-        if (nextTaskError) {
+        if (startTaskError) {
           nextState = "error";
-        } else if (nextTask) {
-          console.log("TaskStepper nextTask", nextTask);
+        } else if (startTask) {
+          console.log("TaskStepper nextTask", startTask);
           setTasksIdx(tasks.length);
-          setTasks((prevVisitedTasks) => [...prevVisitedTasks, nextTask]);
-          // Could have a getNextTask that could look after clearing it when it returns
-          props.clearNextTask(); // So we only use it once.
+          setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
           nextState = "navigate";
         }
         break;

@@ -29,7 +29,6 @@ const TaskGeneratePersona = (props) => {
     startTaskFn,
     stackPtr,
     modifyTask,
-    modifyState,
     useTaskState,
     transition,
     onDidMount,
@@ -86,25 +85,24 @@ const TaskGeneratePersona = (props) => {
   // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    if (task) {
-      let nextState;
-      if (transition()) { log(`${componentName} State Machine State ` + task.state.current) }
-      switch (task.state.current) {
-        case "start":
-          // We are waiting so NodeJS can generate the persona
-          setResponseText(task.config.response);
-          break;
-        case "generated":
-          setResponseText(task.output.summary);
-          startTaskFn(props.stackTaskId[stackPtr], task.familyId, stackPtr + 1);
-          nextState = "wait";
-        case "wait":
-        default:
-          console.log("Default state : " + task.state.current);
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+    if (!props.checkIfStateReady()) {return}
+    let nextState;
+    if (transition()) { log(`${componentName} State Machine State ` + task.state.current) }
+    switch (task.state.current) {
+      case "start":
+        // We are waiting so NodeJS can generate the persona
+        setResponseText(task.config.response);
+        break;
+      case "generated":
+        setResponseText(task.output.summary);
+        startTaskFn(props.stackTaskId[stackPtr], task.familyId, stackPtr + 1);
+        nextState = "wait";
+      case "wait":
+      default:
+        console.log("Default state : " + task.state.current);
     }
+    // Manage state.current and state.last
+    props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 

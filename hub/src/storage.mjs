@@ -19,8 +19,8 @@ var activeProcessors = new Map();
 // Still seems like a good idea to keep it around.
 class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
   async *iterate() {
-    const selectAll = this.entry.select().toString();
-    const rows = this.db.prepare(selectAll).all();
+    const selectAllQuery = this.entry.select().toString();
+    const rows = this.db.prepare(selectAllQuery).all();
     
     for (const row of rows) {
       const key = row.key.startsWith('keyv:') ? row.key.substring(5) : row.key;

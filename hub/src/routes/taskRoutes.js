@@ -86,25 +86,25 @@ router.post("/", async (req, res) => {
     const currentDate = new Date(); // Will be local time
     const resetDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate(), currentDate.getUTCHours(), currentDate.getUTCMinutes());
     // If task has been updated before
-    const maxUpdateRate = task?.config?.maxUpdateRate; // per minute
-    if (maxUpdateRate && task.meta.updatedAt) {
+    const maxRequestRate = task?.config?.maxRequestRate; // per minute
+    if (maxRequestRate && task.meta.updatedAt) {
       const updatedAt = new Date(task.meta.updatedAt.date);
       // If the last update happened within the current minute
       if (updatedAt >= resetDate) {
         // If updates this minute is more than the max rate, cannot update
-        if (task.meta.updatesThisMinute >= maxUpdateRate) {
-          return res.status(409).json({ error: "Task update rate exceeded " + maxUpdateRate + " per minute"});
+        if (task.meta.requestsThisMinute >= maxRequestRate) {
+          return res.status(409).json({ error: "Task update rate exceeded " + maxRequestRate + " per minute"});
         }
       } else {
         // If the last update was not in the current minute, reset the counter
-        //console.log("task.meta.updatesThisMinute = 0")
-        task.meta.updatesThisMinute = 0;
+        //console.log("task.meta.requestsThisMinute = 0")
+        task.meta.requestsThisMinute = 0;
       }
-      task.meta.updatesThisMinute++;
+      task.meta.requestsThisMinute++;
     }
-    const maxUpdateCount = task?.config?.maxUpdateCount;
-    if (maxUpdateCount && task.meta.updateCount > maxUpdateCount) {
-      return res.status(409).json({ error: "Task update count exceeded" });
+    const maxRequestCount = task?.config?.maxRequestCount;
+    if (maxRequestCount && task.meta.maxRequestCount > maxRequestCount) {
+      return res.status(409).json({ error: "Task request count exceeded" });
     }
     // Catch errors
     if (task.error) {
@@ -147,7 +147,6 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "No user" });
   }
 });
-
 
 async function start_async(res, userId, processorId, command, commandArgs, task) {
   console.log("start_async " + task.id);

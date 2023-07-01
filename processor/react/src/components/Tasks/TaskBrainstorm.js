@@ -23,7 +23,7 @@ ToDo:
 
 function TaskBrainstorm(props) {
   const {
-    log, task, modifyTask, modifyState, transition, transitionTo, transitionFrom, user, onDidMount,
+    log, task, modifyTask, transition, transitionTo, transitionFrom, user, onDidMount,
   } = props;
 
   const [prompt, setPrompt] = useState("");
@@ -79,59 +79,58 @@ function TaskBrainstorm(props) {
   // Need to be careful setting task in the state machine so it does not loop
   // Could add a check for this
   useEffect(() => {
-    if (task) {
-      let nextState;
-      if (transition()) { log("TaskBrainstorm State Machine State " + task.state.current); }
-      // Deep copy because we are going to modify the msgs array which is part of a React state
-      // so it should only be modified with modifyTask
-      const msgs = JSON.parse(JSON.stringify(task.output.msgs));
-      switch (task.state.current) {
-        case "input":
-          if (transitionFrom("receiving")) {
-            responseTextRef.current = "";
-            setResponseText(responseTextRef.current);
-          }
-          if (submittingForm) {
-            nextState = "sending";
-          }
-          break;
-        case "sending":
-          // Create a slot for new msgs
-          if (transitionTo("sending")) {
-            // Create a new slot for the next message
-            // Add the input too for the user
-            const newMsgArray = [
-              { role: "user", text: prompt, user: user.label },
-              { role: "assistant", text: "", user: "assistant" },
-            ];
-            //console.log("Sending newMsgArray", newMsgArray, prompt);
-            // Lock task so users cannot send at same time. NodeJS will unlock on final response.
-            modifyTask({
-              "output.msgs": [...msgs, ...newMsgArray],
-              "commandArgs": { "lock": true },
-              "command": "update",
-            });
-            setSubmittingForm(false);
-          }
-          break;
-        case "receiving":
-          if (transitionTo("receiving")) {
-            setPrompt("");
-          }
-          const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+    if (!props.checkIfStateReady()) {return}
+    let nextState;
+    if (transition()) { log("TaskBrainstorm State Machine State " + task.state.current); }
+    // Deep copy because we are going to modify the msgs array which is part of a React state
+    // so it should only be modified with modifyTask
+    const msgs = JSON.parse(JSON.stringify(task.output.msgs));
+    switch (task.state.current) {
+      case "input":
+        if (transitionFrom("receiving")) {
+          responseTextRef.current = "";
+          setResponseText(responseTextRef.current);
+        }
+        if (submittingForm) {
+          nextState = "sending";
+        }
+        break;
+      case "sending":
+        // Create a slot for new msgs
+        if (transitionTo("sending")) {
+          // Create a new slot for the next message
+          // Add the input too for the user
+          const newMsgArray = [
+            { role: "user", text: prompt, user: user.label },
+            { role: "assistant", text: "", user: "assistant" },
+          ];
+          //console.log("Sending newMsgArray", newMsgArray, prompt);
+          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+          modifyTask({
+            "output.msgs": [...msgs, ...newMsgArray],
+            "commandArgs": { "lock": true },
+            "command": "update",
+          });
+          setSubmittingForm(false);
+        }
+        break;
+      case "receiving":
+        if (transitionTo("receiving")) {
+          setPrompt("");
+        }
+        const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
 
-          // Avoid looping due to modifyTask by checking if the text has changed
-          if (responseText && responseText !== lastElement.text) {
-            lastElement.text = responseText;
-            modifyTask({
-              "output.msgs": [...msgs.slice(0, -1), lastElement],
-            });
-          }
-          break;
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+        // Avoid looping due to modifyTask by checking if the text has changed
+        if (responseText && responseText !== lastElement.text) {
+          lastElement.text = responseText;
+          modifyTask({
+            "output.msgs": [...msgs.slice(0, -1), lastElement],
+          });
+        }
+        break;
     }
+    // Manage state.current and state.last
+    props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, submittingForm, responseText]);
 

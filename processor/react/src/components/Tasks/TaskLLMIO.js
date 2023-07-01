@@ -28,7 +28,6 @@ const TaskLLMIO = (props) => {
     leaving,
     task,
     modifyTask,
-    modifyState,
     onDidMount,
     transition,
     transitionTo, 
@@ -100,64 +99,63 @@ const TaskLLMIO = (props) => {
   // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    if (task) {
-      const nextConfigState = task?.config?.nextStates?.[task.state.current]
-      let nextState;
-      if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
-      switch (task.state.current) {
-        case "start":
-          nextState = nextConfigState;
-          break;
-        case "display":
-          setResponseText(task.config.response);
-          break;
-        case "response":
-          // Don't fetch if we already have the output
-          if (task.output?.LLMtext) {
-            setResponseText(task.output.LLMtext);
-            nextState = "received";
-          } else if (transition()) {
-            modifyTask({ "command": "update" });
-          } 
-        case "receiving":
-          // NodeJS should be streaming the response
-          // When it has finished it will set the state to received
-          break;
-        case "received":
-          nextState = nextConfigState;
+    if (!props.checkIfStateReady()) {return}
+    const nextConfigState = task?.config?.nextStates?.[task.state.current]
+    let nextState;
+    if (transition()) { log(`${componentName} State Machine State ${task.state.current} nextConfigState ${nextConfigState}`) }
+    switch (task.state.current) {
+      case "start":
+        nextState = nextConfigState;
+        break;
+      case "display":
+        setResponseText(task.config.response);
+        break;
+      case "response":
+        // Don't fetch if we already have the output
+        if (task.output?.LLMtext) {
           setResponseText(task.output.LLMtext);
-          if (nextConfigState === "input") {
-            setShowUserInput(true);
-          }
-          break;
-        case "input":
-          // Show any previous input stored
-          if (task.output?.userInput && !userInput) {
-            setUserInput(task.output.userInput);
-          }
-          break;
-        case "exit":
-          if (transitionFrom("input")) {
-            modifyTask({ "command": "update", "output.userInput": userInput });
-          } else {
-            nextState = "stop"
-          }
-          break;
-        case "wait":
-          // If not collecting input we are in the wait state before exiting
-          break;
-        case "stop":
-          if (transition()) {
-            modifyTask({ "state.done": true });
-          }
-          break;
-        default:
-          console.log("ERROR unknown state : ", task.state.current);
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+          nextState = "received";
+        } else if (transition()) {
+          modifyTask({ "command": "update" });
+        } 
+      case "receiving":
+        // NodeJS should be streaming the response
+        // When it has finished it will set the state to received
+        break;
+      case "received":
+        nextState = nextConfigState;
+        setResponseText(task.output.LLMtext);
+        if (nextConfigState === "input") {
+          setShowUserInput(true);
+        }
+        break;
+      case "input":
+        // Show any previous input stored
+        if (task.output?.userInput && !userInput) {
+          setUserInput(task.output.userInput);
+        }
+        break;
+      case "exit":
+        if (transitionFrom("input")) {
+          modifyTask({ "command": "update", "output.userInput": userInput });
+        } else {
+          nextState = "stop"
+        }
+        break;
+      case "wait":
+        // If not collecting input we are in the wait state before exiting
+        break;
+      case "stop":
+        if (transition()) {
+          modifyTask({ "state.done": true });
+        }
+        break;
+      default:
+        console.log("ERROR unknown state : ", task.state.current);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Manage state.current and state.last
+    props.modifyState(nextState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
   useEffect(() => {

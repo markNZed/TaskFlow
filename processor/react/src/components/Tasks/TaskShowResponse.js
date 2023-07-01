@@ -24,7 +24,6 @@ const TaskShowResponse = (props) => {
     log,
     task,
     modifyTask,
-    modifyState,
     transition,
     onDidMount,
   } = props;
@@ -44,32 +43,31 @@ const TaskShowResponse = (props) => {
   // Task state machine
   // Unique for each component that requires steps
   useEffect(() => {
-    if (task) {
-      let nextState;
-      if (transition()) { log("TaskShowResponse State Machine State " + task.state.current) }
-      switch (task.state.current) {
-        case "start":
-          if (task.output.response) {
-            log("Response cached React Task Processor side");
-            nextState = "response";
-          }
-          break;
-        case "response":
-          if (responseText !== task.output.response) {
-            setResponseText(task.output.response);
-          }
-          break;
-        case "exit":
-          if (transition()) {
-            modifyTask({ "state.done": true });
-          }
-          break
-        default:
-          console.log("ERROR unknown state : " + task.state.current);
-      }
-      // Manage state.current and state.last
-      modifyState(nextState);
+    if (!props.checkIfStateReady()) {return}
+    let nextState;
+    if (transition()) { log("TaskShowResponse State Machine State " + task.state.current) }
+    switch (task.state.current) {
+      case "start":
+        if (task.output.response) {
+          log("Response cached React Task Processor side");
+          nextState = "response";
+        }
+        break;
+      case "response":
+        if (responseText !== task.output.response) {
+          setResponseText(task.output.response);
+        }
+        break;
+      case "exit":
+        if (transition()) {
+          modifyTask({ "state.done": true });
+        }
+        break
+      default:
+        console.log("ERROR unknown state : " + task.state.current);
     }
+    // Manage state.current and state.last
+    props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
