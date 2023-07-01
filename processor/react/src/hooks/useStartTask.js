@@ -9,36 +9,32 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { log } from "../utils/utils";
 
-const useStartTask = (startId, setStartId, familyId, stackPtr, prevInstanceId) => {
+const useStartTask = (initTask, setInitTask) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setTaskStartError] = useState();
 
   useEffect(() => {
-    if (!startId || startTaskError) {
+    if (!initTask?.id || startTaskError) {
       return;
     }
     const fetchTaskFromAPI = async () => {
       try {
+        let snapshot = JSON.parse(JSON.stringify(initTask)); // deep copy
         const command = "start";
-        const commandArgs = {prevInstanceId: prevInstanceId};
-            log("useStartTask", startId, stackPtr);
-        let task = { 
-          id: startId,
-          ...(stackPtr && { stackPtr: stackPtr }),
-          ...(familyId && { familyId: familyId }),
-          processor: {},
-        };        
-        fetchTask(globalState, command, commandArgs, task);
+        const commandArgs = {prevInstanceId: initTask.commandArgs?.prevInstanceId};
+        log("useStartTask", snapshot.id, snapshot.stackPtr);
+        snapshot["processor"] = {};    
+        fetchTask(globalState, command, commandArgs, snapshot);
       } catch (error) {
         setTaskStartError(error.message);
       }
       // If start fails then we can try again for the same task if it is cleared
-      setStartId(null);
+      setInitTask(null);
     };
 
     fetchTaskFromAPI();
   // eslint-disable-next-line
-  }, [startId]);
+  }, [initTask]);
 
   return { startTaskError };
 };

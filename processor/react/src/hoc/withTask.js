@@ -39,6 +39,7 @@ function withTask(Component) {
     const { globalState, mergeGlobalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
+    const [initTask, setInitTask] = useState();
     const [startTaskId, setStartTaskId] = useState();
     const [lastStartTaskId, setLastStartTaskId] = useState();
     const [startTaskThreadId, setStartTaskThreadId] = useState();
@@ -54,7 +55,7 @@ function withTask(Component) {
       localStackPtrRef.current
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError } = useStartTask(startTaskId, setStartTaskId, startTaskThreadId, startTaskDepth, startTaskPrevInstanceId);
+    const { startTaskError } = useStartTask(initTask, setInitTask);
     const lastStateRef = useRef();
     const stateRef = useRef();
     const { subscribe, unsubscribe, publish, initialized } = useEventSource();
@@ -226,11 +227,12 @@ function withTask(Component) {
 
     function startTaskFn(initTask) {
       setStartTaskReturned(null);
-      setStartTaskId(initTask.id);
+      setInitTask(initTask);
+      //setStartTaskId(initTask.id);
       setLastStartTaskId(initTask.id); // used by the useStartWSFilter
-      setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
-      setStartTaskThreadId(initTask.familyId);
-      setStartTaskDepth(initTask.stackPtr);
+      //setStartTaskPrevInstanceId(initTask.commandArgs?.prevInstanceId); // used by the useStartWSFilter
+      //setStartTaskThreadId(initTask.familyId);
+      //setStartTaskDepth(initTask.stackPtr);
     }
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
