@@ -71,7 +71,7 @@ function mergeTasks(childTask, tasksObj) {
     const tasktemplatename = childTask.type;
     if (tasktypes[tasktemplatename]) {
       for (const key2 in tasktypes[tasktemplatename]) {
-        if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
+        if (key2 !== "id" && key2 !== "name" && key2 !== "parentName") {
           //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
           if (key2 === "config") {
             // ChildTask has priority so it can override default config
@@ -119,10 +119,10 @@ function flattenTaskflows(taskflows) {
     if (debug) {console.log("Taskflow: " + taskflow?.name)}
 
     // Defensive programming
-    if (taskflow.name !== "root" && !parent2id[taskflow.parentType]) {
+    if (taskflow.name !== "root" && !parent2id[taskflow.parentName]) {
       throw new Error(
-        "Error: Taskflow parentType " +
-          taskflow.parentType +
+        "Error: Taskflow parentName " +
+          taskflow.parentName +
           " does not exist in parent2id");
     }
     
@@ -131,7 +131,7 @@ function flattenTaskflows(taskflows) {
     if (taskflow.name === "root") {
       id = "root";
     } else {
-      id = parent2id[taskflow.parentType] + "." + taskflow.name;
+      id = parent2id[taskflow.parentName] + "." + taskflow.name;
     }
     if (taskflowLookup[id]) {
       throw new Error("Error: Duplicate taskflow " + id);
@@ -146,7 +146,7 @@ function flattenTaskflows(taskflows) {
     }
     taskflow["meta"] = {};
     if (taskflow.name !== "root") {
-      taskflow.meta["parentId"] = parent2id[taskflow.parentType];
+      taskflow.meta["parentId"] = parent2id[taskflow.parentName];
     }
     if (id !== "root") {
       let parent = taskflowLookup[taskflow.meta["parentId"]]
@@ -157,7 +157,7 @@ function flattenTaskflows(taskflows) {
       }
     }
     
-    // Copy keys from the parentType
+    // Copy keys from the parent
     const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
     mergeTasks(taskflow, parentTaskflow);
 
@@ -174,7 +174,7 @@ function flattenTaskflows(taskflows) {
             taskflow.tasks[taskkey]["meta"] = {};
           }
           taskflow.tasks[taskkey]["meta"]["parentId"] = taskflow.id;
-          taskflow.tasks[taskkey]["meta"]["parentType"] = taskflow.type;
+          taskflow.tasks[taskkey]["meta"]["parentName"] = taskflow.type;
           if (taskflow.meta.childrenId) {
             taskflow.meta.childrenId.push(taskflow.tasks[taskkey]["id"]);
           } else {

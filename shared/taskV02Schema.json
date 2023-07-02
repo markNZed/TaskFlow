@@ -11,15 +11,6 @@
         "pattern": "^((?!\\.).)*$"
       },
       "properties": {
-        "baseType": {
-          "type": "string"
-        },
-        "children": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "command": {
           "type": ["null", "string"]
         },
@@ -36,11 +27,8 @@
             }
           ]
         },
-        "permissions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "familyId": {
+          "type": "string"
         },
         "groupId": {
           "type": "string"
@@ -51,14 +39,14 @@
         "name": {
           "type": "string"
         },
-        "parentType": {
+        "parentName": {
           "type": "string"
-        },       
-        "parentId": {
-          "type": "string"
-        },               
-        "familyId": {
-          "type": "string"
+        },              
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "type": {
           "type": "string"

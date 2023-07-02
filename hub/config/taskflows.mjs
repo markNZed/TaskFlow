@@ -10,12 +10,12 @@ const taskflows = [
   },
   {
     name: "exercices",
-    parentType: "root",
+    parentName: "root",
   },
   {
     type: "TaskConversation",
     name: "conversation",
-    parentType: "exercices",
+    parentName: "exercices",
   },
   {
     config: {
@@ -25,7 +25,7 @@ const taskflows = [
       },
     },
     name: "chatgpt",
-    parentType: "conversation",
+    parentName: "conversation",
     tasks: {
       start: {
         type: "TaskChat",
@@ -38,11 +38,11 @@ const taskflows = [
   {
     type: "TaskStepper",
     name: "taskflow",
-    parentType: "exercices",
+    parentName: "exercices",
   },
   {
     name: "example",
-    parentType: "taskflow",
+    parentName: "taskflow",
     tasks: {
       start: {
         type: "TaskShowResponse",

@@ -51,13 +51,13 @@ export const configSchema = yup.object()
 
 const taskflowsSchema = yup.array().of(yup.object()
   .shape({
-    name: yup.string().required().test('root-if-no-parent', 'Must have a parentType or be named "root"', function(value) {
-      const { parentType } = this.parent;
-      return parentType || value === 'root';
+    name: yup.string().required().test('root-if-no-parent', 'Must have a parentName or be named "root"', function(value) {
+      const { parentName } = this.parent;
+      return parentName || value === 'root';
     }),
     type: yup.string(),
     menu: yup.boolean(),
-    parentType: yup.string(),
+    parentName: yup.string(),
     permissions: yup.array().of(yup.string()),
     config: configSchema,
     initiator: yup.boolean(),

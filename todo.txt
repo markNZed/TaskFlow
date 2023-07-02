@@ -1,9 +1,9 @@
 /* ToDo
 -------
-Move to meta: parentType, parentId, familyId
+Move to meta: parentName, parentId, familyId
+  parentName is not in meta because it makes config easier
+  parentName -> parentName?
 Should a task that requests start also update? 
-Replace stack with childrenType
-  Maybe need to build childrenType in start
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
@@ -284,7 +284,7 @@ A list of features that are manually tested
       websocket (with and without)
       permissions X
       authentication X
-      parentType X
+      parentName X
       user
         name X
         profile X
