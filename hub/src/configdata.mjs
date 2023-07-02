@@ -39,15 +39,6 @@ try {
 }
 
 function mergeTasks(childTask, tasksObj, id, addStackTaskId = false) {
-  if (addStackTaskId) {
-    if (childTask.name === "start") {
-      childTask["APPEND_stackTaskId"] = [id + "." + childTask.name];
-    }
-    if (childTask["APPEND_stack"]) {
-      const componentCount = childTask["APPEND_stack"].length;
-      childTask["APPEND_stackTaskId"] = new Array(componentCount).fill(id + "." + childTask.name);
-    }
-  }
   for (const key in tasksObj) {
     if (tasksObj.hasOwnProperty(key)) {
       if (key === "tasks" || key === "label" || key === "type" || key === "meta") {continue;}
@@ -164,12 +155,6 @@ function flattenTaskflows(taskflows) {
       } else {
         parent.meta["childrenId"] = [taskflow.id];
       }
-    }
-
-    // It might poossible to specify a stack with a list but we do not use this
-    if (taskflow["APPEND_stack"]) {
-      const componentCount = taskflow["APPEND_stack"].length;
-      taskflow["APPEND_stackTaskId"] = new Array(componentCount).fill(id);
     }
     
     // Copy keys from the parentType

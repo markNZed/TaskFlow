@@ -53,8 +53,6 @@ router.post("/", async (req, res) => {
           initiator = false;
         } else {
           initiator = true;
-          // This seems very hacky
-          wf.stackTaskId = wf.tasks.start.stackTaskId;
         }
       }
       wf['initiator'] = initiator;
@@ -66,7 +64,6 @@ router.post("/", async (req, res) => {
       "label",
       "initiator",
       "menu",
-      "stackTaskId"
     ]);
   }
   //console.log("taskflowsTree ", taskflowsTree)

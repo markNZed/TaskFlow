@@ -98,7 +98,7 @@ const TaskGeneratePersona = (props) => {
         modifyTask({
           "command": "start",
           "commandArgs": {
-            id: startTaskId, //props.stackTaskId[stackPtr],
+            id: startTaskId,
             stackPtr: stackPtr + 1,
           }
         });

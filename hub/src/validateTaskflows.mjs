@@ -57,7 +57,6 @@ const taskflowsSchema = yup.array().of(yup.object()
     }),
     stack: yup.array().of(yup.string()),
     type: yup.string(),
-    stackTaskId: yup.array().of(yup.string()),
     menu: yup.boolean(),
     parentType: yup.string(),
     permissions: yup.array().of(yup.string()),

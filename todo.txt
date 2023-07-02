@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Remove stackTaskId
 Should a task that requests start also update? 
 Replace stack with children
   Maybe need to build childrenId in start

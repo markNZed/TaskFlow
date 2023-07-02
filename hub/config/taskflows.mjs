@@ -2,7 +2,6 @@ const taskflows = [
   {
     name: "root",
     stack: [], // Use of APPEND means we need to initialize this.
-    stackTaskId: [], // Use of APPEND means we need to initialize this.
     menu: true,
     config: {
       maxRequestCount: 100,
