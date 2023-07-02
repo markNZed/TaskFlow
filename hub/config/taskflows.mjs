@@ -1,7 +1,6 @@
 const taskflows = [
   {
     name: "root",
-    stack: [], // Use of APPEND means we need to initialize this.
     menu: true,
     config: {
       maxRequestCount: 100,
@@ -14,7 +13,6 @@ const taskflows = [
     parentType: "root",
   },
   {
-    APPEND_stack: ["TaskConversation"],
     type: "TaskConversation",
     name: "conversation",
     parentType: "exercices",
@@ -30,7 +28,6 @@ const taskflows = [
     parentType: "conversation",
     tasks: {
       start: {
-        APPEND_stack: ["TaskChat"],
         type: "TaskChat",
         config: {
           nextTask: "start",
@@ -39,7 +36,6 @@ const taskflows = [
     },
   },
   {
-    APPEND_stack: ["TaskStepper"],
     type: "TaskStepper",
     name: "taskflow",
     parentType: "exercices",
@@ -49,7 +45,6 @@ const taskflows = [
     parentType: "taskflow",
     tasks: {
       start: {
-        APPEND_stack: ["TaskShowResponse"],
         type: "TaskShowResponse",
         config: {
           nextTask: "summarize",
@@ -57,7 +52,6 @@ const taskflows = [
         },
       },
       summarize: {
-        APPEND_stack: ["TaskLLMIO"],
         type: "TaskLLMIO",
         config: {
           nextTask: "structure",
@@ -71,7 +65,6 @@ const taskflows = [
         },
       },
       structure: {
-        APPEND_stack: ["TaskLLMIO"],
         type: "TaskLLMIO",
         config: {
           nextTask: "stop",

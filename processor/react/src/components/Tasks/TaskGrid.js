@@ -26,7 +26,6 @@ function TaskGrid(props) {
     task,
     setTask,
     useTasksState,
-    stackPtr,
     useTaskState,
     onDidMount,
   } = props;
@@ -87,16 +86,15 @@ function TaskGrid(props) {
   return (
     <div>
       <Grid container {...applyContainerProps(GridConfig.containerProps)}>
-        {tasks.map(({ name, stack, instanceId }, idx) => (
+        {tasks.map(({ name, instanceId }, idx) => (
           <Grid item key={`task-${name}`} {...GridConfig.gridItems[0]}>
-            {stack && (
+            {(
               <DynamicComponent
                 key={instanceId}
                 is={tasks[idx].type}
                 task={tasks[idx]}
                 setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                 parentTask={gridTask}
-                stackPtr={stackPtr}
               />
             )}
           </Grid>

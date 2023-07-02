@@ -31,7 +31,6 @@ function Taskflows(props) {
     useTasksState,
     startTaskError,
     startTask,
-    stackPtr,
   } = props;
 
   const { globalState, replaceGlobalState } = useGlobalStateContext();
@@ -56,11 +55,9 @@ function Taskflows(props) {
       const index = tasksIds.indexOf(start);
       if (index === -1) {
         setTask({
-          stackPtr: 0,
           command: "start",
           commandArgs: {
             id: selectedTaskId,
-            stackPtr: 1,
           }
         });
         setTasksStackId((p) => [...p, selectedTaskId]);
@@ -74,11 +71,9 @@ function Taskflows(props) {
     // If we only have one start task and the Processor has registered with the hub
     if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
       setTask({
-        stackPtr: 0,
         command: "start",
         commandArgs: {
           id: selectedTaskId,
-          stackPtr: 1,
         }
       });
       setHideSide(true);
@@ -192,19 +187,18 @@ function Taskflows(props) {
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Toolbar />
           {tasks.map(
-            ({ stack, instanceId }, idx) =>
-              stack && (
+            ({ instanceId }, idx) =>
+              (
                 <div
                   key={`unique${instanceId}`}
                   className={`${tasksIdx !== idx ? "hide" : "flex-grow"}`}
                 >
                   <DynamicComponent
                     key={instanceId}
-                    is={stack[0]}
+                    is={tasks[idx].type}
                     task={tasks[idx]}
                     setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
-                    stackPtr={stackPtr}
                   />
                 </div>
               )

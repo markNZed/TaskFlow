@@ -15,7 +15,7 @@ import useWebSocketContext from "../contexts/WebSocketContext";
 //          Task with task
 // We should combine these
 
-const useUpdateTask = (task, setTask, local_stackPtr) => {
+const useUpdateTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
   const [updateTaskError, setUpdateTaskError] = useState();
   const { sendJsonMessagePlus } = useWebSocketContext();
@@ -23,7 +23,7 @@ const useUpdateTask = (task, setTask, local_stackPtr) => {
   useEffect(() => {
     const command = task?.command;
     const commandArgs = task?.commandArgs;
-    if (task && command === "update" && task.stackPtr === local_stackPtr && !updateTaskError) {
+    if (task && command === "update" && !updateTaskError) {
       log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {

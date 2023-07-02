@@ -38,7 +38,7 @@ try {
   throw new Error("Error validating taskflows");
 }
 
-function mergeTasks(childTask, tasksObj, id, addStackTaskId = false) {
+function mergeTasks(childTask, tasksObj) {
   for (const key in tasksObj) {
     if (tasksObj.hasOwnProperty(key)) {
       if (key === "tasks" || key === "label" || key === "type" || key === "meta") {continue;}
@@ -159,7 +159,7 @@ function flattenTaskflows(taskflows) {
     
     // Copy keys from the parentType
     const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
-    mergeTasks(taskflow, parentTaskflow, id);
+    mergeTasks(taskflow, parentTaskflow);
 
     // This should be separated so we deal only with flattening taskflows here
     // The best approach may be to stop distinguishing between taskflow and task
@@ -195,7 +195,7 @@ function flattenTaskflows(taskflows) {
               }
             }
           }
-          mergeTasks(taskflow.tasks[taskkey], taskflow, id, true);
+          mergeTasks(taskflow.tasks[taskkey], taskflow);
         }
       }
     }

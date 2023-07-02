@@ -28,32 +28,21 @@ function withTask(Component) {
 
   function TaskComponent(props) {
 
-    const localStackPtrRef = useRef();
-    if (typeof props.stackPtr === "number") {
-      localStackPtrRef.current = props.stackPtr + 1;
-    } else {
-      //console.log("Defaulting to stackPtr 0")
-      localStackPtrRef.current = 0;
-    }
-
     const { globalState, mergeGlobalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
     const [childTask, setChildTask] = useState();
-    // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
     // Could allow for things like changing config from an earlier component
     const { updateTaskError } = useUpdateTask(
       props.task,
       props.setTask,
-      localStackPtrRef.current,
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
     const { startTaskError } = useStartTask(
       props.task, 
       props.setTask,
-      localStackPtrRef.current,
     );
     const lastStateRef = useRef();
     const stateRef = useRef();
@@ -114,15 +103,14 @@ function withTask(Component) {
     }, [subscribe, unsubscribe, familyId]);
 
     useEffect(() => {
-      // Only need one watcher per task, use the active stackPtr level
-      if (familyId && localStackPtrRef.current === props.task.stackPtr) {
+      if (familyId) {
         let diff;
         if (prevTask && publishedRef.current) {
           diff = getObjectDifference(prevTask, props.task);
         } else {
           diff = props.task;
         }
-        publish('taskChange-' + familyId, {taskdiff: diff, id: props.task.id, instanceId: props.task.instanceId, stackPtr: props.task.stackPtr});
+        publish('taskChange-' + familyId, {taskdiff: diff, id: props.task.id, instanceId: props.task.instanceId});
         publishedRef.current = true;
       }
     }, [props.task]);
@@ -142,73 +130,62 @@ function withTask(Component) {
 
     // React does not seem to gaurantee this is called in the parent before the child
     useEffect(() => {
-      // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
-      if (localStackPtrRef.current > 0) {
-        const spawnTask = props.task.config?.spawnTask === false ? false : true;
-        console.log("spawnTask", spawnTask)
-        if (spawnTask && props.task.meta.childrenId) {
-          props.task.meta.childrenId.forEach(childId => {
-            console.log(childId);
-            const newPtr = localStackPtrRef.current + 1;
-            modifyTask({
-              "command": "start",
-              "commandArgs": {
-                id: childId,
-                stackPtr: newPtr
-              }
-            });
-            console.log("Start from withTask", childId, newPtr)
+      if (!props.task) {return}
+      const spawnTask = props.task.config?.spawnTask === false ? false : true;
+      console.log("spawnTask", spawnTask)
+      if (spawnTask && props.task.meta.childrenId) {
+        props.task.meta.childrenId.forEach(childId => {
+          console.log(childId);
+          modifyTask({
+            "command": "start",
+            "commandArgs": {
+              id: childId,
+            }
           });
-        }
-        //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
-        //modifyTask({stackPtr: localStackPtrRef.current});
+          console.log("Start from withTask", childId)
+        });
       }
     }, []);
 
     useEffect(() => {
-      // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
-      if (localStackPtrRef.current > 0) {
-        const spawnTask = props.task.config?.spawnTask === false ? false : true;
-        if (spawnTask && !childTask) {
-          if (startTaskReturned) {
-            setChildTask(startTaskReturned)
-            console.log("setChildTask", startTaskReturned.id)
-          }
+      if (!props.task) {return}
+      const spawnTask = props.task.config?.spawnTask === false ? false : true;
+      if (spawnTask && !childTask) {
+        if (startTaskReturned) {
+          setChildTask(startTaskReturned)
+          console.log("setChildTask", startTaskReturned.id)
         }
       }
     }, [startTaskReturned]);
 
-    useUpdateWSFilter(isMounted, localStackPtrRef, props.task,
+    useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
-        //console.log("useUpdateWSFilter updateDiff.stackPtr === localStackPtrRef", updateDiff.stackPtr, localStackPtrRef.current);
-        if (updateDiff.stackPtr === localStackPtrRef.current) {
-          const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-          //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
-          //console.log("lastTask", lastTask)
-          // If the resource has been locked then ignore whatever was done locally
-          let currentTaskDiff = {};
-          if (lastTask.meta.locked === globalState.processorId) {
-            currentTaskDiff = getObjectDifference(lastTask, props.task);
-          }
-          //console.log("currentTaskDiff", currentTaskDiff);
-          //console.log("updateDiff", updateDiff);
-          //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
-          //console.log("currentUpdateDiff", currentUpdateDiff);
-          // ignore differences in source & updatedAt & lock
-          // partial updates to response can cause conflicts
-          // Needs further thought
-          delete currentTaskDiff.response
-          if (checkConflicts(currentTaskDiff, updateDiff)) {
-            console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
-            //throw new Error("CONFLICT");
-          }
-          modifyTask(updateDiff);
-          // Important we record updateDiff as it was sent to keep in sync with Hub
-          await globalState.storageRef.current.set(props.task.instanceId, deepMerge(lastTask, updateDiff));
-          const newTask = await globalState.storageRef.current.get(props.task.instanceId);
-          console.log("Storage update ", props.task.id, props.task.instanceId, updateDiff);
-          //console.log("Storage task ", props.task.id, props.task.instanceId, mergedTask);
+        const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
+        //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
+        //console.log("lastTask", lastTask)
+        // If the resource has been locked then ignore whatever was done locally
+        let currentTaskDiff = {};
+        if (lastTask.meta.locked === globalState.processorId) {
+          currentTaskDiff = getObjectDifference(lastTask, props.task);
         }
+        //console.log("currentTaskDiff", currentTaskDiff);
+        //console.log("updateDiff", updateDiff);
+        //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
+        //console.log("currentUpdateDiff", currentUpdateDiff);
+        // ignore differences in source & updatedAt & lock
+        // partial updates to response can cause conflicts
+        // Needs further thought
+        delete currentTaskDiff.response
+        if (checkConflicts(currentTaskDiff, updateDiff)) {
+          console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
+          //throw new Error("CONFLICT");
+        }
+        modifyTask(updateDiff);
+        // Important we record updateDiff as it was sent to keep in sync with Hub
+        await globalState.storageRef.current.set(props.task.instanceId, deepMerge(lastTask, updateDiff));
+        const newTask = await globalState.storageRef.current.get(props.task.instanceId);
+        console.log("Storage update ", props.task.id, props.task.instanceId, updateDiff);
+        //console.log("Storage task ", props.task.id, props.task.instanceId, mergedTask);
       }
     )
 
@@ -312,14 +289,14 @@ function withTask(Component) {
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.stackPtr === localStackPtrRef.current) {
+      if (task) {
         setPrevTask(task);
       }
     }, []);
 
     useEffect(() => {
       const { task } = props;
-      if (task && task.stackPtr === localStackPtrRef.current) {
+      if (task) {
         if (prevTask !== task) {
           setPrevTask(props.task);
         }
@@ -369,13 +346,11 @@ function withTask(Component) {
           console.log("Unexpected: Task without id ", state);
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if (state.stackPtr === localStackPtrRef.current) {
-            logWithComponent(
-              componentName,
-              name + " " + state.id + " changes:",
-              diff
-            );
-          }
+          logWithComponent(
+            componentName,
+            name + " " + state.id + " changes:",
+            diff
+          );
         }
         setPrevTaskState(state);
       }, [state, prevTaskState]);
@@ -423,13 +398,11 @@ function withTask(Component) {
             console.log("Unexpected: Task without id ", state);
           }
           if (show_diff && Object.keys(diff).length > 0) {
-            if (state.stackPtr === localStackPtrRef.current) {
-              logWithComponent(
-                componentName,
-                name + " " + state.id + " changes:",
-                diff
-              );
-            }
+            logWithComponent(
+              componentName,
+              name + " " + state.id + " changes:",
+              diff
+            );
           }
         }
         setPrevTasksState(states);
@@ -477,7 +450,6 @@ function withTask(Component) {
       prevTask,
       modifyTask,
       modifyState,
-      stackPtr: localStackPtrRef.current,
       useTaskState,
       useTasksState,
       processorId: globalState.processorId,
@@ -487,7 +459,7 @@ function withTask(Component) {
       user: globalState.user,
       onDidMount: handleChildDidMount,
       useWebSocketContext,
-      componentName: props?.task?.stack && props?.task?.stack[localStackPtrRef.current - 1],
+      componentName: props?.task?.type,
       childTask,
       setChildTask,
       handleTaskUpdate,

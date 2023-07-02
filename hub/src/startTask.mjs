@@ -27,7 +27,6 @@ async function startTask_async(
     let id = initTask.id;
     let userId = initTask.userId;
     let groupId = initTask.groupId;
-    let stackPtr = initTask.stackPtr;
     let familyId = initTask.familyId;  
     let instanceId = uuidv4();
     let processor = {}
@@ -53,14 +52,8 @@ async function startTask_async(
       taskCopy["error"] = "Task authentication failed";
       return taskCopy;
     }
-
-    if (typeof stackPtr !== "number") {
-      taskCopy["stackPtr"] = taskCopy.stack.length;
-    } else {
-      taskCopy["stackPtr"] = stackPtr;
-    }
     
-    if (taskCopy.config?.oneFamily && taskCopy["stackPtr"] === taskCopy.stack.length) {
+    if (taskCopy.config?.oneFamily) {
       instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
       familyId = instanceId;
       let instance = await instancesStore_async.get(instanceId);
@@ -100,7 +93,7 @@ async function startTask_async(
       }
     }
 
-    if (taskCopy.config?.collaborateGroupId && taskCopy["stackPtr"] === taskCopy.stack.length) {
+    if (taskCopy.config?.collaborateGroupId) {
       // Taskflow to choose the group (taskflow should include that)
       if (!groupId) {
         // This is a hack for the collaborate feature
@@ -213,17 +206,6 @@ async function startTask_async(
       }
       if (parent.state?.lastAddress) {
         taskCopy.state["lastAddress"] = parent.state.lastAddress;
-      }
-      // We start with the deepest component in the stack
-      // This will not work with how we have stackPtr set earlier
-      if (!taskCopy["stackPtr"]) {
-        if (typeof stackPtr === "number") {
-          taskCopy["stackPtr"] = stackPtr;
-        } else if (parent?.stackPtr) {
-          taskCopy["stackPtr"] = parent.stackPtr;
-        } else if (taskCopy?.stack) {
-          taskCopy["stackPtr"] = taskCopy.stack.length;
-        }
       }
       if (!parent.meta.childrenInstanceId) {
         parent.meta.childrenInstanceId = [];

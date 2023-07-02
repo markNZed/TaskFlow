@@ -56,22 +56,7 @@
         },       
         "parentId": {
           "type": "string"
-        },       
-        "stack": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "stackPtr": {
-          "type": "integer"
-        },
-        "stackTaskId": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },        
+        },               
         "familyId": {
           "type": "string"
         },

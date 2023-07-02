@@ -155,13 +155,6 @@ utils.filter_in = function (tasktypes, tasks, task) {
   //console.log("BEFORE ", task)
   let filter_list = [];
   let filter_for_react = [];
-  // This assumes the tasktypes are not expanded - need to do this in dataconfig
-  for (const c of task.stack) {
-    filter_list = filter_list.concat(tasktypes[c].filter_for_react);
-    filter_for_react = filter_list.concat(
-      tasktypes[c].filter_for_react
-    );
-  }
   if (task?.filter_for_react) {
     filter_list = filter_list.concat(task.filter_for_react);
     filter_for_react = filter_for_react.concat(task.filter_for_react);

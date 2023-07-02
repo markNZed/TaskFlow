@@ -57,7 +57,6 @@ const wsSendTask = async function (task, processorId = null) {
        // Because this routes the task but does not change so need to add back in
        // Points to a class of concern
       diff.instanceId = task.instanceId;
-      diff.stackPtr = task.stackPtr;
       diff["hub"] = {};
       diff.hub["command"] = command;
       diff.hub["commandArgs"] = commandArgs;

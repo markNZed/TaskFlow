@@ -21,7 +21,6 @@ import {
 /*
 Task Process
   Present a sequence of tasks in an Accordian component
-  We have an array of tasks stored here that are passed to the next component in the stack
   
 ToDo:
   Maybe tasksIdx is just a ref?
@@ -72,7 +71,6 @@ function TaskStepper(props) {
           "command": "start",
           "commandArgs": {
             id: startTaskId,
-            stackPtr: stackPtr + 1,
           }
         });
         nextState = "waitForStart"
@@ -116,7 +114,6 @@ function TaskStepper(props) {
             "command": "start",
             "commandArgs": {
               id: tasks[tasksIdx].config.nextTask,
-              stackPtr: stackPtr + 1,
             }
           });
           const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
@@ -197,7 +194,7 @@ function TaskStepper(props) {
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, stack, config: {nextTask: metaNextTask}, instanceId }, idx) => (
+        ({ name, label, config: {nextTask: metaNextTask}, instanceId }, idx) => (
           <Accordion
             key={name}
             expanded={isExpanded(name)}
@@ -207,14 +204,13 @@ function TaskStepper(props) {
               <Typography>{label}</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              {stack && (
+              {(
                 <DynamicComponent
                   key={keys[idx]}
                   is={tasks[idx].type}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   parentTask={task}
-                  stackPtr={stackPtr}
                   handleChildmodifyState={props.handleChildmodifyState}
                 />
               )}

@@ -36,7 +36,6 @@ const TaskChat = (props) => {
   const {
     log,
     task,
-    stackPtr,
     modifyTask,
     transition,
     transitionTo, 

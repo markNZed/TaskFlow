@@ -26,7 +26,6 @@ export async function doneTask_async(task) {
       id: nextTaskId,
       userId: task.userId,
       groupId: task?.groupId,
-      stackPtr: task.stackPtr,
       familyId: task.familyId,
     }
     await startTask_async(initTask, false, task.hub["sourceProcessorId"], task.instanceId);

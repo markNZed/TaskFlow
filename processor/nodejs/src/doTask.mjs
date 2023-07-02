@@ -11,13 +11,9 @@ import { fetchTask_async } from "./fetchTask.mjs";
 export async function do_task_async(wsSendTask, task) {
     let updated_task = {};
     let idx = 0;
-    if (task?.stackPtr) {
-      idx = task.stackPtr - 1;
-      console.log("Component ", task.stack, " idx ", idx);
-    }
-    if (taskFunctions.hasOwnProperty(`${task.stack[idx]}_async`)) {
+    if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       try {
-        updated_task = await taskFunctions[`${task.stack[idx]}_async`](task.stack[idx], wsSendTask, task);
+        updated_task = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
       } catch (e) {
         console.log("do_task_async error", e, task);
       }
@@ -44,7 +40,7 @@ export async function do_task_async(wsSendTask, task) {
         console.log("do_task_async null " + task.id);
       }
     } else {
-      console.log("NodeJS Task Processor unknown component at idx " + idx + " : " + task.stack);
+      console.log("NodeJS Task Processor unknown component " + task.type);
       //console.log("taskFunctions", taskFunctions);
       updated_task = task;
     }

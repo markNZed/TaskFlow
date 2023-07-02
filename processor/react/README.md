@@ -26,7 +26,6 @@ Running on localhost set the port for the React React Task Processor server in p
     * `modifyTask({param : 2})` is equivalent to `setTask(p => { return {...p, param : 2} })`
   * Prop to update the state in a Task
     * `modifyState('input')` is equivalent to `setTask(p => { return {...p, state : 'input'} })`
-  * Prop stackPtr that presents where in the component stack the component is (starts at 1)
   * Logging of changes for Task variable e.g. `const [X, setX] = useTaskState(null,'X')`
   * A parent Task can modify the state of a child through modifyChildState, this is the preferred method for commanding the child Task.
   * The `task.command` field is intended to send commands to the Task Processor.

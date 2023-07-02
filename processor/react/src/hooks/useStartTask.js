@@ -9,7 +9,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
 import { setNestedProperties, deepMerge, log } from "../utils/utils";
 
-const useStartTask = (task, setTask, local_stackPtr) => {
+const useStartTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
   const [startTaskError, setStartTaskError] = useState();
 
@@ -23,7 +23,6 @@ const useStartTask = (task, setTask, local_stackPtr) => {
       try {
         const initTask = {
           id: commandArgs.id,
-          stackPtr: commandArgs.stackPtr,
           familyId: commandArgs?.familyId,
           processor: {},
         }
@@ -32,7 +31,7 @@ const useStartTask = (task, setTask, local_stackPtr) => {
         setNestedProperties(updating);
         setTask((p) => deepMerge(p, updating));
         snapshot = deepMerge(snapshot, updating)
-        log("useStartTask", snapshot.id, snapshot.stackPtr);
+        log("useStartTask", snapshot.id);
         fetchTask(globalState, command, commandArgs, snapshot);
       } catch (error) {
         console.log(error)

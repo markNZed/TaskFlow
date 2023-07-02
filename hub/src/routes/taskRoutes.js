@@ -151,7 +151,6 @@ async function start_async(res, processorId, commandArgs, task) {
     console.log("start_async " + commandArgs.id + " by " + task.id);
     const initTask = {
       id: commandArgs.id,
-      stackPtr: commandArgs.stackPtr || task.stackPtr,
       userId: task.userId,
     }
     let prevInstanceId;

@@ -27,7 +27,6 @@ const TaskConversation = (props) => {
     setTask,
     childTask,
     setChildTask,
-    stackPtr,
     useTaskState,
     onDidMount,
   } = props;
@@ -141,7 +140,6 @@ const TaskConversation = (props) => {
             task={childTask}
             setTask={setChildTask}
             parentTask={task}
-            stackPtr={stackPtr}
           />
         )}
       </div>

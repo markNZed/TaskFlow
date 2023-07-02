@@ -55,7 +55,6 @@ const taskflowsSchema = yup.array().of(yup.object()
       const { parentType } = this.parent;
       return parentType || value === 'root';
     }),
-    stack: yup.array().of(yup.string()),
     type: yup.string(),
     menu: yup.boolean(),
     parentType: yup.string(),

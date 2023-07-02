@@ -48,12 +48,10 @@ function withDebug(Component) {
           diff.response.text = diff.response.text.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if (props.task?.stackPtr === props.stackPtr) {
-            log(
-              "Task " + props.task.instanceId + " stackPtr " + props.task.stackPtr + " " + props.task.id + " changes:",
-              diff
-            );
-          }
+          log(
+            "Task " + props.task.instanceId + " " + props.task.id + " changes:",
+            diff
+          );
         }
       }
     }, [props.task]);

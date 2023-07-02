@@ -1,14 +1,13 @@
 /* ToDo
 -------
+Move to meta: parentType, parentId, familyId
 Should a task that requests start also update? 
-Replace stack with children
-  Maybe need to build childrenId in start
+Replace stack with childrenType
+  Maybe need to build childrenType in start
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
 
-The stack of components for React should not be mixed with a stack of Tasks.
-  Stack of components should be in the task.config
 Requests from other tasks via: task.processor.task.request
   See notes
 Could be valuable to communicate with an instance on a subset of environments

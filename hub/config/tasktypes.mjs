@@ -1,10 +1,6 @@
 const tasktypes = [
   {
-    name: "root"
-  },
-  {
     name: "TaskChat",
-    parentType: "root",
     websocket: true,
     // If multiple environments then it will be synchronized
     environments: ["react", "nodejs"],
@@ -23,22 +19,18 @@ const tasktypes = [
   },
   {
     name: "TaskConversation",
-    parentType: "root",
     environments: ["react", "nodejs"],
   },
   {
     name: "TaskStepper",
-    parentType: "root",
     environments: ["react"],
   },
   {
     name: "TaskGrid",
-    parentType: "root",
     environments: ["react"],
   },
   {
     name: "TaskLLMIO",
-    parentType: "root",
     websocket: true,
     environments: ["react", "nodejs"],
     config: {
@@ -60,7 +52,6 @@ const tasktypes = [
   },
   {
     name: "TaskShowResponse",
-    parentType: "root",
     environments: ["react", "nodejs"],
     state: {
       current: "start",
@@ -71,13 +62,11 @@ const tasktypes = [
   },
   {
     name: "TaskChoose",
-    parentType: "root",
     environments: ["nodejs"],
   }
   ,
   {
     name: "TaskGeneratePersona",
-    parentType: "root",
     environments: ["react", "nodejs"],
     state: {
       current: "start",

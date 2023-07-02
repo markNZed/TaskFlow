@@ -26,7 +26,6 @@ const TaskGeneratePersona = (props) => {
     setTask,
     startTaskError,
     startTask,
-    stackPtr,
     modifyTask,
     useTaskState,
     transition,
@@ -99,7 +98,6 @@ const TaskGeneratePersona = (props) => {
           "command": "start",
           "commandArgs": {
             id: startTaskId,
-            stackPtr: stackPtr + 1,
           }
         });
         nextState = "wait";
@@ -145,7 +143,6 @@ const TaskGeneratePersona = (props) => {
             task={childTask}
             setTask={setChildTask}
             parentTask={task}
-            stackPtr={stackPtr}
           />
         </div>
       ) : (
