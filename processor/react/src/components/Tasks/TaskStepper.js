@@ -67,11 +67,11 @@ function TaskStepper(props) {
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
+        const startTaskId = props.task.meta.childrenId[0];
         modifyTask({
           "command": "start",
           "commandArgs": {
-            id: props.stackTaskId[stackPtr],
-            familyId: task.familyId,
+            id: startTaskId,
             stackPtr: stackPtr + 1,
           }
         });
@@ -116,9 +116,7 @@ function TaskStepper(props) {
             "command": "start",
             "commandArgs": {
               id: tasks[tasksIdx].config.nextTask,
-              familyId: task.familyId,
               stackPtr: stackPtr + 1,
-              prevInstanceId: tasks[tasksIdx].instanceId,
             }
           });
           const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
@@ -137,7 +135,7 @@ function TaskStepper(props) {
         // Need to check that this is the start task we are expecting as we may have 
         // previously started another task. It would be better to clear this down.
         // But I'm not sure how to automate that
-        } else if (startTask.id === tasks[tasksIdx].config.nextTask) {
+        } else if (startTask.id !== tasks[tasksIdx].id) {
           console.log("TaskStepper nextTask", startTask);
           setTasksIdx(tasks.length);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
@@ -199,7 +197,7 @@ function TaskStepper(props) {
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, stack, stackTaskId, config: {nextTask: metaNextTask}, instanceId }, idx) => (
+        ({ name, label, stack, config: {nextTask: metaNextTask}, instanceId }, idx) => (
           <Accordion
             key={name}
             expanded={isExpanded(name)}
@@ -212,12 +210,11 @@ function TaskStepper(props) {
               {stack && (
                 <DynamicComponent
                   key={keys[idx]}
-                  is={stack[stackPtr]}
+                  is={tasks[idx].type}
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   parentTask={task}
                   stackPtr={stackPtr}
-                  stackTaskId={stackTaskId}
                   handleChildmodifyState={props.handleChildmodifyState}
                 />
               )}

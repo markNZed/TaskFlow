@@ -29,7 +29,7 @@ export async function do_task_async(wsSendTask, task) {
           throw new Error("start not implemented yet");
           const task = {
             userId: updated_task.userId,
-            startId: updated_task.commandArgs.startId,
+            startId: updated_task.commandArgs.id,
             hub: {},
             command: "start",
           }

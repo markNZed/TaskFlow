@@ -15,9 +15,7 @@ import { fetchTask_async } from "../fetchTask.mjs";
 const TaskChat_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log(
-    "TaskChat name " + T("name") + " state " + T("state.current")
-  );
+  console.log(`${taskName} in state ${task.state.current}`);
 
   // Could return msgs instead of response.text
   switch (task.state.current) {

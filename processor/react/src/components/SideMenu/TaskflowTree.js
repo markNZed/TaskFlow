@@ -72,29 +72,29 @@ function TaskflowTree({ onClose }) {
       // Would be better to strip from children also
       return "";
     }
-    const { label, children, initiator, menu } = node;
+    const { label, childrenId, initiator, menu } = node;
     //console.log(id)
     if (propagateDefault) {
       tempNodeIds = [...tempNodeIds, id];
     }
 
-    if (children && children.length > 0 && !initiator) {
+    if (childrenId && childrenId.length > 0 && !initiator) {
       if (id != "root") {
         if (menu) {
           return (
             <TreeItem key={id} nodeId={id} label={label}>
-              {children.map((child) =>
+              {childrenId.map((child) =>
                 renderTree(nodes, child, handleSelectNode, propagateDefault)
               )}
             </TreeItem>
           );
         } else {
-          return children.map((child) =>
+          return childrenId.map((child) =>
             renderTree(nodes, child, handleSelectNode, propagateDefault)
           );
         }
       } else {
-        return children.map((child) =>
+        return childrenId.map((child) =>
           renderTree(nodes, child, handleSelectNode, propagateDefault)
         );
       }

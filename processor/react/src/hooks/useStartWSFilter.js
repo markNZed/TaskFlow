@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
+import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 import { log } from "../utils/utils";
 
 function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
@@ -22,33 +22,38 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
     }
   };
 
-  const handleStart = (task) => {
-    //console.log("useStartWSFilter handleStart with startTaskId, task:", startTaskId, task);
-    if (startTaskId && startTaskId === task.id ||
-      startPrevInstanceId && startPrevInstanceId === task.processor?.prevInstanceId) {
-      console.log("useStartWSFilter handleStart", startTaskId, task);
-      setEventQueue((prev) => [...prev, task]);
+  const handleStart = async (taskStart) => {
+    // messageQueue is an object not an array so we can delete from the object during iteration
+    const keys = Object.keys(messageQueue);
+    // sort the keyys so we process the oldest first
+    keys.sort();
+    //console.log("keys", keys);
+    for (let key of keys) {
+      const message = messageQueue[key];
+      //console.log("message", message, key);
+      if (message && message?.command && message.command === "start") {
+        //console.log("useUpdateWSFilter handleUpdate update key", key);
+        if (message.task.id === startTaskId ||
+            message.task.processor?.prevInstanceId === startPrevInstanceId) {
+          //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
+          // Important to wait so that the task is saved to storage before it is retrieved again
+          // We copy it so w can delete it ASAP
+          const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
+          delete messageQueue[key];
+          startTaskDB(taskCopy);
+          await onStart(taskCopy);
+          //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
+        }
+      }
     }
+    //console.log("useUpdateWSFilter useEffect after messageQueue", messageQueue);
   };
 
   useEffect(() => {
-    const startTask = async () => {
-      if (eventQueue.length && !working) {
-        setWorking(true);
-        startTaskDB(eventQueue[0]);
-        await onStart(eventQueue[0]);
-        //pop the first task from eventQueue
-        setEventQueue((prev) => prev.slice(1));
-        setWorking(false);
-      }
-    };
-    startTask();
-  }, [eventQueue, working]);
-
-  useEffect(() => {
     if (initialTask?.command === "start") {
+      console.log("useStartWSFilter initialTask commandArgs", initialTask.commandArgs);
       setStartTaskId(initialTask.commandArgs.id);
-      setStartPrevInstanceId(initialTask?.id);
+      setStartPrevInstanceId(initialTask.commandArgs.prevInstanceId || initialTask.instanceId);
     }
   }, [initialTask]);
 

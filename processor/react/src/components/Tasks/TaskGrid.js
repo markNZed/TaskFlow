@@ -92,7 +92,7 @@ function TaskGrid(props) {
             {stack && (
               <DynamicComponent
                 key={instanceId}
-                is={stack[stackPtr]}
+                is={tasks[idx].type}
                 task={tasks[idx]}
                 setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                 parentTask={gridTask}

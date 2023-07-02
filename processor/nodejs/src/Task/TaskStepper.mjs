@@ -9,7 +9,7 @@ import { utils } from "../utils.mjs";
 const TaskStepper_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log("Returning from TaskStepper_async");
+  console.log(`${taskName} in state ${task.state.current}`);
 
   return null;
 };

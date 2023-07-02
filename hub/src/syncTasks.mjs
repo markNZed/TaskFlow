@@ -31,8 +31,7 @@ const syncTasks_async = async (key, value) => {
     } else if (command === "update") {
       taskCopy.meta.updatedAt = utils.updatedAt();
     }
-   }
-  // foreach processorId in processorIds send the task to the processor
+  }
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {

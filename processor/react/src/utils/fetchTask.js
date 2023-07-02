@@ -6,12 +6,12 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
 
   let messageJsonString;
 
-  if (!task.processor) {
-    throw new Error("Missing task.processor in fetchTask" + JSON.stringify(task));
-  }
-
   const processorId = globalState.processorId;
 
+  // Initialize processor when it does not exist e.g. when starting initial task
+  if (!task.processor) {
+    task.processor = {};
+  }
   // Clear down task commands as we do not want these coming back from the hub
   task.processor["command"] = command;
   task.processor["commandArgs"] = commandArgs;

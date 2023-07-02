@@ -48,10 +48,7 @@ function withDebug(Component) {
           diff.response.text = diff.response.text.slice(0, 20) + " ...";
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          if (!props.task.id) {
-            console.log("Weird ", props.task);
-          }
-          if (props.task.stackPtr === props.stackPtr) {
+          if (props.task?.stackPtr === props.stackPtr) {
             log(
               "Task " + props.task.instanceId + " stackPtr " + props.task.stackPtr + " " + props.task.id + " changes:",
               diff

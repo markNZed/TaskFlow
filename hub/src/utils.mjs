@@ -157,9 +157,9 @@ utils.filter_in = function (tasktypes, tasks, task) {
   let filter_for_react = [];
   // This assumes the tasktypes are not expanded - need to do this in dataconfig
   for (const c of task.stack) {
-    filter_list = filter_list.concat(tasktypes["root." + c].filter_for_react);
+    filter_list = filter_list.concat(tasktypes[c].filter_for_react);
     filter_for_react = filter_list.concat(
-      tasktypes["root." + c].filter_for_react
+      tasktypes[c].filter_for_react
     );
   }
   if (task?.filter_for_react) {

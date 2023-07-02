@@ -104,13 +104,11 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       if (command !== "pong") {
         //console.log("App webSocket command", command,  message.task.instanceId, message.task);
-        //Could strcuture as messageQueue[command][messageQueueIdx]
-        if (command === "update") {
-          // Need to include this here because we have cleared message.task.command by here
-          message.command = command;
-          messageQueue[messageQueueIdx] = message;
-          messageQueueIdx = messageQueueIdx + 1;
-        }
+        //Could structure as messageQueue[command][messageQueueIdx]
+        // Need to include this here because we have cleared message.task.command by here
+        message.command = command;
+        messageQueue[messageQueueIdx] = message;
+        messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index
         webSocketEventEmitter.emit(command, message.task);
       } else if (command === "pong") {

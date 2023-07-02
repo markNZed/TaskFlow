@@ -94,11 +94,11 @@ const TaskGeneratePersona = (props) => {
         break;
       case "generated":
         setResponseText(task.output.summary);
+        const startTaskId = props.task.meta.childrenId[0];
         modifyTask({
           "command": "start",
           "commandArgs": {
-            id: props.stackTaskId[stackPtr],
-            familyId: task.familyId,
+            id: startTaskId, //props.stackTaskId[stackPtr],
             stackPtr: stackPtr + 1,
           }
         });
@@ -141,12 +141,11 @@ const TaskGeneratePersona = (props) => {
         <div className="flex-grow">
           <DynamicComponent
             key="childTask"
-            is={childTask.stack[stackPtr]}
+            is={childTask.type}
             task={childTask}
             setTask={setChildTask}
             parentTask={task}
             stackPtr={stackPtr}
-            stackTaskId={props.stackTaskId}
           />
         </div>
       ) : (

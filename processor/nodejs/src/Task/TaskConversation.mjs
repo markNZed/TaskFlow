@@ -8,7 +8,7 @@ import { utils } from "../utils.mjs";
 const TaskConversation_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log("Returning from TaskConversation_async");
+  console.log(`${taskName} in state ${task.state.current}`);
 
   return null;
 };

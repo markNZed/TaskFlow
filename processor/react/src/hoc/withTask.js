@@ -40,7 +40,6 @@ function withTask(Component) {
     const [isMounted, setIsMounted] = useState();
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
-    const [startTaskPrevInstanceId, setStartTaskPrevInstanceId] = useState();
     const [childTask, setChildTask] = useState();
     // By passing the stackPtr we know which layer is sending the task
     // Updates to the task might be visible in other layers
@@ -146,19 +145,20 @@ function withTask(Component) {
       // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
       if (localStackPtrRef.current > 0) {
         const spawnTask = props.task.config?.spawnTask === false ? false : true;
-        console.log("localStackPtrRef.current < props.stackTaskId.length && spawnTask", localStackPtrRef.current, props.stackTaskId.length, spawnTask)
-        if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
-          let startTaskId = props.stackTaskId[localStackPtrRef.current]
-          const newPtr = localStackPtrRef.current + 1;
-          modifyTask({
-            "command": "start",
-            "commandArgs": {
-              id: startTaskId,
-              familyId: props.task.familyId,
-              stackPtr: newPtr
-            }
+        console.log("spawnTask", spawnTask)
+        if (spawnTask && props.task.meta.childrenId) {
+          props.task.meta.childrenId.forEach(childId => {
+            console.log(childId);
+            const newPtr = localStackPtrRef.current + 1;
+            modifyTask({
+              "command": "start",
+              "commandArgs": {
+                id: childId,
+                stackPtr: newPtr
+              }
+            });
+            console.log("Start from withTask", childId, newPtr)
           });
-          console.log("Start from withTask", startTaskId, newPtr)
         }
         //modifyTask(() => { return {stackPtr: Math.max(props.task.stackPtr, localStackPtrRef.current)} });
         //modifyTask({stackPtr: localStackPtrRef.current});
@@ -169,7 +169,7 @@ function withTask(Component) {
       // Don't do this when stackPtr is 0 e.g. from taskflows.js where there is no props.task
       if (localStackPtrRef.current > 0) {
         const spawnTask = props.task.config?.spawnTask === false ? false : true;
-        if (localStackPtrRef.current < props.stackTaskId.length && spawnTask) {
+        if (spawnTask && !childTask) {
           if (startTaskReturned) {
             setChildTask(startTaskReturned)
             console.log("setChildTask", startTaskReturned.id)

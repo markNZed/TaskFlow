@@ -1,5 +1,9 @@
 /* ToDo
 -------
+Remove stackTaskId
+Should a task that requests start also update? 
+Replace stack with children
+  Maybe need to build childrenId in start
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering

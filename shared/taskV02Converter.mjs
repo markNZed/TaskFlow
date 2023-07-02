@@ -180,7 +180,7 @@ const typeMap = {
         { json: "familyId", js: "familyId", typ: u(undefined, "") },
         { json: "groupId", js: "groupId", typ: u(undefined, "") },
         { json: "hub", js: "hub", typ: u(undefined, m("any")) },
-        { json: "id", js: "id", typ: "" },
+        { json: "id", js: "id", typ: u(undefined, "") },
         { json: "input", js: "input", typ: u(undefined, m("any")) },
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },

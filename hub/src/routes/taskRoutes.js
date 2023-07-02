@@ -146,14 +146,25 @@ router.post("/", async (req, res) => {
 });
 
 async function start_async(res, processorId, commandArgs, task) {
-  console.log("start_async " + task.id);
   //console.log("start_async task", task);
   try {
+    console.log("start_async " + commandArgs.id + " by " + task.id);
+    const initTask = {
+      id: commandArgs.id,
+      stackPtr: commandArgs.stackPtr || task.stackPtr,
+      userId: task.userId,
+    }
+    let prevInstanceId;
+    if (commandArgs.prevInstanceId) {
+      prevInstanceId = commandArgs.prevInstanceId;
+    } else {
+      prevInstanceId = task.instanceId;
+    }
     // Just set initial task values and pass that in instead of a long list of arguments?
-    await startTask_async(task, true, processorId, commandArgs?.prevInstanceId);
+    await startTask_async(initTask, true, processorId, prevInstanceId);
     res.status(200).send("ok");
   } catch (err) {
-    //throw err;
+    throw err;
     console.log("Error starting task " + task.id + " " + err);
     res.status(500).json({ error: "Error starting task " + task.id + " " + err });
   }

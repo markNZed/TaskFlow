@@ -9,13 +9,12 @@ import { utils } from "../utils.mjs";
 const TaskShowResponse_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log(
-    "TaskShowResponse name " + T("name") + " state " + T("state.current")
-  );
-
+  console.log(`${taskName} in state ${task.state.current}`);
+  
   switch (task.state.current) {
     case undefined:
-      console.log("TaskShowResponse state.current is undefined");
+    case "response":
+      console.log(`${taskName} does nothing in state ${task.state.current}`);
       return null
     case "start":
       T("output.response", T("config.response"));

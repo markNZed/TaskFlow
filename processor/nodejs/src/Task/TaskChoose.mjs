@@ -20,7 +20,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   // First we get the response
-  console.log("TaskChoose name " + T("name"));
+  console.log(`${taskName} in state ${task.state.current}`);
 
   T("response.text", null); // Avoid using previously stored response
   const subTask = await SubTaskLLM_async(wsSendTask, task);

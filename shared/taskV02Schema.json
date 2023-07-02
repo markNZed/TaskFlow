@@ -117,8 +117,7 @@
         "response": {
           "$ref": "./genericV02schema.json#/definitions/Response"
         }
-      },
-      "required": ["id"]
+      }
     }
   }
 }

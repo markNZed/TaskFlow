@@ -10,9 +10,12 @@ import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
+  console.log(`${taskName} in state ${task.state.current}`);
+
   switch (task.state.current) {
     case undefined:
-      console.log(`${taskName} state.current is undefined`);
+    case "generated":
+      console.log(`${taskName} does nothing in state ${task.state.current}`);
       return null
     case "start":
       T("state.request.model.prompt", "Generate a random client profile");

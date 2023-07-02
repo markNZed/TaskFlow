@@ -16,6 +16,7 @@ const taskflows = [
   },
   {
     APPEND_stack: ["TaskConversation"],
+    type: "TaskConversation",
     name: "conversation",
     parentType: "exercices",
   },
@@ -31,6 +32,7 @@ const taskflows = [
     tasks: {
       start: {
         APPEND_stack: ["TaskChat"],
+        type: "TaskChat",
         config: {
           nextTask: "start",
         },
@@ -39,6 +41,7 @@ const taskflows = [
   },
   {
     APPEND_stack: ["TaskStepper"],
+    type: "TaskStepper",
     name: "taskflow",
     parentType: "exercices",
   },
@@ -48,6 +51,7 @@ const taskflows = [
     tasks: {
       start: {
         APPEND_stack: ["TaskShowResponse"],
+        type: "TaskShowResponse",
         config: {
           nextTask: "summarize",
           response: "Hello",
@@ -55,6 +59,7 @@ const taskflows = [
       },
       summarize: {
         APPEND_stack: ["TaskLLMIO"],
+        type: "TaskLLMIO",
         config: {
           nextTask: "structure",
           instruction: "Tell the user what to do",
@@ -68,6 +73,7 @@ const taskflows = [
       },
       structure: {
         APPEND_stack: ["TaskLLMIO"],
+        type: "TaskLLMIO",
         config: {
           nextTask: "stop",
           instruction: "This is what I think of your response",

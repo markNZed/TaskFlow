@@ -16,7 +16,7 @@ const useStartTask = (task, setTask, local_stackPtr) => {
   useEffect(() => {
     const command = task?.command;
     const commandArgs = task?.commandArgs;
-    if (command !== "start" || startTaskError || task.stackPtr !== local_stackPtr) {
+    if (command !== "start" || startTaskError) {
       return;
     }
     const fetchTaskFromAPI = async () => {
@@ -27,7 +27,7 @@ const useStartTask = (task, setTask, local_stackPtr) => {
           familyId: commandArgs?.familyId,
           processor: {},
         }
-        let snapshot = JSON.parse(JSON.stringify(initTask)); // deep copy
+        let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
         const updating = { "command": null, "commandArgs": null };
         setNestedProperties(updating);
         setTask((p) => deepMerge(p, updating));

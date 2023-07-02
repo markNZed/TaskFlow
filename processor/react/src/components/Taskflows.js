@@ -48,25 +48,23 @@ function Taskflows(props) {
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
-    if (globalState.selectedTaskId && 
-        (tasksIds.length === 0 || globalState.selectedTaskId !== tasksIds[tasksIdx])
+    const selectedTaskId = globalState.selectedTaskId
+    if (selectedTaskId && 
+        (tasksIds.length === 0 || selectedTaskId !== tasksIds[tasksIdx])
     ) {
-      const selectedTaskId = globalState.selectedTaskId
       const start = selectedTaskId + ".start";
       const index = tasksIds.indexOf(start);
       if (index === -1) {
-        // Could/should us the stackTaskId
-        const taskStackId = globalState.taskflowsTree[selectedTaskId].stackTaskId;
         setTask({
           stackPtr: 0,
           command: "start",
           commandArgs: {
-            id: taskStackId[0],
+            id: selectedTaskId,
             stackPtr: 1,
           }
         });
-        setTasksStackId((p) => [...p, taskStackId]);
-        console.log("Taskflows start", taskStackId)
+        setTasksStackId((p) => [...p, selectedTaskId]);
+        console.log("Taskflows start", selectedTaskId)
       } else {
         setTasksIdx(index);
       }
@@ -75,15 +73,11 @@ function Taskflows(props) {
     }
     // If we only have one start task and the Processor has registered with the hub
     if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
-      const sortedKeys = Object.keys(globalState.taskflowsTree).sort(
-        (a, b) => a.length - b.length
-      );
-      const longestKey = sortedKeys[sortedKeys.length - 1];
       setTask({
         stackPtr: 0,
         command: "start",
         commandArgs: {
-          id: globalState.taskflowsTree[longestKey].id + ".start",
+          id: selectedTaskId,
           stackPtr: 1,
         }
       });
@@ -211,7 +205,6 @@ function Taskflows(props) {
                     setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
                     stackPtr={stackPtr}
-                    stackTaskId={tasksStackId[idx]}
                   />
                 </div>
               )

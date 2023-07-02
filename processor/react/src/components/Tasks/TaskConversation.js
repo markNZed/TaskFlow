@@ -137,12 +137,11 @@ const TaskConversation = (props) => {
         {childTask && (
           <DynamicComponent
             key={childTask.id}
-            is={childTask.stack[stackPtr]}
+            is={childTask.type}
             task={childTask}
             setTask={setChildTask}
             parentTask={task}
             stackPtr={stackPtr}
-            stackTaskId={props.stackTaskId}
           />
         )}
       </div>

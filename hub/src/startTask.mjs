@@ -162,13 +162,13 @@ async function startTask_async(
       let instanceIds = await threadsStore_async.get(familyId);
       if (!instanceIds) {
         await threadsStore_async.set(taskCopy["familyId"], [instanceId]);
-        console.log("Initiating thread " + taskCopy["familyId"] + " with instanceId: " + instanceId)
+        console.log("Initiating family " + taskCopy["familyId"] + " with instanceId: " + instanceId)
       } else if (!instanceIds.includes(instanceId)) {
         instanceIds.push(instanceId);
         await threadsStore_async.set(taskCopy["familyId"], instanceIds);
-        console.log("Adding to thread " + taskCopy["familyId"] + " instanceId: " + instanceId)
+        console.log("Adding to family " + taskCopy["familyId"] + " instanceId: " + instanceId)
       } else {
-        console.log("Instance already in thread " + taskCopy["familyId"] + " instanceId: " + instanceId)
+        console.log("Instance already in family " + taskCopy["familyId"] + " instanceId: " + instanceId)
       }
     } else {
       taskCopy["familyId"] = instanceId;
@@ -206,7 +206,6 @@ async function startTask_async(
     taskCopy.userId = userId;
     
     if (prevInstanceId) {
-      // Should rename to sibling?
       taskCopy.meta["parentInstanceId"] = prevInstanceId;
       let parent = await instancesStore_async.get(prevInstanceId);
       if (parent.state?.address) {
@@ -226,14 +225,18 @@ async function startTask_async(
           taskCopy["stackPtr"] = taskCopy.stack.length;
         }
       }
-      if (
-        !parent.hasOwnProperty("childrenInstances") ||
-        !Array.isArray(parent.childrenInstances)
-      ) {
-        parent.childrenInstances = [];
+      if (!parent.meta.childrenInstanceId) {
+        parent.meta.childrenInstanceId = [];
       }
-      parent.childrenInstances.push(instanceId);
+      parent.meta.childrenInstanceId.push(instanceId);
+      // We update the parent and set sourceProcessorId to hub so all Processors will be updated
+      parent.hub.command = "update";
+      parent.hub.sourceProcessorId = "hub";
       await instancesStore_async.set(prevInstanceId, parent);
+      // The parent task may be "done" so no longer active
+      if (await activeTasksStore_async.has(prevInstanceId)) {
+        await activeTasksStore_async.set(prevInstanceId, parent);
+      }
     }
     taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
 

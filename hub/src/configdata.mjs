@@ -50,7 +50,7 @@ function mergeTasks(childTask, tasksObj, id, addStackTaskId = false) {
   }
   for (const key in tasksObj) {
     if (tasksObj.hasOwnProperty(key)) {
-      if (key === "tasks" || key === "label") {continue;}
+      if (key === "tasks" || key === "label" || key === "type" || key === "meta") {continue;}
 
       if (childTask.hasOwnProperty(key) &&
         !key.startsWith("APPEND_") &&
@@ -75,20 +75,15 @@ function mergeTasks(childTask, tasksObj, id, addStackTaskId = false) {
 
     }
   }
-  if (childTask["stack"].length) {
-    const stack = childTask["stack"];
-    const stackLength = stack.length;
-    const component = stack[stackLength - 1];
+  if (childTask.type) {
     // Need to deal with a list of components
-    const tasktemplatename = "root." + component;
+    const tasktemplatename = childTask.type;
     if (tasktypes[tasktemplatename]) {
-      // for each taskkey in the tasktemplatename copy it into this task
-      // Should detect conflicts
       for (const key2 in tasktypes[tasktemplatename]) {
         if (key2 !== "id" && key2 !== "name" && key2 !== "parentId" && key2 !== "parentType") {
           //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
           if (key2 === "config") {
-            // ChildTask has priority
+            // ChildTask has priority so it can override default config
             childTask[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], childTask[key2])
           } else {
             childTask[key2] =  utils.deepMerge(childTask[key2], tasktypes[tasktemplatename][key2])
@@ -162,6 +157,14 @@ function flattenTaskflows(taskflows) {
     if (taskflow.name !== "root") {
       taskflow.meta["parentId"] = parent2id[taskflow.parentType];
     }
+    if (id !== "root") {
+      let parent = taskflowLookup[taskflow.meta["parentId"]]
+      if (parent.meta.childrenId) {
+        parent.meta.childrenId.push(taskflow.id);
+      } else {
+        parent.meta["childrenId"] = [taskflow.id];
+      }
+    }
 
     // It might poossible to specify a stack with a list but we do not use this
     if (taskflow["APPEND_stack"]) {
@@ -186,6 +189,12 @@ function flattenTaskflows(taskflows) {
             taskflow.tasks[taskkey]["meta"] = {};
           }
           taskflow.tasks[taskkey]["meta"]["parentId"] = taskflow.id;
+          taskflow.tasks[taskkey]["meta"]["parentType"] = taskflow.type;
+          if (taskflow.meta.childrenId) {
+            taskflow.meta.childrenId.push(taskflow.tasks[taskkey]["id"]);
+          } else {
+            taskflow.meta.childrenId = [taskflow.tasks[taskkey]["id"]];
+          }
           // Convert relative task references to absolute
           const nextTask = taskflow.tasks[taskkey]?.config?.nextTask;
           if (nextTask && !nextTask.includes(".")) {
@@ -213,13 +222,6 @@ function flattenTaskflows(taskflows) {
       children[taskflow.meta["parentId"]].push(taskflow.id);
     } else {
       children[taskflow.meta["parentId"]] = [taskflow.id];
-    }
-  });
-
-  // For the menu building
-  taskflows.forEach(function (taskflow) {
-    if (children[taskflow.id]) {
-      taskflowLookup[taskflow.id]["meta"]["children"] = children[taskflow.id];
     }
   });
 
