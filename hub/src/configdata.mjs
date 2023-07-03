@@ -9,7 +9,7 @@ import { CONFIG_DIR } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import assert from "assert";
-import { validateTaskflows } from "./validateTaskflows.mjs";
+import { validateTasks } from "./validateTasks.mjs";
 import { fromTask } from "./taskConverterWrapper.mjs";
 import fs from 'fs/promises'; // Use promises variant of fs for async/await style
 import jsonDiff from 'json-diff'; // You need to install this package: npm install json-diff
@@ -19,29 +19,28 @@ import jsonDiff from 'json-diff'; // You need to install this package: npm insta
 console.log("Loading config data from " + CONFIG_DIR);
 var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
-var taskflows = await utils.load_data_async(CONFIG_DIR, "taskflows");
+var tasks = await utils.load_data_async(CONFIG_DIR, "tasks");
 var tasktypes = await utils.load_data_async(CONFIG_DIR, "tasktypes");
-var tasks = {}; // We will build this from taskflows
 
 // We adopt a DRY strategy in the code and config files
 // But not in the data structures that are generated from the config for the code
-// Transform hierarchical taskflows structure into a hash
-// Build tasks hash from the taskflows hash
+// Transform hierarchical tasks structure into a hash
+// Build tasks hash from the tasks array
 
 tasktypes = utils.flattenObjects(tasktypes);
 //console.log(JSON.stringify(tasktypes, null, 2))
 
 try {
-  await validateTaskflows(taskflows);
+  await validateTasks(tasks);
 } catch (e) {
-  console.error("Error validating taskflows", e);
-  throw new Error("Error validating taskflows");
+  console.error("Error validating tasks", e);
+  throw new Error("Error validating tasks");
 }
 
 function mergeTasks(childTask, tasksObj) {
   for (const key in tasksObj) {
     if (tasksObj.hasOwnProperty(key)) {
-      if (key === "tasks" || key === "label" || key === "type" || key === "meta") {continue;}
+      if (key === "label" || key === "type" || key === "meta" || key === "initiator") {continue;}
 
       if (childTask.hasOwnProperty(key) &&
         !key.startsWith("APPEND_") &&
@@ -105,14 +104,13 @@ function appendOperation(taskflow, key, tasksObj) {
 }
 
 // Not that this has huge side-effects
-// Transform taskflows array into flattened taskflows hash
-// Should flatten taskflows then add parent to tasks then flatten tasks (separate generic functions)
-function flattenTaskflows(taskflows) {
+// Transform tasks array into flattened tasks hash
+function flattenTasks(tasks) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
   var taskflowLookup = {};
-  taskflows.forEach(function (taskflow) {
+  tasks.forEach(function (taskflow) {
     // Debug option 
     let debug = false;
     //if (taskflow.name.includes("chatgptzeroshot")) {debug = true;}
@@ -141,7 +139,7 @@ function flattenTaskflows(taskflows) {
     if (!taskflow.config) {
       taskflow['config'] = {}
     }
-    if (!taskflow.config?.label) {
+    if (taskflow.config?.label === undefined) {
       taskflow.config["label"] = utils.capitalizeFirstLetter(taskflow.name);
     }
     taskflow["meta"] = {};
@@ -161,45 +159,22 @@ function flattenTaskflows(taskflows) {
     const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
     mergeTasks(taskflow, parentTaskflow);
 
-    // This should be separated so we deal only with flattening taskflows here
-    // The best approach may be to stop distinguishing between taskflow and task
-    // Then can either specify hierarchically or using the array format
-    // Copy keys from the taskflow that are not in the current tasks
-    if (taskflow?.tasks) {
-      for (const taskkey in taskflow.tasks) {
-        if (taskflow.tasks.hasOwnProperty(taskkey)) {
-          taskflow.tasks[taskkey]["name"] = taskkey;
-          taskflow.tasks[taskkey]["id"] = id + "." + taskkey;
-          if (!taskflow.tasks[taskkey]?.meta) {
-            taskflow.tasks[taskkey]["meta"] = {};
+    // Convert relative task references to absolute
+    const nextTask = taskflow?.config?.nextTask;
+    if (nextTask && !nextTask.includes(".")) {
+      taskflow.config.nextTask = taskflow.meta["parentId"] + "." + nextTask;
+    }
+    const nextTaskTemplate = taskflow?.config?.nextTaskTemplate;
+    if (nextTaskTemplate) {
+      for (const key in nextTaskTemplate) {
+        if (nextTaskTemplate.hasOwnProperty(key)) {
+          if (!nextTaskTemplate[key].includes(".")) {
+            nextTaskTemplate[key] = id + "." + nextTaskTemplate[key];
           }
-          taskflow.tasks[taskkey]["meta"]["parentId"] = taskflow.id;
-          taskflow.tasks[taskkey]["meta"]["parentName"] = taskflow.type;
-          if (taskflow.meta.childrenId) {
-            taskflow.meta.childrenId.push(taskflow.tasks[taskkey]["id"]);
-          } else {
-            taskflow.meta.childrenId = [taskflow.tasks[taskkey]["id"]];
-          }
-          // Convert relative task references to absolute
-          const nextTask = taskflow.tasks[taskkey]?.config?.nextTask;
-          if (nextTask && !nextTask.includes(".")) {
-            taskflow.tasks[taskkey].config.nextTask = id + "." + nextTask;
-          }
-          const nextTaskTemplate = taskflow.tasks[taskkey]?.config?.nextTaskTemplate;
-          if (nextTaskTemplate) {
-            for (const key in nextTaskTemplate) {
-              if (nextTaskTemplate.hasOwnProperty(key)) {
-                if (!nextTaskTemplate[key].includes(".")) {
-                  nextTaskTemplate[key] = id + "." + nextTaskTemplate[key];
-                }
-              }
-            }
-          }
-          mergeTasks(taskflow.tasks[taskkey], taskflow);
         }
       }
     }
-
+    
     taskflowLookup[id] = taskflow;
     parent2id[taskflow.name] = id;
     // Build children data
@@ -210,15 +185,15 @@ function flattenTaskflows(taskflows) {
     }
   });
 
-  // Replace array of taskflows with hash
+  // Replace array of tasks with hash
   // Array just made it easier for the user to specify parents in the config file
   return taskflowLookup;
 }
 
-// This has side-effects, modifying taskflows in-place
+// This has side-effects, modifying tasks in-place
 // Could check that each taskflow has a 'start' task
-taskflows = flattenTaskflows(taskflows);
-//console.log(JSON.stringify(taskflows, null, 2))
+tasks = flattenTasks(tasks);
+//console.log(JSON.stringify(tasks, null, 2))
 
 users = utils.flattenObjects(users);
 //console.log(JSON.stringify(users, null, 2))
@@ -262,45 +237,8 @@ for (const groupKey in groups) {
     });
   }
 }
-
 //console.log(JSON.stringify(users, null, 2))
 
-// Flatten the hash of tasks from taskflows
-// Add the parentId to task objects
-function flattenTasks(taskflows) {
-  const tasks = {};
-  for (const taskflowKey in taskflows) {
-    if (Object.prototype.hasOwnProperty.call(taskflows, taskflowKey)) {
-      const taskflow = taskflows[taskflowKey];
-      const taskflowId = taskflow.id;
-      tasks[taskflowId] = {};
-      for (const key in taskflow) {
-        if (key !== "tasks") {
-          tasks[taskflowId][key] = taskflows[taskflowKey][key];
-        }
-      }
-      const taskflowTasks = taskflows[taskflowKey].tasks;
-      if (taskflowTasks) {
-        for (const taskKey in taskflowTasks) {
-          if (Object.prototype.hasOwnProperty.call(taskflowTasks, taskKey)) {
-            const task = taskflows[taskflowKey].tasks[taskKey];
-            const taskId = task.id;
-            if (!taskId) {
-              console.log("taskID not set " + taskKey + " " + taskflowKey);
-            }
-            tasks[taskId] = task;
-            //tasks[taskId]["meta"]["parentId"] = taskflowKey;
-            //tasks[taskId]['filter_for_react'] = taskflows[taskflowKey].filter_for_react;
-          }
-        }
-      }
-    }
-  }
-  return tasks;
-}
-
-tasks = flattenTasks(taskflows);
-//console.log(JSON.stringify(tasks, null, 2))
 
 /**
  * Save tasks to a file if the file does not exist.
@@ -335,10 +273,10 @@ async function saveTasks(tasks) {
     console.log('No differences found');
   }
 }
-//await saveTasks(tasks);
+await saveTasks(tasks);
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
-//console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2));
+console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 
 
 // For each task in tasks run fromTask to validate the task
 Object.keys(tasks).forEach(key => {
@@ -346,4 +284,4 @@ Object.keys(tasks).forEach(key => {
   fromTask(task);
 });
 
-export { users, groups, taskflows, tasktypes, tasks };
+export { users, groups, tasktypes, tasks };

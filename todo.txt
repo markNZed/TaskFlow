@@ -1,13 +1,18 @@
 /* ToDo
 -------
-Move to meta: parentName, parentId, familyId
-  parentName is not in meta because it makes config easier
-  parentName -> parentName?
+Make use of task.input instead of task.output.userInput 
+  Needs a DB for all the inputs too or we use an IO db on Hub
+  The userInput is an output of the Task
+  Could remove task.input or is this a place for information at the start of the task?
+    task.commandArgs.input
+Test error handling
+Review use of request and response
 Should a task that requests start also update? 
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
 
+Schema for tasktype to document options
 Requests from other tasks via: task.processor.task.request
   See notes
 Could be valuable to communicate with an instance on a subset of environments
@@ -18,19 +23,12 @@ If we have a TaskFilter this raises the question of how to configure/program it.
         How to inform another task
         If we do want a DSL the Lua might be a good option for language indepedence
           https://github.com/fengari-lua/fengari-web
-Do we want a join route on Hub for symmetry? Join is internal to the hub?
-chatContainermaxHeight in TaskConversation scrolling?
 Modify the partial text update so it is incremental. This will better allow for text selection.
   Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
 Show websocket connection status with traffic light icon
-Maybe start can be missed like update
-  Get all the WS working this way
-  Add queue to other React WS filters
-Possible next feature: remembering the system messages for Vierge
 Provide sample of nginx proxy config
 Need to be able to force a task to restart (Hub command?) Could be a forget button.
 log not working in Chrome
-Transaction might be a better concept than lock, then don't need bypass.
 Re-architect the react Processor to make use of the Service Worker API
   Should have React Hub
   Progressive Web Apps https://developer.chrome.com/docs/workbox/
@@ -56,13 +54,10 @@ Ideally we want the same code for Task storage on Hub/React/NodeJs
 Demo of collaborative chat would be good.
   In default config assign a random user label so we can demo multiparty chat
 Add function to remove last paragraph
-  Interesting to explore how that might be done
+  Interesting to explore how that might be generalized
 A new conversation button once we have the session restoring.
-Address is just a part of a task state
-  Raises the idea of a task setting user information on the hub
-    Or should there be a Task to do that?
-Privacy - should only be implemented on the Hub
-  Hub and Processors need to have secure communication, then identification is managed on the hub.
+Privacy - should be implemented on the Hub
+  Hub and Processors secure communication, then identification is managed on the hub.
 Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -94,6 +89,9 @@ Consider how we would add a radio select box to a component
   Add the component and a config option to display or not
   Dynamic mapping of config to the input
   Standard way of mapping this to response. Make these available as variable in next Task (or state?)
+  Could have an inject command from Hub
+    Modify the parent task.meta.children and modify the child task.parent etc. then 
+      Modify parent should then start new child that can be configured to start previous child as its child
 Can we have the same React component present a new Task? I guess it does that automatically (carry the previous output along)
   In this case the patterns of display then input or input then display should be enough. TaskIO
 
@@ -103,6 +101,7 @@ Backlog
   Bugs
   -----
   Scrolling to view suggested_prompts in TaskChat
+  chatContainermaxHeight in TaskConversation scrolling
 
   Refactoring
   -----------
@@ -112,6 +111,7 @@ Backlog
   --------
     High Priority
     -------------
+    Possible next feature: remembering the system messages for Vierge
     Simplify multiple configuration files for the NodeJS Task Processor
     Use a route for configuring: user, session, taskflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.

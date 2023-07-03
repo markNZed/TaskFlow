@@ -15,11 +15,11 @@ Information sent between Hub(s) and Processor(s) is managed within the Task obje
 ## Task
 
 Tasks consist of:
-* Task Definition that conform to a generic Task schema
+* **Task Definition** that conform to a generic Task schema
   * A Task may reference data not provided by T@skFLow
-* Task Function available in one or more Task Environment(s)
+* **Task Function** available in one or more Task Environment(s)
   * A Task Function may use services not provided by T@askFlow
-* Task Data available in one or more Task Environment(s)
+* **Task Data** available in one or more Task Environment(s)
   * Task Data may use services not provided by T@skFlow
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
@@ -88,10 +88,7 @@ Imagine a new task that will be called TaskNew:
 * Add information about the new Task to hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
-* If the seqeunce is simple then 
-  * add it directly to hub/config/taskflows.mjs
-* If the sequence is complicated/long then 
-  * edit hub/config/taskflows.mjs to import TaskNewFlow.mjs
+* Add it to hub/config/tasks.mjs
 
 ### Task Patterns
 

@@ -399,7 +399,6 @@ async function startTask_async(
     }
     activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
 
-    //console.log("New task processor ", taskCopy.processor)
     console.log("Started task id " + taskCopy.id);
     return taskCopy;
   }
