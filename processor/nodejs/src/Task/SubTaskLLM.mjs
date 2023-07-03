@@ -26,7 +26,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
   let params = await chat_prepare_async(task);
   params["wsSendTask"] = wsSendTask;
   const res = ChatGPTAPI_request_async(params);
-  task.response.text = await res;
+  task.response.LLM = await res;
   return task
 }
 

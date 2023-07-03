@@ -21,13 +21,13 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
       T("state.request.model.prompt", "Generate a random client profile");
       T("state.request.model.noWebsocket", true);
       let subTask = await SubTaskLLM_async(wsSendTask, task);
-      T("output.profile", subTask.response.text);
+      T("output.profile", subTask.response.LLM);
       T("state.request.model.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
       T("state.request.model.prompt", T("output.profile"));
       const forget = T("state.request.model.forget");
       T("state.request.model.noWebsocket", false);
       subTask = await SubTaskLLM_async(wsSendTask, task);
-      T("output.summary", subTask.response.text);
+      T("output.summary", subTask.response.LLM);
       T("state.request.model.forget", forget);
       T("state.request", {}); // clear - do we need to do this here?
       T("state.last", T("state.current"));

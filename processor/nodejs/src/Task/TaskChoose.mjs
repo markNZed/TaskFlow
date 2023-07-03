@@ -22,21 +22,21 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
   // First we get the response
   console.log(`${taskName} in state ${task.state.current}`);
 
-  T("response.text", null); // Avoid using previously stored response
+  T("response.LLM", null); // Avoid using previously stored response
   const subTask = await SubTaskLLM_async(wsSendTask, task);
-  T("response.text", subTask.response.text);
+  T("response.LLM", subTask.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
   const nextTaskIds = Object.values(T("config.nextTaskTemplate"));
 
-  const phrases = [T("response.text"), ...nextTaskKeys];
+  const phrases = [T("response.LLM"), ...nextTaskKeys];
 
-  //console.log("phrases", phrases)
+  console.log("phrases", phrases)
 
   try {
     const embeddingsData = await model.embed(phrases);
     const next_embeddings = tf.split(embeddingsData, phrases.length, 0);
-    //console.log("next_embeddings", next_embeddings)
+    console.log("next_embeddings", next_embeddings)
     // Do something with next_embeddings
     const response_embedding = next_embeddings[0]; // The first embedding corresponds to response_text.
 

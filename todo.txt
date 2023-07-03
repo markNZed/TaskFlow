@@ -1,12 +1,6 @@
 /* ToDo
 -------
-Make use of task.input instead of task.output.userInput 
-  Needs a DB for all the inputs too or we use an IO db on Hub
-  The userInput is an output of the Task
-  Could remove task.input or is this a place for information at the start of the task?
-    task.commandArgs.input
 Test error handling
-Review use of request and response
 Should a task that requests start also update? 
 Code refactoring
   Hub pipeline: a module with function for each step

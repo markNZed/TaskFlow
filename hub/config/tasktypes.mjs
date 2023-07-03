@@ -53,6 +53,9 @@ const tasktypes = [
   {
     name: "TaskShowResponse",
     environments: ["react", "nodejs"],
+    config: {
+      response: "",
+    },
     state: {
       current: "start",
     },

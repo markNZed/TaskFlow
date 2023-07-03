@@ -26,7 +26,7 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
       await fetchTask_async(task)
       // The response needs to be available for other tasks to point at
       const subTask = await SubTaskLLM_async(wsSendTask, task); 
-      T("output.LLMtext", subTask.response.text);
+      T("output.LLMtext", subTask.response.LLM);
       T("state.last", T("state.current"));
       T("state.current", "received");
       T("command", "update");

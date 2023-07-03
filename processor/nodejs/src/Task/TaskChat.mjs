@@ -35,7 +35,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       const lastElement = {
         ...msgs[msgs.length - 1],
       }; // shallow copy
-      lastElement.text = subTask.response.text
+      lastElement.text = subTask.response.LLM
       // Send to sync latest outputs via Hub, should also unlock
       T("output.msgs", [...msgs.slice(0, -1), lastElement]);
       T("state.last", T("state.current"));

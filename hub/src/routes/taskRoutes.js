@@ -127,7 +127,8 @@ router.post("/", async (req, res) => {
       if (!output) {
         output = {};
       }
-      output[task.id] = task.output;
+      output[task.id + ".output"] = task.output;
+      console.log("Output " + task.id + ".output" + " " + task.output)
       await outputStore_async.set(task.familyId, output);
     }
     // Switch to function based on task.hub["command"]

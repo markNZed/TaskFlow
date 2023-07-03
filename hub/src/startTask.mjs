@@ -238,14 +238,13 @@ async function startTask_async(
           const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
           const matches = regex.exec(curr);
           //console.log("curr ", curr, " matches", matches)
-          //root.collaborate.clientgenerator.conversation.chat.clientgenerator
           if (matches && !isAllCaps(matches[1])) {
             const path = curr.split('.');
             let outputPath;
             if (path[0] === "root") {
               outputPath = curr.replace(/\.[^.]+$/, '');
             } else {
-              outputPath = taskCopy.meta.parentId + "." + matches[1];
+              outputPath = taskCopy.meta.parentId + "." + matches[1] + ".output";
             }
             if (outputs[outputPath] === undefined) {
               throw new Error("outputStore " + familyId + " " + outputPath + " does not exist")

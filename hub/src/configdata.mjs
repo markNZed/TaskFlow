@@ -20,7 +20,7 @@ console.log("Loading config data from " + CONFIG_DIR);
 var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
 var tasks = await utils.load_data_async(CONFIG_DIR, "tasks");
-var tasktypes = await utils.load_data_async(CONFIG_DIR, "tasktypes");
+var tasktypes = await utils.load_data_async("../config", "tasktypes");
 
 // We adopt a DRY strategy in the code and config files
 // But not in the data structures that are generated from the config for the code
@@ -116,8 +116,10 @@ function flattenTasks(tasks) {
     //if (taskflow.name.includes("chatgptzeroshot")) {debug = true;}
     if (debug) {console.log("Taskflow: " + taskflow?.name)}
 
+    const parentId = parent2id[taskflow.parentName]
+    
     // Defensive programming
-    if (taskflow.name !== "root" && !parent2id[taskflow.parentName]) {
+    if (taskflow.name !== "root" && !parentId) {
       throw new Error(
         "Error: Taskflow parentName " +
           taskflow.parentName +
@@ -129,7 +131,7 @@ function flattenTasks(tasks) {
     if (taskflow.name === "root") {
       id = "root";
     } else {
-      id = parent2id[taskflow.parentName] + "." + taskflow.name;
+      id = parentId + "." + taskflow.name;
     }
     if (taskflowLookup[id]) {
       throw new Error("Error: Duplicate taskflow " + id);
@@ -144,10 +146,10 @@ function flattenTasks(tasks) {
     }
     taskflow["meta"] = {};
     if (taskflow.name !== "root") {
-      taskflow.meta["parentId"] = parent2id[taskflow.parentName];
+      taskflow.meta["parentId"] = parentId;
     }
     if (id !== "root") {
-      let parent = taskflowLookup[taskflow.meta["parentId"]]
+      let parent = taskflowLookup[parentId]
       if (parent.meta.childrenId) {
         parent.meta.childrenId.push(taskflow.id);
       } else {
@@ -156,20 +158,20 @@ function flattenTasks(tasks) {
     }
     
     // Copy keys from the parent
-    const parentTaskflow = taskflowLookup[taskflow.meta["parentId"]];
+    const parentTaskflow = taskflowLookup[parentId];
     mergeTasks(taskflow, parentTaskflow);
 
     // Convert relative task references to absolute
     const nextTask = taskflow?.config?.nextTask;
     if (nextTask && !nextTask.includes(".")) {
-      taskflow.config.nextTask = taskflow.meta["parentId"] + "." + nextTask;
+      taskflow.config.nextTask = parentId + "." + nextTask;
     }
     const nextTaskTemplate = taskflow?.config?.nextTaskTemplate;
     if (nextTaskTemplate) {
       for (const key in nextTaskTemplate) {
         if (nextTaskTemplate.hasOwnProperty(key)) {
           if (!nextTaskTemplate[key].includes(".")) {
-            nextTaskTemplate[key] = id + "." + nextTaskTemplate[key];
+            nextTaskTemplate[key] = parentId + "." + nextTaskTemplate[key];
           }
         }
       }
@@ -178,10 +180,10 @@ function flattenTasks(tasks) {
     taskflowLookup[id] = taskflow;
     parent2id[taskflow.name] = id;
     // Build children data
-    if (children[taskflow.meta["parentId"]]) {
-      children[taskflow.meta["parentId"]].push(taskflow.id);
+    if (children[parentId]) {
+      children[parentId].push(taskflow.id);
     } else {
-      children[taskflow.meta["parentId"]] = [taskflow.id];
+      children[parentId] = [taskflow.id];
     }
   });
 
@@ -276,7 +278,7 @@ async function saveTasks(tasks) {
 await saveTasks(tasks);
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
-console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 
+//console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 
 
 // For each task in tasks run fromTask to validate the task
 Object.keys(tasks).forEach(key => {
