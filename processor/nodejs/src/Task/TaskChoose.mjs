@@ -31,12 +31,12 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
 
   const phrases = [T("response.LLM"), ...nextTaskKeys];
 
-  console.log("phrases", phrases)
+  //console.log("phrases", phrases)
 
   try {
     const embeddingsData = await model.embed(phrases);
     const next_embeddings = tf.split(embeddingsData, phrases.length, 0);
-    console.log("next_embeddings", next_embeddings)
+    //console.log("next_embeddings", next_embeddings)
     // Do something with next_embeddings
     const response_embedding = next_embeddings[0]; // The first embedding corresponds to response_text.
 
@@ -50,7 +50,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
       similarities.push(similarity);
     }
 
-    console.log("Similarities:", similarities);
+    //console.log("Similarities:", similarities);
 
     const maxSimilarity = Math.max(...similarities);
     const maxIndex = similarities.indexOf(maxSimilarity);
