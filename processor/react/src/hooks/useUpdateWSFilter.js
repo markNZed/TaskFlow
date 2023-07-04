@@ -42,7 +42,7 @@ function useUpdateWSFilter(isMounted, initialTask, onUpdate) {
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
   useEffect(() => {
-    if (initialTask?.instanceId) {
+    if (initialTask?.instanceId !== instanceId) {
       setInstanceId(initialTask.instanceId);
     }
   }, [initialTask]);

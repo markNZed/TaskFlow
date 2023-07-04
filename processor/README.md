@@ -15,6 +15,7 @@ The Task Processor communicates with the Hub using the object `task.processor` O
 `task.processor.command` may be be one of:
   * update
   * start
+  * error
   * ping
   * register
 

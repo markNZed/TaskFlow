@@ -20,6 +20,9 @@ export async function do_task_async(wsSendTask, task) {
       // Returning null is  away of doing nothing
       if (updated_task !== null) {
         await activeTasksStore_async.set(task.instanceId, updated_task)
+        if (updated_task.error) {
+          console.error("Task error ", updated_task.error)
+        }
         if (updated_task?.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");

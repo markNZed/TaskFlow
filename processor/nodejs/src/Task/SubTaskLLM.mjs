@@ -81,6 +81,7 @@ async function chat_prepare_async(task) {
   let baseModel = T("state.request.model.base") || T("config.model.base") || modelType?.base;
   let temperature = T("state.request.model.temperature") || T("config.model.temperature") || modelType?.temperature;
   let maxTokens = T("state.request.model.maxTokens") || T("config.model.maxTokens") || modelType?.maxTokens;
+  console.log("state.request.model.maxTokens config.model.maxTokens modelType?.maxTokens", T("state.request.model.maxTokens"), T("config.model.maxTokens"), modelType?.maxTokens);
   let maxResponseTokens = T("state.request.model.maxResponseTokens") || T("config.model.maxResponseTokens") || modelType?.maxResponseTokens;
   console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " base " + baseModel);
 
@@ -217,6 +218,8 @@ async function chat_prepare_async(task) {
     id: (index + 1)
   }));
 
+  const cacheKey = T("config.cacheKey");
+
   return {
     systemMessage,
     messages,
@@ -229,6 +232,7 @@ async function chat_prepare_async(task) {
     maxResponseTokens,
     modelTypeId,
     instanceId,
+    cacheKey,
   };
 }
 
@@ -253,6 +257,7 @@ async function ChatGPTAPI_request_async(params) {
     modelTypeId,
     instanceId,
     wsSendTask,
+    cacheKey,
   } = params;
 
   let {
@@ -327,24 +332,26 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   let cachedValue = null;
-  let cacheKey = "";
+  let computedCacheKey = "";
   let cacheKeyText = "";
   if (useCache) {
     let contents = messages.map(message => message.content);
     let messagesText = contents.join(' ');
     cacheKeyText = [
       messageParams.systemMessage,
-      messageParams.maxResponseTokens,
-      messageParams.maxModelTokens,
+      maxResponseTokens,
+      maxTokens,
       JSON.stringify(messageParams.completionParams),
       prompt,
       messagesText,
+      cacheKey,
     ]
       .join("-")
       .replace(/\s+/g, "-");
-    cacheKey = utils.djb2Hash(cacheKeyText);
-    console.log("cacheKey " + cacheKey);
-    cachedValue = await cacheStore_async.get(cacheKey);
+    console.log("cacheKeyText ", cacheKeyText);
+    computedCacheKey = utils.djb2Hash(cacheKeyText);
+    console.log("computedCacheKey " + computedCacheKey);
+    cachedValue = await cacheStore_async.get(computedCacheKey);
     //console.log("cachedValue ", cachedValue);
   }
 
@@ -417,8 +424,8 @@ async function ChatGPTAPI_request_async(params) {
           let text = response.text;
           message_from("API", text, noWebsocket, instanceId);
           if (useCache) {
-            cacheStore_async.set(cacheKey, response);
-            console.log("cache stored key ", cacheKey);
+            cacheStore_async.set(computedCacheKey, response);
+            console.log("cache stored key ", computedCacheKey);
           }
           return text;
         })

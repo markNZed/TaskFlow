@@ -11,6 +11,7 @@ import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { doneTask_async } from "../doneTask.mjs";
+import { tasks } from "../configdata.mjs";
 
 const router = express.Router();
 
@@ -107,17 +108,27 @@ router.post("/", async (req, res) => {
       return res.status(409).json({ error: "Task request count exceeded" });
     }
     // Catch errors
+    function findClosestErrorTask(taskId, tasks) {
+      const strArr = taskId.split('.');
+      for (let i = strArr.length - 1; i >= 0; i--) {
+          strArr[i] = "error";
+          const errorTaskId = strArr.join('.');
+          if (tasks[errorTaskId]) {
+              return errorTaskId;
+          }
+          strArr.splice(i, 1); // If this level doesn't exist, remove it
+      }
+      return null; // Return null if no error task found
+    }
     if (task.error) {
       let errorTask
       if (task.config?.errorTask) {
         errorTask = task.config.errorTask
       } else {
-        // Assumes there is a default errorTask named error
-        const strArr = task.id.split('.');
-        strArr[strArr.length - 1] = "error";
-        errorTask = strArr.join('.');
+        errorTask = findClosestErrorTask(task.id, tasks);
+        console.log("Found errorTask " + errorTask);
       }
-      // Should be using command here?
+      // We are not using errorTask yet
       task.hub["command"] = "error";
       task.hub["commandArgs"] = {"errorTask": errorTask, "done": true};
       console.log("Task error " + task.id);
@@ -128,15 +139,17 @@ router.post("/", async (req, res) => {
         output = {};
       }
       output[task.id + ".output"] = task.output;
-      console.log("Output " + task.id + ".output" + " " + task.output)
+      //console.log("Output " + task.id + ".output" + " " + task.output)
       await outputStore_async.set(task.familyId, output);
     }
     // Switch to function based on task.hub["command"]
     switch (task.hub["command"]) {
       case "start":
-        return await start_async(res, processorId, commandArgs, task)
+        return await start_async(res, processorId, task)
       case "update":
-        return await update_async(res, processorId, commandArgs, task)
+        return await update_async(res, processorId, task)
+      case "error":
+        return await error_async(res, processorId, task)
       default:
         throw new Error("Unknown command " + task.hub["command"]);
     }
@@ -146,8 +159,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-async function start_async(res, processorId, commandArgs, task) {
+async function start_async(res, processorId, task) {
   //console.log("start_async task", task);
+  const commandArgs = task.hub["commandArgs"];
   try {
     console.log("start_async " + commandArgs.id + " by " + task.id);
     const initTask = {
@@ -170,8 +184,9 @@ async function start_async(res, processorId, commandArgs, task) {
   }
 }
 
-async function update_async(res, processorId, commandArgs, task) {
+async function update_async(res, processorId, task) {
   console.log("update_async " + task.id);
+  const commandArgs = task.hub["commandArgs"];
   // We intercept tasks that are done.
   if (commandArgs?.done) {
     doneTask_async(task) 
@@ -187,6 +202,26 @@ async function update_async(res, processorId, commandArgs, task) {
     res.status(200).send("ok");
   }
 }
+
+async function error_async(res, processorId, task) {
+  console.log("error_async " + task.id);
+  const commandArgs = task.hub["commandArgs"];
+  // We intercept tasks that are done.
+  if (commandArgs?.done) {
+    doneTask_async(task) 
+    return res.status(200).send("ok");
+  // Pass on tasks that are not done
+  } else {
+    console.log("Error in task " + task.id + " in state " + task.state?.current + " from " + processorId + " error Task returned " + commandArgs.errorTask)
+    task.meta.updateCount = task.meta.updateCount + 1;
+    // Don't await so the return gets back before the websocket update
+    // Middleware will send the update
+    activeTasksStore_async.set(task.instanceId, task);
+    // So we do not return a task anymore. This requires the task synchronization working.
+    res.status(200).send("ok");
+  }
+}
+
 
 export default router;
 

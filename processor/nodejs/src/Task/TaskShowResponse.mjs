@@ -26,6 +26,9 @@ const TaskShowResponse_async = async function (taskName, wsSendTask, task) {
       console.log("ERROR unknown state : " + task.state.current);
   }
 
+  // This task can be used as an errorTask so an error here risks to 
+  // create a loop ?
+
   console.log("Returning from TaskShowResponse", task.id);
   return task;
 };

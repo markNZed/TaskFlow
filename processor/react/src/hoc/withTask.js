@@ -197,10 +197,11 @@ function withTask(Component) {
       }
     )
     
-    useErrorWSFilter(props.task?.familyId,
-      (updatedTask) => {
-        console.log("useErrorWSFilter", updatedTask.id, updatedTask.response.text);
+    useErrorWSFilter(useGlobalStateContext, props.task,
+      (errorTask) => {
+        console.log("useErrorWSFilter", errorTask.id, errorTask.error);
         // We do not have a plan for dealing with errors here yet
+        alert("Task error: " + errorTask.response.text);
       }
     )
 

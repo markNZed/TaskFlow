@@ -32,21 +32,21 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
       const message = messageQueue[key];
       //console.log("message", message, key);
       if (message && message?.command && message.command === "start") {
-        //console.log("useUpdateWSFilter handleUpdate update key", key);
+        //console.log("useStartWSFilter handleUpdate update key", key);
         if (message.task.id === startTaskId ||
             message.task.processor?.prevInstanceId === startPrevInstanceId) {
-          //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
+          //console.log("useStartWSFilter handleUpdate calling onUpdate", taskStart);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
           delete messageQueue[key];
           startTaskDB(taskCopy);
           await onStart(taskCopy);
-          //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
+          //console.log("useStartWSFilter handleUpdate delete key", messageQueue);
         }
       }
     }
-    //console.log("useUpdateWSFilter useEffect after messageQueue", messageQueue);
+    //console.log("useStartWSFilter useEffect after messageQueue", messageQueue);
   };
 
   useEffect(() => {

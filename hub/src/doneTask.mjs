@@ -13,13 +13,18 @@ export async function doneTask_async(task) {
     console.log("task", task);
     throw new Error("Called doneTask_async on a task that is not done");
   }
-  const nextTaskId = task.hub.commandArgs?.nextTaskId;
+  let nextTaskId = task.hub.commandArgs?.nextTaskId;
   console.log("Task " + task.id + " done, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
   // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
   // !!!
   activeTasksStore_async.delete(task.instanceId);
   activeTaskProcessorsStore_async.delete(task.instanceId);
+  const errorTask = task.hub.commandArgs.errorTask;
+  if (errorTask) {
+    nextTaskId = errorTask;
+    console.log("nextTask is errorTask " + errorTask);
+  }
   // Fetch from the Task Hub
   if (nextTaskId) {
     const initTask = {

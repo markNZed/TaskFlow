@@ -1,7 +1,5 @@
 /* ToDo
 -------
-Test error handling
-Should a task that requests start also update? 
 Code refactoring
   Hub pipeline: a module with function for each step
     Will help for filtering
@@ -183,6 +181,7 @@ Notes/Idea
       Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
   Swagger for the API ?
   Refactoring with jscodeshift, see example in config repository
+  Should a task that requests to start a Task also be updated by the Hub? 
 
 Architecture
 ------------

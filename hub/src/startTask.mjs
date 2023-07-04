@@ -328,7 +328,8 @@ async function startTask_async(
       console.log("Set error from previous task", prevTask.id)
       taskCopy.response.text = response
       taskCopy.environments = prevTask.environments
-      taskCopy.state.current = "error"
+      //taskCopy.state.current = "error"
+      taskCopy.hub.command = "error";
       //console.log("Error task", taskCopy)
     }
 

@@ -41,7 +41,8 @@ const syncTasks_async = async (key, value) => {
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
         if ((processorId !== sourceProcessorId && command !== "join") ||
-            command === "start" ||
+            command === "start" || 
+            command === "error" ||
             (command === "join" && processorId === sourceProcessorId)
         ) {
           if (!taskCopy.processor[processorId]) {

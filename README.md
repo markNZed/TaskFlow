@@ -54,7 +54,11 @@ There may be side-effects from a SubTask, for example, it may return results to 
 
 ## Task Hub
 
-Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see [README.md](hub/README.md) 
+Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see [README.md](hub/README.md)
+
+## Error Handling
+
+If a Task Function sets task.error and the Task is updated then the Task Hub api/task route will detect this and set task.hub.command to "error" then set task.hub.commandArgs.errorTask to `task.config.errorTask` or the nearest error task (task.id ends in ".error"). The task that errored is then considered to be "done" bby the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
 
 # Motivation
 
