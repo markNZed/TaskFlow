@@ -2,7 +2,25 @@
 -------
 Code refactoring
   Hub pipeline: a module with function for each step
-    Will help for filtering
+    For taskRoutes.js
+    * Separation of concerns into a pipeline
+      * Versioning
+      * Authentication
+      * Throttling
+      * Authorization
+      * Storage
+      * Task locking
+      * Task interception
+        * Error handling
+      * Templating filling
+        * Storage
+      * Filter execution
+        * Event generation (Task updates)
+        * Complex event processing (CEP)
+      * Scheduling
+      * Diff generation
+      * Dispatch
+      * Privacy filtering
 
 Schema for tasktype to document options
 Requests from other tasks via: task.processor.task.request
