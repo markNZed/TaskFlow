@@ -208,8 +208,6 @@ async function chat_prepare_async(task) {
     console.log("Sytem message from task " + T("id"));
   }
 
-  const modelTypeId = modelType.id;
-
   //console.log("messages before map of id", messages);
   // The index starts at 1 so we do not have an id === 0 as this seemed to cause issues in ChatGPTAPI
   messages = messages.map((message, index) => ({
@@ -230,7 +228,6 @@ async function chat_prepare_async(task) {
     temperature,
     maxTokens,
     maxResponseTokens,
-    modelTypeId,
     instanceId,
     cacheKey,
   };
@@ -254,7 +251,6 @@ async function ChatGPTAPI_request_async(params) {
     baseModel,
     temperature,
     maxTokens,
-    modelTypeId,
     instanceId,
     wsSendTask,
     cacheKey,

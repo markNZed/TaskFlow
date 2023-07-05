@@ -32,10 +32,10 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
       const message = messageQueue[key];
       //console.log("message", message, key);
       if (message && message?.command && message.command === "error") {
-        console.log("useErrorWSFilter handleError update key", key, taskError, message.task.processor?.prevInstanceId, errorPrevInstanceId);
+        //console.log("useErrorWSFilter handleError update key", key, taskError, message.task.processor?.prevInstanceId, errorPrevInstanceId);
         if (message.task.id === instanceId ||
-            message.task.processor?.prevInstanceId === errorPrevInstanceId) {
-          console.log("useErrorWSFilter handleError calling onUpdate", taskError);
+            message.task.meta?.parentInstanceId === errorPrevInstanceId) {
+          //console.log("useErrorWSFilter handleError calling onError", taskError);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
@@ -51,7 +51,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
 
   useEffect(() => {
     if (initialTask?.instanceId !== instanceId) {
-      console.log("useErrorWSFilter initialTask commandArgs", initialTask.commandArgs);
+      //console.log("useErrorWSFilter initialTask commandArgs", initialTask.commandArgs);
       setInstanceId(initialTask.instanceId);
       setErrorPrevInstanceId(initialTask.instanceId);
     }

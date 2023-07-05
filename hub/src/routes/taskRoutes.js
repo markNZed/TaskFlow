@@ -11,6 +11,7 @@ import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import { doneTask_async } from "../doneTask.mjs";
+import { errorTask_async } from "../errorTask.mjs";
 import { tasks } from "../configdata.mjs";
 
 const router = express.Router();
@@ -41,199 +42,188 @@ class RequestError extends Error {
 
 function checkLockConflict(task, activeTask) {
   if (task.meta) {
-    let lock = task.hub.commandArgs.lock || false;
-    let unlock = task.hub.commandArgs.unlock || false;
-    let lockBypass = task.hub.commandArgs.lockBypass || false;
-    const processorId = task.hub["sourceProcessorId"];
-    // Check if the task is locked
+    const lock = task.hub.commandArgs.lock || false;
+    const unlock = task.hub.commandArgs.unlock || false;
+    const lockBypass = task.hub.commandArgs.lockBypass || false;
+    const processorId = task.hub.sourceProcessorId;
+    
     if (unlock) {
-      task.meta["locked"] = null;
-      console.log("Task forced unlock by " + processorId);
-    }
-    if (lock) {
-      if (activeTask && !activeTask.meta.locked) {
-        console.log("Task locked by " + processorId);
-        task.meta["locked"] = processorId;
-      }
-    } else if (activeTask && activeTask.meta.locked && activeTask.meta.locked === processorId) {
-      console.log("Task unlocked by " + processorId);
       task.meta.locked = null;
     }
-    if (
-      activeTask && 
-      activeTask.meta.locked && 
-      activeTask.meta.locked !== processorId && 
-      !lockBypass &&!unlock
-    ) {
-      let now = new Date(); // Current time
+    
+    if (lock && activeTask && !activeTask.meta.locked) {
+      task.meta.locked = processorId;
+    } else if (activeTask && activeTask.meta.locked && activeTask.meta.locked === processorId) {
+      task.meta.locked = null;
+    }
+    
+    if (activeTask && activeTask.meta.locked && activeTask.meta.locked !== processorId && !lockBypass && !unlock) {
+      const now = new Date();
       let updatedAt;
       if (task.meta.updatedAt) {
-        updatedAt = new Date(task.meta.updatedAt.date); 
+        updatedAt = new Date(task.meta.updatedAt.date);
       }
-      // Get the difference in minutes
-      let differenceInMinutes = (now - updatedAt) / 1000 / 60;
-      console.log("differenceInMinutes", differenceInMinutes)
+      
+      const differenceInMinutes = (now - updatedAt) / 1000 / 60;
+      
       if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log("Task lock expired for " + processorId + " locked by " + activeTask.meta.locked)
+        console.log(`Task lock expired for ${processorId} locked by ${activeTask.meta.locked}`);
       } else {
-        console.log("Task lock conflict with " + processorId + " locked by " + activeTask.meta.locked + " " + differenceInMinutes + " minutes ago.")
+        console.log(`Task lock conflict with ${processorId} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new RequestError("Task locked", 423);
-      } 
+      }
     }
   }
+  
   return task;
 }
 
 function checkAPIRate(task, activeTask) {
-  if (task.meta) {  // Control API rate
-    const currentDate = new Date(); // Will be local time
-    const resetDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate(), currentDate.getUTCHours(), currentDate.getUTCMinutes());
-    // If task has been updated before
-    const maxRequestRate = task?.config?.maxRequestRate; // per minute
+  if (task.meta) {
+    const currentDate = new Date();
+    const resetDate = new Date(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate(),
+      currentDate.getUTCHours(),
+      currentDate.getUTCMinutes()
+    );
+
+    const maxRequestRate = task?.config?.maxRequestRate ?? 0;
     if (maxRequestRate && task.meta.updatedAt) {
       const updatedAt = new Date(task.meta.updatedAt.date);
-      // If the last update happened within the current minute
+
       if (updatedAt >= resetDate) {
-        // If updates this minute is more than the max rate, cannot update
         if (task.meta.requestsThisMinute >= maxRequestRate) {
-          throw new RequestError("Task update rate exceeded " + maxRequestRate + " per minute", 409);
+          throw new RequestError(
+            `Task update rate exceeded ${maxRequestRate} per minute`,
+            409
+          );
         }
       } else {
-        // If the last update was not in the current minute, reset the counter
-        //console.log("task.meta.requestsThisMinute = 0")
         task.meta.requestsThisMinute = 0;
       }
+
       task.meta.requestsThisMinute++;
     }
-    const maxRequestCount = task?.config?.maxRequestCount;
+
+    const maxRequestCount = task?.config?.maxRequestCount ?? 0;
     if (maxRequestCount && task.meta.maxRequestCount > maxRequestCount) {
       throw new RequestError("Task request count exceeded", 409);
     }
   }
+
   return task;
 }
 
 function findClosestErrorTask(taskId, tasks) {
-  const strArr = taskId.split('.');
-  for (let i = strArr.length - 1; i >= 0; i--) {
-      strArr[i] = "error";
-      const errorTaskId = strArr.join('.');
-      if (tasks[errorTaskId]) {
-          return errorTaskId;
-      }
-      strArr.splice(i, 1); // If this level doesn't exist, remove it
+  const taskLevels = taskId.split('.');
+  for (let i = taskLevels.length - 1; i >= 0; i--) {
+    taskLevels[i] = "error";
+    const errorTaskId = taskLevels.join('.');
+    if (tasks[errorTaskId]) {
+      return errorTaskId;
+    }
+    taskLevels.splice(i, 1);
   }
-  return null; // Return null if no error task found
+  return null;
 }
 
 function processError(task, tasks) {
-  // Catch errors
   if (task.error) {
-    let errorTask
-    if (task.config?.errorTask) {
-      errorTask = task.config.errorTask
+    let errorTask;
+    if (task.config && task.config.errorTask) {
+      errorTask = task.config.errorTask;
     } else {
       errorTask = findClosestErrorTask(task.id, tasks);
-      console.log("Found errorTask " + errorTask);
     }
-    // We are not using errorTask yet
-    task.hub["command"] = "error";
-    task.hub["commandArgs"] = {"errorTask": errorTask, "done": true};
-    console.log("Task error " + task.id);
+    task.hub.command = "error";
+    task.hub.commandArgs = { errorTask };
   }
   return task;
 }
 
-async function processOutput_async(task, outputStore_async) {
+async function processOutput_async(task, outputStore) {
   if (task.output) {
-    let output = await outputStore_async.get(task.familyId);
+    let output = await outputStore.get(task.familyId);
     if (!output) {
       output = {};
     }
-    output[task.id + ".output"] = task.output;
-    //console.log("Output " + task.id + ".output" + " " + task.output)
-    await outputStore_async.set(task.familyId, output);
+    output[`${task.id}.output`] = task.output;
+    await outputStore.set(task.familyId, output);
   }
   return task;
 }
 
 async function processCommand_async(task, res) {
-  // Switch to function based on task.hub["command"]
-  switch (task.hub["command"]) {
+  const command = task.hub.command;
+  switch (command) {
     case "start":
-      return await start_async(res, task)
+      return await start_async(res, task);
     case "update":
-      return await update_async(res, task)
+      return await update_async(res, task);
     case "error":
-      return await error_async(res, task)
+      return await error_async(res, task);
     default:
-      throw new Error("Unknown command " + task.hub["command"]);
+      throw new Error("Unknown command " + command);
   }
 }
 
 async function start_async(res, task) {
-  //console.log("start_async task", task);
-  const commandArgs = task.hub["commandArgs"];
-  const processorId = task.hub["sourceProcessorId"];
+  const commandArgs = task.hub.commandArgs;
+  const processorId = task.hub.sourceProcessorId;
   try {
-    console.log("start_async " + commandArgs.id + " by " + task.id);
+    console.log("start_async " + task.id + " from " + processorId);
     const initTask = {
       id: commandArgs.id,
       userId: task.userId,
-    }
-    let prevInstanceId;
-    if (commandArgs.prevInstanceId) {
-      prevInstanceId = commandArgs.prevInstanceId;
-    } else {
-      prevInstanceId = task.instanceId;
-    }
-    // Just set initial task values and pass that in instead of a long list of arguments?
+    };
+    const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     await startTask_async(initTask, true, processorId, prevInstanceId);
     res.status(200).send("ok");
   } catch (err) {
-    //throw err;
-    console.log("Error starting task " + task.id + " " + err);
-    res.status(500).json({ error: "Error starting task " + task.id + " " + err });
+    console.log(`Error starting task ${task.id} ${err}`);
+    throw new RequestError(`Error starting task ${task.id} ${err}`, 500);
   }
 }
 
 async function update_async(res, task) {
-  console.log("update_async " + task.id);
-  const commandArgs = task.hub["commandArgs"];
-  const processorId = task.hub["sourceProcessorId"];
-  // We intercept tasks that are done.
-  if (commandArgs?.done) {
-    doneTask_async(task) 
-    return res.status(200).send("ok");
-  // Pass on tasks that are not done
-  } else {
-    console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId)
-    task.meta.updateCount = task.meta.updateCount + 1;
-    // Don't await so the return gets back before the websocket update
-    // Middleware will send the update
-    activeTasksStore_async.set(task.instanceId, task);
-    // So we do not return a task anymore. This requires the task synchronization working.
-    res.status(200).send("ok");
+  try {
+    const processorId = task.hub["sourceProcessorId"];
+    console.log("update_async " + task.id + " from " + processorId);
+    const commandArgs = task.hub["commandArgs"];
+
+    // We intercept tasks that are done.
+    if (commandArgs?.done) {
+      console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
+      await doneTask_async(task);
+      res.status(200).send("ok");
+    } else {
+      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
+      task.meta.updateCount = task.meta.updateCount + 1;
+
+      // Don't await so the return gets back before the websocket update
+      // Middleware will send the update via websocket
+      activeTasksStore_async.set(task.instanceId, task);
+      
+      // So we do not return a task anymore. This requires the task synchronization working.
+      res.status(200).send("ok");
+    }
+  } catch (error) {
+    console.error(`Error updating task ${task.id}: ${error.message}`);
+    throw new RequestError(`Error updating task ${task.id}: ${error.message}`, 500);
   }
 }
 
 async function error_async(res, task) {
-  console.log("error_async " + task.id);
-  const commandArgs = task.hub["commandArgs"];
-  const processorId = task.hub["sourceProcessorId"];
-  // We intercept tasks that are done.
-  if (commandArgs?.done) {
-    doneTask_async(task) 
-    return res.status(200).send("ok");
-  // Pass on tasks that are not done
-  } else {
-    console.log("Error in task " + task.id + " in state " + task.state?.current + " from " + processorId + " error Task returned " + commandArgs.errorTask)
-    task.meta.updateCount = task.meta.updateCount + 1;
-    // Don't await so the return gets back before the websocket update
-    // Middleware will send the update
-    activeTasksStore_async.set(task.instanceId, task);
-    // So we do not return a task anymore. This requires the task synchronization working.
+  try {
+    const processorId = task.hub["sourceProcessorId"];
+    console.log("error_async " + task.id + " from " + processorId);
+    await errorTask_async(task);
     res.status(200).send("ok");
+  } catch (error) {
+    console.error(`Error in error_async task ${task.id}: ${error.message}`);
+    throw new RequestError(`Error in error_async task ${task.id}: ${error.message}`, 500);
   }
 }
 
@@ -260,7 +250,7 @@ router.post("/", async (req, res) => {
       res.status(200).json(result);
     } catch (err) {
       if (err instanceof RequestError) {
-        res.status(error.code).send(error.message);
+        res.status(err.code).send(err.message);
       } else {
         console.log("Error in /hub/api/task " + err.message);
         res.status(500).json({ error: "Error in /hub/api/task " + err.message });
@@ -273,5 +263,3 @@ router.post("/", async (req, res) => {
 });
 
 export default router;
-
-

@@ -7,19 +7,16 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, outputStore_async} from "./storage.mjs";
 import startTask_async from "./startTask.mjs";
 
-export async function doneTask_async(task) {
+// Should probably split out errorTask_async
+export async function errorTask_async(task) {
   // Should be an assertion
-  if (!task.hub.commandArgs?.done) {
+  if (!task.hub.commandArgs?.errorTask) {
     console.log("task", task);
-    throw new Error("Called doneTask_async on a task that is not done");
+    throw new Error("Called errorTask_async on a task that is not errored");
   }
-  let nextTaskId = task.hub.commandArgs?.nextTaskId;
-  console.log("Task " + task.id + " done, next " + nextTaskId);
+  let nextTaskId = task.hub.commandArgs.errorTask;
+  console.log("Task " + task.id + " error, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
-  // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
-  // !!!
-  activeTasksStore_async.delete(task.instanceId);
-  activeTaskProcessorsStore_async.delete(task.instanceId);
   if (nextTaskId) {
     const initTask = {
       id: nextTaskId,

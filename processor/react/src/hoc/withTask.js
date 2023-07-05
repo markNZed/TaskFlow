@@ -133,7 +133,7 @@ function withTask(Component) {
       if (!props.task) {return}
       const spawnTask = props.task.config?.spawnTask === false ? false : true;
       console.log("spawnTask", spawnTask)
-      if (spawnTask && props.task.meta.childrenId) {
+      if (spawnTask && props.task?.meta?.childrenId) {
         props.task.meta.childrenId.forEach(childId => {
           console.log(childId);
           modifyTask({
@@ -199,9 +199,12 @@ function withTask(Component) {
     
     useErrorWSFilter(useGlobalStateContext, props.task,
       (errorTask) => {
-        console.log("useErrorWSFilter", errorTask.id, errorTask.error);
+        console.log("useErrorWSFilter", errorTask.id, errorTask.error, errorTask);
         // We do not have a plan for dealing with errors here yet
         alert("Task error: " + errorTask.response.text);
+        // Probably better to "remount" the component
+        // This can be done by changing the Key where the component is instantiated
+        modifyState("start");
       }
     )
 
@@ -264,7 +267,7 @@ function withTask(Component) {
       return isStateAlignedWithModifyState || isStateUpdatedDirectly;
     };
 
-    // If the parent wants to be able to modify the child state is passes this prop
+    // If the parent wants to be able to modify the child state it passes this prop
     if (props.handleChildmodifyState) {
       props.handleChildmodifyState(modifyState)
     }

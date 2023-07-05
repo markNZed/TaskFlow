@@ -122,6 +122,8 @@ const connectWebSocket = () => {
     } else if (command === "register") {
       console.log("ws register request received")
       register_async();
+    } else if (command === "error") {
+      console.log("ws error received but not doing anything yet")
     } else {
       console.log("Unexpected message command ", command)
     }

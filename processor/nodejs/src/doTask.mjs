@@ -15,11 +15,15 @@ export async function do_task_async(wsSendTask, task) {
       try {
         updated_task = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
       } catch (e) {
-        console.log("do_task_async error", e, task);
+        console.error(e);
+        updated_task = task;
+        // Strictly we should not be updating the task object in the processor
+        // Could set updated_task.processor.command = "error" ?
+        updated_task.error = e.message;
+        updated_task.command = "update";
       }
       // Returning null is  away of doing nothing
       if (updated_task !== null) {
-        await activeTasksStore_async.set(task.instanceId, updated_task)
         if (updated_task.error) {
           console.error("Task error ", updated_task.error)
         }

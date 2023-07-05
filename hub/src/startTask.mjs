@@ -14,7 +14,7 @@ async function startTask_async(
     initTask,
     authenticate,
     processorId,
-    prevInstanceId = null,
+    prevInstanceId,
   ) {
     /*
     console.log(
@@ -193,13 +193,11 @@ async function startTask_async(
     }
     taskCopy.hub["sourceProcessorId"] = processorId;
 
-    if (prevInstanceId !== undefined) {
-      taskCopy.processor[processorId]["prevInstanceId"] = prevInstanceId;
-    }
     taskCopy.userId = userId;
     
     if (prevInstanceId) {
       taskCopy.meta["parentInstanceId"] = prevInstanceId;
+      taskCopy.processor[processorId]["prevInstanceId"] = prevInstanceId;
       let parent = await instancesStore_async.get(prevInstanceId);
       if (parent.state?.address) {
         taskCopy.state["address"] = parent.state.address;
@@ -216,8 +214,11 @@ async function startTask_async(
       parent.hub.sourceProcessorId = "hub";
       await instancesStore_async.set(prevInstanceId, parent);
       // The parent task may be "done" so no longer active
-      if (await activeTasksStore_async.has(prevInstanceId)) {
-        await activeTasksStore_async.set(prevInstanceId, parent);
+      // Also we do not want to update a task that errored
+      if (!parent.done && !taskCopy.id.endsWith(".error")) {
+        if (await activeTasksStore_async.has(prevInstanceId)) {
+          await activeTasksStore_async.set(prevInstanceId, parent);
+        }
       }
     }
     taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
@@ -399,7 +400,7 @@ async function startTask_async(
     }
     activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
 
-    console.log("Started task id " + taskCopy.id);
+    console.log("Started task id " + taskCopy.id, taskCopy.processor, taskCopy.meta.parentInstanceId);
     return taskCopy;
   }
 
