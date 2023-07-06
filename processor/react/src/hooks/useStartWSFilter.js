@@ -31,11 +31,12 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
     for (let key of keys) {
       const message = messageQueue[key];
       //console.log("message", message, key);
-      if (message && message?.command && message.command === "start") {
-        //console.log("useStartWSFilter handleUpdate update key", key);
+      if (message && message?.command && (message.command === "start" || message.command === "join")) {
+        //console.log("useStartWSFilter " + initialTask + " startTaskId " + startTaskId + " startPrevInstanceId " + startPrevInstanceId);
         if ((startTaskId && message.task.id === startTaskId) ||
             (startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId)) {
-          //console.log("useStartWSFilter handleUpdate calling onUpdate", taskStart);
+          //console.log("useStartWSFilter startTaskId && message.task.id === startTaskId", startTaskId && message.task.id === startTaskId);
+          //console.log("startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId", startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId)
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy

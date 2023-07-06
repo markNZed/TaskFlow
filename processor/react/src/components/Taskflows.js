@@ -51,7 +51,7 @@ function Taskflows(props) {
     if (selectedTaskId && 
         (tasksIds.length === 0 || selectedTaskId !== tasksIds[tasksIdx])
     ) {
-      const start = selectedTaskId + ".start";
+      const start = selectedTaskId;
       const index = tasksIds.indexOf(start);
       if (index === -1) {
         setTask({
