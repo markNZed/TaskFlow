@@ -5,9 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 export default class RequestError extends Error {
-    constructor(message, code) {
+    constructor(message, code, error = null) {
       super(message);
       this.code = code;
+      this.origError = error;
       this.name = this.constructor.name;
       Error.captureStackTrace(this, this.constructor);
     }

@@ -1,12 +1,10 @@
 /* ToDo
 -------
-Code refactoring
-  Hub pipeline: for the startTask.mjs
 
 Schema for tasktype to document options
+Tests will allow for better code generation
 Requests from other tasks via: task.processor.task.request
   See notes
-Could be valuable to communicate with an instance on a subset of environments
 If we have a TaskFilter this raises the question of how to configure/program it.
   Detects an event and passes information.
     Filter -> action
@@ -14,42 +12,19 @@ If we have a TaskFilter this raises the question of how to configure/program it.
         How to inform another task
         If we do want a DSL the Lua might be a good option for language indepedence
           https://github.com/fengari-lua/fengari-web
-Modify the partial text update so it is incremental. This will better allow for text selection.
-  Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
-Show websocket connection status with traffic light icon
 Provide sample of nginx proxy config
-Need to be able to force a task to restart (Hub command?) Could be a forget button.
-log not working in Chrome
-Re-architect the react Processor to make use of the Service Worker API
-  Should have React Hub
-  Progressive Web Apps https://developer.chrome.com/docs/workbox/
-  ServiceWorker will intercept any HTTP request from a client except WebSocket upgrade requests
-  Workbox is built into Create React App (CRA) with a default configuration that precaches all the static assets.
-    "react-scripts": "5.0.1"
-  Redux State Sync might provide many of these benefits
-    Have one tab that is "master" and others as slaves that pass requests to master.
-    https://www.howtogeek.com/devops/how-to-sync-a-redux-store-across-browser-tabs/
-    This is a different architecture in that all tabs communicate with the server and Redux is synchronized
-  Could detect when more than one tab is open then route websocket from one master tab to shared worker then on to slave tabs
-    https://github.com/pubkey/broadcast-channel seems good - it provides LeaderElection
-    Basically the leader broadcasts what it receives on websocket and forwards what it received on the channel
-      The websocket context just needs to decide which to use (depending on whether it is the leader)
-      It seems OK to let the HTTP requests go through, eventaully the session could be managed by the Processor
-        Then just use the thread to allow different tabs to have the same task
+log not working in Chrome ?
 Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
   https://www.asyncapi.com/ (standard )
-Ideally we want the same code for Task storage on Hub/React/NodeJs
-  Could use @kvs/node-localstorage
 Demo of collaborative chat would be good.
   In default config assign a random user label so we can demo multiparty chat
 Add function to remove last paragraph
   Interesting to explore how that might be generalized
-A new conversation button once we have the session restoring.
 Privacy - should be implemented on the Hub
   Hub and Processors secure communication, then identification is managed on the hub.
-Embedding functions in the template? Use ejs, could also have a template for the output e.g. post-processing.
+Embedding functions in the template?
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
   What about use across languages?
@@ -62,7 +37,7 @@ Harmonise the Task Processor
       React Processor adds the concept of address/location.
 When should we introduce Typescript?
   First try to simplify the code
-Tests will allow for better code generation
+  Maybe linting with CoPilot reduces the value of this
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
 How can we specify the UI in a more compact/easy way?
@@ -83,8 +58,6 @@ Consider how we would add a radio select box to a component
   Could have an inject command from Hub
     Modify the parent task.meta.children and modify the child task.parent etc. then 
       Modify parent should then start new child that can be configured to start previous child as its child
-Can we have the same React component present a new Task? I guess it does that automatically (carry the previous output along)
-  In this case the patterns of display then input or input then display should be enough. TaskIO
 
 Backlog
 -------
@@ -97,6 +70,7 @@ Backlog
   Refactoring
   -----------
   children -> meta.children (used for tree)
+  Align usage of utils
 
   Features
   --------
@@ -112,7 +86,12 @@ Backlog
 
     Low Priority
     ------------
-    Align usage of utils
+    Show websocket connection status with traffic light icon
+    Could be valuable to communicate with an instance on a subset of environments
+    Ability to force a task to restart (Hub command?) Could be a forget button.
+      A new conversation button once we have the session restoring.
+    Modify the partial text update so it is incremental. This will better allow for text selection.
+      Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
     Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
     Logout option (could just be a route)
     Sending diff to Hub from Processor during update
@@ -128,8 +107,8 @@ Backlog
     Only display menu option if leaf is a real task
     Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
 
-    Tasks
-    ----------
+  Tasks
+  ----------
     MyAssistant -> MyAssistantConversation
     Multiple-choice above prompt to allow for quick refining of prompt e.g. use tutoiment, friendly, formal etc
     Templating with user defined variables
@@ -206,6 +185,24 @@ Architecture
   Keep server on nodejs processor - yes but for debug/admin/metrics etc
     Performance, utilization etc, a Processor Object for this (instead of Task)
     The debug features can be shared between processors e.g. just connect to keyv with activeTasks
+  Re-architect the react Processor to make use of the Service Worker API
+    Should have React Hub
+    Progressive Web Apps https://developer.chrome.com/docs/workbox/
+    ServiceWorker will intercept any HTTP request from a client except WebSocket upgrade requests
+    Workbox is built into Create React App (CRA) with a default configuration that precaches all the static assets.
+      "react-scripts": "5.0.1"
+    Redux State Sync might provide many of these benefits
+      Have one tab that is "master" and others as slaves that pass requests to master.
+      https://www.howtogeek.com/devops/how-to-sync-a-redux-store-across-browser-tabs/
+      This is a different architecture in that all tabs communicate with the server and Redux is synchronized
+    Could detect when more than one tab is open then route websocket from one master tab to shared worker then on to slave tabs
+      https://github.com/pubkey/broadcast-channel seems good - it provides LeaderElection
+      Basically the leader broadcasts what it receives on websocket and forwards what it received on the channel
+        The websocket context just needs to decide which to use (depending on whether it is the leader)
+        It seems OK to let the HTTP requests go through, eventaully the session could be managed by the Processor
+          Then just use the thread to allow different tabs to have the same task
+  Ideally we want the same code for Task storage on Hub/React/NodeJs
+    Could use @kvs/node-localstorage
 
 Issues
 ------
@@ -265,9 +262,9 @@ Comparison with similar systems
 
 Test Plan
 ---------
-Prefill tasks so we can work on a specifc part of the sequence (inherit taskflow with tasks? Needs better recursion)
+Prefill tasks so we can work on a specifc part of the sequence
 
-A list of features that are manually tested
+Features that are manually tested
 -------------------------------------------
   Features:
     general

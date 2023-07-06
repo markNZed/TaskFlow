@@ -7,7 +7,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import RequestError from './RequestError.mjs';
 
 function transferCommand(task, activeTask) {
-  const { command, commandArgs, id } = task.processor;
+  const { command, id } = task.processor;
+  let commandArgs = {};
+  if (task.processor.commandArgs) {
+    commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs))
+  }
   task.processor.command = null;
   task.processor.commandArgs = null;
   const activeTaskProcessor = activeTask?.processor || {};
@@ -15,7 +19,7 @@ function transferCommand(task, activeTask) {
   task.processor = activeTaskProcessor;
   task.hub = {
     command,
-    commandArgs: JSON.parse(JSON.stringify(commandArgs)),
+    commandArgs: commandArgs,
     sourceProcessorId: id,
   };
   return task;

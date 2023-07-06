@@ -4,11 +4,289 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, threadsStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
-import { hubId } from "../config.mjs";
+
+// Test handling of error
+
+// The async function startTask_async is where the sequence for starting a task is managed.
+// It makes use of many helper functions defined above it.
+
+async function checkActiveTaskAsync(instanceId, activeProcessors) {
+  let activeTask = await activeTasksStore_async.get(instanceId);
+  let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
+  let doesContain = false;
+  if (activeTaskProcessors) {
+    for (let key of activeProcessors.keys()) {
+        if (activeTaskProcessors.includes(key)) {
+            doesContain = true;
+            break;
+        }
+    }
+  }
+  return { activeTask, doesContain };
+}
+
+async function processInstanceAsync(task, instanceId, mode) {
+  let instance = await instancesStore_async.get(instanceId);
+  if (instance) {
+    let { activeTask, doesContain } = await checkActiveTaskAsync(instanceId, activeProcessors);
+    if (activeTask && doesContain) {
+      console.log("Task already active", instanceId);
+      task = activeTask;
+      task["hub"]["command"] = "join";
+      console.log(`Joining ${mode} for ${task.id}`);
+    } else {
+      task = instance;
+      task.state["current"] = "start";
+      task.meta["updateCount"] = 0;
+      task.meta["locked"] = null;
+      await activeTasksStore_async.delete(instanceId);
+      console.log(`Restarting ${mode} ${instanceId} for ${task.id}`);
+    }
+  } else {
+    console.log(`Initiating ${mode} with instanceId ${instanceId}`);
+  }
+  return task;
+}
+
+function checkUserGroup(groupId, userId) {
+  if (!groups[groupId]?.users) {
+    throw new Error("No users in group " + groupId);
+  }
+  if (!groups[groupId].users.includes(userId)) {
+    throw new Error(`User ${userId} not in group ${groupId}`);
+  } else {
+    console.log("User in group", groupId, userId);
+    return true;
+  }
+}
+
+function isAllCaps(str) {
+  return /^[A-Z\s]+$/.test(str);
+}
+
+function processTemplateArrays(obj, task, outputs, familyId) {
+  // Do substitution on arrays of strings and return a string
+  if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
+    const user = users[task.userId];
+    return obj.reduce(function (acc, curr) {
+      // Substitute variables with previous outputs
+      const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
+      const matches = regex.exec(curr);
+      //console.log("curr ", curr, " matches", matches)
+      if (matches && !isAllCaps(matches[1])) {
+        const path = curr.split('.');
+        let outputPath;
+        if (path[0] === "root") {
+          outputPath = curr.replace(/\.[^.]+$/, '');
+        } else {
+          outputPath = task.meta.parentId + "." + matches[1] + ".output";
+        }
+        if (outputs[outputPath] === undefined) {
+          throw new Error("outputStore " + familyId + " " + outputPath + " does not exist")
+        }
+        if (outputs[outputPath][matches[2]] === undefined) {
+          throw new Error("outputStore " + familyId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
+        }
+        //console.log("Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
+        return acc.concat(outputs[outputPath][matches[2]]);
+      } else {
+        const regex = /^(USER)\.([^\s.]+)$/;
+        const matches = regex.exec(curr);
+        if (matches) {
+          // Substitute variables with user data
+          return acc.concat(user[matches[2]])
+        } else {
+          return acc.concat(curr);
+        }
+      }
+    }, []).join("");
+  } else {
+    for (const key in obj) {
+      if (Array.isArray(obj[key])) {
+        obj[key] = processTemplateArrays(obj[key], task, outputs, familyId);
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        processTemplateArrays(obj[key], task, outputs, familyId);
+      }
+    }
+  }
+  return obj
+}
+
+function processTemplates(task, obj, outputs, familyId) {
+  // Traverse every key-value pair in the object
+  for (const [key, value] of Object.entries(obj)) {
+    // If the value is an object, then recurse
+    if (typeof value === 'object' && value !== null) {
+        processTemplates(task, value, outputs, familyId);
+    }
+
+    // If the key ends with "Template", process it
+    if (key.endsWith('Template')) {
+        const strippedKey = key.replace('Template', '');
+        const templateCopy = JSON.parse(JSON.stringify(value));
+        obj[strippedKey] = processTemplateArrays(templateCopy, task, outputs, familyId);
+    }
+  }
+  return task;
+}
+
+function checkUserPermissions(task, groups, authenticate) {
+  // Check if the user has permissions
+  if (authenticate && !utils.authenticatedTask(task, task.userId, groups)) {
+    throw new Error("Task authentication failed");
+  }
+}
+
+async function updateFamilyStoreAsync(task, familyStore_async) {
+  // Update familyStore_async
+  if (task.familyId) {
+    // If task.instanceId already exists then do nothing otherwise add instance to family
+    let instanceIds = await familyStore_async.get(task.familyId);
+    if (!instanceIds) {
+      await familyStore_async.set(task.familyId, [task.instanceId]);
+      console.log("Initiating family " + task.familyId + " with instanceId: " + task.instanceId);
+    } else if (!instanceIds.includes(task.instanceId)) {
+      instanceIds.push(task.instanceId);
+      await familyStore_async.set(task.familyId, instanceIds);
+      task.familyId = instanceId;
+      console.log("Adding to family " + task.familyId + " instanceId: " + task.instanceId);
+    } else {
+      console.log("Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
+    }
+  }
+  return task;
+}
+
+async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async) {
+  // Copy information from prevTask and update prevTask children
+  if (prevTask) {
+    task.meta["prevInstanceId"] = prevTask.instanceId;
+    // Copying processor information from previous task instance
+    // In the case where the task sequence advances on another processor 
+    // we need to be able to associate a more recent tasks with an older
+    // task that is waiting on the next task.
+    task.processor = prevTask.processor;
+    task.processor[processorId]["command"] = null;
+    task.processor[processorId]["commandArgs"] = null;
+    task.processor[processorId]["prevInstanceId"] = prevTask.instanceId;
+    task.state.address = prevTask.state?.address ?? task.state.address;
+    task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
+    // Update all the active prevTask with new child
+    prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
+    prevTask.meta.childrenInstanceId.push(task.instanceId);
+    // We update the prevTask and set sourceProcessorId to hub so all Processors will be updated
+    await instancesStore_async.set(prevTask.instanceId, prevTask);
+    // The prevTask task may be "done" so no longer active
+    // Also we do not want to update a task that errored
+    if (!prevTask.done && !task.id.endsWith(".error")) {
+      if (await activeTasksStore_async.has(prevTask.instanceId)) {
+        prevTask.hub.command = "update";
+        prevTask.hub.sourceProcessorId = "hub";
+        // This has the side effect of also updating the task
+        await activeTasksStore_async.set(prevTask.instanceId, prevTask);
+      }
+    }
+  }
+  return task;
+}
+
+function supportMultipleLanguages(task, users) {
+  // Multiple language support for config fields
+  // Eventually replace with a standard solution
+  // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
+  const user = users[task.userId];
+  const language = user.language || "EN";
+  for (const [key, value] of Object.entries(task.config)) {
+    if (key.endsWith("_" + language.toUpperCase())) {
+      const newKey = key.replace(/_\w{2}$/, "");
+      if (task.config[newKey] === undefined) {
+        task.config[newKey] = value;
+      }
+    }
+    // Strip out the language configs
+    const match = key.match(/_(\w{2})$/);
+    if (match) {
+      delete task.config[key];
+    }
+  }
+  return task;
+}
+
+function allocateTaskToProcessors(task, processorId, activeProcessors) {
+  // Build list of processors/environments that need to receive this task
+  let taskProcessors = []
+
+  if (!task.environments) {
+    throw new Error("No environments in task " + task.id);
+  }
+
+  //console.log("task.environments", task.environments);
+
+  // Allocate the task to processors that supports the environment(s) requested
+  const sourceProcessor = activeProcessors.get(processorId);
+  for (const environment of task.environments) {
+    // Favor the source Task Processor if we need that environment
+    let found = false;
+    if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
+      found = true;
+      taskProcessors.push(processorId);
+    }
+    // If there are already processor entries then favor these
+    if (!found && task.processor) {
+      for (let id in task.processor) {
+        const processor = activeProcessors.get(id);
+        if (processor && processor.environments && processor.environments.includes(environment)) {
+          found = true;
+          taskProcessors.push(id);
+        }
+      }
+    }
+    // Find an active processor that supports this environment
+    if (!found) {
+      for (const [activeProcessorId, value] of activeProcessors.entries()) {
+        const environments = value.environments;
+        if (environments && environments.includes(environment)) {
+            found = true;
+            taskProcessors.push(activeProcessorId);
+            if (!task.processor[activeProcessorId]) {
+              task.processor[activeProcessorId] = {};
+            }
+            break;
+        }
+      }       
+    }
+    if (!found) {
+      throw new Error("No processor found for environment " + environment);
+    }
+  }
+
+  if (taskProcessors.length == 0) {
+    throw new Error("No processors allocated for task " + task.id);
+  }
+
+  console.log("Allocated new task " + task.id + " to processors ", taskProcessors);
+
+  return taskProcessors;
+}
+
+async function recordTaskProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async) {
+  // Record which processors have this task
+  if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
+    let processorIds = await activeTaskProcessorsStore_async.get(task.instanceId)
+    taskProcessors.forEach(id => {
+      if (processorIds && !processorIds.includes(id)) {
+        processorIds.push(id);
+      } 
+    });
+    await activeTaskProcessorsStore_async.set(task.instanceId, processorIds);
+  } else {
+    await activeTaskProcessorsStore_async.set(task.instanceId, taskProcessors);
+  }
+}
 
 async function startTask_async(
     initTask,
@@ -16,392 +294,94 @@ async function startTask_async(
     processorId,
     prevInstanceId,
   ) {
-    /*
-    console.log(
-      "initTask:", initTask, 
-      "authenticate:", authenticate,
-      "processorId:", processorId, 
-      "prevInstanceId:", prevInstanceId,
-    );
-    */    
-    let id = initTask.id;
-    let userId = initTask.userId;
-    let groupId = initTask.groupId;
-    let familyId = initTask.familyId;  
-    let instanceId = uuidv4();
-    let processor = {}
+    
+    if (!tasks[initTask.id]) {
+      throw new Error("Could not find task with id " + initTask.id)
+    }
 
-    if (prevInstanceId) {
-      console.log("prevInstanceId", prevInstanceId)
-      // In the case where the thread advances on another processor 
-      // we still need to be able to find the nextTask 
-      // Need to fetch processors from prevInstance
-      let instance = await instancesStore_async.get(prevInstanceId);
-      familyId = instance.familyId;
-      processor = instance.processor;
-      processor[processorId]["command"] = null;
-    }
-    if (!tasks[id]) {
-      console.log("ERROR could not find task with id", id)
-    }
-    let taskCopy = JSON.parse(JSON.stringify(tasks[id])); // deep copy
-    //console.log("taskCopy", taskCopy)
-    // Check if the user has permissions
-    if (authenticate && !utils.authenticatedTask(taskCopy, userId, groups)) {
-      console.log("Task authentication failed", taskCopy.id, userId);
-      taskCopy["error"] = "Task authentication failed";
-      return taskCopy;
+    // Instantiate new task
+    let task = JSON.parse(JSON.stringify(tasks[initTask.id])); // deep copy
+
+    //console.log("Task template", task)
+
+    // Note that instanceId may change due to task.config.oneFamily or task.config.collaborateGroupId
+    task.instanceId = uuidv4();
+
+    task = utils.deepMerge(task, initTask);
+
+    // The task template may not have initialized some top level objects 
+    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'hub', 'request', 'response', 'state'].forEach(key => task[key] = task[key] || {});
+
+    //console.log("Task after merge", task)
+
+    checkUserPermissions(task, groups, authenticate)
+
+    const prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
+       
+    if (task.config.oneFamily) {
+      // '.' is not used in keys or it breaks setNestedProperties
+      // Maybe this could be added to schema
+      task["instanceId"] = (task.id + task.userId).replace(/\./g, '-');
+      task.familyId = task.instanceId;
+      task = await processInstanceAsync(task, task.instanceId, "oneFamily");
     }
     
-    if (taskCopy.config?.oneFamily) {
-      instanceId = (id + userId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      familyId = instanceId;
-      let instance = await instancesStore_async.get(instanceId);
-      // There should be at max one instance
-      if (instance) {
-        // Check if the task is already active
-        let activeTask = await activeTasksStore_async.get(instanceId);
-        let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
-        let doesContain = false;
-        if (activeTaskProcessors) {
-          for (let key of activeProcessors.keys()) {
-              if (activeTaskProcessors.includes(key)) {
-                  doesContain = true;
-                  break;
-              }
-          }
-        }
-        if (activeTask && doesContain) {
-          console.log("Task already active", instanceId);
-          taskCopy = activeTask
-          taskCopy["hub"]["command"] = "join";
-          console.log("Joining oneFamily for " + taskCopy.id)
-        } else {
-          taskCopy = instance
-          taskCopy.state["current"] = "start";
-          taskCopy.meta["updateCount"] = 0;
-          taskCopy.meta["locked"] = null;
-          // Delete so we restart with full task being synchronized
-          // It would be better to do this only for the new processor
-          await activeTasksStore_async.delete(instanceId);
-          console.log(
-            "Restarting oneFamily " + instanceId + " for " + taskCopy.id
-          )
-        }
+    if (task.config.collaborateGroupId) {
+      // GroupId should be an array of group Ids?
+      task.groupId = task.config.collaborateGroupId;
+      if (checkUserGroup(task.groupId, task.userId)) {
+        // '.' is not used in keys or it breaks setNestedProperties
+        // Maybe this could be added to schema
+        task["instanceId"] = (task.id + task.groupId).replace(/\./g, '-');
+        task.familyId = task.instanceId;
+        task = await processInstanceAsync(task, task.instanceId, "collaborate");
+      }
+    }
+
+    if (!task.config.oneFamily && !task.config.collaborateGroupId) {
+      // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
+      if (prevTask) {
+         console.log("Using prevInstanceId", prevTask.instanceId);
+        task.familyId = prevTask.familyId;
       } else {
-        console.log("Initiating oneFamily with instanceId " + instanceId)
+        task.familyId = initTask.familyId;
       }
     }
 
-    if (taskCopy.config?.collaborateGroupId) {
-      // Taskflow to choose the group (taskflow should include that)
-      if (!groupId) {
-        // This is a hack for the collaborate feature
-        groupId = taskCopy.config.collaborateGroupId;
-      }
-      if (!groups[groupId]?.users) {
-        throw new Error("No users in group " + groupId);
-      }
-      // Check if the user is in the group
-      if (!groups[groupId].users.includes(userId)) {
-        console.log("User not in group", groupId, userId);
-        taskCopy["error"] = "User not in group";
-        return taskCopy;
-      } else {
-        console.log("User in group", groupId, userId);
-      }
-      instanceId = (id + groupId).replace(/\./g, '-'); // . is not used in keys or it breaks setNestedProperties
-      familyId = instanceId;
-      let instance = await instancesStore_async.get(instanceId);
-      // There should be at max one instance
-      if (instance) {
-        // Check if the task is already active
-        let activeTask = await activeTasksStore_async.get(instanceId);
-        let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
-        let doesContain = false;
-        if (activeTaskProcessors) {
-          for (let key of activeProcessors.keys()) {
-              if (activeTaskProcessors.includes(key)) {
-                  doesContain = true;
-                  break;
-              }
-          }
-        }
-        if (activeTask && doesContain) {
-          console.log("Task already active", instanceId);
-          taskCopy = activeTask
-          taskCopy["hub"]["command"] = "join";
-          console.log("Joining collaborate for " + taskCopy.id)
-        } else {
-          taskCopy = instance
-          taskCopy.state["current"] = "start";
-          taskCopy.meta["updateCount"] = 0;
-          taskCopy.meta["locked"] = null;
-          // Delete so we restart with full task being synchronized
-          await activeTasksStore_async.delete(instanceId);
-          console.log(
-            "Restarting collaborate " + instanceId + " for " + taskCopy.id
-          )
-        }
-      } else {
-        console.log("Initiating collaborate with instanceId " + instanceId)
-      }
-    }
+    // Side-effect on task.familyd
+    task = await updateFamilyStoreAsync(task, familyStore_async)
 
-    // Must set familyId after oneFamily, restoreSession and collaborate
-    if (familyId) {
-      taskCopy["familyId"] = familyId;
-      // If instanceId already exists then do nothing otherwise add instance to thread
-      let instanceIds = await threadsStore_async.get(familyId);
-      if (!instanceIds) {
-        await threadsStore_async.set(taskCopy["familyId"], [instanceId]);
-        console.log("Initiating family " + taskCopy["familyId"] + " with instanceId: " + instanceId)
-      } else if (!instanceIds.includes(instanceId)) {
-        instanceIds.push(instanceId);
-        await threadsStore_async.set(taskCopy["familyId"], instanceIds);
-        console.log("Adding to family " + taskCopy["familyId"] + " instanceId: " + instanceId)
-      } else {
-        console.log("Instance already in family " + taskCopy["familyId"] + " instanceId: " + instanceId)
-      }
-    } else {
-      taskCopy["familyId"] = instanceId;
-    }
-
-    taskCopy.config = taskCopy.config || {};
-    taskCopy.input = taskCopy.input || {};
-    taskCopy.meta = taskCopy.meta || {};
-    taskCopy.output = taskCopy.output || {};
-    taskCopy.privacy = taskCopy.privacy || {};
-    taskCopy.processor = taskCopy.processor || processor;
-    taskCopy.hub = taskCopy.hub || {};
-    taskCopy.request = taskCopy.request || {};
-    taskCopy.response = taskCopy.response || {};
-    taskCopy.state = taskCopy.state || {};
-
-    if (!taskCopy.meta.updateCount) {
-      taskCopy.meta["updateCount"] = 0;
-    }
-    taskCopy.meta["requestsThisMinute"] = 0;
-
-    if (!taskCopy["processor"][processorId]) {
-      taskCopy["processor"][processorId] = {};
-    }
-    taskCopy["processor"][processorId]["id"] = processorId;
-
-    if (!taskCopy.hub?.command) {
-      taskCopy.hub.command = "start";
-    }
-    taskCopy.hub["sourceProcessorId"] = processorId;
-
-    taskCopy.userId = userId;
+    // Initialize task.hub.sourceProcessorId
+    task.hub["command"] = task.hub.command ?? "start";
+    task.hub.sourceProcessorId = processorId;
     
-    if (prevInstanceId) {
-      taskCopy.meta["parentInstanceId"] = prevInstanceId;
-      taskCopy.processor[processorId]["prevInstanceId"] = prevInstanceId;
-      let parent = await instancesStore_async.get(prevInstanceId);
-      if (parent.state?.address) {
-        taskCopy.state["address"] = parent.state.address;
-      }
-      if (parent.state?.lastAddress) {
-        taskCopy.state["lastAddress"] = parent.state.lastAddress;
-      }
-      if (!parent.meta.childrenInstanceId) {
-        parent.meta.childrenInstanceId = [];
-      }
-      parent.meta.childrenInstanceId.push(instanceId);
-      // We update the parent and set sourceProcessorId to hub so all Processors will be updated
-      parent.hub.command = "update";
-      parent.hub.sourceProcessorId = "hub";
-      await instancesStore_async.set(prevInstanceId, parent);
-      // The parent task may be "done" so no longer active
-      // Also we do not want to update a task that errored
-      if (!parent.done && !taskCopy.id.endsWith(".error")) {
-        if (await activeTasksStore_async.has(prevInstanceId)) {
-          await activeTasksStore_async.set(prevInstanceId, parent);
-        }
-      }
-    }
-    taskCopy.meta["createdAt"] = taskCopy.meta["createdAt"] || Date.now();
+    // Initialize meta object
+    task.meta.updateCount = task.meta.updateCount ?? 0;
+    task.meta["requestsThisMinute"] = 0;
+    task.meta["createdAt"] = task.meta["createdAt"] || Date.now();
 
-    const outputs = await outputStore_async.get(familyId);
-    //console.log("outputs", outputs)
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async)
+
+    // Set task.processor[processorId].id after copying info from prevTask
+    task.processor[processorId] = task.processor[processorId] ?? {};
+    task.processor[processorId].id = processorId;
+    
+    // This is only for task.config 
+    task = supportMultipleLanguages(task, users);
 
     // Templating functionality
-    function isAllCaps(str) {
-      return /^[A-Z\s]+$/.test(str);
-    }
-    function processTemplateArrays(obj, taskCopy, outputs, familyId) {
-      // Do substitution on arrays of strings and return a string
-      if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
-        const user = users[taskCopy.userId];
-        return obj.reduce(function (acc, curr) {
-          // Substitute variables with previous outputs
-          const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
-          const matches = regex.exec(curr);
-          //console.log("curr ", curr, " matches", matches)
-          if (matches && !isAllCaps(matches[1])) {
-            const path = curr.split('.');
-            let outputPath;
-            if (path[0] === "root") {
-              outputPath = curr.replace(/\.[^.]+$/, '');
-            } else {
-              outputPath = taskCopy.meta.parentId + "." + matches[1] + ".output";
-            }
-            if (outputs[outputPath] === undefined) {
-              throw new Error("outputStore " + familyId + " " + outputPath + " does not exist")
-            }
-            if (outputs[outputPath][matches[2]] === undefined) {
-              throw new Error("outputStore " + familyId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
-            }
-            //console.log("Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
-            return acc.concat(outputs[outputPath][matches[2]]);
-          } else {
-            const regex = /^(USER)\.([^\s.]+)$/;
-            const matches = regex.exec(curr);
-            if (matches) {
-              // Substitute variables with user data
-              return acc.concat(user[matches[2]])
-            } else {
-              return acc.concat(curr);
-            }
-          }
-        }, []).join("");
-      } else {
-        for (const key in obj) {
-          if (Array.isArray(obj[key])) {
-            obj[key] = processTemplateArrays(obj[key], taskCopy, outputs, familyId);
-          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-            processTemplateArrays(obj[key], taskCopy, outputs, familyId);
-          }
-        }
-      }
-      return obj
-    }
+    const outputs = await outputStore_async.get(task.familyId);
+    // Using side-effects to update task.config
+    task = processTemplates(task, task.config, outputs, task.familyId);
 
-    
-    const user = users[taskCopy.userId];
-    const language = user.language || "EN";
-    // Rename all the language specific configs
-    for (const [key, value] of Object.entries(taskCopy.config)) {
-      if (key.endsWith("_" + language.toUpperCase())) {
-        const newKey = key.replace(/_\w{2}$/, "");
-        if (taskCopy.config[newKey] === undefined) {
-          taskCopy.config[newKey] = value;
-          delete taskCopy.config[key];
-        }
-      }
-      // Strip out the configs that do not have the right language
-      const match = key.match(/_(\w{2})$/);
-      if (match && match[1] !== language.toUpperCase()) {
-        delete taskCopy.config[key];
-      }
-    }
+    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors)
 
-    function processDeepTemplates(obj, outputs, familyId) {
-      // Traverse every key-value pair in the object
-      for (const [key, value] of Object.entries(obj)) {
-          // If the value is an object, then recurse
-          if (typeof value === 'object' && value !== null) {
-              processDeepTemplates(value, outputs, familyId);
-          }
-  
-          // If the key ends with "Template", process it
-          if (key.endsWith('Template')) {
-              const strippedKey = key.replace('Template', '');
-              const templateCopy = JSON.parse(JSON.stringify(value));
-              obj[strippedKey] = processTemplateArrays(templateCopy, taskCopy, outputs, familyId);
-          }
-      }
-    }
-    processDeepTemplates(taskCopy.config, outputs, familyId);
+    await recordTaskProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async)
 
-    // Must set instanceId after threadsStore_async
-    taskCopy["instanceId"] = instanceId;
+    // This will also send the task to the processors
+    activeTasksStore_async.set(task.instanceId, task);
 
-    // Build list of processesors that need to be notified about this task
-    let taskProcessors = []
-
-    // Deal with errors
-    if (taskCopy.id.endsWith(".error")) {
-      // Fetch the previous task
-      const prevTask = await instancesStore_async.get(taskCopy.meta.parentInstanceId)
-      const response = "ERROR: " + prevTask.error
-      console.log("Set error from previous task", prevTask.id)
-      taskCopy.response.text = response
-      taskCopy.environments = prevTask.environments
-      //taskCopy.state.current = "error"
-      taskCopy.hub.command = "error";
-      //console.log("Error task", taskCopy)
-    }
-
-    if (!taskCopy.environments) {
-      throw new Error("No environments in task " + taskCopy.id);
-    }
-
-    // Allocate the task to processors that supports the environment(s) requested
-    const sourceProcessorId = processorId;
-    const sourceProcessor = activeProcessors.get(sourceProcessorId);
-    for (const environment of taskCopy.environments) {
-      // Favor the source Processor if we need that environment
-      let found = false;
-      if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
-        found = true;
-        taskProcessors.push(sourceProcessorId);
-        //console.log("Adding source processor " + sourceProcessorId + " to taskProcessors")
-      }
-      // If there are already processor entries then favor these
-      if (!found && taskCopy.processor) {
-        for (let id in taskCopy.processor) {
-          const processor = activeProcessors.get(id);
-          if (processor && processor.environments && processor.environments.includes(environment)) {
-            found = true;
-            taskProcessors.push(id);
-          }
-        }
-      }
-      // Find an active processor that supports this environment
-      if (!found) {
-        //console.log("sourceProcessor did not match, now looking in activeProcessors")
-        for (const [activeProcessorId, value] of activeProcessors.entries()) {
-          const environments = value.environments;
-          if (environments && environments.includes(environment)) {
-              found = true;
-              taskProcessors.push(activeProcessorId);
-              if (!taskCopy.processor[activeProcessorId]) {
-                taskCopy.processor[activeProcessorId] = {};
-              }
-              break;
-          }
-        }       
-      }
-      if (!found) {
-        throw new Error("No processor found for environment " + environment);
-      }
-    }
-
-    if (taskProcessors.length == 0) {
-      throw new Error("No processors allocated for task " + taskCopy.id);
-    }
-
-    console.log("Allocated new task " + taskCopy.id + " to processors ", taskProcessors);
-
-    // Record which processors have this task
-    // Could convert this into asynchronous form
-    if (await activeTaskProcessorsStore_async.has(taskCopy.instanceId)) {
-      let processorIds = await activeTaskProcessorsStore_async.get(taskCopy.instanceId)
-      taskProcessors.forEach(id => {
-        if (processorIds && !processorIds.includes(id)) {
-          processorIds.push(id);
-        } 
-      });
-      activeTaskProcessorsStore_async.set(taskCopy.instanceId, processorIds);
-    } else {
-      activeTaskProcessorsStore_async.set(taskCopy.instanceId, taskProcessors);
-    }
-    activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
-
-    console.log("Started task id " + taskCopy.id, taskCopy.processor, taskCopy.meta.parentInstanceId);
-    return taskCopy;
+    console.log("Started task id " + task.id, task.processor);
   }
 
   export default startTask_async;

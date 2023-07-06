@@ -41,7 +41,11 @@ export async function do_task_async(wsSendTask, task) {
           if (!updated_task?.command) {
             throw new Error("Missing command in updated_task");
           }
-          await fetchTask_async(updated_task);
+          try {
+            await fetchTask_async(updated_task);
+          } catch (error) {
+            console.error(`Command ${updated_task.command} failed to fetch ${error}`);
+          }
         }
       } else {
         console.log("do_task_async null " + task.id);

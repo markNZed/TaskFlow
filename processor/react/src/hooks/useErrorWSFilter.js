@@ -34,7 +34,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
       if (message && message?.command && message.command === "error") {
         //console.log("useErrorWSFilter handleError update key", key, taskError, message.task.processor?.prevInstanceId, errorPrevInstanceId);
         if (message.task.id === instanceId ||
-            message.task.meta?.parentInstanceId === errorPrevInstanceId) {
+            message.task.meta?.prevInstanceId === errorPrevInstanceId) {
           //console.log("useErrorWSFilter handleError calling onError", taskError);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP

@@ -17,12 +17,16 @@ export async function errorTask_async(task) {
   let nextTaskId = task.hub.commandArgs.errorTask;
   console.log("Task " + task.id + " error, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
+
   if (nextTaskId) {
     const initTask = {
       id: nextTaskId,
       userId: task.userId,
       groupId: task?.groupId,
       familyId: task.familyId,
+      response: {text: task.error},
+      environments: task.environments,
+      hub: {command: "error"},
     }
     await startTask_async(initTask, false, task.hub["sourceProcessorId"], task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
