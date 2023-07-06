@@ -191,7 +191,7 @@ function withTask(Component) {
 
     useStartWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
-        console.log("useStartWSFilter", newTask);
+        console.log("useStartWSFilter withTask " + props.task.id + " started", newTask);
         setInitTask(null);
         setStartTaskReturned(newTask);
       }

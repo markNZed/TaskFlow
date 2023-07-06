@@ -33,8 +33,8 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
       //console.log("message", message, key);
       if (message && message?.command && message.command === "start") {
         //console.log("useStartWSFilter handleUpdate update key", key);
-        if (message.task.id === startTaskId ||
-            message.task.processor?.prevInstanceId === startPrevInstanceId) {
+        if ((startTaskId && message.task.id === startTaskId) ||
+            (startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId)) {
           //console.log("useStartWSFilter handleUpdate calling onUpdate", taskStart);
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP

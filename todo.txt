@@ -1,6 +1,5 @@
 /* ToDo
 -------
-
 Schema for tasktype to document options
 Tests will allow for better code generation
 Requests from other tasks via: task.processor.task.request
