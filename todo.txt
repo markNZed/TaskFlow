@@ -1,5 +1,36 @@
 /* ToDo
 -------
+Notion of a cache in Task
+  Cannot replace caching in the LLM because it does streaming
+  Then we can use the configdata rather than DUMMY_OPENAI, CACHE_ENABLE
+  task.config.subTaskLLM = {cache: true}
+  task.config.cacheState = [
+    {
+      environment: xxx,
+      state: xxx,
+      key = ["task.userId"]
+    }
+  ]
+
+Could allow for Hub to create tasks on the fly
+  Could modify tasks too
+  Raises issues for masking - could just not mask the things we want to be able to modify
+    Then allow for copying rather than creating
+  If we update the configurations on the fly then we need a way to have the UI reload
+    This is true for any changes to the config.
+      Could have a hash on the config
+        Currently the Hub asks the Processor to reregister, it could include the config hash
+          If the hash is different then reload.
+Children could be started dynamically
+  Could specify children to spawn
+    Could allow parent to specify children also
+      Same task can be reused in different branches (then better to specify children)
+      Spawn could be a list (maybe true for all, false for none, or a list for some)
+  Ths can make it much easier to add features to a Task through components ?
+  By inserting a Task between parent and child e.g. between TaskConversation and TaskChat we effecively "wrap" TaskChat
+    The inserted Task can modify the JSX returned by the child e.g. {modifyJSX(child)}
+  This can insert something before or after the component but we can't easily modify the HTML
+  React.cloneElement
 Schema for tasktype to document options
 Tests will allow for better code generation
 Requests from other tasks via: task.processor.task.request
@@ -124,6 +155,7 @@ Backlog
         Fix for syntax errors
     Fetch prompt suggestion
     Integrate https://rapidapi.com/products/api-hub/
+    AI powered journal
 
 Notes/Idea
 -----
