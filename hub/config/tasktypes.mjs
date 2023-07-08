@@ -1,3 +1,6 @@
+
+import { CACHE_ENABLE } from "../config.mjs";
+
 const tasktypes = [
   {
     name: "TaskChat",
@@ -8,7 +11,14 @@ const tasktypes = [
       welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
       welcomeMessage_EN: "Welcome! How can I assist you today?",
       promptPlaceholder_FR: "Écrivez votre prompt ici.",
-      promptPlaceholder_EN: "Write your prompt here."
+      promptPlaceholder_EN: "Write your prompt here.",
+      APPEND_cache: [
+        {
+          subTask: "SubTaskLLM",
+          seed: "",
+          enable: CACHE_ENABLE,
+        }
+      ],
     },
     state: {
       current: "input",

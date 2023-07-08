@@ -1,16 +1,27 @@
 /* ToDo
 -------
+
+Make use of task.config.cache in resume 
+The cache is not going to allow a conversation if it matches and the key is not including the messages
 Notion of a cache in Task
   Cannot replace caching in the LLM because it does streaming
-  Then we can use the configdata rather than DUMMY_OPENAI, CACHE_ENABLE
-  task.config.subTaskLLM = {cache: true}
-  task.config.cacheState = [
+  task.config.cache = [
     {
-      environment: xxx,
-      state: xxx,
-      key = ["task.userId"]
+      environments: [xxx],
+      states: [xxx],
+      key = ["this.userId"]
+    },
+    {
+      subTask: "subTaskLLM",
+      key = i
     }
   ]
+  Maybe:
+    {
+      subTask: "subTaskLLM",
+      key = i
+    }
+In templating maybe we should support this. syntax
 
 Could allow for Hub to create tasks on the fly
   Could modify tasks too

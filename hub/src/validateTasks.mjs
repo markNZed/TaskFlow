@@ -47,7 +47,8 @@ export const configSchema = yup.object()
   systemMessageTemplate: stringOrArrayOfStrings,
   promptTemplate: stringOrArrayOfStrings,
   welcomeMessage: stringOrArrayOfStrings,
-  cacheKey: yup.string(),
+  cacheKeySeed: yup.string(),
+  cache: yup.array().of(yup.object()),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

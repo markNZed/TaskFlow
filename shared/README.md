@@ -4,6 +4,12 @@
 
 The schema is defined in JSON and [Quicktype](https://quicktype.io) is used to generate validation code.
 
+The task.config.cache object allows for flexible cache rules, it is an array of cache objects (so use APPEND_cache to allow for inheritance):
+* cache.subTask - this allows to control the caching in subTasks, it is a string e.g. "SubTaskLLM"
+* cache.enable - boolean, can be excluded and in that case is assumed to be true
+* cache.seed - array of strings or paths in the task object e.g. ["task.name"]
+
+
 The Task object currently has a fixed set of top level properties. Several properties are objects:
 * privacy - a copy of the Task object's structure with boolean types that indicate if the property should be sent from the NodeJS Task Processor to the React Task Processor. For example, this could avoid sending prompts in config data to the web browser.
 * input - any object, provided to the task when it starts

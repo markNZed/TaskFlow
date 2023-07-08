@@ -9,42 +9,45 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { fetchTask_async } from "./fetchTask.mjs";
 
 export async function do_task_async(wsSendTask, task) {
-    let updated_task = {};
+    let updatedTask = {};
     let idx = 0;
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       try {
-        updated_task = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
+        updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
       } catch (e) {
         console.error(e);
-        updated_task = task;
+        updatedTask = task;
         // Strictly we should not be updating the task object in the processor
-        // Could set updated_task.processor.command = "error" ?
-        updated_task.error = e.message;
-        updated_task.command = "update";
+        // Could set updatedTask.processor.command = "error" ?
+        updatedTask.error = e.message;
+        updatedTask.command = "update";
       }
       // Returning null is  away of doing nothing
-      if (updated_task !== null) {
-        if (updated_task.error) {
-          console.error("Task error ", updated_task.error)
+      if (updatedTask !== null) {
+        if (updatedTask.error) {
+          console.error("Task error ", updatedTask.error)
         }
-        if (updated_task?.command === "start") {
+        if (updatedTask?.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
-            userId: updated_task.userId,
-            startId: updated_task.commandArgs.id,
+            userId: updatedTask.userId,
+            startId: updatedTask.commandArgs.id,
             hub: {},
             command: "start",
           }
           await fetchTask_async(task);
         } else {
-          if (!updated_task?.command) {
-            throw new Error("Missing command in updated_task");
+          if (!updatedTask?.command) {
+            throw new Error("Missing command in updatedTask");
+          }
+          if (updatedTask.command === "update") {
+            await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
           }
           try {
-            await fetchTask_async(updated_task);
+            await fetchTask_async(updatedTask);
           } catch (error) {
-            console.error(`Command ${updated_task.command} failed to fetch ${error}`);
+            console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }
         }
       } else {
@@ -53,7 +56,7 @@ export async function do_task_async(wsSendTask, task) {
     } else {
       console.log("NodeJS Task Processor unknown component " + task.type);
       //console.log("taskFunctions", taskFunctions);
-      updated_task = task;
+      updatedTask = task;
     }
 
 }

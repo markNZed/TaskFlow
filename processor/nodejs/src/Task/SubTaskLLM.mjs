@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
 import { utils } from "../utils.mjs";
-import { DUMMY_OPENAI, CACHE_ENABLE, CONFIG_DIR } from "../../config.mjs";
+import { DUMMY_OPENAI, CONFIG_DIR } from "../../config.mjs";
 import {
   cacheStore_async,
 } from "../storage.mjs";
@@ -57,6 +57,29 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
   //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
 }
 
+function checkSubTaskCache (T, task, subTaskName) {
+  // Loop over each object in task.config.cache if it exists
+  let enabled = false;
+  let seed = T("id");
+  for (const cacheObj of task.config.cache) {
+    if (cacheObj.subTask === subTaskName) {
+      enabled = cacheObj.enable;
+      if (enabled && cacheObj.seed) {
+        for (const cacheKeySeed of cacheObj.seed) {
+          if (cacheKeySeed.startsWith("task.")) {
+            seed += T(cacheKeySeed.slice(5));
+          } else {
+            seed += cacheKeySeed;
+          }
+        }
+        console.log("cacheObj.seed", seed);
+      }
+      break;
+    }
+  }
+  return [enabled, seed];
+}
+
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
 // Also using modelTypes
@@ -65,8 +88,9 @@ async function chat_prepare_async(task) {
 
   const instanceId = T("instanceId");
   let systemMessage = "";
-  let initializing = false;
-  let useCache = CACHE_ENABLE;
+  let forget = false;
+  let [useCache, cacheKeySeed] = checkSubTaskCache(T, task, "SubTaskLLM");
+  console.log("useCache config " + useCache + " seed " + cacheKeySeed);
   let noWebsocket = false;
 
   let prompt = T("state.request.model.prompt") || T("config.model.prompt");
@@ -109,12 +133,12 @@ async function chat_prepare_async(task) {
 
   if (T("config.model.useCache") !== undefined) {
     useCache = T("config.model.useCache");
-    console.log("Task config set cache " + useCache);
+    console.log("Task model config set cache " + useCache);
   }
 
   if (T("state.request.model.useCache") !== undefined) {
     useCache = T("state.request.model.useCache");
-    console.log("Task request set cache " + useCache);
+    console.log("Task request set model cache " + useCache);
   }
 
   if (typeof modelType?.prepend_prompt !== "undefined") {
@@ -140,17 +164,17 @@ async function chat_prepare_async(task) {
   }
 
   if (modelType?.forget) {
-    initializing = true;
+    forget = true;
     console.log("Agent forget previous messages");
   }
 
   if (T("config.model.forget") !== undefined) {
-    initializing = T("rconfig.model.forget")
+    forget = T("config.model.forget")
     console.log("Task config forget previous messages", T("config.model.forget"));
   }
 
   if (T("state.request.model.forget") !== undefined) {
-    initializing = T("state.request.model.forget")
+    forget = T("state.request.model.forget")
     console.log("Task request forget previous messages", T("state.request.model.forget"));
   }
 
@@ -173,8 +197,8 @@ async function chat_prepare_async(task) {
     console.log("Found request messages");
   }
 
-  // This is assuming the structure usd in TaskChat
-  if (T("output.msgs")) {
+  // This is assuming the structure used in TaskChat
+  if (T("output.msgs") && !forget) {
     console.log("Initializing messages from output.msgs");
     messages.push(...T("output.msgs"));
     // Remove the empty response holder and the prompt
@@ -216,7 +240,9 @@ async function chat_prepare_async(task) {
     id: (index + 1)
   }));
 
-  const cacheKey = T("config.cacheKey");
+  if (T("config.model.cacheKeySeed")) {
+    cacheKeySeed = T("config.model.cacheKeySeed");
+  }
 
   return {
     systemMessage,
@@ -229,7 +255,7 @@ async function chat_prepare_async(task) {
     maxTokens,
     maxResponseTokens,
     instanceId,
-    cacheKey,
+    cacheKeySeed,
   };
 }
 
@@ -253,7 +279,7 @@ async function ChatGPTAPI_request_async(params) {
     maxTokens,
     instanceId,
     wsSendTask,
-    cacheKey,
+    cacheKeySeed,
   } = params;
 
   let {
@@ -340,7 +366,7 @@ async function ChatGPTAPI_request_async(params) {
       JSON.stringify(messageParams.completionParams),
       prompt,
       messagesText,
-      cacheKey,
+      cacheKeySeed,
     ]
       .join("-")
       .replace(/\s+/g, "-");

@@ -6,8 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "./utils.mjs";
 import { CONFIG_DIR } from "../config.mjs";
-import * as dotenv from "dotenv";
-dotenv.config();
 import assert from "assert";
 import { validateTasks } from "./validateTasks.mjs";
 import { fromTask } from "./taskConverterWrapper.mjs";
@@ -38,33 +36,7 @@ try {
 }
 
 function mergeTasks(childTask, tasksObj) {
-  for (const key in tasksObj) {
-    if (tasksObj.hasOwnProperty(key)) {
-      if (key === "label" || key === "type" || key === "meta" || key === "initiator") {continue;}
-
-      if (childTask.hasOwnProperty(key) &&
-        !key.startsWith("APPEND_") &&
-        !key.startsWith("PREPEND_")
-      ) {
-        childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
-      } else if (
-        !childTask.hasOwnProperty(key) &&
-        !key.startsWith("APPEND_") &&
-        !key.startsWith("PREPEND_")
-      ){
-        childTask[key] = tasksObj[key];
-      }
-
-      if (childTask.hasOwnProperty("PREPEND_" + key)) {
-        childTask[key] = prependOperation(childTask, key, tasksObj);
-      }
-
-      if (childTask.hasOwnProperty("APPEND_" + key)) {
-        childTask[key] = appendOperation(childTask, key, tasksObj);
-      }
-
-    }
-  }
+  // Merge the taskType first so we can take APPEN_ PREPREND_ into account from tasktype
   if (childTask.type) {
     // Need to deal with a list of components
     const tasktemplatename = childTask.type;
@@ -84,7 +56,39 @@ function mergeTasks(childTask, tasksObj) {
       console.log("Count not find task template", tasktemplatename)
     }
   }
-  
+  for (const key in tasksObj) {
+    if (tasksObj.hasOwnProperty(key)) {
+      if (key === "label" || key === "type" || key === "meta" || key === "initiator") {
+        continue;
+      }
+      if (key === "config" && childTask.config) {
+        for (const configKey in tasksObj.config) {
+          mergeObj(childTask.config, configKey, tasksObj.config);
+        }
+      } else {
+        mergeObj(childTask, key, tasksObj);
+      }
+    }
+  }  
+}
+
+// Could replace PREPEND_ with ...+ and APPEND with +...
+function mergeObj(childTask, key, tasksObj) {
+  if (childTask.hasOwnProperty(key) &&
+    !key.startsWith("APPEND_") &&
+    !key.startsWith("PREPEND_")) {
+    childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
+  } else if (!childTask.hasOwnProperty(key) &&
+    !key.startsWith("APPEND_") &&
+    !key.startsWith("PREPEND_")) {
+    childTask[key] = tasksObj[key];
+  }
+  if (childTask.hasOwnProperty("PREPEND_" + key)) {
+    childTask[key] = prependOperation(childTask, key, tasksObj);
+  }
+  if (childTask.hasOwnProperty("APPEND_" + key)) {
+    childTask[key] = appendOperation(childTask, key, tasksObj);
+  }
 }
 
 function prependOperation(taskflow, key, tasksObj) {

@@ -2,7 +2,8 @@ const tasks = [
   {
     config: {
       maxRequestCount: 100,
-      maxRequestRate: 30
+      maxRequestRate: 30,
+      cache: [],
     },
     menu: true,
     name: "root",
