@@ -12,7 +12,7 @@ import {
   cacheStore_async,
 } from "../storage.mjs";
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config(); // For process.env.OPENAI_API_KEY
 
 // Should we return a promise? Better to be task iin/out ?
 

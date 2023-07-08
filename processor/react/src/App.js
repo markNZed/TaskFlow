@@ -21,6 +21,7 @@ import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
   const [enableGeolocation, setEnableGeolocation] = useState(false);
+  const [configHash, setConfigHash] = useState();
   const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
@@ -58,6 +59,20 @@ function App({ activeWorkerCount, workerId }) {
       console.log("Enabling use of address");
     }
   }, [globalState, enableGeolocation]);
+
+  useEffect(() => {
+    if (globalState?.configHash) {
+      if (configHash) {
+        if (globalState.configHash !== configHash) {
+          //reload window
+          window.location.reload();
+        }
+      } else {
+        setConfigHash(globalState.configHash);
+        console.log("etConfigHash", globalState.configHash);
+      }
+    }
+  }, [globalState]);
 
   useEffect(() => {
     if (enableGeolocation && address && globalState?.address !== address) {
@@ -118,6 +133,9 @@ function App({ activeWorkerCount, workerId }) {
         console.log("Registered processor: ", data);
         if (data?.hubId) {
           replaceGlobalState("hubId", data.hubId);
+        }
+        if (data?.configHash) {
+          replaceGlobalState("configHash", data.configHash);
         }
       } catch (err) {
         console.log("Registered processor error ");

@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { activeProcessors } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
+import { getConfigHash } from "../configdata.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -25,6 +26,7 @@ router.post("/", async (req, res) => {
   
   res.send({
     hubId: hubId,
+    configHash: getConfigHash(),
   });
 
 });

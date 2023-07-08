@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
-import { hubId } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
 /**

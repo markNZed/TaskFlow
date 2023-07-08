@@ -286,4 +286,7 @@ Object.keys(tasks).forEach(key => {
   fromTask(task);
 });
 
-export { users, groups, tasktypes, tasks };
+function getConfigHash() {
+  return utils.djb2Hash(JSON.stringify([users, groups, tasktypes, tasks]));
+}
+export { users, groups, tasktypes, tasks, getConfigHash };
