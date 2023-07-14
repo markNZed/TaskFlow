@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAt } from "./shared/utils.mjs";
+import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString } from "./shared/utils.mjs";
 
 const utils = {};
 
@@ -15,6 +15,7 @@ utils.checkConflicts = checkConflicts;
 utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;
 utils.updatedAt = updatedAt;
+utils.parseRegexString = parseRegexString;
 
 utils.formatDateAndTime = function (date) {
   const options = {
@@ -69,7 +70,7 @@ utils.djb2Hash = function (str) {
   return hash >>> 0; // convert to unsigned 32-bit integer
 };
 
-utils.processMessages_async = async function (
+utils.regexProcessMessages_async = async function (
   messages,
   messageStore_async,
   initialLastMessageId = null
@@ -132,7 +133,7 @@ utils.createTaskValueGetter = function(task) {
   return function (path, value) {
     if (arguments.length === 2) {
       utils.setNestedValue(task, path, value);
-      //console.log("createTaskValueGetter set ",path,value)
+      //console.log("createTaskValueGetter set ", path, value)
     } else {
       const res = utils.getNestedValue(task, path);
       //console.log("createTaskValueGetter get ", path, res)
@@ -149,6 +150,5 @@ utils.add_index = function(config) {
     }
   }
 }
-
 
 export { utils };

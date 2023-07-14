@@ -9,6 +9,9 @@ The task.config.cache object allows for flexible cache rules, it is an array of 
 * cache.enable - boolean, can be excluded and in that case is assumed to be true
 * cache.seed - array of strings or paths in the task object e.g. ["task.name"]
 
+task.commands:
+* partial
+* ...
 
 The Task object currently has a fixed set of top level properties. Several properties are objects:
 * privacy - a copy of the Task object's structure with boolean types that indicate if the property should be sent from the NodeJS Task Processor to the React Task Processor. For example, this could avoid sending prompts in config data to the web browser.

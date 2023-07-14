@@ -99,7 +99,7 @@ utils.djb2Hash = function (str) {
   return hash >>> 0; // convert to unsigned 32-bit integer
 };
 
-utils.processMessages_async = async function (
+utils.regexProcessMessages_async = async function (
   messages,
   messageStore_async,
   initialLastMessageId = null

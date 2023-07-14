@@ -209,4 +209,21 @@ function updatedAt() {
   return data;
 }
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAt };
+function parseRegexString(regexStr) {
+  const regex = /^\/(.+)\/(.*)$/;
+  const match = regexStr.match(regex);
+  if (match) {
+      return {
+          pattern: match[1],
+          flags: match[2]
+      };
+  } else {
+      // If not in regex format, treat as simple string with no flags
+      return {
+          pattern: regexStr,
+          flags: ""
+      };
+  }
+}
+
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString };

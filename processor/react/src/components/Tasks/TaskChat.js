@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
+import { parseRegexString } from "../../utils/utils";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 
@@ -102,7 +103,7 @@ const TaskChat = (props) => {
     if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
     // Deep copy because we are going to modify the msgs array which is part of a React state
     // so it should only be modified with modifyTask
-    const msgs = JSON.parse(JSON.stringify(task.output.msgs)); 
+    const msgs = task.output?.msgs ? JSON.parse(JSON.stringify(task.output.msgs)) : [];
     switch (task.state.current) {
       case "start":
       case "input":
@@ -133,7 +134,6 @@ const TaskChat = (props) => {
         }
         break;
       case "sending":
-        // Create a slot for new msgs
         if (transitionTo("sending") && !task.meta?.locked) {
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
@@ -215,6 +215,19 @@ const TaskChat = (props) => {
     }
   }, [submitForm]);
 
+  function processMessages(text) {
+    const regexProcessMessages = task.config.regexProcessMessages;
+    if (regexProcessMessages) {
+      for (const [regexStr, replacement] of regexProcessMessages) {
+        let { pattern, flags } = parseRegexString(regexStr);
+        const regex = new RegExp(pattern, flags);
+        text = text.replace(regex, replacement);
+      }
+    }
+    return text;
+  }
+
+
   const sendReady = (!task || task.state.current === "sending") ? "not-ready" : "ready"
 
   return (
@@ -233,7 +246,7 @@ const TaskChat = (props) => {
         <textarea
           ref={textareaRef}
           name="prompt"
-          value={task.input.prompt}
+          value={processMessages(task.input.prompt)}
           rows="1"
           cols="1"
           onChange={(e) => {

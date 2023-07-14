@@ -1,19 +1,6 @@
 /* ToDo
 -------
-It seems the assistant can complete rather than reply sometimes. 
-  Doe we need a stronger indicator for the end of a response.
-  Each chat message received starts with <BEGIN> and ends with <END>
-    How to strip this?
-      Config for the TaskChat or SubTask
-        RegexProcess("output.thing", match, replace)
-         Use https://www.npmjs.com/package/safe-regex
-
-Maybe task.user needs to be like task.processor 
-  Replace React globalState.user with task.user
 To be able to insert tasks we need to use task.input/output and not task.state
-Should not modify task.output.msgs in SubTaskLLM
-  Clean up TaskChat & TaskConversation
-    Split into msgsHistory + prompt + response
 Should the modeltype be copied into task.config.model?
 Should the Processor also implement rate limiting?
 Ability to select a model. This is a very simple task?

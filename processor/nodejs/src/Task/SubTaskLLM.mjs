@@ -31,6 +31,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
 }
 
 function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
+  //console.log("partialResponse.delta", partialResponse.delta);
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
   let response;
   if (wsDelta[instanceId] === undefined) {
@@ -248,6 +249,16 @@ async function chat_prepare_async(task) {
     cacheKeySeed = T("config.model.cacheKeySeed");
   }
 
+  // Check if we need to preprocess
+  if (task.config.regexProcessPrompt) {
+    for (const [regexStr, replacement] of task.config.regexProcessPrompt) {
+      let { pattern, flags } = utils.parseRegexString(regexStr);
+      let regex = new RegExp(pattern, flags);
+      prompt = prompt.replace(regex, replacement);
+      //console.log("regexProcessPrompt", regexStr, prompt);
+    }
+  }
+
   return {
     systemMessage,
     messages,
@@ -295,7 +306,7 @@ async function ChatGPTAPI_request_async(params) {
   const debug = true;
 
   const lastMessageId = messages.length;
-
+  
   // Need to account for the system message and some margin because the token count may not be exact.
   console.log("prompt " + prompt + " systemMessage " + systemMessage)
   let promptTokenLength = 0;

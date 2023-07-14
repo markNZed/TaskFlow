@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { deepCompare, replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { parseRegexString } from "../../utils/utils";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import DynamicComponent from "../Generic/DynamicComponent";
 
@@ -24,7 +24,7 @@ const TaskSimulateUser = (props) => {
     setTask,
     modifyTask,
     childTask,
-    setChildTask,
+    modifyChildTask,
     onDidMount,
     transition,
     transitionTo,
@@ -80,10 +80,11 @@ const TaskSimulateUser = (props) => {
   // We should explicitly pass the current task up to allow for insertion.
   // Or is this notion of one task instantiating another only in React so we should not assume it?
 
-  // So TaskConversation sees what it is expecting
+  // So TaskConversation sees what it is expecting and TaskSimulateUser acts as a pass-through
   useEffect(() => {
     if (task && childTask?.output) {
-      if (childTask.output.msgs !== task.output.msgs) {
+      // Convert to string to compare deep data structure
+      if (JSON.stringify(childTask.output.msgs) !== JSON.stringify(task.output.msgs)) {
         modifyTask({"output.msgs": childTask.output.msgs});
       }
       if (childTask.output.prompt !== task.output.prompt) {
@@ -97,6 +98,34 @@ const TaskSimulateUser = (props) => {
       }
     }
   }, [childTask?.output]);
+
+  // So TaskChat sees what it is expecting and TaskSimulateUser acts as a pass-through
+  useEffect(() => {
+    if (task?.input && childTask) {
+      // Convert to string to compare deep data structure
+      if (JSON.stringify(task.input?.msgs) !== JSON.stringify(childTask.input?.msgs)) {
+        modifyChildTask({"input.msgs": task.input.msgs});
+      }
+    }
+  }, [task?.input]);
+
+  useEffect(() => {
+    if (responseText && responseText !== childTask.input.prompt) {
+      let updatedResponseText = responseText;
+      const regexProcessResponse = task.config.regexProcessResponse;
+      if (regexProcessResponse) {
+        for (const [regexStr, replacement] of regexProcessResponse) {
+          let { pattern, flags } = parseRegexString(regexStr);
+          const regex = new RegExp(pattern, flags);
+          updatedResponseText = updatedResponseText.replace(regex, replacement);
+        }
+      }
+      modifyChildTask({
+        "input.prompt": updatedResponseText,
+      });
+    }
+  }, [responseText]);
+
 
   // Task state machine
   // Need to be careful setting task in the state machine so it does not loop
@@ -114,7 +143,7 @@ const TaskSimulateUser = (props) => {
         break;
       case "introduction":
         if (transition()) {
-          // Sync state with nodejs
+          // Sync state with nodejs processor
           modifyTask({ 
             "command": "update",
           });
@@ -122,8 +151,9 @@ const TaskSimulateUser = (props) => {
         break;
       case "input":
         if (transition()) {
+          // Break here rather than generating error due to maxRequestCount
           if (task.config.maxRequestCount && task.meta.requestCount >= task.config.maxRequestCount) {
-            alert("You have exceeded the maximum number of requests");
+            alert("Simulated user exceeded the maximum number of requests");
           } else {
             nextState = "sending";
             responseTextRef.current = "";
@@ -133,42 +163,28 @@ const TaskSimulateUser = (props) => {
         break;
       case "sending":
         if (transitionTo("sending") && !task.meta?.locked) {
-          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            //"commandArgs": { "lock": true },
             "command": "update",
-            //"input.submitForm": false,
           });
         }
         break;
       case "receiving":
-        if (transitionTo("receiving")) {
-          setChildTask(p => ({...p, input: {
-            ...p.input, 
-            prompt: "",
-          }})); // Not so good for collaborative interface 
-        }
-        // Avoid looping due to modifyTask by checking if the text has changed
-        if (responseText && responseText !== childTask.input.prompt) {
-          setChildTask(p => ({...p, input: {
-            ...p.input, 
-            prompt: responseText,
-          }}));
-        }
         break;
       case "received":
-        if (transitionTo("received")) {
-          setChildTask(p => ({...p, input: {
-            ...p.input, 
-            submitForm: true,
-            prompt: task.output.simulationResponse.text,
-          }})); // Not so good for collaborative interface 
+        setResponseText(task.output.simulationResponse.text);
+        nextState = "submit";
+        break;
+      case "submit":
+        if (transition()) {
+          modifyChildTask({
+            "input.submitForm": true,
+          });
         }
         if (childTask?.state?.current === "received") {
           nextState = "input";
         }
         break;
-        }
+    }
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, responseText, childTask]);
@@ -180,8 +196,9 @@ const TaskSimulateUser = (props) => {
             key={childTask.id}
             is={childTask.type}
             task={childTask}
-            setTask={setChildTask}
+            setTask={props.setChildTask}
             parentTask={task}
+            handleModifyChildTask={props.handleModifyChildTask}
           />
         )}
       </div>

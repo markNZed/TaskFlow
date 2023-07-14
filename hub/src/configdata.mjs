@@ -74,20 +74,17 @@ function mergeTasks(childTask, tasksObj) {
 
 // Could replace PREPEND_ with ...+ and APPEND with +...
 function mergeObj(childTask, key, tasksObj) {
-  if (childTask.hasOwnProperty(key) &&
-    !key.startsWith("APPEND_") &&
-    !key.startsWith("PREPEND_")) {
-    childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
-  } else if (!childTask.hasOwnProperty(key) &&
-    !key.startsWith("APPEND_") &&
-    !key.startsWith("PREPEND_")) {
-    childTask[key] = tasksObj[key];
-  }
   if (childTask.hasOwnProperty("PREPEND_" + key)) {
     childTask[key] = prependOperation(childTask, key, tasksObj);
-  }
-  if (childTask.hasOwnProperty("APPEND_" + key)) {
+  } else if (childTask.hasOwnProperty("APPEND_" + key)) {
     childTask[key] = appendOperation(childTask, key, tasksObj);
+  // Don't copy PRIVATE info (specific to the task)
+  } else if (!key.startsWith("PRIVATE_") && !tasksObj.hasOwnProperty("PRIVATE_" + key)) {
+    if (childTask.hasOwnProperty(key)) {
+      childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
+    } else {
+      childTask[key] = tasksObj[key];
+    }
   }
 }
 
@@ -105,6 +102,18 @@ function appendOperation(taskflow, key, tasksObj) {
   } else {
     return tasksObj[key] + taskflow["APPEND_" + key];
   }
+}
+
+function copyPrivateKeysRecursively(obj) {
+  for (const key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] !== null) {
+      copyPrivateKeysRecursively(obj[key]);
+    }
+    if (key.startsWith("PRIVATE_")) {
+      obj[key.slice(8)] = obj[key];
+    }
+  }
+  return obj;
 }
 
 // Not that this has huge side-effects
@@ -160,6 +169,9 @@ function flattenTasks(tasks) {
         parent.meta["childrenId"] = [taskflow.id];
       }
     }
+
+    // Copy PRIVATE_ keys
+    taskflow = copyPrivateKeysRecursively(taskflow);
     
     // Copy keys from the parent
     const parentTaskflow = taskflowLookup[parentId];

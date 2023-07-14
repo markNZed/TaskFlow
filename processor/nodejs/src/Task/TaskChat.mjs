@@ -87,7 +87,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("command", "update");
       await fetchTask_async(task)
       //console.log("task.output", task.output);
-      let msgs = T("output.msgs");
+      let msgs = T("input.msgs");
       // Extract the prompt
       //const msgPrompt = msgs[msgs.length - 2];
       //T("state.request.model.prompt", msgPrompt.text)
@@ -110,7 +110,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     default:
       console.log("WARNING unknown state : " + task.state.current);
       return null;
-    }
+  }
 
   if (cacheEnabled) {
     // Store in cache

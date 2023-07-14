@@ -50,7 +50,8 @@ function withTask(Component) {
     const [familyId, setFamilyId] = useState();
     const publishedRef = useRef("");
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
-    const handleChildmodifyStateRef = useRef(null);
+    const handleModifyChildStateRef = useRef(null);
+    const handleModifyChildTaskRef = useRef(null);
 
     useEffect(() => {
       const useAddress = props.task?.config?.useAddress;
@@ -268,18 +269,37 @@ function withTask(Component) {
     };
 
     // If the parent wants to be able to modify the child state it passes this prop
-    if (props.handleChildmodifyState) {
-      props.handleChildmodifyState(modifyState)
+    if (props.handleModifyChildState) {
+      props.handleModifyChildState(modifyState)
     }
 
-    // This is the implementation that is passd to the parent as a prop that will be passed to the child
-    const handleChildmodifyState = (modifyStateFunction) => {
-      handleChildmodifyStateRef.current = modifyStateFunction;  
+    // This is the prop that will be passed to the child and called just above to set modifyChildState
+    const handleModifyChildState = (modifyStateFunction) => {
+      handleModifyChildStateRef.current = modifyStateFunction;  
     }
 
     // This is what the parent calls to modify the state of the child
+    // To us this we need to pass the handleModifyChildState to the child e.g.
+    // handleModifyChildState={props.handleModifyChildState}
     const modifyChildState = (state) => {
-      handleChildmodifyStateRef.current(state);
+      handleModifyChildStateRef.current(state);
+    }
+
+    // If the parent wants to be able to modify the child it passes this prop
+    if (props.handleModifyChildTask) {
+      props.handleModifyChildTask(modifyTask)
+    }
+
+    // This is the prop that will be passed to the child and called just above to set modifyChildTask
+    const handleModifyChildTask = (modifyTaskFunction) => {
+      handleModifyChildTaskRef.current = modifyTaskFunction;  
+    }
+
+    // This is what the parent calls to modify the state of the child
+    // To us this we need to pass the handleChildModify to the child e.g.
+    // handleChildModify={props.handleChildModify}
+    const modifyChildTask = (update) => {
+      handleModifyChildTaskRef.current(update);
     }
 
     useEffect(() => {
@@ -468,8 +488,10 @@ function withTask(Component) {
       setChildTask,
       handleTaskUpdate,
       familyTaskDiff,
-      handleChildmodifyState,
+      handleModifyChildState,
       modifyChildState,
+      handleModifyChildTask,
+      modifyChildTask,
       checkIfStateReady,
     };
 

@@ -56,7 +56,8 @@ const tasktypes = [
   {
     name: "TaskSimulateUser",
     environments: ["react", "nodejs"],
-    config: { 
+    config: {
+      //introductionPrompt: "Please introduce yourself.",
       APPEND_cache: [
         {
           subTask: "SubTaskLLM",

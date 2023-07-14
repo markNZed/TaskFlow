@@ -1,9 +1,9 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt } from "../shared/utils.mjs"
+import { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt, parseRegexString } from "../shared/utils.mjs"
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt }
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, updatedAt, parseRegexString }
 
 // e.g. delta(() => {modifyState('input')})
 export const delta = (callback, delay = 0) => setTimeout(callback, delay);

@@ -90,7 +90,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
       const ok = await fetchTask_async(task)
       if (ok) {
         if (entryState === "introduction") {
-          const simulationPrompt = { role: "user", text: "Introduce yourself.", user: task.user.label };
+          const simulationPrompt = { role: "user", text: task.config.introductionPrompt, user: task.user.label };
           T("output.simulationPrompt", simulationPrompt);
           const simulationResponse = { role: "assistant", text: "", user: "assistant" };
           T("output.simulationResponse", simulationResponse);

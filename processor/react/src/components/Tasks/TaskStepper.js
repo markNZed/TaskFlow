@@ -211,7 +211,7 @@ function TaskStepper(props) {
                   task={tasks[idx]}
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   parentTask={task}
-                  handleChildmodifyState={props.handleChildmodifyState}
+                  handleModifyChildState={props.handleModifyChildState}
                 />
               )}
             </AccordionDetails>

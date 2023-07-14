@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { deepCompare, replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { deepCompare, replaceNewlinesWithParagraphs, parseRegexString } from "../../utils/utils";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
@@ -24,12 +24,10 @@ ToDo:
 const TaskConversation = (props) => {
   const {
     task,
-    setTask,
+    modifyTask,
     childTask,
-    setChildTask,
-    useTaskState,
+    modifyChildTask,
     onDidMount,
-    user,
   } = props;
 
   const chatContainerRef = useRef(null);
@@ -44,25 +42,53 @@ const TaskConversation = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
+  // There is a loop from the childTask.output.msgs to task.state.msgs to childTask.input.msgs
+  // This allows msgs to be controlled by TaskConversation
+  useEffect(() => {
+    if (task?.state?.msgs) {
+      modifyChildTask({
+        "input.msgs": task.state.msgs,
+      });
+    }
+  }, [task?.state?.msgs]);
+
   useEffect(() => {
     if (childTask) {
-      const taskMessages = childTask.output?.msgs || [];
-      let newMsgArray = [];
+      const childMsgs = childTask.output?.msgs || [];
+      let promptMsgs = [];
       if (childTask.output.prompt) {
-        newMsgArray.push(childTask.output.prompt)
+        promptMsgs.push(childTask.output.prompt)
       }
       if (childTask.output.promptResponse) {
-        newMsgArray.push(childTask.output.promptResponse);
+        promptMsgs.push(childTask.output.promptResponse);
       }
+      let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
       // The welcome message is not included as part of the Task msgs sent to the LLM
       if (task.config?.welcomeMessage && task.config.welcomeMessage !== "") {
-        const welcomeMessage = { role: "assistant", text: task.config.welcomeMessage, user: "assistant" };
-        //console.log("setMsgs", [welcomeMessage, ...taskMessages, ...newMsgArray]);
-        setMsgs([welcomeMessage, ...taskMessages, ...newMsgArray]);
-      } else {
-        //console.log("setMsgs", [...taskMessages, ...newMsgArray]);
-        setMsgs([...taskMessages, ...newMsgArray]);
+        welcomeMessage.push({ role: "assistant", text: task.config.welcomeMessage, user: "assistant" });
+      }
+      // deep copy because we may modify with regexProcessMessages
+      let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs, ...promptMsgs]));
+      // Convert to string to compare deep data structure
+      if (JSON.stringify(combinedMsgs) !== JSON.stringify(msgs)) {
+        // Here we could process messages
+        const regexProcessMessages = task.config.regexProcessMessages;
+        if (regexProcessMessages) {
+          for (const [regexStr, replacement] of regexProcessMessages) {
+            let { pattern, flags } = parseRegexString(regexStr);
+            const regex = new RegExp(pattern, flags);
+            for (const msg of combinedMsgs) {
+              if (msg.text) {
+                msg.text = msg.text.replace(regex, replacement);
+              }
+            }
+          }
+        }
+        setMsgs(combinedMsgs);
+        modifyTask({ 
+          "state.msgs": childMsgs,
+        });
       }
     }
   }, [childTask?.output]);
@@ -150,7 +176,8 @@ const TaskConversation = (props) => {
             key={childTask.id}
             is={childTask.type}
             task={childTask}
-            setTask={setChildTask}
+            setTask={props.setChildTask}
+            handleModifyChildTask={props.handleModifyChildTask}
             parentTask={task}
           />
         )}

@@ -59,6 +59,10 @@ export const configSchema = yup.object()
     })),
   })),
   regexProcess: yup.object(),
+  regexProcessPrompt: yup.array(),
+  regexProcessResponse: yup.array(),
+  regexProcessMessages: yup.array(),
+  introductionPrompt: yup.string(),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()
@@ -83,6 +87,8 @@ const tasksSchema = yup.array().of(yup.object()
 function transformKeys(obj) {
   return Object.keys(obj).reduce((result, key) => {
     let newKey = key.replace(/^APPEND_/, '');
+    newKey = newKey.replace(/^PREPEND_/, '');
+    newKey = newKey.replace(/^PRIVATE_/, '');
     newKey = newKey.replace(/_(FR|EN)$/, '');
     if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
       result[newKey] = transformKeys(obj[key]);  // Recursively transform keys of nested object
