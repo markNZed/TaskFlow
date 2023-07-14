@@ -15,13 +15,13 @@ function deepMerge(prevState, update) {
   }
 
   if (Array.isArray(update)) {
-    //console.log("deepMerge array", update)
+    //console.log("deepMerge array", prevState, update)
     let output = [];
     const maxLength = update.length;
   
     for (let i = 0; i < maxLength; i++) {
       // Null is treated as a placeholder in the case of arrays
-      if (i >= prevState.length) {
+      if (!prevState || i >= prevState.length) {
         //console.log("deepMerge length", prevState[i]);
         output.push(update[i]);
       } else if (update[i] === null) {
@@ -180,6 +180,7 @@ function flattenObjects(objs) {
     } else {
       if (!obj.parentType) {
         id = obj.name;
+        obj["id"] = id;
         //console.log("flattenObjects object is at root of tree", obj.name);
       } else {
         const parentId = parent2id[obj.parentType];

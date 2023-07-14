@@ -29,6 +29,7 @@ const TaskConversation = (props) => {
     setChildTask,
     useTaskState,
     onDidMount,
+    user,
   } = props;
 
   const chatContainerRef = useRef(null);
@@ -46,21 +47,32 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (childTask) {
       const taskMessages = childTask.output?.msgs || [];
+      let newMsgArray = [];
+      if (childTask.output.prompt) {
+        newMsgArray.push(childTask.output.prompt)
+      }
+      if (childTask.output.promptResponse) {
+        newMsgArray.push(childTask.output.promptResponse);
+      }
+      //console.log("newMsgArray", newMsgArray);
       // The welcome message is not included as part of the Task msgs sent to the LLM
-      if (childTask.config?.welcomeMessage && childTask.config?.welcomeMessage !== "") {
-        const welcomeMessage = { role: "assistant", text: childTask.config?.welcomeMessage, user: "assistant" };
-        //console.log("setMsgs", [welcomeMessage, ...taskMessages]);
-        setMsgs([welcomeMessage, ...taskMessages]);
+      if (task.config?.welcomeMessage && task.config.welcomeMessage !== "") {
+        const welcomeMessage = { role: "assistant", text: task.config.welcomeMessage, user: "assistant" };
+        //console.log("setMsgs", [welcomeMessage, ...taskMessages, ...newMsgArray]);
+        setMsgs([welcomeMessage, ...taskMessages, ...newMsgArray]);
       } else {
-        setMsgs(taskMessages);
+        //console.log("setMsgs", [...taskMessages, ...newMsgArray]);
+        setMsgs([...taskMessages, ...newMsgArray]);
       }
     }
-  }, [childTask?.output?.msgs]);
+  }, [childTask?.output]);
 
+  /*
   useEffect(() => {
-    //console.log("childTask",childTask)
-  }, [childTask]);
-
+    console.log("msgs", msgs)
+  }, [msgs]);
+  */
+ 
   useEffect(() => {
     if (isMountedRef.current) {
       if (messagesEndRef.current && !hasScrolledRef.current && !hasScrolled) {
@@ -118,7 +130,7 @@ const TaskConversation = (props) => {
               >
                 <div className="chat">
                   <Icon role={msg.role} user={msg.user} />
-                  {childTask.state.current === "sending" && isLastElement ? (
+                  {childTask.output?.sending && isLastElement ? (
                     <div key={index} className="dot-typing"></div>
                   ) : (
                     <div 

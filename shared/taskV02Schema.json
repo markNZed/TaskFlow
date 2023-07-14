@@ -51,6 +51,9 @@
         "type": {
           "type": "string"
         },
+        "user": {
+          "type": "object"
+        },
         "userId": {
           "type": "string"
         },
@@ -80,6 +83,9 @@
         },
         "processor": {
           "$ref": "./genericV02schema.json#/definitions/Processor"
+        },
+        "users": {
+          "$ref": "./genericV02schema.json#/definitions/Users"
         },
         "hub": {
           "$ref": "./genericV02schema.json#/definitions/Hub"

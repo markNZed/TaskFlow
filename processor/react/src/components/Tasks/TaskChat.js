@@ -45,9 +45,7 @@ const TaskChat = (props) => {
     componentName,
   } = props;
 
-  const [prompt, setPrompt] = useState("");
   const [submitForm, setSubmitForm] = useState(false);
-  const [submittingForm, setSubmittingForm] = useState(false);
   const [responseText, setResponseText] = useState("");
   const responseTextRef = useRef("");
   const textareaRef = useRef();
@@ -108,11 +106,11 @@ const TaskChat = (props) => {
     switch (task.state.current) {
       case "start":
       case "input":
-        if (transitionFrom("receiving")) {
+        if (transitionFrom("received")) {
           responseTextRef.current = "";
           setResponseText(responseTextRef.current);
         }
-        if (submittingForm) {
+        if (task.input.submitForm) {
           nextState = "sending";
         }
         if (task.state?.address && task.state?.lastAddress !== task.state.address) {
@@ -122,68 +120,74 @@ const TaskChat = (props) => {
       case "mentionAddress":
         if (transitionTo("mentionAddress")) {
           // Add the input too for the user
-          const prompt = "Location: " + task.state?.address;
-          const newMsgArray = [
-            { role: "user", text: prompt, user: user.label },
-            { role: "assistant", text: "", user: "assistant" },
-          ];
-          //console.log("Sending newMsgArray", newMsgArray, prompt);
+          const promptText = "Location: " + task.state?.address;
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.msgs": [...msgs, ...newMsgArray],
+            "output.prompt": { role: "user", text: promptText, user: user.label },
+            "output.promptResponse": { role: "assistant", text: "", user: "assistant" },
             "commandArgs": { "lock": true },
             "command": "update",
             "state.lastAddress": task.state.address,
+            "input.prompt": prompt,
           });
         }
         break;
       case "sending":
         // Create a slot for new msgs
         if (transitionTo("sending") && !task.meta?.locked) {
-          // Create a new slot for the next message
-          // Add the input too for the user
-          const newMsgArray = [
-            { role: "user", text: prompt, user: user.label },
-            { role: "assistant", text: "", user: "assistant" },
-          ];
-          //console.log("Sending newMsgArray", newMsgArray, prompt);
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.msgs": [...msgs, ...newMsgArray],
+            "output.prompt": { role: "user", text: task.input.prompt, user: user.label },
+            "output.promptResponse": { role: "assistant", text: "", user: "assistant" },
+            "output.sending": true,
             "commandArgs": { "lock": true },
             "command": "update",
+            "input.submitForm": false,
           });
-          setSubmittingForm(false);
         }
         break;
       case "receiving":
         if (transitionTo("receiving")) {
-          setPrompt(""); // Not so good for collaborative interface
+          modifyTask({
+            "input.prompt": "",
+            "output.sending": false,
+            "output.prompt": null,
+            "output.msgs": [...msgs, task.output.prompt],
+          }); // Not so good for collaborative interface 
         }
-        const lastElement = { ...msgs[msgs.length - 1] }; // shallow copy
+        const promptResponse = task.output.promptResponse;
         // Avoid looping due to modifyTask by checking if the text has changed
-        if (responseText && responseText !== lastElement.text) {
-          lastElement.text = responseText;
+        if (responseText && responseText !== promptResponse.text) {
+          promptResponse.text = responseText;
           //console.log("modifyTask")
           modifyTask({
-            "output.msgs": [...msgs.slice(0, -1), lastElement],
+            "output.promptResponse": promptResponse,
           });
         }
+        break;
+      case "received":
+        nextState = "input";
+        modifyTask({
+          "output.promptResponse": null,
+          "output.msgs": [...msgs, task.output.promptResponse],
+        });
         break;
     }
     // Manage state.current and state.last
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, submittingForm, responseText]);
+  }, [task, responseText]);
 
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      if (prompt) {
-        setSubmittingForm(true);
+      if (task?.input?.prompt) {
+        modifyTask({
+          "input.submitForm": true,
+        });
       }
     },
-    [prompt]
+    [task?.input?.prompt]
   );
 
   useEffect(() => {
@@ -191,11 +195,11 @@ const TaskChat = (props) => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
     textarea.placeholder = task?.config?.promptPlaceholder;
-  }, [prompt, task?.config?.promptPlaceholder]);
+  }, [task?.input?.prompt, task?.config?.promptPlaceholder]);
 
   const handleDropdownSelect = (selectedPrompt) => {
     // Prepend to existing prompt, might be better just to replace
-    setPrompt((prevPrompt) => selectedPrompt + prevPrompt );
+    modifyTask({"input.prompt": selectedPrompt + task.input.prompt});
     setSubmitForm(true);
   }
 
@@ -229,11 +233,11 @@ const TaskChat = (props) => {
         <textarea
           ref={textareaRef}
           name="prompt"
-          value={prompt}
+          value={task.input.prompt}
           rows="1"
           cols="1"
           onChange={(e) => {
-            setPrompt(e.target.value);
+            modifyTask({"input.prompt": e.target.value});
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey === false) {

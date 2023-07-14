@@ -89,21 +89,17 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       //console.log("task.output", task.output);
       let msgs = T("output.msgs");
       // Extract the prompt
-      //const msgPrompt = msgs[msgs.length - 2];
-      //T("state.request.model.prompt", msgPrompt.text)
-      T("state.request.model.prompt", T("output.prompt.text"))
+      const msgPrompt = msgs[msgs.length - 2];
+      T("state.request.model.prompt", msgPrompt.text)
       const subTask = await SubTaskLLM_async(wsSendTask, task);
-      /*
       const lastElement = {
         ...msgs[msgs.length - 1],
       }; // shallow copy
       lastElement.text = subTask.response.LLM
       // Send to sync latest outputs via Hub, should also unlock
       T("output.msgs", [...msgs.slice(0, -1), lastElement]);
-      */
-      T("output.promptResponse.text", subTask.response.LLM);
       T("state.last", T("state.current"));
-      T("state.current", "received");
+      T("state.current", "input");
       T("commandArgs.unlock", true);
       T("command", "update");
       break;

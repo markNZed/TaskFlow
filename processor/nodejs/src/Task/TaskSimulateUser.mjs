@@ -55,7 +55,7 @@ function checkTaskCache (task, T) {
   return [enabled, seed];
 }
 
-const TaskChat_async = async function (taskName, wsSendTask, task) {
+const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(`${taskName} in state ${task.state.current}`);
@@ -78,34 +78,62 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
 
   // Could return msgs instead of response.text
   switch (task.state.current) {
-    case "mentionAddress":
+    case "introduction":
     case "sending":
+      const entryState = task.state.current;
       T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
-      await fetchTask_async(task)
-      //console.log("task.output", task.output);
-      let msgs = T("output.msgs");
-      // Extract the prompt
-      //const msgPrompt = msgs[msgs.length - 2];
-      //T("state.request.model.prompt", msgPrompt.text)
-      T("state.request.model.prompt", T("output.prompt.text"))
-      const subTask = await SubTaskLLM_async(wsSendTask, task);
-      /*
-      const lastElement = {
-        ...msgs[msgs.length - 1],
-      }; // shallow copy
-      lastElement.text = subTask.response.LLM
-      // Send to sync latest outputs via Hub, should also unlock
-      T("output.msgs", [...msgs.slice(0, -1), lastElement]);
-      */
-      T("output.promptResponse.text", subTask.response.LLM);
-      T("state.last", T("state.current"));
-      T("state.current", "received");
-      T("commandArgs.unlock", true);
-      T("command", "update");
+      // Could error here maybe need to chek?
+      const ok = await fetchTask_async(task)
+      if (ok) {
+        if (entryState === "introduction") {
+          const simulationPrompt = { role: "user", text: "Introduce yourself.", user: task.user.label };
+          T("output.simulationPrompt", simulationPrompt);
+          const simulationResponse = { role: "assistant", text: "", user: "assistant" };
+          T("output.simulationResponse", simulationResponse);
+          T("state.request.model.prompt", T("output.simulationPrompt.text"));
+          const subTask = await SubTaskLLM_async(wsSendTask, task);
+          T("output.simulationResponse.text", subTask.response.LLM);
+        } else {
+          let msgsOrig = JSON.parse(JSON.stringify(T("output.msgs")));
+          let msgs = T("output.msgs");
+          msgs.shift(); // Remove the first entry
+          if (msgs && msgs.length > 0) {
+            msgs.forEach(function(item, index) {
+              if (item !== null) {
+                if (item.role === "user") {
+                  item.role = "assistant";
+                  item.user = "assistant";
+                } else if (item.role === "assistant") {
+                  item.role = "user";
+                  item.user = task.user.label;
+                }
+              }
+            });
+          }
+          // The last message in output.msgs should become the prompt
+          const simulationPrompt = msgs.pop().text;
+          T("output.msgs", msgs);
+          const simulationResponse = { role: "assistant", text: "", user: "assistant" };
+          T("output.simulationResponse", simulationResponse);
+          T("state.request.model.prompt", simulationPrompt)
+          const subTask = await SubTaskLLM_async(wsSendTask, task);
+          T("output.msgs", msgsOrig);
+          T("output.simulationResponse.text", subTask.response.LLM);
+        }
+
+        // Send to sync latest outputs via Hub, should also unlock
+        T("state.last", T("state.current"));
+        T("state.current", "received");
+        T("commandArgs.unlock", true);
+        T("command", "update");
+      } else {
+        console.log("response nok");
+        return null;
+      }
       break;
     default:
       console.log("WARNING unknown state : " + task.state.current);
@@ -120,8 +148,8 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }
 
-  console.log("Returning from TaskChat_async", task.id);
+  console.log("Returning from TaskSimulateUser_async", task.id);
   return task;
 };
 
-export { TaskChat_async };
+export { TaskSimulateUser_async };

@@ -10,7 +10,7 @@ import assistant from "../../../assets/assistant.svg";
 import userSvg from "../../../assets/user.svg";
 
 const Icon = ({ role, user }) => {
-  //console.log("Icon compoent")
+  //console.log("Icon component", role, user);
 
   if (role === "assistant") {
     return (

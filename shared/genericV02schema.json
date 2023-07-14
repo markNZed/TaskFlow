@@ -65,6 +65,11 @@
       "additionalProperties": true,
       "title": "Processor"
     },    
+    "Users": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Users"
+    },    
     "Hub": {
       "type": "object",
       "additionalProperties": true,

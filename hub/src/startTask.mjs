@@ -173,6 +173,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     task.processor[processorId]["command"] = null;
     task.processor[processorId]["commandArgs"] = null;
     task.processor[processorId]["prevInstanceId"] = prevTask.instanceId;
+    task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     // Update all the active prevTask with new child
@@ -310,7 +311,7 @@ async function startTask_async(
     task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'hub', 'request', 'response', 'state'].forEach(key => task[key] = task[key] || {});
+    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
     //console.log("Task after merge", task)
 
@@ -358,14 +359,18 @@ async function startTask_async(
     // Initialize meta object
     task.meta.updateCount = task.meta.updateCount ?? 0;
     task.meta["requestsThisMinute"] = 0;
+    task.meta["requestCount"] = 0;
     task.meta["createdAt"] = task.meta["createdAt"] || Date.now();
 
-    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async)
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
 
     // Set task.processor[processorId].id after copying info from prevTask
     task.processor[processorId] = task.processor[processorId] ?? {};
     task.processor[processorId].id = processorId;
     
+    task.users[task.userId] = task.users[task.userId] ?? {};
+    task.users[task.userId] = utils.deepMerge(users[task.userId], task.users[task.userId]);
+
     // This is only for task.config 
     task = supportMultipleLanguages(task, users);
 
@@ -381,7 +386,7 @@ async function startTask_async(
     // This will also send the task to the processors
     activeTasksStore_async.set(task.instanceId, task);
 
-    console.log("Started task id " + task.id, task.processor);
+    console.log("Started task id " + task.id);
   }
 
   export default startTask_async;

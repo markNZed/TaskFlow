@@ -37,6 +37,7 @@ const wsSendTask = async function (task, processorId = null) {
   let command = task.hub.command;
   let commandArgs = task.hub?.commandArgs;
   let processor = task.processor;
+  let users = task.users;
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
@@ -60,6 +61,7 @@ const wsSendTask = async function (task, processorId = null) {
       diff.hub["command"] = command;
       diff.hub["commandArgs"] = commandArgs;
       diff.processor = processor;
+      diff.users = users;
       message["task"] = diff;
     }
   } else {
@@ -72,6 +74,10 @@ const wsSendTask = async function (task, processorId = null) {
     if (message.task.processor?.commandArgs) {
       message.task.processor.commandArgs = null;
     }
+  }
+  if (message.task?.users) {
+    message.task.user = JSON.parse(JSON.stringify(message.task.users[task.userId]));
+    delete message.task.users;
   }
   if (command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)

@@ -63,7 +63,11 @@ function checkSubTaskCache (T, task, subTaskName) {
   let seed = T("id");
   for (const cacheObj of task.config.cache) {
     if (cacheObj.subTask === subTaskName) {
-      enabled = cacheObj.enable;
+      if (cacheObj.enable === undefined) {
+        enabled = true;
+      } else {
+        enabled = cacheObj.enable;
+      }
       if (enabled && cacheObj.seed) {
         for (const cacheKeySeed of cacheObj.seed) {
           if (cacheKeySeed.startsWith("task.")) {
@@ -91,6 +95,8 @@ async function chat_prepare_async(task) {
   let forget = false;
   let [useCache, cacheKeySeed] = checkSubTaskCache(T, task, "SubTaskLLM");
   console.log("useCache config " + useCache + " seed " + cacheKeySeed);
+  let dummyAPI = T("config.model.dummyAPI") || DUMMY_OPENAI;
+  console.log("dummyAPI " + dummyAPI);
   let noWebsocket = false;
 
   let prompt = T("state.request.model.prompt") || T("config.model.prompt");
@@ -201,9 +207,7 @@ async function chat_prepare_async(task) {
   if (T("output.msgs") && !forget) {
     console.log("Initializing messages from output.msgs");
     messages.push(...T("output.msgs"));
-    // Remove the empty response holder and the prompt
-    messages.pop();
-    messages.pop();
+    //console.log("messages", messages);
   }
 
   if (modelType?.systemMessage) {
@@ -256,6 +260,7 @@ async function chat_prepare_async(task) {
     maxResponseTokens,
     instanceId,
     cacheKeySeed,
+    dummyAPI,
   };
 }
 
@@ -280,6 +285,7 @@ async function ChatGPTAPI_request_async(params) {
     instanceId,
     wsSendTask,
     cacheKeySeed,
+    dummyAPI,
   } = params;
 
   let {
@@ -291,7 +297,7 @@ async function ChatGPTAPI_request_async(params) {
   const lastMessageId = messages.length;
 
   // Need to account for the system message and some margin because the token count may not be exact.
-  //console.log("prompt " + prompt + " systemMessage " + systemMessage)
+  console.log("prompt " + prompt + " systemMessage " + systemMessage)
   let promptTokenLength = 0;
   if (prompt) {
     promptTokenLength = encode(prompt).length
@@ -418,7 +424,7 @@ async function ChatGPTAPI_request_async(params) {
     response_text_promise = Promise.resolve(text);
   } else {
     // Need to return a promise
-    if (DUMMY_OPENAI) {
+    if (dummyAPI) {
       if (debug) {
         console.log("Debug: ", cacheKeyText);
       }

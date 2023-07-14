@@ -37,6 +37,7 @@ export const configSchema = yup.object()
     forget: yup.boolean(),
     prompt: yup.string(),
     maxTokens: yup.number(),
+    maxResponseTokens: yup.number(),
     messagesTemplate: yup.array().of(templateSchema),
     useCache: yup.boolean(),
   }),
@@ -49,6 +50,15 @@ export const configSchema = yup.object()
   welcomeMessage: stringOrArrayOfStrings,
   cacheKeySeed: yup.string(),
   cache: yup.array().of(yup.object()),
+  fields: yup.array().of(yup.object({ 
+    type: yup.string(),
+    options: yup.array().of(yup.object({
+      // value can be boolean, string, or number
+      value: yup.mixed().required(),
+      label: yup.string().required(),
+    })),
+  })),
+  regexProcess: yup.object(),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

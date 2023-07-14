@@ -57,7 +57,8 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
       console.log('Resource is locked, try again later');
       result = "locked";
     } else {
-      throw new Error('An error occurred: response status ' + response.status);
+      console.error('An error occurred: response status ' + response.status);
+      //throw new Error('An error occurred: response status ' + response.status);
     }
     if (task.instanceId) {
       await globalState.storageRef.current.set(rollback.instanceId, rollback);

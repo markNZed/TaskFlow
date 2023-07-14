@@ -1,29 +1,28 @@
 /* ToDo
 -------
+It seems the assistant can complete rather than reply sometimes. 
+  Doe we need a stronger indicator for the end of a response.
+  Each chat message received starts with <BEGIN> and ends with <END>
+    How to strip this?
+      Config for the TaskChat or SubTask
+        RegexProcess("output.thing", match, replace)
+         Use https://www.npmjs.com/package/safe-regex
 
-Make use of task.config.cache in resume 
+Maybe task.user needs to be like task.processor 
+  Replace React globalState.user with task.user
+To be able to insert tasks we need to use task.input/output and not task.state
+Should not modify task.output.msgs in SubTaskLLM
+  Clean up TaskChat & TaskConversation
+    Split into msgsHistory + prompt + response
+Should the modeltype be copied into task.config.model?
+Should the Processor also implement rate limiting?
+Ability to select a model. This is a very simple task?
+  Could allow for various ways of selecting. 
+
 The cache is not going to allow a conversation if it matches and the key is not including the messages
-Notion of a cache in Task
-  Cannot replace caching in the LLM because it does streaming
-  task.config.cache = [
-    {
-      environments: [xxx],
-      states: [xxx],
-      key = ["this.userId"]
-    },
-    {
-      subTask: "subTaskLLM",
-      key = i
-    }
-  ]
-  Maybe:
-    {
-      subTask: "subTaskLLM",
-      key = i
-    }
-In templating maybe we should support this. syntax
+In templating maybe we should support "task." syntax
 
-Could allow for Hub to create tasks on the fly
+Allow for Hub to create tasks on the fly
   Could modify tasks too
   Raises issues for masking - could just not mask the things we want to be able to modify
     Then allow for copying rather than creating

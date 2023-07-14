@@ -132,7 +132,7 @@ function withTask(Component) {
     useEffect(() => {
       if (!props.task) {return}
       const spawnTask = props.task.config?.spawnTask === false ? false : true;
-      console.log("spawnTask", spawnTask)
+      //console.log("spawnTask", spawnTask)
       if (spawnTask && props.task?.meta?.childrenId) {
         props.task.meta.childrenId.forEach(childId => {
           console.log(childId);

@@ -3,6 +3,25 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskSelect",
+    config: {
+      selectUI: 'checkboxes',
+      fields: [
+        {
+          singleSelection: undefined,
+          type: undefined,
+          options: [
+            { value: "default1", label: "Default 1" },
+            { value: "default2", label: "Default 2" }
+          ],
+        },
+      ],
+    },
+    output: {
+      selected: [],
+    }
+  },
+  {
     name: "TaskChat",
     websocket: true,
     // If multiple environments then it will be synchronized
@@ -25,11 +44,33 @@ const tasktypes = [
     },
     output: {
       msgs: [],
+    },
+    input: {
+      prompt: "",
     }
   },
   {
     name: "TaskConversation",
     environments: ["react", "nodejs"],
+  },
+  {
+    name: "TaskSimulateUser",
+    environments: ["react", "nodejs"],
+    config: { 
+      APPEND_cache: [
+        {
+          subTask: "SubTaskLLM",
+          seed: "",
+          enable: CACHE_ENABLE,
+        }
+      ],
+    },
+    output: {
+      prompt: "",
+    },
+    input: {
+      msgs: [],
+    }
   },
   {
     name: "TaskStepper",

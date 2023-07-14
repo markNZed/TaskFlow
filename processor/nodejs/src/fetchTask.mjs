@@ -39,10 +39,18 @@ export async function fetchTask_async(task) {
       const apiUrl = `${TASKHUB_URL}/api/task`;
       console.log(`API ${command} call to ${apiUrl}`);
       const response = await fetch(apiUrl, requestOptions);
+      console.log(`API ${command} response status ${response.status}`);
+      return response.ok;
+      /*
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      } else {
+        return response;
       }
+      */
     } catch (error) {
+      console.log(`Error in fetchTask_async ${command}: ${error}`);
+      console.trace();
       throw new Error(`Error in fetchTask_async ${command}: ${error}`);
     }
   }

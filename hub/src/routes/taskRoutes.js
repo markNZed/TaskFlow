@@ -41,7 +41,6 @@ async function start_async(res, task) {
     };
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     await startTask_async(initTask, true, processorId, prevInstanceId);
-    res.status(200).send("ok");
   } catch (err) {
     console.log(`Error starting task ${commandArgs.id}`);
     throw new RequestError(`Error starting task ${task.id} ${err}`, 500, err);
@@ -58,7 +57,6 @@ async function update_async(res, task) {
     if (commandArgs?.done) {
       console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
       await doneTask_async(task);
-      res.status(200).send("ok");
     } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.updateCount = task.meta.updateCount + 1;
@@ -81,7 +79,6 @@ async function error_async(res, task) {
     const processorId = task.hub["sourceProcessorId"];
     console.log("error_async " + task.id + " from " + processorId);
     await errorTask_async(task);
-    res.status(200).send("ok");
   } catch (error) {
     console.error(`Error in error_async task ${task.id}: ${error.message}`);
     throw new RequestError(`Error in error_async task ${task.id}: ${error.message}`, 500, error);
@@ -106,12 +103,23 @@ router.post("/", async (req, res) => {
       task = checkLockConflict(task, activeTask);
       task = checkAPIRate(task, activeTask);
       task = processError(task, tasks);
+      // Deep copy
+      let error;
+      if (task.error) {
+        error = JSON.parse(JSON.stringify(task.error));
+      }
       task = await processOutput_async(task, outputStore_async);
       const result = await processCommand_async(task, res);
-      res.status(200).json(result);
+      if (error !== undefined) {
+        // Maybe throw from here ?
+        console.log("Error in /hub/api/task " + error);
+        res.status(500).json({ error: error });
+      } else {
+        res.status(200).json(result);
+      }
     } catch (err) {
       if (err instanceof RequestError) {
-        console.error("origError", err.origError);
+        console.log("Error in /hub/api/task " + err.code + " " + err.message, err.origError);
         res.status(err.code).send(err.message);
       } else {
         console.log("Error in /hub/api/task " + err.message, task);

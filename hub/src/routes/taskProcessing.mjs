@@ -92,9 +92,15 @@ function checkAPIRate(task, activeTask) {
       task.meta.requestsThisMinute++;
     }
 
-    const maxRequestCount = task?.config?.maxRequestCount ?? 0;
-    if (maxRequestCount && task.meta.maxRequestCount > maxRequestCount) {
-      throw new RequestError("Task request count exceeded", 409);
+    const maxRequestCount = task?.config?.maxRequestCount;
+    if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
+      console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
+      task.error = "Task request count of " + maxRequestCount + " exceeded.";
+      //throw new RequestError("Task request count exceeded", 409);
+    }
+    if (maxRequestCount) {
+      //console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
+      task.meta.requestCount++;
     }
   }
 

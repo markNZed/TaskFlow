@@ -279,7 +279,7 @@ async function saveTasks(tasks) {
     console.log('No differences found');
   }
 }
-await saveTasks(tasks);
+//await saveTasks(tasks);
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 

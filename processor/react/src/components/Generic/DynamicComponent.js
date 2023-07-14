@@ -12,7 +12,7 @@ const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
   let Component;
 
   if (!is) {
-    console.log("Warning: DynamicComponent ", is);
+    console.log("Warning: DynamicComponent ", rest);
   }
 
   try {
