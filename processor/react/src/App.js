@@ -116,6 +116,12 @@ function App({ activeWorkerCount, workerId }) {
     const registerProcessor = async () => {
       setRegistering(true);
       try {
+        const messagesStyle = {
+          wsOutputDiff: false,
+          wsInputDiff: true,
+          httpOutputDiff: false,
+          httpInputDiff: false, // Not used by Hub yet
+        };      
         const language = navigator?.language?.toLowerCase() ?? 'en';
         const response = await fetch(`${hubUrl}/api/register`, {
           method: "POST",
@@ -127,6 +133,7 @@ function App({ activeWorkerCount, workerId }) {
              processorId: globalState.processorId,
              environments: ["react"],
              language: language,
+             messagesStyle,
           }),
         });
         const data = await response.json();

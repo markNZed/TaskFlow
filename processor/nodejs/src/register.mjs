@@ -4,11 +4,25 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { processorId, TASKHUB_URL } from "../config.mjs";
+import { processorId, TASKHUB_URL, CONFIG_DIR } from "../config.mjs";
+import { utils } from "./utils.mjs";
+
+var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
+serviceTypes = utils.flattenObjects(serviceTypes);
+
+const locale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || process.env.LC_MESSAGES || 'en';
+const language = locale.split('_')[0];
 
 let hubId;
 
 const register_async = async () => {
+
+  const messagesStyle = {
+    wsOutputDiff: false,
+    wsInputDiff: true,
+    httpOutputDiff: false,
+    httpInputDiff: false, // Not used by Hub yet
+  };
 
   const requestOptions = {
     method: "POST",
@@ -16,7 +30,10 @@ const register_async = async () => {
     credentials: "include",
     body: JSON.stringify({
       processorId: processorId,
-      environments: ["nodejs"]
+      environments: ["nodejs"],
+      commandsAccepted: ["partial", "update", "start", "join", "pong", "register", "error"],
+      messagesStyle,
+      language,
    }),
   };
 

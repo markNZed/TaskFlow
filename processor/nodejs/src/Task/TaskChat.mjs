@@ -120,6 +120,8 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }
 
+  //T("error", {message: "Testing Error"});
+
   console.log("Returning from TaskChat_async", task.id);
   return task;
 };

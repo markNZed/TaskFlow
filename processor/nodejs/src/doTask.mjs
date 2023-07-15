@@ -24,10 +24,13 @@ export async function do_task_async(wsSendTask, task) {
       }
       // Returning null is  away of doing nothing
       if (updatedTask !== null) {
+        if (!updatedTask?.command) {
+          throw new Error("Missing command in updatedTask");
+        }
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
         }
-        if (updatedTask?.command === "start") {
+        if (updatedTask.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
@@ -38,9 +41,6 @@ export async function do_task_async(wsSendTask, task) {
           }
           await fetchTask_async(task);
         } else {
-          if (!updatedTask?.command) {
-            throw new Error("Missing command in updatedTask");
-          }
           if (updatedTask.command === "update") {
             await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
           }

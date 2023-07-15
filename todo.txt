@@ -1,13 +1,8 @@
 /* ToDo
 -------
-Register servicetypes
-  ServiceTypes is very AI specific, is there something more generic?
-    Change model to service  
-Option to IGNORE config options from parents
-  Avoids inheriting info that is not used.
 Error needs to return which processor/environment it was from
   maybe need to move to an object
-Option for full/diff communnication with Hub
+messagesStyle not being used yet 
 RxJS V7 Processor
   Start with NodeJS Processor and refactor
     1) Same functionality but using Observer pattern
@@ -124,6 +119,9 @@ Consider how we would add a radio select box to a component
   Could have an inject command from Hub
     Modify the parent task.meta.children and modify the child task.parent etc. then 
       Modify parent should then start new child that can be configured to start previous child as its child
+Option to IGNORE config options from parents
+  Avoids inheriting info that is not used.
+  Can just set to null to achieve this?
 
 Backlog
 -------

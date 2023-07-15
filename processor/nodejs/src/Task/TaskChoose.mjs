@@ -69,7 +69,7 @@ const TaskChoose_async = async function (taskName, wsSendTask, task) {
   } catch (error) {
     // Handle the error here
     console.log("An error occurred:", error);
-    T("error", error.message);
+    T("error", error);
   }
   console.log("Returning from TaskChoose");
   return task;

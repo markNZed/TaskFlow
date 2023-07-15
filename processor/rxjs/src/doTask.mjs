@@ -39,16 +39,18 @@ export async function do_task_async(wsSendTask, task) {
             command: "start",
           }
           await fetchTask_async(task);
-        } else if (updatedTask.command === "update") {
-          await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
+        } else if (updatedTask.command === "nop") {
+          console.log("do_task_async nop " + task.id);
+        } else {
+          if (updatedTask.command === "update") {
+            await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
+          }
           try {
             await fetchTask_async(updatedTask);
           } catch (error) {
             console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }
-        } else if (updatedTask.command === "nop") {
-          console.log("do_task_async nop " + task.id);
-        }
+        } 
       } else {
         console.log("do_task_async null " + task.id);
       }
