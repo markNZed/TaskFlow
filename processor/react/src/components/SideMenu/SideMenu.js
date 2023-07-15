@@ -14,7 +14,7 @@ import TaskflowTree from "./TaskflowTree";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 
-const SideMenu = ({ onClose }) => {
+const SideMenu = ({ onClose, interfaceType }) => {
   const [openToast, setOpenToast] = useState(false);
   const { globalState, mergeGlobalState } = useGlobalStateContext();
 
@@ -39,7 +39,7 @@ const SideMenu = ({ onClose }) => {
   return (
     <aside>
       <div
-        className={`${globalState.user?.interface === "full" ? "" : "hide"}`}
+        className={`${interfaceType === "full" ? "" : "hide"}`}
       >
         <SelectBox
           value={globalState.langModel}

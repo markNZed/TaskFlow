@@ -1,7 +1,34 @@
 /* ToDo
 -------
+RxJS Processor
+  Start with NodeJS Processor and refactor
+    1) Same functionality but using Observer pattern
+    2) Monitoring of another Task
+    3) Update the config of another task
+  https://github.com/statelyai/xstate to provide common FSM?
+
+
+The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
+  Can read the Task if it is active on that processor by using childrenId
+  Could modify the task and set command to "update" then call do_task_async ?
+   But could be active on the Processor too
+   Would need access to the current task object i.e. this needs to be maintained by processor
+     Typically the websocket creates Task then calls do_task_async
+       Can then maintain activeTasks but how to access this from task function?
+         Could pass it in as a parameter
+         Could pass in a function that can be called - this would allow for access control
+         Should the task stay active?
+           Then rather than returning the Task we would need to monitor for commands.
+             Would also need to implement the state machine.
+             Could use events
+  What is the scenario when we want to do this?
+    Monitoring activity across multiple Tasks
+      This is perhaps the next step
+Taskflows.js could be a task then would have task.user available and could remove globalState.user
 To be able to insert tasks we need to use task.input/output and not task.state
 Should the modeltype be copied into task.config.model?
+  The modeltype is on the Processor while config is on the Hub
+  Maybe Processor should register modeltypes as well as environment ?
 Should the Processor also implement rate limiting?
 Ability to select a model. This is a very simple task?
   Could allow for various ways of selecting. 

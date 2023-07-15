@@ -16,6 +16,7 @@ import { utils } from "./utils.mjs";
 let connectionAttempts = 0;
 let maxAttempts = 100;
 let processorWs;
+let activeTasks = {};
 
 function wsSendObject(message) {
   if (!processorWs) {
@@ -112,7 +113,10 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging")
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
-      await do_task_async(wsSendTask, mergedTask)
+      // Not using activeTasks but if we want Task to interact this will be neccessary
+      activeTasks[mergedTask.id] = mergedTask;
+      await do_task_async(wsSendTask, mergedTask);
+      delete activeTasks[mergedTask.id];
     } else if (command === "start" || command === "join") {
       console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)

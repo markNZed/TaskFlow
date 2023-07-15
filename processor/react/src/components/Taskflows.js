@@ -166,7 +166,7 @@ function Taskflows(props) {
               },
             }}
           >
-            <SideMenu onClose={handleToggle} />
+            <SideMenu onClose={handleToggle} interfaceType={globalState.user?.interface} />
           </Drawer>
 
           <Drawer
@@ -180,7 +180,7 @@ function Taskflows(props) {
             }}
             open
           >
-            <SideMenu onClose={() => (null)} />
+            <SideMenu onClose={() => (null)}  interfaceType={globalState.user?.interface}/>
           </Drawer>
         </Box>
 
