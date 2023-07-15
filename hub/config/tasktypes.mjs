@@ -25,7 +25,7 @@ const tasktypes = [
     name: "TaskChat",
     websocket: true,
     // If multiple environments then it will be synchronized
-    environments: ["react", "nodejs"],
+    environments: ["react", "nodejs", "rxjs"],
     config: { 
       welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
       welcomeMessage_EN: "Welcome! How can I assist you today?",
@@ -51,7 +51,7 @@ const tasktypes = [
   },
   {
     name: "TaskConversation",
-    environments: ["react", "nodejs"],
+    environments: ["react", "nodejs", "rxjs"],
   },
   {
     name: "TaskSimulateUser",

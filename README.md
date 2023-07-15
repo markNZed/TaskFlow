@@ -34,23 +34,29 @@ The Task Function may implement a state machine using `task.state.current` and t
 
 ## Task Processor
 
-Tasks are processed by Task Processors, currently there are two Task Processors implemented in T@skFlow. The NodeJS Task Processor runs Node on a server and the React Task Processor runs React in a web browser. The NodeJS Task Processor and React Task Processor communicate with the Hub using websocket and HTTP API. The NodeJS Task Processor and React Task Processor are implemented in Javascript.
+Tasks are processed by Task Processors, currently there are three Task Processors implemented in T@skFlow. 
+
+* NodeJS Task Processor runs Node on a server
+* React Task Processor runs React in a web browser
+* RxJS Task Processor runs RxJS on a server
+
+The Processors communicate with the Hub using websocket and HTTP API.
 
 The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node and the Express framework.
 
 The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Task Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
 
-Task Processor communication uses either websockets (e.g., for real-time interaction) or HTTP API.
+The RxJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the RxJS Task Processor without user interaction. The RxJS Task Processor uses Node, Express, and RxJS.
 
 ### Task Environment
 
-The Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The Task Environment could be decoupled from the Task Processor so a Task Processor could provide multiple Task Environments.
+The Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment. A Task Processor could provide multiple Task Environments.
 
 ### SubTask
 
-A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks. The SubTask may return asynchronously e.g., the `task.response` field could include a promise in Javascript.
+A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
 
-There may be side-effects from a SubTask, for example, it may return results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
+There may be side-effects from a SubTask, for example, it may return partial results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
 
 ## Task Hub
 
@@ -58,7 +64,7 @@ Information shared between Task Processors is maintained in the Task Hub which a
 
 ## Error Handling
 
-If a Task Function sets task.error and the Task is updated then the Task Hub api/task route will detect this and set task.hub.command to "error" then set task.hub.commandArgs.errorTask to `task.config.errorTask` or the nearest error task (task.id ends in ".error"). The task that errored is then considered to be "done" bby the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
+If a Task Function sets task.error and the Task is updated then the Task Hub will detect this and set task.hub.command to "error" then set task.hub.commandArgs.errorTask to `task.config.errorTask` or the nearest error task (task.id ends in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
 
 # Motivation
 

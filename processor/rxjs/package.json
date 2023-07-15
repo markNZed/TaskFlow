@@ -1,11 +1,11 @@
 {
-  "name": "taskflow-servernodejs",
+  "name": "taskflow-rxjs",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "start": "nodemon --watch ../../config/modeltypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' server",
-    "debug": "nodemon --watch ../../config/modeltypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9230 server.js"
+    "debug": "nodemon --watch ../../config/modeltypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --inspect=0.0.0.0:9231 server.js"
   },
   "dependencies": {
     "@kvs/node-localstorage": "^2.1.3",
@@ -28,6 +28,7 @@
     "node-cache": "^5.1.2",
     "node-fetch": "^3.3.1",
     "nodemon": "^2.0.21",
+    "rxjs": "^7.8.1",
     "seedrandom": "^3.0.5",
     "ws": "^8.12.1"
   },

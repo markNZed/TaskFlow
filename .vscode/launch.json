@@ -19,12 +19,21 @@
             "port": 9230,
             "localRoot": "/app/processor/nodejs",
             "remoteRoot": "/app/processor/nodejs"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "RxJS Processsor",
+            "address": "localhost",
+            "port": 9231,
+            "localRoot": "/app/processor/rxjs",
+            "remoteRoot": "/app/processor/rxjs"
         }
     ],
     "compounds": [
         {
             "name": "Debug Servers",
-            "configurations": ["Hub", "NodeJS Processsor"]
+            "configurations": ["Hub", "NodeJS Processsor", "RxJS Processsor"]
         }
     ]
 }

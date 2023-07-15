@@ -20,15 +20,6 @@ if (process.env.CACHE_ENABLE !== undefined) {
 }
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
-let DUMMY_OPENAI = false;
-if (process.env.DUMMY_OPENAI !== undefined) {
-  DUMMY_OPENAI = process.env.DUMMY_OPENAI === "true"
-}
-if (process.env.OPENAI_API_KEY === "") {
-  DUMMY_OPENAI = true;
-}
-console.log("DUMMY_OPENAI " + DUMMY_OPENAI);
-
 const DEFAULT_USER = "test@testing.com";
 // For teting we can map one user to any ohter user e.g.
 // MAP_USER_JSON={ "dev@email.com" : "user@email.org" }
@@ -47,11 +38,11 @@ try {
     processorId = fs.readFileSync(processorIdFile, 'utf-8');
 } catch (e) {
     // If the file does not exist, generate a new id
-    processorId = "nodejs-" + uuidv4();
+    processorId = "rxjs-" + uuidv4();
     // Save the id to a file for future use
     fs.writeFileSync(processorIdFile, processorId);
 }
 
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };

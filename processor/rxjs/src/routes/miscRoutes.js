@@ -10,8 +10,8 @@ dotenv.config();
 
 const router = express.Router();
 
-router.get("/nodejs", async (req, res) => {
-  console.log("/nodejs")
+router.get("/rxjs", async (req, res) => {
+  console.log("/rxjs")
   res.send(`Hello!`);
 });
 

@@ -27,6 +27,18 @@ services:
       - web-proxy
     depends_on:
       - taskflow-hub
+  taskflow-rxjs:
+    image: taskflow-prod:latest
+    volumes:
+      - ../../processor/rxjs:/app/processor/rxjs
+      - ../../shared:/app/shared
+    entrypoint: ["/entrypoint-nodejs.sh"]
+    environment:
+      - TASKHUB_URL=http://localhost:5001/hub
+    networks:
+      - web-proxy
+    depends_on:
+      - taskflow-hub
   taskflow-hub:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest

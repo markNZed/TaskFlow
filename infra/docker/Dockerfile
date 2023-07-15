@@ -21,6 +21,7 @@ RUN npm install -g typescript
 EXPOSE 3000
 EXPOSE 5000
 EXPOSE 5001
+EXPOSE 5002
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh

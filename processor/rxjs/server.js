@@ -63,6 +63,6 @@ const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
 
-const port = process.env.WS_PORT || 5000;
-server.listen(port, () => console.log(appName + " NodeJS Task Processor started on port " + port));
+const port = process.env.WS_PORT || 5002;
+server.listen(port, () => console.log(appName + " RxJS Task Processor started on port " + port));
 connectWebSocket();

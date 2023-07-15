@@ -1,12 +1,20 @@
 /* ToDo
 -------
-RxJS Processor
+error needs to return which processor/environment it was from
+  maybe need to move to an object
+partial should be able to decide which environmenet it is sent to?
+  commandArgs: {environments: ["react"]}
+RxJS V7 Processor
   Start with NodeJS Processor and refactor
     1) Same functionality but using Observer pattern
     2) Monitoring of another Task
     3) Update the config of another task
   https://github.com/statelyai/xstate to provide common FSM?
-
+  Event processing could be on the Processor but it would not se events of Tasks on another Processor
+    RxJS could be added to environmnet of all Tasks that we want to monitor
+    Create some sort of subscrption to a Task via the Hub - can we know the family ids ?
+  There should be an option for the Hub-Processor communication to be by diff or full (during register)
+  ReactiveX is language-agnostic, and there are many implementations of the ReactiveX API in various programming languages, including RxJava, RxJS, RxSwift, and others.
 
 The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
   Can read the Task if it is active on that processor by using childrenId

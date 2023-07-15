@@ -5,11 +5,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocket } from "ws";
+import { from, mergeMap, of } from 'rxjs';
 import { hubSocketUrl, processorId } from "./../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
+
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -115,7 +117,23 @@ const connectWebSocket = () => {
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       // Not using activeTasks but if we want Task to interact this will be neccessary
       activeTasks[mergedTask.id] = mergedTask;
-      await do_task_async(wsSendTask, mergedTask);
+      // create an Observable from the promise
+      const task$ = from(do_task_async(wsSendTask, mergedTask));
+      // use mergeMap operator to handle the async operation
+      task$
+        .pipe(
+          mergeMap(result => {
+            // handle the result of the async operation here
+            console.log("mergeMap result", result);
+            return of(result); // modify this as needed
+          })
+        )
+        .subscribe({
+          next: (v) => console.log("subscribe nxt", v),
+          error: (e) => console.error(e),
+          complete: () => console.info('complete') 
+        })
+      //await do_task_async(wsSendTask, mergedTask);
       delete activeTasks[mergedTask.id];
     } else if (command === "start" || command === "join") {
       console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
@@ -156,7 +174,7 @@ const connectWebSocket = () => {
     // attempt reconnection with backoff on error
     if (connectionAttempts < maxAttempts) {
       //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
-      let backoffTime = 5000;
+      let backoffTime = 5002;
       let currentDateTime = new Date();
       let currentDateTimeString = currentDateTime.toString();
       console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);

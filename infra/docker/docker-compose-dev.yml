@@ -12,6 +12,7 @@ services:
     ports:
       - "127.0.0.1:9229:9229" # debug of hub
       - "127.0.0.1:9230:9230" # debug of nodejs
+      - "127.0.0.1:9230:9231" # debug of rxjs
     networks:
       - web-proxy
 

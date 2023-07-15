@@ -13,6 +13,7 @@ task.commands:
 * start
 * update
 * partial
+* nop
 
 The Task object currently has a fixed set of top level properties. Several properties are objects:
 * privacy - a copy of the Task object's structure with boolean types that indicate if the property should be sent from the NodeJS Task Processor to the React Task Processor. For example, this could avoid sending prompts in config data to the web browser.

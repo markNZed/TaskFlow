@@ -27,7 +27,9 @@ export async function do_task_async(wsSendTask, task) {
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
         }
-        if (updatedTask?.command === "start") {
+        if (!updatedTask?.command) {
+          throw new Error("Missing command in updatedTask");
+        } else if (updatedTask?.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
@@ -37,24 +39,21 @@ export async function do_task_async(wsSendTask, task) {
             command: "start",
           }
           await fetchTask_async(task);
-        } else {
-          if (!updatedTask?.command) {
-            throw new Error("Missing command in updatedTask");
-          }
-          if (updatedTask.command === "update") {
-            await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
-          }
+        } else if (updatedTask.command === "update") {
+          await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
           try {
             await fetchTask_async(updatedTask);
           } catch (error) {
             console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }
+        } else if (updatedTask.command === "nop") {
+          console.log("do_task_async nop " + task.id);
         }
       } else {
         console.log("do_task_async null " + task.id);
       }
     } else {
-      console.log("NodeJS Task Processor unknown component " + task.type);
+      console.log("RxJS Task Processor unknown component " + task.type);
       //console.log("taskFunctions", taskFunctions);
       updatedTask = task;
     }
