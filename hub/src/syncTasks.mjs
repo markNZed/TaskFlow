@@ -46,10 +46,14 @@ const syncTasks_async = async (key, value) => {
             (command === "join" && processorId === sourceProcessorId)
         ) {
           if (!taskCopy.processor[processorId]) {
-            console.log("command taskCopy missing processor", command, taskCopy, processorId );
+            console.log("taskCopy missing processor", command, taskCopy, processorId );
           }
-          console.log("syncTasks_async", command, key, processorId);
-          await wsSendTask(taskCopy, processorId);
+          if (processorData.commandsAccepted.includes(command)) {
+            console.log("syncTasks_async", command, key, processorId);
+            await wsSendTask(taskCopy, processorId);
+          } else {
+            console.log("syncTasks_async processor does not support commmand", command, processorId);
+          }
         } else {
           //console.log("syncTasks_async skipping", key, processorId);
         }

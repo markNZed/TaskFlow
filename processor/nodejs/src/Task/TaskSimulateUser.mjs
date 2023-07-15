@@ -94,7 +94,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           T("output.simulationPrompt", simulationPrompt);
           const simulationResponse = { role: "assistant", text: "", user: "assistant" };
           T("output.simulationResponse", simulationResponse);
-          T("state.request.model.prompt", T("output.simulationPrompt.text"));
+          T("state.request.service.prompt", T("output.simulationPrompt.text"));
           const subTask = await SubTaskLLM_async(wsSendTask, task);
           T("output.simulationResponse.text", subTask.response.LLM);
         } else {
@@ -119,7 +119,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           T("output.msgs", msgs);
           const simulationResponse = { role: "assistant", text: "", user: "assistant" };
           T("output.simulationResponse", simulationResponse);
-          T("state.request.model.prompt", simulationPrompt)
+          T("state.request.service.prompt", simulationPrompt)
           const subTask = await SubTaskLLM_async(wsSendTask, task);
           T("output.msgs", msgsOrig);
           T("output.simulationResponse.text", subTask.response.LLM);

@@ -23,7 +23,7 @@ const tasks = [
   {
     config: {
       label: "chatGPT",
-      model: {
+      service: {
         type: "chatgpt"
       }
     },
@@ -62,7 +62,7 @@ const tasks = [
     config: {
       inputLabel: "Respond here.",
       instruction: "Tell the user what to do",
-      model: {
+      service: {
         forget: true,
         prompt: "Tell me a story about something random.",
         type: "chatgpt"
@@ -97,7 +97,7 @@ const tasks = [
         "\""
       ]
     },
-    model: {
+    service: {
       forget: true,
       type: "chatgpt"
     },

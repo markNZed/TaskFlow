@@ -153,12 +153,15 @@ function initWebSocketServer(server) {
           task.hub["sourceProcessorId"] = processorId;     
           for (const id of activeTaskProcessors) {
             if (id !== processorId) {
-              const ws = connections.get(id);
-              if (!ws) {
-                console.log("Lost websocket for ", id, connections.keys());
-              } else {
-                //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
-                wsSendTask(task, id);
+              const processorData = activeProcessors.get(id);
+              if (processorData.commandsAccepted.includes(command)) {
+                const ws = connections.get(id);
+                if (!ws) {
+                  console.log("Lost websocket for ", id, connections.keys());
+                } else {
+                  //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
+                  wsSendTask(task, id);
+                }
               }
             }
           }

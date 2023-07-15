@@ -1,9 +1,13 @@
 /* ToDo
 -------
-error needs to return which processor/environment it was from
+Register servicetypes
+  ServiceTypes is very AI specific, is there something more generic?
+    Change model to service  
+Option to IGNORE config options from parents
+  Avoids inheriting info that is not used.
+Error needs to return which processor/environment it was from
   maybe need to move to an object
-partial should be able to decide which environmenet it is sent to?
-  commandArgs: {environments: ["react"]}
+Option for full/diff communnication with Hub
 RxJS V7 Processor
   Start with NodeJS Processor and refactor
     1) Same functionality but using Observer pattern
@@ -34,11 +38,11 @@ The React Processor provides a parent-child relationship for interaction. How to
       This is perhaps the next step
 Taskflows.js could be a task then would have task.user available and could remove globalState.user
 To be able to insert tasks we need to use task.input/output and not task.state
-Should the modeltype be copied into task.config.model?
-  The modeltype is on the Processor while config is on the Hub
-  Maybe Processor should register modeltypes as well as environment ?
+Should the servicetype be copied into task.config.service?
+  The servicetype is on the Processor while config is on the Hub
+  Maybe Processor should register servicetypes as well as environment ?
 Should the Processor also implement rate limiting?
-Ability to select a model. This is a very simple task?
+Ability to select a service. This is a very simple task?
   Could allow for various ways of selecting. 
 
 The cache is not going to allow a conversation if it matches and the key is not including the messages
@@ -201,7 +205,7 @@ Notes/Idea
               Task
                 User Task
                   Session Task
-  Asking the model to output in a format that would pass a test might be a software good way of constraining prmopts
+  Asking the service to output in a format that would pass a test might be a software good way of constraining prmopts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
   How to interface with other apps with output from T@skFlow ?
     Windows accessibility APIs, such as UI Automation or MSAA (Microsoft Active Accessibility)
@@ -242,7 +246,7 @@ Architecture
     In React this is fairly easy. On the NodeJS Task Processor this could be a pub-sub system. The common point is asynchronous messages.
   How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Task Processor provide the environment?)
     "child process execution" with child_process library
-    RabbitMQ for message passing good for a local model but do we need high speed, probably not.
+    RabbitMQ for message passing good for a local service but do we need high speed, probably not.
     REST API would allow for remote etc, maybe better
     AMQP or MQTT would be more scalable.
   Keep server on nodejs processor - yes but for debug/admin/metrics etc
@@ -286,7 +290,7 @@ Comparison with similar systems
   LangChain - a framework for developing applications powered by language models.
     An abstraction above JS and Python
     Standard interface to models (could reuse this)
-    Model output parsing sytem (could reuse this from TaskFunction)
+    service output parsing sytem (could reuse this from TaskFunction)
     Provides stores for custom data e.g. text splitter
     The taskflow in T@skFlow is like an Agent in LangChain
   GPT-Index
@@ -385,11 +389,11 @@ Features that are manually tested
             prompt X
             forget X
             agent X
-            model X
+            service X
           response
             userInput X
             text X
-          model
+          service
             langModel X
             temperature X
             maxTokens X

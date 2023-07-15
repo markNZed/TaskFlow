@@ -31,7 +31,7 @@ export const configSchema = yup.object()
   nextStates: yup.object(),
   nextTaskTemplate: yup.object(),
   responseTemplate: stringOrArrayOfStrings,
-  model: yup.object({
+  service: yup.object({
     base: yup.string(),
     type: yup.string(),
     forget: yup.boolean(),

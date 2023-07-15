@@ -19,10 +19,22 @@ router.post("/", async (req, res) => {
   console.log("/hub/api/register");
   let processorId = req.body.processorId;
   let environments = req.body.environments;
+  let commandsAccepted = req.body?.commandsAccepted;
+  let serviceTypes = req.body?.serviceTypes;
+
+  if (commandsAccepted === undefined) {
+    commandsAccepted = ["partial", "update", "start", "join", "pong", "register"];
+  }
 
   console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments));
+  console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
+  //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
     
-  activeProcessors.set(processorId, {environments: environments})
+  activeProcessors.set(processorId, {
+    environments,
+    commandsAccepted,
+    serviceTypes,
+  })
   
   res.send({
     hubId: hubId,

@@ -90,8 +90,8 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       let msgs = T("input.msgs");
       // Extract the prompt
       //const msgPrompt = msgs[msgs.length - 2];
-      //T("state.request.model.prompt", msgPrompt.text)
-      T("state.request.model.prompt", T("output.prompt.text"))
+      //T("state.request.service.prompt", msgPrompt.text)
+      T("state.request.service.prompt", T("output.prompt.text"))
       const subTask = await SubTaskLLM_async(wsSendTask, task);
       /*
       const lastElement = {

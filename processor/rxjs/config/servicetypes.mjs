@@ -1,6 +1,6 @@
 const currentDate = new Date().toISOString().split("T")[0];
 
-const modeltypes = [
+const servicetypes = [
   {
     name: "root",
     base : 'gpt-3.5-turbo',
@@ -27,4 +27,4 @@ const modeltypes = [
     */
   },
 ];
-export { modeltypes };
+export { servicetypes };
