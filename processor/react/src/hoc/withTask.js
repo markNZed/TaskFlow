@@ -30,6 +30,7 @@ function withTask(Component) {
 
     const { globalState, mergeGlobalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
+    const [isLocked, setIsLocked] = useState(false);
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
     const [childTask, setChildTask] = useState();
@@ -52,6 +53,18 @@ function withTask(Component) {
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
     const handleModifyChildStateRef = useRef(null);
     const handleModifyChildTaskRef = useRef(null);
+
+    useEffect(() => {
+      if (props.task?.meta?.locked) {
+        if (props.task.meta.locked === globalState.processorId) {
+          setIsLocked(false);
+        } else {
+          setIsLocked(true);
+        }
+      } else if (isLocked) {
+        setIsLocked(false);
+      }
+    }, [props.task]);
 
     useEffect(() => {
       const useAddress = props.task?.config?.useAddress;
@@ -124,7 +137,7 @@ function withTask(Component) {
 
     const handleChildDidMount = () => {
       // This is called during the rendering of the Task and even though
-      // this is a HoC w get warnings for changing state during rendering
+      // this is a HoC we get warnings for changing state during rendering
       // So adding this delay will update outside of the rendering of Task
       setTimeout(() => setIsMounted(true), 0);
     }
@@ -162,31 +175,40 @@ function withTask(Component) {
     useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        //console.log("Storage get ", props.task.id, props.task.instanceId, lastTask);
+        const updatedTask = deepMerge(lastTask, updateDiff)
         //console.log("lastTask", lastTask)
-        // If the resource has been locked then ignore whatever was done locally
-        let currentTaskDiff = {};
-        if (lastTask.meta.locked === globalState.processorId) {
-          currentTaskDiff = getObjectDifference(lastTask, props.task);
+        // If the resource has been locked by another processor then we ignore whatever was done locally
+        // If this is the source processor then we want to keep any change made to the task since the update was sent
+        // There may be meta data like task.meta.lock that we want updated on the source processor
+        // The lock effectively makes a processor the master so even if changes are made by another processor
+        // the values of the procesor with the lock will be favored.
+        const thisProcssorIsSource = updateDiff.meta.sourceProcessorId === globalState.processorId;
+        const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
+        if (thisProcssorIsSource) {
+          //console.log("update from this processor")
+          // Just update task.meta
+          const newMeta = deepMerge(props.task.meta, updateDiff.meta);
+          modifyTask({"meta": newMeta});
+        } else if (thisProcessorHasLock) {
+          if (thisProcessorHasLock) {console.log("update with lock");}
+          let currentTaskDiff = getObjectDifference(lastTask, props.task);
+          // We copy across the meta data in any case
+          currentTaskDiff.meta = deepMerge(currentTaskDiff.meta, updateDiff.meta);
+          if (checkConflicts(currentTaskDiff, updateDiff)) {
+            console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
+          }
+          let modifiedUpdatedTask = deepMerge(lastTask, currentTaskDiff);
+          // Priority to updateDiff
+          modifiedUpdatedTask = deepMerge(modifiedUpdatedTask, updateDiff);
+          props.setTask(modifiedUpdatedTask);
+          console.log("Update ", props.task.id, modifiedUpdatedTask);
+        } else {
+          props.setTask(updatedTask);
+          console.log("Update ", props.task.id, updatedTask);
         }
-        //console.log("currentTaskDiff", currentTaskDiff);
-        //console.log("updateDiff", updateDiff);
-        //const currentUpdateDiff = getObjectDifference(currentTaskDiff, updateDiff);
-        //console.log("currentUpdateDiff", currentUpdateDiff);
-        // ignore differences in source & updatedAt & lock
-        // partial updates to response can cause conflicts
-        // Needs further thought
-        delete currentTaskDiff.response
-        if (checkConflicts(currentTaskDiff, updateDiff)) {
-          console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
-          //throw new Error("CONFLICT");
-        }
-        modifyTask(updateDiff);
         // Important we record updateDiff as it was sent to keep in sync with Hub
-        await globalState.storageRef.current.set(props.task.instanceId, deepMerge(lastTask, updateDiff));
-        const newTask = await globalState.storageRef.current.get(props.task.instanceId);
-        console.log("Storage update ", props.task.id, props.task.instanceId, updateDiff);
-        //console.log("Storage task ", props.task.id, props.task.instanceId, mergedTask);
+        await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
+        console.log("Storage update ", props.task.id, updateDiff, updatedTask);
       }
     )
 
@@ -327,11 +349,12 @@ function withTask(Component) {
       }
     }, [props.task]);
 
-    function modifyTask(update) {
-      setNestedProperties(update);
-      //console.log("modifyTask", props.task)
+    function modifyTask(modification) {
+      setNestedProperties(modification);
+      //console.log("modifyTask modification", modification)
       props.setTask((prevState) => {
-        const res = deepMerge(prevState, update);
+        const res = deepMerge(prevState, modification);
+        //console.log("deepMerge", res);
         return res;
       });
     }
@@ -493,6 +516,7 @@ function withTask(Component) {
       handleModifyChildTask,
       modifyChildTask,
       checkIfStateReady,
+      isLocked,
     };
 
     return <WithDebugComponent {...componentProps} />;

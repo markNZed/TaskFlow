@@ -38,6 +38,7 @@ const TaskConversation = (props) => {
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState([]);
+  const [chatResponse, setChatResponse] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
@@ -55,24 +56,20 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (childTask) {
       const childMsgs = childTask.output?.msgs || [];
-      let promptMsgs = [];
-      if (childTask.output.prompt) {
-        promptMsgs.push(childTask.output.prompt)
-      }
-      if (childTask.output.promptResponse) {
-        promptMsgs.push(childTask.output.promptResponse);
+      if (childTask.output.promptResponse !== chatResponse) {
+        setChatResponse(childTask.output.promptResponse);
       }
       let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
       // The welcome message is not included as part of the Task msgs sent to the LLM
       if (task.config?.welcomeMessage && task.config.welcomeMessage !== "") {
-        welcomeMessage.push({ role: "assistant", text: task.config.welcomeMessage, user: "assistant" });
+        welcomeMessage.push({ role: "assistant", text: task.config.welcomeMessage, user: "assistant", id: "welcome" });
       }
       // deep copy because we may modify with regexProcessMessages
-      let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs, ...promptMsgs]));
+      let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs]));
       // Convert to string to compare deep data structure
       if (JSON.stringify(combinedMsgs) !== JSON.stringify(msgs)) {
-        // Here we could process messages
+        // This modifies the presentation of messages
         const regexProcessMessages = task.config.regexProcessMessages;
         if (regexProcessMessages) {
           for (const [regexStr, replacement] of regexProcessMessages) {
@@ -92,12 +89,6 @@ const TaskConversation = (props) => {
       }
     }
   }, [childTask?.output]);
-
-  /*
-  useEffect(() => {
-    console.log("msgs", msgs)
-  }, [msgs]);
-  */
  
   useEffect(() => {
     if (isMountedRef.current) {
@@ -127,6 +118,7 @@ const TaskConversation = (props) => {
     const chatInputRect = chatInputRef.current.getBoundingClientRect();
     const maxHeight = Math.max(chatInputRect.top - chatContainerRect.top, 100)
     setChatContainermaxHeight(maxHeight)
+    //console.log("Updating chatContainermaxHeight" + maxHeight);
   }, [chatContainerRef, chatInputRef]); // chatInputRef detects mobile screen rotation changes
 
   useEffect(() => {
@@ -136,6 +128,26 @@ const TaskConversation = (props) => {
       chatContainer.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  // React.memo does not make any difference as TaskConversation is rerendering
+  const Message = ({ role, user, text, sending, id }) => {
+    //console.log("Rendering ", role, user, text, sending, id);
+    return (
+      <div className={`wrapper ${role === "assistant" && "ai"}`}>
+        <div className="chat">
+          <Icon role={role} user={user} />
+          {sending ? (
+            <div className="dot-typing"></div>
+          ) : (
+            <div 
+              className="message text2html"
+              dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(text) }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <section className="chat-section">
@@ -148,26 +160,30 @@ const TaskConversation = (props) => {
       >
         { msgs && msgs.length > 0 &&
           msgs.map((msg, index) => {
-            const isLastElement = index === msgs.length - 1;
+            //console.log("msg", msg);
+            // Use components here so we can avoid re-rendering if nothing changes
             return (
-              <div
-                key={index}
-                className={`wrapper ${msg.role === "assistant" && "ai"}`}
-              >
-                <div className="chat">
-                  <Icon role={msg.role} user={msg.user} />
-                  {childTask.output?.sending && isLastElement ? (
-                    <div key={index} className="dot-typing"></div>
-                  ) : (
-                    <div 
-                      className="message text2html"
-                      dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(msg.text) }}
-                    />
-                  )}
-                </div>
-              </div>
+              <Message 
+                key={msg.id}
+                role={msg.role}
+                user={msg.user}
+                text={msg.text}
+                sending={false}
+                id={msg.id}
+              />
             );
-          })}
+          })
+        }
+        { chatResponse && (
+          <Message 
+            key={chatResponse.id}
+            role={chatResponse.role}
+            user={chatResponse.user}
+            text={chatResponse.text} 
+            sending={childTask.output?.sending} 
+            id={chatResponse.id}
+          />
+        )}
         <div ref={messagesEndRef} style={{ height: "5px" }} />
       </div>
       <div id="chat-input" ref={chatInputRef}>

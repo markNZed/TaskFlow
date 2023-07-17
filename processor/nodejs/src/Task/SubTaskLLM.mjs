@@ -205,9 +205,9 @@ async function chat_prepare_async(task) {
   }
 
   // This is assuming the structure used in TaskChat
-  if (T("output.msgs") && !forget) {
-    console.log("Initializing messages from output.msgs");
-    messages.push(...T("output.msgs"));
+  if (T("input.msgs") && !forget) {
+    console.log("Initializing messages from input.msgs");
+    messages.push(...T("input.msgs"));
     //console.log("messages", messages);
   }
 

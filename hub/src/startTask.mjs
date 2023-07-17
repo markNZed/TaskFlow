@@ -4,10 +4,11 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
+import syncTask_async from "./syncTask.mjs";
 
 // Test handling of error
 
@@ -16,14 +17,28 @@ import { utils } from "./utils.mjs";
 
 async function checkActiveTaskAsync(instanceId, activeProcessors) {
   let activeTask = await activeTasksStore_async.get(instanceId);
-  let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
   let doesContain = false;
-  if (activeTaskProcessors) {
-    for (let key of activeProcessors.keys()) {
-        if (activeTaskProcessors.includes(key)) {
-            doesContain = true;
-            break;
+  if (activeTask) {
+    let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
+    let environments = [];
+    if (activeTaskProcessors) {
+      for (let processorId of activeProcessors.keys()) {
+        if (activeTaskProcessors.includes(processorId)) {
+          const processorData = activeProcessors.get(processorId);
+          doesContain = true;
+          environments.push(...processorData.environments);
+          //console.log("Adding environments to task " + activeTask.id, processorData.environments)
         }
+      }
+    }
+    // Check that we have at least one environment active
+    
+    if (doesContain) {
+      const allEnvironmentsPresent = activeTask.environments.every(env => environments.includes(env));
+      console.log("activeTask.environments", activeTask.environments, "environments", environments, "allEnvironmentsPresent", allEnvironmentsPresent);
+      if (!allEnvironmentsPresent) {
+        doesContain = false;
+      }
     }
   }
   return { activeTask, doesContain };
@@ -40,6 +55,7 @@ async function processInstanceAsync(task, instanceId, mode) {
       console.log(`Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
+      task["hub"]["command"] = "start";
       task.state["current"] = "start";
       task.meta["updateCount"] = 0;
       task.meta["locked"] = null;
@@ -187,8 +203,8 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
       if (await activeTasksStore_async.has(prevTask.instanceId)) {
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
-        // This has the side effect of also updating the task
         await activeTasksStore_async.set(prevTask.instanceId, prevTask);
+        await syncTask_async(prevTask.instanceId, prevTask);
       }
     }
   }
@@ -274,10 +290,10 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
   return taskProcessors;
 }
 
-async function recordTaskProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async) {
+async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
   // Record which processors have this task
   if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
-    let processorIds = await activeTaskProcessorsStore_async.get(task.instanceId)
+    let processorIds = await activeTaskProcessorsStore_async.get(task.instanceId);
     taskProcessors.forEach(id => {
       if (processorIds && !processorIds.includes(id)) {
         processorIds.push(id);
@@ -287,6 +303,22 @@ async function recordTaskProcessorsAsync(task, taskProcessors, activeTaskProcess
   } else {
     await activeTaskProcessorsStore_async.set(task.instanceId, taskProcessors);
   }
+  //console.log("Processors with task instance " + task.instanceId, taskProcessors);
+  // Record which tasks have this processor
+  await Promise.all(
+    taskProcessors.map(async (processorId) => {
+      if (await activeProcessorTasksStore_async.has(processorId)) {
+        let taskInstanceIds = await activeProcessorTasksStore_async.get(processorId);
+        if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
+          taskInstanceIds.push(task.instanceId);
+        }
+        await activeProcessorTasksStore_async.set(processorId, taskInstanceIds);
+      } else {
+        await activeProcessorTasksStore_async.set(processorId, [task.instanceId]);
+      }
+      //console.log("Added task instance " + task.instanceId + " to processor " + processorId);
+    })
+  );
 }
 
 async function startTask_async(
@@ -381,10 +413,11 @@ async function startTask_async(
 
     const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors)
 
-    await recordTaskProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async)
+    await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async)
 
-    // This will also send the task to the processors
-    activeTasksStore_async.set(task.instanceId, task);
+    // Don't await so the return gets back before the websocket update
+    syncTask_async(task.instanceId, task)
+      .then(() => activeTasksStore_async.set(task.instanceId, task))
 
     console.log("Started task id " + task.id);
   }

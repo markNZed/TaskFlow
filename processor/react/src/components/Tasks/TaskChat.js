@@ -10,6 +10,7 @@ import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import { parseRegexString } from "../../utils/utils";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
+import { v4 as uuidv4 } from "uuid";
 
 /*
 Task Process
@@ -21,9 +22,22 @@ Task Process
     Display updates to task.output.msgs
 
 Task States
-  input: get user prompt
+  start:
+  input: detect submission of input or skip to state mentionAddress
+  mentionAddress: send location as prompt
   sending: sending user prmopt to NodeJS Task Processor
   receiving: receiving websocket response from NodeJS Task Processor
+  received: 
+
+Task IO
+  output:
+    promptResponse: output from the LLM
+    msgs: input.msgs with prompt appended
+    sending: indicate prompt is being sent to LLM
+  input:
+    promptText: the prompt input 
+    submitPrompt: trigger to send prompt
+    msgs: conversation history 
   
 ToDo:
   Allow copy/paste while receiving
@@ -44,9 +58,10 @@ const TaskChat = (props) => {
     user,
     onDidMount,
     componentName,
+    isLocked,
   } = props;
 
-  const [submitForm, setSubmitForm] = useState(false);
+  const [submitPrompt, setSubmitPrompt] = useState(false);
   const [responseText, setResponseText] = useState("");
   const responseTextRef = useRef("");
   const textareaRef = useRef();
@@ -101,76 +116,79 @@ const TaskChat = (props) => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
     if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
-    // Deep copy because we are going to modify the msgs array which is part of a React state
-    // so it should only be modified with modifyTask
-    const msgs = task.output?.msgs ? JSON.parse(JSON.stringify(task.output.msgs)) : [];
+    const msgs = task.input?.msgs || [];
+    //console.log("msgs before SM", msgs);
     switch (task.state.current) {
       case "start":
+        modifyTask({
+          "output.sending": false,
+          "input.promptText": "",
+          "input.submitPrompt": false,
+        });
+        nextState = "input";
       case "input":
         if (transitionFrom("received")) {
           responseTextRef.current = "";
           setResponseText(responseTextRef.current);
         }
-        if (task.input.submitForm) {
-          nextState = "sending";
+        if (task.input.submitPrompt) {
+          nextState = "send";
         }
         if (task.state?.address && task.state?.lastAddress !== task.state.address) {
           nextState = "mentionAddress";
         }
         break;
       case "mentionAddress":
-        if (transitionTo("mentionAddress")) {
+        if (transitionTo("mentionAddress") && !isLocked) {
           // Add the input too for the user
           const promptText = "Location: " + task.state?.address;
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.prompt": { role: "user", text: promptText, user: user.label },
-            "output.promptResponse": { role: "assistant", text: "", user: "assistant" },
+            "output.promptResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
+            "output.sending": true,
+            "output.msgs": [...msgs, { role: "user", text: promptText, user: user.label, id: uuidv4() }],
+            "state.request.prompt": promptText,
+            "state.lastAddress": task.state.address,
             "commandArgs": { "lock": true },
             "command": "update",
-            "state.lastAddress": task.state.address,
-            "input.prompt": prompt,
           });
         }
         break;
-      case "sending":
-        if (transitionTo("sending") && !task.meta?.locked) {
+      case "send":
+        if (transitionTo("send") && !isLocked) {
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.prompt": { role: "user", text: task.input.prompt, user: user.label },
-            "output.promptResponse": { role: "assistant", text: "", user: "assistant" },
+            // PLaceholder for sending indicator
+            "output.promptResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
             "output.sending": true,
+            "output.msgs": [...msgs, { role: "user", text: task.input.promptText, user: user.label, id: uuidv4() } ],
+            "input.promptText": "",
+            "input.submitPrompt": false,
+            "state.request.prompt": task.input.promptText,
             "commandArgs": { "lock": true },
             "command": "update",
-            "input.submitForm": false,
           });
         }
         break;
       case "receiving":
-        if (transitionTo("receiving")) {
-          modifyTask({
-            "input.prompt": "",
-            "output.sending": false,
-            "output.prompt": null,
-            "output.msgs": [...msgs, task.output.prompt],
-          }); // Not so good for collaborative interface 
-        }
-        const promptResponse = task.output.promptResponse;
         // Avoid looping due to modifyTask by checking if the text has changed
-        if (responseText && responseText !== promptResponse.text) {
-          promptResponse.text = responseText;
-          //console.log("modifyTask")
+        if (responseText && responseText !== task.output.promptResponse?.text) {
           modifyTask({
-            "output.promptResponse": promptResponse,
+            "output.promptResponse.text": responseText,
           });
         }
         break;
       case "received":
-        nextState = "input";
-        modifyTask({
-          "output.promptResponse": null,
-          "output.msgs": [...msgs, task.output.promptResponse],
-        });
+        if (!isLocked) {
+          nextState = "input";
+          // Need to update to store output.msgs
+          modifyTask({
+            "output.promptResponse": null,
+            "output.msgs": [...msgs, JSON.parse(JSON.stringify(task.output.promptResponse)) ],  // do we need this deep copy?
+            "commandArgs": { "unlock": true },
+            "command": "update",
+          });
+        }
         break;
     }
     // Manage state.current and state.last
@@ -181,13 +199,13 @@ const TaskChat = (props) => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      if (task?.input?.prompt) {
+      if (task?.input?.promptText) {
         modifyTask({
-          "input.submitForm": true,
+          "input.submitPrompt": true,
         });
       }
     },
-    [task?.input?.prompt]
+    [task?.input?.promptText]
   );
 
   useEffect(() => {
@@ -195,38 +213,39 @@ const TaskChat = (props) => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
     textarea.placeholder = task?.config?.promptPlaceholder;
-  }, [task?.input?.prompt, task?.config?.promptPlaceholder]);
+  }, [task?.input?.promptText, task?.config?.promptPlaceholder]);
 
   const handleDropdownSelect = (selectedPrompt) => {
     // Prepend to existing prompt, might be better just to replace
-    modifyTask({"input.prompt": selectedPrompt + task.input.prompt});
-    setSubmitForm(true);
+    modifyTask({"input.promptText": selectedPrompt + task.input.promptText});
+    setSubmitPrompt(true);
   }
 
   // Allow programmatic submission of the form 
-  // Set submitForm to true to submit
+  // Set submitPrompt to true to submit
   // Maybe events would be better
   useEffect(() => {
-    if (!submitForm) {
+    if (submitPrompt) {
       const formNode = formRef.current;
       if (formNode) {
         formNode.requestSubmit();
       }
     }
-  }, [submitForm]);
+  }, [submitPrompt]);
 
   function processMessages(text) {
-    const regexProcessMessages = task.config.regexProcessMessages;
-    if (regexProcessMessages) {
-      for (const [regexStr, replacement] of regexProcessMessages) {
-        let { pattern, flags } = parseRegexString(regexStr);
-        const regex = new RegExp(pattern, flags);
-        text = text.replace(regex, replacement);
+    if (text) {
+      const regexProcessMessages = task.config.regexProcessMessages;
+      if (regexProcessMessages) {
+        for (const [regexStr, replacement] of regexProcessMessages) {
+          let { pattern, flags } = parseRegexString(regexStr);
+          const regex = new RegExp(pattern, flags);
+          text = text.replace(regex, replacement);
+        }
       }
     }
     return text;
   }
-
 
   const sendReady = (!task || task.state.current === "sending") ? "not-ready" : "ready"
 
@@ -246,11 +265,11 @@ const TaskChat = (props) => {
         <textarea
           ref={textareaRef}
           name="prompt"
-          value={processMessages(task.input.prompt)}
+          value={processMessages(task.input?.promptText)}
           rows="1"
           cols="1"
           onChange={(e) => {
-            modifyTask({"input.prompt": e.target.value});
+            modifyTask({"input.promptText": e.target.value});
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey === false) {

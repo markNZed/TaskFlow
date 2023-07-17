@@ -11,6 +11,7 @@ import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import { doneTask_async } from "../doneTask.mjs";
 import { errorTask_async } from "../errorTask.mjs";
 import { tasks } from "../configdata.mjs";
+import syncTask_async from "../syncTask.mjs";
 import { transferCommand, checkLockConflict, checkAPIRate, processError, processOutput_async } from "./taskProcessing.mjs";
 import RequestError from './RequestError.mjs';
 
@@ -60,12 +61,12 @@ async function update_async(res, task) {
     } else {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.updateCount = task.meta.updateCount + 1;
+      task.meta.sourceProcessorId = processorId;
 
       // Don't await so the return gets back before the websocket update
-      // Middleware will send the update via websocket
-      activeTasksStore_async.set(task.instanceId, task);
+      syncTask_async(task.instanceId, task)
+        .then(() => activeTasksStore_async.set(task.instanceId, task))
       
-      // So we do not return a task anymore. This requires the task synchronization working.
       res.status(200).send("ok");
     }
   } catch (error) {

@@ -15,6 +15,8 @@ task.commands:
 * partial
 * nop
 
+To be able to insert tasks into a sequence we need to use task.input/output so the inserted task can intercept the data and have its own internal state etc. If a parent makes assumptions about implementation details (e.g. task.state) then the intercepting task is limited by those assumptions. Set user input via task.input so it can be simulated if required. The general rle is that anything we want to be able to control about the task should be visible via task.input and anything we want to know about the task should be visible via task.output
+
 The Task object currently has a fixed set of top level properties. Several properties are objects:
 * privacy - a copy of the Task object's structure with boolean types that indicate if the property should be sent from the NodeJS Task Processor to the React Task Processor. For example, this could avoid sending prompts in config data to the web browser.
 * input - any object, provided to the task when it starts

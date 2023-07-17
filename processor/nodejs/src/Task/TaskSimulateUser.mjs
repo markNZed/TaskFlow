@@ -11,7 +11,7 @@ import { cacheStore_async } from "../storage.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
-// state === sending : this processor has control
+// state === send : this processor has control
 
 function checkTaskCache (task, T) {
   // Loop over each object in task.config.cache if it exists
@@ -79,7 +79,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
   // Could return msgs instead of response.text
   switch (task.state.current) {
     case "introduction":
-    case "sending":
+    case "send":
       const entryState = task.state.current;
       T("state.last", T("state.current"));
       T("state.current", "receiving");

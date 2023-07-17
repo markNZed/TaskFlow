@@ -38,6 +38,7 @@ function checkLockConflict(task, activeTask) {
     
     if (lock && activeTask && !activeTask.meta.locked) {
       task.meta.locked = processorId;
+      //console.log("LOCKED ",task.id, processorId);
     } else if (activeTask && activeTask.meta.locked && activeTask.meta.locked === processorId) {
       task.meta.locked = null;
     }
@@ -54,7 +55,7 @@ function checkLockConflict(task, activeTask) {
       if (differenceInMinutes > 5 || updatedAt === undefined) {
         console.log(`Task lock expired for ${processorId} locked by ${activeTask.meta.locked}`);
       } else {
-        console.log(`Task lock conflict with ${processorId} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
+        console.log(`Task lock conflict with ${processorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new RequestError("Task locked", 423);
       }
     }
@@ -95,7 +96,7 @@ function checkAPIRate(task, activeTask) {
     const maxRequestCount = task?.config?.maxRequestCount;
     if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
       console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
-      task.error = "Task request count of " + maxRequestCount + " exceeded.";
+      task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
       //throw new RequestError("Task request count exceeded", 409);
     }
     if (maxRequestCount) {

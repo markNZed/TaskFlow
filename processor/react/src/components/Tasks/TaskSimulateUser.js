@@ -87,9 +87,6 @@ const TaskSimulateUser = (props) => {
       if (JSON.stringify(childTask.output.msgs) !== JSON.stringify(task.output.msgs)) {
         modifyTask({"output.msgs": childTask.output.msgs});
       }
-      if (childTask.output.prompt !== task.output.prompt) {
-        modifyTask({"output.prompt": childTask.output.prompt});
-      }
       if (childTask.output.promptResponse !== task.output.promptResponse) {
         modifyTask({"output.promptResponse": childTask.output.promptResponse});
       }
@@ -98,6 +95,15 @@ const TaskSimulateUser = (props) => {
       }
     }
   }, [childTask?.output]);
+
+  // So TaskConversation sees what it is expecting and TaskSimulateUser acts as a pass-through
+  useEffect(() => {
+    if (task && childTask?.input) {
+      if (childTask.input.promptText !== task.input.promptText) {
+        modifyTask({"input.promptText": childTask.input.promptText});
+      }
+    }
+  }, [childTask?.input]);
 
   // So TaskChat sees what it is expecting and TaskSimulateUser acts as a pass-through
   useEffect(() => {
@@ -110,7 +116,7 @@ const TaskSimulateUser = (props) => {
   }, [task?.input]);
 
   useEffect(() => {
-    if (responseText && responseText !== childTask.input.prompt) {
+    if (responseText && responseText !== childTask.input.promptText) {
       let updatedResponseText = responseText;
       const regexProcessResponse = task.config.regexProcessResponse;
       if (regexProcessResponse) {
@@ -121,7 +127,7 @@ const TaskSimulateUser = (props) => {
         }
       }
       modifyChildTask({
-        "input.prompt": updatedResponseText,
+        "input.promptText": updatedResponseText,
       });
     }
   }, [responseText]);
@@ -155,14 +161,14 @@ const TaskSimulateUser = (props) => {
           if (task.config.maxRequestCount && task.meta.requestCount >= task.config.maxRequestCount) {
             alert("Simulated user exceeded the maximum number of requests");
           } else {
-            nextState = "sending";
+            nextState = "send";
             responseTextRef.current = "";
             setResponseText(responseTextRef.current);
           }
         }
         break;
-      case "sending":
-        if (transitionTo("sending") && !task.meta?.locked) {
+      case "send":
+        if (transitionTo("send")) {
           modifyTask({ 
             "command": "update",
           });
@@ -177,7 +183,7 @@ const TaskSimulateUser = (props) => {
       case "submit":
         if (transition()) {
           modifyChildTask({
-            "input.submitForm": true,
+            "input.submitPrompt": true,
           });
         }
         if (childTask?.state?.current === "received") {

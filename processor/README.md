@@ -22,6 +22,10 @@ The Task Processor communicates with the Hub using the object `task.processor` O
 
 The Task Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
 
+The Task Processor abstraction is useful during development. For example, create a new Task Processor by copying and renaming an existing one, then allocate a single Task Function to this new processor and remove it from the old processor, now you can experiment with refactoring the Task Processor without breaking all Task Functions. 
+
+Task Processors can provide more or less complicated user interfaces, for example, the NodeJS Task Processor is coded in a procedural style while the RxJS Task Processor uses a functional programming style.
+
 ## Future
 
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,

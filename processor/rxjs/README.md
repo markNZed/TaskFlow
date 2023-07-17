@@ -1,6 +1,6 @@
 # RxJS Task Processor
 
-This is the RxJS Task Processor in T@skFlow
+This is the RxJS Task Processor in T@skFlow. RxJS V7 implements ReactiveX which is language-agnostic, and there are many implementations of the ReactiveX API in various programming languages, including RxJava, RxSwift, and others.
 
 1. Written in Node JS, Express, RxJS
 2. Fetched data is cached by SQLite

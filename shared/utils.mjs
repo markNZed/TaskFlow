@@ -97,19 +97,38 @@ function deepCompare(obj1, obj2, visitedObjects = new WeakSet()) {
   }
 }
 
+/*
+In this updated function, we've added an isArray helper function that uses Array.isArray to check if a value is an array. We then use this function in our check for whether the values at a key in both objects are objects. If they are arrays, we iterate over their elements and check for conflicts, but ignore any elements that are null in either array. If the lengths of the arrays are different, we still consider that a conflict, as it's a structural difference between the two objects.
+*/
 function checkConflicts(obj1, obj2) {
-  // Helper function to check if a value is an object
+  // Helper functions
   const isObject = (value) => typeof value === 'object' && value !== null;
+  const isArray = (value) => Array.isArray(value);
 
   let conflict = false;
-  
+
   // Iterate over keys in obj1
   Object.keys(obj1).forEach(key => {
     if (obj2.hasOwnProperty(key)) {
       if (isObject(obj1[key]) && isObject(obj2[key])) {
-        // Recursive check for nested objects
-        if (checkConflicts(obj1[key], obj2[key])) {
-          conflict = true;
+        // Check if value is an array
+        if (isArray(obj1[key]) && isArray(obj2[key])) {
+          // Only create conflict if non-null elements are different
+          if (obj1[key].length !== obj2[key].length) {
+            conflict = true;
+          } else {
+            for (let i = 0; i < obj1[key].length; i++) {
+              if (obj1[key][i] !== null && obj2[key][i] !== null && obj1[key][i] !== obj2[key][i]) {
+                conflict = true;
+                break;
+              }
+            }
+          }
+        } else {
+          // Recursive check for nested objects
+          if (checkConflicts(obj1[key], obj2[key])) {
+            conflict = true;
+          }
         }
       } else if (obj1[key] !== obj2[key]) {
         // Conflict detected when values are different

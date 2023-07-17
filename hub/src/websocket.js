@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
+import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 
 /**
@@ -62,7 +62,16 @@ const wsSendTask = async function (task, processorId = null) {
       diff.hub["commandArgs"] = commandArgs;
       diff.processor = processor;
       diff.users = users;
+      if (!diff.meta) {
+        diff["meta"] = {};
+      }
+      diff.meta["sourceProcessorId"] = task.meta.sourceProcessorId;
+      if (task.meta.locked) {
+        diff.meta["locked"] = task.meta.locked;
+      }
       message["task"] = diff;
+    } else {
+      throw new Error("Update but no active task for " + task.id);
     }
   } else {
     message["task"] = task;
@@ -154,7 +163,7 @@ function initWebSocketServer(server) {
           for (const id of activeTaskProcessors) {
             if (id !== processorId) {
               const processorData = activeProcessors.get(id);
-              if (processorData.commandsAccepted.includes(command)) {
+              if (processorData && processorData.commandsAccepted.includes(command)) {
                 const ws = connections.get(id);
                 if (!ws) {
                   console.log("Lost websocket for ", id, connections.keys());
@@ -182,22 +191,36 @@ function initWebSocketServer(server) {
 
     });
 
-    ws.on("close", function (code, reason) {
-      console.log("ws processorId " + ws.data.processorId + " is closed with code: " + code + " reason: ", reason);
-      if (ws.data.processorId) {
-        connections.delete(ws.data.processorId);
-        activeProcessors.delete(ws.data.processorId);
-        // In theory we should clean up activeTaskProcessorsStore_async
-        // This probably means tracking a mapping from processorId to instanceId to avoid iterating over all activeTasks        
+    ws.on("close", async function (code, reason) {
+      const processorId = ws.data.processorId;
+      console.log("ws processorId " + processorId + " is closed with code: " + code + " reason: ", reason);
+      if (processorId) {
+        connections.delete(processorId);
+        activeProcessors.delete(processorId);
+        const activeProcessorTasks = await activeProcessorTasksStore_async.get(processorId);
+        if (activeProcessorTasks) {
+          // for each task delete entry from activeTaskProcessorsStore_async
+          for (const taskId of activeProcessorTasks) {
+            let activeTaskProcessors = await activeTaskProcessorsStore_async.get(taskId);
+            if (activeTaskProcessors) {
+              console.log("Removing processor " + processorId + " from task " + taskId);
+              activeTaskProcessors = activeTaskProcessors.filter(id => id !== processorId);
+              if (activeTaskProcessors.length > 0) {
+                await activeTaskProcessorsStore_async.set(taskId, activeTaskProcessors);
+              } else {
+                console.log("No processor for task " + taskId);
+                await activeTaskProcessorsStore_async.delete(taskId);                
+              }
+            }
+          }
+          await activeProcessorTasksStore_async.delete(processorId);
+        }
       }
     });
 
+    // Assuming that close is called after error - need to check this assumption
     ws.on('error', function(error) {
       console.error("Websocket error: ", error);
-      if (ws.data.processorId) {
-        connections.delete(ws.data.processorId);
-        activeProcessors.delete(ws.data.processorId);
-      }
     });
 
   });

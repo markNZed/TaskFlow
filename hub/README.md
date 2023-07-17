@@ -2,7 +2,7 @@
 
 The Task Hub is implemented in Node using the Express framework and SQLite database. 
 
-Information for the hub is held in the `task.hub` object. Only the Task Hub writes to the `task.hub` object. The Task Processor communicates with the Task Hub using the object `task.procesor` which includes fields: command, commandArgs, and config. 
+Information for the Task Hub is held in the `task.hub` object. Only the Task Hub writes to the `task.hub` object. The Task Processor communicates with the Task Hub using the object `task.procesor` which includes fields: command, commandArgs, and config. 
 
 `task.hub.command` maybe be one of:
   * partial
@@ -44,6 +44,8 @@ The Hub provides the following features:
 * `task.meta.parentId` the `task.id` of the Task that started this Task
 * `task.meta.updateCount` the number of Task updates completed
 * `task.meta.updatesThisMinute` rate of API accesses per minute
+
+When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). It would be possible to send a smaller diff to the source Task Processor after updating the task on the Task Hub but this would require a new data path and the code complexity does not seem justifiable.
 
 # Launch
 

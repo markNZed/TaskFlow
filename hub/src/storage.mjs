@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import {} from "../config.mjs";
-import syncTasks from "./syncTasks.mjs";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
@@ -21,7 +20,6 @@ class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
   async *iterate() {
     const selectAllQuery = this.entry.select().toString();
     const rows = this.db.prepare(selectAllQuery).all();
-    
     for (const row of rows) {
       const key = row.key.startsWith('keyv:') ? row.key.substring(5) : row.key;
       const value = JSON.parse(row.value).value;
@@ -34,6 +32,8 @@ class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
 const DB_URI = "sqlite://db/main.sqlite";
 
 // Allows for middleware intercepting set calls to the DB
+// This is not great for debug because we can lose the call stack for debug
+// Currently not using it
 function newKeyV(uri, table, setCallback = null) {
   const store = new ExtendedKeyvBetterSqlite3({
     uri: uri,
@@ -58,6 +58,11 @@ function newKeyV(uri, table, setCallback = null) {
   return keyv;
 };
 
+function logActiveTasksStore(key, value) {
+  console.log("activeTasksStore_async.set", key);
+  return value;
+}
+
 // We could have one keyv store and use prefix for different tables
 
 // Schema:
@@ -71,11 +76,16 @@ const familyStore_async = newKeyV(DB_URI, "threads");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", syncTasks);
+//const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", logActiveTasksStore);
+const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
 // Schema:
 //   Key: instanceId
 //   Value: array of processorIds
 const activeTaskProcessorsStore_async = newKeyV(DB_URI, "activeTaskProcessors");
+// Schema:
+//   Key: processorId
+//   Value: array of instanceIds
+const activeProcessorTasksStore_async = newKeyV(DB_URI, "activeProcessorTasks");
 // Schema:
 //   Key: familyId
 //   Value: {taskId : output}
@@ -86,6 +96,7 @@ export {
   familyStore_async,
   activeTasksStore_async,
   activeTaskProcessorsStore_async,
+  activeProcessorTasksStore_async,
   activeProcessors,
   outputStore_async,
   connections,

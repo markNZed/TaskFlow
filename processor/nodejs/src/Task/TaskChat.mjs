@@ -79,32 +79,25 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
   // Could return msgs instead of response.text
   switch (task.state.current) {
     case "mentionAddress":
-    case "sending":
+    case "send":
       T("state.last", T("state.current"));
       T("state.current", "receiving");
+      T("output.sending", false);
       T("commandArgs.lockBypass", true);
-      // Here we update the task which has the effect of setting the state to receiving
+      // Update the task which has the effect of setting the state to receiving
       T("command", "update");
+
       await fetchTask_async(task)
-      //console.log("task.output", task.output);
-      let msgs = T("input.msgs");
-      // Extract the prompt
-      //const msgPrompt = msgs[msgs.length - 2];
-      //T("state.request.service.prompt", msgPrompt.text)
-      T("state.request.service.prompt", T("output.prompt.text"))
+      T("state.request.service.prompt", T("state.request.prompt"))
       const subTask = await SubTaskLLM_async(wsSendTask, task);
-      /*
-      const lastElement = {
-        ...msgs[msgs.length - 1],
-      }; // shallow copy
-      lastElement.text = subTask.response.LLM
-      // Send to sync latest outputs via Hub, should also unlock
-      T("output.msgs", [...msgs.slice(0, -1), lastElement]);
-      */
-      T("output.promptResponse.text", subTask.response.LLM);
+      let promptResponse = T("output.promptResponse");
+      promptResponse.text = subTask.response.LLM;
+      T("output.promptResponse", promptResponse );
+      //T("output.promptResponse", null );
+      //T("output.msgs", [...T("output.msgs"), promptResponse ]);
       T("state.last", T("state.current"));
       T("state.current", "received");
-      T("commandArgs.unlock", true);
+      //T("commandArgs.unlock", true);
       T("command", "update");
       break;
     default:

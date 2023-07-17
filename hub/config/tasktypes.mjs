@@ -39,15 +39,6 @@ const tasktypes = [
         }
       ],
     },
-    state: {
-      current: "input",
-    },
-    output: {
-      msgs: [],
-    },
-    input: {
-      prompt: "",
-    }
   },
   {
     name: "TaskConversation",
@@ -66,12 +57,6 @@ const tasktypes = [
         }
       ],
     },
-    output: {
-      prompt: "",
-    },
-    input: {
-      msgs: [],
-    }
   },
   {
     name: "TaskStepper",

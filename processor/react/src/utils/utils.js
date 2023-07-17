@@ -62,6 +62,7 @@ export function setArrayState(setArray, idx, t) {
 
 // Support for dot notation in Task keys
 export function setNestedProperties(obj, path = null, value = null) {
+  
   const processKey = (obj, key, value) => {
     if (key.includes(".")) {
       const [head, ...tail] = key.split(".");

@@ -8,20 +8,20 @@ import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore
 import { wsSendTask } from "./websocket.js";
 import { utils } from "./utils.mjs";
 
-const syncTasks_async = async (key, value) => {
+const syncTask_async = async (key, value) => {
 
-  //console.log("syncTasks_async", key, value.processor)
+  //console.log("syncTask_async", key, value.processor)
   await instancesStore_async.set(key, value);
 
   // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   const sourceProcessorId = taskCopy.hub.sourceProcessorId;
   if (!sourceProcessorId) {
-    throw new Error("syncTasks_async missing sourceProcessorId" + JSON.stringify(taskCopy));
+    throw new Error("syncTask_async missing sourceProcessorId" + JSON.stringify(taskCopy));
   }
   const has = await activeTasksStore_async.has(key);
   if (!taskCopy?.hub?.command) {
-    throw new Error("syncTasks_async missing command" + JSON.stringify(taskCopy));
+    throw new Error("syncTask_async missing command" + JSON.stringify(taskCopy));
   }
   let command = taskCopy.hub.command;
   let commandArgs = taskCopy.hub.commandArgs;
@@ -35,27 +35,22 @@ const syncTasks_async = async (key, value) => {
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {
-    //console.log("syncTasks_async task " + taskCopy.id + " from " + sourceProcessorId);
+    //console.log("syncTask_async task " + taskCopy.id + " from " + sourceProcessorId);
     let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
     for (const processorId of processorIds) {
+      if (command === "join" && processorId !== sourceProcessorId) {
+        continue;
+      }
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
-        if ((processorId !== sourceProcessorId && command !== "join") ||
-            command === "start" || 
-            command === "error" ||
-            (command === "join" && processorId === sourceProcessorId)
-        ) {
-          if (!taskCopy.processor[processorId]) {
-            console.log("taskCopy missing processor", command, taskCopy, processorId );
-          }
-          if (processorData.commandsAccepted.includes(command)) {
-            console.log("syncTasks_async", command, key, processorId);
-            await wsSendTask(taskCopy, processorId);
-          } else {
-            console.log("syncTasks_async processor does not support commmand", command, processorId);
-          }
+        if (!taskCopy.processor[processorId]) {
+          console.log("taskCopy missing processor", command, taskCopy, processorId );
+        }
+        if (processorData.commandsAccepted.includes(command)) {
+          //console.log("syncTask_async", command, key, processorId, taskCopy);
+          await wsSendTask(taskCopy, processorId);
         } else {
-          //console.log("syncTasks_async skipping", key, processorId);
+          console.log("syncTask_async processor does not support commmand", command, processorId);
         }
       } else {
         updatedProcessorIds = updatedProcessorIds.filter(id => id !== processorId);
@@ -67,11 +62,11 @@ const syncTasks_async = async (key, value) => {
       await activeTaskProcessorsStore_async.set(key, updatedProcessorIds);
     }
   } else {
-    console.log("syncTasks_async no processorIds", key, value);
+    console.log("syncTask_async no processorIds", key, value);
   }
-  //console.log("syncTasks_async after", key, value.processor);
+  //console.log("syncTask_async after", key, value.processor);
   return value;
 
 };
 
-export default syncTasks_async;
+export default syncTask_async;
