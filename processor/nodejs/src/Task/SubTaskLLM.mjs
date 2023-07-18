@@ -309,7 +309,7 @@ async function ChatGPTAPI_request_async(params) {
   const lastMessageId = messages.length;
   
   // Need to account for the system message and some margin because the token count may not be exact.
-  console.log("prompt " + prompt + " systemMessage " + systemMessage)
+  //console.log("prompt " + prompt + " systemMessage " + systemMessage)
   let promptTokenLength = 0;
   if (prompt) {
     promptTokenLength = encode(prompt).length

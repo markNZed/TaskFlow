@@ -98,8 +98,9 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           const subTask = await SubTaskLLM_async(wsSendTask, task);
           T("output.simulationResponse.text", subTask.response.LLM);
         } else {
-          let msgsOrig = JSON.parse(JSON.stringify(T("output.msgs")));
-          let msgs = T("output.msgs");
+          let subTask = JSON.parse(JSON.stringify(task));
+          const ST = utils.createTaskValueGetter(subTask);
+          let msgs = ST("output.msgs");
           msgs.shift(); // Remove the first entry
           if (msgs && msgs.length > 0) {
             msgs.forEach(function(item, index) {
@@ -116,13 +117,11 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           }
           // The last message in output.msgs should become the prompt
           const simulationPrompt = msgs.pop().text;
-          T("output.msgs", msgs);
-          const simulationResponse = { role: "assistant", text: "", user: "assistant" };
+          ST("input.msgs", msgs);
+          ST("state.request.service.prompt", simulationPrompt)
+          subTask = await SubTaskLLM_async(wsSendTask, subTask);
+          const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
           T("output.simulationResponse", simulationResponse);
-          T("state.request.service.prompt", simulationPrompt)
-          const subTask = await SubTaskLLM_async(wsSendTask, task);
-          T("output.msgs", msgsOrig);
-          T("output.simulationResponse.text", subTask.response.LLM);
         }
 
         // Send to sync latest outputs via Hub, should also unlock
