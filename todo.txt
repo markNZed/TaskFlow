@@ -1,15 +1,20 @@
 /* ToDo
 -------
-Regexp needs to be applied to setChatResponse(childTask.output.promptResponse);
-  Needs a function - probably need to move to utils
 To specify behavior we have the static configuration and predefined dynamics of a Task Function
-  Maybe SubTask are the right way to specify some dynamic functions ?
-    Like what? State machine decisions.
+  Maybe SubTask are the right way to specify configurable dynamic functions ?
+    Like what? Different state machines
       Seems too hard to make generic tasks and are tasks too "big" for some functionality
-        Should we be able to configuree a state machine?
+        Should we be able to configure a state machine?
           Advantage of Xstate
             Could allow for inheriting/modifying etc
               Another level of config? e.g. one task that has multiple SM versions ?
+            https://lucylang.org/ A concise language for describing Finite State Machines.
+            https://www.stateml.org is not released but seems to get the idea of transforming in both directions
+  There is also an idea that Tasks could be simple and composed
+    This means there is no need to modify the "internals" of a Task
+    It also creates a lot of repeated code in the Task Functions 
+    It also means a lot of configuration to construct more complicated tasks from many components
+    Supporting both seems possible.
 Use task.processors like task.users
 Learn more about RxJS
 Task specific config seems important, with something like a schema for config.

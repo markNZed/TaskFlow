@@ -185,10 +185,12 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     // In the case where the task sequence advances on another processor 
     // we need to be able to associate a more recent tasks with an older
     // task that is waiting on the next task.
+    task.processors = prevTask.processors;
     task.processor = prevTask.processor;
-    task.processor[processorId]["command"] = null;
-    task.processor[processorId]["commandArgs"] = null;
-    task.processor[processorId]["prevInstanceId"] = prevTask.instanceId;
+    task.processor["command"] = null;
+    task.processor["commandArgs"] = null;
+    task.processor["prevInstanceId"] = prevTask.instanceId;
+    task.processors[processorId] = task.processor;
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
@@ -253,8 +255,8 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
       taskProcessors.push(processorId);
     }
     // If there are already processor entries then favor these
-    if (!found && task.processor) {
-      for (let id in task.processor) {
+    if (!found && task.processors) {
+      for (let id in task.processors) {
         const processor = activeProcessors.get(id);
         if (processor && processor.environments && processor.environments.includes(environment)) {
           found = true;
@@ -269,8 +271,8 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
         if (environments && environments.includes(environment)) {
             found = true;
             taskProcessors.push(activeProcessorId);
-            if (!task.processor[activeProcessorId]) {
-              task.processor[activeProcessorId] = {};
+            if (!task.processors[activeProcessorId]) {
+              task.processors[activeProcessorId] = {};
             }
             break;
         }
@@ -343,7 +345,7 @@ async function startTask_async(
     task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
+    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'processors', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
     //console.log("Task after merge", task)
 
@@ -395,10 +397,9 @@ async function startTask_async(
     task.meta["createdAt"] = task.meta["createdAt"] || Date.now();
 
     task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
-
-    // Set task.processor[processorId].id after copying info from prevTask
-    task.processor[processorId] = task.processor[processorId] ?? {};
-    task.processor[processorId].id = processorId;
+    // Set task.processor.id after copying info from prevTask
+    task.processors[processorId] = task.processors[processorId] ?? {};
+    task.processors[processorId]["id"] = processorId;
     
     task.users[task.userId] = task.users[task.userId] ?? {};
     task.users[task.userId] = utils.deepMerge(users[task.userId], task.users[task.userId]);

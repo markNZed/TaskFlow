@@ -187,6 +187,7 @@ const typeMap = {
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
         { json: "privacy", js: "privacy", typ: u(undefined, m("any")) },
         { json: "processor", js: "processor", typ: u(undefined, m("any")) },
+        { json: "processors", js: "processors", typ: u(undefined, m("any")) },
         { json: "request", js: "request", typ: u(undefined, m("any")) },
         { json: "response", js: "response", typ: u(undefined, m("any")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },

@@ -48,6 +48,9 @@
             "type": "string"
           }
         },
+        "processor": {
+          "type": "object"
+        },
         "type": {
           "type": "string"
         },
@@ -81,7 +84,7 @@
         "state": {
           "$ref": "./genericV02schema.json#/definitions/State"
         },
-        "processor": {
+        "processors": {
           "$ref": "./genericV02schema.json#/definitions/Processor"
         },
         "users": {

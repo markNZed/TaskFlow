@@ -14,9 +14,9 @@ function transferCommand(task, activeTask) {
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
-  const activeTaskProcessor = activeTask?.processor || {};
-  activeTaskProcessor[id] = JSON.parse(JSON.stringify(task.processor));
-  task.processor = activeTaskProcessor;
+  const activeTaskProcessors = activeTask?.processors || {};
+  activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
+  task.processors = activeTaskProcessors;
   task.hub = {
     command,
     commandArgs: commandArgs,

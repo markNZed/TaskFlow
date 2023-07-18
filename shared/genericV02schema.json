@@ -60,7 +60,7 @@
       "additionalProperties": true,
       "title": "Configuration"
     },
-    "Processor": {
+    "Processors": {
       "type": "object",
       "additionalProperties": true,
       "title": "Processor"

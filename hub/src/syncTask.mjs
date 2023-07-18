@@ -43,7 +43,10 @@ const syncTask_async = async (key, value) => {
       }
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
-        if (!taskCopy.processor[processorId]) {
+        if (!taskCopy.processors) {
+          console.log("taskCopy missing processors", command, taskCopy );
+        }
+        if (!taskCopy.processors[processorId]) {
           console.log("taskCopy missing processor", command, taskCopy, processorId );
         }
         if (processorData.commandsAccepted.includes(command)) {

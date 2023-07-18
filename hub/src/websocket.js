@@ -36,7 +36,7 @@ const wsSendTask = async function (task, processorId = null) {
   }
   let command = task.hub.command;
   let commandArgs = task.hub?.commandArgs;
-  let processor = task.processor;
+  let processors = task.processors;
   let users = task.users;
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
@@ -60,7 +60,7 @@ const wsSendTask = async function (task, processorId = null) {
       diff["hub"] = {};
       diff.hub["command"] = command;
       diff.hub["commandArgs"] = commandArgs;
-      diff.processor = processor;
+      diff.processors = processors;
       diff.users = users;
       if (!diff.meta) {
         diff["meta"] = {};
@@ -76,13 +76,15 @@ const wsSendTask = async function (task, processorId = null) {
   } else {
     message["task"] = task;
   }
-  if (message.task?.processor) {
+  // For example task.command === "partial" does not have task.processors
+  if (message.task?.processors) {
     //deep copy because we are going to edit the object
-    message.task.processor = JSON.parse(JSON.stringify(message.task.processor[processorId]));
+    message.task.processor = JSON.parse(JSON.stringify(message.task.processors[processorId]));
     message.task.processor.command = null;
     if (message.task.processor?.commandArgs) {
       message.task.processor.commandArgs = null;
     }
+    delete message.task.processors;
   }
   if (message.task?.users) {
     message.task.user = JSON.parse(JSON.stringify(message.task.users[task.userId]));
