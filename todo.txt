@@ -1,6 +1,5 @@
 /* ToDo
 -------
-response.updating ?
 Regexp needs to be applied to setChatResponse(childTask.output.promptResponse);
   Needs a function - probably need to move to utils
 To specify behavior we have the static configuration and predefined dynamics of a Task Function
