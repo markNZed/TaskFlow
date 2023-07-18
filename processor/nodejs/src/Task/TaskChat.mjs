@@ -76,7 +76,6 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     origTask = JSON.parse(JSON.stringify(task));
   }
 
-  // Could return msgs instead of response.text
   switch (task.state.current) {
     case "mentionAddress":
     case "send":

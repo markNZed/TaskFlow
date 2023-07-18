@@ -15,11 +15,12 @@ import { v4 as uuidv4 } from "uuid";
 /*
 Task Process
   Present textarea and dropdown for user to enter a prompt
-  When prompt is submitted state.current -> sending
-  NodeJS sends incemental text responses by websocket updating task.response.text
-  NodeJS sends final text and terminates HTTP request with state.current=input
+  When prompt is submitted state.current -> send
+  NodeJS sends incemental text responses by websocket updating task.output.promptResponse
+  NodeJS sends final text and terminates HTTP request with state.current=received
   Parent component is expected to:
     Display updates to task.output.msgs
+    Provide task.input.msgs
 
 Task States
   start:
@@ -180,14 +181,21 @@ const TaskChat = (props) => {
         break;
       case "received":
         if (!isLocked) {
-          nextState = "input";
-          // Need to update to store output.msgs
-          modifyTask({
-            "output.promptResponse": null,
-            "output.msgs": [...msgs, JSON.parse(JSON.stringify(task.output.promptResponse)) ],  // do we need this deep copy?
-            "commandArgs": { "unlock": true },
-            "command": "update",
-          });
+          // If we set nextState at the same time as command then there is a risk that the 
+          // task.state.current updates before the command is sent.
+          // By setting nextState after the transition we minimize this risk.
+          if (transition()) {
+            // Need to update to store output.msgs
+            modifyTask({
+              "output.promptResponse": null,
+              // We are assuming that output.promptResponse object to null happens after it is copied into output.msgs
+              "output.msgs": [...msgs, task.output.promptResponse ],
+              "commandArgs": { "unlock": true },
+              "command": "update",
+            });
+          } else {
+            nextState = "input";
+          }
         }
         break;
     }

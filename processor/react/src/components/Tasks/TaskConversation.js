@@ -53,11 +53,35 @@ const TaskConversation = (props) => {
     }
   }, [task?.state?.msgs]);
 
+  function applyRegex(msgsToProcess) {
+    if (msgsToProcess) {
+      const regexProcessMessages = task.config.regexProcessMessages;
+      if (regexProcessMessages) {
+        for (const [regexStr, replacement] of regexProcessMessages) {
+          let { pattern, flags } = parseRegexString(regexStr);
+          const regex = new RegExp(pattern, flags);
+          if (msgsToProcess.length) {
+            for (const msg of msgsToProcess) {
+              if (msg.text) {
+                msg.text = msg.text.replace(regex, replacement);
+              }
+            }
+          } else {
+            if (msgsToProcess.text) {
+              msgsToProcess.text = msgsToProcess.text.replace(regex, replacement);
+            }
+          }
+        }
+      }
+    }
+    return msgsToProcess;
+  }
+
   useEffect(() => {
     if (childTask) {
       const childMsgs = childTask.output?.msgs || [];
       if (childTask.output.promptResponse !== chatResponse) {
-        setChatResponse(childTask.output.promptResponse);
+        setChatResponse(applyRegex(childTask.output.promptResponse));
       }
       let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
@@ -69,19 +93,7 @@ const TaskConversation = (props) => {
       let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs]));
       // Convert to string to compare deep data structure
       if (JSON.stringify(combinedMsgs) !== JSON.stringify(msgs)) {
-        // This modifies the presentation of messages
-        const regexProcessMessages = task.config.regexProcessMessages;
-        if (regexProcessMessages) {
-          for (const [regexStr, replacement] of regexProcessMessages) {
-            let { pattern, flags } = parseRegexString(regexStr);
-            const regex = new RegExp(pattern, flags);
-            for (const msg of combinedMsgs) {
-              if (msg.text) {
-                msg.text = msg.text.replace(regex, replacement);
-              }
-            }
-          }
-        }
+        applyRegex(combinedMsgs);
         setMsgs(combinedMsgs);
         modifyTask({ 
           "state.msgs": childMsgs,
@@ -131,7 +143,9 @@ const TaskConversation = (props) => {
 
   // React.memo does not make any difference as TaskConversation is rerendering
   const Message = ({ role, user, text, sending, id }) => {
-    //console.log("Rendering ", role, user, text, sending, id);
+    if (!role || !user || !id) {
+      console.error("Mesasge missing ", role, user, text, sending, id);
+    }
     return (
       <div className={`wrapper ${role === "assistant" && "ai"}`}>
         <div className="chat">

@@ -54,6 +54,16 @@ function withTask(Component) {
     const handleModifyChildStateRef = useRef(null);
     const handleModifyChildTaskRef = useRef(null);
 
+    if (!window.tasks) {
+      window.tasks = {};
+    }
+    useEffect(() => {
+      if (props.task) {
+        window.tasks[props.task.id] = props.task;
+      }
+    }, [props.task]);
+    
+
     useEffect(() => {
       if (props.task?.meta?.locked) {
         if (props.task.meta.locked === globalState.processorId) {
@@ -470,10 +480,16 @@ function withTask(Component) {
     }
 
     const transitionTo = (state) => {
+      if (!state) {
+        throw new Error("state is undefined");
+      }
       return (props.task.state.current === state && lastStateRef.current !== state)
     };
   
     const transitionFrom = (state) => {
+      if (!state) {
+        throw new Error("state is undefined");
+      }
       return (props.task.state.current !== state && lastStateRef.current === state)
     };
   

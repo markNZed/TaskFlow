@@ -23,10 +23,11 @@ serviceTypes = utils.flattenObjects(serviceTypes);
 const wsDelta = {}
 
 async function SubTaskLLM_async(wsSendTask, task) {
-  let params = await chat_prepare_async(task);
+  const taskCopy = JSON.parse(JSON.stringify(task));
+  let params = await chat_prepare_async(taskCopy);
   params["wsSendTask"] = wsSendTask;
   const res = ChatGPTAPI_request_async(params);
-  task.response.LLM = await res;
+  taskCopy.response.LLM = await res;
   return task
 }
 
