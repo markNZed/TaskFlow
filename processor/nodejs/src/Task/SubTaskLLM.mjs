@@ -28,7 +28,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
   params["wsSendTask"] = wsSendTask;
   const res = ChatGPTAPI_request_async(params);
   taskCopy.response.LLM = await res;
-  return task
+  return taskCopy;
 }
 
 function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
