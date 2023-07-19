@@ -103,7 +103,15 @@ async function chat_prepare_async(task) {
 
   let prompt = T("state.request.service.prompt") || T("config.service.prompt");
   //console.log("prompt " + prompt);
-  let type = T("state.request.service.type") || T("config.service.type");
+  const services = T("config.services");
+  const openaigptServices = services.filter(service => service.type.startsWith("openaigpt"));
+  if (openaigptServices.length === 0) {
+    throw new Error("No openaigpt service");
+  }
+  if (openaigptServices.length > 1) {
+    throw new Error("Too many openaigpt services " + openaigptServices.length);
+  }
+  let type = openaigptServices[0].type;
   let serviceType = serviceTypes["root."+type];
   if (!serviceType) {
     console.log("No serviceType for ", task.id, type);

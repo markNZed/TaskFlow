@@ -23,9 +23,11 @@ const tasks = [
   {
     config: {
       label: "chatGPT",
-      service: {
-        type: "chatgpt"
-      }
+      services: [
+        {
+          type: "openaigpt.chatgpt"
+        }
+      ],
     },
     initiator: true,
     name: "chatgpt",
@@ -60,13 +62,17 @@ const tasks = [
   },
   {
     config: {
-      inputLabel: "Respond here.",
-      instruction: "Tell the user what to do",
-      service: {
-        forget: true,
-        prompt: "Tell me a story about something random.",
-        type: "chatgpt"
+      local: {
+        inputLabel: "Respond here.",
+        instruction: "Tell the user what to do",  
       },
+      services: [
+        {
+          forget: true,
+          prompt: "Tell me a story about something random.",
+          type: "openaigpt.chatgpt"
+        },
+      ],
       nextTask: "structure"
     },
     name: "summarize",
@@ -75,31 +81,35 @@ const tasks = [
   },
   {
     config: {
-      instruction: "This is what I think of your response",
-      messagesTemplate: [
-        {
-          role: "user",
-          text: [
-            "This is a response from an earlier message",
-            "summarize.response"
-          ]
-        },
-        {
-          role: "assistant",
-          text: "OK. Thank you. What would you like me to do?"
-        }
-      ],
+      local: {
+        instruction: "This is what I think of your response",
+      },
       nextTask: "stop",
-    },
-    service: {
-      forget: true,
-      type: "chatgpt",
-      promptTemplate: [
-        "Provide feedback on this prompt, is it a good prompt? ",
-        "\"",
-        "summarize.input",
-        "\""
-      ]
+      services: [
+        {
+          forget: true,
+          type: "openaigpt.chatgpt",
+          promptTemplate: [
+            "Provide feedback on this prompt, is it a good prompt? ",
+            "\"",
+            "summarize.input",
+            "\""
+          ],
+          messagesTemplate: [
+            {
+              role: "user",
+              text: [
+                "This is a response from an earlier message",
+                "summarize.response"
+              ]
+            },
+            {
+              role: "assistant",
+              text: "OK. Thank you. What would you like me to do?"
+            }
+          ],
+        },
+      ],
     },
     name: "structure",
     parentName: "example",

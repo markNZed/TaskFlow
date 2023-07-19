@@ -1,9 +1,8 @@
 /* ToDo
 -------
-Support for multiple service configs
-  config.service.chatGPT 
-    In a config hierachy
-In SubTaskLLM.mjs merge servicetypes infor into task.config.service
+
+In SubTaskLLM.mjs merge servicetypes into task.config.service
+  Simplify the code that was chcking for both
 RxJS V7 Processor
   Refactor NodeJS Processor
     1) Same functionality but using Observer pattern
@@ -71,7 +70,7 @@ Children could be started dynamically
       Spawn could be a list (maybe true for all, false for none, or a list for some)
   Ths can make it much easier to add features to a Task through components ?
   By inserting a Task between parent and child e.g. between TaskConversation and TaskChat we effecively "wrap" TaskChat
-    The inserted Task can modify the JSX returned by the child e.g. {modifyJSX(child)}
+    The inserted Task can modify the JSX returned by the child e.g  {modifyJSX(child)}
   This can insert something before or after the component but we can't easily modify the HTML
   React.cloneElement
 Schema for tasktype to document options

@@ -62,6 +62,8 @@ const tasktypes = [
           ["<BEGIN>", ""],
           ["<END>", ""],
         ],
+        promptWithTime: false,
+        useAddress: false,
       },
     },
   },

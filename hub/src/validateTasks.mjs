@@ -22,13 +22,11 @@ export const configSchema = yup.object()
   label: yup.string(),
   nextTask: yup.string(),
   oneFamily: yup.boolean(),
-  useAddress: yup.boolean(),
-  promptWithTime: yup.boolean(),
   collaborateGroupId: yup.string(),
   spawnTask: yup.boolean(),
   nextStates: yup.object(),
   nextTaskTemplate: yup.object(),
-  service: yup.object({
+  services: yup.array().of(yup.object({
     base: yup.string(),
     type: yup.string(),
     forget: yup.boolean(),
@@ -39,7 +37,7 @@ export const configSchema = yup.object()
     useCache: yup.boolean(),
     systemMessageTemplate: stringOrArrayOfStrings,
     promptTemplate: stringOrArrayOfStrings,
-  }),
+  })),
   cacheKeySeed: yup.string(),
   cache: yup.array().of(yup.object()),
   local: yup.object(),
