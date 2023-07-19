@@ -6,7 +6,7 @@ const servicetypes = [
   },
   {
     name: "openaigpt",
-    base: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
+    modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     temperature: 0,
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context

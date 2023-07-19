@@ -27,7 +27,7 @@ export const configSchema = yup.object()
   nextStates: yup.object(),
   nextTaskTemplate: yup.object(),
   services: yup.array().of(yup.object({
-    base: yup.string(),
+    modelVersion: yup.string(),
     type: yup.string(),
     forget: yup.boolean(),
     prompt: yup.string(),

@@ -97,11 +97,8 @@ async function chat_prepare_async(task) {
   let forget = false;
   let [useCache, cacheKeySeed] = checkSubTaskCache(T, task, "SubTaskLLM");
   console.log("useCache config " + useCache + " seed " + cacheKeySeed);
-  let dummyAPI = T("config.service.dummyAPI") || DUMMY_OPENAI;
-  console.log("dummyAPI " + dummyAPI);
   let noWebsocket = false;
 
-  let prompt = T("state.request.service.prompt") || T("config.service.prompt");
   //console.log("prompt " + prompt);
   const services = T("config.services");
   const openaigptServices = services.filter(service => service.type.startsWith("openaigpt"));
@@ -112,28 +109,38 @@ async function chat_prepare_async(task) {
     throw new Error("Too many openaigpt services " + openaigptServices.length);
   }
   let type = openaigptServices[0].type;
-  let serviceType = serviceTypes["root."+type];
-  if (!serviceType) {
+  let serviceConfig = serviceTypes["root."+type];
+  if (!serviceConfig) {
     console.log("No serviceType for ", task.id, type);
   } else {
-    console.log("ServiceType for ", task.id, serviceType.name, serviceType.base);
+    console.log("ServiceType for ", task.id, serviceConfig.name, serviceConfig.modelVersion);
   }
-  let baseService = T("state.request.service.base") || T("config.service.base") || serviceType?.base;
-  let temperature = T("state.request.service.temperature") || T("config.service.temperature") || serviceType?.temperature;
-  let maxTokens = T("state.request.service.maxTokens") || T("config.service.maxTokens") || serviceType?.maxTokens;
-  console.log("state.request.service.maxTokens config.service.maxTokens serviceType?.maxTokens", T("state.request.service.maxTokens"), T("config.service.maxTokens"), serviceType?.maxTokens);
-  let maxResponseTokens = T("state.request.service.maxResponseTokens") || T("config.service.maxResponseTokens") || serviceType?.maxResponseTokens;
-  console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " base " + baseService);
 
-  //console.log("Agent ", serviceType)
+  if (T("config.service")) {
+    serviceConfig = utils.deepMerge(serviceConfig, T("config.service"));
+  }
+  if (T("state.request.service")) {
+    serviceConfig = utils.deepMerge(serviceConfig, T("state.request.service"));
+  }
+  const modelVersion = serviceConfig.modelVersion;
+  const temperature = serviceConfig.temperature;
+  const maxTokens = serviceConfig.maxTokens;
+  const maxResponseTokens = serviceConfig.maxResponseTokens;
+  console.log("maxResponseTokens " + maxResponseTokens + " maxTokens " + maxTokens  + " temperature " + temperature + " modelVersion " + modelVersion);
+  let dummyAPI = serviceConfig.dummyAPI || DUMMY_OPENAI;
+  console.log("dummyAPI " + dummyAPI);
 
-  if (T("config.service.promptTemplate")) {
-    console.log("Found promptTemplate");
-    prompt = T("config.service.prompt");
+  //console.log("Agent ", serviceConfig)
+
+  let prompt;
+
+  if (serviceConfig.prompt) {
+    console.log("Found prompt in serviceConfig.prompt");
+    prompt = serviceConfig.prompt;
     //console.log("Prompt " + prompt)
   } 
 
-  if (T("config?.promptWithTime")) {
+  if (T("config?.local?.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -147,24 +154,19 @@ async function chat_prepare_async(task) {
     console.log("oneFamily prompt : " + prompt);
   }
 
-  if (T("config.service.useCache") !== undefined) {
-    useCache = T("config.service.useCache");
+  if (serviceConfig.useCache !== undefined) {
+    useCache = serviceConfig.useCache;
     console.log("Task service config set cache " + useCache);
   }
 
-  if (T("state.request.service.useCache") !== undefined) {
-    useCache = T("state.request.service.useCache");
-    console.log("Task request set service cache " + useCache);
+  if (typeof serviceConfig?.prepend_prompt !== "undefined") {
+    prompt = serviceConfig.prepend_prompt + prompt;
+    console.log("Prepend serviceConfig prompt " + serviceConfig.prepend_prompt);
   }
 
-  if (typeof serviceType?.prepend_prompt !== "undefined") {
-    prompt = serviceType.prepend_prompt + prompt;
-    console.log("Prepend serviceType prompt " + serviceType.prepend_prompt);
-  }
-
-  if (typeof serviceType?.append_prompt !== "undefined") {
-    prompt += serviceType.append_prompt;
-    console.log("Append serviceType prompt " + serviceType.append_prompt);
+  if (typeof serviceConfig?.append_prompt !== "undefined") {
+    prompt += serviceConfig.append_prompt;
+    console.log("Append serviceConfig prompt " + serviceConfig.append_prompt);
   }
 
   const environments = T("environments");
@@ -174,43 +176,28 @@ async function chat_prepare_async(task) {
     console.log("Environment noWebsocket");
   }
 
-  if (T("state.request.service.noWebsocket") !== undefined) {
-    noWebsocket = T("state.request.service.noWebsocket");
+  if (serviceConfig.noWebsocket !== undefined) {
+    noWebsocket = serviceConfig.noWebsocket;
     console.log("Request noWebsocket");
   }
 
-  if (serviceType?.forget) {
-    forget = true;
-    console.log("Agent forget previous messages");
-  }
-
-  if (T("config.service.forget") !== undefined) {
-    forget = T("config.service.forget")
-    console.log("Task config forget previous messages", T("config.service.forget"));
-  }
-
-  if (T("state.request.service.forget") !== undefined) {
-    forget = T("state.request.service.forget")
-    console.log("Task request forget previous messages", T("state.request.service.forget"));
+  if (serviceConfig.forget !== undefined) {
+    forget = serviceConfig.forget
+    console.log("Task config forget previous messages", serviceConfig.forget);
   }
 
   let messages = [];
 
-  if (serviceType?.messages) {
-    messages.push(...serviceType.messages)
+  if (serviceConfig?.messages) {
+    messages.push(...serviceConfig.messages)
     console.log(
-      "Initial messages from serviceType " + serviceType.name
+      "Initial messages from serviceConfig " + serviceConfig.name
     );
   }
 
-  if (T("config.service.messages")) {
-    messages.push(...T("config.service.messages"))
+  if (serviceConfig.messages) {
+    messages.push(...serviceConfig.messages)
     console.log("Found config messages");
-  }
-
-  if (T("state.request.service.messages")) {
-    messages.push(...T("state.request.service.messages"))
-    console.log("Found request messages");
   }
 
   // This is assuming the structure used in TaskChat
@@ -220,30 +207,24 @@ async function chat_prepare_async(task) {
     //console.log("messages", messages);
   }
 
-  if (serviceType?.systemMessage) {
-    systemMessage = serviceType.systemMessage;
-    console.log("Sytem message from serviceType " + serviceType.name);
+  if (serviceConfig?.systemMessage) {
+    systemMessage = serviceConfig.systemMessage;
+    console.log("Sytem message from serviceConfig " + serviceConfig.name);
   }
 
   // Replace MODEL variables in systemMessageTemplate
-  if (T("config.systemMessageTemplate")) {
-    let systemMessageTemplate = T("config.systemMessage");
+  if (serviceConfig.systemMessageTemplate) {
+    let systemMessageTemplate = serviceConfig.systemMessageTemplate;
     console.log("systemMessageTemplate " + systemMessageTemplate);
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Using replace with a callback function
     systemMessage = systemMessageTemplate.replace(regex, (match, p1, p2) => {
-      if (!serviceType[p2]) {
-        throw new Error("serviceType " + p2 + " does not exist");
+      if (!serviceConfig[p2]) {
+        throw new Error("serviceConfig " + p2 + " does not exist");
       }
-      return serviceType[p2]
+      return serviceConfig[p2]
     });
     console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
-  }
-
-  // This allows for user defined system messages
-  if (T("state.request.service.systemMessage")) {
-    systemMessage = T("state.request.service.systemMessage");
-    console.log("Sytem message from task " + T("id"));
   }
 
   //console.log("messages before map of id", messages);
@@ -254,8 +235,8 @@ async function chat_prepare_async(task) {
     id: (index + 1)
   }));
 
-  if (T("config.service.cacheKeySeed")) {
-    cacheKeySeed = T("config.service.cacheKeySeed");
+  if (serviceConfig.cacheKeySeed) {
+    cacheKeySeed = serviceConfig.cacheKeySeed;
   }
 
   // Check if we need to preprocess
@@ -274,7 +255,7 @@ async function chat_prepare_async(task) {
     noWebsocket,
     prompt,
     useCache,
-    baseService,
+    modelVersion,
     temperature,
     maxTokens,
     maxResponseTokens,
@@ -299,7 +280,7 @@ async function ChatGPTAPI_request_async(params) {
     noWebsocket,
     prompt,
     useCache,
-    baseService,
+    modelVersion,
     temperature,
     maxTokens,
     instanceId,
@@ -367,7 +348,7 @@ async function ChatGPTAPI_request_async(params) {
 
   const messageParams = {
     completionParams: {
-      model: baseService,
+      model: modelVersion,
       temperature: temperature,
     },
     parentMessageId: lastMessageId,
