@@ -63,7 +63,10 @@ function mergeTasks(childTask, tasksObj) {
       }
       if (key === "config" && childTask.config) {
         for (const configKey in tasksObj.config) {
-          mergeObj(childTask.config, configKey, tasksObj.config);
+          // We don;t want to copy task.config.local
+          if (configKey !== "local") {
+            mergeObj(childTask.config, configKey, tasksObj.config);
+          }
         }
       } else {
         mergeObj(childTask, key, tasksObj);
@@ -79,7 +82,7 @@ function mergeObj(childTask, key, tasksObj) {
   } else if (childTask.hasOwnProperty("APPEND_" + key)) {
     childTask[key] = appendOperation(childTask, key, tasksObj);
   // Don't copy PRIVATE info (specific to the task)
-  } else if (!key.startsWith("PRIVATE_") && !tasksObj.hasOwnProperty("PRIVATE_" + key)) {
+  } else if (!key.startsWith("LOCAL_") && !tasksObj.hasOwnProperty("LOCAL_" + key)) {
     if (childTask.hasOwnProperty(key)) {
       childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
     } else {
@@ -109,7 +112,7 @@ function copyPrivateKeysRecursively(obj) {
     if (typeof obj[key] === 'object' && obj[key] !== null) {
       copyPrivateKeysRecursively(obj[key]);
     }
-    if (key.startsWith("PRIVATE_")) {
+    if (key.startsWith("LOCAL_")) {
       obj[key.slice(8)] = obj[key];
     }
   }
@@ -170,7 +173,7 @@ function flattenTasks(tasks) {
       }
     }
 
-    // Copy PRIVATE_ keys
+    // Copy LOCAL_ keys
     taskflow = copyPrivateKeysRecursively(taskflow);
     
     // Copy keys from the parent

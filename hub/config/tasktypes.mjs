@@ -5,17 +5,18 @@ const tasktypes = [
   {
     name: "TaskSelect",
     config: {
-      selectUI: 'checkboxes',
-      fields: [
-        {
-          singleSelection: undefined,
-          type: undefined,
-          options: [
-            { value: "default1", label: "Default 1" },
-            { value: "default2", label: "Default 2" }
-          ],
-        },
-      ],
+      local: {
+        fields: [
+          {
+            singleSelection: undefined,
+            type: undefined,
+            options: [
+              { value: "default1", label: "Default 1" },
+              { value: "default2", label: "Default 2" }
+            ],
+          },
+        ],
+      }
     },
     output: {
       selected: [],
@@ -26,11 +27,21 @@ const tasktypes = [
     websocket: true,
     // If multiple environments then it will be synchronized
     environments: ["react", "nodejs", "rxjs"],
-    config: { 
-      welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
-      welcomeMessage_EN: "Welcome! How can I assist you today?",
-      promptPlaceholder_FR: "Écrivez votre prompt ici.",
-      promptPlaceholder_EN: "Write your prompt here.",
+    config: {
+      local: {
+        promptPlaceholder_FR: "Écrivez votre prompt ici.",
+        promptPlaceholder_EN: "Write your prompt here.",
+        /*
+        regexProcessPrompt: [
+          ["^", "<BEGIN>"],
+          ["$", "<END>"],
+        ],
+        */
+        regexProcessMessages: [
+          ["<BEGIN>", ""],
+          ["<END>", ""],
+        ],
+      },
       APPEND_cache: [
         {
           subTask: "SubTaskLLM",
@@ -43,12 +54,24 @@ const tasktypes = [
   {
     name: "TaskConversation",
     environments: ["react", "nodejs", "rxjs"],
+    config: {
+      local: {
+        welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
+        welcomeMessage_EN: "Welcome! How can I assist you today?",
+        regexProcessMessages: [
+          ["<BEGIN>", ""],
+          ["<END>", ""],
+        ],
+      },
+    },
   },
   {
     name: "TaskSimulateUser",
     environments: ["react", "nodejs"],
     config: {
-      //introductionPrompt: "Please introduce yourself.",
+      local: {
+        introductionPrompt: "Please introduce yourself.",
+      },
       APPEND_cache: [
         {
           subTask: "SubTaskLLM",
@@ -78,6 +101,11 @@ const tasktypes = [
         received:  "wait", 
         wait:      "stop" 
       },
+      local: {
+        //instruction: "",
+        //inputLabel: "",
+        //display: "",
+      }
     },
     state: {
       current: "start",
@@ -88,26 +116,34 @@ const tasktypes = [
     }
   },
   {
-    name: "TaskShowResponse",
+    name: "TaskShowInstruction",
     environments: ["react", "nodejs"],
     config: {
-      response: "",
+      local: {
+        instruction: "",
+      }
     },
     state: {
       current: "start",
     },
     output: {
-      response: "",
+      instruction: "",
     }
   },
   {
     name: "TaskChoose",
     environments: ["nodejs"],
-  }
-  ,
+  },
   {
     name: "TaskGeneratePersona",
     environments: ["react", "nodejs"],
+    config: {
+      local: {
+        //instruction: "",
+        //inputLabel: "",
+        //display: "",
+      },
+    },
     state: {
       current: "start",
     },

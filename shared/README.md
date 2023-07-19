@@ -4,10 +4,13 @@
 
 The schema is defined in JSON and [Quicktype](https://quicktype.io) is used to generate validation code.
 
-The task.config.cache object allows for flexible cache rules, it is an array of cache objects (so use APPEND_cache to allow for inheritance):
-* cache.subTask - this allows to control the caching in subTasks, it is a string e.g. "SubTaskLLM"
+The task.config.cache object allows for flexible cache rules, it is an array of objects (so use APPEND_cache to allow for inheritance):
+* cache.subTask - controls the caching in subTasks, a string e.g. "SubTaskLLM"
 * cache.enable - boolean, can be excluded and in that case is assumed to be true
-* cache.seed - array of strings or paths in the task object e.g. ["task.name"]
+* cache.seed - array of strings or paths in the task object e.g. ["task.name"] or ["123"]
+
+task.config stores generic configuration information that many tasks may use, it is inherited by tasks further down the hierarchy.
+task.config.local stores tasktype specific configuration information that is not inherited.
 
 task.commands:
 * start

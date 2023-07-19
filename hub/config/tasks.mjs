@@ -56,7 +56,7 @@ const tasks = [
     },
     name: "start",
     parentName: "example",
-    type: "TaskShowResponse"
+    type: "TaskShowInstruction"
   },
   {
     config: {
@@ -90,16 +90,16 @@ const tasks = [
         }
       ],
       nextTask: "stop",
+    },
+    service: {
+      forget: true,
+      type: "chatgpt",
       promptTemplate: [
         "Provide feedback on this prompt, is it a good prompt? ",
         "\"",
         "summarize.input",
         "\""
       ]
-    },
-    service: {
-      forget: true,
-      type: "chatgpt"
     },
     name: "structure",
     parentName: "example",

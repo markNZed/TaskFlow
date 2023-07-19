@@ -108,7 +108,7 @@ const TaskLLMIO = (props) => {
         nextState = nextConfigState;
         break;
       case "display":
-        setResponseText(task.config.response);
+        setResponseText(task.config.local.display);
         break;
       case "response":
         // Don't fetch if we already have the output
@@ -185,7 +185,7 @@ const TaskLLMIO = (props) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {props.task.config?.instruction ? (
+      {props.task.config?.local?.instruction ? (
         <Paper
           elevation={3}
           style={{
@@ -196,7 +196,7 @@ const TaskLLMIO = (props) => {
           }}
         >
           <Typography style={{ marginTop: "16px" }}>
-            {props.task.config.instruction}
+            {props.task.config.local.instruction}
           </Typography>
         </Paper>
       ) : (
@@ -241,7 +241,7 @@ const TaskLLMIO = (props) => {
       {showUserInput ? (
         <div>
           <TextareaAutosize
-            placeholder={props.task.config?.inputLabel}
+            placeholder={props.task.config?.local?.inputLabel}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             style={{ marginTop: "16px" }}

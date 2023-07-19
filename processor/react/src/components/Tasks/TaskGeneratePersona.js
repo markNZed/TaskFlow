@@ -89,7 +89,7 @@ const TaskGeneratePersona = (props) => {
     switch (task.state.current) {
       case "start":
         // We are waiting so NodeJS can generate the persona
-        setResponseText(task.config.response);
+        setResponseText(task.config.local.display);
         break;
       case "generated":
         setResponseText(task.output.summary);

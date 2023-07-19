@@ -13,13 +13,13 @@ import { replaceNewlinesWithParagraphs } from "../../utils/utils";
 /*
 Task Process
   This component is complete overkill for what it is doing but it was useful during early dev
-  Fetches a response from the NodeJS Task Processor that is hard coded in the task
+  Fetches a instruction from the NodeJS Task Processor that is hard coded in the task
   
 ToDo:
   
 */
 
-const TaskShowResponse = (props) => {
+const TaskShowInstruction = (props) => {
   const {
     log,
     task,
@@ -28,7 +28,7 @@ const TaskShowResponse = (props) => {
     onDidMount,
   } = props;
 
-  const [responseText, setResponseText] = useState("");
+  const [instructionText, setInstructionText] = useState("");
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
@@ -45,17 +45,17 @@ const TaskShowResponse = (props) => {
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
-    if (transition()) { log("TaskShowResponse State Machine State " + task.state.current) }
+    if (transition()) { log("TaskShowInstruction State Machine State " + task.state.current) }
     switch (task.state.current) {
       case "start":
-        if (task.output.response) {
-          log("Response cached React Task Processor side");
+        if (task.output.instruction) {
+          log("Instruction cached React Task Processor side");
           nextState = "response";
         }
         break;
       case "response":
-        if (responseText !== task.output.response) {
-          setResponseText(task.output.response);
+        if (instructionText !== task.output.instruction) {
+          setInstructionText(task.output.instruction);
         }
         break;
       case "exit":
@@ -81,7 +81,7 @@ const TaskShowResponse = (props) => {
           padding: "16px",
         }}
       >
-        {responseText && responseText.split("\\n").map((line, index) => (
+        {instructionText && instructionText.split("\\n").map((line, index) => (
           <Typography 
             style={{ marginTop: "16px" }} 
             key={index}
@@ -94,4 +94,4 @@ const TaskShowResponse = (props) => {
   );
 };
 
-export default withTask(TaskShowResponse);
+export default withTask(TaskShowInstruction);

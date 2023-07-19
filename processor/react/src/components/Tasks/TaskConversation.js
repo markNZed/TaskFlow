@@ -55,7 +55,7 @@ const TaskConversation = (props) => {
 
   function applyRegex(msgsToProcess) {
     if (msgsToProcess) {
-      const regexProcessMessages = task.config.regexProcessMessages;
+      const regexProcessMessages = task.config?.local?.regexProcessMessages;
       if (regexProcessMessages) {
         for (const [regexStr, replacement] of regexProcessMessages) {
           let { pattern, flags } = parseRegexString(regexStr);
@@ -86,8 +86,8 @@ const TaskConversation = (props) => {
       let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
       // The welcome message is not included as part of the Task msgs sent to the LLM
-      if (task.config?.welcomeMessage && task.config.welcomeMessage !== "") {
-        welcomeMessage.push({ role: "assistant", text: task.config.welcomeMessage, user: "assistant", id: "welcome" });
+      if (task.config?.local?.welcomeMessage && task.config.local.welcomeMessage !== "") {
+        welcomeMessage.push({ role: "assistant", text: task.config.local.welcomeMessage, user: "assistant", id: "welcome" });
       }
       // deep copy because we may modify with regexProcessMessages
       let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs]));

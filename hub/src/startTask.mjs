@@ -133,6 +133,9 @@ function processTemplateArrays(obj, task, outputs, familyId) {
 }
 
 function processTemplates(task, obj, outputs, familyId) {
+  if (!obj) {
+    return task;
+  }
   // Traverse every key-value pair in the object
   for (const [key, value] of Object.entries(obj)) {
     // If the value is an object, then recurse
@@ -219,17 +222,25 @@ function supportMultipleLanguages(task, users) {
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
   const user = users[task.userId];
   const language = user.language || "EN";
-  for (const [key, value] of Object.entries(task.config)) {
-    if (key.endsWith("_" + language.toUpperCase())) {
-      const newKey = key.replace(/_\w{2}$/, "");
-      if (task.config[newKey] === undefined) {
-        task.config[newKey] = value;
+  // Array of the objects
+  let configs = [task.config];
+  if (task.config?.local) {
+    configs.push(task.config.local);
+  }
+  // Loop over the objects in the array
+  for (const config of configs) {
+    for (const [key, value] of Object.entries(config)) {
+      if (key.endsWith("_" + language.toUpperCase())) {
+        const newKey = key.replace(/_\w{2}$/, "");
+        if (config[newKey] === undefined) {
+          config[newKey] = value;
+        }
       }
-    }
-    // Strip out the language configs
-    const match = key.match(/_(\w{2})$/);
-    if (match) {
-      delete task.config[key];
+      // Strip out the language configs
+      const match = key.match(/_(\w{2})$/);
+      if (match) {
+        delete config[key];
+      }
     }
   }
   return task;
@@ -411,6 +422,7 @@ async function startTask_async(
     const outputs = await outputStore_async.get(task.familyId);
     // Using side-effects to update task.config
     task = processTemplates(task, task.config, outputs, task.familyId);
+    task = processTemplates(task, task.config.local, outputs, task.familyId);
 
     const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors)
 

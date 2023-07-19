@@ -77,14 +77,14 @@ function withTask(Component) {
     }, [props.task]);
 
     useEffect(() => {
-      const useAddress = props.task?.config?.useAddress;
+      const useAddress = props.task?.config?.local?.useAddress;
       if (useAddress && useAddress !== globalState?.useAddress) {
         mergeGlobalState({useAddress});
       }
     }, [props.task]);
 
     useEffect(() => {
-      const useAddress = props.task?.config?.useAddress;
+      const useAddress = props.task?.config?.local?.useAddress;
       const address = props.task?.state?.address;
       if (useAddress && globalState?.address && address !== globalState.address) {
         modifyTask({"state.address": globalState.address, "state.lastAddress": address});

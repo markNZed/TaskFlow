@@ -119,13 +119,13 @@ async function chat_prepare_async(task) {
 
   //console.log("Agent ", serviceType)
 
-  if (T("config.promptTemplate")) {
+  if (T("config.service.promptTemplate")) {
     console.log("Found promptTemplate");
-    prompt = T("config.prompt");
+    prompt = T("config.service.prompt");
     //console.log("Prompt " + prompt)
   } 
 
-  if (T("config.promptWithTime")) {
+  if (T("config?.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -251,8 +251,8 @@ async function chat_prepare_async(task) {
   }
 
   // Check if we need to preprocess
-  if (task.config.regexProcessPrompt) {
-    for (const [regexStr, replacement] of task.config.regexProcessPrompt) {
+  if (task.config?.local?.regexProcessPrompt) {
+    for (const [regexStr, replacement] of task.config.local.regexProcessPrompt) {
       let { pattern, flags } = utils.parseRegexString(regexStr);
       let regex = new RegExp(pattern, flags);
       prompt = prompt.replace(regex, replacement);

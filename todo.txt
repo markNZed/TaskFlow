@@ -1,23 +1,9 @@
 /* ToDo
 -------
-To specify behavior we have the static configuration and predefined dynamics of a Task Function
-  Maybe SubTask are the right way to specify configurable dynamic functions ?
-    Like what? Different state machines
-      Seems too hard to make generic tasks and are tasks too "big" for some functionality
-        Should we be able to configure a state machine?
-          Advantage of Xstate
-            Could allow for inheriting/modifying etc
-              Another level of config? e.g. one task that has multiple SM versions ?
-            https://lucylang.org/ A concise language for describing Finite State Machines.
-            https://www.stateml.org is not released but seems to get the idea of transforming in both directions
-  There is also an idea that Tasks could be simple and composed
-    This means there is no need to modify the "internals" of a Task
-    It also creates a lot of repeated code in the Task Functions 
-    It also means a lot of configuration to construct more complicated tasks from many components
-    Supporting both seems possible.
-Use task.processors like task.users
-Learn more about RxJS
-Task specific config seems important, with something like a schema for config.
+Support for multiple service configs
+  config.service.chatGPT 
+    In a config hierachy
+In SubTaskLLM.mjs merge servicetypes infor into task.config.service
 RxJS V7 Processor
   Refactor NodeJS Processor
     1) Same functionality but using Observer pattern
@@ -29,6 +15,24 @@ RxJS V7 Processor
     Create some sort of subscription to a Task via the Hub - can we know the family ids ?
   A scheduler should be able to provide  acron like feature
     TaskCron
+After experimenting with RxJS processor we may want to try using a similar approach in React Processor
+To specify behavior we have the static configuration and predefined dynamics of a Task Function
+  Maybe SubTask are the right way to specify configurable dynamic functions ?
+    Like what? Different state machines
+      Seems too hard to make generic tasks and are tasks too "big" for some functionality
+        Should we be able to configure a state machine?
+          Advantage of Xstate
+            Could allow for inheriting/modifying etc
+              Another level of config? e.g. one task that has multiple SM versions ?
+            https://lucylang.org/ A concise language for describing Finite State Machines.
+            https://www.stateml.org is not released but seems to get the idea of transforming in both directions
+  We do have nextTaskTemplate which allows for re-ordering SM
+  There is also an idea that Tasks could be simple and composed
+    This means there is no need to modify the "internals" of a Task
+    It also creates a lot of repeated code in the Task Functions 
+    It also means a lot of configuration to construct more complicated tasks from many components
+    Supporting both seems possible.
+Add schemas for task.config.local as per tasktypes.mjs and use this to check tasks in configdata
 The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
   Use the RxJS TP but how does it cause an update on another Task ?
     task.command = "remoteUpdate"
@@ -131,6 +135,12 @@ Option to IGNORE config options from parents
   Avoids inheriting info that is not used.
   Can just set to null to achieve this?
 messagesStyle not being used yet 
+Config for SubTaskLLM and oher SubTask?
+  At the moment we only have SubTaskLLM and it doe not have any config (all in config.service)
+  I guess it would be possible to have a SubTask config under a Task config
+    Just specify as a task but use subtask name e.g. task.name = "SubTaskLLM"
+    SubTask would need to be extended to make use of this 
+
 
 Backlog
 -------
@@ -373,7 +383,7 @@ Features that are manually tested
           word count X 
         response
           word count X
-      TaskShowResponse
+      TaskShowInstruction
         error
       TaskChat
       TaskConversation

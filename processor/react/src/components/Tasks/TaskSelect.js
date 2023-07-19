@@ -41,7 +41,7 @@ const TaskSelect = (props) => {
         if (Object.keys(task.output.selected).length > 0) {
             setSelectedOptions(task.output.selected);
         } else {
-            const init = task.config.fields.map(() => []);
+            const init = task.config.local.fields.map(() => []);
             setSelectedOptions(init);
         }
         break;
@@ -66,7 +66,7 @@ const TaskSelect = (props) => {
             ...prevState,
             [fieldIndex]: prevSelectedOption.filter(option => option !== value),
           };
-        } else if (task.config.fields[fieldIndex].options.length === 1 || task.config.fields[fieldIndex].singleSelection) {
+        } else if (task.config.local.fields[fieldIndex].options.length === 1 || task.config.local.fields[fieldIndex].singleSelection) {
           return {
             ...prevState,
             [fieldIndex]: [value],

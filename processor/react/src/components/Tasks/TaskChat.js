@@ -184,6 +184,8 @@ const TaskChat = (props) => {
           // If we set nextState at the same time as command then there is a risk that the 
           // task.state.current updates before the command is sent.
           // By setting nextState after the transition we minimize this risk.
+          // We probably need to be able to await on modifyTask so we know command has been sent
+          // Could also chain the nextState assignment
           if (transition()) {
             // Need to update to store output.msgs
             modifyTask({
@@ -220,8 +222,8 @@ const TaskChat = (props) => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
-    textarea.placeholder = task?.config?.promptPlaceholder;
-  }, [task?.input?.promptText, task?.config?.promptPlaceholder]);
+    textarea.placeholder = task?.config?.local?.promptPlaceholder;
+  }, [task?.input?.promptText, task?.config?.local?.promptPlaceholder]);
 
   const handleDropdownSelect = (selectedPrompt) => {
     // Prepend to existing prompt, might be better just to replace
@@ -243,7 +245,7 @@ const TaskChat = (props) => {
 
   function processMessages(text) {
     if (text) {
-      const regexProcessMessages = task.config.regexProcessMessages;
+      const regexProcessMessages = task.config?.local?.regexProcessMessages;
       if (regexProcessMessages) {
         for (const [regexStr, replacement] of regexProcessMessages) {
           let { pattern, flags } = parseRegexString(regexStr);
@@ -259,10 +261,10 @@ const TaskChat = (props) => {
 
   return (
     <form onSubmit={handleSubmit} ref={formRef} className="msg-form">
-      {task && task.config?.suggestedPrompts ? (
+      {task && task.config?.local?.suggestedPrompts ? (
         <div style={{ textAlign: "left" }}>
           <PromptDropdown
-            prompts={task.config.suggestedPrompts}
+            prompts={task.config.local.suggestedPrompts}
             onSelect={handleDropdownSelect}
           />
         </div>
