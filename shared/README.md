@@ -12,6 +12,8 @@ The task.config.cache object allows for flexible cache rules, it is an array of 
 task.config stores generic configuration information that many tasks may use, it is inherited by tasks further down the hierarchy.
 task.config.local stores tasktype specific configuration information that is not inherited.
 
+Task.config.services storea an array of service configurations
+
 task.commands:
 * start
 * update

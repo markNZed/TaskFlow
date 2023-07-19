@@ -1,6 +1,5 @@
 /* ToDo
 -------
-
 In SubTaskLLM.mjs merge servicetypes into task.config.service
   Simplify the code that was chcking for both
 RxJS V7 Processor
@@ -44,13 +43,12 @@ The React Processor provides a parent-child relationship for interaction. How to
     Monitoring activity across multiple Tasks
       This is perhaps the next step
 Taskflows.js could be a task then would have task.user available and could remove globalState.user
-Should the servicetype be copied into task.config.service?
+Should the servicetype be copied into task.config.services?
   The servicetype is on the Processor while config is on the Hub
-  Maybe Processor should register servicetypes as well as environment ?
 Should the Processor also implement rate limiting?
-Ability to select a service. This is a very simple task?
+Ability to select a service type. This is a very simple task?
   Could allow for various ways of selecting. 
-If a task is no longer in an environment that it needs then we should shut it down ?
+If a task is no longer in an environment then shut it down
   Would require something like a delete command sent to processors
 
 
@@ -348,6 +346,7 @@ Test Plan
 Prefill tasks so we can work on a specifc part of the sequence.
 If we stub the services and use a teset task for monitoring behavior in the browser then we could have system tests.
 Need to look more into testing React apps
+Testing should be a task
 
 Features that are manually tested
 ---------------------------------

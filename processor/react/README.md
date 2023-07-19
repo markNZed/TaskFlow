@@ -35,6 +35,7 @@ Running on localhost set the port for the React React Task Processor server in p
 * The HOC `withTask` wraps the Task component with the HOC `withDebug`
 * Enable debug from App.js and leave useful regex for debug commented in the file
 * The HOC provides the `props.log()` function
+* The object window.tasks represents the current tasks so it can be inspected from the console
 
 # Notes
 
