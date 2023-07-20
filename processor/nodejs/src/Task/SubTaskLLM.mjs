@@ -119,8 +119,8 @@ async function chat_prepare_async(task) {
   if (T("config.service")) {
     serviceConfig = utils.deepMerge(serviceConfig, T("config.service"));
   }
-  if (T("state.request.service")) {
-    serviceConfig = utils.deepMerge(serviceConfig, T("state.request.service"));
+  if (T("request.service")) {
+    serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));
   }
   const modelVersion = serviceConfig.modelVersion;
   const temperature = serviceConfig.temperature;
@@ -138,6 +138,12 @@ async function chat_prepare_async(task) {
     console.log("Found prompt in serviceConfig.prompt");
     prompt = serviceConfig.prompt;
     //console.log("Prompt " + prompt)
+  } 
+
+  if (T("request.prompt")) {
+    console.log("Found prompt in request.prompt");
+    prompt = T("request.prompt");
+    //console.log("Request.prompt " + prompt)
   } 
 
   if (T("config?.local?.promptWithTime")) {

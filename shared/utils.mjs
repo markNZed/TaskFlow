@@ -100,7 +100,7 @@ function deepCompare(obj1, obj2, visitedObjects = new WeakSet()) {
 /*
 In this updated function, we've added an isArray helper function that uses Array.isArray to check if a value is an array. We then use this function in our check for whether the values at a key in both objects are objects. If they are arrays, we iterate over their elements and check for conflicts, but ignore any elements that are null in either array. If the lengths of the arrays are different, we still consider that a conflict, as it's a structural difference between the two objects.
 */
-function checkConflicts(obj1, obj2) {
+function checkConflicts(obj1, obj2, path = "") {
   // Helper functions
   const isObject = (value) => typeof value === 'object' && value !== null;
   const isArray = (value) => Array.isArray(value);
@@ -126,13 +126,13 @@ function checkConflicts(obj1, obj2) {
           }
         } else {
           // Recursive check for nested objects
-          if (checkConflicts(obj1[key], obj2[key])) {
+          if (checkConflicts(obj1[key], obj2[key], path + "." + key)) {
             conflict = true;
           }
         }
       } else if (obj1[key] !== obj2[key]) {
         // Conflict detected when values are different
-        console.log("Conflict in merge: " + key + " " + JSON.stringify(obj1[key]) + " " + JSON.stringify(obj2[key]));
+        console.log("Conflict in merge: " + path + "." + key + " " + JSON.stringify(obj1[key]) + " " + JSON.stringify(obj2[key]));
         conflict = true;
       }
     }

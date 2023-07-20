@@ -43,15 +43,16 @@ const TaskConversation = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
-  // There is a loop from the childTask.output.msgs to task.state.msgs to childTask.input.msgs
-  // This allows msgs to be controlled by TaskConversation
+  // There is a loop from the childTask.output.msgs to childTask.input.msgs
+  // This potetniallly allows msgs to be controlled by TaskConversation
   useEffect(() => {
-    if (task?.state?.msgs) {
+    console.log("TaskConversation childTask?.output?.msgs", childTask?.output?.msgs);
+    if (childTask?.output?.msgs) {
       modifyChildTask({
-        "input.msgs": task.state.msgs,
+        "input.msgs": childTask.output.msgs,
       });
     }
-  }, [task?.state?.msgs]);
+  }, [childTask?.output?.msgs]);
 
   function applyRegex(msgsToProcess) {
     if (msgsToProcess) {
@@ -80,8 +81,8 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (childTask) {
       const childMsgs = childTask.output?.msgs || [];
-      if (childTask.output.promptResponse !== chatResponse) {
-        setChatResponse(applyRegex(childTask.output.promptResponse));
+      if (childTask.output.LLMResponse !== chatResponse) {
+        setChatResponse(applyRegex(childTask.output.LLMResponse));
       }
       let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
@@ -95,9 +96,6 @@ const TaskConversation = (props) => {
       if (JSON.stringify(combinedMsgs) !== JSON.stringify(msgs)) {
         applyRegex(combinedMsgs);
         setMsgs(combinedMsgs);
-        modifyTask({ 
-          "state.msgs": childMsgs,
-        });
       }
     }
   }, [childTask?.output]);

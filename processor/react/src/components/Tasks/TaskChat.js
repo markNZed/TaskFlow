@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 Task Process
   Present textarea and dropdown for user to enter a prompt
   When prompt is submitted state.current -> send
-  NodeJS sends incemental text responses by websocket updating task.output.promptResponse
+  NodeJS sends incemental text responses by websocket updating task.output.LLMResponse
   NodeJS sends final text and terminates HTTP request with state.current=received
   Parent component is expected to:
     Display updates to task.output.msgs
@@ -31,12 +31,14 @@ Task States
   received: 
 
 Task IO
+  request:
+  response:
   output:
-    promptResponse: output from the LLM
+    LLMResponse: output from the LLM
     msgs: input.msgs with prompt appended
     sending: indicate prompt is being sent to LLM
   input:
-    promptText: the prompt input 
+    prompt: the prompt input 
     submitPrompt: trigger to send prompt
     msgs: conversation history 
   
@@ -118,7 +120,7 @@ const TaskChat = (props) => {
     let nextState;
     if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
     const msgs = task.input?.msgs || [];
-    //console.log("msgs before SM", msgs);
+    console.log("msgs before SM", msgs);
     switch (task.state.current) {
       case "start":
         modifyTask({
@@ -145,10 +147,10 @@ const TaskChat = (props) => {
           const promptText = "Location: " + task.state?.address;
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.promptResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
+            "output.LLMResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
             "output.sending": true,
             "output.msgs": [...msgs, { role: "user", text: promptText, user: user.label, id: uuidv4() }],
-            "state.request.prompt": promptText,
+            "request.prompt": promptText,
             "state.lastAddress": task.state.address,
             "commandArgs": { "lock": true },
             "command": "update",
@@ -159,13 +161,12 @@ const TaskChat = (props) => {
         if (transitionTo("send") && !isLocked) {
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            // PLaceholder for sending indicator
-            "output.promptResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
+            "output.LLMResponse": {role: "assistant", text: "", user: "assistant", id: uuidv4()},
             "output.sending": true,
-            "output.msgs": [...msgs, { role: "user", text: task.input.promptText, user: user.label, id: uuidv4() } ],
+            "output.msgs": [...msgs, {role: "user", text: task.input.promptText, user: user.label, id: uuidv4()}],
             "input.promptText": "",
             "input.submitPrompt": false,
-            "state.request.prompt": task.input.promptText,
+            "request.prompt": task.input.promptText,
             "commandArgs": { "lock": true },
             "command": "update",
           });
@@ -173,9 +174,9 @@ const TaskChat = (props) => {
         break;
       case "receiving":
         // Avoid looping due to modifyTask by checking if the text has changed
-        if (responseText && responseText !== task.output.promptResponse?.text) {
+        if (responseText && responseText !== task.output.LLMResponse?.text) {
           modifyTask({
-            "output.promptResponse.text": responseText,
+            "output.LLMResponse.text": responseText,
           });
         }
         break;
@@ -188,10 +189,12 @@ const TaskChat = (props) => {
           // Could also chain the nextState assignment
           if (transition()) {
             // Need to update to store output.msgs
+            let outputPromptResponse = task.output.LLMResponse;
+            outputPromptResponse.text = task.response.LLMResponse;
             modifyTask({
-              "output.promptResponse": null,
-              // We are assuming that output.promptResponse object to null happens after it is copied into output.msgs
-              "output.msgs": [...msgs, task.output.promptResponse ],
+              "output.LLMResponse": null,
+              // We are assuming that output.LLMResponse object to null happens after it is copied into output.msgs
+              "output.msgs": [...msgs, outputPromptResponse ],
               "commandArgs": { "unlock": true },
               "command": "update",
             });

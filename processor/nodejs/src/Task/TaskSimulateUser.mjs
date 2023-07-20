@@ -94,7 +94,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           T("output.simulationPrompt", simulationPrompt);
           const simulationResponse = { role: "assistant", text: "", user: "assistant" };
           T("output.simulationResponse", simulationResponse);
-          T("state.request.service.prompt", T("output.simulationPrompt.text"));
+          T("request.prompt", T("output.simulationPrompt.text"));
           const subTask = await SubTaskLLM_async(wsSendTask, task);
           T("output.simulationResponse.text", subTask.response.LLM);
         } else {
@@ -118,7 +118,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
           // The last message in output.msgs should become the prompt
           const simulationPrompt = msgs.pop().text;
           ST("input.msgs", msgs);
-          ST("state.request.service.prompt", simulationPrompt)
+          ST("request.prompt", simulationPrompt)
           subTask = await SubTaskLLM_async(wsSendTask, subTask);
           const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
           T("output.simulationResponse", simulationResponse);

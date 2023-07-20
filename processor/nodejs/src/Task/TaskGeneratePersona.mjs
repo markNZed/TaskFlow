@@ -18,17 +18,17 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
       console.log(`${taskName} does nothing in state ${task.state.current}`);
       return null
     case "start":
-      T("state.request.service.prompt", "Generate a random client profile");
-      T("state.request.service.noWebsocket", true);
+      T("request.prompt", "Generate a random client profile");
+      T("request.service.noWebsocket", true);
       let subTask = await SubTaskLLM_async(wsSendTask, task);
       T("output.profile", subTask.response.LLM);
-      T("state.request.service.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
-      T("state.request.service.prompt", T("output.profile"));
-      const forget = T("state.request.service.forget");
-      T("state.request.service.noWebsocket", false);
+      T("request.service.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
+      T("request.prompt", T("output.profile"));
+      const forget = T("request.service.forget");
+      T("request.service.noWebsocket", false);
       subTask = await SubTaskLLM_async(wsSendTask, task);
       T("output.summary", subTask.response.LLM);
-      T("state.request.service.forget", forget);
+      T("request.service.forget", forget);
       T("state.request", {}); // clear - do we need to do this here?
       T("state.last", T("state.current"));
       T("state.current", "generated");

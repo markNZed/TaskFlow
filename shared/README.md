@@ -4,6 +4,16 @@
 
 The schema is defined in JSON and [Quicktype](https://quicktype.io) is used to generate validation code.
 
+The Task schema defines a staic object (i.e. no funtions) so it is language independant. Therfore conventions are criticla to allowing for communication and synchronization. The conventions must be enforced by the Task Processors and Task Hub. 
+
+The task.input should not be driven by the Task, this ensure that it will not overwrite values.
+The task.meta should not be modified by the Task.
+Each parameter in task.output should be updated by a single processor or managed carefully (e.g., locking) to avoid conflicts.
+task.request should be used for sending information within the distributed task
+task.response should be used for information within the distributed task in response to task.request
+task.state may also be used for internal Task communication and synchronization
+The processor that locks a Task should ideally also unlock the Task
+
 The task.config.cache object allows for flexible cache rules, it is an array of objects (so use APPEND_cache to allow for inheritance):
 * cache.subTask - controls the caching in subTasks, a string e.g. "SubTaskLLM"
 * cache.enable - boolean, can be excluded and in that case is assumed to be true

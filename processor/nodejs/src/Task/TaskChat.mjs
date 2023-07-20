@@ -83,20 +83,13 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("state.current", "receiving");
       T("output.sending", false);
       T("commandArgs.lockBypass", true);
-      // Update the task which has the effect of setting the state to receiving
+      // Update the task which has the effect of setting the state to receiving on ohter Processors
       T("command", "update");
-
       await fetchTask_async(task)
-      T("state.request.service.prompt", T("state.request.prompt"))
       const subTask = await SubTaskLLM_async(wsSendTask, task);
-      let promptResponse = T("output.promptResponse");
-      promptResponse.text = subTask.response.LLM;
-      T("output.promptResponse", promptResponse );
-      //T("output.promptResponse", null );
-      //T("output.msgs", [...T("output.msgs"), promptResponse ]);
+      T("response.LLMResponse", subTask.response.LLM);
       T("state.last", T("state.current"));
       T("state.current", "received");
-      //T("commandArgs.unlock", true);
       T("command", "update");
       break;
     default:

@@ -87,8 +87,8 @@ const TaskSimulateUser = (props) => {
       if (JSON.stringify(childTask.output.msgs) !== JSON.stringify(task.output.msgs)) {
         modifyTask({"output.msgs": childTask.output.msgs});
       }
-      if (childTask.output.promptResponse !== task.output.promptResponse) {
-        modifyTask({"output.promptResponse": childTask.output.promptResponse});
+      if (childTask.output.LLMResponse !== task.output.LLMResponse) {
+        modifyTask({"output.LLMResponse": childTask.output.LLMResponse});
       }
       if (childTask.output.sending !== task.output.sending) {
         modifyTask({"output.sending": childTask.output.sending});

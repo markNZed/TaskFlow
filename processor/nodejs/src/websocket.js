@@ -98,6 +98,11 @@ const connectWebSocket = () => {
       delete message.task.hub;
     }
     if (command === "update") {
+      if (message.task.meta.sourceProcessorId === processorId) {
+        console.log("Skipping self-update as not used by nodejs task functions " + message.task.id);
+        return;
+      }
+      //console.log("processorWs.onMessage update", message);
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React

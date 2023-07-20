@@ -195,30 +195,34 @@ function withTask(Component) {
         const thisProcssorIsSource = updateDiff.meta.sourceProcessorId === globalState.processorId;
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
         if (thisProcssorIsSource) {
-          //console.log("update from this processor")
-          // Just update task.meta
-          const newMeta = deepMerge(props.task.meta, updateDiff.meta);
-          modifyTask({"meta": newMeta});
+          console.log("Update from this processor")
+          // Just update task.meta & the task.input
+          const currentMetaDiff = deepMerge(props.task.meta, updateDiff.meta);
+          modifyTask({"meta": currentMetaDiff});
         } else if (thisProcessorHasLock) {
-          if (thisProcessorHasLock) {console.log("update with lock");}
+          console.log("Update with lock");
           let currentTaskDiff = getObjectDifference(lastTask, props.task);
-          // We copy across the meta data in any case
-          currentTaskDiff.meta = deepMerge(currentTaskDiff.meta, updateDiff.meta);
+          // Keep the current input and any changes received
+          // We do not want to use latTask because it may overwrite changes on the inputs 
+          // coming form outside the Task.
+          let currentInputDiff = {};
+          currentInputDiff["input"] = deepMerge(props.task.input, updateDiff.input);
+          let modifiedLastTask = deepMerge(lastTask, currentInputDiff);
+          console.log(("modifiedLastTask after", modifiedLastTask));
           if (checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
           }
-          let modifiedUpdatedTask = deepMerge(lastTask, currentTaskDiff);
           // Priority to updateDiff
-          modifiedUpdatedTask = deepMerge(modifiedUpdatedTask, updateDiff);
-          props.setTask(modifiedUpdatedTask);
-          console.log("Update ", props.task.id, modifiedUpdatedTask);
+          modifiedLastTask = deepMerge(modifiedLastTask, updateDiff);
+          props.setTask(modifiedLastTask);
+          console.log("Update ", props.task.id, modifiedLastTask);
         } else {
           props.setTask(updatedTask);
           console.log("Update ", props.task.id, updatedTask);
         }
         // Important we record updateDiff as it was sent to keep in sync with Hub
         await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
-        console.log("Storage update ", props.task.id, updateDiff, updatedTask);
+        console.log("Storage update ", thisProcssorIsSource, thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
       }
     )
 

@@ -1,7 +1,5 @@
 /* ToDo
 -------
-In SubTaskLLM.mjs merge servicetypes into task.config.service
-  Simplify the code that was chcking for both
 RxJS V7 Processor
   Refactor NodeJS Processor
     1) Same functionality but using Observer pattern
