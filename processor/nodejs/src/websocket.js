@@ -16,7 +16,6 @@ import { utils } from "./utils.mjs";
 let connectionAttempts = 0;
 let maxAttempts = 100;
 let processorWs;
-let activeTasks = {};
 
 function wsSendObject(message) {
   if (!processorWs) {
@@ -99,12 +98,17 @@ const connectWebSocket = () => {
       message.task.processor["command"] = command;
       message.task.processor["commandArgs"] = commandArgs;
     }
+    if (command !== "pong") {
+      console.log(""); //empty line
+      console.log("processorWs " + command)
+    }
     if (command === "update") {
       if (message.task.meta.sourceProcessorId === processorId) {
         console.log("Skipping self-update as not used by nodejs task functions " + message.task.id);
+        //console.log("processorWs.onMessage update", message.task);
         return;
       }
-      //console.log("processorWs.onMessage update", message);
+      //console.log("processorWs.onMessage update", message.task);
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
@@ -120,23 +124,17 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging")
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
-      // Not using activeTasks but if we want Task to interact this will be neccessary
-      activeTasks[mergedTask.id] = mergedTask;
       await do_task_async(wsSendTask, mergedTask);
-      delete activeTasks[mergedTask.id];
     } else if (command === "sync") {
-      console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       const mergedTask = utils.deepMerge(lastTask, message.task);
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
     } else if (command === "start" || command === "join") {
-      console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (command === "pong") {
       //console.log("ws pong received", message)
     } else if (command === "register") {
-      console.log("ws register request received")
       register_async();
     } else if (command === "error") {
       console.log("ws error received but not doing anything yet")

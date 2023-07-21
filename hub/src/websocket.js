@@ -41,8 +41,10 @@ const wsSendTask = async function (task, processorId = null) {
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
-  if (command === "update") {
+  if (command === "update" || command === "sync") {
     const activeTask = await activeTasksStore_async.get(task.instanceId);
+    //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
+    //console.log("wsSendTask " + command + " task state", task.state);
     let diff = {}
     if (activeTask) { 
       //console.log("wsSendTask task.output.msgs", task.output?.msgs)
@@ -76,6 +78,7 @@ const wsSendTask = async function (task, processorId = null) {
   } else {
     message["task"] = task;
   }
+  //console.log("wsSendTask " + command + " message state", message["task"].state);
   // For example task.command === "partial" does not have task.processors
   if (message.task?.processors) {
     //deep copy because we are going to edit the object

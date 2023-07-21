@@ -35,6 +35,7 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
     CEPtask.output["CEPCount"] = oldCEPtask.output.CEPCount ? oldCEPtask.output.CEPCount + 1 : 1;
     // Could try to call update from here?
     CEPtask["command"] = "sync";
+    CEPtask["commandArgs"] = {};
     console.log("TaskConversation CEPFunc target " + CEPtask.id + " source " + task.id + " sync");
   }
   utils.createCEP(CEPFuncs, task, match, myCEPFunc);

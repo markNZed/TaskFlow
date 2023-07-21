@@ -185,6 +185,7 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
+        console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         const updatedTask = deepMerge(lastTask, updateDiff)
         //console.log("lastTask", lastTask)

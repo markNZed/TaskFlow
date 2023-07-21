@@ -161,7 +161,7 @@ const connectWebSocket = () => {
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       const diff = utils.getObjectDifference(lastTask, message.task); 
-      console.log("diff", diff, message.task.meta);
+      //console.log("diff", diff, message.task.meta);
       if (message.task.meta.sourceProcessorId === processorId) {
         console.log("Skipping self-update of task " + message.task.id + " in state " + message.task.state?.current + " as it was not used by RxJS task functions " + message.task.id);
         return;

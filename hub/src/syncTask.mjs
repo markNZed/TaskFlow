@@ -51,7 +51,7 @@ const syncTask_async = async (key, value) => {
         }
         if (processorData.commandsAccepted.includes(command)) {
           //console.log("syncTask_async", command, key, processorId, taskCopy);
-          await wsSendTask(taskCopy, processorId);
+          wsSendTask(taskCopy, processorId);
         } else {
           console.log("syncTask_async processor does not support commmand", command, processorId);
         }

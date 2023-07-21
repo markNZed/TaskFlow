@@ -1,5 +1,8 @@
 /* ToDo
 -------
+The updateDiff sent from nodejs on received seems way too big.
+  The storage ref on hub is OK?
+Maybe NodeJS needs a notion of request ID an dprfix this to logging ?
 Maybe CEP should run after task is processd on RxJS so the Task command can be modified
 A Processor that is restarted does not rejoin the activeTasks ?
 RxJS V7 Processor

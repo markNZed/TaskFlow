@@ -83,9 +83,16 @@ async function sync_async(res, task) {
     if (task.instanceId === undefined) {
       throw new Error("Missing task.instanceId");
     }
+    task.meta = task.meta || {};
+    task.meta.sourceProcessorId = processorId;
     // Don't await so the return gets back before the websocket update
     syncTask_async(task.instanceId, task)
-      .then(() => activeTasksStore_async.set(task.instanceId, task))
+      .then(async () => {
+        const activeTask = await activeTasksStore_async.get(task.instanceId);
+        const mergedTask = utils.deepMerge(activeTask, task);
+        activeTasksStore_async.set(task.instanceId, mergedTask);
+        }
+      )
     res.status(200).send("ok");
   } catch (error) {
     console.error(`Error sync task ${task.id}: ${error.message}`);
@@ -106,6 +113,7 @@ async function error_async(res, task) {
 }
 
 router.post("/", async (req, res) => {
+  console.log(""); // Empty line
   console.log("/hub/api/task");
   let userId = utils.getUserId(req);
   if (userId) {
