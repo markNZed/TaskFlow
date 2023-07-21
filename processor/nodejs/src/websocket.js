@@ -92,10 +92,12 @@ const connectWebSocket = () => {
     let commandArgs;
     if (message?.task) {
       // The processor strips hub specific info because the Task Function should not interact with the Hub
-      // Should copy to task.processor.command
       command = message.task.hub.command;
       commandArgs = message.task.hub?.commandArgs;
       delete message.task.hub;
+      message.task.processor = message.task.processor || {};
+      message.task.processor["command"] = command;
+      message.task.processor["commandArgs"] = commandArgs;
     }
     if (command === "update") {
       if (message.task.meta.sourceProcessorId === processorId) {
@@ -122,6 +124,11 @@ const connectWebSocket = () => {
       activeTasks[mergedTask.id] = mergedTask;
       await do_task_async(wsSendTask, mergedTask);
       delete activeTasks[mergedTask.id];
+    } else if (command === "sync") {
+      console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
+      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
+      const mergedTask = utils.deepMerge(lastTask, message.task);
+      await activeTasksStore_async.set(message.task.instanceId, mergedTask)
     } else if (command === "start" || command === "join") {
       console.log("processorWs " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)

@@ -11,6 +11,7 @@ Information for the Task Hub is held in the `task.hub` object. Only the Task Hub
   * error
   * register
   * pong
+  * sync
 
 The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored

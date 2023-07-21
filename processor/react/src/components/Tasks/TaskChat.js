@@ -120,7 +120,7 @@ const TaskChat = (props) => {
     let nextState;
     if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
     const msgs = task.input?.msgs || [];
-    console.log("msgs before SM", msgs);
+    //console.log("msgs before SM", msgs);
     switch (task.state.current) {
       case "start":
         modifyTask({
@@ -193,12 +193,14 @@ const TaskChat = (props) => {
             outputPromptResponse.text = task.response.LLMResponse;
             modifyTask({
               "output.LLMResponse": null,
-              // We are assuming that output.LLMResponse object to null happens after it is copied into output.msgs
-              "output.msgs": [...msgs, outputPromptResponse ],
+              // If we use msgs instead of task.output.msgs then we can miss the last user prompt
+              // It can take time for the output that includes the user prompt to go to
+              // TaskConversation and come back as task.input
+              // Here we simply append to the current output so avoiding that issue
+              "output.msgs": [ ...task.output.msgs, outputPromptResponse ],
               "commandArgs": { "unlock": true },
               "command": "update",
             });
-          } else {
             nextState = "input";
           }
         }

@@ -13,6 +13,7 @@ import useStartTask from "../hooks/useStartTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
 import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
+import useSyncWSFilter from "../hooks/useSyncWSFilter";
 import useStartWSFilter from "../hooks/useStartWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
@@ -195,12 +196,12 @@ function withTask(Component) {
         const thisProcssorIsSource = updateDiff.meta.sourceProcessorId === globalState.processorId;
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
         if (thisProcssorIsSource) {
-          console.log("Update from this processor")
           // Just update task.meta & the task.input
           const currentMetaDiff = deepMerge(props.task.meta, updateDiff.meta);
           modifyTask({"meta": currentMetaDiff});
+          //console.log("Update from this processor")
         } else if (thisProcessorHasLock) {
-          console.log("Update with lock");
+          //console.log("Update with lock");
           let currentTaskDiff = getObjectDifference(lastTask, props.task);
           // Keep the current input and any changes received
           // We do not want to use latTask because it may overwrite changes on the inputs 
@@ -208,21 +209,31 @@ function withTask(Component) {
           let currentInputDiff = {};
           currentInputDiff["input"] = deepMerge(props.task.input, updateDiff.input);
           let modifiedLastTask = deepMerge(lastTask, currentInputDiff);
-          console.log(("modifiedLastTask after", modifiedLastTask));
           if (checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
           }
           // Priority to updateDiff
           modifiedLastTask = deepMerge(modifiedLastTask, updateDiff);
           props.setTask(modifiedLastTask);
-          console.log("Update ", props.task.id, modifiedLastTask);
+          //console.log("Update ", props.task.id, modifiedLastTask);
         } else {
           props.setTask(updatedTask);
-          console.log("Update ", props.task.id, updatedTask);
+          //console.log("Update ", props.task.id, updatedTask);
         }
         // Important we record updateDiff as it was sent to keep in sync with Hub
         await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
-        console.log("Storage update ", thisProcssorIsSource, thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
+        console.log("Storage update isSource:" + thisProcssorIsSource + " lock:" + thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
+      }
+    )
+
+    useSyncWSFilter(isMounted, props.task,
+      async (syncDiff) => {
+        const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
+        const updatedTask = deepMerge(lastTask, syncDiff)
+        // Important we record syncDiff as it was sent to keep in sync with Hub
+        await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
+        modifyTask(syncDiff);
+        console.log("Storage sync ", props.task.id, syncDiff);
       }
     )
 

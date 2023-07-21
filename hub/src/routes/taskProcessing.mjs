@@ -36,14 +36,14 @@ function checkLockConflict(task, activeTask) {
       task.meta.locked = null;
     }
     
-    if (lock && activeTask && !activeTask.meta.locked) {
+    if (lock && activeTask && !activeTask.meta?.locked) {
       task.meta.locked = processorId;
       //console.log("LOCKED ",task.id, processorId);
-    } else if (activeTask && activeTask.meta.locked && activeTask.meta.locked === processorId) {
+    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === processorId) {
       task.meta.locked = null;
     }
     
-    if (activeTask && activeTask.meta.locked && activeTask.meta.locked !== processorId && !lockBypass && !unlock) {
+    if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== processorId && !lockBypass && !unlock) {
       const now = new Date();
       let updatedAt;
       if (task.meta.updatedAt) {

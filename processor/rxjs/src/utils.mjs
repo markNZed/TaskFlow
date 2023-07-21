@@ -151,4 +151,29 @@ utils.add_index = function(config) {
   }
 }
 
+utils.createCEP = function(CEPFuncs, task, match, myCEPFunc) {
+  // Check if the Map has an entry for match
+  if (!task.familyId) {
+    console.log("task", task);
+    throw new Error("task.familyId is undefined");
+  }
+  let origMatch = match;
+  match =  match + task.familyId;
+  let funcMap = CEPFuncs.get(match);
+  if (!funcMap) {
+    // If not, create a new Map for match
+    funcMap = new Map();
+    funcMap.set(task.instanceId, [myCEPFunc]); // Will need to clean this up
+    CEPFuncs.set(match, funcMap);
+    console.log("CEPFuncs created function for " + origMatch + " from " + task.id + " familyId " + task.familyId);  
+  } else {
+    // Only add the function if there isn't already an entry for this task.instanceId
+    if (!funcMap.has(task.instanceId)) {
+      funcMap.set(task.instanceId, [myCEPFunc]);
+      CEPFuncs.set(match, funcMap);
+      console.log("CEPFuncs added function for " + origMatch + " from " + task.id + " familyId " + task.familyId);
+    }
+  }
+}
+
 export { utils };

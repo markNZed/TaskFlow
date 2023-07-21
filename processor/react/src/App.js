@@ -131,6 +131,7 @@ function App({ activeWorkerCount, workerId }) {
           },
           body: JSON.stringify({
              processorId: globalState.processorId,
+             commandsAccepted: ["partial", "update", "start", "join", "pong", "register", "error", "sync"],
              environments: ["react"],
              language: language,
              messagesStyle,

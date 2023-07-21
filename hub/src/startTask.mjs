@@ -171,7 +171,6 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
     } else if (!instanceIds.includes(task.instanceId)) {
       instanceIds.push(task.instanceId);
       await familyStore_async.set(task.familyId, instanceIds);
-      task.familyId = instanceId;
       console.log("Adding to family " + task.familyId + " instanceId: " + task.instanceId);
     } else {
       console.log("Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
@@ -387,10 +386,14 @@ async function startTask_async(
     if (!task.config.oneFamily && !task.config.collaborateGroupId) {
       // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
       if (prevTask) {
-         console.log("Using prevInstanceId", prevTask.instanceId);
+        console.log("Using prev familyId", prevTask.instanceId);
         task.familyId = prevTask.familyId;
-      } else {
+      } else if (initTask.familyId) { 
+        console.log("Using init familyId", initTask.instanceId);
         task.familyId = initTask.familyId;
+      } else {
+        console.log("Using instanceId familyId", task.instanceId);
+        task.familyId = task.instanceId;
       }
     }
 

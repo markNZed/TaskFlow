@@ -31,7 +31,7 @@ const register_async = async () => {
     body: JSON.stringify({
       processorId: processorId,
       environments: ["rxjs"],
-      commandsAccepted: ["update", "start", "pong", "register", "error"],
+      commandsAccepted: ["update", "start", "pong", "register", "error", "sync"],
       serviceTypes: serviceTypes,
       messagesStyle,
    }),

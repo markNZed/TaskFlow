@@ -7,13 +7,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { fetchTask_async } from "./fetchTask.mjs";
+import { utils } from "./utils.mjs";
 
-export async function do_task_async(wsSendTask, task) {
+export async function do_task_async(wsSendTask, task, CEPFuncs) {
     let updatedTask = {};
     let idx = 0;
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       try {
-        updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
+        updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
       } catch (e) {
         console.error(e);
         updatedTask = task;
@@ -23,13 +24,11 @@ export async function do_task_async(wsSendTask, task) {
         updatedTask.command = "update";
       }
       // Returning null is  away of doing nothing
-      if (updatedTask !== null) {
+      if (updatedTask !== null && updatedTask.command) {
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
         }
-        if (!updatedTask?.command) {
-          throw new Error("Missing command in updatedTask");
-        } else if (updatedTask?.command === "start") {
+        if (updatedTask.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
@@ -45,14 +44,22 @@ export async function do_task_async(wsSendTask, task) {
           if (updatedTask.command === "update") {
             await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
           }
+          if (updatedTask.command === "sync") {
+            console.log("do_task_async sync " + task.id);
+            const lastTask = await activeTasksStore_async.get(updatedTask.instanceId);
+            const mergedTask = utils.deepMerge(lastTask, updatedTask);
+            await activeTasksStore_async.set(updatedTask.instanceId, mergedTask)
+          }
           try {
             await fetchTask_async(updatedTask);
           } catch (error) {
             console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }
         } 
+        return updatedTask;
       } else {
         console.log("do_task_async null " + task.id);
+        return null;
       }
     } else {
       console.log("RxJS Task Processor unknown component " + task.type);

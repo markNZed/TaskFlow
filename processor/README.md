@@ -19,6 +19,7 @@ The Task Processor communicates with the Hub using the object `task.processor` O
   * ping
   * register
   * partial
+  * sync (update the Task object but do not evaluate the Task Function)
 
 The Task Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
 

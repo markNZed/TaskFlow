@@ -26,6 +26,8 @@ async function processCommand_async(task, res) {
       return await update_async(res, task);
     case "error":
       return await error_async(res, task);
+    case "sync":
+      return await sync_async(res, task);
     default:
       throw new Error("Unknown command " + command);
   }
@@ -62,11 +64,9 @@ async function update_async(res, task) {
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.updateCount = task.meta.updateCount + 1;
       task.meta.sourceProcessorId = processorId;
-
       // Don't await so the return gets back before the websocket update
       syncTask_async(task.instanceId, task)
-        .then(() => activeTasksStore_async.set(task.instanceId, task))
-      
+        .then(() => activeTasksStore_async.set(task.instanceId, task)) 
       res.status(200).send("ok");
     }
   } catch (error) {
@@ -74,6 +74,25 @@ async function update_async(res, task) {
     throw new RequestError(`Error updating task ${task.id}: ${error.message}`, 500, error);
   }
 }
+
+// This should actually send the equivalen tof sync
+async function sync_async(res, task) {
+  try {
+    const processorId = task.hub["sourceProcessorId"];
+    console.log("sync_async " + task.id + " from " + processorId);
+    if (task.instanceId === undefined) {
+      throw new Error("Missing task.instanceId");
+    }
+    // Don't await so the return gets back before the websocket update
+    syncTask_async(task.instanceId, task)
+      .then(() => activeTasksStore_async.set(task.instanceId, task))
+    res.status(200).send("ok");
+  } catch (error) {
+    console.error(`Error sync task ${task.id}: ${error.message}`);
+    throw new RequestError(`Error sync task ${task.id}: ${error.message}`, 500, error);
+  }
+}
+
 
 async function error_async(res, task) {
   try {

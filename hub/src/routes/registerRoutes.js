@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
   let language = req.body?.language;
 
   if (commandsAccepted === undefined) {
-    commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error"];
+    commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error", "sync"];
   }
   // Not used yet but could e usful for interfacing with a third party service
   if (messagesStyle === undefined) {
