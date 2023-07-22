@@ -107,6 +107,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here
         message.command = command;
+        message.commandArgs = commandArgs;
         messageQueue[messageQueueIdx] = message;
         messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index

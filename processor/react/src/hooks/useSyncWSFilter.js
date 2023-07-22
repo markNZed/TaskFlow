@@ -31,7 +31,7 @@ function useSyncWSFilter(isMounted, initialTask, onSync) {
           // We copy it so w can delete it ASAP
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
           delete messageQueue[key];
-          await onSync(taskCopy);
+          await onSync(taskCopy, message.commandArgs);
           //console.log("useSyncWSFilter handleSync delete key", messageQueue);
         }
       }

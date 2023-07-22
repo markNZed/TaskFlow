@@ -37,7 +37,7 @@ async function start_async(res, task) {
   const commandArgs = task.hub.commandArgs;
   const processorId = task.hub.sourceProcessorId;
   try {
-    console.log("start_async " + commandArgs.id + " from " + processorId);
+    console.log(task.hub.requestId + " start_async " + commandArgs.id + " from " + processorId);
     const initTask = {
       id: commandArgs.id,
       userId: task.userId,
@@ -53,7 +53,7 @@ async function start_async(res, task) {
 async function update_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];
-    console.log("update_async " + task.id + " from " + processorId);
+    console.log(task.hub.requestId + " update_async " + task.id + " from " + processorId);
     const commandArgs = task.hub["commandArgs"];
 
     // We intercept tasks that are done.
@@ -75,11 +75,12 @@ async function update_async(res, task) {
   }
 }
 
-// This should actually send the equivalen tof sync
+// This should actually send the equivalent of sync
 async function sync_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];
-    console.log("sync_async " + task.id + " from " + processorId);
+    console.log(task.hub.requestId + " sync_async " + task.id + " from " + processorId);
+    const commandArgs = task.hub["commandArgs"];
     if (task.instanceId === undefined) {
       throw new Error("Missing task.instanceId");
     }
@@ -104,7 +105,7 @@ async function sync_async(res, task) {
 async function error_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];
-    console.log("error_async " + task.id + " from " + processorId);
+    console.log(task.hub.requestId + " error_async " + task.id + " from " + processorId);
     await errorTask_async(task);
   } catch (error) {
     console.error(`Error in error_async task ${task.id}: ${error.message}`);
@@ -127,7 +128,8 @@ router.post("/", async (req, res) => {
       if (task.instanceId !== undefined) {
         activeTask = await activeTasksStore_async.get(task.instanceId);
       }
-      task = transferCommand(task, activeTask);
+      const requestId = req.id;
+      task = transferCommand(task, activeTask, requestId);
       task = checkLockConflict(task, activeTask);
       task = checkAPIRate(task, activeTask);
       task = processError(task, tasks);

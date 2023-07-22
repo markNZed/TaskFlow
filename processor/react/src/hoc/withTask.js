@@ -228,13 +228,14 @@ function withTask(Component) {
     )
 
     useSyncWSFilter(isMounted, props.task,
-      async (syncDiff) => {
+      async (syncTask, commandArgs) => {
+        console.log("Storage sync ", props.task.id, commandArgs);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        const updatedTask = deepMerge(lastTask, syncDiff)
-        // Important we record syncDiff as it was sent to keep in sync with Hub
+        const updatedTask = deepMerge(lastTask, commandArgs.syncTask)
+        // Important we record syncTask as it was sent to keep in sync with Hub
         await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
-        modifyTask(syncDiff);
-        console.log("Storage sync ", props.task.id, syncDiff);
+        modifyTask(commandArgs.syncTask);
+        console.log("Storage sync updatedTask", updatedTask);
       }
     )
 

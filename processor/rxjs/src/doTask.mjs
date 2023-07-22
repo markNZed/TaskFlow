@@ -40,15 +40,11 @@ export async function do_task_async(wsSendTask, task, CEPFuncs) {
           await fetchTask_async(task);
         } else if (updatedTask.command === "nop") {
           console.log("do_task_async nop " + task.id);
+        } else if (updatedTask.command === "sync") {
+          console.log("do_task_async sync " + task.id);
         } else {
           if (updatedTask.command === "update") {
             await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
-          }
-          if (updatedTask.command === "sync") {
-            console.log("do_task_async sync " + task.id);
-            const lastTask = await activeTasksStore_async.get(updatedTask.instanceId);
-            const mergedTask = utils.deepMerge(lastTask, updatedTask);
-            await activeTasksStore_async.set(updatedTask.instanceId, mergedTask)
           }
           try {
             await fetchTask_async(updatedTask);

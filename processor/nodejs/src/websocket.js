@@ -127,7 +127,7 @@ const connectWebSocket = () => {
       await do_task_async(wsSendTask, mergedTask);
     } else if (command === "sync") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const mergedTask = utils.deepMerge(lastTask, message.task);
+      const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
     } else if (command === "start" || command === "join") {
       await activeTasksStore_async.set(message.task.instanceId, message.task)

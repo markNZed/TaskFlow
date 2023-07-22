@@ -56,7 +56,7 @@ taskSubject
       let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs].flat();
       // Run each CEP function
       allCEPFuncs.forEach(func => func(task));
-      if (task.processor["command"] === "update" || task.processor["command"] === "partalUpdate") {
+      if (task.processor["command"] === "update" || task.processor["command"] === "sync") {
         await do_task_async(wsSendTask, task, CEPFuncs);
       }
       return task;
@@ -158,9 +158,13 @@ const connectWebSocket = () => {
       message.task.processor["command"] = command;
       message.task.processor["commandArgs"] = commandArgs;
     }
+    if (command !== "pong") {
+      console.log(""); //empty line
+      console.log("processorWs " + command)
+    }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const diff = utils.getObjectDifference(lastTask, message.task); 
+      //const diff = utils.getObjectDifference(lastTask, message.task); 
       //console.log("diff", diff, message.task.meta);
       if (message.task.meta.sourceProcessorId === processorId) {
         console.log("Skipping self-update of task " + message.task.id + " in state " + message.task.state?.current + " as it was not used by RxJS task functions " + message.task.id);
@@ -183,9 +187,10 @@ const connectWebSocket = () => {
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
       taskSubject.next(mergedTask);
-    } else if (command === "sync") { // Unsure we need this
+    } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
+      console.log("ws " + command + " task ", message.task);
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const mergedTask = utils.deepMerge(lastTask, message.task);
+      const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
       console.log("ws " + command + " activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import RequestError from './RequestError.mjs';
 
-function transferCommand(task, activeTask) {
+function transferCommand(task, activeTask, requestId) {
   const { command, id } = task.processor;
   let commandArgs = {};
   if (task.processor.commandArgs) {
@@ -21,12 +21,13 @@ function transferCommand(task, activeTask) {
     command,
     commandArgs: commandArgs,
     sourceProcessorId: id,
+    requestId: requestId,
   };
   return task;
 }
 
 function checkLockConflict(task, activeTask) {
-  if (task.meta) {
+  if (task.meta && task.hub.command !== "sync") {
     const lock = task.hub.commandArgs.lock || false;
     const unlock = task.hub.commandArgs.unlock || false;
     const lockBypass = task.hub.commandArgs.lockBypass || false;

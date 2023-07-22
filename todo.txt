@@ -1,8 +1,10 @@
 /* ToDo
 -------
-The updateDiff sent from nodejs on received seems way too big.
-  The storage ref on hub is OK?
-Maybe NodeJS needs a notion of request ID an dprfix this to logging ?
+Dynamic task configuration
+  Hub would need to be extended
+  Could it dump out configuratins that can be saved/reused?
+  This is far better than static definitions because we don't need to elaborate all possibilities in the config options
+NodeJS needs a notion of request ID prefixed to logging
 Maybe CEP should run after task is processd on RxJS so the Task command can be modified
 A Processor that is restarted does not rejoin the activeTasks ?
 RxJS V7 Processor
@@ -20,6 +22,8 @@ A scheduler should be able to provide  a cron like feature
     Seems nice to be able to have  CEP that "wakes" up
     Mayb a JS library can help e.g. an array of cron times
 After experimenting with RxJS processor we may want to use a similar approach in React Processor
+  Run RxJS in on the Shared Worker
+    Eventually use this instead of lifting state
 To specify behavior we have the static configuration and predefined dynamics of a Task Function
   Maybe SubTask are the right way to specify configurable dynamic functions ?
     Like what? Different state machines

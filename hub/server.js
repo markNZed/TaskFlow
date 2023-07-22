@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // 3rd party modules
 import express from "express";
+import requestId from 'express-request-id';
 import cors from "cors";
 import http from "http";
 import bodyParser from "body-parser";
@@ -24,6 +25,7 @@ import miscRoutes from "./src/routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();
+app.use(requestId());
 app.use(bodyParser.json());
 
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
