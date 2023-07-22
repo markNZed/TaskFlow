@@ -41,6 +41,8 @@ export const configSchema = yup.object()
   cacheKeySeed: yup.string(),
   cache: yup.array().of(yup.object()),
   local: yup.object(),
+  subtasks: yup.object(),
+  ceps: yup.object(),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

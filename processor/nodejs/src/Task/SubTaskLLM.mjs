@@ -60,31 +60,29 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
 }
 
 function checkSubTaskCache (T, task, subTaskName) {
-  // Loop over each object in task.config.cache if it exists
+  // Loop over each object in task.config.subtas if it exists
   let enabled = false;
   let seed = T("id");
-  for (const cacheObj of task.config.cache) {
-    if (cacheObj.subTask === subTaskName) {
-      if (cacheObj.enable === undefined) {
-        enabled = true;
-      } else {
-        enabled = cacheObj.enable;
+  if (task.config.subtasks) {
+    const subTaskConfig = task.config.subtasks[subTaskName];
+    if (subTaskConfig) {
+      if (subTaskConfig.useCache !== undefined) {
+        enabled = subTaskConfig.useCache;
       }
-      if (enabled && cacheObj.seed) {
-        for (const cacheKeySeed of cacheObj.seed) {
+      if (subTaskConfig.seed !== undefined && subTaskConfig.seed.length) {
+        for (const cacheKeySeed of subTaskConfig.seed) {
           if (cacheKeySeed.startsWith("task.")) {
             seed += T(cacheKeySeed.slice(5));
           } else {
             seed += cacheKeySeed;
           }
         }
-        console.log("cacheObj.seed", seed);
       }
-      break;
     }
   }
   return [enabled, seed];
 }
+
 
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API

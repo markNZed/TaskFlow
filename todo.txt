@@ -1,5 +1,9 @@
 /* ToDo
 -------
+How to specify CEP function ?
+  Could be like a SubTask ? 
+    This is task in/out but CEP needs state
+  task.config.ceps = {"CEPPopup": {...configs}};
 Dynamic task configuration
   Hub would need to be extended
   Could it dump out configuratins that can be saved/reused?

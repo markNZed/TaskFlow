@@ -14,13 +14,18 @@ task.response should be used for information within the distributed task in resp
 task.state may also be used for internal Task communication and synchronization
 The processor that locks a Task should ideally also unlock the Task
 
-The task.config.cache object allows for flexible cache rules, it is an array of objects (so use APPEND_cache to allow for inheritance):
-* cache.subTask - controls the caching in subTasks, a string e.g. "SubTaskLLM"
-* cache.enable - boolean, can be excluded and in that case is assumed to be true
-* cache.seed - array of strings or paths in the task object e.g. ["task.name"] or ["123"]
 
 task.config stores generic configuration information that many tasks may use, it is inherited by tasks further down the hierarchy.
 task.config.local stores tasktype specific configuration information that is not inherited.
+task.config.subtasks stores subtask specific configuration information.
+task.config.ceps stores CEP specific configuration information.
+
+The task.config.cache object allows for flexible cache rules, it is an array of objects (so use APPEND_cache to allow for inheritance):
+* cache.enable - boolean, can be excluded and in that case is assumed to be true
+* cache.seed - array of strings or paths in the task object e.g. ["task.name"] or ["123"]
+
+The task.config.subtasks.SubTaskNAME.cache controls caching in the SubTask
+The task.config.subtasks.SubTaskNAME.seed sets the cache seed in the SubTask, it is an array of strings or paths in the task object e.g. ["task.name"] or ["123"]
 
 Task.config.services storea an array of service configurations
 

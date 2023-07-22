@@ -42,13 +42,12 @@ const tasktypes = [
           ["<END>", ""],
         ],
       },
-      APPEND_cache: [
-        {
-          subTask: "SubTaskLLM",
-          seed: "",
-          enable: CACHE_ENABLE,
+      subtasks: {
+        "SubTaskLLM": {
+          useCache: CACHE_ENABLE,
+          seed: [],
         }
-      ],
+      },
     },
   },
   {
@@ -74,13 +73,12 @@ const tasktypes = [
       local: {
         introductionPrompt: "Please introduce yourself.",
       },
-      APPEND_cache: [
-        {
-          subTask: "SubTaskLLM",
-          seed: "",
-          enable: CACHE_ENABLE,
+      subtasks: {
+        "SubTaskLLM": {
+          useCache: CACHE_ENABLE,
+          seed: [],
         }
-      ],
+      },
     },
   },
   {
