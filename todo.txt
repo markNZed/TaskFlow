@@ -1,15 +1,12 @@
 /* ToDo
 -------
-How to specify CEP function ?
-  Could be like a SubTask ? 
-    This is task in/out but CEP needs state
-  task.config.ceps = {"CEPPopup": {...configs}};
+Do we want to be able to configure CEP functionality?
+syncTask_async -> syncCommand_async ?
 Dynamic task configuration
   Hub would need to be extended
   Could it dump out configuratins that can be saved/reused?
   This is far better than static definitions because we don't need to elaborate all possibilities in the config options
 NodeJS needs a notion of request ID prefixed to logging
-Maybe CEP should run after task is processd on RxJS so the Task command can be modified
 A Processor that is restarted does not rejoin the activeTasks ?
 RxJS V7 Processor
   Experiment with CEP that causes a sync on a TaskB when fired by TaskA

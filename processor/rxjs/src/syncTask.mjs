@@ -8,9 +8,10 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { fetchTask_async } from "./fetchTask.mjs";
 import { utils } from "./utils.mjs";
 
-export async function syncTask_async(task) { 
+export async function syncTask_async(CEPtask, task) { 
   console.log("syncTask_async sync " + task.instanceId);
   task["command"] = "sync";
+  task["instanceId"] = CEPtask.instanceId;
   // Copying before setting commandArgs avoids self reference
   task["commandArgs"] = {syncTask: JSON.parse(JSON.stringify(task))};
   delete task.commandArgs.syncTask.command;

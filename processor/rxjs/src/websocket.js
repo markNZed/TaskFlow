@@ -47,15 +47,16 @@ taskSubject
       // We add familyId so CEP can only operate on its own family
       let instanceSourceFuncsMap = CEPFuncs.get(task.instanceId + task.familyId) || new Map();
       let taskSourceFuncsMap = CEPFuncs.get(task.id + task.familyId) || new Map();
-      let familySourceFuncsMap = CEPFuncs.get(task.familyId + task.familyId) || new Map();
+      let familySourceFuncsMap = CEPFuncs.get(task.familyId + task.familyId) || new Map();    
       // Retrieve the function arrays from each Map
-      let instanceCEPFuncs = instanceSourceFuncsMap.values();
-      let taskCEPFuncs = taskSourceFuncsMap.values();
-      let familyCEPFuncs = familySourceFuncsMap.values();
+      let instanceCEPFuncs = [...instanceSourceFuncsMap.values()];
+      let taskCEPFuncs = [...taskSourceFuncsMap.values()];
+      let familyCEPFuncs = [...familySourceFuncsMap.values()];  
       // Flatten all CEP functions into a single array
-      let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs].flat();
+      let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs];
+            console.log("allCEPFuncs", allCEPFuncs);
       // Run each CEP function
-      allCEPFuncs.forEach(func => func(task));
+      allCEPFuncs.forEach(([func, args]) => func(task, args));
       if (task.processor["command"] === "update" || task.processor["command"] === "sync") {
         await do_task_async(wsSendTask, task, CEPFuncs);
       }
@@ -188,7 +189,7 @@ const connectWebSocket = () => {
       // Emit the mergedTask into the taskSubject
       taskSubject.next(mergedTask);
     } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
-      console.log("ws " + command + " task ", message.task);
+      //console.log("ws " + command + " task ", message.task);
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
       console.log("ws " + command + " activeTasksStore_async", mergedTask.id, mergedTask.instanceId)

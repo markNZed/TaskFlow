@@ -9,56 +9,57 @@ import { syncTask_async } from "../syncTask.mjs";
 const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
 
-  // Monitor for root.conversation.chatgptzeroshot
-  const match = "root.conversation.chatgptzeroshot.start";
   // Through the closure we can access task from myCEPFunc
-  const myCEPFunc = (CEPtask) => {
+  const myCEPFunc = (CEPtask, args) => {
+    const increment = args.increment;
     // No reason to ignore start
     if (CEPtask.processor.command === "start") {
-      console.log("CEPFunc doing nothing for start command")
+      console.log("myCEPFunc doing nothing for start command")
       return;
     }
-    // We want to avoid a loop because we are requesting a sync
+    // We want to avoid a loop because we are using syncTask_async
     if (CEPtask.command === "sync") {
-      console.log("CEPFunc doing nothing for sync command")
+      console.log("myCEPFunc doing nothing for sync command")
       return;
     }
     /*
-    if (CEPtask.output.CEPCountNew === 2) {
-      console.log("Stopped with CEPCountNew " + CEPtask.output.CEPCountNew);
+    if (CEPtask.output.CEPCount === 2) {
+      console.log("myCEPFunc stopped with CEPCount " + CEPtask.output.CEPCount);
       return
     }
     */
-    // From here can we modify the CEPtask
-    // I guess yes
-    // We don't need to return it because we can modify the reference
-    // We need to be able to do a partial update
-    //  New command sync
-    const oldCEPtask = JSON.parse(JSON.stringify(CEPtask));
     let syncTask = {}
-    syncTask["instanceId"] = oldCEPtask.instanceId;
     syncTask["output"] = {};
-    syncTask.output["CEPCountNew"] = oldCEPtask.output.CEPCountNew ? oldCEPtask.output.CEPCountNew + 1 : 1;
-    syncTask_async(syncTask);
-    console.log("TaskConversation CEPFunc sync target " + CEPtask.id + " source " + task.id, CEPtask);
+    syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
+    syncTask_async(CEPtask, syncTask);
+    console.log("TaskConversation myCEPFunc called on " + CEPtask.id + " set by " + task.id);
     return;
-    //console.log("CEPtask:", CEPtask);
-    // Delete all but keep the reference
-    Object.keys(CEPtask).forEach((key) => {
-      delete CEPtask[key];
-    });
-    CEPtask["id"] = oldCEPtask.id; // need this?
-    CEPtask["instanceId"] = oldCEPtask.instanceId;
-    CEPtask["type"] = oldCEPtask.type;
-    CEPtask["processor"] = oldCEPtask.processor;
-    CEPtask["output"] = {};
-    CEPtask.output["CEPCount"] = oldCEPtask.output.CEPCount ? oldCEPtask.output.CEPCount + 1 : 1;
-    // Could try to call update from here?
-    CEPtask["command"] = "sync";
-    CEPtask["commandArgs"] = {};
-    console.log("TaskConversation CEPFunc target " + CEPtask.id + " source " + task.id + " sync");
   }
-  utils.createCEP(CEPFuncs, task, match, myCEPFunc);
+
+  const taskCEPfuncs = {
+    "myCEPFunc": myCEPFunc,
+  }
+
+  // match could be a regex ?
+  // CEP is either a function or DSL ?
+
+  function getFunctionByName(taskCEPfuncs, funcName) {
+    if (typeof taskCEPfuncs[funcName] === 'function') {
+        return taskCEPfuncs[funcName];
+    } else {
+        throw new Error('Invalid function name ' + funcName);
+    }
+  }
+
+  if (task.config?.ceps) {
+    for (const key in task.config.ceps) {
+      if (task.config.ceps.hasOwnProperty(key)) {
+        const funcionName = task.config.ceps[key].funcionName;
+        const args = task.config.ceps[key].args;
+        utils.createCEP(CEPFuncs, task, key, getFunctionByName(taskCEPfuncs, funcionName), args);
+      }
+    }
+  }
 
   console.log(`${taskName} in state ${task.state.current}`);
 
