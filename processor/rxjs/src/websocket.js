@@ -167,10 +167,6 @@ const connectWebSocket = () => {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       //const diff = utils.getObjectDifference(lastTask, message.task); 
       //console.log("diff", diff, message.task.meta);
-      if (message.task.meta.sourceProcessorId === processorId) {
-        console.log("Skipping self-update of task " + message.task.id + " in state " + message.task.state?.current + " as it was not used by RxJS task functions " + message.task.id);
-        return;
-      }
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
@@ -185,17 +181,31 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging")
       }
       console.log("ws " + command + " activeTasksStore_async " + mergedTask.id + " " + mergedTask.instanceId);
+      // Check hash
+      const hash = utils.taskHash(mergedTask);
+      if (hash !== mergedTask.meta.hash) {
+        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+      }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
-      taskSubject.next(mergedTask);
+      if (message.task.meta.sourceProcessorId !== processorId) {
+        taskSubject.next(mergedTask);
+      }
     } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
       //console.log("ws " + command + " task ", message.task);
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
       console.log("ws " + command + " activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
+      // Check hash
+      const hash = utils.taskHash(mergedTask);
+      if (hash !== mergedTask.meta.hash) {
+        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+      }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
-      taskSubject.next(mergedTask);
+      if (message.task.meta.sourceProcessorId !== processorId) {
+        taskSubject.next(mergedTask);
+      }
     } else if (command === "start" || command === "join") {
       console.log("ws " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)

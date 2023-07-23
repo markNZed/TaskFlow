@@ -1,11 +1,20 @@
 /* ToDo
 -------
+syncCount -> modifyCount ?
+Align react utils usage
+Should task.id be task.config.id ?
+  Then task.id could replace task.instanceId
 Do we want to be able to configure CEP functionality?
+  The Task provides state machine not CEP.
+  Arguments allow for dynamic CEP function, if the CEP evals e.g., vm2, Jailed, Secure ECMAScript, Function(), AST limiting
+    New command "execute" that would just pull active task out of storage
+      CEP decides if the Task SM needs to be run
+    See Processor README.md for mathjs etc
 syncTask_async -> syncCommand_async ?
 Dynamic task configuration
   Hub would need to be extended
   Could it dump out configuratins that can be saved/reused?
-  This is far better than static definitions because we don't need to elaborate all possibilities in the config options
+  This is better than static definitions because we don't need to elaborate all possibilities in the config options
 NodeJS needs a notion of request ID prefixed to logging
 A Processor that is restarted does not rejoin the activeTasks ?
 RxJS V7 Processor
@@ -22,6 +31,7 @@ A scheduler should be able to provide  a cron like feature
     Or can any task do this just by waiting ?
     Seems nice to be able to have  CEP that "wakes" up
     Mayb a JS library can help e.g. an array of cron times
+    Maintain an array of jobs and calculate the wait time in a loop for the next wakeup
 After experimenting with RxJS processor we may want to use a similar approach in React Processor
   Run RxJS in on the Shared Worker
     Eventually use this instead of lifting state
@@ -222,29 +232,17 @@ Backlog
 
 Notes/Idea
 -----
-  Possible hierarchy of configuration:
-  Defaults
-    User (Route)
-      Session
-        Taskflow (Route)
-          User Taskflow
-            Session Taskflow
-              Task
-                User Task
-                  Session Task
-  Asking the service to output in a format that would pass a test might be a software good way of constraining prmopts
+  Asking the service to output in a format that would pass a test might be a software good way of constraining prompts
     e.g. provide Python/JS code that the output should pass (e.g. a single word)
   How to interface with other apps with output from T@skFlow ?
     Windows accessibility APIs, such as UI Automation or MSAA (Microsoft Active Accessibility)
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
-  One idea is to "flatten" the Task object on the Task Processor. Maybe this does not matter if access if wrapped by the Task processor.
   Writing the Hub and a generic Porcessor in Rust
-  Can we inherit/build on React or NodeJS Task Function?
   No easy way to do this with React in the functional style
-    In te distant future we could build components on the fly
+    In the future we could build components on the fly
   Could have a task.family entry which allows for broadcast and config
-  Hub could look after converting family command into instance command
+  Hub could look after converting "family" command into instance command
   Task search feature could be a micro-service provided by the Hub?
     For example user can search personal history
   Tools T@skFLow could leverage:
@@ -267,10 +265,7 @@ Architecture
   User defaults, taskflow defaults etc can be tasks
   Could add middleware that tasks can use to modify input/output (similar to LangChain)
     Currently in the TaskFunction but should be easy to factor out when that makes sense
-  How does a task monitor other tasks ? Callback to monitor a thread or a task (middleware catch updates to instance store)
-    Maybe tasks are responsible for their own communication protocol 
-    Pattern of having the parent own the state? That allows for communication.
-    In React this is fairly easy. On the NodeJS Task Processor this could be a pub-sub system. The common point is asynchronous messages.
+      Could allow for a chain of SubTasks/Services/CEP
   How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Task Processor provide the environment?)
     "child process execution" with child_process library
     RabbitMQ for message passing good for a local service but do we need high speed, probably not.
@@ -301,15 +296,15 @@ Architecture
 Issues
 ------
   Tasks run with full NodeJS Task Processor rights. They should be sandboxed on the NodeJS Task Processor.
-      TaskFunction could run in a docker container
-      Each TaskFunction could be a user on Linux
-          User could run in a restricted environment e.g. firejail, bubblewrap
-          Difficult to stop information being shared across tasks
-          Also separate by session
-          How to control what information a Task can request from other tasks
-            Currently limited to thread
-            Should not be able to go "up" the Task hierarchy (only explore current branch)
-            Can only read outputs
+    TaskFunction could run in a docker container
+    Each TaskFunction could be a user on Linux
+        User could run in a restricted environment e.g. firejail, bubblewrap
+        Difficult to stop information being shared across tasks
+        Also separate by session
+        How to control what information a Task can request from other tasks
+          Currently limited to thread
+          Should not be able to go "up" the Task hierarchy (only explore current branch)
+          Can only read outputs
   Administation/monitoring of T@skFlow, could ping a service that alerts to problems
 
 Comparison with similar systems

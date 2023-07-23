@@ -100,10 +100,8 @@ function checkAPIRate(task, activeTask) {
       task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
       //throw new RequestError("Task request count exceeded", 409);
     }
-    if (maxRequestCount) {
-      //console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
-      task.meta.requestCount++;
-    }
+    //console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
+    task.meta.requestCount++;
   }
 
   return task;

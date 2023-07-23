@@ -9,6 +9,7 @@ The Task Function mainly communicates with the Task Processor using the object `
 `task.command` maybe be one of:
   * update
   * start
+  * sync
 
 The Task Processor communicates with the Hub using the object `task.processor` Only the Task Processor write to `task.processor`.
 
@@ -20,6 +21,8 @@ The Task Processor communicates with the Hub using the object `task.processor` O
   * register
   * partial
   * sync (update the Task object but do not evaluate the Task Function)
+
+Both `update` and `sync` send a diff, not the entire object, this helps to avoid different Task Processors over-writing parts of the Task they are not modifying. 
 
 The Task Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
 
@@ -44,7 +47,7 @@ function taskEvent(expression, taskChange, task) {
     // Use exprima to get the AST for expression
     // for each variable in the expression rewrite the expresion where that variable is refered to as taskChange.variable while the other variables are task.variable
     // Build modifiedExpression as a logical OR of all these expression rewrites
-    // Wee are returning the math.evaluate it should be evaluated in the context of where the function was called
+    // We are returning the math.evaluate it should be evaluated in the context of where the function was called
     // mathjs is safer than using eval, it suports AND not && (etc) but we can rewrite && as AND during the rewrite step above.
     // return math.evaluate(modifiedExpression, {taskChange, task}) 
 }

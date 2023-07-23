@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { TASKHUB_URL, processorId } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
+import { activeTasksStore_async } from "./storage.mjs";
 
 export async function fetchTask_async(task) {
     if (!task.command) {
@@ -24,10 +25,10 @@ export async function fetchTask_async(task) {
   
     try {
       const validatedTaskJsonString = fromTask(task);
-      const validatedTaskObject = JSON.parse(validatedTaskJsonString);
+      let validatedTaskObject = JSON.parse(validatedTaskJsonString);
       const messageObject = {
         task: validatedTaskObject,
-        userId: task.userId,
+        userId: task.user.id,
       };
       const messageJsonString = JSON.stringify(messageObject);
       const requestOptions = {

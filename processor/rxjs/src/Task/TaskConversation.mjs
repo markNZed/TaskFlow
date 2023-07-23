@@ -9,6 +9,9 @@ import { syncTask_async } from "../syncTask.mjs";
 const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
 
+  // Can we dynamically load CEPFuncs like we do Task Functions ?
+  // Export CEPFuncs
+
   // Through the closure we can access task from myCEPFunc
   const myCEPFunc = (CEPtask, args) => {
     const increment = args.increment;
@@ -51,6 +54,9 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
     }
   }
 
+  // How about overriding a match. createCEP needs more review/testing
+  // Create two functions
+  // Modify the argument to one of the functions on some condition
   if (task.config?.ceps) {
     for (const key in task.config.ceps) {
       if (task.config.ceps.hasOwnProperty(key)) {

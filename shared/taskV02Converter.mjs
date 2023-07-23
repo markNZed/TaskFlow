@@ -193,7 +193,6 @@ const typeMap = {
         { json: "state", js: "state", typ: u(undefined, r("State")) },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "user", js: "user", typ: u(undefined, m("any")) },
-        { json: "userId", js: "userId", typ: u(undefined, "") },
         { json: "users", js: "users", typ: u(undefined, m("any")) },
         { json: "versionExternal", js: "versionExternal", typ: u(undefined, "") },
         { json: "versionInternal", js: "versionInternal", typ: u(undefined, "") },

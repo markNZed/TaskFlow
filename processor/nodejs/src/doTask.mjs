@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { fetchTask_async } from "./fetchTask.mjs";
+import { utils } from "./utils.mjs";
 
 export async function do_task_async(wsSendTask, task) {
     let updatedTask = {};
@@ -34,7 +35,7 @@ export async function do_task_async(wsSendTask, task) {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
-            userId: updatedTask.userId,
+            user: {id: updatedtask.user.id},
             startId: updatedTask.commandArgs.id,
             hub: {},
             command: "start",
@@ -42,7 +43,9 @@ export async function do_task_async(wsSendTask, task) {
           await fetchTask_async(task);
         } else {
           if (updatedTask.command === "update") {
-            await activeTasksStore_async.set(updatedTask.instanceId, updatedTask)
+            const activeTask = await activeTasksStore_async.get(task.instanceId);
+            const updatedTask = utils.getObjectDifference(activeTask, task);
+            updatedTask["instanceId"] = activeTask.instanceId;
           }
           try {
             await fetchTask_async(updatedTask);

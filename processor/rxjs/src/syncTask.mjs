@@ -20,8 +20,6 @@ export async function syncTask_async(CEPtask, task) {
     throw new Error("No task found for " + task.instanceId);
   }
   const mergedTask = utils.deepMerge(lastTask, task);
-  await activeTasksStore_async.set(task.instanceId, mergedTask)
-  // We could send just the relevant fields of mergedTask?
   try {
     await fetchTask_async(mergedTask);
   } catch (error) {

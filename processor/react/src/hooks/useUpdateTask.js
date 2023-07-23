@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
-import { setNestedProperties, deepMerge, log } from "../utils/utils";
+import { setNestedProperties, deepMerge, log, getObjectDifference } from "../utils/utils";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
 // We have: Start with startId, familyId
@@ -35,9 +35,12 @@ const useUpdateTask = (task, setTask) => {
           // So we align the snapshot with the updated task and send that
           // otherwise send could come back true and we will get a loop
           snapshot = deepMerge(snapshot, updating)
+          const activeTask = await globalState.storageRef.current.get(task.instanceId);
+          const diff = getObjectDifference(activeTask, snapshot);
+          diff["instanceId"] = activeTask.instanceId;      
           // fetchTask can change some parameters in Task 
           // so we save the task object after those changes in the fetchTask
-          await fetchTask(globalState, command, commandArgs, snapshot);
+          await fetchTask(globalState, command, commandArgs, diff);
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);

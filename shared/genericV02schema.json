@@ -63,7 +63,7 @@
     "Processors": {
       "type": "object",
       "additionalProperties": true,
-      "title": "Processor"
+      "title": "Processors"
     },    
     "Users": {
       "type": "object",

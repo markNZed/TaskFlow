@@ -27,7 +27,7 @@ export async function errorTask_async(task) {
   if (nextTaskId) {
     const initTask = {
       id: nextTaskId,
-      userId: task.userId,
+      user: {id: task.user.id},
       groupId: task?.groupId,
       familyId: task.familyId,
       response: {text: text, error: task.error},

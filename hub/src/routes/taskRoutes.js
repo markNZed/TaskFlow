@@ -40,7 +40,7 @@ async function start_async(res, task) {
     console.log(task.hub.requestId + " start_async " + commandArgs.id + " from " + processorId);
     const initTask = {
       id: commandArgs.id,
-      userId: task.userId,
+      user: {id: task.user.id},
     };
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     await startTask_async(initTask, true, processorId, prevInstanceId);
@@ -53,7 +53,19 @@ async function start_async(res, task) {
 async function update_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];
-    console.log(task.hub.requestId + " update_async " + task.id + " from " + processorId);
+    if (task.instanceId === undefined) {
+      throw new Error("Missing task.instanceId");
+    }
+    const activeTask = await activeTasksStore_async.get(task.instanceId)
+    if (!activeTask) {
+      throw new Error("No active task " + task.instanceId);
+    }
+    task = utils.deepMerge(activeTask, task);
+    if (!task?.meta?.syncCount) {
+      console.log("task", task, activeTask);
+
+    }
+    console.log(task.meta.syncCount + " update_async " + task.id + " from " + processorId);
     const commandArgs = task.hub["commandArgs"];
 
     // We intercept tasks that are done.
@@ -61,12 +73,13 @@ async function update_async(res, task) {
       console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
       await doneTask_async(task);
     } else {
-      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.updateCount = task.meta.updateCount + 1;
       task.meta.sourceProcessorId = processorId;
-      // Don't await so the return gets back before the websocket update
+      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
+      task.meta.hash = utils.taskHash(task);
+      // Don't await so the HTTP response may get back before the websocket update
       syncTask_async(task.instanceId, task)
-        .then(() => activeTasksStore_async.set(task.instanceId, task)) 
+        .then(async () => activeTasksStore_async.set(task.instanceId, task)) 
       res.status(200).send("ok");
     }
   } catch (error) {
@@ -79,21 +92,29 @@ async function update_async(res, task) {
 async function sync_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];
-    console.log(task.hub.requestId + " sync_async " + task.id + " from " + processorId);
-    const commandArgs = task.hub["commandArgs"];
     if (task.instanceId === undefined) {
       throw new Error("Missing task.instanceId");
     }
-    task.meta = task.meta || {};
-    task.meta.sourceProcessorId = processorId;
-    // Don't await so the return gets back before the websocket update
-    syncTask_async(task.instanceId, task)
-      .then(async () => {
-        const activeTask = await activeTasksStore_async.get(task.instanceId);
-        const mergedTask = utils.deepMerge(activeTask, task);
-        activeTasksStore_async.set(task.instanceId, mergedTask);
-        }
-      )
+    const activeTask = await activeTasksStore_async.get(task.instanceId)
+    if (!activeTask) {
+      throw new Error("No active task " + task.instanceId);
+    }
+    let commandArgs = JSON.parse(JSON.stringify(task.hub["commandArgs"]));
+    let mergeTask = utils.deepMerge(activeTask, commandArgs.syncTask);
+    mergeTask.hub = JSON.parse(JSON.stringify(task.hub));
+    console.log(mergeTask.meta.syncCount + " sync_async " + mergeTask.id + " from " + processorId);
+    mergeTask.meta = mergeTask.meta || {};
+    mergeTask.meta.sourceProcessorId = processorId;
+    console.log("Sync mergeTask " + mergeTask.id + " from " + processorId);
+    const hash = utils.taskHash(mergeTask);
+    mergeTask.meta.hash = hash;
+    commandArgs.syncTask["meta"] = commandArgs.syncTask.meta || {};
+    commandArgs.syncTask.meta["hash"] = hash;
+    mergeTask.hub.commandArgs = commandArgs;
+    //console.log("Sync mergeTask.hub.commandArgs", mergeTask.hub.commandArgs);
+    // Don't await so the HTTP response may get back before the websocket update
+    syncTask_async(mergeTask.instanceId, mergeTask)
+      .then(async () => activeTasksStore_async.set(mergeTask.instanceId, mergeTask))
     res.status(200).send("ok");
   } catch (error) {
     console.error(`Error sync task ${task.id}: ${error.message}`);

@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 "use strict";
 import { v4 as uuidv4 } from "uuid";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
-import { deepMerge, getObjectDifference, flattenObjects, updatedAt } from "./shared/utils.mjs";
+import { deepMerge, getObjectDifference, flattenObjects, updatedAt, djb2Hash, taskHash } from "./shared/utils.mjs";
 
 const utils = {};
 
@@ -16,6 +16,8 @@ utils.deepMerge = deepMerge;
 utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;
 utils.updatedAt = updatedAt;
+utils.djb2Hash = djb2Hash;
+utils.taskHash = taskHash;
 
 utils.getUserId = function (req) {
   let userId = DEFAULT_USER;
@@ -89,14 +91,6 @@ utils.findSubObjectWithKeyValue = function (obj, targetKey, targetValue) {
     }
   }
   return null;
-};
-
-utils.djb2Hash = function (str) {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33) ^ str.charCodeAt(i);
-  }
-  return hash >>> 0; // convert to unsigned 32-bit integer
 };
 
 utils.regexProcessMessages_async = async function (

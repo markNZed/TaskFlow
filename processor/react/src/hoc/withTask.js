@@ -7,6 +7,7 @@ import {
   setNestedProperties,
   deepMerge,
   checkConflicts,
+  taskHash,
 } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
@@ -188,6 +189,7 @@ function withTask(Component) {
         console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         const updatedTask = deepMerge(lastTask, updateDiff)
+        globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         //console.log("lastTask", lastTask)
         // If the resource has been locked by another processor then we ignore whatever was done locally
         // If this is the source processor then we want to keep any change made to the task since the update was sent
@@ -222,7 +224,15 @@ function withTask(Component) {
           //console.log("Update ", props.task.id, updatedTask);
         }
         // Important we record updateDiff as it was sent to keep in sync with Hub
-        await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
+        // Check hash
+        const hash = taskHash(updatedTask);
+        if (hash !== updatedTask.meta.hash) {
+          const diff = getObjectDifference(lastTask.output, updatedTask.output)
+          console.error("Task hash does not match", updateDiff.meta.syncCount, hash, updatedTask.meta.hash, diff);
+          //throw new Error("Task hash does not match");
+        } else {
+          //console.log("Task hash matches", hash);
+        }
         console.log("Storage update isSource:" + thisProcssorIsSource + " lock:" + thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
       }
     )
@@ -232,10 +242,18 @@ function withTask(Component) {
         console.log("Storage sync ", props.task.id, commandArgs);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         const updatedTask = deepMerge(lastTask, commandArgs.syncTask)
+        globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         // Important we record syncTask as it was sent to keep in sync with Hub
-        await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
+        // Check hash
+        const hash = taskHash(updatedTask);
+        if (hash !== updatedTask.meta.hash) {
+          const diff = getObjectDifference(lastTask.output, updatedTask.output)
+          console.error("Task hash does not match", syncTask.meta.syncCount, hash, updatedTask.meta.hash, diff);
+          //throw new Error("Task hash does not match");
+        } else {
+          //console.log("Task hash matches", hash);
+        }
         modifyTask(commandArgs.syncTask);
-        console.log("Storage sync updatedTask", updatedTask);
       }
     )
 

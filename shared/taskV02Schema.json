@@ -57,9 +57,6 @@
         "user": {
           "type": "object"
         },
-        "userId": {
-          "type": "string"
-        },
         "versionExternal": {
           "type": "string"
         },
@@ -85,7 +82,7 @@
           "$ref": "./genericV02schema.json#/definitions/State"
         },
         "processors": {
-          "$ref": "./genericV02schema.json#/definitions/Processor"
+          "$ref": "./genericV02schema.json#/definitions/Processors"
         },
         "users": {
           "$ref": "./genericV02schema.json#/definitions/Users"

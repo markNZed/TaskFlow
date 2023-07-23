@@ -32,6 +32,7 @@ const TaskSimulateUser = (props) => {
   } = props;
 
   const [responseText, setResponseText] = useState("");
+  const [maxRequestHit, setMaxRequestHit] = useState(false);
   const responseTextRef = useRef("");
   const [socketResponses, setSocketResponses] = useState([]);
 
@@ -140,6 +141,13 @@ const TaskSimulateUser = (props) => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
     if (transition()) { log("TaskSimulateUser State Machine State " + task.state.current,task) }
+    if (maxRequestHit) {
+      return;
+    } else if (task.config.maxRequestCount && (task.meta.requestCount + 1) >= task.config.maxRequestCount) {
+      setMaxRequestHit(true);
+      alert("Simulated user exceeded the maximum number of requests");
+      return
+    }
     switch (task.state.current) {
       case "start":
         // Get introduction
@@ -157,14 +165,9 @@ const TaskSimulateUser = (props) => {
         break;
       case "input":
         if (transition()) {
-          // Break here rather than generating error due to maxRequestCount
-          if (task.config.maxRequestCount && task.meta.requestCount >= task.config.maxRequestCount) {
-            alert("Simulated user exceeded the maximum number of requests");
-          } else {
-            nextState = "send";
-            responseTextRef.current = "";
-            setResponseText(responseTextRef.current);
-          }
+          nextState = "send";
+          responseTextRef.current = "";
+          setResponseText(responseTextRef.current);
         }
         break;
       case "send":

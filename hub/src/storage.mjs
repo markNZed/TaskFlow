@@ -58,11 +58,6 @@ function newKeyV(uri, table, setCallback = null) {
   return keyv;
 };
 
-function logActiveTasksStore(key, value) {
-  console.log("activeTasksStore_async.set", key);
-  return value;
-}
-
 // We could have one keyv store and use prefix for different tables
 
 // Schema:

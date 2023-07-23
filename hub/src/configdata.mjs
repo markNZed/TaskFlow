@@ -241,18 +241,18 @@ for (const groupKey in groups) {
   if (groups.hasOwnProperty(groupKey)) {
     const group = groups[groupKey];
     assert(group.hasOwnProperty("users"), "Group " + groupKey + " has no users");
-    group.users.forEach(function (userId) {
+    group.users.forEach(function (id) {
       // Groups may have users that do not exist
-      if (!users[userId]) {
+      if (!users[id]) {
         console.log(
-          "Could not find user " + userId + " expected in group " + groupKey
+          "Could not find user " + id + " expected in group " + groupKey
         );
       } else {
-        if (users[userId]["groups"]) {
+        if (users[id]["groups"]) {
           // Should check that not already in groups
-          users[userId]["groups"].push(groupKey);
+          users[id]["groups"].push(groupKey);
         } else {
-          users[userId]["groups"] = [groupKey];
+          users[id]["groups"] = [groupKey];
         }
       }
     });

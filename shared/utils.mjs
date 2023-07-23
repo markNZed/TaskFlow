@@ -153,6 +153,14 @@ function getObjectDifference(obj1, obj2) {
     return obj2;
   }
 
+  if (obj2 === undefined) {
+    return obj1;
+  }
+
+  if (obj1 === undefined) {
+    return obj2;
+  }
+
   let diffObj = Array.isArray(obj2) ? [] : {};
 
   _.each(obj2, (value, key) => {
@@ -245,4 +253,50 @@ function parseRegexString(regexStr) {
   }
 }
 
-export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString };
+function djb2Hash(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33) ^ str.charCodeAt(i);
+  }
+  return hash >>> 0; // convert to unsigned 32-bit integer
+};
+
+//As of the ECMAScript 2015 specification (also known as ES6), the order of keys in 
+// JavaScript objects is guaranteed for certain types of keys (e.g. strings here)
+function sortKeys(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+      // Not an object or array, return as is
+      return obj;
+  }
+  if (Array.isArray(obj)) {
+      // Array, sort items
+      return obj.map(sortKeys);
+  }
+  // Object, sort keys
+  return Object.keys(obj)
+      .sort()
+      .reduce((result, key) => {
+          // Recursively sort keys in the object
+          result[key] = sortKeys(obj[key]);
+          return result;
+      }, {});
+}
+
+function taskHash(task) {
+  // Only hash information that is shared between all processors and hub
+  let taskCopy = JSON.parse(JSON.stringify(task));
+  delete taskCopy.hub;
+  delete taskCopy.processor;
+  delete taskCopy.processors;
+  delete taskCopy.user;
+  delete taskCopy.users;
+  delete taskCopy.permissions;
+  delete taskCopy.meta;
+  // The processor may have copied the commands or not
+  delete taskCopy.command;
+  delete taskCopy.commandArgs;
+  const sortedObj = sortKeys(taskCopy);
+  return djb2Hash(JSON.stringify(sortedObj));
+}
+
+export { deepMerge, deepCompare, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString, djb2Hash, taskHash };

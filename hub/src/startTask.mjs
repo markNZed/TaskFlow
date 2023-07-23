@@ -87,7 +87,7 @@ function isAllCaps(str) {
 function processTemplateArrays(obj, task, outputs, familyId) {
   // Do substitution on arrays of strings and return a string
   if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
-    const user = users[task.userId];
+    const user = users[task.user.id];
     return obj.reduce(function (acc, curr) {
       // Substitute variables with previous outputs
       const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
@@ -155,7 +155,7 @@ function processTemplates(task, obj, outputs, familyId) {
 
 function checkUserPermissions(task, groups, authenticate) {
   // Check if the user has permissions
-  if (authenticate && !utils.authenticatedTask(task, task.userId, groups)) {
+  if (authenticate && !utils.authenticatedTask(task, task.user.id, groups)) {
     throw new Error("Task authentication failed");
   }
 }
@@ -207,6 +207,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
       if (await activeTasksStore_async.has(prevTask.instanceId)) {
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
+        prevTask.meta.hash = utils.taskHash(prevTask);
         await activeTasksStore_async.set(prevTask.instanceId, prevTask);
         await syncTask_async(prevTask.instanceId, prevTask);
       }
@@ -219,7 +220,7 @@ function supportMultipleLanguages(task, users) {
   // Multiple language support for config fields
   // Eventually replace with a standard solution
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
-  const user = users[task.userId];
+  const user = users[task.user.id];
   const language = user.language || "EN";
   // Array of the objects
   let configs = [task.config];
@@ -366,7 +367,7 @@ async function startTask_async(
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
       // Maybe this could be added to schema
-      task["instanceId"] = (task.id + task.userId).replace(/\./g, '-');
+      task["instanceId"] = (task.id + task.user.id).replace(/\./g, '-');
       task.familyId = task.instanceId;
       task = await processInstanceAsync(task, task.instanceId, "oneFamily");
     }
@@ -374,7 +375,7 @@ async function startTask_async(
     if (task.config.collaborateGroupId) {
       // GroupId should be an array of group Ids?
       task.groupId = task.config.collaborateGroupId;
-      if (checkUserGroup(task.groupId, task.userId)) {
+      if (checkUserGroup(task.groupId, task.user.id)) {
         // '.' is not used in keys or it breaks setNestedProperties
         // Maybe this could be added to schema
         task["instanceId"] = (task.id + task.groupId).replace(/\./g, '-');
@@ -405,18 +406,20 @@ async function startTask_async(
     task.hub.sourceProcessorId = processorId;
     
     // Initialize meta object
-    task.meta.updateCount = task.meta.updateCount ?? 0;
-    task.meta["requestsThisMinute"] = 0;
-    task.meta["requestCount"] = 0;
-    task.meta["createdAt"] = task.meta["createdAt"] || Date.now();
+    // If already set (e.g. joining the task) keep the current values
+    task.meta["requestsThisMinute"] = task.meta.requestsThisMinute ?? 0;
+    task.meta["requestCount"] = task.meta.requestCount ?? 0;
+    task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
+    task.meta["updateCount"] = task.meta.updateCount ?? 0;
+    task.meta["syncCount"] = task.meta.syncCount ?? 0;
 
     task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
     // Set task.processor.id after copying info from prevTask
     task.processors[processorId] = task.processors[processorId] ?? {};
     task.processors[processorId]["id"] = processorId;
     
-    task.users[task.userId] = task.users[task.userId] ?? {};
-    task.users[task.userId] = utils.deepMerge(users[task.userId], task.users[task.userId]);
+    task.users[task.user.id] = task.users[task.user.id] ?? {};
+    task.users[task.user.id] = utils.deepMerge(users[task.user.id], task.users[task.user.id]);
 
     // This is only for task.config 
     task = supportMultipleLanguages(task, users);
@@ -431,9 +434,13 @@ async function startTask_async(
 
     await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async)
 
+    // Calculate hash of the task 
+    // This jight break the joining ?
+    task.meta.hash = utils.taskHash(task);
+
     // Don't await so the return gets back before the websocket update
-    syncTask_async(task.instanceId, task)
-      .then(() => activeTasksStore_async.set(task.instanceId, task))
+    await syncTask_async(task.instanceId, task);
+    await activeTasksStore_async.set(task.instanceId, task);
 
     console.log("Started task id " + task.id);
   }

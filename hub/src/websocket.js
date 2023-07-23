@@ -8,6 +8,8 @@ import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 
+let taskMessageCount = 0;
+
 /**
  * Sends an object through the WebSocket connection identified by the given processor ID.
  *
@@ -90,13 +92,16 @@ const wsSendTask = async function (task, processorId = null) {
     delete message.task.processors;
   }
   if (message.task?.users) {
-    message.task.user = JSON.parse(JSON.stringify(message.task.users[task.userId]));
+    message.task.user = JSON.parse(JSON.stringify(message.task.users[task.user.id]));
     delete message.task.users;
   }
+  message.task.meta = message.task.meta || {};
+  message.task.meta.messageCount = taskMessageCount;
   if (command !== "pong") {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
   }
   wsSendObject(processorId,message);
+  taskMessageCount++;
 }
 
 function initWebSocketServer(server) {

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString } from "./shared/utils.mjs";
+import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString, djb2Hash, taskHash } from "./shared/utils.mjs";
 
 const utils = {};
 
@@ -16,6 +16,8 @@ utils.getObjectDifference = getObjectDifference;
 utils.flattenObjects = flattenObjects;
 utils.updatedAt = updatedAt;
 utils.parseRegexString = parseRegexString;
+utils.djb2Hash = djb2Hash;
+utils.taskHash = taskHash;
 
 utils.formatDateAndTime = function (date) {
   const options = {
@@ -60,14 +62,6 @@ utils.findSubObjectWithKeyValue = function (obj, targetKey, targetValue) {
     }
   }
   return null;
-};
-
-utils.djb2Hash = function (str) {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33) ^ str.charCodeAt(i);
-  }
-  return hash >>> 0; // convert to unsigned 32-bit integer
 };
 
 utils.regexProcessMessages_async = async function (

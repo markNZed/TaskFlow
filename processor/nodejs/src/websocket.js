@@ -103,16 +103,11 @@ const connectWebSocket = () => {
       console.log("processorWs " + command)
     }
     if (command === "update") {
-      if (message.task.meta.sourceProcessorId === processorId) {
-        console.log("Skipping self-update as not used by nodejs task functions " + message.task.id);
-        //console.log("processorWs.onMessage update", message.task);
-        return;
-      }
+      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       //console.log("processorWs.onMessage update", message.task);
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
-      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       //console.log("lastTask", lastTask?.output?.msgs);
       const mergedTask = utils.deepMerge(lastTask, message.task);
       //console.log("mergedTask", mergedTask?.output?.msgs);
@@ -123,11 +118,23 @@ const connectWebSocket = () => {
         console.log("processorWs updating activeTasksStore_async mergedTask", mergedTask)
         throw new Error("Problem with merging")
       }
+      // Check hash
+      const hash = utils.taskHash(mergedTask);
+      if (hash !== mergedTask.meta.hash) {
+        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+      }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
-      await do_task_async(wsSendTask, mergedTask);
+      if (message.task.meta.sourceProcessorId !== processorId) {
+        await do_task_async(wsSendTask, mergedTask);
+      }
     } else if (command === "sync") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
       const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
+      // Check hash
+      const hash = utils.taskHash(mergedTask);
+      if (hash !== mergedTask.meta.hash) {
+        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+      }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
     } else if (command === "start" || command === "join") {
       await activeTasksStore_async.set(message.task.instanceId, message.task)

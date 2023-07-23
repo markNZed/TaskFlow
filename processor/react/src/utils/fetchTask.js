@@ -1,6 +1,6 @@
 import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
-import { log, updatedAt } from "./utils";
+import { log, updatedAt, taskHash, getObjectDifference} from "./utils";
 
 export const fetchTask = async (globalState, command, commandArgs, task) => {
 
@@ -17,7 +17,8 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   task.processor["commandArgs"] = commandArgs;
   task.processor["id"] = processorId;  
 
-  task.userId = globalState.user.userId;
+  task.user = task.user || {};
+  task.user["id"] = globalState.user.userId;
 
   // The immediate destination of this request
   let fetchUrl = `${hubUrl}/api/task/`; // using hub routing
@@ -25,8 +26,8 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   try {
     const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
-    messageJsonString = JSON.stringify({ task: validatedTaskObject });
-  } catch (error) {
+    messageJsonString = JSON.stringify({ task: task });
+    } catch (error) {
     console.log("Error while converting Task to JSON:", error, task);
     return;
   }
@@ -39,14 +40,6 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
     credentials: "include",
     body: messageJsonString,
   };
-  
-  // Need to be able to roll back if we are sending an instance
-  let rollback;
-  if (task.instanceId) {
-    rollback = await globalState.storageRef.current.get(task.instanceId);
-    await globalState.storageRef.current.set(task.instanceId, task);
-    //console.log("fetchTask stored task", task.instanceId, "in storageRef", task);
-  }
 
   const response = await fetch(fetchUrl, requestOptions);
 
@@ -59,10 +52,6 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
     } else {
       console.error('An error occurred: response status ' + response.status);
       //throw new Error('An error occurred: response status ' + response.status);
-    }
-    if (task.instanceId) {
-      await globalState.storageRef.current.set(rollback.instanceId, rollback);
-      console.log("fetchTask rolled back task", task.instanceId, "in storageRef", rollback);
     }
   } 
 
