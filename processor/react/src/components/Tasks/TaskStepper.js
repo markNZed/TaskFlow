@@ -11,12 +11,7 @@ import ModalComponent from '../Generic/ModalComponent';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
-
-import {
-  utils,
-  setArrayState,
-  setNestedProperties,
-} from "../../utils/utils";
+import { utils } from "../../utils/utils";
 
 /*
 Task Process
@@ -116,7 +111,7 @@ function TaskStepper(props) {
               id: tasks[tasksIdx].config.nextTask,
             }
           });
-          const modifiedTask = utils.deepMerge(tasks[tasksIdx], setNestedProperties({ 
+          const modifiedTask = utils.deepMerge(tasks[tasksIdx], utils.setNestedProperties({ 
             "state.done": false, 
           }));
           setTasksTask((p) => {
@@ -176,7 +171,7 @@ function TaskStepper(props) {
   const isExpanded = (panel) => expanded.includes(panel);
 
   function setTasksTask(t, idx) {
-    setArrayState(setTasks, idx, t);
+    utils.setArrayState(setTasks, idx, t);
   }
 
   return (

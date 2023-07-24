@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  utils,
-  log,
-  logWithComponent,
-  hasOnlyResponseKey,
-  setNestedProperties,
-} from "../utils/utils";
+import { utils } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
 import withDebug from "./withDebug";
@@ -283,7 +277,7 @@ function withTask(Component) {
         props.setTask((p) =>
           utils.deepMerge(
             p,
-            setNestedProperties({
+            utils.setNestedProperties({
               "state.current": state,
               "state.last": p.state.current,
             })
@@ -368,10 +362,10 @@ function withTask(Component) {
 
     useEffect(() => {
       if (startTaskError) {
-        log("startTaskError", startTaskError);
+        utils.log("startTaskError", startTaskError);
       }
       if (updateTaskError) {
-        log("updateTaskError", updateTaskError);
+        utils.log("updateTaskError", updateTaskError);
       }
     }, [startTaskError, updateTaskError]);
 
@@ -392,7 +386,7 @@ function withTask(Component) {
     }, [props.task]);
 
     function modifyTask(modification) {
-      setNestedProperties(modification);
+      utils.setNestedProperties(modification);
       //console.log("modifyTask modification", modification)
       props.setTask((prevState) => {
         const res = utils.deepMerge(prevState, modification);
@@ -424,7 +418,7 @@ function withTask(Component) {
           diff = state;
         }
         let show_diff = true;
-        if (hasOnlyResponseKey(diff)) {
+        if (utils.hasOnlyResponseKey(diff)) {
           if (!prevTaskState.response?.text) {
             diff.response["text"] = "...";
           } else {
@@ -435,7 +429,7 @@ function withTask(Component) {
           console.log("Unexpected: Task without id ", state);
         }
         if (show_diff && Object.keys(diff).length > 0) {
-          logWithComponent(
+          utils.logWithComponent(
             componentName,
             name + " " + state.id + " changes:",
             diff
@@ -476,7 +470,7 @@ function withTask(Component) {
             diff = state;
           }
           let show_diff = true;
-          if (hasOnlyResponseKey(diff)) {
+          if (utils.hasOnlyResponseKey(diff)) {
             if (!prevTaskState.response?.text) {
               diff.response["text"] = "...";
             } else {
@@ -487,7 +481,7 @@ function withTask(Component) {
             console.log("Unexpected: Task without id ", state);
           }
           if (show_diff && Object.keys(diff).length > 0) {
-            logWithComponent(
+            utils.logWithComponent(
               componentName,
               name + " " + state.id + " changes:",
               diff

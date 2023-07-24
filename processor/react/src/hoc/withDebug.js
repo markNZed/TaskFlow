@@ -1,9 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  logWithComponent,
-  utils,
-  hasOnlyResponseKey,
-} from "../utils/utils";
+import { utils } from "../utils/utils";
 import _ from "lodash";
 
 function withDebug(Component) {
@@ -11,7 +7,7 @@ function withDebug(Component) {
 
   function DebugComponent(props) {
     function log(...message) {
-      logWithComponent(componentName, ...message);
+      utils.logWithComponent(componentName, ...message);
     }
 
     useEffect(() => {
@@ -37,7 +33,7 @@ function withDebug(Component) {
         delete diff.output;
         removeNullValues(diff)
         let show_diff = true;
-        if (hasOnlyResponseKey(diff)) {
+        if (utils.hasOnlyResponseKey(diff)) {
           if (!props.prevTask.response?.text) {
             diff.response.text = " ...";
           } else {

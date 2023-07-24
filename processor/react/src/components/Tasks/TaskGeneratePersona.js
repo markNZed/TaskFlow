@@ -9,7 +9,7 @@ import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import DynamicComponent from "./../Generic/DynamicComponent";
-import { replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 
 /*
@@ -131,7 +131,7 @@ const TaskGeneratePersona = (props) => {
             style={{ marginTop: "16px" }} 
             key={index}
             className="text2html"
-            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(line) }}
+            dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
           />
         ))}
       </Paper>

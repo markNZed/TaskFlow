@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from "react";
 import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
-import { log } from "../utils/utils";
 
 function useRegisterWSFilter(onMessage) {
 

@@ -20,7 +20,7 @@ import Drawer from "@mui/material/Drawer";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
-import { setArrayState } from "../utils/utils";
+import { utils } from "../utils/utils";
 import { appLabel } from "../config";
 
 // If there is only one agent then do not show side menu
@@ -95,7 +95,7 @@ function Taskflows(props) {
 
   /*
   function setTasksTask(t, idx) {
-    setArrayState(setTasks, idx, t);
+    utils.setArrayState(setTasks, idx, t);
   }
   */
 
@@ -105,9 +105,9 @@ function Taskflows(props) {
     // Also passing the task and setTask down means that during the rendering of Taskflows
     // DynamicComponents can call setTask which is aliased to setTasksTask
     // Maybe Redux is the way to work around this
-    setTimeout(() => setArrayState(setTasks, idx, t), 0);
-    //setArrayState(setTasks, idx, t)
-  }, [setArrayState]);
+    setTimeout(() => utils.setArrayState(setTasks, idx, t), 0);
+    //utils.setArrayState(setTasks, idx, t)
+  }, [utils.setArrayState]);
 
   //Tracing
 

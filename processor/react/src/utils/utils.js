@@ -12,10 +12,7 @@ utils.updatedAt = updatedAt;
 utils.parseRegexString = parseRegexString;
 utils.taskHash = taskHash;
 
-// e.g. delta(() => {modifyState('input')})
-export const delta = (callback, delay = 0) => setTimeout(callback, delay);
-
-export function hasOnlyResponseKey(obj) {
+utils.hasOnlyResponseKey = function (obj) {
   const keys = Object.keys(obj);
   return keys.length === 1 && keys[0] === "response";
 }
@@ -40,7 +37,7 @@ function getCallerName(stackTrace) {
   return callerName;
 }
 
-export const logWithComponent = (componentName, ...message) => {
+utils.logWithComponent = (componentName, ...message) => {
   //console.log(...message)
   const stackTrace = new Error().stack.split("\n");
   const callerName = getCallerName(stackTrace);
@@ -49,7 +46,7 @@ export const logWithComponent = (componentName, ...message) => {
 };
 
 // Should not create debug each time, should create log locally
-export const log = (...message) => {
+utils.log = (...message) => {
   //console.log(...message)
   const stackTrace = new Error().stack.split("\n");
   const callerName = getCallerName(stackTrace);
@@ -57,7 +54,7 @@ export const log = (...message) => {
   log(...message);
 };
 
-export function setArrayState(setArray, idx, t) {
+utils.setArrayState = function (setArray, idx, t) {
   setArray((prevElements) => {
     const updatedElements = [...prevElements]; // create a copy of the previous state array
     const changedElement =
@@ -68,7 +65,7 @@ export function setArrayState(setArray, idx, t) {
 }
 
 // Support for dot notation in Task keys
-export function setNestedProperties(obj, path = null, value = null) {
+utils.setNestedProperties = function (obj, path = null, value = null) {
   
   const processKey = (obj, key, value) => {
     if (key.includes(".")) {
@@ -111,7 +108,7 @@ export function setNestedProperties(obj, path = null, value = null) {
   return obj;
 }
 
-export function replaceNewlinesWithParagraphs(text) {
+utils.replaceNewlinesWithParagraphs = function (text) {
   let html = ""
   if (text) {
     // Split the text on one or more newline characters to get an array of lines
@@ -126,4 +123,4 @@ export function replaceNewlinesWithParagraphs(text) {
   return html;
 }
 
-export { utils }
+export { utils };

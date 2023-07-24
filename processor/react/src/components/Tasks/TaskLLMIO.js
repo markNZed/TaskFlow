@@ -19,7 +19,7 @@ import { Typography, TextareaAutosize } from "@mui/material";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
-import { replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 
 const TaskLLMIO = (props) => {
   const {
@@ -219,7 +219,7 @@ const TaskLLMIO = (props) => {
                 style={{ marginTop: "16px" }} 
                 key={index}
                 className="text2html"
-                dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(line) }}
+                dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
               />
             ))}
           </Paper>

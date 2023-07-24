@@ -9,8 +9,6 @@ import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
 
-import { log, updatedAt } from "../utils/utils";
-
 class WebSocketEventEmitter extends EventEmitter {}
 
 const WebSocketContext = React.createContext();

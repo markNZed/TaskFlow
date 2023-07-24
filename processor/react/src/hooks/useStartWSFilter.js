@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
-import { log } from "../utils/utils";
 
 function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
   

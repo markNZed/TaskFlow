@@ -19,7 +19,7 @@ import React, { useState, useEffect } from "react";
 import { Grid } from "@mui/material";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
-import { setArrayState } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 
 function TaskGrid(props) {
   const {
@@ -48,7 +48,7 @@ function TaskGrid(props) {
   }, []);
 
   function setTasksTask(t, idx) {
-    setArrayState(setTasks, idx, t);
+    utils.setArrayState(setTasks, idx, t);
   }
 
   const GridConfig = task.config.grid;

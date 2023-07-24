@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { useState, useEffect, useRef } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import { fetchTask } from "../utils/fetchTask";
-import { utils, setNestedProperties, log } from "../utils/utils";
+import { utils } from "../utils/utils";
 
 const useStartTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
@@ -28,10 +28,10 @@ const useStartTask = (task, setTask) => {
         }
         let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
         const updating = { "command": null, "commandArgs": null };
-        setNestedProperties(updating);
+        utils.setNestedProperties(updating);
         setTask((p) => utils.deepMerge(p, updating));
         snapshot = utils.deepMerge(snapshot, updating)
-        log("useStartTask", snapshot.id);
+        utils.log("useStartTask", snapshot.id);
         fetchTask(globalState, command, commandArgs, snapshot);
       } catch (error) {
         console.log(error)

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
-import { log } from "../utils/utils";
 
 // The wbsocket is re-rendering which causes the useSyncWSFilter to rerender which
 // loses the state, so can't remember the task

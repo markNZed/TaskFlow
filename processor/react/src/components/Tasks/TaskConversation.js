@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { replaceNewlinesWithParagraphs, utils } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
@@ -153,7 +153,7 @@ const TaskConversation = (props) => {
           ) : (
             <div 
               className="message text2html"
-              dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(text) }}
+              dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(text) }}
             />
           )}
         </div>

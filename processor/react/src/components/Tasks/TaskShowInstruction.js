@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
-import { replaceNewlinesWithParagraphs } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 
 /*
 Task Process
@@ -86,7 +86,7 @@ const TaskShowInstruction = (props) => {
             style={{ marginTop: "16px" }} 
             key={index}
             className="text2html"
-            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithParagraphs(line) }}
+            dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
           />
         ))}
       </Paper>
