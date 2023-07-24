@@ -62,6 +62,10 @@ There may be side-effects from a SubTask, for example, it may return partial res
 
 Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see [README.md](hub/README.md)
 
+### Task Hub Co-Processor
+
+A Task Hub Co-Processor optionally modifies messages received on the Task Hub before forwarding to the appropraite Task Processors.
+
 ## Error Handling
 
 If a Task Function sets task.error and the Task is updated then the Task Hub will detect this and set task.hub.command to "error" then set task.hub.commandArgs.errorTask to `task.config.errorTask` or the nearest error task (task.id ends in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).

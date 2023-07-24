@@ -11,7 +11,7 @@ Do we want to be able to configure CEP functionality?
     See Processor README.md for mathjs etc
 Dynamic task configuration
   Hub would need to be extended
-  Could it dump out configuratins that can be saved/reused?
+  Could it dump out configurations that can be saved/reused?
   This is better than static definitions because we don't need to elaborate all possibilities in the config options
 NodeJS needs a notion of request ID prefixed to logging
 A Processor that is restarted does not rejoin the activeTasks ?
@@ -41,7 +41,12 @@ FSM
     Could analyse the Task to see what outputs are available then filter available stateBehaviors
     Initially just provide explicit eventNames and stateBehavior
       When a library is built we can dynamically load the event/behavior
-    
+    Events could be CEP
+      Do we want a DSL for CEP ?
+      Currently function with arguments
+    Actions could be change to task
+      Do we want a DSP for actions?
+    Statecharts introduce concurrency and hierarchy but can avoid that to begin with
 A scheduler should be able to provide  a cron like feature
   TaskCron
     Or can any task do this just by waiting ?
@@ -267,7 +272,8 @@ Notes/Idea
       Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
   Swagger for the API ?
   Refactoring with jscodeshift, see example in config repository
-  Should a task that requests to start a Task also be updated by the Hub? 
+  Should a task that requests to start a Task also be updated by the Hub?
+  A GraphQL based API into the Task family may be a useful abstraction that can be offloaded to a Co-Processor
 
 Architecture
 ------------
