@@ -5,10 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { activeTasksStore_async } from "./storage.mjs";
-import { fetchTask_async } from "./fetchTask.mjs";
 import { utils } from "./utils.mjs";
 
-export async function syncCommand_async(CEPtask, task) { 
+export async function syncCommand_async(wsSendTask, CEPtask, task) { 
   console.log("syncCommand_async sync " + task.instanceId);
   task["command"] = "sync";
   task["instanceId"] = CEPtask.instanceId;
@@ -21,7 +20,7 @@ export async function syncCommand_async(CEPtask, task) {
   }
   const mergedTask = utils.deepMerge(lastTask, task);
   try {
-    await fetchTask_async(mergedTask);
+    wsSendTask(mergedTask);
   } catch (error) {
     console.error(`Command ${mergedTask.command} failed to fetch ${error}`);
   }

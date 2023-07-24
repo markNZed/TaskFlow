@@ -1,5 +1,12 @@
 /* ToDo
 -------
+Notion of an input pipeline and output pipeline, managed by Processor
+  task.config.inputPipeline = [...]
+  task.config.outputPipeline = [...]
+  task.config.pipeline - then task is called for both input and output
+    Need to implement a queue on the task request/response ? The are no longer internal requests
+    A new "request" and "response" command then the Processor can implement a queue (provide next request after previous response)
+  In React the output bypasses the task but we could do something similar whereby the HoC passes the component output through the output pipeline. Could replace output.
 syncCount -> modifyCount ?
 Should task.id be task.config.id ?
   Then task.id could replace task.instanceId

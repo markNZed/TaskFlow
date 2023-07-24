@@ -44,7 +44,7 @@ function wsSendObject(message) {
   }
 }
 
-const wsSendTask = function (task, command = null) {
+const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
   message["task"] = task;

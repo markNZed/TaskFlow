@@ -8,9 +8,7 @@ import { encode } from "gpt-3-encoder";
 import { ChatGPTAPI } from "chatgpt";
 import { utils } from "../utils.mjs";
 import { DUMMY_OPENAI, CONFIG_DIR } from "../../config.mjs";
-import {
-  cacheStore_async,
-} from "../storage.mjs";
+import { cacheStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 

@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
+import { syncCommand_async } from "./syncCommand.mjs";
 
 let taskMessageCount = 0;
 
@@ -151,8 +152,7 @@ function initWebSocketServer(server) {
         }
         const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
         if (command === "update") {throw new Error("update not implemented")}
-        if (command === "partial") {
-          //console.log("ws update", task)
+        if (command) {
           if (!activeTaskProcessors) {
             // This can happen if the React processor has not yet registered after a restart of the Hub
             console.log("No processors for ", task.id, task.instanceId, " in activeTaskProcessorsStore_async");
@@ -163,13 +163,19 @@ function initWebSocketServer(server) {
           }
           const activeTask = await activeTasksStore_async.get(task.instanceId);
           // Restore the other processors
-          const processor = activeTask.processor;
+          const processors = activeTask.processors;
           //console.log("processor", processor);
-          task.processor = processor;
+          task.processors = processors;
           task.hub = activeTask.hub;
           task.hub["command"] = command;
           task.hub["commandArgs"] = commandArgs;
           task.hub["sourceProcessorId"] = processorId;     
+        }
+        if (command === "sync") {
+          console.log("ws sync", task.id)
+          syncCommand_async(task);
+        }
+        if (command === "partial") {   
           for (const id of activeTaskProcessors) {
             if (id !== processorId) {
               const processorData = activeProcessors.get(id);

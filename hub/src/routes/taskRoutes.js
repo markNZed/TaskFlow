@@ -61,10 +61,6 @@ async function update_async(res, task) {
       throw new Error("No active task " + task.instanceId);
     }
     task = utils.deepMerge(activeTask, task);
-    if (!task?.meta?.syncCount) {
-      console.log("task", task, activeTask);
-
-    }
     console.log(task.meta.syncCount + " update_async " + task.id + " from " + processorId);
     const commandArgs = task.hub["commandArgs"];
 
