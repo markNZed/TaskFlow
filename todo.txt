@@ -1,7 +1,6 @@
 /* ToDo
 -------
 syncCount -> modifyCount ?
-Align react utils usage
 Should task.id be task.config.id ?
   Then task.id could replace task.instanceId
 Do we want to be able to configure CEP functionality?
@@ -10,7 +9,6 @@ Do we want to be able to configure CEP functionality?
     New command "execute" that would just pull active task out of storage
       CEP decides if the Task SM needs to be run
     See Processor README.md for mathjs etc
-syncTask_async -> syncCommand_async ?
 Dynamic task configuration
   Hub would need to be extended
   Could it dump out configuratins that can be saved/reused?
