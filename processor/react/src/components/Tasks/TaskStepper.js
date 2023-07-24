@@ -13,8 +13,8 @@ import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
 
 import {
+  utils,
   setArrayState,
-  deepMerge,
   setNestedProperties,
 } from "../../utils/utils";
 
@@ -116,7 +116,7 @@ function TaskStepper(props) {
               id: tasks[tasksIdx].config.nextTask,
             }
           });
-          const modifiedTask = deepMerge(tasks[tasksIdx], setNestedProperties({ 
+          const modifiedTask = utils.deepMerge(tasks[tasksIdx], setNestedProperties({ 
             "state.done": false, 
           }));
           setTasksTask((p) => {

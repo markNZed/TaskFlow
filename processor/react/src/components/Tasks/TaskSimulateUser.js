@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { parseRegexString } from "../../utils/utils";
+import { utils} from "../../utils/utils";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import DynamicComponent from "../Generic/DynamicComponent";
 
@@ -122,7 +122,7 @@ const TaskSimulateUser = (props) => {
       const regexProcessResponse = task.config.regexProcessResponse;
       if (regexProcessResponse) {
         for (const [regexStr, replacement] of regexProcessResponse) {
-          let { pattern, flags } = parseRegexString(regexStr);
+          let { pattern, flags } = utils.parseRegexString(regexStr);
           const regex = new RegExp(pattern, flags);
           updatedResponseText = updatedResponseText.replace(regex, replacement);
         }

@@ -1,6 +1,5 @@
 import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
-import { log, updatedAt, taskHash, getObjectDifference} from "./utils";
 
 export const fetchTask = async (globalState, command, commandArgs, task) => {
 

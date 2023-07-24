@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
-import { parseRegexString } from "../../utils/utils";
+import { utils } from "../../utils/utils";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 import { v4 as uuidv4 } from "uuid";
@@ -253,7 +253,7 @@ const TaskChat = (props) => {
       const regexProcessMessages = task.config?.local?.regexProcessMessages;
       if (regexProcessMessages) {
         for (const [regexStr, replacement] of regexProcessMessages) {
-          let { pattern, flags } = parseRegexString(regexStr);
+          let { pattern, flags } = utils.parseRegexString(regexStr);
           const regex = new RegExp(pattern, flags);
           text = text.replace(regex, replacement);
         }

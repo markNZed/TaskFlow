@@ -26,6 +26,24 @@ FSM
   Event processing could be on the Processor but it would not see events of Tasks on another Processor
     RxJS could be added to environment of all Tasks that we want to monitor
     Create some sort of subscription to a Task via the Hub - can we know the family ids ?
+  Work directly with the XState JSON configuration and provide CRUD operation in Javascript 
+    Layer of CRUD operation on JSON
+      Layer of FSM CRUD operations on top
+      Consider the objects Lucy supports
+    Very simple parser to go from text to Javascript functions using PEG.js
+    CREATE_MACHINE(id, initialState): Creates a new state machine.
+    ADD_STATE(machineId, stateName, stateBehavior): Adds a new state to an existing machine.
+    REMOVE_STATE(machineId, stateName): Removes a state from a machine.
+    ADD_TRANSITION(machineId, sourceState, targetState, eventName): Adds a transition from one state to another on an event.
+    REMOVE_TRANSITION(machineId, sourceState, eventName): Removes a transition from a state.
+    UPDATE_STATE(machineId, stateName, newStateBehavior): Updates the behavior of a state. This could involve adding or removing transitions, or updating effects.
+    GET_STATE(machineId, stateName): Retrieves the configuration of a state.
+    Potentially FSM could be a base type like Task so we can compose from a library of stateBehavior
+    Could analyse the Task to see what inputs/events are available then filter available eventNames
+    Could analyse the Task to see what outputs are available then filter available stateBehaviors
+    Initially just provide explicit eventNames and stateBehavior
+      When a library is built we can dynamically load the event/behavior
+    
 A scheduler should be able to provide  a cron like feature
   TaskCron
     Or can any task do this just by waiting ?

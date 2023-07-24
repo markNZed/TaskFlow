@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
+  utils,
   log,
   logWithComponent,
-  getObjectDifference,
   hasOnlyResponseKey,
   setNestedProperties,
-  deepMerge,
-  checkConflicts,
-  taskHash,
 } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
@@ -132,7 +129,7 @@ function withTask(Component) {
       if (familyId) {
         let diff;
         if (prevTask && publishedRef.current) {
-          diff = getObjectDifference(prevTask, props.task);
+          diff = utils.getObjectDifference(prevTask, props.task);
         } else {
           diff = props.task;
         }
@@ -188,7 +185,7 @@ function withTask(Component) {
       async (updateDiff) => {
         console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        const updatedTask = deepMerge(lastTask, updateDiff)
+        const updatedTask = utils.deepMerge(lastTask, updateDiff)
         globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         //console.log("lastTask", lastTask)
         // If the resource has been locked by another processor then we ignore whatever was done locally
@@ -200,23 +197,23 @@ function withTask(Component) {
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
         if (thisProcssorIsSource) {
           // Just update task.meta & the task.input
-          const currentMetaDiff = deepMerge(props.task.meta, updateDiff.meta);
+          const currentMetaDiff = utils.deepMerge(props.task.meta, updateDiff.meta);
           modifyTask({"meta": currentMetaDiff});
           //console.log("Update from this processor")
         } else if (thisProcessorHasLock) {
           //console.log("Update with lock");
-          let currentTaskDiff = getObjectDifference(lastTask, props.task);
+          let currentTaskDiff = utils.getObjectDifference(lastTask, props.task);
           // Keep the current input and any changes received
           // We do not want to use latTask because it may overwrite changes on the inputs 
           // coming form outside the Task.
           let currentInputDiff = {};
-          currentInputDiff["input"] = deepMerge(props.task.input, updateDiff.input);
-          let modifiedLastTask = deepMerge(lastTask, currentInputDiff);
-          if (checkConflicts(currentTaskDiff, updateDiff)) {
+          currentInputDiff["input"] = utils.deepMerge(props.task.input, updateDiff.input);
+          let modifiedLastTask = utils.deepMerge(lastTask, currentInputDiff);
+          if (utils.checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff ", currentTaskDiff, updateDiff);
           }
           // Priority to updateDiff
-          modifiedLastTask = deepMerge(modifiedLastTask, updateDiff);
+          modifiedLastTask = utils.deepMerge(modifiedLastTask, updateDiff);
           props.setTask(modifiedLastTask);
           //console.log("Update ", props.task.id, modifiedLastTask);
         } else {
@@ -225,9 +222,9 @@ function withTask(Component) {
         }
         // Important we record updateDiff as it was sent to keep in sync with Hub
         // Check hash
-        const hash = taskHash(updatedTask);
+        const hash = utils.taskHash(updatedTask);
         if (hash !== updatedTask.meta.hash) {
-          const diff = getObjectDifference(lastTask.output, updatedTask.output)
+          const diff = utils.getObjectDifference(lastTask.output, updatedTask.output)
           console.error("Task hash does not match", updateDiff.meta.syncCount, hash, updatedTask.meta.hash, diff);
           //throw new Error("Task hash does not match");
         } else {
@@ -241,13 +238,13 @@ function withTask(Component) {
       async (syncTask, commandArgs) => {
         console.log("Storage sync ", props.task.id, commandArgs);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        const updatedTask = deepMerge(lastTask, commandArgs.syncTask)
+        const updatedTask = utils.deepMerge(lastTask, commandArgs.syncTask)
         globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         // Important we record syncTask as it was sent to keep in sync with Hub
         // Check hash
-        const hash = taskHash(updatedTask);
+        const hash = utils.taskHash(updatedTask);
         if (hash !== updatedTask.meta.hash) {
-          const diff = getObjectDifference(lastTask.output, updatedTask.output)
+          const diff = utils.getObjectDifference(lastTask.output, updatedTask.output)
           console.error("Task hash does not match", syncTask.meta.syncCount, hash, updatedTask.meta.hash, diff);
           //throw new Error("Task hash does not match");
         } else {
@@ -284,7 +281,7 @@ function withTask(Component) {
       if (state && state !== props.task.state.current) {
         stateRef.current = state;
         props.setTask((p) =>
-          deepMerge(
+          utils.deepMerge(
             p,
             setNestedProperties({
               "state.current": state,
@@ -398,8 +395,8 @@ function withTask(Component) {
       setNestedProperties(modification);
       //console.log("modifyTask modification", modification)
       props.setTask((prevState) => {
-        const res = deepMerge(prevState, modification);
-        //console.log("deepMerge", res);
+        const res = utils.deepMerge(prevState, modification);
+        //console.log("utils.deepMerge", res);
         return res;
       });
     }
@@ -422,7 +419,7 @@ function withTask(Component) {
         }
         let diff;
         if (prevTaskState) {
-          diff = getObjectDifference(prevTaskState, state);
+          diff = utils.getObjectDifference(prevTaskState, state);
         } else {
           diff = state;
         }
@@ -474,7 +471,7 @@ function withTask(Component) {
           const prevTaskState = prevTasksState[i];
           let diff;
           if (prevTaskState) {
-            diff = getObjectDifference(prevTaskState, state);
+            diff = utils.getObjectDifference(prevTaskState, state);
           } else {
             diff = state;
           }

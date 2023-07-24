@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { deepCompare, replaceNewlinesWithParagraphs, parseRegexString } from "../../utils/utils";
+import { replaceNewlinesWithParagraphs, utils } from "../../utils/utils";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
@@ -59,7 +59,7 @@ const TaskConversation = (props) => {
       const regexProcessMessages = task.config?.local?.regexProcessMessages;
       if (regexProcessMessages) {
         for (const [regexStr, replacement] of regexProcessMessages) {
-          let { pattern, flags } = parseRegexString(regexStr);
+          let { pattern, flags } = utils.parseRegexString(regexStr);
           const regex = new RegExp(pattern, flags);
           if (msgsToProcess.length) {
             for (const msg of msgsToProcess) {
