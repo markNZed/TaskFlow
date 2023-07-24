@@ -84,7 +84,6 @@ async function update_async(res, task) {
   }
 }
 
-// This should actually send the equivalent of sync
 async function sync_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];

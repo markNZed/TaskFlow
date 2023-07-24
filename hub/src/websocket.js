@@ -8,6 +8,7 @@ import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { syncCommand_async } from "./syncCommand.mjs";
+import { transferCommand } from "./routes/taskProcessing.mjs";
 
 let taskMessageCount = 0;
 
@@ -141,50 +142,26 @@ function initWebSocketServer(server) {
       }
 
       if (j?.task) {
-        const task = j.task;
-        const command = task.processor.command;
-        const commandArgs = task.processor?.commandArgs;
-        const processorId = task.processor.id;
-        delete task.processor.command;
-        delete task.processor.commandArgs;
-        if (!command) {
-          throw new Error("Missing command in task.hub " + JSON.stringify(task));
-        }
+        console.log("");
+        let task = j.task;
+        const activeTask = await activeTasksStore_async.get(task.instanceId);
+        task = transferCommand(task, activeTask, null);
         const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
-        if (command === "update") {throw new Error("update not implemented")}
-        if (command) {
-          if (!activeTaskProcessors) {
-            // This can happen if the React processor has not yet registered after a restart of the Hub
-            console.log("No processors for ", task.id, task.instanceId, " in activeTaskProcessorsStore_async");
-            return;
-            //throw new Error("No processors ", task);
-          } else {
-            //console.log("Number of processors " + activeTask.processorIds.length)
-          }
-          const activeTask = await activeTasksStore_async.get(task.instanceId);
-          // Restore the other processors
-          const processors = activeTask.processors;
-          //console.log("processor", processor);
-          task.processors = processors;
-          task.hub = activeTask.hub;
-          task.hub["command"] = command;
-          task.hub["commandArgs"] = commandArgs;
-          task.hub["sourceProcessorId"] = processorId;     
-        }
-        if (command === "sync") {
+        if (task.hub.command === "update") {throw new Error("update not implemented")}
+        if (task.hub.command === "sync") {
           console.log("ws sync", task.id)
           syncCommand_async(task);
         }
-        if (command === "partial") {   
+        if (task.hub.command === "partial") {   
           for (const id of activeTaskProcessors) {
-            if (id !== processorId) {
+            if (id !== task.hub["sourceProcessorId"]) {
               const processorData = activeProcessors.get(id);
-              if (processorData && processorData.commandsAccepted.includes(command)) {
+              if (processorData && processorData.commandsAccepted.includes(task.hub.command)) {
                 const ws = connections.get(id);
                 if (!ws) {
                   console.log("Lost websocket for ", id, connections.keys());
                 } else {
-                  //console.log("Forwarding " + j.command + " to " + id + " from " + processorId)
+                  //console.log("Forwarding " + task.hub.command + " to " + id + " from " + task.hub["sourceProcessorId"])
                   wsSendTask(task, id);
                 }
               }
