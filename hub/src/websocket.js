@@ -8,6 +8,7 @@ import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { syncCommand_async } from "./syncCommand.mjs";
+import { updateCommand_async } from "./updateCommand.mjs";
 import { transferCommand } from "./routes/taskProcessing.mjs";
 
 let taskMessageCount = 0;
@@ -142,13 +143,17 @@ function initWebSocketServer(server) {
       }
 
       if (j?.task) {
-        console.log("");
         let task = j.task;
         const activeTask = await activeTasksStore_async.get(task.instanceId);
         task = transferCommand(task, activeTask, null);
         const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
-        if (task.hub.command === "update") {throw new Error("update not implemented")}
+        if (task.hub.command === "update") {
+          console.log("");
+          console.log("ws update", task.id)
+          updateCommand_async(task);
+        }
         if (task.hub.command === "sync") {
+          console.log("");
           console.log("ws sync", task.id)
           syncCommand_async(task);
         }

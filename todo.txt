@@ -1,5 +1,8 @@
 /* ToDo
 -------
+update is sending a diff from the hub but not receiving a diff from processors
+Get RxJS working as a pipeline and send update at the end of the pipeline if the task has changed
+  Then move update command to websocket - but why ?
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]
   task.config.outputPipeline = [...]

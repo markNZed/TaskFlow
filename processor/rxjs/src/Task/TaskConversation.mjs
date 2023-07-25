@@ -36,6 +36,7 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
     syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
     syncCommand_async(wsSendTask, CEPtask, syncTask);
     console.log("TaskConversation myCEPFunc called on " + CEPtask.id + " set by " + task.id);
+    CEPtask.output.modifiedBy = task.id;
     return;
   }
 
@@ -60,9 +61,9 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
   if (task.config?.ceps) {
     for (const key in task.config.ceps) {
       if (task.config.ceps.hasOwnProperty(key)) {
-        const funcionName = task.config.ceps[key].funcionName;
+        const functionName = task.config.ceps[key].functionName;
         const args = task.config.ceps[key].args;
-        utils.createCEP(CEPFuncs, task, key, getFunctionByName(taskCEPfuncs, funcionName), args);
+        utils.createCEP(CEPFuncs, task, key, getFunctionByName(taskCEPfuncs, functionName), functionName, args);
       }
     }
   }

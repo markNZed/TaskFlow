@@ -145,7 +145,7 @@ utils.add_index = function(config) {
   }
 }
 
-utils.createCEP = function(CEPFuncs, task, match, CEPFunc, args) {
+utils.createCEP = function(CEPFuncs, task, match, CEPFunc, functionName, args) {
   // Check if the Map has an entry for match
   if (!task.familyId) {
     console.log("task", task);
@@ -157,13 +157,13 @@ utils.createCEP = function(CEPFuncs, task, match, CEPFunc, args) {
   if (!funcMap) {
     // If not, create a new Map for match
     funcMap = new Map();
-    funcMap.set(task.instanceId, [CEPFunc, args]); // Will need to clean this up
+    funcMap.set(task.instanceId, [CEPFunc, functionName, args]); // Will need to clean this up
     CEPFuncs.set(match, funcMap);
     console.log("CEPFuncs created function for " + origMatch + " from " + task.id + " familyId " + task.familyId);  
   } else {
     // Only add the function if there isn't already an entry for this task.instanceId
     if (!funcMap.has(task.instanceId)) {
-      funcMap.set(task.instanceId, [CEPFunc, args]);
+      funcMap.set(task.instanceId, [CEPFunc, functionName, args]);
       CEPFuncs.set(match, funcMap);
       console.log("CEPFuncs added function for " + origMatch + " from " + task.id + " familyId " + task.familyId);
     }

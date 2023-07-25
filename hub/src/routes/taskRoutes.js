@@ -117,7 +117,6 @@ async function sync_async(res, task) {
   }
 }
 
-
 async function error_async(res, task) {
   try {
     const processorId = task.hub["sourceProcessorId"];

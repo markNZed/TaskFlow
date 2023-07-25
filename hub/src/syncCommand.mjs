@@ -20,7 +20,7 @@ export async function syncCommand_async(task) {
       let commandArgs = JSON.parse(JSON.stringify(task.hub["commandArgs"]));
       let mergeTask = utils.deepMerge(activeTask, commandArgs.syncTask);
       mergeTask.hub = JSON.parse(JSON.stringify(task.hub));
-      console.log(mergeTask.meta.syncCount + " sync_async " + mergeTask.id + " from " + processorId);
+      console.log(mergeTask.meta.syncCount + " syncCommand_async " + mergeTask.id + " from " + processorId);
       mergeTask.meta = mergeTask.meta || {};
       mergeTask.meta.sourceProcessorId = processorId;
       console.log("Sync mergeTask " + mergeTask.id + " from " + processorId);

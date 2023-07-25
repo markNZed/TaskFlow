@@ -7,18 +7,17 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTasksStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 
-export async function syncCommand_async(wsSendTask, CEPtask, task) { 
-  console.log("syncCommand_async sync " + task.instanceId);
-  task["command"] = "sync";
-  task["instanceId"] = CEPtask.instanceId;
+export async function syncCommand_async(wsSendTask, task, diff) { 
+  console.log("syncCommand_async sync " + diff.instanceId);
+  diff["command"] = "sync";
   // Copying before setting commandArgs avoids self reference
-  task["commandArgs"] = {syncTask: JSON.parse(JSON.stringify(task))};
-  delete task.commandArgs.syncTask.command;
+  diff["commandArgs"] = {syncTask: JSON.parse(JSON.stringify(diff))};
+  delete diff.commandArgs.syncTask.command;
   const lastTask = await activeTasksStore_async.get(task.instanceId);
   if (!lastTask) {
-    throw new Error("No task found for " + task.instanceId);
+    throw new Error("No diff found for " + diff.instanceId);
   }
-  const mergedTask = utils.deepMerge(lastTask, task);
+  const mergedTask = utils.deepMerge(lastTask, diff);
   try {
     wsSendTask(mergedTask);
   } catch (error) {

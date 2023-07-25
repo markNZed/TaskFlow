@@ -11,6 +11,8 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
+import { updateCommand_async } from "./updateCommand.mjs";
+import { syncCommand_async } from "./syncCommand.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -39,6 +41,9 @@ taskSubject
     mergeMap(async (task) => {
       // Insert additional side-effects or logging here.
       console.log("Incoming task", task.id);
+      const origTask = JSON.parse(JSON.stringify(task)); //deep copy
+      delete task.command;
+      delete task.commandArgs;
       // Complex event processing uss a Map of Map
       // The outer Map matches a task property with a Map of functions
       // The inner Map matches a source task.instanceId with a function
@@ -54,11 +59,27 @@ taskSubject
       let familyCEPFuncs = [...familySourceFuncsMap.values()];  
       // Flatten all CEP functions into a single array
       let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs];
-            console.log("allCEPFuncs", allCEPFuncs);
-      // Run each CEP function
-      allCEPFuncs.forEach(([func, args]) => func(task, args));
-      if (task.processor["command"] === "update" || task.processor["command"] === "sync") {
-        await do_task_async(wsSendTask, task, CEPFuncs);
+      //console.log("allCEPFuncs", allCEPFuncs);
+      //allCEPFuncs.forEach(([func, args]) => func(task, args));
+      // Run each CEP function one after another
+      for (const [func, functionName, args] of allCEPFuncs) {
+        console.log(`Running CEP function ${functionName} with ${args}`);
+        await func(task, args);
+      }
+      // Check for changes to the task
+      const diff = utils.getObjectDifference(origTask, task);
+      // We assume that any sync commands are run from the CEP function
+      if (task.processor["command"] === "update" || task.processor["command"] === "start") {
+        await do_task_async(wsSendTask, origTask, CEPFuncs);
+      }
+      if (Object.keys(diff).length > 0) {
+        console.log("DIFF", diff);
+        // Runnig update is quite aggressive 
+        // Should do this when forwarding the update as a co-processor
+        //await updateCommand_async(wsSendTask, task);
+        // Sync the task 
+        // Do not update as this could re-execute task state
+        await syncCommand_async(wsSendTask, origTask, diff);
       }
       return task;
     }),
