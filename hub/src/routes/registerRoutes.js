@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors } from "../storage.mjs";
+import { activeProcessors, activeCoProcessors } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
 import { getConfigHash } from "../configdata.mjs";
 import * as dotenv from "dotenv";
@@ -23,6 +23,7 @@ router.post("/", async (req, res) => {
   let messagesStyle = req.body?.messagesStyle;
   let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
+  let coprocessor = req.body?.coprocessor;
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error", "sync"];
@@ -39,20 +40,32 @@ router.post("/", async (req, res) => {
   if (language === undefined) {
     language = "EN";
   }
+  if (coprocessor === undefined) {
+    coprocessor = false;
+  }
 
-  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments));
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
   //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
   //console.log("processorId " + processorId + " registered with messagesStyle " + JSON.stringify(messagesStyle));
-  console.log("processorId " + processorId + " registered with language " + language);
+  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
     
-  activeProcessors.set(processorId, {
-    environments,
-    commandsAccepted,
-    serviceTypes,
-    messagesStyle,
-    language,
-  })
+  if (coprocessor) {
+    activeCoProcessors.set(processorId, {
+      environments,
+      commandsAccepted,
+      serviceTypes,
+      messagesStyle,
+      language,
+    })
+  } else {  
+    activeProcessors.set(processorId, {
+      environments,
+      commandsAccepted,
+      serviceTypes,
+      messagesStyle,
+      language,
+    })
+  }
   
   res.send({
     hubId: hubId,

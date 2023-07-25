@@ -26,7 +26,7 @@ const tasktypes = [
     name: "TaskChat",
     websocket: true,
     // If multiple environments then it will be synchronized
-    environments: ["react", "nodejs", "rxjs"],
+    environments: ["react", "nodejs"],
     config: {
       local: {
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
@@ -52,7 +52,7 @@ const tasktypes = [
   },
   {
     name: "TaskConversation",
-    environments: ["react", "nodejs", "rxjs"],
+    environments: ["react", "nodejs"],
     config: {
       local: {
         welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",

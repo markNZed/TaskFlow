@@ -12,6 +12,7 @@ dotenv.config();
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();
+var activeCoProcessors = new Map();
 
 // This extends KeyvBetterSqlite3 to allow for iteration
 // I was using it but then refactored it out.
@@ -93,6 +94,7 @@ export {
   activeTaskProcessorsStore_async,
   activeProcessorTasksStore_async,
   activeProcessors,
+  activeCoProcessors,
   outputStore_async,
   connections,
 };

@@ -43,6 +43,8 @@ try {
     fs.writeFileSync(processorIdFile, processorId);
 }
 
+const coprocessor = true;
+
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, coprocessor };
