@@ -192,7 +192,6 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     task.processor["command"] = null;
     task.processor["commandArgs"] = null;
     task.processor["prevInstanceId"] = prevTask.instanceId;
-    task.processors[processorId] = task.processor;
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
@@ -272,6 +271,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
         if (processor && processor.environments && processor.environments.includes(environment)) {
           found = true;
           taskProcessors.push(id);
+          task.processors[id] = {id: id};
         }
       }
     }
@@ -282,9 +282,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
         if (environments && environments.includes(environment)) {
             found = true;
             taskProcessors.push(activeProcessorId);
-            if (!task.processors[activeProcessorId]) {
-              task.processors[activeProcessorId] = {};
-            }
+            task.processors[activeProcessorId] = {id: activeProcessorId};
             break;
         }
       }       
@@ -412,6 +410,7 @@ async function startTask_async(
     task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["syncCount"] = task.meta.syncCount ?? 0;
+    task.meta["initiatingProcessorId"] = processorId;
 
     task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
     // Set task.processor.id after copying info from prevTask
@@ -435,14 +434,12 @@ async function startTask_async(
     await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async)
 
     // Calculate hash of the task 
-    // This jight break the joining ?
+    // This might break the joining ?
     task.meta.hash = utils.taskHash(task);
 
-    // Don't await so the return gets back before the websocket update
-    await syncTask_async(task.instanceId, task);
-    await activeTasksStore_async.set(task.instanceId, task);
-
     console.log("Started task id " + task.id);
+
+    return task;
   }
 
   export default startTask_async;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 
 // The wbsocket is re-rendering which causes the useUpdateWSFilter to rerender which
@@ -10,10 +10,12 @@ function useUpdateWSFilter(isMounted, initialTask, onUpdate) {
   //console.log("------------ useUpdateWSFilter ---------------", initialTask);
 
   const [instanceId, setInstanceId] = useState();
+  const processingRef = useRef(false);
 
   // No need for a local queue if we use messageQueue
   // Needs to pass task. Not 100% sure why. Maybe setTask is creating a new object so the reference is lost?
   const handleUpdate = async (taskUpdate) => {
+    if (processingRef.current) {return}
     // messageQueue is an object not an array so we can delete from the object during iteration
     const keys = Object.keys(messageQueue);
     // sort the keyys so we process the oldest first
@@ -27,10 +29,10 @@ function useUpdateWSFilter(isMounted, initialTask, onUpdate) {
         if (message.task.instanceId === initialTask.instanceId) {
           //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
           // Important to wait so that the task is saved to storage before it is retrieved again
-          // We copy it so w can delete it ASAP
-          const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
+          processingRef.current = true;
+          await onUpdate(message.task, message.sourceProcessorId, message.commandArgs);
           delete messageQueue[key];
-          await onUpdate(taskCopy);
+          processingRef.current = false;
           //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);
         }
       }

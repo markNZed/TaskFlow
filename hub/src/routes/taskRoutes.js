@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import startTask_async from "../startTask.mjs";
-import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
+import { activeTasksStore_async, outputStore_async, activeCoProcessors } from "../storage.mjs";
 import { doneTask_async } from "../doneTask.mjs";
 import { errorTask_async } from "../errorTask.mjs";
 import { tasks } from "../configdata.mjs";
@@ -26,8 +26,6 @@ async function processCommand_async(task, res) {
       return await update_async(res, task);
     case "error":
       return await error_async(res, task);
-    case "sync":
-      return await sync_async(res, task);
     default:
       throw new Error("Unknown command " + command);
   }
@@ -43,7 +41,25 @@ async function start_async(res, task) {
       user: {id: task.user.id},
     };
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    await startTask_async(initTask, true, processorId, prevInstanceId);
+    const coProcessorIds = Array.from(activeCoProcessors.keys());
+    const coProcessing = coProcessorIds.length > 0;
+    startTask_async(initTask, true, processorId, prevInstanceId)
+      .then(async (startTask) => {
+        if (coProcessing) {
+          activeTasksStore_async.set(startTask.instanceId, startTask);
+        }
+        return startTask;
+      })
+      .then(async (startTask) => {
+        //console.log("startTask",startTask)
+        syncTask_async(startTask.instanceId, startTask);
+        return startTask;
+      })
+      .then(async (startTask) => {
+        if (!coProcessing) {
+          activeTasksStore_async.set(startTask.instanceId, startTask);
+        }
+      })
   } catch (err) {
     console.log(`Error starting task ${commandArgs.id}`);
     throw new RequestError(`Error starting task ${task.id} ${err}`, 500, err);
@@ -60,60 +76,40 @@ async function update_async(res, task) {
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
-    task = utils.deepMerge(activeTask, task);
-    console.log(task.meta.syncCount + " update_async " + task.id + " from " + processorId);
     const commandArgs = task.hub["commandArgs"];
-
+    const hub = JSON.parse(JSON.stringify(task.hub));
+    if (commandArgs?.sync) {
+      if (commandArgs?.done) {
+        throw new Error("Not expecting sync of done task");
+      }
+      task = utils.deepMerge(activeTask, commandArgs.syncTask);
+    } else {
+      task = utils.deepMerge(activeTask, task);
+    }
+    task.hub = hub;
+    console.log(task.meta.syncCount + " update_async " + task.id + " from " + processorId);
     // We intercept tasks that are done.
     if (commandArgs?.done) {
       console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
       await doneTask_async(task);
     } else {
       task.meta.updateCount = task.meta.updateCount + 1;
-      task.meta.sourceProcessorId = processorId;
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.hash = utils.taskHash(task);
-      // Don't await so the HTTP response may get back before the websocket update
+      const coProcessorIds = Array.from(activeCoProcessors.keys());
+      const coProcessing = coProcessorIds.length > 0;
+        // Don't await so the HTTP response may get back before the websocket update
       syncTask_async(task.instanceId, task)
-        .then(async () => activeTasksStore_async.set(task.instanceId, task)) 
+        .then(async (syncTask) => {
+          if (!coProcessing) {
+            activeTasksStore_async.set(syncTask.instanceId, syncTask);
+          }
+        })
       res.status(200).send("ok");
     }
   } catch (error) {
     console.error(`Error updating task ${task.id}: ${error.message}`);
     throw new RequestError(`Error updating task ${task.id}: ${error.message}`, 500, error);
-  }
-}
-
-async function sync_async(res, task) {
-  try {
-    const processorId = task.hub["sourceProcessorId"];
-    if (task.instanceId === undefined) {
-      throw new Error("Missing task.instanceId");
-    }
-    const activeTask = await activeTasksStore_async.get(task.instanceId)
-    if (!activeTask) {
-      throw new Error("No active task " + task.instanceId);
-    }
-    let commandArgs = JSON.parse(JSON.stringify(task.hub["commandArgs"]));
-    let mergeTask = utils.deepMerge(activeTask, commandArgs.syncTask);
-    mergeTask.hub = JSON.parse(JSON.stringify(task.hub));
-    console.log(mergeTask.meta.syncCount + " sync_async " + mergeTask.id + " from " + processorId);
-    mergeTask.meta = mergeTask.meta || {};
-    mergeTask.meta.sourceProcessorId = processorId;
-    console.log("Sync mergeTask " + mergeTask.id + " from " + processorId);
-    const hash = utils.taskHash(mergeTask);
-    mergeTask.meta.hash = hash;
-    commandArgs.syncTask["meta"] = commandArgs.syncTask.meta || {};
-    commandArgs.syncTask.meta["hash"] = hash;
-    mergeTask.hub.commandArgs = commandArgs;
-    //console.log("Sync mergeTask.hub.commandArgs", mergeTask.hub.commandArgs);
-    // Don't await so the HTTP response may get back before the websocket update
-    syncTask_async(mergeTask.instanceId, mergeTask)
-      .then(async () => activeTasksStore_async.set(mergeTask.instanceId, mergeTask))
-    res.status(200).send("ok");
-  } catch (error) {
-    console.error(`Error sync task ${task.id}: ${error.message}`);
-    throw new RequestError(`Error sync task ${task.id}: ${error.message}`, 500, error);
   }
 }
 

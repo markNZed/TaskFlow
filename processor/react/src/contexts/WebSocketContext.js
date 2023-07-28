@@ -94,10 +94,12 @@ export function WebSocketProvider({ children, socketUrl }) {
       const message = JSON.parse(e.data);
       let command;
       let commandArgs;
+      let sourceProcessorId;
       if (message?.task) {
         // The processor strips hub specific info because the Task Function should not interact with the Hub
         command = message.task.hub.command;
         commandArgs = message.task.hub?.commandArgs;
+        sourceProcessorId = message.task.hub?.sourceProcessorId;
         delete message.task.hub;
       }
       if (command !== "pong") {
@@ -106,6 +108,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         // Need to include this here because we have cleared message.task.command by here
         message.command = command;
         message.commandArgs = commandArgs;
+        message.sourceProcessorId = sourceProcessorId;
         messageQueue[messageQueueIdx] = message;
         messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index

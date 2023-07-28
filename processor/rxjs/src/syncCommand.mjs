@@ -5,19 +5,31 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { activeTasksStore_async } from "./storage.mjs";
+import { processorId } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
 export async function syncCommand_async(wsSendTask, task, diff) { 
-  console.log("syncCommand_async sync " + diff.instanceId);
-  diff["command"] = "sync";
-  // Copying before setting commandArgs avoids self reference
-  diff["commandArgs"] = {syncTask: JSON.parse(JSON.stringify(diff))};
-  delete diff.commandArgs.syncTask.command;
+  console.log("syncCommand_async sync");
   const lastTask = await activeTasksStore_async.get(task.instanceId);
   if (!lastTask) {
     throw new Error("No diff found for " + diff.instanceId);
   }
+  //console.log("syncCommand_async sync processor", lastTask.processor);
   const mergedTask = utils.deepMerge(lastTask, diff);
+  mergedTask.processor = task.processor;
+  mergedTask["command"] = "update";
+  mergedTask["commandArgs"] = {
+    syncTask: JSON.parse(JSON.stringify(diff)),
+    sync: true,
+    lockBypass: true,
+  };
+  delete mergedTask.commandArgs.syncTask.command;
+  delete mergedTask.commandArgs.syncTask.commandArgs;
+  // Because this is a fresh command sent from the coProcessor not part of the coProcessing pipeline
+  mergedTask.processor["coProcessing"] = false;
+  mergedTask.processor["coProcessingDone"] = true; // So it is not coprocessed again
+  // Because it is this processor that is the initiator of the sync
+  mergedTask.meta["initiatingProcessorId"] = null;
   try {
     wsSendTask(mergedTask);
   } catch (error) {

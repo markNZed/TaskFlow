@@ -89,14 +89,17 @@ const connectWebSocket = () => {
     //console.log("processorWs.onMessage", message?.task.processor.command);
     let command;
     let commandArgs;
+    let sourceProcessorId;
     if (message?.task) {
       // The processor strips hub specific info because the Task Function should not interact with the Hub
       command = message.task.hub.command;
       commandArgs = message.task.hub?.commandArgs;
+      sourceProcessorId = message.task.hub?.sourceProcessorId;
       delete message.task.hub;
       message.task.processor = message.task.processor || {};
       message.task.processor["command"] = command;
       message.task.processor["commandArgs"] = commandArgs;
+      message.task.processor["sourceProcessorId"] = sourceProcessorId;
     }
     if (command !== "pong") {
       console.log(""); //empty line
@@ -109,13 +112,12 @@ const connectWebSocket = () => {
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
+      const processor = JSON.parse(JSON.stringify(message.task.processor));
       const mergedTask = utils.deepMerge(lastTask, message.task);
+      mergedTask.processor = processor;
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
-        console.log("processorWs updating activeTasksStore_async lastTask", lastTask)
-        console.log("processorWs updating activeTasksStore_async message.task", message.task)
-        console.log("processorWs updating activeTasksStore_async mergedTask", mergedTask)
         throw new Error("Problem with merging")
       }
       // Check hash
@@ -124,18 +126,9 @@ const connectWebSocket = () => {
         console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
-      if (message.task.meta.sourceProcessorId !== processorId) {
+      if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
         await do_task_async(wsSendTask, mergedTask);
       }
-    } else if (command === "sync") {
-      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
-      // Check hash
-      const hash = utils.taskHash(mergedTask);
-      if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
-      }
-      await activeTasksStore_async.set(message.task.instanceId, mergedTask)
     } else if (command === "start" || command === "join") {
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)

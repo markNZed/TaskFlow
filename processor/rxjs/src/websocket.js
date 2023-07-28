@@ -6,13 +6,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { filter, mergeMap, tap, map, Subject } from 'rxjs';
-import { hubSocketUrl, processorId } from "./../config.mjs";
+import { hubSocketUrl, processorId, coProcessor } from "./../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
 import { updateCommand_async } from "./updateCommand.mjs";
 import { syncCommand_async } from "./syncCommand.mjs";
+import { coProcessTask_async } from "./coProcessTask.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -42,6 +43,7 @@ taskSubject
       // Insert additional side-effects or logging here.
       console.log("Incoming task", task.id);
       const origTask = JSON.parse(JSON.stringify(task)); //deep copy
+      // Not sure we need to delete here, processor should have cleaned this up?
       delete task.command;
       delete task.commandArgs;
       // Complex event processing uss a Map of Map
@@ -68,18 +70,24 @@ taskSubject
       }
       // Check for changes to the task
       const diff = utils.getObjectDifference(origTask, task);
-      // We assume that any sync commands are run from the CEP function
-      if (task.processor["command"] === "update" || task.processor["command"] === "start") {
-        await do_task_async(wsSendTask, origTask, CEPFuncs);
-      }
-      if (Object.keys(diff).length > 0) {
-        console.log("DIFF", diff);
-        // Runnig update is quite aggressive 
-        // Should do this when forwarding the update as a co-processor
-        //await updateCommand_async(wsSendTask, task);
-        // Sync the task 
-        // Do not update as this could re-execute task state
-        await syncCommand_async(wsSendTask, origTask, diff);
+      if (coProcessor) {
+        console.log("CoProcessing task " + origTask.id);
+        task = await coProcessTask_async(wsSendTask, task, CEPFuncs);
+        //console.log("CoProcessing task ", task);
+      } else {
+        // We assume that any sync commands are run from the CEP function
+        if (task.processor["command"] === "update" || task.processor["command"] === "start") {
+          await do_task_async(wsSendTask, origTask, CEPFuncs);
+        }
+        if (Object.keys(diff).length > 0) {
+          console.log("DIFF", diff);
+          // Running update is quite aggressive 
+          // Should do this when forwarding the update as a co-processor
+          //await updateCommand_async(wsSendTask, task);
+          // Sync the task 
+          // Do not update as this could re-execute task state
+          await syncCommand_async(wsSendTask, origTask, diff);
+        }
       }
       return task;
     }),
@@ -119,7 +127,7 @@ function wsSendObject(message) {
     message.task.processor["id"] = processorId;
     if (message.task.processor.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
-      //console.log("wsSendObject " + message.task.hub.command + " " + message.task.id )
+      //console.log("wsSendObject commmand " + message.task.processor.command + " " + message.task.id + " commandArgs ",message.task.processor.commandArgs)
       //console.log("wsSendObject ", message )
     }
     processorWs.send(JSON.stringify(message));
@@ -171,18 +179,33 @@ const connectWebSocket = () => {
     //console.log("processorWs.onMessage", message?.task.processor.command);
     let command;
     let commandArgs;
+    let coProcessorPosition; 
+    let sourceProcessorId;
+    let coProcessing;
+    let coProcessingDone;
+    //console.log("message.task.hub", message.task.hub);
     if (message?.task) {
       // The processor strips hub specific info because the Task Function should not interact with the Hub
       command = message.task.hub.command;
       commandArgs = message.task.hub?.commandArgs;
+      coProcessorPosition = message.task.hub?.coProcessorPosition;
+      sourceProcessorId = message.task.hub?.sourceProcessorId;
+      coProcessingDone = message.task.hub?.coProcessingDone;
+      coProcessing = message.task.hub?.coProcessing;
       delete message.task.hub;
       message.task.processor = message.task.processor || {};
       message.task.processor["command"] = command;
       message.task.processor["commandArgs"] = commandArgs;
+      message.task.processor["coProcessorPosition"] = coProcessorPosition;
+      message.task.processor["sourceProcessorId"] = sourceProcessorId;
+      message.task.processor["coProcessing"] = coProcessing;
+      message.task.processor["coProcessingDone"] = coProcessingDone;
     }
+    //console.log("message.task.processor", message.task.processor);
     if (command !== "pong") {
       console.log(""); //empty line
-      console.log("processorWs " + command)
+      //console.log("processorWs " + command)
+      console.log("processorWs coProcessingDone " + message.task.processor.coProcessingDone + " coProcessing " + message.task.processor.coProcessing);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
@@ -192,13 +215,12 @@ const connectWebSocket = () => {
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
-      const mergedTask = utils.deepMerge(lastTask, message.task);
+      const processor = JSON.parse(JSON.stringify(message.task.processor));
+      const mergedTask = utils.deepMerge(lastTask, message.task); 
+      mergedTask.processor = processor;
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
-        console.log("processorWs updating activeTasksStore_async lastTask", lastTask)
-        console.log("processorWs updating activeTasksStore_async message.task", message.task)
-        console.log("processorWs updating activeTasksStore_async mergedTask", mergedTask)
         throw new Error("Problem with merging")
       }
       console.log("ws " + command + " activeTasksStore_async " + mergedTask.id + " " + mergedTask.instanceId);
@@ -208,14 +230,20 @@ const connectWebSocket = () => {
         console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
       }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
+      //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
+      //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (message.task.meta.sourceProcessorId !== processorId) {
+      if (message.task.processor.sourceProcessorId !== processorId && !commandArgs.sync && !message.task.processor.coProcessingDone) {
         taskSubject.next(mergedTask);
+      } else {
+        console.log("Skip update sourceProcessorId", message.task.processor.sourceProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
       //console.log("ws " + command + " task ", message.task);
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
+      const processor = JSON.parse(JSON.stringify(message.task.processor));
       const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
+      mergedTask.processor = processor;
       console.log("ws " + command + " activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
       // Check hash
       const hash = utils.taskHash(mergedTask);
@@ -224,14 +252,17 @@ const connectWebSocket = () => {
       }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
-      if (message.task.meta.sourceProcessorId !== processorId) {
+      console.log("activeTasksStore_async sourceProcessorId BEFORE NEXT", message.task.processor.sourceProcessorId, processorId);
+      if (message.task.processor.sourceProcessorId !== processorId) {
         taskSubject.next(mergedTask);
       }
     } else if (command === "start" || command === "join") {
       console.log("ws " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       // Emit the task into the taskSubject
-      taskSubject.next(message.task);
+      if (message.task.processor.sourceProcessorId !== processorId && !message.task.processor.coProcessingDone) {
+        taskSubject.next(message.task);
+      }
     } else if (command === "pong") {
       //console.log("ws pong received", message)
     } else if (command === "register") {

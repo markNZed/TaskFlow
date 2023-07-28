@@ -17,21 +17,29 @@ export async function updateCommand_async(task) {
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
-    task = utils.deepMerge(activeTask, task);
+    const hub = JSON.parse(JSON.stringify(task.hub));
+    const commandArgs = hub["commandArgs"];
+    if (commandArgs?.sync) {
+      if (commandArgs?.done) {
+        throw new Error("Not expecting sync of done task");
+      }
+      task = utils.deepMerge(activeTask, commandArgs.syncTask);
+    } else {
+      task = utils.deepMerge(activeTask, task);
+    }
+    task.hub = hub;
     console.log(task.meta.syncCount + " updateCommand_async " + task.id + " from " + processorId);
-    const commandArgs = task.hub["commandArgs"];
     // We intercept tasks that are done.
     if (commandArgs?.done) {
       console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
       await doneTask_async(task);
     } else {
       task.meta.updateCount = task.meta.updateCount + 1;
-      task.meta.sourceProcessorId = processorId;
       console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
       task.meta.hash = utils.taskHash(task);
       // Don't await so the HTTP response may get back before the websocket update
       syncTask_async(task.instanceId, task)
-        .then(async () => activeTasksStore_async.set(task.instanceId, task)) 
+        .then(async (syncTask) => activeTasksStore_async.set(syncTask.instanceId, syncTask)) 
     }
   } catch (error) {
     console.error(`Error updating task ${task.id}: ${error.message}`);

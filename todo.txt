@@ -1,9 +1,26 @@
 /* ToDo
 -------
+cleanup: 
+  initiatingProcessorId should be task.hub.initiatingProcessorId not task.meta?
+  Merging task on hub need to replace task.hub, merging task on processor need to replace task.processor
+    Could create deepMergeHub and deepMergeProcessor
+  Refactor update_async + updateCommand_async
+  Does syncTask_async need to return a value and does it need to be used?
+  Should be commandArgs ? coProcessorPosition, sourceProcessorId, coProcessingDone, coProcessing 
+  Remove sync support form processors
+  Review coProcessTask
+  hash match issues
+  meta.coProcessing -> hub.coProcessing
+  Do we need hub.coprocessors ?
+  update is sending a diff from the hub but not receiving a diff from processors
+    Does not matter if the hash is aligned
+    To us diff would need to add check of hash on hub
+  syncCount -> modifyCount ?
+For hash debug we could send the entire task as a parameter e.g task.hashCheck
+Need to add RxJS processor - convert to only being a coprocessor?
+Websocket command handling needs refactoring and probably refacting across HTTP & WS
+Why does hub not have updateTask ?
 messagesStyle http input must be diff ?
-update is sending a diff from the hub but not receiving a diff from processors
-Get RxJS working as a pipeline and send update at the end of the pipeline if the task has changed
-  Then move update command to websocket - but why ?
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]
   task.config.outputPipeline = [...]
@@ -11,7 +28,6 @@ Notion of an input pipeline and output pipeline, managed by Processor
     Need to implement a queue on the task request/response ? The are no longer internal requests
     A new "request" and "response" command then the Processor can implement a queue (provide next request after previous response)
   In React the output bypasses the task but we could do something similar whereby the HoC passes the component output through the output pipeline. Could replace output.
-syncCount -> modifyCount ?
 Should task.id be task.config.id ?
   Then task.id could replace task.instanceId
 Do we want to be able to configure CEP functionality?

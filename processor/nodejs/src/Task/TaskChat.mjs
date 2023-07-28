@@ -90,6 +90,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("response.LLMResponse", subTask.response.LLM);
       T("state.last", T("state.current"));
       T("state.current", "received");
+      T("commandArgs.lockBypass", true);
       T("command", "update");
       break;
     default:

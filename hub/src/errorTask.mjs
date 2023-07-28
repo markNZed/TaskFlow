@@ -14,7 +14,7 @@ export async function errorTask_async(task) {
     console.log("task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
-  const processorId = task.hub["sourceProcessorId"];
+  const processorId = task.hub.sourceProcessorId;
   task.error.sourceProcessorId = processorId;
   const sourceProcessor = activeProcessors.get(processorId);
   task.error.environments = sourceProcessor.environments;
@@ -34,7 +34,7 @@ export async function errorTask_async(task) {
       environments: task.environments,
       hub: {command: "error"},
     }
-    await startTask_async(initTask, false, task.hub["sourceProcessorId"], task.instanceId);
+    await startTask_async(initTask, false, task.hub.sourceProcessorId, task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)
   }
 }

@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
   let messagesStyle = req.body?.messagesStyle;
   let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
-  let coprocessor = req.body?.coprocessor;
+  let coProcessor = req.body?.coProcessor;
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error", "sync"];
@@ -40,22 +40,23 @@ router.post("/", async (req, res) => {
   if (language === undefined) {
     language = "EN";
   }
-  if (coprocessor === undefined) {
-    coprocessor = false;
+  if (coProcessor === undefined) {
+    coProcessor = false;
   }
 
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
   //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
   //console.log("processorId " + processorId + " registered with messagesStyle " + JSON.stringify(messagesStyle));
-  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
+  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coProcessor " + coProcessor);
     
-  if (coprocessor) {
+  if (coProcessor) {
     activeCoProcessors.set(processorId, {
       environments,
       commandsAccepted,
       serviceTypes,
       messagesStyle,
       language,
+      isCoProcessor: true,
     })
   } else {  
     activeProcessors.set(processorId, {

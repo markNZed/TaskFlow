@@ -7,22 +7,33 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import RequestError from './RequestError.mjs';
 
 function transferCommand(task, activeTask, requestId) {
-  const { command, id } = task.processor;
+  const { command, id, coProcessorPosition, coProcessingDone, coProcessing } = task.processor;
+  if (!task.processor.isCoProcessor) {
+    if (!task.meta) {
+      task.meta = {};
+    }
+    task.meta["initiatingProcessorId"] = task.meta?.initiatingProcessorId || id;
+  }
   let commandArgs = {};
   if (task.processor.commandArgs) {
     commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs))
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
+  task.processor.coProcessorPosition = null;
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
   task.processors = activeTaskProcessors;
   task.hub = {
     command,
-    commandArgs: commandArgs,
+    commandArgs,
     sourceProcessorId: id,
-    requestId: requestId,
+    requestId,
+    coProcessorPosition,
+    coProcessingDone,
+    coProcessing,
   };
+  //console.log("transferCommand " + command + " state " + task?.state?.current, activeTask?.id, id);
   return task;
 }
 

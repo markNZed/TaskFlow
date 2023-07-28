@@ -20,6 +20,8 @@ export async function fetchTask_async(task) {
       // Deep copy because we are going to clear
       task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
       task.commandArgs = null;
+    } else {
+      task.processor["commandArgs"] = {};
     }
     task.processor["id"] = processorId;
   

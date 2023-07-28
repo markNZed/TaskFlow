@@ -34,6 +34,7 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
     let syncTask = {}
     syncTask["output"] = {};
     syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
+    console.log("CEPCount", CEPtask.output.CEPCount, increment);
     syncCommand_async(wsSendTask, CEPtask, syncTask);
     console.log("TaskConversation myCEPFunc called on " + CEPtask.id + " set by " + task.id);
     CEPtask.output.modifiedBy = task.id;
