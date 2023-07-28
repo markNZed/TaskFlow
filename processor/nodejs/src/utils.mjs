@@ -6,21 +6,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { deepMerge, checkConflicts, getObjectDifference, flattenObjects, updatedAt, parseRegexString, djb2Hash, taskHash } from "./shared/utils.mjs";
-
-const sharedUtils = {
-  deepMerge,
-  checkConflicts,
-  getObjectDifference,
-  flattenObjects,
-  updatedAt,
-  parseRegexString,
-  djb2Hash,
-  taskHash
-};
+import { sharedUtils } from "./shared/utils.mjs";
 
 const utils = {
-  
+
   ...sharedUtils,
 
   formatDateAndTime: function (date) {

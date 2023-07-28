@@ -7,16 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 "use strict";
 import { v4 as uuidv4 } from "uuid";
 import { MAP_USER, DEFAULT_USER } from "../config.mjs";
-import { deepMerge, getObjectDifference, flattenObjects, updatedAt, djb2Hash, taskHash } from "./shared/utils.mjs";
-
-const sharedUtils = {
-  deepMerge,
-  getObjectDifference,
-  flattenObjects,
-  updatedAt,
-  djb2Hash,
-  taskHash
-};
+import { sharedUtils } from "./shared/utils.mjs";
 
 const utils = {
   

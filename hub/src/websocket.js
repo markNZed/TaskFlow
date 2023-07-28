@@ -11,7 +11,6 @@ import { updateCommand_async } from "./updateCommand.mjs";
 import { startCommand_async } from "./startCommand.mjs";
 import { errorCommand_async } from "./errorCommand.mjs";
 import { transferCommand } from "./routes/taskProcessing.mjs";
-import { taskHash } from "./shared/utils.mjs";
 
 let taskMessageCount = 0;
 
@@ -126,7 +125,7 @@ const wsSendTask = async function (task, processorId = null) {
     //console.log("wsSendTask message.task.hub.commandArgs.sync", message.task?.hub?.commandArgs?.sync);
   }
   if (message.task.meta.hash) {
-    const testHash = taskHash(task);  
+    const testHash = utils.taskHash(task);  
     if (message.task.meta.hash !== testHash) {
       console.log("wsSendTask hash MISMATCH", testHash, message.task.meta.hash);
     }

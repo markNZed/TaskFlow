@@ -1,16 +1,7 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { deepMerge, checkConflicts, getObjectDifference, updatedAt, parseRegexString, taskHash } from "../shared/utils.mjs"
-
-const sharedUtils = {
-  deepMerge,
-  checkConflicts,
-  getObjectDifference,
-  updatedAt,
-  parseRegexString,
-  taskHash
-};
+import { sharedUtils } from "../shared/utils.mjs"
 
 const utils = {
 
