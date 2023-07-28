@@ -181,6 +181,7 @@ const connectWebSocket = () => {
     let commandArgs;
     let coProcessorPosition; 
     let sourceProcessorId;
+    let initiatingProcessorId;
     let coProcessing;
     let coProcessingDone;
     //console.log("message.task.hub", message.task.hub);
@@ -190,6 +191,7 @@ const connectWebSocket = () => {
       commandArgs = message.task.hub?.commandArgs;
       coProcessorPosition = message.task.hub?.coProcessorPosition;
       sourceProcessorId = message.task.hub?.sourceProcessorId;
+      initiatingProcessorId = message.task.hub?.initiatingProcessorId;
       coProcessingDone = message.task.hub?.coProcessingDone;
       coProcessing = message.task.hub?.coProcessing;
       delete message.task.hub;
@@ -198,6 +200,7 @@ const connectWebSocket = () => {
       message.task.processor["commandArgs"] = commandArgs;
       message.task.processor["coProcessorPosition"] = coProcessorPosition;
       message.task.processor["sourceProcessorId"] = sourceProcessorId;
+      message.task.processor["initiatingProcessorId"] = initiatingProcessorId;
       message.task.processor["coProcessing"] = coProcessing;
       message.task.processor["coProcessingDone"] = coProcessingDone;
     }
@@ -233,10 +236,10 @@ const connectWebSocket = () => {
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (message.task.processor.sourceProcessorId !== processorId && !commandArgs.sync && !message.task.processor.coProcessingDone) {
+      if (message.task.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !message.task.processor.coProcessingDone) {
         taskSubject.next(mergedTask);
       } else {
-        console.log("Skip update sourceProcessorId", message.task.processor.sourceProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
+        console.log("Skip update initiatingProcessorId", message.task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
       //console.log("ws " + command + " task ", message.task);
@@ -253,7 +256,7 @@ const connectWebSocket = () => {
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
       console.log("activeTasksStore_async sourceProcessorId BEFORE NEXT", message.task.processor.sourceProcessorId, processorId);
-      if (message.task.processor.sourceProcessorId !== processorId) {
+      if (message.task.processor.initiatingProcessorId !== processorId) {
         taskSubject.next(mergedTask);
       }
     } else if (command === "start" || command === "join") {

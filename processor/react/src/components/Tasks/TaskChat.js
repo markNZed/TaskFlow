@@ -186,7 +186,8 @@ const TaskChat = (props) => {
           // task.state.current updates before the command is sent.
           // By setting nextState after the transition we minimize this risk.
           // We probably need to be able to await on modifyTask so we know command has been sent
-          // Could also chain the nextState assignment
+          // Could also chain the nextState assignment. This turns out to be difficult in React.
+          // So instead of setting nextState we set the state in modifyTask
           if (transition()) {
             // Need to update to store output.msgs
             let outputPromptResponse = task.output.LLMResponse;
@@ -200,8 +201,9 @@ const TaskChat = (props) => {
               "output.msgs": [ ...task.output.msgs, outputPromptResponse ],
               "commandArgs": { "unlock": true },
               "command": "update",
+              "state.current": "input",
             });
-            nextState = "input";
+            //nextState = "input";
           }
         }
         break;

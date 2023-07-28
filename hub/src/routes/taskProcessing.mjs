@@ -7,12 +7,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import RequestError from './RequestError.mjs';
 
 function transferCommand(task, activeTask, requestId) {
-  const { command, id, coProcessorPosition, coProcessingDone, coProcessing } = task.processor;
+  const { command, id, coProcessorPosition, coProcessingDone, coProcessing  } = task.processor;
+  // Could initiate from a processor before going through the coprocessor
+  // Could be initiated by the coprocessor
+  let initiatingProcessorId = task.processor.initiatingProcessorId || id;
+  console.log("transferCommand " + command + " state " + task?.state?.current + " initiatingProcessorId " + initiatingProcessorId);
   if (!task.processor.isCoProcessor) {
-    if (!task.meta) {
-      task.meta = {};
-    }
-    task.meta["initiatingProcessorId"] = task.meta?.initiatingProcessorId || id;
+    initiatingProcessorId = id;
   }
   let commandArgs = {};
   if (task.processor.commandArgs) {
@@ -28,12 +29,13 @@ function transferCommand(task, activeTask, requestId) {
     command,
     commandArgs,
     sourceProcessorId: id,
+    initiatingProcessorId,
     requestId,
     coProcessorPosition,
     coProcessingDone,
     coProcessing,
   };
-  //console.log("transferCommand " + command + " state " + task?.state?.current, activeTask?.id, id);
+  console.log("transferCommand " + command + " state " + task?.state?.current + " initiatingProcessorId " + task.hub.initiatingProcessorId);
   return task;
 }
 

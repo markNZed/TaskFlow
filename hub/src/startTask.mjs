@@ -401,7 +401,8 @@ async function startTask_async(
 
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = task.hub.command ?? "start";
-    task.hub.sourceProcessorId = processorId;
+    task.hub["sourceProcessorId"] = processorId;
+    task.hub["initiatingProcessorId"] = processorId;
     
     // Initialize meta object
     // If already set (e.g. joining the task) keep the current values
@@ -410,7 +411,6 @@ async function startTask_async(
     task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["syncCount"] = task.meta.syncCount ?? 0;
-    task.meta["initiatingProcessorId"] = processorId;
 
     task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
     // Set task.processor.id after copying info from prevTask

@@ -48,7 +48,7 @@ const syncTask_async = async (key, value) => {
       const coProcessorData = activeCoProcessors.get(coProcessorId);
       if (coProcessorData.commandsAccepted.includes(command)) {
         taskCopy.hub.coProcessorPosition = position;
-        console.log("syncTask_async coprocessor", command, key, coProcessorId);
+        console.log("syncTask_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
         if (!taskCopy.processors[coProcessorId]) {
           taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
           value.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true}; // Note this impacts the return value!!
@@ -87,7 +87,7 @@ const syncTask_async = async (key, value) => {
     }
   }
 
-  const initiatingProcessorId = taskCopy.meta.initiatingProcessorId || sourceProcessorId;
+  const initiatingProcessorId = taskCopy.hub.initiatingProcessorId || sourceProcessorId;
   taskCopy.hub.sourceProcessorId = initiatingProcessorId
 
   taskCopy.meta.syncCount = syncCount;

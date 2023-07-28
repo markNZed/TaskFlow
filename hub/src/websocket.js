@@ -45,6 +45,7 @@ const wsSendTask = async function (task, processorId = null) {
   let commandArgs = task.hub?.commandArgs;
   let coProcessorPosition = task.hub?.coProcessorPosition;
   let sourceProcessorId = task.hub?.sourceProcessorId;
+  let initiatingProcessorId = task.hub?.initiatingProcessorId;
   let coProcessingDone = task.hub?.coProcessingDone;
   let coProcessing = task.hub?.coProcessing;
   let processors = task.processors;
@@ -77,6 +78,7 @@ const wsSendTask = async function (task, processorId = null) {
       diff.hub["commandArgs"] = commandArgs;
       diff.hub["coProcessorPosition"] = coProcessorPosition;
       diff.hub["sourceProcessorId"] = sourceProcessorId;
+      diff.hub["initiatingProcessorId"] = initiatingProcessorId;
       diff.hub["coProcessingDone"] = coProcessingDone;
       diff.hub["coProcessing"] = coProcessing;
       diff.processors = processors;
@@ -107,6 +109,7 @@ const wsSendTask = async function (task, processorId = null) {
     }
     message.task.processor["coProcessorPosition"] = coProcessorPosition;
     message.task.processor["sourceProcessorId"] = sourceProcessorId;
+    message.task.processor["initiatingProcessorId"] = initiatingProcessorId;
     message.task.processor["coProcessingDone"] = coProcessingDone;
     message.task.processor["coProcessing"] = coProcessing;
     delete message.task.processors;
@@ -219,15 +222,15 @@ function initWebSocketServer(server) {
 
         if (!coProcessing) {
           const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
-          // Allows us to track where the request came fomr while coprocessors are in use
-          processorId = task.meta.initiatingProcessorId || processorId;
+          // Allows us to track where the request came from while coprocessors are in use
+          processorId = task.hub.initiatingProcessorId || processorId;
           task.processor = task.processors[processorId];
           task.hub.sourceProcessorId = processorId;
           task.hub["coProcessorPosition"] = null;
-          task.meta["initiatingProcessorId"] = null;
+          //task.hub["initiatingProcessorId"] = null;
           if (wasLastCoProcessor && task.hub.command !== "partial") {
             console.log("Finished with coProcessors", task.id, processorId);
-            console.log("initiatingProcessorId", task.meta["initiatingProcessorId"]);
+            console.log("initiatingProcessorId", task.hub["initiatingProcessorId"]);
             task.hub["coProcessingDone"] = true;
           }
           // Updates through WS can only come from RxJS for now

@@ -27,7 +27,7 @@ export async function doneTask_async(task) {
       groupId: task?.groupId,
       familyId: task.familyId,
     }
-    let processorId = task.meta.initiatingProcessorId || task.hub["sourceProcessorId"];
+    let processorId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
     task.processor = task.processors[processorId];
     await startTask_async(initTask, false, processorId, task.instanceId);
     // In theory the startTask_async will update activeTasksStore_async and that will send the task to the correct processor(s)

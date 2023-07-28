@@ -29,7 +29,7 @@ export async function updateSyncCommand_async(wsSendTask, task, diff) {
   mergedTask.processor["coProcessing"] = false;
   mergedTask.processor["coProcessingDone"] = true; // So it is not coprocessed again
   // Because it is this processor that is the initiator of the sync
-  mergedTask.meta["initiatingProcessorId"] = null;
+  mergedTask.processor["initiatingProcessorId"] = null;
   try {
     wsSendTask(mergedTask);
   } catch (error) {

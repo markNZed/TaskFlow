@@ -1,5 +1,7 @@
 /* ToDo
 -------
+sourceProcessorId 
+taskCopy.processors[coProcessorId]["coProcessing"] = true; should not be assigned in hub?
 cleanup: 
   initiatingProcessorId should be task.hub.initiatingProcessorId not task.meta?
   Merging task on hub need to replace task.hub, merging task on processor need to replace task.processor
