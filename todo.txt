@@ -1,23 +1,13 @@
 /* ToDo
 -------
-sourceProcessorId 
-taskCopy.processors[coProcessorId]["coProcessing"] = true; should not be assigned in hub?
+Check output.CEPcount is working on second prompt
 cleanup: 
-  initiatingProcessorId should be task.hub.initiatingProcessorId not task.meta?
-  Merging task on hub need to replace task.hub, merging task on processor need to replace task.processor
+  When merging task on hub need to replace task.hub, when merging task on processor need to replace task.processor
     Could create deepMergeHub and deepMergeProcessor
   Refactor update_async + updateCommand_async
   Does syncTask_async need to return a value and does it need to be used?
   Should be commandArgs ? coProcessorPosition, sourceProcessorId, coProcessingDone, coProcessing 
-  Remove sync support form processors
-  Review coProcessTask
   hash match issues
-  meta.coProcessing -> hub.coProcessing
-  Do we need hub.coprocessors ?
-  update is sending a diff from the hub but not receiving a diff from processors
-    Does not matter if the hash is aligned
-    To us diff would need to add check of hash on hub
-  syncCount -> modifyCount ?
 For hash debug we could send the entire task as a parameter e.g task.hashCheck
 Need to add RxJS processor - convert to only being a coprocessor?
 Websocket command handling needs refactoring and probably refacting across HTTP & WS

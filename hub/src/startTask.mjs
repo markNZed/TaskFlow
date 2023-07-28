@@ -410,7 +410,7 @@ async function startTask_async(
     task.meta["requestCount"] = task.meta.requestCount ?? 0;
     task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
-    task.meta["syncCount"] = task.meta.syncCount ?? 0;
+    task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
     task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
     // Set task.processor.id after copying info from prevTask

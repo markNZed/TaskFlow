@@ -123,7 +123,7 @@ const connectWebSocket = () => {
       // Check hash
       const hash = utils.taskHash(mergedTask);
       if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+        console.error("ERROR: Task hash does not match", mergedTask.meta.broadcastCount, hash, mergedTask.meta.hash);
       }
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {

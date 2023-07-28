@@ -27,17 +27,9 @@ export async function coProcessTask_async(wsSendTask, task, CEPFuncs) {
       if (updatedTask === null) {
         updatedTask = task;
         console.log("coProcessTask_async null so task replaces updatedTask", updatedTask.id);
+        // The updatedTask.processor will take effect in wsSendTask
+        // We are not working at the Task scope here so OK to reuse this 
       }
-      /*
-      if (!updatedTask.command) {
-        updatedTask["command"] = updatedTask.processor.command;
-        console.log("coProcessTask_async no command so task replaces updatedTask", updatedTask.command);
-      }
-      if (!updatedTask.commandArgs) {
-        updatedTask["commandArgs"] = updatedTask.processor.commandArgs;
-        console.log("coProcessTask_async no commandArgs so task replaces updatedTask", updatedTask.commandArgs);
-      }
-      */
       try {
         //await fetchTask_async(updatedTask);
         console.log("coProcessTask_async wsSendTask", updatedTask.id);

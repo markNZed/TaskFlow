@@ -28,7 +28,7 @@ export async function updateCommand_async(task) {
       task = utils.deepMerge(activeTask, task);
     }
     task.hub = hub;
-    console.log(task.meta.syncCount + " updateCommand_async " + task.id + " from " + processorId);
+    console.log(task.meta.broadcastCount + " updateCommand_async " + task.id + " from " + processorId);
     // We intercept tasks that are done.
     if (commandArgs?.done) {
       console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);

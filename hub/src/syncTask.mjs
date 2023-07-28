@@ -8,7 +8,7 @@ import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore
 import { wsSendTask } from "./websocket.js";
 import { utils } from "./utils.mjs";
 
-let syncCount = 0;
+let broadcastCount = 0;
 
 const syncTask_async = async (key, value) => {
 
@@ -90,8 +90,8 @@ const syncTask_async = async (key, value) => {
   const initiatingProcessorId = taskCopy.hub.initiatingProcessorId || sourceProcessorId;
   taskCopy.hub.sourceProcessorId = initiatingProcessorId
 
-  taskCopy.meta.syncCount = syncCount;
-  syncCount++;
+  taskCopy.meta.broadcastCount = broadcastCount;
+  broadcastCount++;
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {

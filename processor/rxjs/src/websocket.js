@@ -11,7 +11,6 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
-import { updateCommand_async } from "./updateCommand.mjs";
 import { updateSyncCommand_async } from "./updateSyncCommand.mjs";
 import { coProcessTask_async } from "./coProcessTask.mjs";
 
@@ -81,11 +80,6 @@ taskSubject
         }
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
-          // Running update is quite aggressive 
-          // Should do this when forwarding the update as a co-processor
-          //await updateCommand_async(wsSendTask, task);
-          // Sync the task 
-          // Do not update as this could re-execute task state
           await updateSyncCommand_async(wsSendTask, origTask, diff);
         }
       }
@@ -230,7 +224,7 @@ const connectWebSocket = () => {
       // Check hash
       const hash = utils.taskHash(mergedTask);
       if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+        console.error("ERROR: Task hash does not match", mergedTask.meta.broadcastCount, hash, mergedTask.meta.hash);
       }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
@@ -251,7 +245,7 @@ const connectWebSocket = () => {
       // Check hash
       const hash = utils.taskHash(mergedTask);
       if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.syncCount, hash, mergedTask.meta.hash);
+        console.error("ERROR: Task hash does not match", mergedTask.meta.broadcastCount, hash, mergedTask.meta.hash);
       }
       await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       // Emit the mergedTask into the taskSubject
