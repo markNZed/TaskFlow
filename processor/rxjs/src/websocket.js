@@ -12,7 +12,7 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
 import { updateCommand_async } from "./updateCommand.mjs";
-import { syncCommand_async } from "./syncCommand.mjs";
+import { updateSyncCommand_async } from "./updateSyncCommand.mjs";
 import { coProcessTask_async } from "./coProcessTask.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
@@ -86,7 +86,7 @@ taskSubject
           //await updateCommand_async(wsSendTask, task);
           // Sync the task 
           // Do not update as this could re-execute task state
-          await syncCommand_async(wsSendTask, origTask, diff);
+          await updateSyncCommand_async(wsSendTask, origTask, diff);
         }
       }
       return task;

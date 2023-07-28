@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
-import { syncCommand_async } from "./syncCommand.mjs";
 import { updateCommand_async } from "./updateCommand.mjs";
 import { startCommand_async } from "./startCommand.mjs";
 import { errorCommand_async } from "./errorCommand.mjs";
@@ -236,11 +235,6 @@ function initWebSocketServer(server) {
             console.log("");
             console.log("WS update", task.id);
             updateCommand_async(task);
-          }
-          if (task.hub.command === "sync") {
-            console.log("");
-            console.log("WS sync", task.id, processorId);
-            syncCommand_async(task);
           }
           if (task.hub.command === "start") {
             console.log("");

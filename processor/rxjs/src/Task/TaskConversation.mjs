@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
-import { syncCommand_async } from "../syncCommand.mjs";
+import { updateSyncCommand_async } from "../updateSyncCommand.mjs";
 
 const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
@@ -20,7 +20,7 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
       console.log("myCEPFunc doing nothing for start command")
       return;
     }
-    // We want to avoid a loop because we are using syncCommand_async
+    // We want to avoid a loop because we are using updateSyncCommand_async
     if (CEPtask.command === "sync") {
       console.log("myCEPFunc doing nothing for sync command")
       return;
@@ -35,7 +35,7 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
     syncTask["output"] = {};
     syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
     console.log("CEPCount", CEPtask.output.CEPCount, increment);
-    syncCommand_async(wsSendTask, CEPtask, syncTask);
+    updateSyncCommand_async(wsSendTask, CEPtask, syncTask);
     console.log("TaskConversation myCEPFunc called on " + CEPtask.id + " set by " + task.id);
     CEPtask.output.modifiedBy = task.id;
     return;
