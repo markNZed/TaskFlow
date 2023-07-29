@@ -111,6 +111,8 @@ const wsSendTask = async function (task, processorId = null) {
     if (message.task.meta.hash !== testHash) {
       console.log("wsSendTask hash MISMATCH", testHash, message.task.meta.hash);
     }
+    // Comment this in if we want to see hash diff on React processor
+    //message.task.meta["hashDebug"] = JSON.parse(JSON.stringify(message.task))
   }
   wsSendObject(processorId, message);
   taskMessageCount++;
@@ -174,6 +176,7 @@ function initWebSocketServer(server) {
         }
 
         // Have not tested this yet because we only have one coprocessor
+        // There is very similar code in taskSync.mjs
         if (task.processor.isCoProcessor && task.hub.coProcessing && !wasLastCoProcessor) {
           console.log("Looking for NEXT coprocessor");
           // Send through the coProcessors
@@ -187,7 +190,14 @@ function initWebSocketServer(server) {
             const ws = connections.get(coProcessorId);
             if (!ws) {
               console.log("Lost websocket for ", coProcessorId, connections.keys());
-            } else {    
+            } else {
+              console.log("Websocket coprocessor chain", command, key, coProcessorId);
+              // If the task is only on one co-processor at a time then we could just use task.coprocessor ?
+              if (!task.processors[coProcessorId]) {
+                task.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
+              }
+              task.processors[coProcessorId]["coProcessing"] = true;
+              task.processors[coProcessorId]["coProcessingDone"] = false;      
               wsSendTask(task, coProcessorId);
             }
           }

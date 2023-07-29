@@ -232,6 +232,10 @@ function withTask(Component) {
         if (hash !== updatedTask.meta.hash) {
           const diff = utils.getObjectDifference(lastTask.output, updatedTask.output)
           console.error("Task hash does not match in update", updateDiff.meta.broadcastCount, hash, updatedTask.meta.hash, diff);
+          if (updatedTask.meta.hashDebug) {
+            let hashDiff = utils.getObjectDifference(lastTask, updatedTask.meta.hashDebug);
+            console.error("Task hashDiff", hashDiff);
+          }
           //throw new Error("Task hash does not match");
         }
         console.log("Storage update isSource:" + thisProcessorIsSource + " lock:" + thisProcessorHasLock, props.task.id, updateDiff, updatedTask);

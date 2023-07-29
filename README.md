@@ -24,13 +24,13 @@ Tasks consist of:
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat interface, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow application, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
 
-The concept of **Task Instance** refers to a particular object confirming to the Task Definition.
+The concept of **Task Instance** refers to a particular object conforming to the Task Definition.
 
-The concept of **Task Context** refers to the total data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
+The concept of **Task Context** refers to the complete data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
 
-A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task.state object (in particular `task.state.request` and `task.state.response`). The Task Function sends commands to the Task Processor using task.command and `task.commandArgs` Only the Task Function writes to `task.command`
+A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Task Processor using task.command and `task.commandArgs` Only Task Functions write to `task.command`
 
-The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide support features for this.
+The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide features for managing the state machine.
 
 ## Task Processor
 

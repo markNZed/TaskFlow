@@ -1,11 +1,14 @@
 /* ToDo
 -------
-Error sequence needs testing
-cleanup: 
-  hash match issues
-    For hash debug we could send the entire task as a parameter e.g task.hashCheck
-Need to add RxJS processor - convert to only being a coprocessor?
-Websocket command handling needs refactoring and probably refacting across HTTP & WS
+Create CEP directory and automated function pickup
+ChatGPTAPI_request_async could be moved into Service directory
+  request.prompt is used?
+  config?.local should not be used in SubTask ? (or is this actaully the SubTask config?)
+Review RxJS websocket.js
+Plan: Refactoring above, add logging via coprocessor + browser interface, testing (in particular errors)
+  Logging is the first "aspect" as well as being a system Task
+
+Add RxJS processor - test that it can switch between coprocessor and processor role
 messagesStyle http input must be diff ?
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]

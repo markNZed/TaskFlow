@@ -161,14 +161,14 @@ async function chat_prepare_async(task) {
     console.log("Task service config set cache " + useCache);
   }
 
-  if (typeof serviceConfig?.prepend_prompt !== "undefined") {
-    prompt = serviceConfig.prepend_prompt + prompt;
-    console.log("Prepend serviceConfig prompt " + serviceConfig.prepend_prompt);
+  if (typeof serviceConfig?.prePrompt !== "undefined") {
+    prompt = serviceConfig.prePrompt + prompt;
+    console.log("Prepend serviceConfig prompt " + serviceConfig.prePrompt);
   }
 
-  if (typeof serviceConfig?.append_prompt !== "undefined") {
-    prompt += serviceConfig.append_prompt;
-    console.log("Append serviceConfig prompt " + serviceConfig.append_prompt);
+  if (typeof serviceConfig?.postPrompt !== "undefined") {
+    prompt += serviceConfig.postPrompt;
+    console.log("Append serviceConfig prompt " + serviceConfig.postPrompt);
   }
 
   const environments = T("environments");

@@ -52,7 +52,6 @@ const taskSync_async = async (key, value) => {
         console.log("taskSync_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
         if (!taskCopy.processors[coProcessorId]) {
           taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
-          value.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true}; // Note this impacts the return value!!
         }
         taskCopy.processors[coProcessorId]["coProcessing"] = true;
         taskCopy.processors[coProcessorId]["coProcessingDone"] = false;
@@ -67,7 +66,6 @@ const taskSync_async = async (key, value) => {
     return value;
   }
 
-  value.hub.coProcessing = false; // Note this impacts the return value!! Do we need this?
   taskCopy.hub.coProcessing = false;
 
   // Every coprocssor needs to be updated/synced

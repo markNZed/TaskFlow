@@ -11,6 +11,17 @@ const servicetypes = [
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context
     parentType: "root",
+    prePrompt: "",
+    postPrompt: "",
+    systemMessage:"",
+    messages: [],
+    forget: false,
+    dummyAPI: false,
+    prompt: "",
+    useCache: true,
+    noWebsocket: false,
+    systemMessageTemplate: "",
+    cacheKeySeed: "",
   },
   {
     name: "chatgpt",
