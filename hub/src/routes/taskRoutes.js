@@ -6,12 +6,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { utils } from "../utils.mjs";
-import startTask_async from "../startTask.mjs";
-import { activeTasksStore_async, outputStore_async, activeCoProcessors } from "../storage.mjs";
-import { doneTask_async } from "../doneTask.mjs";
+import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
 import { errorTask_async } from "../errorTask.mjs";
+import { updateCommand_async } from "../updateCommand.mjs";
+import { startCommand_async } from "../startCommand.mjs";
+import { errorCommand_async } from "../errorCommand.mjs";
 import { tasks } from "../configdata.mjs";
-import syncTask_async from "../syncTask.mjs";
 import { transferCommand, checkLockConflict, checkAPIRate, processError, processOutput_async } from "./taskProcessing.mjs";
 import RequestError from './RequestError.mjs';
 
@@ -21,104 +21,13 @@ async function processCommand_async(task, res) {
   const command = task.hub.command;
   switch (command) {
     case "start":
-      return await start_async(res, task);
+      return await startCommand_async(task, res);
     case "update":
-      return await update_async(res, task);
+      return await updateCommand_async(task, res);
     case "error":
-      return await error_async(res, task);
+      return await errorCommmand_async(task, res);
     default:
       throw new Error("Unknown command " + command);
-  }
-}
-
-async function start_async(res, task) {
-  const commandArgs = task.hub.commandArgs;
-  const processorId = task.hub.sourceProcessorId;
-  try {
-    console.log(task.hub.requestId + " start_async " + commandArgs.id + " from " + processorId);
-    const initTask = {
-      id: commandArgs.id,
-      user: {id: task.user.id},
-    };
-    const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    const coProcessorIds = Array.from(activeCoProcessors.keys());
-    const coProcessing = coProcessorIds.length > 0;
-    startTask_async(initTask, true, processorId, prevInstanceId)
-      .then(async (startTask) => {
-        if (coProcessing) {
-          activeTasksStore_async.set(startTask.instanceId, startTask);
-        }
-        return startTask;
-      })
-      .then(async (startTask) => {
-        //console.log("startTask",startTask)
-        syncTask_async(startTask.instanceId, startTask);
-        return startTask;
-      })
-      .then(async (startTask) => {
-        if (!coProcessing) {
-          activeTasksStore_async.set(startTask.instanceId, startTask);
-        }
-      })
-  } catch (err) {
-    console.log(`Error starting task ${commandArgs.id}`);
-    throw new RequestError(`Error starting task ${task.id} ${err}`, 500, err);
-  }
-}
-
-async function update_async(res, task) {
-  try {
-    const processorId = task.hub["sourceProcessorId"];
-    if (task.instanceId === undefined) {
-      throw new Error("Missing task.instanceId");
-    }
-    const activeTask = await activeTasksStore_async.get(task.instanceId)
-    if (!activeTask) {
-      throw new Error("No active task " + task.instanceId);
-    }
-    const commandArgs = task.hub["commandArgs"];
-    if (commandArgs?.sync) {
-      if (commandArgs?.done) {
-        throw new Error("Not expecting sync of done task");
-      }
-      task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
-    } else {
-      task = utils.deepMergeHub(activeTask, task, task.hub);
-    }
-    console.log(task.meta.broadcastCount + " update_async " + task.id + " from " + processorId);
-    // We intercept tasks that are done.
-    if (commandArgs?.done) {
-      console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
-      await doneTask_async(task);
-    } else {
-      task.meta.updateCount = task.meta.updateCount + 1;
-      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
-      task.meta.hash = utils.taskHash(task);
-      const coProcessorIds = Array.from(activeCoProcessors.keys());
-      const coProcessing = coProcessorIds.length > 0;
-        // Don't await so the HTTP response may get back before the websocket update
-      syncTask_async(task.instanceId, task)
-        .then(async (syncTask) => {
-          if (!coProcessing) {
-            activeTasksStore_async.set(syncTask.instanceId, syncTask);
-          }
-        })
-      res.status(200).send("ok");
-    }
-  } catch (error) {
-    console.error(`Error updating task ${task.id}: ${error.message}`);
-    throw new RequestError(`Error updating task ${task.id}: ${error.message}`, 500, error);
-  }
-}
-
-async function error_async(res, task) {
-  try {
-    const processorId = task.hub["sourceProcessorId"];
-    console.log(task.hub.requestId + " error_async " + task.id + " from " + processorId);
-    await errorTask_async(task);
-  } catch (error) {
-    console.error(`Error in error_async task ${task.id}: ${error.message}`);
-    throw new RequestError(`Error in error_async task ${task.id}: ${error.message}`, 500, error);
   }
 }
 
@@ -133,6 +42,7 @@ router.post("/", async (req, res) => {
       if (!task.processor) {
         throw new Error("Missing task.processor in /hub/api/task");
       }
+      console.log("From processor " + task.processor.id);
       let activeTask = {};
       if (task.instanceId !== undefined) {
         activeTask = await activeTasksStore_async.get(task.instanceId);

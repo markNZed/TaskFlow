@@ -7,11 +7,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import RequestError from './RequestError.mjs';
 
 function transferCommand(task, activeTask, requestId) {
-  const { command, id, coProcessorPosition, coProcessingDone, coProcessing  } = task.processor;
+  const { command, id, coProcessorPosition, coProcessing, coProcessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   let initiatingProcessorId = task.processor.initiatingProcessorId || id;
-  console.log("transferCommand " + command + " state " + task?.state?.current + " initiatingProcessorId " + initiatingProcessorId);
   if (!task.processor.isCoProcessor) {
     initiatingProcessorId = id;
   }

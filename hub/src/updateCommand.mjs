@@ -4,12 +4,33 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
+import { activeTasksStore_async, activeCoProcessors } from "./storage.mjs";
 import syncTask_async from "./syncTask.mjs";
+import { doneTask_async } from "./doneTask.mjs";
+import RequestError from './routes/RequestError.mjs';
 
-export async function updateCommand_async(task) {
+async function doUpdate(commandArgs, task, res) {
+  if (commandArgs?.done) {
+    console.log("Update task done " + task.id + " in state " + task.state?.current);
+    await doneTask_async(task);
+  } else {
+    task.meta.updateCount = task.meta.updateCount + 1;
+    console.log("Update task " + task.id + " in state " + task.state?.current);
+    task.meta.hash = utils.taskHash(task);
+    // Don't await so the HTTP response may get back before the websocket update
+    syncTask_async(task.instanceId, task)
+      .then(async () => {
+        activeTasksStore_async.set(task.instanceId, task);
+      });
+    // We can use this for the websocket so thre is no res provided in that case  
+    if (res) {
+      res.status(200).send("ok");
+    }
+  }
+}
+
+export async function updateCommand_async(task, res) {
   try {
-    const processorId = task.hub["sourceProcessorId"];
     if (task.instanceId === undefined) {
       throw new Error("Missing task.instanceId");
     }
@@ -26,23 +47,26 @@ export async function updateCommand_async(task) {
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
-    console.log(task.meta.broadcastCount + " updateCommand_async " + task.id + " from " + processorId);
-    // We intercept tasks that are done.
-    if (commandArgs?.done) {
-      console.log("Update task done " + task.id + " in state " + task.state?.current + " from " + processorId);
-      await doneTask_async(task);
+    console.log(task.meta.broadcastCount + " updateCommand_async " + task.id);
+    const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
+    const coProcessorIds = Array.from(activeCoProcessors.keys());
+    const haveCoProcessor = coProcessorIds.length > 0;
+    if (haveCoProcessor) {
+      if (task.hub.coProcessingDone) {
+        await doUpdate(commandArgs, task, res);       
+      } else {
+        syncTask_async(task.instanceId, task);
+      }
     } else {
-      task.meta.updateCount = task.meta.updateCount + 1;
-      console.log("Update task " + task.id + " in state " + task.state?.current + " from " + processorId);
-      task.meta.hash = utils.taskHash(task);
-      // Don't await so the HTTP response may get back before the websocket update
-      syncTask_async(task.instanceId, task)
-        .then(async (syncTask) => activeTasksStore_async.set(syncTask.instanceId, syncTask)) 
+      await doUpdate(commandArgs, task, res);       
     }
   } catch (error) {
-    console.error(`Error updating task ${task.id}: ${error.message}`);
-    throw new Error(`Error updating task ${task.id}: ${error.message}`, 500, error);
+    const msg = `Error updateCommand_async task ${task.id}: ${error.message}`;
+    console.error(msg);
+    if (res) {
+      throw new RequestError(msg, 500, error);
+    } else {
+      throw new Error(msg);
+    }
   }
 }
-
-  

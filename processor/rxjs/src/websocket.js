@@ -234,11 +234,13 @@ const connectWebSocket = () => {
         console.log("Skip update initiatingProcessorId", message.task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "start" || command === "join") {
-      console.log("ws " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)
+      console.log("ws " + command + " id ", message.task.id, message.task.instanceId)
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       // Emit the task into the taskSubject
       if (message.task.processor.sourceProcessorId !== processorId && !message.task.processor.coProcessingDone) {
         taskSubject.next(message.task);
+      } else {
+        console.log("Skip start join", message.task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)

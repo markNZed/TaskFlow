@@ -37,9 +37,10 @@ const syncTask_async = async (key, value) => {
 
   const coProcessorIds = Array.from(activeCoProcessors.keys());
   const isCoProcessor = coProcessorIds.includes(sourceProcessorId);
+  const haveCoProcessor = coProcessorIds.length > 0;
 
   // Pass to the first co-processor if we should coprocess first
-  if (coProcessorIds.length > 0 && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone) {
+  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone) {
     console.log("Start coprocessing");
     // Start Co-Processing
     // Send to the first Co-Processor that supports the command 
