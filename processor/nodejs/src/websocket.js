@@ -112,9 +112,7 @@ const connectWebSocket = () => {
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
-      const processor = JSON.parse(JSON.stringify(message.task.processor));
-      const mergedTask = utils.deepMerge(lastTask, message.task);
-      mergedTask.processor = processor;
+      const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {

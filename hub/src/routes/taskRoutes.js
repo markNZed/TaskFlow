@@ -77,16 +77,14 @@ async function update_async(res, task) {
       throw new Error("No active task " + task.instanceId);
     }
     const commandArgs = task.hub["commandArgs"];
-    const hub = JSON.parse(JSON.stringify(task.hub));
     if (commandArgs?.sync) {
       if (commandArgs?.done) {
         throw new Error("Not expecting sync of done task");
       }
-      task = utils.deepMerge(activeTask, commandArgs.syncTask);
+      task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
     } else {
-      task = utils.deepMerge(activeTask, task);
+      task = utils.deepMergeHub(activeTask, task, task.hub);
     }
-    task.hub = hub;
     console.log(task.meta.broadcastCount + " update_async " + task.id + " from " + processorId);
     // We intercept tasks that are done.
     if (commandArgs?.done) {

@@ -7,6 +7,20 @@ const { DateTimeFormat } = pkg;
 
 const sharedUtils = {
 
+  deepMergeProcessor: function(prevState, update, processorIn) {
+    const processor = JSON.parse(JSON.stringify(processorIn));
+    let result = sharedUtils.deepMerge(prevState, update);
+    result.processor = processor;
+    return result;
+  },
+
+  deepMergeHub: function(prevState, update, hubIn) {
+    const hub = JSON.parse(JSON.stringify(hubIn));
+    let result = sharedUtils.deepMerge(prevState, update);
+    result.hub = hub;
+    return result;
+  },
+
   deepMerge: function(prevState, update) {
     if (prevState === undefined) {
       return update;

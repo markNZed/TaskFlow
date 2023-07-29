@@ -212,9 +212,7 @@ const connectWebSocket = () => {
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
-      const processor = JSON.parse(JSON.stringify(message.task.processor));
-      const mergedTask = utils.deepMerge(lastTask, message.task); 
-      mergedTask.processor = processor;
+      const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
@@ -234,24 +232,6 @@ const connectWebSocket = () => {
         taskSubject.next(mergedTask);
       } else {
         console.log("Skip update initiatingProcessorId", message.task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
-      }
-    } else if (command === "sync") { // Unsure we need this, we update in doTask so can ignore?
-      //console.log("ws " + command + " task ", message.task);
-      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      const processor = JSON.parse(JSON.stringify(message.task.processor));
-      const mergedTask = utils.deepMerge(lastTask, commandArgs.syncTask);
-      mergedTask.processor = processor;
-      console.log("ws " + command + " activeTasksStore_async", mergedTask.id, mergedTask.instanceId)
-      // Check hash
-      const hash = utils.taskHash(mergedTask);
-      if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.broadcastCount, hash, mergedTask.meta.hash);
-      }
-      await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
-      // Emit the mergedTask into the taskSubject
-      console.log("activeTasksStore_async sourceProcessorId BEFORE NEXT", message.task.processor.sourceProcessorId, processorId);
-      if (message.task.processor.initiatingProcessorId !== processorId) {
-        taskSubject.next(mergedTask);
       }
     } else if (command === "start" || command === "join") {
       console.log("ws " + command + " activeTasksStore_async", message.task.id, message.task.instanceId)

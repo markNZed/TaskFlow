@@ -3,7 +3,7 @@
 Check output.CEPcount is working on second prompt
 cleanup: 
   When merging task on hub need to replace task.hub, when merging task on processor need to replace task.processor
-    Could create deepMergeHub and deepMergeProcessor
+    Use deepMergeHub and deepMergeProcessor
   Refactor update_async + updateCommand_async
   Does syncTask_async need to return a value and does it need to be used?
   Should be commandArgs ? coProcessorPosition, sourceProcessorId, coProcessingDone, coProcessing 
