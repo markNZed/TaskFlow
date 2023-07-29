@@ -64,7 +64,11 @@ Information shared between Task Processors is maintained in the Task Hub which a
 
 ### Task Hub Co-Processor
 
-A Task Hub Co-Processor offloads complex event processing (CEP) from the Task Hub. The Task Hub Co-Processor is a Task processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor can also run CEP functions that are initiated by a Task. The CEP functions monitor the stream of Tasks and in repsonse to patterns update Tasks.
+A Task Hub Co-Processor offloads processing from the Task Hub. The Task Hub Co-Processor is a Task processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor may provide a bridge to other systems e.g., logging, monitoring, testing, debugging, etc.
+
+#### CEP
+
+Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks.
 
 ## Error Handling
 
