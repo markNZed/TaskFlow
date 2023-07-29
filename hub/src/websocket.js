@@ -7,9 +7,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
-import { updateCommand_async } from "./updateCommand.mjs";
-import { startCommand_async } from "./startCommand.mjs";
-import { errorCommand_async } from "./errorCommand.mjs";
+import { commandUpdate_async } from "./commandUpdate.mjs";
+import { commandStart_async } from "./commandStart.mjs";
+import { commandError_async } from "./commandError.mjs";
 import { transferCommand } from "./routes/taskProcessing.mjs";
 
 let taskMessageCount = 0;
@@ -157,7 +157,7 @@ function initWebSocketServer(server) {
         task = transferCommand(task, activeTask, null);
 
         // If there are multiple coprocessors then we may need to specify a priority
-        // We start the co-processing from syncTask.mjs
+        // We start the co-processing from taskSync.mjs
         // Currently update/sync requests via websocket are only coming from co-processor
 
         let processorId = task.hub.sourceProcessorId;
@@ -218,17 +218,17 @@ function initWebSocketServer(server) {
           if (task.hub.command === "update") {
             console.log("");
             console.log("WS update", task.id);
-            updateCommand_async(task);
+            commandUpdate_async(task);
           }
           if (task.hub.command === "start") {
             console.log("");
             console.log("WS start", task.id);
-            startCommand_async(task);
+            commandStart_async(task);
           }
           if (task.hub.command === "error") {
             console.log("");
             console.log("WS error", task.id);
-            errorCommand_async(task);
+            commandError_async(task);
           }
           if (task.hub.command === "partial") {   
             for (const id of activeTaskProcessors) {

@@ -4,10 +4,42 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async, activeCoProcessors } from "./storage.mjs";
-import syncTask_async from "./syncTask.mjs";
-import { doneTask_async } from "./doneTask.mjs";
+import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, activeCoProcessors } from "./storage.mjs";
+import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
+import { commandStart_async } from "./commandStart.mjs";
+
+async function doneTask_async(task) {
+  // Should be an assertion
+  if (!task.hub.commandArgs?.done) {
+    console.log("task", task);
+    throw new Error("Called doneTask_async on a task that is not done");
+  }
+  let nextTaskId = task.hub.commandArgs?.nextTaskId;
+  console.log("Task " + task.id + " done, next " + nextTaskId);
+  await instancesStore_async.set(task.instanceId, task);
+  // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
+  // !!!
+  activeTasksStore_async.delete(task.instanceId);
+  activeTaskProcessorsStore_async.delete(task.instanceId);
+  if (nextTaskId) {
+    const initTask = {
+      id: nextTaskId,
+      user: {id: task.user.id},
+      groupId: task?.groupId,
+      familyId: task.familyId,
+    }
+    let processorId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
+    task.processor = task.processors[processorId];
+    task.commandArgs = {
+      init: initTask,
+      prevInstanceId: task.instanceId,
+    }
+    await commandStart_async(task);
+    //await taskStart_async(initTask, false, processorId, task.instanceId);
+    // In theory commandStart_async will update activeTasksStore_async and that will send the task to the correct processor(s)
+  }
+}
 
 async function doUpdate(commandArgs, task, res) {
   if (commandArgs?.done) {
@@ -18,7 +50,7 @@ async function doUpdate(commandArgs, task, res) {
     console.log("Update task " + task.id + " in state " + task.state?.current);
     task.meta.hash = utils.taskHash(task);
     // Don't await so the HTTP response may get back before the websocket update
-    syncTask_async(task.instanceId, task)
+    taskSync_async(task.instanceId, task)
       .then(async () => {
         activeTasksStore_async.set(task.instanceId, task);
       });
@@ -29,7 +61,7 @@ async function doUpdate(commandArgs, task, res) {
   }
 }
 
-export async function updateCommand_async(task, res) {
+export async function commandUpdate_async(task, res) {
   try {
     if (task.instanceId === undefined) {
       throw new Error("Missing task.instanceId");
@@ -47,7 +79,7 @@ export async function updateCommand_async(task, res) {
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
-    console.log(task.meta.broadcastCount + " updateCommand_async " + task.id);
+    console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     const coProcessorIds = Array.from(activeCoProcessors.keys());
     const haveCoProcessor = coProcessorIds.length > 0;
@@ -55,13 +87,13 @@ export async function updateCommand_async(task, res) {
       if (task.hub.coProcessingDone) {
         await doUpdate(commandArgs, task, res);       
       } else {
-        syncTask_async(task.instanceId, task);
+        taskSync_async(task.instanceId, task);
       }
     } else {
       await doUpdate(commandArgs, task, res);       
     }
   } catch (error) {
-    const msg = `Error updateCommand_async task ${task.id}: ${error.message}`;
+    const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
     console.error(msg);
     if (res) {
       throw new RequestError(msg, 500, error);

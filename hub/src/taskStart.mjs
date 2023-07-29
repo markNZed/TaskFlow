@@ -8,11 +8,11 @@ import { instancesStore_async, familyStore_async, activeTasksStore_async, active
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
-import syncTask_async from "./syncTask.mjs";
+import taskSync_async from "./taskSync.mjs";
 
 // Test handling of error
 
-// The async function startTask_async is where the sequence for starting a task is managed.
+// The async function taskStart_async is where the sequence for starting a task is managed.
 // It makes use of many helper functions defined above it.
 
 async function checkActiveTaskAsync(instanceId, activeProcessors) {
@@ -208,7 +208,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
         prevTask.hub.sourceProcessorId = "hub";
         prevTask.meta.hash = utils.taskHash(prevTask);
         await activeTasksStore_async.set(prevTask.instanceId, prevTask);
-        await syncTask_async(prevTask.instanceId, prevTask);
+        await taskSync_async(prevTask.instanceId, prevTask);
       }
     }
   }
@@ -332,7 +332,7 @@ async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskPro
   );
 }
 
-async function startTask_async(
+async function taskStart_async(
     initTask,
     authenticate,
     processorId,
@@ -442,4 +442,4 @@ async function startTask_async(
     return task;
   }
 
-  export default startTask_async;
+  export default taskStart_async;

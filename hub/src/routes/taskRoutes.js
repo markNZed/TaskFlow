@@ -7,10 +7,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import express from "express";
 import { utils } from "../utils.mjs";
 import { activeTasksStore_async, outputStore_async } from "../storage.mjs";
-import { errorTask_async } from "../errorTask.mjs";
-import { updateCommand_async } from "../updateCommand.mjs";
-import { startCommand_async } from "../startCommand.mjs";
-import { errorCommand_async } from "../errorCommand.mjs";
+import { commandUpdate_async } from "../commandUpdate.mjs";
+import { commandStart_async } from "../commandStart.mjs";
+import { commandError_async } from "../commandError.mjs";
 import { tasks } from "../configdata.mjs";
 import { transferCommand, checkLockConflict, checkAPIRate, processError, processOutput_async } from "./taskProcessing.mjs";
 import RequestError from './RequestError.mjs';
@@ -21,11 +20,11 @@ async function processCommand_async(task, res) {
   const command = task.hub.command;
   switch (command) {
     case "start":
-      return await startCommand_async(task, res);
+      return await commandStart_async(task, res);
     case "update":
-      return await updateCommand_async(task, res);
+      return await commandUpdate_async(task, res);
     case "error":
-      return await errorCommmand_async(task, res);
+      return await commandError_async(task, res);
     default:
       throw new Error("Unknown command " + command);
   }
