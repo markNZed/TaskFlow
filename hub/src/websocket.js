@@ -162,7 +162,6 @@ function initWebSocketServer(server) {
 
         let processorId = task.hub.sourceProcessorId;
         const coProcessors = Array.from(activeCoProcessors.keys());
-        const isCoProcessor = coProcessors.includes(processorId);
         const wasLastCoProcessor = task.hub?.coProcessorPosition === (coProcessors.length - 1);
 
         if (task.hub.coProcessing && wasLastCoProcessor) {
@@ -171,11 +170,11 @@ function initWebSocketServer(server) {
         }
 
         if (task.hub.command !== "partial") {
-          //console.log("isCoProcessor " + isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coProcessorPosition " + task.hub?.coProcessorPosition + " processorId " + processorId);
+          //console.log("isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coProcessorPosition " + task.hub?.coProcessorPosition + " processorId " + processorId);
         }
 
         // Have not tested this yet because we only have one coprocessor
-        if (isCoProcessor && task.hub.coProcessing && !wasLastCoProcessor) {
+        if (task.processor.isCoProcessor && task.hub.coProcessing && !wasLastCoProcessor) {
           console.log("Looking for NEXT coprocessor");
           // Send through the coProcessors
           // The task.hub.coProcessorPosition decides which coProcessor to run
@@ -188,12 +187,7 @@ function initWebSocketServer(server) {
             const ws = connections.get(coProcessorId);
             if (!ws) {
               console.log("Lost websocket for ", coProcessorId, connections.keys());
-            } else {
-              //console.log("Forwarding " + task.hub.command + " to " + coProcessorId + " from " + task.hub["sourceProcessorId"])
-              if (!task.processors[coProcessorId]) {
-                task.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
-                console.log("task missing coprocessor", coProcessorId );
-              }      
+            } else {    
               wsSendTask(task, coProcessorId);
             }
           }

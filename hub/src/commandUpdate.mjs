@@ -8,6 +8,7 @@ import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 async function doneTask_async(task) {
   // Should be an assertion
@@ -80,9 +81,6 @@ export async function commandUpdate_async(task, res) {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
     console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
-    const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    const coProcessorIds = Array.from(activeCoProcessors.keys());
-    const haveCoProcessor = coProcessorIds.length > 0;
     if (haveCoProcessor) {
       if (task.hub.coProcessingDone) {
         await doUpdate(commandArgs, task, res);       

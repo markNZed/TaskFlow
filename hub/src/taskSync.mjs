@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { wsSendTask } from "./websocket.js";
 import { utils } from "./utils.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 let broadcastCount = 0;
 
@@ -37,7 +38,6 @@ const taskSync_async = async (key, value) => {
 
   const coProcessorIds = Array.from(activeCoProcessors.keys());
   const isCoProcessor = coProcessorIds.includes(sourceProcessorId);
-  const haveCoProcessor = coProcessorIds.length > 0;
 
   // Pass to the first co-processor if we should coprocess first
   if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone) {

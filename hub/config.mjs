@@ -41,4 +41,6 @@ try {
     fs.writeFileSync(hubIdFile, hubId);
 }
 
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId };
+const haveCoProcessor = true;
+
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoProcessor };

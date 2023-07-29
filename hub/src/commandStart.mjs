@@ -7,6 +7,7 @@ import { activeTasksStore_async, activeCoProcessors } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
@@ -23,8 +24,6 @@ export async function commandStart_async(task, res) {
       };
     }
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    const coProcessorIds = Array.from(activeCoProcessors.keys());
-    const haveCoProcessor = coProcessorIds.length > 0;
     // If we have one or more coprocessor 
     console.log("haveCoProcessor " + haveCoProcessor + " task.hub.coProcessing " + task.hub.coProcessing + " task.hub.coProcessingDone " + task.hub.coProcessingDone);
     if (haveCoProcessor) {

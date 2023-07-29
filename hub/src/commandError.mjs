@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTasksStore_async, activeCoProcessors, instancesStore_async, activeProcessors } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { commandStart_async } from "./commandStart.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 async function errorTask_async(task) {
   // Should be an assertion
@@ -49,8 +50,6 @@ async function errorTask_async(task) {
 export async function commandError_async(task) {
   try {
     console.log(task.hub.requestId + " errorCommnad_async " + task.id);
-    const coProcessorIds = Array.from(activeCoProcessors.keys());
-    const haveCoProcessor = coProcessorIds.length > 0;
     if (haveCoProcessor) {
       if (task.hub.coProcessingDone) {
         await errorTask_async(task); 
