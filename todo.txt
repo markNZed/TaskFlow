@@ -1,10 +1,8 @@
 /* ToDo
 -------
-Create CEP directory and automated function pickup
-ChatGPTAPI_request_async could be moved into Service directory
-  request.prompt is used?
-  config?.local should not be used in SubTask ? (or is this actaully the SubTask config?)
+In general the coprocessing is too dispersed, needs refactoring.
 Review RxJS websocket.js
+  Merge coProcessTask and dotask
 Plan: Refactoring above, add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
 

@@ -103,7 +103,8 @@ export function WebSocketProvider({ children, socketUrl }) {
         delete message.task.hub;
       }
       if (command !== "pong") {
-        //console.log("App webSocket command", command,  message.task.instanceId, message.task);
+        //console.log("App webSocket command", command,  commandArgs, message.task.id, message.task);
+        //console.log("App webSocket sourceProcessorId", sourceProcessorId);
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here
         message.command = command;

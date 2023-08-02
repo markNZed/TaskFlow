@@ -4,7 +4,12 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import RequestError from './RequestError.mjs';
+import RequestError from './routes/RequestError.mjs';
+import { tasks } from "./configdata.mjs";
+import { activeTasksStore_async, outputStore_async } from "./storage.mjs";
+import { commandUpdate_async } from "./commandUpdate.mjs";
+import { commandStart_async } from "./commandStart.mjs";
+import { commandError_async } from "./commandError.mjs";
 
 function transferCommand(task, activeTask, requestId) {
   const { command, id, coProcessorPosition, coProcessing, coProcessingDone  } = task.processor;
@@ -34,29 +39,29 @@ function transferCommand(task, activeTask, requestId) {
     coProcessingDone,
     coProcessing,
   };
-  console.log("transferCommand " + command + " state " + task?.state?.current + " initiatingProcessorId " + task.hub.initiatingProcessorId);
+  console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs);
   return task;
 }
 
 function checkLockConflict(task, activeTask) {
-  if (task.meta && task.hub.command !== "sync") {
+  if (task.meta) {
     const lock = task.hub.commandArgs.lock || false;
     const unlock = task.hub.commandArgs.unlock || false;
     const lockBypass = task.hub.commandArgs.lockBypass || false;
-    const processorId = task.hub.sourceProcessorId;
+    const lockProcessorId = task.hub.initiatingProcessorId;
     
     if (unlock) {
       task.meta.locked = null;
     }
     
     if (lock && activeTask && !activeTask.meta?.locked) {
-      task.meta.locked = processorId;
-      //console.log("LOCKED ",task.id, processorId);
-    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === processorId) {
+      task.meta.locked = lockProcessorId;
+      console.log("LOCKED ",task.id, task.meta.locked);
+    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockProcessorId) {
       task.meta.locked = null;
     }
     
-    if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== processorId && !lockBypass && !unlock) {
+    if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockProcessorId && !lockBypass && !unlock) {
       const now = new Date();
       let updatedAt;
       if (task.meta.updatedAt) {
@@ -66,9 +71,9 @@ function checkLockConflict(task, activeTask) {
       const differenceInMinutes = (now - updatedAt) / 1000 / 60;
       
       if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log(`Task lock expired for ${processorId} locked by ${activeTask.meta.locked}`);
+        console.log(`Task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked}`);
       } else {
-        console.log(`Task lock conflict with ${processorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
+        console.log(`Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new RequestError("Task locked", 423);
       }
     }
@@ -158,4 +163,73 @@ async function processOutput_async(task, outputStore) {
   return task;
 }
 
-export { transferCommand, checkLockConflict, checkAPIRate, processError, processOutput_async }
+async function processCommand_async(task, res) {
+  const command = task.hub.command;
+  switch (command) {
+    case "start":
+      return await commandStart_async(task, res);
+    case "update":
+      return await commandUpdate_async(task, res);
+    case "error":
+      return await commandError_async(task, res);
+    default:
+      throw new Error("Unknown command " + command);
+  }
+}
+
+async function taskProcess_async(task, req, res) {
+  try {
+    if (!task.processor) {
+      throw new Error("Missing task.processor in /hub/api/task");
+    }
+    console.log("From processor " + task.processor.id);
+    let activeTask = {};
+    if (task.instanceId !== undefined) {
+      activeTask = await activeTasksStore_async.get(task.instanceId);
+    }
+    let requestId;
+    if (req) {
+      const requestId = req.id;
+    }
+    task = transferCommand(task, activeTask, requestId);
+    task = checkLockConflict(task, activeTask);
+    task = checkAPIRate(task, activeTask);
+    task = processError(task, tasks);
+    // Deep copy
+    let error;
+    if (task.error) {
+      error = JSON.parse(JSON.stringify(task.error));
+    }
+    task = await processOutput_async(task, outputStore_async);
+    if (res) {
+      const result = await processCommand_async(task, res);
+      if (error !== undefined) {
+        // Maybe throw from here ?
+        console.log("Error in /hub/api/task " + error);
+        if (res) {
+          res.status(500).json({ error: error });
+        }
+      } else {
+        if (res) {
+          res.status(200).json(result);
+        }
+      }
+    }
+  } catch (err) {
+    if (err instanceof RequestError) {
+      console.log("Error in /hub/api/task " + err.code + " " + err.message, err.origError);
+      if (res) {
+        res.status(err.code).send(err.message);
+      }
+    } else {
+      console.log("Error in /hub/api/task " + err.message, task);
+      throw err;
+      if (res) {
+        res.status(500).json({ error: "Error in /hub/api/task " + err.message });
+      }
+    }
+  }
+  return task;
+}
+
+export { taskProcess_async }

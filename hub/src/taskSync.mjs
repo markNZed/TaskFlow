@@ -38,9 +38,11 @@ const taskSync_async = async (key, value) => {
 
   const coProcessorIds = Array.from(activeCoProcessors.keys());
   const isCoProcessor = coProcessorIds.includes(sourceProcessorId);
-
+  const skipCoProcessingCommands = ["partial"];
+  const skipCoProcssing = skipCoProcessingCommands.includes(command);
+  
   // Pass to the first co-processor if we should coprocess first
-  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone) {
+  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcssing) {
     console.log("Start coprocessing");
     // Start Co-Processing
     // Send to the first Co-Processor that supports the command 
@@ -53,8 +55,8 @@ const taskSync_async = async (key, value) => {
         if (!taskCopy.processors[coProcessorId]) {
           taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
         }
-        taskCopy.processors[coProcessorId]["coProcessing"] = true;
-        taskCopy.processors[coProcessorId]["coProcessingDone"] = false;
+        taskCopy.hub["coProcessing"] = true;
+        taskCopy.hub["coProcessingDone"] = false;
         wsSendTask(taskCopy, coProcessorId);
         break;
       } else {

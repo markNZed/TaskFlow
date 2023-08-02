@@ -23,7 +23,7 @@ export async function do_task_async(wsSendTask, task, CEPFuncs) {
         updatedTask.error = e.message;
         updatedTask.command = "update";
       }
-      // Returning null is  away of doing nothing
+      // Returning null is a way of doing nothing
       if (updatedTask !== null && updatedTask.command) {
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
@@ -40,8 +40,6 @@ export async function do_task_async(wsSendTask, task, CEPFuncs) {
           await fetchTask_async(task);
         } else if (updatedTask.command === "nop") {
           console.log("do_task_async nop " + task.id);
-        } else if (updatedTask.command === "sync") {
-          console.log("do_task_async sync " + task.id);
         } else {
           if (updatedTask.command === "update") {
             const activeTask = await activeTasksStore_async.get(task.instanceId);

@@ -32,9 +32,15 @@ async function doneTask_async(task) {
     }
     let processorId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
     task.processor = task.processors[processorId];
-    task.commandArgs = {
+    task.hub.coProcessingDone = false;
+    // Seems weird having this here. 
+    if (haveCoProcessor) {
+      //task.hub.coProcessing = false;
+    }
+    task.hub.commandArgs = {
       init: initTask,
       prevInstanceId: task.instanceId,
+      authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
     }
     await commandStart_async(task);
     //await taskStart_async(initTask, false, processorId, task.instanceId);
@@ -49,10 +55,10 @@ async function doUpdate(commandArgs, task, res) {
   } else {
     task.meta.updateCount = task.meta.updateCount + 1;
     console.log("Update task " + task.id + " in state " + task.state?.current);
-    task.meta.hash = utils.taskHash(task);
     // Don't await so the HTTP response may get back before the websocket update
     taskSync_async(task.instanceId, task)
       .then(async () => {
+        task.meta.hash = utils.taskHash(task);
         activeTasksStore_async.set(task.instanceId, task);
       });
     // We can use this for the websocket so thre is no res provided in that case  
@@ -88,7 +94,7 @@ export async function commandUpdate_async(task, res) {
         taskSync_async(task.instanceId, task);
       }
     } else {
-      await doUpdate(commandArgs, task, res);       
+      await doUpdate(activeTask, commandArgs, task, res);       
     }
   } catch (error) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
@@ -96,6 +102,7 @@ export async function commandUpdate_async(task, res) {
     if (res) {
       throw new RequestError(msg, 500, error);
     } else {
+      console.log("commandUpdate_async task", task);
       throw new Error(msg);
     }
   }

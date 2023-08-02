@@ -182,7 +182,7 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
 async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async) {
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
-    task.meta["prevInstanceId"] = prevTask.instanceId;
+    task.meta["prevInstanceId"] = prevTask.meta.prevInstanceId || prevTask.instanceId;
     // Copying processor information from previous task instance
     // In the case where the task sequence advances on another processor 
     // we need to be able to associate a more recent tasks with an older
@@ -191,7 +191,6 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     task.processor = prevTask.processor;
     task.processor["command"] = null;
     task.processor["commandArgs"] = null;
-    task.processor["prevInstanceId"] = prevTask.instanceId;
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
@@ -385,10 +384,10 @@ async function taskStart_async(
     if (!task.config.oneFamily && !task.config.collaborateGroupId) {
       // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
       if (prevTask) {
-        console.log("Using prev familyId", prevTask.instanceId);
+        console.log("Using prev familyId", prevTask.familyId);
         task.familyId = prevTask.familyId;
       } else if (initTask.familyId) { 
-        console.log("Using init familyId", initTask.instanceId);
+        console.log("Using init familyId", initTask.familyId);
         task.familyId = initTask.familyId;
       } else {
         console.log("Using instanceId familyId", task.instanceId);
@@ -431,10 +430,9 @@ async function taskStart_async(
 
     const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors)
 
-    await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async)
+    await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 
-    // Calculate hash of the task 
-    // This might break the joining ?
+    // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);
 
     console.log("Started task id " + task.id);

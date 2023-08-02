@@ -58,7 +58,10 @@ export async function commandError_async(task) {
       }
     } else {
       taskSync_async(task.instanceId, task)
-        .then(async () => activeTasksStore_async.set(task.instanceId, task))  
+        .then(async () => {
+          task.meta.hash = utils.taskHash(task);
+          activeTasksStore_async.set(task.instanceId, task);
+        })  
     }
   } catch (error) {
     const msg = `Error commandError_async task ${task.id}: ${error.message}`;

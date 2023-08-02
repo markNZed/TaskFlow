@@ -142,7 +142,7 @@ async function chat_prepare_async(task) {
     //console.log("Request.prompt " + prompt)
   } 
 
-  if (T("config?.local?.promptWithTime")) {
+  if (T("task.config?.subtasks?.SubTaskLLM?.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -242,12 +242,12 @@ async function chat_prepare_async(task) {
   }
 
   // Check if we need to preprocess
-  if (task.config?.local?.regexProcessPrompt) {
-    for (const [regexStr, replacement] of task.config.local.regexProcessPrompt) {
+  if (task.config?.subtasks?.SubTaskLLM?.regexProcessPrompt) {
+    for (const [regexStr, replacement] of task.config.subtasks.SubTaskLLM.regexProcessPrompt) {
       let { pattern, flags } = utils.parseRegexString(regexStr);
       let regex = new RegExp(pattern, flags);
       prompt = prompt.replace(regex, replacement);
-      //console.log("regexProcessPrompt", regexStr, prompt);
+      console.log("regexProcessPrompt", regexStr, prompt);
     }
   }
 

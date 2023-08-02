@@ -8,13 +8,13 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { processorId } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
-export async function updateSyncCommand_async(wsSendTask, task, diff) { 
-  console.log("updateSyncCommand_async sync");
+export async function commandUpdateSync_async(wsSendTask, task, diff) { 
+  console.log("commandUpdateSync_async sync");
   const lastTask = await activeTasksStore_async.get(task.instanceId);
   if (!lastTask) {
     throw new Error("No diff found for " + diff.instanceId);
   }
-  //console.log("updateSyncCommand_async sync processor", lastTask.processor);
+  //console.log("commandUpdateSync_async sync processor", lastTask.processor);
   const mergedTask = utils.deepMerge(lastTask, diff);
   mergedTask.processor = task.processor;
   mergedTask["command"] = "update";

@@ -11,7 +11,7 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { do_task_async } from "./doTask.mjs";
 import { utils } from "./utils.mjs";
-import { updateSyncCommand_async } from "./updateSyncCommand.mjs";
+import { commandUpdateSync_async } from "./commandUpdateSync.mjs";
 import { coProcessTask_async } from "./coProcessTask.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
@@ -27,30 +27,20 @@ const CEPFuncs = new Map();
 // Maybe dedect when family has no active tasks
 taskSubject
   .pipe(
+    /*
     filter((task) => {
-      return true;
-      // Filter out some tasks.
-      // Return false to filter out
-      if (task.id === "root.conversation.chatgptzeroshot") {
-        console.log("Filtering out root.conversation.chatgptzeroshot");
-        return false;
-      } else {
-        return true;
-      }
+      return true; // Return false to filter out tasks
     }),
+    */
     mergeMap(async (task) => {
-      // Insert additional side-effects or logging here.
       console.log("Incoming task", task.id);
       const origTask = JSON.parse(JSON.stringify(task)); //deep copy
-      // Not sure we need to delete here, processor should have cleaned this up?
-      delete task.command;
-      delete task.commandArgs;
-      // Complex event processing uss a Map of Map
-      // The outer Map matches a task property with a Map of functions
-      // The inner Map matches a source task.instanceId with a function
-      // This allows us to have each instance set CEP triggered by instanceId, id, familyId
-      // Maps maintian their order and keys do not need to be strings
-      // We add familyId so CEP can only operate on its own family
+      // Complex event processing uses a Map of Map
+      //  The outer Map matches a task identity of the task that is being processed
+      //  The inner Map associates the CEP initiator task.instanceId with a function
+      // A task instance can initiate CEP triggered by instanceId, id, familyId
+      // Maps maintain order and keys do not need to be strings
+      // We always add familyId so CEP can only operate on its own family
       let instanceSourceFuncsMap = CEPFuncs.get(task.instanceId + task.familyId) || new Map();
       let taskSourceFuncsMap = CEPFuncs.get(task.id + task.familyId) || new Map();
       let familySourceFuncsMap = CEPFuncs.get(task.familyId + task.familyId) || new Map();    
@@ -61,11 +51,10 @@ taskSubject
       // Flatten all CEP functions into a single array
       let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs];
       //console.log("allCEPFuncs", allCEPFuncs);
-      //allCEPFuncs.forEach(([func, args]) => func(task, args));
-      // Run each CEP function one after another
-      for (const [func, functionName, args] of allCEPFuncs) {
+      // Run each CEP function serially
+      for (const [origTask, func, functionName, args] of allCEPFuncs) {
         console.log(`Running CEP function ${functionName} with ${args}`);
-        await func(task, args);
+        await func(functionName, wsSendTask, origTask, task, args);
       }
       // Check for changes to the task
       const diff = utils.getObjectDifference(origTask, task);
@@ -80,7 +69,7 @@ taskSubject
         }
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
-          await updateSyncCommand_async(wsSendTask, origTask, diff);
+          await commandUpdateSync_async(wsSendTask, origTask, diff);
         }
       }
       return task;
@@ -220,27 +209,29 @@ const connectWebSocket = () => {
       }
       console.log("ws " + command + " activeTasksStore_async " + mergedTask.id + " " + mergedTask.instanceId);
       // Check hash
-      const hash = utils.taskHash(mergedTask);
+      const hash = lastTask.meta.hash;
       if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", mergedTask.meta.broadcastCount, hash, mergedTask.meta.hash);
+        console.error("ERROR: Task hash does not match", sourceProcessorId, hash, mergedTask.meta.hash);
       }
-      await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
       if (message.task.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !message.task.processor.coProcessingDone) {
         taskSubject.next(mergedTask);
       } else {
+        // Here we are receiving an update not coprocessing an update so we store the task.
+        // The stord task needs to b in sync with the hub if we want to use diffs
+        await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
         console.log("Skip update initiatingProcessorId", message.task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "start" || command === "join") {
       console.log("ws " + command + " id ", message.task.id, message.task.instanceId)
-      await activeTasksStore_async.set(message.task.instanceId, message.task)
       // Emit the task into the taskSubject
       if (message.task.processor.sourceProcessorId !== processorId && !message.task.processor.coProcessingDone) {
         taskSubject.next(message.task);
       } else {
-        console.log("Skip start join", message.task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", message.task.processor.coProcessingDone);
+        await activeTasksStore_async.set(message.task.instanceId, message.task)
+        console.log("Skip ", command, message.task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", message.task.processor.coProcessingDone);
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)

@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
   let coProcessor = req.body?.coProcessor;
 
   if (commandsAccepted === undefined) {
-    commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error", "sync"];
+    commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error"];
   }
   // Not used yet but could e usful for interfacing with a third party service
   if (messagesStyle === undefined) {

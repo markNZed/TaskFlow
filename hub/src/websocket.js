@@ -10,7 +10,7 @@ import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
-import { transferCommand } from "./routes/taskProcessing.mjs";
+import { taskProcess_async } from "./taskProcess.mjs";
 
 let taskMessageCount = 0;
 
@@ -43,8 +43,9 @@ const wsSendTask = async function (task, processorId = null) {
   //console.log("wsSendTask", task)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
-  if (task.hub.command === "update" || task.hub.command === "sync") {
-    const activeTask = await activeTasksStore_async.get(task.instanceId);
+  let activeTask = {};
+  if (task.hub.command === "update") {
+    activeTask = await activeTasksStore_async.get(task.instanceId);
     //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
     //console.log("wsSendTask " + command + " task state", task.state);
     let diff = {}
@@ -69,6 +70,13 @@ const wsSendTask = async function (task, processorId = null) {
       }
       if (task.meta.locked) {
         diff.meta["locked"] = task.meta.locked;
+      }
+      diff.meta["hash"] = activeTask.meta.hash;
+      // In theory we could enable the hash debug in the task
+      const hashDebug = true;
+      if (hashDebug || task.meta.hashDebug) {
+        delete activeTask.meta.hashTask;
+        diff.meta["hashTask"] = JSON.parse(JSON.stringify(activeTask));
       }
       message["task"] = diff;
     } else {
@@ -105,14 +113,6 @@ const wsSendTask = async function (task, processorId = null) {
     //console.log("wsSendTask sourceProcessorId " + message.task.hub.sourceProcessorId)
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
     //console.log("wsSendTask message.task.hub.commandArgs.sync", message.task?.hub?.commandArgs?.sync);
-  }
-  if (message.task.meta.hash) {
-    const testHash = utils.taskHash(task);  
-    if (message.task.meta.hash !== testHash) {
-      console.log("wsSendTask hash MISMATCH", testHash, message.task.meta.hash);
-    }
-    // Comment this in if we want to see hash diff on React processor
-    //message.task.meta["hashDebug"] = JSON.parse(JSON.stringify(message.task))
   }
   wsSendObject(processorId, message);
   taskMessageCount++;
@@ -155,20 +155,24 @@ function initWebSocketServer(server) {
 
       if (j?.task && j.task?.processor?.command !== "ping") {
         let task = j.task;
-        const activeTask = await activeTasksStore_async.get(task.instanceId);
-        task = transferCommand(task, activeTask, null);
+        task = await taskProcess_async(task);
 
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs
         // Currently update/sync requests via websocket are only coming from co-processor
 
-        let processorId = task.hub.sourceProcessorId;
         const coProcessors = Array.from(activeCoProcessors.keys());
         const wasLastCoProcessor = task.hub?.coProcessorPosition === (coProcessors.length - 1);
 
+        // Most of the coprocessing code could be moved into taskProcess_async ?
+        let processorId;
         if (task.hub.coProcessing && wasLastCoProcessor) {
           console.log("wasLastCoProcessor so stop coProcessing")
           task.hub.coProcessing = false;
+          processorId = task.hub.initiatingProcessorId
+          task.hub.sourceProcessorId = processorId;
+        } else {
+          processorId = task.hub.sourceProcessorId;
         }
 
         if (task.hub.command !== "partial") {
@@ -196,8 +200,8 @@ function initWebSocketServer(server) {
               if (!task.processors[coProcessorId]) {
                 task.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
               }
-              task.processors[coProcessorId]["coProcessing"] = true;
-              task.processors[coProcessorId]["coProcessingDone"] = false;      
+              taskCopy.hub["coProcessing"] = true;
+              taskCopy.hub["coProcessingDone"] = false;
               wsSendTask(task, coProcessorId);
             }
           }
@@ -210,7 +214,6 @@ function initWebSocketServer(server) {
           task.processor = task.processors[processorId];
           task.hub.sourceProcessorId = processorId;
           task.hub["coProcessorPosition"] = null;
-          //task.hub["initiatingProcessorId"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
               console.log("Finished with coProcessors", task.id, processorId);

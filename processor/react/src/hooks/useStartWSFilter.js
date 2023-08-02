@@ -31,16 +31,19 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
       const message = messageQueue[key];
       //console.log("message", message, key);
       if (message && message?.command && (message.command === "start" || message.command === "join")) {
+        //console.log("message", message, key);
         //console.log("useStartWSFilter " + initialTask + " startTaskId " + startTaskId + " startPrevInstanceId " + startPrevInstanceId);
         if ((startTaskId && message.task.id === startTaskId) ||
-            (startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId)) {
+            (startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId)) {
           //console.log("useStartWSFilter startTaskId && message.task.id === startTaskId", startTaskId && message.task.id === startTaskId);
-          //console.log("startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId", startPrevInstanceId && message.task.processor?.prevInstanceId === startPrevInstanceId)
+          //console.log("startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId", startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId)
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
           delete messageQueue[key];
           startTaskDB(taskCopy);
+          setStartTaskId(null);
+          setStartPrevInstanceId(null);
           await onStart(taskCopy);
           //console.log("useStartWSFilter handleUpdate delete key", messageQueue);
         }
@@ -51,7 +54,7 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
 
   useEffect(() => {
     if (initialTask?.command === "start") {
-      console.log("useStartWSFilter initialTask commandArgs", initialTask.commandArgs);
+      console.log("useStartWSFilter initialTask", initialTask);
       setStartTaskId(initialTask.commandArgs.id);
       setStartPrevInstanceId(initialTask.commandArgs.prevInstanceId || initialTask.instanceId);
     }

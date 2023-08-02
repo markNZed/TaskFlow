@@ -31,12 +31,6 @@ const tasktypes = [
       local: {
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
         promptPlaceholder_EN: "Write your prompt here.",
-        /*
-        regexProcessPrompt: [
-          ["^", "<BEGIN>"],
-          ["$", "<END>"],
-        ],
-        */
         regexProcessMessages: [
           ["<BEGIN>", ""],
           ["<END>", ""],
@@ -46,6 +40,12 @@ const tasktypes = [
         "SubTaskLLM": {
           useCache: CACHE_ENABLE,
           seed: [],
+          /*
+          regexProcessPrompt: [
+            ["^", "<BEGIN>"],
+            ["$", "<END>"],
+          ],
+          */
         }
       },
     },
@@ -60,9 +60,13 @@ const tasktypes = [
         regexProcessMessages: [
           ["<BEGIN>", ""],
           ["<END>", ""],
-        ],
-        promptWithTime: false,
+        ],    
         useAddress: false,
+      },
+      subtasks: {
+        "SubTaskLLM": {
+          promptWithTime: false,
+        }
       },
     },
   },
