@@ -103,7 +103,7 @@ const connectWebSocket = () => {
     }
     if (command !== "pong") {
       console.log(""); //empty line
-      console.log("processorWs " + command)
+      console.log("processorWs ", command, commandArgs);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
@@ -115,6 +115,7 @@ const connectWebSocket = () => {
       const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
+      console.log("processorWs state:" + mergedTask.state?.current);
       if (!mergedTask.id) {
         throw new Error("Problem with merging")
       }

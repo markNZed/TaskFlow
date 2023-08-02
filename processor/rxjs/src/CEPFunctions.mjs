@@ -24,7 +24,7 @@ const CEPFunctions = {
     }
   },
 
-  myCEPFunc: function(functionName, wsSendTask, origTask, CEPtask, args) {
+  myCEPFunc: async function(functionName, wsSendTask, origTask, CEPtask, args) {
     const increment = args.increment;
     // No reason to ignore start
     if (CEPtask.processor.command === "start") {
@@ -41,10 +41,9 @@ const CEPFunctions = {
     syncTask["output"] = {};
     syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
     console.log("CEPCount", CEPtask.output.CEPCount, increment);
-    commandUpdateSync_async(wsSendTask, CEPtask, syncTask);
+    await commandUpdateSync_async(wsSendTask, CEPtask, syncTask);
     console.log("TaskConversation " + functionName + " called on " + CEPtask.id + " set by " + origTask.id);
     CEPtask.output.modifiedBy = origTask.id;
-    return;
   },
 
 };

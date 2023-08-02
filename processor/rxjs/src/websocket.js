@@ -9,10 +9,9 @@ import { filter, mergeMap, tap, map, Subject } from 'rxjs';
 import { hubSocketUrl, processorId, coProcessor } from "./../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
-import { do_task_async } from "./doTask.mjs";
+import { taskUpdate_async } from "./taskUpdate.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdateSync_async } from "./commandUpdateSync.mjs";
-import { coProcessTask_async } from "./coProcessTask.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -34,7 +33,7 @@ taskSubject
     */
     mergeMap(async (task) => {
       console.log("Incoming task", task.id);
-      const origTask = JSON.parse(JSON.stringify(task)); //deep copy
+      const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
       // Complex event processing uses a Map of Map
       //  The outer Map matches a task identity of the task that is being processed
       //  The inner Map associates the CEP initiator task.instanceId with a function
@@ -57,19 +56,24 @@ taskSubject
         await func(functionName, wsSendTask, origTask, task, args);
       }
       // Check for changes to the task
-      const diff = utils.getObjectDifference(origTask, task);
+      const diff = utils.getObjectDifference(taskCopy, task);
+      //if (Object.keys(diff).length > 0) {
+      //  console.log("DIFF", diff);
+      //}
       if (coProcessor) {
-        console.log("CoProcessing task " + origTask.id);
-        task = await coProcessTask_async(wsSendTask, task, CEPFuncs);
+        console.log("CoProcessing task " + taskCopy.id);
+        //console.log("taskSubject task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
+        //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
+        task = await taskUpdate_async(wsSendTask, task, CEPFuncs);
         //console.log("CoProcessing task ", task);
       } else {
         // We assume that any sync commands are run from the CEP function
         if (task.processor["command"] === "update" || task.processor["command"] === "start") {
-          await do_task_async(wsSendTask, origTask, CEPFuncs);
+          await taskUpdate_async(wsSendTask, taskCopy, CEPFuncs);
         }
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
-          await commandUpdateSync_async(wsSendTask, origTask, diff);
+          await commandUpdateSync_async(wsSendTask, taskCopy, diff);
         }
       }
       return task;
@@ -171,14 +175,10 @@ const connectWebSocket = () => {
       // The processor strips hub specific info because the Task Function should not interact with the Hub
       command = hub.command;
       commandArgs = hub?.commandArgs;
-
       delete hub.id;
-      //task.processor = utils.deepMerge(task.processor, hub);
       task.processor = task.processor || {};
       task.processor["command"] = command;
       task.processor["commandArgs"] = commandArgs;
-      console.log("task.processor", task.processor);
-      console.log("hub", hub);
       task.processor = utils.deepMerge(task.processor, hub);
     } else {
       console.error("Missing task in message");
@@ -192,19 +192,11 @@ const connectWebSocket = () => {
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(task.instanceId);
-      //const diff = utils.getObjectDifference(lastTask, task); 
-      //console.log("diff", diff, task.meta);
-      // If we receive this task we don't want to send it back to the hub
-      // So pass null instead of websocket
-      // We do not have a concept of chnages that are in progress like we do in React
-      //console.log("lastTask", lastTask?.output?.msgs);
       const mergedTask = utils.deepMergeProcessor(lastTask, task, task.processor);
-      //console.log("mergedTask", mergedTask?.output?.msgs);
-      //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
-        throw new Error("Problem with merging")
+        throw new Error("Problem with merging, id is missing")
       }
-      console.log("ws " + command + " activeTasksStore_async " + mergedTask.id + " " + mergedTask.instanceId);
+      console.log("ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       // Check hash
       const hash = lastTask.meta.hash;
       if (hash !== mergedTask.meta.hash) {
@@ -213,11 +205,12 @@ const connectWebSocket = () => {
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (task.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !task.processor.coProcessingDone) {
+      if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !mergedTask.processor.coProcessingDone) {
+        console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
         taskSubject.next(mergedTask);
       } else {
-        // Here we are receiving an update not coprocessing an update so we store the task.
-        // The stord task needs to b in sync with the hub if we want to use diffs
+        // Here we are receiving an update not coprocessing so we store the task.
+        // The stored task needs to be in sync with the hub if we want to use diffs
         mergedTask.meta["hash"] = utils.taskHash(mergedTask);
         await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
         console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);

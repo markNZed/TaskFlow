@@ -15,10 +15,13 @@ function transferCommand(task, activeTask, requestId) {
   const { command, id, coProcessorPosition, coProcessing, coProcessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
+  //console.log("task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
   let initiatingProcessorId = task.processor.initiatingProcessorId || id;
+  //console.log("initiatingProcessorId", initiatingProcessorId);
   if (!task.processor.isCoProcessor) {
     initiatingProcessorId = id;
   }
+  //console.log("initiatingProcessorId", initiatingProcessorId);
   let commandArgs = {};
   if (task.processor.commandArgs) {
     commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs))
@@ -39,7 +42,7 @@ function transferCommand(task, activeTask, requestId) {
     coProcessingDone,
     coProcessing,
   };
-  console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs);
+  console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
 }
 
@@ -189,7 +192,7 @@ async function taskProcess_async(task, req, res) {
     }
     let requestId;
     if (req) {
-      const requestId = req.id;
+      requestId = req.id;
     }
     task = transferCommand(task, activeTask, requestId);
     task = checkLockConflict(task, activeTask);

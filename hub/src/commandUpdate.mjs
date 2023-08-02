@@ -50,11 +50,11 @@ async function doneTask_async(task) {
 
 async function doUpdate(commandArgs, task, res) {
   if (commandArgs?.done) {
-    console.log("Update task done " + task.id + " in state " + task.state?.current);
+    console.log("Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     await doneTask_async(task);
   } else {
     task.meta.updateCount = task.meta.updateCount + 1;
-    console.log("Update task " + task.id + " in state " + task.state?.current);
+    console.log("Update task " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     // Don't await so the HTTP response may get back before the websocket update
     taskSync_async(task.instanceId, task)
       .then(async () => {

@@ -16,7 +16,8 @@ export async function commandUpdateSync_async(wsSendTask, task, diff) {
   }
   //console.log("commandUpdateSync_async sync processor", lastTask.processor);
   const mergedTask = utils.deepMerge(lastTask, diff);
-  mergedTask.processor = task.processor;
+  // Deep copy task.processor to avoif changes to task that was passed in
+  mergedTask.processor = JSON.parse(JSON.stringify(task.processor)); 
   mergedTask["command"] = "update";
   mergedTask["commandArgs"] = {
     syncTask: JSON.parse(JSON.stringify(diff)),
