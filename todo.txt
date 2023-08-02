@@ -1,5 +1,6 @@
 /* ToDo
 -------
+hash not reliable in CEP test
 In general the coprocessing is too dispersed, needs refactoring.
 Review RxJS websocket.js
   Merge coProcessTask and dotask

@@ -162,46 +162,43 @@ const connectWebSocket = () => {
     //console.log("processorWs.onMessage", message?.task.processor.command);
     let command;
     let commandArgs;
-    let coProcessorPosition; 
-    let sourceProcessorId;
-    let initiatingProcessorId;
-    let coProcessing;
-    let coProcessingDone;
     //console.log("message.task.hub", message.task.hub);
+    let task;
     if (message?.task) {
+      task = message.task;
+      const hub = JSON.parse(JSON.stringify(task.hub)); // deep copy
+      delete task.hub;
       // The processor strips hub specific info because the Task Function should not interact with the Hub
-      command = message.task.hub.command;
-      commandArgs = message.task.hub?.commandArgs;
-      coProcessorPosition = message.task.hub?.coProcessorPosition;
-      sourceProcessorId = message.task.hub?.sourceProcessorId;
-      initiatingProcessorId = message.task.hub?.initiatingProcessorId;
-      coProcessingDone = message.task.hub?.coProcessingDone;
-      coProcessing = message.task.hub?.coProcessing;
-      delete message.task.hub;
-      message.task.processor = message.task.processor || {};
-      message.task.processor["command"] = command;
-      message.task.processor["commandArgs"] = commandArgs;
-      message.task.processor["coProcessorPosition"] = coProcessorPosition;
-      message.task.processor["sourceProcessorId"] = sourceProcessorId;
-      message.task.processor["initiatingProcessorId"] = initiatingProcessorId;
-      message.task.processor["coProcessing"] = coProcessing;
-      message.task.processor["coProcessingDone"] = coProcessingDone;
+      command = hub.command;
+      commandArgs = hub?.commandArgs;
+
+      delete hub.id;
+      //task.processor = utils.deepMerge(task.processor, hub);
+      task.processor = task.processor || {};
+      task.processor["command"] = command;
+      task.processor["commandArgs"] = commandArgs;
+      console.log("task.processor", task.processor);
+      console.log("hub", hub);
+      task.processor = utils.deepMerge(task.processor, hub);
+    } else {
+      console.error("Missing task in message");
+      return;
     }
-    //console.log("message.task.processor", message.task.processor);
+    //console.log("task.processor", task.processor);
     if (command !== "pong") {
       console.log(""); //empty line
       //console.log("processorWs " + command)
-      console.log("processorWs coProcessingDone " + message.task.processor.coProcessingDone + " coProcessing " + message.task.processor.coProcessing);
+      console.log("processorWs coProcessingDone " + task.processor.coProcessingDone + " coProcessing " + task.processor.coProcessing);
     }
     if (command === "update") {
-      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
-      //const diff = utils.getObjectDifference(lastTask, message.task); 
-      //console.log("diff", diff, message.task.meta);
+      const lastTask = await activeTasksStore_async.get(task.instanceId);
+      //const diff = utils.getObjectDifference(lastTask, task); 
+      //console.log("diff", diff, task.meta);
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
-      const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
+      const mergedTask = utils.deepMergeProcessor(lastTask, task, task.processor);
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       if (!mergedTask.id) {
@@ -211,27 +208,28 @@ const connectWebSocket = () => {
       // Check hash
       const hash = lastTask.meta.hash;
       if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", sourceProcessorId, hash, mergedTask.meta.hash);
+        console.error("ERROR: Task hash does not match", task.processor.sourceProcessorId, hash, mergedTask.meta.hash);
       }
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (message.task.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !message.task.processor.coProcessingDone) {
+      if (task.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !task.processor.coProcessingDone) {
         taskSubject.next(mergedTask);
       } else {
         // Here we are receiving an update not coprocessing an update so we store the task.
         // The stord task needs to b in sync with the hub if we want to use diffs
+        mergedTask.meta["hash"] = utils.taskHash(mergedTask);
         await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
-        console.log("Skip update initiatingProcessorId", message.task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", message.task.processor.coProcessingDone);
+        console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
       }
     } else if (command === "start" || command === "join") {
-      console.log("ws " + command + " id ", message.task.id, message.task.instanceId)
+      console.log("ws " + command + " id ", task.id, task.instanceId)
       // Emit the task into the taskSubject
-      if (message.task.processor.sourceProcessorId !== processorId && !message.task.processor.coProcessingDone) {
-        taskSubject.next(message.task);
+      if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
+        taskSubject.next(task);
       } else {
-        await activeTasksStore_async.set(message.task.instanceId, message.task)
-        console.log("Skip ", command, message.task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", message.task.processor.coProcessingDone);
+        await activeTasksStore_async.set(task.instanceId, task)
+        console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)
