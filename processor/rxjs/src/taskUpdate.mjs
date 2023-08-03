@@ -76,6 +76,7 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       if (updatedTask.command === "update") {
         // Should be moved to a central place e.g. fetchTask_async
         const activeTask = await activeTasksStore_async.get(task.instanceId);
+        activeTask.processor["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
         const hashTask = activeTask.processor["hashTask"]
         const updatedTask = utils.getObjectDifference(hashTask, updatedTask);
         updatedTask["instanceId"] = activeTask.instanceId;

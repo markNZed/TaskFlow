@@ -1,5 +1,8 @@
 /* ToDo
 -------
+Align code for hub<->processor and processor.hashTask -> origTask
+  Document origTask
+  Document mutex on hub 
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
 Coprocessing is too dispersed, needs refactoring.

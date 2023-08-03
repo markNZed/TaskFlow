@@ -12,8 +12,6 @@ import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 
-let taskMessageCount = 0;
-
 /**
  * Sends an object through the WebSocket connection identified by the given processor ID.
  *
@@ -46,6 +44,7 @@ const wsSendTask = async function (task, processorId = null) {
   let activeTask = {};
   if (task.hub.command === "update") {
     activeTask = await activeTasksStore_async.get(task.instanceId);
+    activeTask.hub["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
     //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
     //console.log("wsSendTask " + command + " task state", task.state);
     let diff = {}
@@ -108,14 +107,12 @@ const wsSendTask = async function (task, processorId = null) {
     delete message.task.users;
   }
   message.task.meta = message.task.meta || {};
-  message.task.meta.messageCount = taskMessageCount;
   if (task.hub.command !== "pong") {
     //console.log("wsSendTask sourceProcessorId " + message.task.hub.sourceProcessorId)
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
     //console.log("wsSendTask message.task.hub.commandArgs.sync", message.task?.hub?.commandArgs?.sync);
   }
   wsSendObject(processorId, message);
-  taskMessageCount++;
 }
 
 function initWebSocketServer(server) {
@@ -224,17 +221,17 @@ function initWebSocketServer(server) {
           // Updates through WS can only come from RxJS for now
           if (task.hub.command === "update") {
             console.log("");
-            console.log("WS update", task.id, " from " + task.hub.sourceProcessorId);
+            console.log("WS update", task.id, " from:" + task.hub.sourceProcessorId);
             commandUpdate_async(task);
           }
           if (task.hub.command === "start") {
             console.log("");
-            console.log("WS start", task.id);
+            console.log("WS start", task.id, " from:" + task.hub.sourceProcessorId);
             commandStart_async(task);
           }
           if (task.hub.command === "error") {
             console.log("");
-            console.log("WS error", task.id);
+            console.log("WS error", task.id, " from:" + task.hub.sourceProcessorId);
             commandError_async(task);
           }
           if (task.hub.command === "partial") {   

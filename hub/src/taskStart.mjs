@@ -17,6 +17,7 @@ import taskSync_async from "./taskSync.mjs";
 
 async function checkActiveTaskAsync(instanceId, activeProcessors) {
   let activeTask = await activeTasksStore_async.get(instanceId);
+  activeTask.hub["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
   let doesContain = false;
   if (activeTask) {
     let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
@@ -206,6 +207,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
         prevTask.meta.hash = utils.taskHash(prevTask);
+        delete prevTask.hub.hashTask;
         await activeTasksStore_async.set(prevTask.instanceId, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }

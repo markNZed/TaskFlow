@@ -60,6 +60,7 @@ export async function commandError_async(task) {
       taskSync_async(task.instanceId, task)
         .then(async () => {
           task.meta.hash = utils.taskHash(task);
+          delete task.hub.hashTask;
           activeTasksStore_async.set(task.instanceId, task);
         })  
     }

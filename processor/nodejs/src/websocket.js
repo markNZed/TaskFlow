@@ -113,6 +113,8 @@ const connectWebSocket = () => {
       // We do not have a concept of chnages that are in progress like we do in React
       //console.log("lastTask", lastTask?.output?.msgs);
       const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
+      // Because deepMergeProcessor would replace hashTask we need to run this after deepMergeProcessor
+      mergedTask.processor["hashTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
       //console.log("mergedTask", mergedTask?.output?.msgs);
       //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
       console.log("processorWs state:" + mergedTask.state?.current);
@@ -125,12 +127,13 @@ const connectWebSocket = () => {
         console.error("ERROR: Task hash does not match", sourceProcessorId, hash, mergedTask.meta.hash);
       }
       mergedTask.meta["hash"] = utils.taskHash(mergedTask);
+      delete message.task.processor.hashTask;
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
-      mergedTask.processor["hashTask"] = JSON.parse(JSON.stringify(mergedTask)); // deep copy to avoid self-reference
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
         await do_task_async(wsSendTask, mergedTask);
       }
     } else if (command === "start" || command === "join") {
+      delete message.task.processor.hashTask;
       await activeTasksStore_async.set(message.task.instanceId, message.task)
       await do_task_async(wsSendTask, message.task)
     } else if (command === "pong") {

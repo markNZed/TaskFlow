@@ -189,6 +189,7 @@ async function taskProcess_async(task, req, res) {
     let activeTask = {};
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
+      activeTask.hub["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
     }
     let requestId;
     if (req) {

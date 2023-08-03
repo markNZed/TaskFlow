@@ -11,6 +11,7 @@ import { utils } from "./utils.mjs";
 export async function commandUpdateSync_async(wsSendTask, task, diff) { 
   console.log("commandUpdateSync_async sync");
   const lastTask = await activeTasksStore_async.get(task.instanceId);
+  lastTask.processor["hashTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
   if (!lastTask) {
     throw new Error("No diff found for " + diff.instanceId);
   }
