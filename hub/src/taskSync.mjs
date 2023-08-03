@@ -79,7 +79,7 @@ const taskSync_async = async (key, value) => {
       const coProcessorData = activeCoProcessors.get(coProcessorId);
       if (coProcessorData) {
         if (coProcessorData.commandsAccepted.includes(command)) {
-          console.log("taskSync_async coprocessor", command, key, coProcessorId);
+          console.log("taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
           wsSendTask(taskCopy, coProcessorId);
         } else {
           console.log("taskSync_async coprocessor does not support commmand", command, coProcessorId);

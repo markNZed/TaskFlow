@@ -23,7 +23,7 @@ const taskSubject = new Subject();
 const CEPFuncs = new Map();
 
 // We will need to track activeTasks to remove CEP and cleanup unused CEPfunc
-// Maybe dedect when family has no active tasks
+// Maybe detect when family has no active tasks
 taskSubject
   .pipe(
     /*

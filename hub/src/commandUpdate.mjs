@@ -9,6 +9,9 @@ import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
 import { haveCoProcessor } from "../config.mjs";
+import { Mutex } from 'async-mutex';
+
+const mutexes = new Map();
 
 async function doneTask_async(task) {
   // Should be an assertion
@@ -53,10 +56,11 @@ async function doUpdate(commandArgs, task, res) {
     console.log("Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     await doneTask_async(task);
   } else {
-    task.meta.updateCount = task.meta.updateCount + 1;
-    console.log("Update task " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
+    // The increment is being done in activeTasksStore_async.set to provide an atomic operation
+    //task.meta.updateCount = task.meta.updateCount + 1;
+    console.log("Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     // Don't await so the HTTP response may get back before the websocket update
-    taskSync_async(task.instanceId, task)
+    await taskSync_async(task.instanceId, task)
       .then(async () => {
         task.meta.hash = utils.taskHash(task);
         activeTasksStore_async.set(task.instanceId, task);
@@ -69,10 +73,18 @@ async function doUpdate(commandArgs, task, res) {
 }
 
 export async function commandUpdate_async(task, res) {
+  if (task.instanceId === undefined) {
+    throw new Error("Missing task.instanceId");
+  }
+  // Get or create the mutex for this instanceId
+  let mutex = mutexes.get(task.instanceId);
+  if (!mutex) {
+    mutex = new Mutex();
+    mutexes.set(task.instanceId, mutex);
+  }
+  // Lock the mutex
+  const release = await mutex.acquire();
   try {
-    if (task.instanceId === undefined) {
-      throw new Error("Missing task.instanceId");
-    }
     const activeTask = await activeTasksStore_async.get(task.instanceId)
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
@@ -84,8 +96,9 @@ export async function commandUpdate_async(task, res) {
       }
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
     } else {
-      task = utils.deepMergeHub(activeTask, task, task.hub);
+       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
+    task.meta.updateCount = activeTask.meta.updateCount;
     console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
     if (haveCoProcessor) {
       if (task.hub.coProcessingDone) {
@@ -105,5 +118,8 @@ export async function commandUpdate_async(task, res) {
       console.log("commandUpdate_async task", task);
       throw new Error(msg);
     }
+  } finally {
+    // Always release the lock
+    release();
   }
 }
