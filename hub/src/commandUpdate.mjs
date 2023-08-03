@@ -57,7 +57,7 @@ async function doUpdate(commandArgs, task, res) {
     await doneTask_async(task);
   } else {
     // The increment is being done in activeTasksStore_async.set to provide an atomic operation
-    //task.meta.updateCount = task.meta.updateCount + 1;
+    task.meta.updateCount = task.meta.updateCount + 1;
     console.log("Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     // Don't await so the HTTP response may get back before the websocket update
     await taskSync_async(task.instanceId, task)

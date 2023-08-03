@@ -126,6 +126,7 @@ const connectWebSocket = () => {
       }
       mergedTask.meta["hash"] = utils.taskHash(mergedTask);
       await activeTasksStore_async.set(message.task.instanceId, mergedTask)
+      mergedTask.processor["hashTask"] = JSON.parse(JSON.stringify(mergedTask)); // deep copy to avoid self-reference
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
         await do_task_async(wsSendTask, mergedTask);
       }

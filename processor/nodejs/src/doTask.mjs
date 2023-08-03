@@ -42,11 +42,6 @@ export async function do_task_async(wsSendTask, task) {
           }
           await fetchTask_async(task);
         } else {
-          if (updatedTask.command === "update") {
-            const activeTask = await activeTasksStore_async.get(task.instanceId);
-            const updatedTask = utils.getObjectDifference(activeTask, task);
-            updatedTask["instanceId"] = activeTask.instanceId;
-          }
           try {
             await fetchTask_async(updatedTask);
           } catch (error) {

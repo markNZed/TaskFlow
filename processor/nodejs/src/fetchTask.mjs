@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { TASKHUB_URL, processorId } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
+import { utils } from "./utils.mjs";
 
 export async function fetchTask_async(task) {
     if (!task.command) {
@@ -24,9 +25,17 @@ export async function fetchTask_async(task) {
       task.processor["commandArgs"] = {};
     }
     task.processor["id"] = processorId;
+
+    // Only intended for update command
+    const hashTask = task.processor.hashTask;
+    const diffTask = utils.getObjectDifference(hashTask, task);
+    delete diffTask.processor.hashTask; // Only used internally
+    diffTask["instanceId"] = task.instanceId;
+    diffTask["id"] = task.id;
+    diffTask["processor"] = task.processor;
   
     try {
-      const validatedTaskJsonString = fromTask(task);
+      const validatedTaskJsonString = fromTask(diffTask);
       let validatedTaskObject = JSON.parse(validatedTaskJsonString);
       const messageObject = {
         task: validatedTaskObject,

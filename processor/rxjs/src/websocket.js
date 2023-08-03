@@ -207,6 +207,7 @@ const connectWebSocket = () => {
       // Emit the mergedTask into the taskSubject
       if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !mergedTask.processor.coProcessingDone) {
         console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
+        mergedTask.processor.hashTask = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
         taskSubject.next(mergedTask);
       } else {
         // Here we are receiving an update not coprocessing so we store the task.

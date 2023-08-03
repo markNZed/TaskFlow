@@ -60,18 +60,27 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       if (Object.keys(diff).length > 0) {
         console.log("DIFF task vs updatedTask", diff);
       }
-      console.log("taskUpdate_async wsSendTask", updatedTask.id);
-      wsSendTask(updatedTask);
+      const hashTask = updatedTask.processor["hashTask"]
+      const diffTask = utils.getObjectDifference(hashTask, updatedTask);
+      delete diffTask.processor.hashTask; // Only used internally
+      diffTask["instanceId"] = updatedTask.instanceId;
+      diffTask["id"] = updatedTask.id;
+      diffTask["processor"] = updatedTask.processor;
+      console.log("taskUpdate_async wsSendTask", diffTask.id);
+      wsSendTask(diffTask);
     } else {
       // This needs more testing
       // When not a coprocessor what do we want to do?
       // Which command sshould we support here?
       // This is similar to the old do_task
       if (updatedTask.command === "update") {
+        // Should be moved to a central place e.g. fetchTask_async
         const activeTask = await activeTasksStore_async.get(task.instanceId);
-        const updatedTask = utils.getObjectDifference(activeTask, updatedTask);
+        const hashTask = activeTask.processor["hashTask"]
+        const updatedTask = utils.getObjectDifference(hashTask, updatedTask);
         updatedTask["instanceId"] = activeTask.instanceId;
         updatedTask["id"] = activeTask.id;
+        updatedTask["processor"] = task.processor;
         try {
           await fetchTask_async(updatedTask);
         } catch (error) {

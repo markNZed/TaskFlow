@@ -224,7 +224,7 @@ function initWebSocketServer(server) {
           // Updates through WS can only come from RxJS for now
           if (task.hub.command === "update") {
             console.log("");
-            console.log("WS update", task.id);
+            console.log("WS update", task.id, " from " + task.hub.sourceProcessorId);
             commandUpdate_async(task);
           }
           if (task.hub.command === "start") {

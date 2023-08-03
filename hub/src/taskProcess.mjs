@@ -42,7 +42,7 @@ function transferCommand(task, activeTask, requestId) {
     coProcessingDone,
     coProcessing,
   };
-  console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
+  //console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
 }
 

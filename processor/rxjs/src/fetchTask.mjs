@@ -24,9 +24,17 @@ export async function fetchTask_async(task) {
       task.processor["commandArgs"] = {};
     }
     task.processor["id"] = processorId;
+
+    // Only intended for update command
+    const hashTask = task.processor.hashTask;
+    const diffTask = utils.getObjectDifference(hashTask, task);
+    delete diffTask.processor.hashTask; // Only used internally
+    diffTask["instanceId"] = task.instanceId;
+    diffTask["id"] = task.id;
+    diffTask["processor"] = task.processor;
   
     try {
-      const validatedTaskJsonString = fromTask(task);
+      const validatedTaskJsonString = fromTask(diffTask);
       let validatedTaskObject = JSON.parse(validatedTaskJsonString);
       const messageObject = {
         task: validatedTaskObject,

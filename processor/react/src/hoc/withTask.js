@@ -178,9 +178,11 @@ function withTask(Component) {
       async (updateDiff, sourceProcessorId, commandArgs) => {
         console.log("useUpdateWSFilter updateDiff", updateDiff, commandArgs);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
+        delete lastTask.processor.hashTask; // Only used in the processor
         console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
         updatedTask.meta.hash = utils.taskHash(updatedTask);
+        updatedTask.processor["hashTask"] = JSON.parse(JSON.stringify(updatedTask)); // deep copy to avoid self-reference
         await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         //console.log("useUpdateWSFilter props.task", props.task);

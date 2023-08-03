@@ -1,5 +1,6 @@
 import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
+import { utils } from "./utils";
 
 export const fetchTask = async (globalState, command, commandArgs, task) => {
 
@@ -14,16 +15,24 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   // Clear down task commands as we do not want these coming back from the hub
   task.processor["command"] = command;
   task.processor["commandArgs"] = commandArgs;
-  task.processor["id"] = processorId;  
+  task.processor["id"] = processorId;
 
-  task.user = task.user || {};
-  task.user["id"] = globalState.user.userId;
+  // Only intended for update command
+  const hashTask = task.processor.hashTask;
+  const diffTask = utils.getObjectDifference(hashTask, task);
+  delete diffTask.processor.hashTask; // Only used internally
+  diffTask["instanceId"] = task.instanceId;
+  diffTask["id"] = task.id;
+  diffTask["processor"] = task.processor;
+
+  diffTask.user = task.user || {};
+  diffTask.user["id"] = globalState.user.userId;
 
   // The immediate destination of this request
   let fetchUrl = `${hubUrl}/api/task/`; // using hub routing
 
   try {
-    const validatedTaskJsonString = fromTask(task);
+    const validatedTaskJsonString = fromTask(diffTask);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
     messageJsonString = JSON.stringify({ task: task });
     } catch (error) {

@@ -313,7 +313,7 @@ const sharedUtils = {
     delete taskCopy.commandArgs;
     const sortedObj = sharedUtils.taskHashSortKeys(taskCopy);
     const hash = sharedUtils.djb2Hash(JSON.stringify(sortedObj));
-    console.log("HASH VALUE", hash);
+    //console.log("HASH VALUE", hash);
     return hash;
   },
 

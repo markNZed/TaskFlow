@@ -35,12 +35,9 @@ const useUpdateTask = (task, setTask) => {
           // So we align the snapshot with the updated task and send that
           // otherwise send could come back true and we will get a loop
           snapshot = utils.deepMerge(snapshot, updating)
-          const activeTask = await globalState.storageRef.current.get(task.instanceId);
-          const diff = utils.getObjectDifference(activeTask, snapshot);
-          diff["instanceId"] = activeTask.instanceId;      
           // fetchTask can change some parameters in Task 
           // so we save the task object after those changes in the fetchTask
-          await fetchTask(globalState, command, commandArgs, diff);
+          await fetchTask(globalState, command, commandArgs, snapshot);
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);
