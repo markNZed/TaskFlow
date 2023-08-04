@@ -317,6 +317,14 @@ const sharedUtils = {
     return hash;
   },
 
+  activeTasksStoreSet_async: async function(activeTasksStore_async, task) {
+    task.meta["hash"] = sharedUtils.taskHash(task);
+    delete task.processor.origTask;
+    // deep copy to avoid self-reference
+    task.processor["origTask"] = JSON.parse(JSON.stringify(task)); 
+    return activeTasksStore_async.set(task.instanceId, task);
+  }
+
 };
 
 export { sharedUtils };

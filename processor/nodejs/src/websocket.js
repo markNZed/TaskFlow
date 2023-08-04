@@ -125,16 +125,12 @@ const connectWebSocket = () => {
       if (hash !== mergedTask.meta.hash) {
         console.error("ERROR: Task hash does not match", sourceProcessorId, hash, mergedTask.meta.hash);
       }
-      mergedTask.meta["hash"] = utils.taskHash(mergedTask);
-      delete mergedTask.processor.origTask;
-      mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(mergedTask)); // deep copy to avoid self-reference
-      await activeTasksStore_async.set(message.task.instanceId, mergedTask)
+      await utils.activeTasksStoreSet_async(activeTasksStore_async, mergedTask);
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
         await do_task_async(wsSendTask, mergedTask);
       }
     } else if (command === "start" || command === "join") {
-      message.task.processor["origTask"] = JSON.parse(JSON.stringify(message.task)); // deep copy to avoid self-reference
-      await activeTasksStore_async.set(message.task.instanceId, message.task)
+      await utils.activeTasksStoreSet_async(activeTasksStore_async, message.task);
       await do_task_async(wsSendTask, message.task)
     } else if (command === "pong") {
       //console.log("ws pong received", message)

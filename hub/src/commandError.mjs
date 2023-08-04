@@ -3,6 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+import { utils } from "./utils.mjs";
 import { activeTasksStore_async, activeCoProcessors, instancesStore_async, activeProcessors } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -59,9 +60,7 @@ export async function commandError_async(task) {
     } else {
       taskSync_async(task.instanceId, task)
         .then(async () => {
-          task.meta.hash = utils.taskHash(task);
-          delete task.hub.origTask;
-          activeTasksStore_async.set(task.instanceId, task);
+          utils.activeTasksStoreSet_async(activeTasksStore_async, task);
         })  
     }
   } catch (error) {

@@ -62,9 +62,7 @@ async function doUpdate(commandArgs, task, res) {
     // Don't await so the HTTP response may get back before the websocket update
     await taskSync_async(task.instanceId, task)
       .then(async () => {
-        task.meta.hash = utils.taskHash(task);
-        delete task.hub.origTask;
-        activeTasksStore_async.set(task.instanceId, task);
+        utils.activeTasksStoreSet_async(activeTasksStore_async, task);
       });
     // We can use this for the websocket so thre is no res provided in that case  
     if (res) {

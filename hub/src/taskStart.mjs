@@ -206,10 +206,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
       if (await activeTasksStore_async.has(prevTask.instanceId)) {
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
-        prevTask.meta.hash = utils.taskHash(prevTask);
-        delete prevTask.hub.origTask;
-        prevTask.hub["origTask"] = JSON.parse(JSON.stringify(prevTask)); // deep copy to avoid self-reference
-        await activeTasksStore_async.set(prevTask.instanceId, prevTask);
+        await utils.activeTasksStoreSet_async(activeTasksStore_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
     }

@@ -212,10 +212,7 @@ const connectWebSocket = () => {
       } else {
         // Here we are receiving an update not coprocessing so we store the task.
         // The stored task needs to be in sync with the hub if we want to use diffs
-        mergedTask.meta["hash"] = utils.taskHash(mergedTask);
-        delete mergedTask.processor.origTask;
-        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(mergedTask)); // deep copy to avoid self-reference
-        await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
+        await utils.activeTasksStoreSet_async(activeTasksStore_async, mergedTask);
         console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
       }
     } else if (command === "start" || command === "join") {
@@ -224,8 +221,7 @@ const connectWebSocket = () => {
       if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
         taskSubject.next(task);
       } else {
-        task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
-        await activeTasksStore_async.set(task.instanceId, task)
+        await utils.activeTasksStoreSet_async(activeTasksStore_async, task);
         console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
       }
     } else if (command === "pong") {
