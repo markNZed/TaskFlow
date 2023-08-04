@@ -17,15 +17,9 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   task.processor["commandArgs"] = commandArgs;
   task.processor["id"] = processorId;
 
-  // Only intended for update command
-  const origTask = task.processor.origTask;
-  const diffTask = utils.getObjectDifference(origTask, task);
-  diffTask["instanceId"] = task.instanceId;
-  diffTask["id"] = task.id;
-  diffTask["processor"] = task.processor;
-  delete diffTask.processor.origTask; // Only used internally
+  const diffTask = utils.processorDiff(task);
 
-  diffTask.user = task.user || {};
+  diffTask["user"] = task.user || {};
   diffTask.user["id"] = globalState.user.userId;
 
   // The immediate destination of this request
@@ -34,9 +28,9 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   try {
     const validatedTaskJsonString = fromTask(diffTask);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
-    messageJsonString = JSON.stringify({ task: task });
-    } catch (error) {
-    console.log("Error while converting Task to JSON:", error, task);
+    messageJsonString = JSON.stringify({ task: validatedTaskObject });
+  } catch (error) {
+    console.log("Error while converting Task to JSON:", error, diffTask);
     return;
   }
 

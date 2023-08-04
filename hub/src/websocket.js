@@ -45,40 +45,14 @@ const wsSendTask = async function (task, processorId = null) {
   let activeTask = {};
   if (task.hub.command === "update") {
     activeTask = await activeTasksStore_async.get(task.instanceId);
-    activeTask.hub["origTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
     //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
     //console.log("wsSendTask " + command + " task state", task.state);
     let diff = {}
-    if (activeTask) { 
-      //console.log("wsSendTask task.output.msgs", task.output?.msgs)
-      //console.log("wsSendTask activeTask.output.msgs", activeTask.output?.msgs)
-      diff = utils.getObjectDifference(activeTask, task); // keep the differences in task
-      //console.log("wsSendTask diff.output.msgs", diff.output?.msgs)
-      //console.log("wsSendTask diff", diff)
+    if (activeTask) {
+      diff = utils.hubDiff(activeTask, task);
       if (Object.keys(diff).length === 0) {
         console.log("wsSendTask no diff", diff);
         return null;
-      }
-       // Because this routes the task but does not change so need to add back in
-       // Points to a class of concern
-      diff.instanceId = task.instanceId;
-      diff.hub = task.hub;
-      diff.processors = task.processors;
-      diff.users = task.users;
-      if (!diff.meta) {
-        diff["meta"] = {};
-      }
-      if (task.meta.locked) {
-        diff.meta["locked"] = task.meta.locked;
-      }
-      diff.meta["hash"] = activeTask.meta.hash;
-      // In theory we could enable the hash debug in the task
-      const hashDebug = true;
-      if (hashDebug || task.meta.hashDebug) {
-        delete activeTask.meta.hashTask;
-        diff.meta["hashTask"] = JSON.parse(JSON.stringify(activeTask));
-        delete diff.meta.hashTask.hub;
-        delete diff.meta.hashTask.processors;
       }
       message["task"] = diff;
     } else {

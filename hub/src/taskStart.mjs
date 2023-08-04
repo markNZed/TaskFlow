@@ -435,6 +435,8 @@ async function taskStart_async(
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);
 
+    task.hub.origTask = JSON.parse(JSON.stringify(task));
+
     console.log("Started task id " + task.id);
 
     return task;

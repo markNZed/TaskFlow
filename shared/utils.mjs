@@ -323,7 +323,49 @@ const sharedUtils = {
     // deep copy to avoid self-reference
     task.processor["origTask"] = JSON.parse(JSON.stringify(task)); 
     return activeTasksStore_async.set(task.instanceId, task);
-  }
+  },
+
+  processorDiff: function(task) {
+    const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
+    // Only intended for update command
+    const origTask = taskCopy.processor.origTask;
+    const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy);
+    diffTask["instanceId"] = taskCopy.instanceId;
+    diffTask["id"] = taskCopy.id;
+    diffTask["processor"] = taskCopy.processor;
+    delete diffTask.processor.origTask; // Only used internally
+    return diffTask;
+  },
+
+  hubDiff: function(activeTask, task) {
+    const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
+    // Only intended for update command
+    const diffTask = sharedUtils.getObjectDifference(activeTask, taskCopy);
+    if (Object.keys(diffTask).length > 0) {
+      diffTask["instanceId"] = taskCopy.instanceId;
+      diffTask["id"] = taskCopy.id;
+      diffTask["hub"] = taskCopy.hub;
+      diffTask["processors"] = taskCopy.processors;
+      diffTask["users"] = taskCopy.users;
+      if (!diffTask.meta) {
+        diffTask["meta"] = {};
+      }
+      if (taskCopy.meta.locked) {
+        diffTask.meta["locked"] = taskCopy.meta.locked;
+      }
+      diffTask.meta["hash"] = activeTask.meta.hash;
+      // In theory we could enable the hash debug in the task
+      const hashDebug = true;
+      if (hashDebug || taskCopy.meta.hashDebug) {
+        diffTask.meta["hashTask"] = JSON.parse(JSON.stringify(activeTask));
+        delete diffTask.meta.hashTask.hub;
+        delete diffTask.meta.hashTask.processors;
+        delete diffTask.meta.hashTask.meta.hashTask;
+      }
+      delete diffTask.hub.origTask; // Only used internally
+    }
+    return diffTask;
+  },
 
 };
 
