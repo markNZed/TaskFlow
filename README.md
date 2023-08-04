@@ -8,9 +8,7 @@ T@skFlow combines software, AI models, and human interaction in a unique way. A 
 
 ![T@skFlow Diagram](Task.drawio.svg)  *<small>[editable](https://app.diagrams.net/)</small>
 
-T@skFlow provides a flexible infrastructure for human-computer interaction. Specific configurations of Tasks is not part of T@skFlow (except for demonstration purposes). The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
-
-Information sent between Hub(s) and Processor(s) is managed within the Task object (fields `task.hub` and `task.processor`). A Processor sends `task.processor.command` to the Hub and receives `task.hub.command` from the Hub.
+T@skFlow provides a flexible infrastructure for human-computer interaction. The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 ## Task
 
@@ -80,10 +78,6 @@ The potential of large langauge models like chatGPT has become apparent to many 
 
 The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a technology of ethics i.e., using technology to prefer certain moral outcomes over other possible outcomes. T@skFlow is intended to support a new way of thinking.
 
-T@skFlow is intended to allow rapid exploration of new ideas in a relatively trusted environment. On the NodeJS Task Processor side Tasks are first class citizens - they have full access to the NodeJS Task Processor environment. Not having any security constraints on what a Task can do means users and developers need to trust each other. This is not a scalable approach but it is ideal in rapidly exploring use cases for yourself and others. If a particular Task sequence provides a lot of value then it will likely become a standalone application. T@skFlow should make it easy to leverage existing services. T@skFlow is lightweight because it is not trying to centralise a service for coordinating untrusted parties.
-
-For developers T@skFlow could implement a personal assistant that runs on your computer keeping your data local.
-
 # Getting Started
 
 To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the docker directory.
@@ -112,7 +106,7 @@ You will need to include TaskNew in a sequence of tasks (or it could be standalo
 
 **How to reference values from previous Tasks ?**
 
-Available in the `task.output` object of the previous Task Instance. In either case the data could be a reference rather than the values. 
+Available in the `task.output` object of the previous Task Instance.
 
 # Coding Guidelines
 
