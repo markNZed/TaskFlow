@@ -63,7 +63,7 @@ async function doUpdate(commandArgs, task, res) {
     await taskSync_async(task.instanceId, task)
       .then(async () => {
         task.meta.hash = utils.taskHash(task);
-        delete task.hub.hashTask;
+        delete task.hub.origTask;
         activeTasksStore_async.set(task.instanceId, task);
       });
     // We can use this for the websocket so thre is no res provided in that case  
@@ -85,9 +85,10 @@ export async function commandUpdate_async(task, res) {
   }
   // Lock the mutex
   const release = await mutex.acquire();
+  //console.log("commandUpdate_async lock", task.instanceId);
   try {
     const activeTask = await activeTasksStore_async.get(task.instanceId)
-    activeTask.hub["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
+    activeTask.hub["origTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
@@ -122,6 +123,7 @@ export async function commandUpdate_async(task, res) {
     }
   } finally {
     // Always release the lock
+    //console.log("commandUpdate_async release", task.instanceId);
     release();
   }
 }

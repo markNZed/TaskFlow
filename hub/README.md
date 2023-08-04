@@ -11,7 +11,6 @@ Information for the Task Hub is held in the `task.hub` object. Only the Task Hub
   * error
   * register
   * pong
-  * sync
 
 The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored
@@ -45,8 +44,10 @@ The Hub provides the following features:
 * `task.meta.parentId` the `task.id` of the Task that started this Task
 * `task.meta.updateCount` the number of Task updates completed
 * `task.meta.updatesThisMinute` rate of API accesses per minute
+* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Task Processors.
+* A mutex imposes serial updates per task instanceId
 
-When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). It would be possible to send a smaller diff to the source Task Processor after updating the task on the Task Hub but this would require a new data path and the code complexity does not seem justifiable.
+When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Task Processor is synchronized with all other Task Processors.
 
 # Launch
 

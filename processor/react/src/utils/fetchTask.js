@@ -18,12 +18,12 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   task.processor["id"] = processorId;
 
   // Only intended for update command
-  const hashTask = task.processor.hashTask;
-  const diffTask = utils.getObjectDifference(hashTask, task);
-  delete diffTask.processor.hashTask; // Only used internally
+  const origTask = task.processor.origTask;
+  const diffTask = utils.getObjectDifference(origTask, task);
   diffTask["instanceId"] = task.instanceId;
   diffTask["id"] = task.id;
   diffTask["processor"] = task.processor;
+  delete diffTask.processor.origTask; // Only used internally
 
   diffTask.user = task.user || {};
   diffTask.user["id"] = globalState.user.userId;

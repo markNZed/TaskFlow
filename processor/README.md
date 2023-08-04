@@ -9,7 +9,6 @@ The Task Function mainly communicates with the Task Processor using the object `
 `task.command` maybe be one of:
   * update
   * start
-  * sync
 
 The Task Processor communicates with the Hub using the object `task.processor` Only the Task Processor write to `task.processor`.
 
@@ -20,9 +19,8 @@ The Task Processor communicates with the Hub using the object `task.processor` O
   * ping
   * register
   * partial
-  * sync (update the Task object but do not evaluate the Task Function)
 
-Both `update` and `sync` send a diff, not the entire object, this helps to avoid different Task Processors over-writing parts of the Task they are not modifying. 
+The `update` sends a diff, not the entire object, this helps to avoid different Task Processors over-writing parts of the Task they are not modifying. The last state of the task received is stored in `task.processor.origTask` which is used to compute the diff before sending to the Task Hub.
 
 The Task Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
 

@@ -46,7 +46,7 @@ const TaskConversation = (props) => {
   // There is a loop from the childTask.output.msgs to childTask.input.msgs
   // This potetniallly allows msgs to be controlled by TaskConversation
   useEffect(() => {
-    console.log("TaskConversation childTask?.output?.msgs", childTask?.output?.msgs);
+    //console.log("TaskConversation childTask?.output?.msgs", childTask?.output?.msgs);
     if (childTask?.output?.msgs) {
       modifyChildTask({
         "input.msgs": childTask.output.msgs,

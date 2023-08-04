@@ -25,6 +25,18 @@ import miscRoutes from "./src/routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/websocket.js";
 
 const app = express();
+
+app.use((req, res, next) => {
+  let size = 0;
+  req.on('data', chunk => {
+    size += chunk.length;
+  });
+  req.on('end', () => {
+    console.log(`Request size in bytes: ${size}`);
+  });
+  next();
+});
+
 app.use(requestId());
 app.use(bodyParser.json());
 

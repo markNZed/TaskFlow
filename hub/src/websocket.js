@@ -29,6 +29,7 @@ function wsSendObject(processorId, message = {}) {
     }
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
+      //console.log("wsSendObject message.task.output.sending", message.task?.output?.sending);
       //console.log("wsSendObject ", processorId, message.task.processor )
     }
   }
@@ -44,7 +45,7 @@ const wsSendTask = async function (task, processorId = null) {
   let activeTask = {};
   if (task.hub.command === "update") {
     activeTask = await activeTasksStore_async.get(task.instanceId);
-    activeTask.hub["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
+    activeTask.hub["origTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
     //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
     //console.log("wsSendTask " + command + " task state", task.state);
     let diff = {}
@@ -76,6 +77,8 @@ const wsSendTask = async function (task, processorId = null) {
       if (hashDebug || task.meta.hashDebug) {
         delete activeTask.meta.hashTask;
         diff.meta["hashTask"] = JSON.parse(JSON.stringify(activeTask));
+        delete diff.meta.hashTask.hub;
+        delete diff.meta.hashTask.processors;
       }
       message["task"] = diff;
     } else {
@@ -112,6 +115,7 @@ const wsSendTask = async function (task, processorId = null) {
     //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
     //console.log("wsSendTask message.task.hub.commandArgs.sync", message.task?.hub?.commandArgs?.sync);
   }
+  delete message.task.hub.origTask;
   wsSendObject(processorId, message);
 }
 
@@ -153,6 +157,9 @@ function initWebSocketServer(server) {
       if (j?.task && j.task?.processor?.command !== "ping") {
         let task = j.task;
         task = await taskProcess_async(task);
+
+        const byteSize = Buffer.byteLength(message, 'utf8');
+        console.log(`Message size in bytes: ${byteSize} from ${task?.hub?.sourceProcessorId}`);
 
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs

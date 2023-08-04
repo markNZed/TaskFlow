@@ -124,6 +124,7 @@ function wsSendObject(message) {
 const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
+  delete task.processor.origTask;
   message["task"] = task;
   wsSendObject(message);
 }
@@ -193,8 +194,6 @@ const connectWebSocket = () => {
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(task.instanceId);
       const mergedTask = utils.deepMergeProcessor(lastTask, task, task.processor);
-      // Because deepMergeProcessor would replace hashTask we need to run this after deepMergeProcessor
-      mergedTask.processor["hashTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }
@@ -214,7 +213,8 @@ const connectWebSocket = () => {
         // Here we are receiving an update not coprocessing so we store the task.
         // The stored task needs to be in sync with the hub if we want to use diffs
         mergedTask.meta["hash"] = utils.taskHash(mergedTask);
-        delete mergedTask.processor.hashTask;
+        delete mergedTask.processor.origTask;
+        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(mergedTask)); // deep copy to avoid self-reference
         await activeTasksStore_async.set(mergedTask.instanceId, mergedTask)
         console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
       }
@@ -224,7 +224,7 @@ const connectWebSocket = () => {
       if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
         taskSubject.next(task);
       } else {
-        delete task.processor.hashTask;
+        task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
         await activeTasksStore_async.set(task.instanceId, task)
         console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
       }

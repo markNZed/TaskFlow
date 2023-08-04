@@ -178,11 +178,11 @@ function withTask(Component) {
       async (updateDiff, sourceProcessorId, commandArgs) => {
         console.log("useUpdateWSFilter updateDiff", updateDiff, commandArgs);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        delete lastTask.processor.hashTask; // Only used in the processor
         console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
         updatedTask.meta.hash = utils.taskHash(updatedTask);
-        updatedTask.processor["hashTask"] = JSON.parse(JSON.stringify(updatedTask)); // deep copy to avoid self-reference
+        delete updatedTask.processor.origTask;
+        updatedTask.processor["origTask"] = JSON.parse(JSON.stringify(updatedTask)); // deep copy to avoid self-reference
         await globalState.storageRef.current.set(props.task.instanceId, updatedTask);
         console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         //console.log("useUpdateWSFilter props.task", props.task);
@@ -217,7 +217,9 @@ function withTask(Component) {
           // the setState has not yet run/completed.
           // Ignore the task.meta.hash because it will be out of date becaues lastTask is directly modified above
           // It may not have reached props.task and will look like a difference
-          currentTaskDiff.meta["hash"] = lastTask.meta.hash;
+          if (currentTaskDiff?.meta?.hash) {
+            currentTaskDiff.meta["hash"] = lastTask.meta.hash;
+          }
           if (utils.checkConflicts(currentTaskDiff, updateDiff)) {
             console.error("CONFLICT currentTaskDiff, updateDiff, lastTask ", currentTaskDiff, updateDiff, lastTask);
           }
@@ -274,6 +276,7 @@ function withTask(Component) {
       (newTask) => {
         console.log("useStartWSFilter withTask " + props.task.id + " started", newTask);
         setInitTask(null);
+        newTask.processor["origTask"] = JSON.parse(JSON.stringify(newTask)); // deep copy to avoid self-reference
         setStartTaskReturned(newTask);
       }
     )

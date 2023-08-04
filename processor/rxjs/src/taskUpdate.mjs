@@ -60,9 +60,9 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       if (Object.keys(diff).length > 0) {
         console.log("DIFF task vs updatedTask", diff);
       }
-      const hashTask = updatedTask.processor["hashTask"]
-      const diffTask = utils.getObjectDifference(hashTask, updatedTask);
-      delete diffTask.processor.hashTask; // Only used internally
+      const origTask = updatedTask.processor["origTask"]
+      const diffTask = utils.getObjectDifference(origTask, updatedTask);
+      delete diffTask.processor.origTask; // Only used internally
       diffTask["instanceId"] = updatedTask.instanceId;
       diffTask["id"] = updatedTask.id;
       diffTask["processor"] = updatedTask.processor;
@@ -75,13 +75,7 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       // This is similar to the old do_task
       if (updatedTask.command === "update") {
         // Should be moved to a central place e.g. fetchTask_async
-        const activeTask = await activeTasksStore_async.get(task.instanceId);
-        activeTask.processor["hashTask"] = JSON.parse(JSON.stringify(activeTask)); // deep copy to avoid self-reference
-        const hashTask = activeTask.processor["hashTask"]
-        const updatedTask = utils.getObjectDifference(hashTask, updatedTask);
-        updatedTask["instanceId"] = activeTask.instanceId;
-        updatedTask["id"] = activeTask.id;
-        updatedTask["processor"] = task.processor;
+
         try {
           await fetchTask_async(updatedTask);
         } catch (error) {

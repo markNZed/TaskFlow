@@ -36,14 +36,14 @@ export async function commandStart_async(task, res) {
       // If this is not coming from a coprocessor
       if (task.hub.coProcessingDone) {
         task.meta.hash = utils.taskHash(task);
-        delete task.hub.hashTask;
+        delete task.hub.origTask;
         activeTasksStore_async.set(task.instanceId, task);
         taskSync_async(task.instanceId, task);
       } else if (!task.hub.coProcessing) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {
             startTask.meta.hash = utils.taskHash(startTask);
-            delete startTask.hub.hashTask;
+            delete startTask.hub.origTask;
             activeTasksStore_async.set(startTask.instanceId, startTask);
             return startTask;
           })
@@ -59,7 +59,7 @@ export async function commandStart_async(task, res) {
         })
         .then(async (startTask) => {
           startTask.meta.hash = utils.taskHash(startTask);
-          delete startTask.hub.hashTask;
+          delete startTask.hub.origTask;
           activeTasksStore_async.set(startTask.instanceId, startTask);
         })
     }
