@@ -175,8 +175,8 @@ function withTask(Component) {
     }, [startTaskReturned]);
 
     useUpdateWSFilter(isMounted, props.task,
-      async (updateDiff, sourceProcessorId, commandArgs) => {
-        console.log("useUpdateWSFilter updateDiff", updateDiff, commandArgs);
+      async (updateDiff) => {
+        console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
@@ -189,9 +189,9 @@ function withTask(Component) {
         // There may be meta data like task.meta.lock that we want updated on the source processor
         // The lock effectively makes a processor the master so even if changes are made by another processor
         // the values of the procesor with the lock will be favored.
-        const thisProcessorIsSource = sourceProcessorId === globalState.processorId;
+        const thisProcessorIsSource = updateDiff.processor.sourceProcessorId === globalState.processorId;
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
-        if (commandArgs && commandArgs.sync) {
+        if (updateDiff?.processor?.commandArgs && updateDiff.processor.commandArgs.sync) {
           modifyTask(updateDiff);
           console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {

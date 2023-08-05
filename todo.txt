@@ -2,6 +2,7 @@
 -------
 Use only websocket for task communications
   Will allow for more sharing of code and less debug
+  wsSendObject can use taskToProcessor ?
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?
   The sync is going to arrive after the local storage has beene updated. Due to mutex on hub

@@ -8,6 +8,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
+import { utils } from "../utils/utils";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -29,8 +30,7 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   console.log("--------- WebSocketProvider ---------");
 
-  const [webSocket, setWebSocket] = useState(null);
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();
 
   // The default is 10 but we have at least 3 listeners per task
@@ -40,12 +40,20 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
-    m.task.processor["id"] = globalState.processorId;
     if (m.task?.processor?.command === "ping") {
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     sendJsonMessage(m);
   };
+
+  const wsSendTask = function (task) {
+    //console.log("wsSendTask " + message)
+    let message = {}; 
+    task = utils.taskToProcessor(task, globalState.processorId)
+    const diffTask = utils.processorDiff(task);
+    message["task"] = diffTask;
+    sendJsonMessagePlusRef.current(message);
+  }
 
   const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
     reconnectAttempts: 15,
@@ -59,24 +67,15 @@ export function WebSocketProvider({ children, socketUrl }) {
     onOpen: (e) => {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
-      //setWebSocket(ws);
       if (!globalState.hubId) {
         // This should cause the App to re-register with the hub
-        // Reassigning te same value will create an event 
+        // Reassigning the same value will create an event 
         //replaceGlobalState("hubId", null);
       }
-      const taskPing = () => {
-        let currentDateTime = new Date();
-        let currentDateTimeString = currentDateTime.toString();
-        return {
-          updatedeAt: currentDateTimeString,
-          processor: {command: "ping"},
-        }
-      }
-      sendJsonMessagePlusRef.current({task: taskPing()});
+      wsSendTask(utils.taskPing());
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          sendJsonMessagePlusRef.current({task: taskPing()});
+          wsSendTask(utils.taskPing());
         } else {
           // WebSocket is not open, clear the interval
           clearInterval(intervalId);
@@ -94,26 +93,23 @@ export function WebSocketProvider({ children, socketUrl }) {
       const message = JSON.parse(e.data);
       let command;
       let commandArgs;
-      let sourceProcessorId;
+      let task;
       if (message?.task) {
+        task = utils.hubToProcessor(message.task);
         // The processor strips hub specific info because the Task Function should not interact with the Hub
-        command = message.task.hub.command;
-        commandArgs = message.task.hub?.commandArgs;
-        sourceProcessorId = message.task.hub?.sourceProcessorId;
-        delete message.task.hub;
+        command = task.processor.command;
+        commandArgs = task.processor.commandArgs;
       }
       if (command !== "pong") {
         //console.log("App webSocket command", command,  commandArgs, message.task.id, message.task);
-        //console.log("App webSocket sourceProcessorId", sourceProcessorId);
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here
         message.command = command;
         message.commandArgs = commandArgs;
-        message.sourceProcessorId = sourceProcessorId;
         messageQueue[messageQueueIdx] = message;
         messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index
-        webSocketEventEmitter.emit(command, message.task);
+        webSocketEventEmitter.emit(command, task);
       } else if (command === "pong") {
         //console.log("App webSocket received pong", message);
       } else {

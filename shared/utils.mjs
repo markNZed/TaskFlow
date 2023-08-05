@@ -415,6 +415,58 @@ const sharedUtils = {
     return true;
   },
 
+  taskToProcessor: function(task, processorId) {
+    if (!task.command) {
+      console.error("ERROR: Missing task.command", task);
+      throw new Error(`Missing task.command`);
+    }
+    const command = task.command;
+    // Initialize processor when it does not exist e.g. when starting initial task
+    if (!task.processor) {
+      task.processor = {};
+    }
+    // Clear down task commands as we do not want these coming back from the hub
+    task.processor["command"] = command;
+    task["command"] = null;
+    if (task.commandArgs) {
+      // Deep copy because we are going to clear
+      task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
+      task.commandArgs = null;
+    } else {
+      task.processor["commandArgs"] = {};
+    }
+    task.processor["id"] = processorId;
+    return task;
+  },
+
+  // Should not be sending processor from hub ? Allows processor specific config. Also initiatingProcessorId
+  hubToProcessor: function(task) {
+    const hub = JSON.parse(JSON.stringify(task.hub)); // deep copy
+    delete task.hub;
+    // The processor strips hub specific info because the Task Function should not interact with the Hub
+    delete hub.id;
+    task.processor = task.processor || {};
+    task.processor["command"] = hub.command;
+    task.processor["commandArgs"] = hub.commandArgs;
+    task.processor = sharedUtils.deepMerge(task.processor, hub);
+    if (hub.sourceProcessorId) {
+      task.processor["sourceProcessorId"] = hub.sourceProcessorId;
+    } else {
+      delete task.processor.sourceProcessorId;
+    }
+    return task;
+  },
+
+  taskPing: function() {
+    let currentDateTime = new Date();
+    let currentDateTimeString = currentDateTime.toString();
+    return {
+      updatedeAt: currentDateTimeString,
+      processor: {},
+      command: "ping",
+    }
+  },
+
 };
 
 export { sharedUtils };

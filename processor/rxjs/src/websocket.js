@@ -98,25 +98,10 @@ taskSubject
     complete: () => console.info('complete'),
   });
 
-
 function wsSendObject(message) {
   if (!processorWs) {
     console.log("Lost websocket for wsSendObject", message);
   } else {
-    if (!message?.task) {
-      throw new Error("Missing task in wsSendObject" + JSON.stringify(message));
-    }
-    // This is used when sending a partial response from SubTaskLLM.mjs
-    if (message.task?.command) {
-      message.task.processor.command = message.task.command;
-      message.task.command = null;
-      if (message.task.commandArgs) {
-        // Deep copy because we are going to clear
-        message.task.processor.commandArgs = JSON.parse(JSON.stringify(message.task.commandArgs));
-        message.task.commandArgs = null;
-      }
-    }
-    message.task.processor["id"] = processorId;
     if (message.task.processor.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
       //console.log("wsSendObject commmand " + message.task.processor.command + " " + message.task.id + " commandArgs ",message.task.processor.commandArgs)
@@ -129,6 +114,7 @@ function wsSendObject(message) {
 const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
+  task = utils.taskToProcessor(task, processorId)
   const diffTask = utils.processorDiff(task);
   message["task"] = diffTask;
   wsSendObject(message);
@@ -144,18 +130,10 @@ const connectWebSocket = () => {
     register_async();
     // reset connection attempts on successful connection
     connectionAttempts = 0;
-    const taskPing = () => {
-      let currentDateTime = new Date();
-      let currentDateTimeString = currentDateTime.toString();
-      return {
-        updatedeAt: currentDateTimeString,
-        processor: {command: "ping"},
-      }
-    }
-    wsSendTask(taskPing());
+    wsSendTask(utils.taskPing());
     const intervalId = setInterval(() => {
       if (processorWs.readyState === WebSocket.OPEN) {
-        wsSendTask(taskPing());
+        wsSendTask(utils.taskPing());
       } else {
         clearInterval(intervalId);
       }
@@ -175,17 +153,10 @@ const connectWebSocket = () => {
     //console.log("message.task.hub", message.task.hub);
     let task;
     if (message?.task) {
-      task = message.task;
-      const hub = JSON.parse(JSON.stringify(task.hub)); // deep copy
-      delete task.hub;
+      task = utils.hubToProcessor(message.task);
       // The processor strips hub specific info because the Task Function should not interact with the Hub
-      command = hub.command;
-      commandArgs = hub?.commandArgs;
-      delete hub.id;
-      task.processor = task.processor || {};
-      task.processor["command"] = command;
-      task.processor["commandArgs"] = commandArgs;
-      task.processor = utils.deepMerge(task.processor, hub);
+      command = task.processor.command;
+      commandArgs = task.processor.commandArgs;
     } else {
       console.error("Missing task in message");
       return;

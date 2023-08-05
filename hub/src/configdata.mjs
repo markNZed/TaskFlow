@@ -84,14 +84,8 @@ function mergeObj(task, key, parentTask) {
   // Don't copy PRIVATE info (specific to the task)
   } else if (!key.startsWith("LOCAL_") && !parentTask.hasOwnProperty("LOCAL_" + key)) {
     if (task.hasOwnProperty(key)) {
-      if (key === "environments") {
-        console.log("Merge environments", parentTask[key], task[key]);
-      }
       task[key] = utils.deepMerge(parentTask[key], task[key]);
-      if (key === "environments") {
-        console.log("Merge environments reult ", task[key]);
-      }
-    } else {
+     } else {
       task[key] = parentTask[key];
     }
   }

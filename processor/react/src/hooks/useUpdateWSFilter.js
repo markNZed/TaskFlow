@@ -30,7 +30,7 @@ function useUpdateWSFilter(isMounted, initialTask, onUpdate) {
           //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
           // Important to wait so that the task is saved to storage before it is retrieved again
           processingRef.current = true;
-          await onUpdate(message.task, message.sourceProcessorId, message.commandArgs);
+          await onUpdate(message.task);
           delete messageQueue[key];
           processingRef.current = false;
           //console.log("useUpdateWSFilter handleUpdate delete key", messageQueue);

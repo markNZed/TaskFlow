@@ -2,21 +2,9 @@ import { hubUrl } from "../config";
 import { toTask, fromTask } from "./taskConverterWrapper";
 import { utils } from "./utils";
 
-export const fetchTask = async (globalState, command, commandArgs, task) => {
+export const fetchTask = async (globalState, task) => {
 
-  let messageJsonString;
-
-  const processorId = globalState.processorId;
-
-  // Initialize processor when it does not exist e.g. when starting initial task
-  if (!task.processor) {
-    task.processor = {};
-  }
-  // Clear down task commands as we do not want these coming back from the hub
-  task.processor["command"] = command;
-  task.processor["commandArgs"] = commandArgs;
-  task.processor["id"] = processorId;
-
+  task = utils.taskToProcessor(task, globalState.processorId)
   const diffTask = utils.processorDiff(task);
 
   diffTask["user"] = task.user || {};
@@ -25,6 +13,7 @@ export const fetchTask = async (globalState, command, commandArgs, task) => {
   // The immediate destination of this request
   let fetchUrl = `${hubUrl}/api/task/`; // using hub routing
 
+  let messageJsonString;
   try {
     const validatedTaskJsonString = fromTask(diffTask);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);

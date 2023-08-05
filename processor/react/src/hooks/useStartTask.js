@@ -30,9 +30,8 @@ const useStartTask = (task, setTask) => {
         const updating = { "command": null, "commandArgs": null };
         utils.setNestedProperties(updating);
         setTask((p) => utils.deepMerge(p, updating));
-        snapshot = utils.deepMerge(snapshot, updating)
         utils.log("useStartTask", snapshot.id);
-        fetchTask(globalState, command, commandArgs, snapshot);
+        fetchTask(globalState, snapshot);
       } catch (error) {
         console.log(error)
         setStartTaskError(error.message);
