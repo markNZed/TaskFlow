@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
-import { fetchTask_async } from "../fetchTask.mjs";
 import { cacheStore_async } from "../storage.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
@@ -86,54 +85,49 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
-      // Could error here maybe need to chek?
-      const ok = await fetchTask_async(task)
-      if (ok) {
-        if (entryState === "introduction") {
-          const simulationPrompt = { role: "user", text: task.config.local.introductionPrompt, user: task.user.label };
-          T("output.simulationPrompt", simulationPrompt);
-          const simulationResponse = { role: "assistant", text: "", user: "assistant" };
-          T("output.simulationResponse", simulationResponse);
-          T("request.prompt", T("output.simulationPrompt.text"));
-          const subTask = await SubTaskLLM_async(wsSendTask, task);
-          T("output.simulationResponse.text", subTask.response.LLM);
-        } else {
-          let subTask = JSON.parse(JSON.stringify(task));
-          const ST = utils.createTaskValueGetter(subTask);
-          let msgs = ST("output.msgs");
-          msgs.shift(); // Remove the first entry
-          if (msgs && msgs.length > 0) {
-            msgs.forEach(function(item, index) {
-              if (item !== null) {
-                if (item.role === "user") {
-                  item.role = "assistant";
-                  item.user = "assistant";
-                } else if (item.role === "assistant") {
-                  item.role = "user";
-                  item.user = task.user.label;
-                }
-              }
-            });
-          }
-          // The last message in output.msgs should become the prompt
-          const simulationPrompt = msgs.pop().text;
-          ST("input.msgs", msgs);
-          ST("request.prompt", simulationPrompt)
-          subTask = await SubTaskLLM_async(wsSendTask, subTask);
-          const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
-          T("output.simulationResponse", simulationResponse);
-        }
-
-        // Send to sync latest outputs via Hub, should also unlock
-        T("state.last", T("state.current"));
-        T("state.current", "received");
-        T("commandArgs.unlock", true);
-        T("command", "update");
+      // Could error here. How to chek?
+      wsSendTask(task);
+      if (entryState === "introduction") {
+        const simulationPrompt = { role: "user", text: task.config.local.introductionPrompt, user: task.user.label };
+        T("output.simulationPrompt", simulationPrompt);
+        const simulationResponse = { role: "assistant", text: "", user: "assistant" };
+        T("output.simulationResponse", simulationResponse);
+        T("request.prompt", T("output.simulationPrompt.text"));
+        const subTask = await SubTaskLLM_async(wsSendTask, task);
+        T("output.simulationResponse.text", subTask.response.LLM);
       } else {
-        console.log("response nok");
-        return null;
+        let subTask = JSON.parse(JSON.stringify(task));
+        const ST = utils.createTaskValueGetter(subTask);
+        let msgs = ST("output.msgs");
+        msgs.shift(); // Remove the first entry
+        if (msgs && msgs.length > 0) {
+          msgs.forEach(function(item, index) {
+            if (item !== null) {
+              if (item.role === "user") {
+                item.role = "assistant";
+                item.user = "assistant";
+              } else if (item.role === "assistant") {
+                item.role = "user";
+                item.user = task.user.label;
+              }
+            }
+          });
+        }
+        // The last message in output.msgs should become the prompt
+        const simulationPrompt = msgs.pop().text;
+        ST("input.msgs", msgs);
+        ST("request.prompt", simulationPrompt)
+        subTask = await SubTaskLLM_async(wsSendTask, subTask);
+        const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
+        T("output.simulationResponse", simulationResponse);
       }
-      break;
+
+      // Send to sync latest outputs via Hub, should also unlock
+      T("state.last", T("state.current"));
+      T("state.current", "received");
+      T("commandArgs.unlock", true);
+      T("command", "update");
+       break;
     default:
       console.log("WARNING unknown state : " + task.state.current);
       return null;

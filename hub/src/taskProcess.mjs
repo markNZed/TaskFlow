@@ -10,6 +10,7 @@ import { activeTasksStore_async, outputStore_async } from "./storage.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
+import { utils } from './utils.mjs';
 
 function processorInHubOut(task, activeTask, requestId) {
   const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
@@ -123,7 +124,6 @@ function checkAPIRate(task, activeTask) {
     //console.log(`Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
     task.meta.requestCount++;
   }
-
   return task;
 }
 
@@ -160,7 +160,8 @@ async function processOutput_async(task, outputStore) {
     if (!output) {
       output = {};
     }
-    output[`${task.id}.output`] = task.output;
+    // Merge because we are receiving a diff
+    output[`${task.id}.output`] = utils.deepMerge(output[`${task.id}.output`], task.output);
     await outputStore.set(task.familyId, output);
   }
   return task;
@@ -189,21 +190,30 @@ async function taskProcess_async(task, req, res) {
     let activeTask = {};
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
+      // Need to restore meta for checkLockConflict, checkAPIRate
+      task.meta = utils.deepMerge(activeTask.meta, task.meta);
     }
     let requestId;
     if (req) {
       requestId = req.id;
     }
     task = processorInHubOut(task, activeTask, requestId);
-    task = checkLockConflict(task, activeTask);
-    task = checkAPIRate(task, activeTask);
-    task = processError(task, tasks);
+    if (task.hub.command !== "partial") {
+      task = checkLockConflict(task, activeTask);
+      task = checkAPIRate(task, activeTask);
+      task = processError(task, tasks);
+    }
     // Deep copy
     let error;
     if (task.error) {
       error = JSON.parse(JSON.stringify(task.error));
     }
-    task = await processOutput_async(task, outputStore_async);
+    if (task.hub.command !== "partial") {
+      // We may receive a diff where familyId is not sent but
+      // we need familyId to set the outputStore_async
+      task.familyId = task.familyId || activeTask.familyId;
+      task = await processOutput_async(task, outputStore_async);
+    }
     if (res) {
       const result = await processCommand_async(task, res);
       if (error !== undefined) {

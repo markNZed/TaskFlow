@@ -5,9 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { taskFunctions } from "./Task/taskFunctions.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
-import { fetchTask_async } from "./fetchTask.mjs";
-import { utils } from "./utils.mjs";
 
 export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
@@ -23,15 +20,24 @@ export async function taskProcess_async(wsSendTask, task) {
         updatedTask.error = e.message;
         updatedTask.command = "update";
       }
+
+        // This needs more testing
+        // When not a coprocessor what do we want to do?
+        // Which command should we support here?
+        // This is similar to the old do_task
+        if (updatedTask?.command === "update") {
+          console.log("taskProcess_async sending");
+          wsSendTask(updatedTask);
+        } else {
+          console.log("taskProcess_async nothing to do");
+        }
+
       // Returning null is  away of doing nothing
       if (updatedTask !== null) {
-        if (!updatedTask?.command) {
-          throw new Error("Missing command in updatedTask");
-        }
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
         }
-        if (updatedTask.command === "start") {
+        if (updatedTask?.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
           const task = {
@@ -40,13 +46,17 @@ export async function taskProcess_async(wsSendTask, task) {
             hub: {},
             command: "start",
           }
-          await fetchTask_async(task);
-        } else {
+          wsSendTask(task);
+        } else if (updatedTask?.command === "update") {
+          console.log("taskProcess_async sending");
+          //wsSendTask(updatedTask);
           try {
-            await fetchTask_async(updatedTask);
+            wsSendTask(task);
           } catch (error) {
             console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }
+        } else {
+          console.log("taskProcess_async nothing to do");
         }
       } else {
         console.log("taskProcess_async null " + task.id);

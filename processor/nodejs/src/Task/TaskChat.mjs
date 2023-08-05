@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
-import { fetchTask_async } from "../fetchTask.mjs";
 import { cacheStore_async } from "../storage.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
@@ -85,7 +84,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       T("commandArgs.lockBypass", true);
       // Update the task which has the effect of setting the state to receiving on ohter Processors
       T("command", "update");
-      await fetchTask_async(task)
+      wsSendTask(task);
       const subTask = await SubTaskLLM_async(wsSendTask, task);
       T("response.LLMResponse", subTask.response.LLM);
       T("state.last", T("state.current"));
