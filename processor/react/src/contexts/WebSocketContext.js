@@ -49,9 +49,8 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    task = utils.taskToProcessor(task, globalState.processorId)
-    const diffTask = utils.processorDiff(task);
-    message["task"] = diffTask;
+    task = utils.taskInProcessorOut(task, globalState.processorId)
+    message["task"] = task;
     sendJsonMessagePlusRef.current(message);
   }
 
@@ -95,8 +94,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       let commandArgs;
       let task;
       if (message?.task) {
-        task = utils.hubToProcessor(message.task);
-        // The processor strips hub specific info because the Task Function should not interact with the Hub
+        task = utils.hubInProcessorOut(message.task);
         command = task.processor.command;
         commandArgs = task.processor.commandArgs;
       }

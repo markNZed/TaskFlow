@@ -345,6 +345,7 @@ const sharedUtils = {
     diffTask["instanceId"] = taskCopy.instanceId;
     diffTask["id"] = taskCopy.id;
     diffTask["processor"] = taskCopy.processor;
+    diffTask["user"] = taskCopy.user || {};
     delete diffTask.processor.origTask; // Only used internally
     return diffTask;
   },
@@ -357,7 +358,9 @@ const sharedUtils = {
       diffTask["instanceId"] = taskCopy.instanceId;
       diffTask["id"] = taskCopy.id;
       diffTask["hub"] = taskCopy.hub;
+      diffTask["processor"] = {};
       diffTask["processors"] = taskCopy.processors;
+      diffTask["user"] = taskCopy.user;
       diffTask["users"] = taskCopy.users;
       if (!diffTask.meta) {
         diffTask["meta"] = {};
@@ -415,7 +418,7 @@ const sharedUtils = {
     return true;
   },
 
-  taskToProcessor: function(task, processorId) {
+  taskInProcessorOut: function(task, processorId) {
     if (!task.command) {
       console.error("ERROR: Missing task.command", task);
       throw new Error(`Missing task.command`);
@@ -436,14 +439,15 @@ const sharedUtils = {
       task.processor["commandArgs"] = {};
     }
     task.processor["id"] = processorId;
-    return task;
+    const diffTask = sharedUtils.processorDiff(task);
+    return diffTask;
   },
 
   // Should not be sending processor from hub ? Allows processor specific config. Also initiatingProcessorId
-  hubToProcessor: function(task) {
+  // The processor strips hub specific info because the Task Function should not interact with the Hub
+  hubInProcessorOut: function(task) {
     const hub = JSON.parse(JSON.stringify(task.hub)); // deep copy
     delete task.hub;
-    // The processor strips hub specific info because the Task Function should not interact with the Hub
     delete hub.id;
     task.processor = task.processor || {};
     task.processor["command"] = hub.command;

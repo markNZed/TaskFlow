@@ -1,8 +1,11 @@
 /* ToDo
 -------
+Maybe should have task.processorId, task.userId etc,. 
 Use only websocket for task communications
-  Will allow for more sharing of code and less debug
-  wsSendObject can use taskToProcessor ?
+  Move nodejs to use only websocket
+    Modify fetchTask then remove
+  Move react to use only websocket
+Implement hashDiff 
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?
   The sync is going to arrive after the local storage has beene updated. Due to mutex on hub

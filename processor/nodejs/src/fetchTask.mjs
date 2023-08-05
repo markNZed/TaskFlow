@@ -12,13 +12,11 @@ import { utils } from "./utils.mjs";
 export async function fetchTask_async(task) {
 
   const command = task.command;
-  task = utils.taskToProcessor(task, processorId)
-  const diffTask = utils.processorDiff(task);
-
-  console.log("fetchTask " + command + " task: " + diffTask.id + " state: " + diffTask?.state?.current);
+  task = utils.taskInProcessorOut(task, processorId)
+  console.log("fetchTask " + command + " task: " + task.id + " state: " + task?.state?.current);
 
   try {
-    const validatedTaskJsonString = fromTask(diffTask);
+    const validatedTaskJsonString = fromTask(task);
     let validatedTaskObject = JSON.parse(validatedTaskJsonString);
     const messageObject = {
       task: validatedTaskObject,

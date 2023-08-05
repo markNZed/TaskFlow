@@ -4,22 +4,19 @@ import { utils } from "./utils";
 
 export const fetchTask = async (globalState, task) => {
 
-  task = utils.taskToProcessor(task, globalState.processorId)
-  const diffTask = utils.processorDiff(task);
-
-  diffTask["user"] = task.user || {};
-  diffTask.user["id"] = globalState.user.userId;
+  task = utils.taskInProcessorOut(task, globalState.processorId) 
+  task.user["id"] = globalState.user.userId;
 
   // The immediate destination of this request
   let fetchUrl = `${hubUrl}/api/task/`; // using hub routing
 
   let messageJsonString;
   try {
-    const validatedTaskJsonString = fromTask(diffTask);
+    const validatedTaskJsonString = fromTask(task);
     const validatedTaskObject = JSON.parse(validatedTaskJsonString);
     messageJsonString = JSON.stringify({ task: validatedTaskObject });
   } catch (error) {
-    console.log("Error while converting Task to JSON:", error, diffTask);
+    console.log("Error while converting Task to JSON:", error, task);
     return;
   }
 

@@ -11,8 +11,8 @@ import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
 
-function transferCommand(task, activeTask, requestId) {
-  const { command, id, coProcessorPosition, coProcessing, coProcessingDone  } = task.processor;
+function processorInHubOut(task, activeTask, requestId) {
+  const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   //console.log("task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
@@ -28,7 +28,7 @@ function transferCommand(task, activeTask, requestId) {
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
-  task.processor.coProcessorPosition = null;
+  task.processor.coProcessingPosition = null;
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
   task.processors = activeTaskProcessors;
@@ -38,11 +38,11 @@ function transferCommand(task, activeTask, requestId) {
     sourceProcessorId: id,
     initiatingProcessorId,
     requestId,
-    coProcessorPosition,
+    coProcessingPosition,
     coProcessingDone,
     coProcessing,
   };
-  //console.log("transferCommand " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
+  //console.log("processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
 }
 
@@ -194,7 +194,7 @@ async function taskProcess_async(task, req, res) {
     if (req) {
       requestId = req.id;
     }
-    task = transferCommand(task, activeTask, requestId);
+    task = processorInHubOut(task, activeTask, requestId);
     task = checkLockConflict(task, activeTask);
     task = checkAPIRate(task, activeTask);
     task = processError(task, tasks);

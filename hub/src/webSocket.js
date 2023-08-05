@@ -24,9 +24,6 @@ function wsSendObject(processorId, message = {}) {
   if (!ws) {
     console.error(`Lost websocket for wsSendObject with processorId ${processorId} and message task ${message.task}`);
   } else {
-    if (!message?.task) {
-      throw new Error(`Missing task in wsSendObject: ${JSON.stringify(message)}`);
-    }
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
       //console.log("wsSendObject message.task.output.sending", message.task?.output?.sending);
@@ -35,7 +32,7 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-const wsSendTask = async function (task, processorId = null) {
+const wsSendTask = async function (task, processorId) {
   if (!task?.hub?.command) {
     throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
@@ -43,6 +40,7 @@ const wsSendTask = async function (task, processorId = null) {
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   let message = {}
   let activeTask = {};
+  // We can only have an activeTask for an update command
   if (task.hub.command === "update") {
     activeTask = await activeTasksStore_async.get(task.instanceId);
     //console.log("wsSendTask " + command + " activeTask state", activeTask.state);
@@ -54,42 +52,47 @@ const wsSendTask = async function (task, processorId = null) {
         console.log("wsSendTask no diff", diff);
         return null;
       }
-      message["task"] = diff;
+      task = diff;
     } else {
       throw new Error("Update but no active task for " + task.id);
     }
-  } else {
-    message["task"] = task;
   }
   //console.log("wsSendTask " + command + " message state", message["task"].state);
   // For example task.command === "partial" does not have task.processors
-  //console.log("wsSendTask message.task.hub", message.task.hub);
-  if (message.task?.processors) {
-    //console.log("wsSendTask message.task.processors", processorId, message.task.processors);
+  //console.log("wsSendTask task.hub", task.hub);
+  if (task?.processors) {
+    //console.log("wsSendTask task.processors", processorId, task.processors);
     //deep copy because we are going to edit the object
-    message.task.processor = JSON.parse(JSON.stringify(message.task.processors[processorId]));
-    message.task.processor["command"] = null;
-    message.task.processor["commandArgs"] = null;
-    if (message.task.processor.isCoProcessor) {
-      message.task.processor["coProcessorPosition"] = task.hub.coProcessorPosition;
-      message.task.processor["coProcessingDone"] = task.hub.coProcessingDone;
-      message.task.processor["coProcessing"] = task.hub.coProcessing;
-      message.task.processor["initiatingProcessorId"] = task.hub.initiatingProcessorId; // Only used by coprocessor ?
+    task.processor = JSON.parse(JSON.stringify(task.processors[processorId]));
+    task.processor["command"] = null;
+    task.processor["commandArgs"] = null;
+    delete task.processors;
+  } else {
+    task.processor = {};
+  }
+  const { coProcessingPosition, coProcessing, coProcessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
+  if (task.processor.isCoProcessor) {
+    task.processor["coProcessingPosition"] = coProcessingPosition;
+    task.processor["coProcessing"] = coProcessing;
+    task.processor["coProcessingDone"] = coProcessingDone;
+  }
+  task.processor["initiatingProcessorId"] = initiatingProcessorId;
+  task.processor["sourceProcessorId"] = sourceProcessorId;
+  if (task?.users) {
+    if (!task?.user?.id) {
+      console.log("wsSendTask no user", task);
     }
-    message.task.processor["sourceProcessorId"] = task.hub.sourceProcessorId;
-    delete message.task.processors;
+    task.user = JSON.parse(JSON.stringify(task.users[task.user.id]));
+    delete task.users;
   }
-  if (message.task?.users) {
-    message.task.user = JSON.parse(JSON.stringify(message.task.users[task.user.id]));
-    delete message.task.users;
-  }
-  message.task.meta = message.task.meta || {};
+  task.meta = task.meta || {};
   if (task.hub.command !== "pong") {
-    //console.log("wsSendTask sourceProcessorId " + message.task.hub.sourceProcessorId)
-    //console.log("wsSendTask task " + (message.task.id || message.task.instanceId )+ " to " + processorId)
-    //console.log("wsSendTask message.task.hub.commandArgs.sync", message.task?.hub?.commandArgs?.sync);
+    //console.log("wsSendTask sourceProcessorId " + task.hub.sourceProcessorId)
+    //console.log("wsSendTask task " + (task.id || task.instanceId )+ " to " + processorId)
+    //console.log("wsSendTask task.hub.commandArgs.sync", task?.hub?.commandArgs?.sync);
   }
-  delete message.task.hub.origTask;
+  delete task.hub.origTask;
+  message["task"] = task;
   wsSendObject(processorId, message);
 }
 
@@ -121,6 +124,7 @@ function initWebSocketServer(server) {
           const task = {
             updatedeAt: currentDateTimeString,
             hub: {command: "register"},
+            processor: {},
           };
           console.log("Request for registering " + processorId)
           wsSendTask(task, processorId);
@@ -140,7 +144,7 @@ function initWebSocketServer(server) {
         // Currently update/sync requests via websocket are only coming from co-processor
 
         const coProcessors = Array.from(activeCoProcessors.keys());
-        const wasLastCoProcessor = task.hub?.coProcessorPosition === (coProcessors.length - 1);
+        const wasLastCoProcessor = task.hub?.coProcessingPosition === (coProcessors.length - 1);
 
         // Most of the coprocessing code could be moved into taskProcess_async ?
         let processorId;
@@ -154,7 +158,7 @@ function initWebSocketServer(server) {
         }
 
         if (task.hub.command !== "partial") {
-          //console.log("isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coProcessorPosition " + task.hub?.coProcessorPosition + " processorId " + processorId);
+          //console.log("isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coProcessingPosition " + task.hub?.coProcessingPosition + " processorId " + processorId);
         }
 
         // Have not tested this yet because we only have one coprocessor
@@ -162,11 +166,11 @@ function initWebSocketServer(server) {
         if (task.processor.isCoProcessor && task.hub.coProcessing && !wasLastCoProcessor) {
           console.log("Looking for NEXT coprocessor");
           // Send through the coProcessors
-          // The task.hub.coProcessorPosition decides which coProcessor to run
+          // The task.hub.coProcessingPosition decides which coProcessor to run
           // It would be faster to chain the coprocessors directly as this avoids a request/response from the hub
-          task.hub.coProcessorPosition++;
+          task.hub.coProcessingPosition++;
           // Should loop over the coprocessors to deal with case where command is not supported
-          const coProcessorId = coProcessors[task.hub.coProcessorPosition];
+          const coProcessorId = coProcessors[task.hub.coProcessingPosition];
           const coProcessorData = activeCoProcessors.get(coProcessorId);
           if (coProcessorData && coProcessorData.commandsAccepted.includes(task.hub.command)) {
             const ws = connections.get(coProcessorId);
@@ -191,7 +195,7 @@ function initWebSocketServer(server) {
           processorId = task.hub.initiatingProcessorId || processorId;
           task.processor = task.processors[processorId];
           task.hub.sourceProcessorId = processorId;
-          task.hub["coProcessorPosition"] = null;
+          task.hub["coProcessingPosition"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
               console.log("Finished with coProcessors", task.id, processorId);
@@ -240,6 +244,7 @@ function initWebSocketServer(server) {
         const task = {
           updatedeAt: currentDateTimeString,
           hub: {command: "pong"},
+          processor: {},
         };
         //console.log("Pong " + j.task.processor.id)
         wsSendTask(task, j.task.processor.id);

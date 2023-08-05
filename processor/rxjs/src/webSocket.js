@@ -114,9 +114,8 @@ function wsSendObject(message) {
 const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
-  task = utils.taskToProcessor(task, processorId)
-  const diffTask = utils.processorDiff(task);
-  message["task"] = diffTask;
+  task = utils.taskInProcessorOut(task, processorId)
+  message["task"] = task;
   wsSendObject(message);
 }
 
@@ -153,8 +152,7 @@ const connectWebSocket = () => {
     //console.log("message.task.hub", message.task.hub);
     let task;
     if (message?.task) {
-      task = utils.hubToProcessor(message.task);
-      // The processor strips hub specific info because the Task Function should not interact with the Hub
+      task = utils.hubInProcessorOut(message.task);
       command = task.processor.command;
       commandArgs = task.processor.commandArgs;
     } else {
@@ -196,6 +194,7 @@ const connectWebSocket = () => {
           console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
         }
       } else {
+        // Do not want to pass sync through CEP. Stop looping if we updated the task from this processor
         if (commandArgs?.sync || mergedTask.processor.initiatingProcessorId === processorId) {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
           console.log("Synced task ", task.id);
@@ -213,9 +212,13 @@ const connectWebSocket = () => {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
           console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
         }
-      } else if (task.processor.initiatingProcessorId !== processorId) {
-        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-        taskSubject.next(task);
+      } else {
+        // To stop looping if we start a task from this processor
+        if (task.processor.initiatingProcessorId === processorId) {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+        } else {
+          taskSubject.next(task);
+        }
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)

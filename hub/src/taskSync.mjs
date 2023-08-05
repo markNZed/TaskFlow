@@ -50,7 +50,7 @@ const taskSync_async = async (key, value) => {
     for (const coProcessorId of coProcessorIds) { 
       const coProcessorData = activeCoProcessors.get(coProcessorId);
       if (coProcessorData.commandsAccepted.includes(command)) {
-        taskCopy.hub.coProcessorPosition = position;
+        taskCopy.hub.coProcessingPosition = position;
         console.log("taskSync_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
         if (!taskCopy.processors[coProcessorId]) {
           taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
