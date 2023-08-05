@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { useState, useEffect } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
-import { fetchTask } from "../utils/fetchTask";
 import { utils } from "../utils/utils";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
@@ -18,7 +17,7 @@ import useWebSocketContext from "../contexts/WebSocketContext";
 const useUpdateTask = (task, setTask) => {
   const { globalState } = useGlobalStateContext();
   const [updateTaskError, setUpdateTaskError] = useState();
-  const { sendJsonMessagePlus } = useWebSocketContext();
+  const { wsSendTask } = useWebSocketContext();
 
   useEffect(() => {
     const command = task?.command;
@@ -31,9 +30,7 @@ const useUpdateTask = (task, setTask) => {
           const updating = { "command": null, "commandArgs": null };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
-          // fetchTask can change some parameters in Task 
-          // so we save the task object after those changes in the fetchTask
-          await fetchTask(globalState, snapshot);
+          wsSendTask(snapshot);
         } catch (error) {
           console.log(error)
           setUpdateTaskError(error.message);

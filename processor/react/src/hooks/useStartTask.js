@@ -5,33 +5,26 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { useState, useEffect, useRef } from "react";
-import useGlobalStateContext from "../contexts/GlobalStateContext";
-import { fetchTask } from "../utils/fetchTask";
 import { utils } from "../utils/utils";
+import useWebSocketContext from "../contexts/WebSocketContext";
 
 const useStartTask = (task, setTask) => {
-  const { globalState } = useGlobalStateContext();
+  const { wsSendTask } = useWebSocketContext();
   const [startTaskError, setStartTaskError] = useState();
 
   useEffect(() => {
     const command = task?.command;
-    const commandArgs = task?.commandArgs;
     if (command !== "start" || startTaskError) {
       return;
     }
     const fetchTaskFromAPI = async () => {
       try {
-        const initTask = {
-          id: commandArgs.id,
-          familyId: commandArgs?.familyId,
-          processor: {},
-        }
         let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
         const updating = { "command": null, "commandArgs": null };
         utils.setNestedProperties(updating);
         setTask((p) => utils.deepMerge(p, updating));
         utils.log("useStartTask", snapshot.id);
-        fetchTask(globalState, snapshot);
+        wsSendTask(snapshot);
       } catch (error) {
         console.log(error)
         setStartTaskError(error.message);

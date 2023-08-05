@@ -1,8 +1,5 @@
 /* ToDo
 -------
-Maybe should have task.processorId, task.userId etc,. 
-Use only websocket for task communications
-  Move react to use only websocket
 Implement hashDiff 
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?

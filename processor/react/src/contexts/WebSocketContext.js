@@ -23,9 +23,6 @@ export default function useWebSocketContext() {
 export let messageQueue = {};
 export let messageQueueIdx = 0;
 
-// Because useWebSocket includes state it will cause a re-render of 
-// WebSocketProvider after each message is received
-// This is not ideal but it is not clear how to avoid it
 export function WebSocketProvider({ children, socketUrl }) {
 
   console.log("--------- WebSocketProvider ---------");
@@ -49,7 +46,10 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    task = utils.taskInProcessorOut(task, globalState.processorId)
+    task = utils.taskInProcessorOut(task, globalState.processorId);
+    if (globalState.user) {
+      task.user["id"] = globalState.user.userId;
+    }
     message["task"] = task;
     sendJsonMessagePlusRef.current(message);
   }
@@ -152,6 +152,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         //webSocketEventEmitter, 
         //sendJsonMessagePlus: (...args) => sendJsonMessagePlusRef.current(...args),
         //messageQueue,
+        wsSendTask,
       }}
     >
       {children}
