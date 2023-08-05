@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
-import { wsSendTask } from "./websocket.js";
+import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { haveCoProcessor } from "../config.mjs";
 

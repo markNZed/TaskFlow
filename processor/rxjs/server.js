@@ -18,7 +18,7 @@ dotenv.config();
 // App specific modules
 import { appName } from "./config.mjs";
 import miscRoutes from "./src/routes/miscRoutes.js";
-import { connectWebSocket } from "./src/websocket.js";
+import { connectWebSocket } from "./src/webSocket.js";
 
 const app = express();
 app.use(requestId());

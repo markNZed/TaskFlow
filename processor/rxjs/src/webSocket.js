@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { filter, mergeMap, tap, map, Subject } from 'rxjs';
-import { hubSocketUrl, processorId, coProcessor } from "./../config.mjs";
+import { hubSocketUrl, processorId, coProcessor } from "../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskUpdate_async } from "./taskUpdate.mjs";

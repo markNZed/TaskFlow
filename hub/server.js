@@ -22,7 +22,7 @@ import interfaceRoutes from "./src/routes/interfaceRoutes.js";
 import registerRoutes from "./src/routes/registerRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
-import { initWebSocketServer } from "./src/websocket.js";
+import { initWebSocketServer } from "./src/webSocket.js";
 
 const app = express();
 
