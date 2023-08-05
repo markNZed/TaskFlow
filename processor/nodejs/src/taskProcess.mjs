@@ -9,7 +9,7 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { fetchTask_async } from "./fetchTask.mjs";
 import { utils } from "./utils.mjs";
 
-export async function do_task_async(wsSendTask, task) {
+export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
     let idx = 0;
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
@@ -49,7 +49,7 @@ export async function do_task_async(wsSendTask, task) {
           }
         }
       } else {
-        console.log("do_task_async null " + task.id);
+        console.log("taskProcess_async null " + task.id);
       }
     } else {
       console.log("NodeJS Task Processor unknown component " + task.type);

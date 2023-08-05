@@ -9,7 +9,7 @@ import { filter, mergeMap, tap, map, Subject } from 'rxjs';
 import { hubSocketUrl, processorId, coProcessor } from "../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
-import { taskUpdate_async } from "./taskUpdate.mjs";
+import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdateSync_async } from "./commandUpdateSync.mjs";
 
@@ -66,7 +66,7 @@ taskSubject
         console.log("CoProcessing task " + taskCopy.id);
         //console.log("taskSubject task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
         //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
-        task = await taskUpdate_async(wsSendTask, task, CEPFuncs);
+        task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         //console.log("CoProcessing task ", task);
       } else {
         if (Object.keys(diff).length > 0) {
@@ -75,7 +75,7 @@ taskSubject
         }
         // Do we want to allow for this ? Need to be able to install the CEP
         if (task.processor["command"] === "update" || task.processor["command"] === "start") {
-          await taskUpdate_async(wsSendTask, task, CEPFuncs);
+          await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
       return task;

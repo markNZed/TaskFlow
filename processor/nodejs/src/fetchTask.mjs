@@ -8,6 +8,7 @@ import { TASKHUB_URL, processorId } from "../config.mjs";
 import { toTask, fromTask } from "./taskConverterWrapper.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
+//import { wsSendTask } from "./webSocket.js";
 
 export async function fetchTask_async(task) {
 
@@ -29,18 +30,15 @@ export async function fetchTask_async(task) {
       credentials: "include",
       body: messageJsonString,
     };
+
+    //wsSendTask(task);
+    
     const apiUrl = `${TASKHUB_URL}/api/task`;
     console.log(`API ${command} call to ${apiUrl}`);
     const response = await fetch(apiUrl, requestOptions);
     console.log(`API ${command} response status ${response.status}`);
     return response.ok;
-    /*
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-    } else {
-      return response;
-    }
-    */
+    
   } catch (error) {
     console.log(`Error in fetchTask_async ${command}: ${error}`);
     console.trace();

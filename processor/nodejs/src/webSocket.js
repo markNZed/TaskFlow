@@ -8,7 +8,7 @@ import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "../config.mjs";
 import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
-import { do_task_async } from "./doTask.mjs";
+import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
@@ -99,11 +99,11 @@ const connectWebSocket = () => {
       utils.checkHash(lastTask, mergedTask);
       await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
-        await do_task_async(wsSendTask, mergedTask);
+        await taskProcess_async(wsSendTask, mergedTask);
       }
     } else if (command === "start" || command === "join") {
       await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);
-      await do_task_async(wsSendTask, message.task)
+      await taskProcess_async(wsSendTask, message.task)
     } else if (command === "pong") {
       //console.log("ws pong received", message)
     } else if (command === "register") {

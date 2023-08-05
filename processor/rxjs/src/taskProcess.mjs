@@ -8,13 +8,13 @@ import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { coProcessor } from "./../config.mjs";
+import { coProcessor } from "../config.mjs";
 
-export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
+export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = {};
   try {
-    console.log("taskUpdate_async", task.id);
-    console.log("taskUpdate_async task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
+    console.log("taskProcess_async", task.id);
+    console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {
@@ -33,7 +33,7 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
           }
         }
       }
-      //console.log("taskUpdate_async CEPFuncs", CEPFuncs);
+      //console.log("taskProcess_async CEPFuncs", CEPFuncs);
     }
   } catch (e) {
     console.error(e);
@@ -50,11 +50,11 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
     if (coProcessor) {
       if (updatedTask === null) {
         updatedTask = task;
-        console.log("taskUpdate_async null so task replaces updatedTask", updatedTask.id);
+        console.log("taskProcess_async null so task replaces updatedTask", updatedTask.id);
         // The updatedTask.processor will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
       }
-      console.log("taskUpdate_async wsSendTask", diffTask.id);
+      console.log("taskProcess_async wsSendTask", diffTask.id);
       wsSendTask(updatedTask);
     } else {
       // This needs more testing
@@ -62,14 +62,14 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       // Which command should we support here?
       // This is similar to the old do_task
       if (updatedTask?.command === "update") {
-        console.log("taskUpdate_async sending");
+        console.log("taskProcess_async sending");
         wsSendTask(updatedTask);
       } else {
-        console.log("taskUpdate_async nothing to do");
+        console.log("taskProcess_async nothing to do");
       }
     }
   } catch (error) {
-    console.log("taskUpdate_async updatedTask", updatedTask);
+    console.log("taskProcess_async updatedTask", updatedTask);
     console.error(`Command ${updatedTask.command} failed to send ${error}`);
   }
   //wsSendTask(updatedTask);
