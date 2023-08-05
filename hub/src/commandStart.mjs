@@ -35,12 +35,12 @@ export async function commandStart_async(task, res) {
     if (haveCoProcessor) {
       // If this is not coming from a coprocessor
       if (task.hub.coProcessingDone) {
-        utils.activeTasksStoreSet_async(activeTasksStore_async, task);
+        utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
         taskSync_async(task.instanceId, task);
       } else if (!task.hub.coProcessing) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {
-            utils.activeTasksStoreSet_async(activeTasksStore_async, startTask);
+            utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
             return startTask;
           })
           .then(async (syncTask) => {
@@ -54,7 +54,7 @@ export async function commandStart_async(task, res) {
           return syncTask;
         })
         .then(async (startTask) => {
-          utils.activeTasksStoreSet_async(activeTasksStore_async, startTask);
+          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
         })
     }
     // We can use this for the websocket so thre is no res provided in that case  

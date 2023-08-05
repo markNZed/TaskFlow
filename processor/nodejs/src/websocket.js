@@ -47,8 +47,8 @@ function wsSendObject(message) {
 const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
-  delete task.processor.origTask;
-  message["task"] = task;
+  const diffTask = utils.processorDiff(task);
+  message["task"] = diffTask;
   wsSendObject(message);
 }
 
@@ -121,16 +121,13 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging")
       }
       // Check hash
-      const hash = lastTask.meta.hash;
-      if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", sourceProcessorId, hash, mergedTask.meta.hash);
-      }
-      await utils.activeTasksStoreSet_async(activeTasksStore_async, mergedTask);
+      utils.checkHash(lastTask, mergedTask);
+      await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
       if (message.task.processor.sourceProcessorId !== processorId && !commandArgs?.sync) {
         await do_task_async(wsSendTask, mergedTask);
       }
     } else if (command === "start" || command === "join") {
-      await utils.activeTasksStoreSet_async(activeTasksStore_async, message.task);
+      await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);
       await do_task_async(wsSendTask, message.task)
     } else if (command === "pong") {
       //console.log("ws pong received", message)

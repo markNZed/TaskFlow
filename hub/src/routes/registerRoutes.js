@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { activeProcessors, activeCoProcessors } from "../storage.mjs";
-import { hubId } from "../../config.mjs";
+import { hubId, haveCoProcessor } from "../../config.mjs";
 import { getConfigHash } from "../configdata.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -50,6 +50,7 @@ router.post("/", async (req, res) => {
   console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coProcessor " + coProcessor);
     
   if (coProcessor) {
+    haveCoProcessor = true;
     activeCoProcessors.set(processorId, {
       environments,
       commandsAccepted,

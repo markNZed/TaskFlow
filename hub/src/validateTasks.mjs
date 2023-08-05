@@ -51,6 +51,7 @@ const tasksSchema = yup.array().of(yup.object()
       const { parentName } = this.parent;
       return parentName || value === 'root';
     }),
+    environments: yup.array().of(yup.string()),
     type: yup.string(),
     menu: yup.boolean(),
     parentName: yup.string(),

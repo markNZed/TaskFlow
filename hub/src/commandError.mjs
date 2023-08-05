@@ -60,7 +60,7 @@ export async function commandError_async(task) {
     } else {
       taskSync_async(task.instanceId, task)
         .then(async () => {
-          utils.activeTasksStoreSet_async(activeTasksStore_async, task);
+          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
         })  
     }
   } catch (error) {

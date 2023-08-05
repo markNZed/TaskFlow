@@ -19,7 +19,6 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {
       console.log("RxJS Task Processor unknown component " + task.type);
-      updatedTask = task;
     }
     // Create the CEP during the start of the command
     if (task.processor["command"] === "start") {
@@ -44,43 +43,27 @@ export async function taskUpdate_async(wsSendTask, task, CEPFuncs) {
     updatedTask.error = e.message;
     updatedTask.command = "update";
   }
-  if (updatedTask === null) {
-    updatedTask = task;
-    console.log("taskUpdate_async null so task replaces updatedTask", updatedTask.id);
-    // The updatedTask.processor will take effect in wsSendTask
-    // We are not working at the Task scope here so OK to reuse this 
-  }
-  if (updatedTask.error) {
+  if (updatedTask?.error) {
     console.error("Task error ", updatedTask.error)
   }
   try {
     if (coProcessor) {
-      // Check for changes to the task
-      const diff = utils.getObjectDifference(task, updatedTask);
-      if (Object.keys(diff).length > 0) {
-        console.log("DIFF task vs updatedTask", diff);
+      if (updatedTask === null) {
+        updatedTask = task;
+        console.log("taskUpdate_async null so task replaces updatedTask", updatedTask.id);
+        // The updatedTask.processor will take effect in wsSendTask
+        // We are not working at the Task scope here so OK to reuse this 
       }
-      const origTask = updatedTask.processor["origTask"]
-      const diffTask = utils.getObjectDifference(origTask, updatedTask);
-      delete diffTask.processor.origTask; // Only used internally
-      diffTask["instanceId"] = updatedTask.instanceId;
-      diffTask["id"] = updatedTask.id;
-      diffTask["processor"] = updatedTask.processor;
       console.log("taskUpdate_async wsSendTask", diffTask.id);
-      wsSendTask(diffTask);
+      wsSendTask(updatedTask);
     } else {
       // This needs more testing
       // When not a coprocessor what do we want to do?
-      // Which command sshould we support here?
+      // Which command should we support here?
       // This is similar to the old do_task
-      if (updatedTask.command === "update") {
-        // Should be moved to a central place e.g. fetchTask_async
-
-        try {
-          await fetchTask_async(updatedTask);
-        } catch (error) {
-          console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
-        }
+      if (updatedTask?.command === "update") {
+        console.log("taskUpdate_async sending");
+        wsSendTask(updatedTask);
       } else {
         console.log("taskUpdate_async nothing to do");
       }

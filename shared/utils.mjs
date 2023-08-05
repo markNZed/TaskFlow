@@ -56,6 +56,11 @@ const sharedUtils = {
           output.push(update[i]);
         }
       }
+
+      if (prevState.length > update.length) {
+        output.push(...prevState.slice(update.length));
+      }
+
       return output;
     }
 
@@ -317,7 +322,7 @@ const sharedUtils = {
     return hash;
   },
 
-  activeTasksStoreSet_async: async function(activeTasksStore_async, task) {
+  processorActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta["hash"] = sharedUtils.taskHash(task);
     delete task.processor.origTask;
     // deep copy to avoid self-reference
@@ -325,9 +330,16 @@ const sharedUtils = {
     return activeTasksStore_async.set(task.instanceId, task);
   },
 
+  hubActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
+    task.meta["hash"] = sharedUtils.taskHash(task);
+    delete task.hub.origTask;
+    // deep copy to avoid self-reference
+    task.hub["origTask"] = JSON.parse(JSON.stringify(task)); 
+    return activeTasksStore_async.set(task.instanceId, task);
+  },
+
   processorDiff: function(task) {
     const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
-    // Only intended for update command
     const origTask = taskCopy.processor.origTask;
     const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy);
     diffTask["instanceId"] = taskCopy.instanceId;
@@ -337,9 +349,9 @@ const sharedUtils = {
     return diffTask;
   },
 
+  // This is only used in the Hub so could move into the Hub utils 
   hubDiff: function(activeTask, task) {
     const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
-    // Only intended for update command
     const diffTask = sharedUtils.getObjectDifference(activeTask, taskCopy);
     if (Object.keys(diffTask).length > 0) {
       diffTask["instanceId"] = taskCopy.instanceId;
@@ -365,6 +377,42 @@ const sharedUtils = {
       delete diffTask.hub.origTask; // Only used internally
     }
     return diffTask;
+  },
+
+  checkHash: function(origTask, updatedTask) {
+    const hashOrigTask = origTask.meta.hash;
+    const hashUpdatedTask = updatedTask.meta.hash;
+    if (hashOrigTask !== hashUpdatedTask) {
+      console.error("ERROR: Task hash does not match", hashOrigTask, hashUpdatedTask);
+      if (updatedTask.meta.hashTask) {
+        let hashDiff;
+        //console.error("Task hash does not match in update local:" + hashOrigTask + " remote:" + hashUpdatedTask); //, origTask, updatedTask.meta.hashTask);
+        hashDiff = sharedUtils.getObjectDifference(updatedTask.meta.hashTask, origTask );
+        delete hashDiff.hub;
+        delete hashDiff.processor;
+        delete hashDiff.processors;
+        delete hashDiff.user;
+        delete hashDiff.users;
+        delete hashDiff.permissions;
+        delete hashDiff.meta;
+        delete hashDiff.command;
+        delete hashDiff.commandArgs;
+        console.error("Task hashDiff of origTask", hashDiff);
+        hashDiff = sharedUtils.getObjectDifference(origTask, updatedTask.meta.hashTask);
+        delete hashDiff.hub;
+        delete hashDiff.processor;
+        delete hashDiff.processors;
+        delete hashDiff.user;
+        delete hashDiff.users;
+        delete hashDiff.permissions;
+        delete hashDiff.meta;
+        delete hashDiff.command;
+        delete hashDiff.commandArgs;
+        console.error("Task hashDiff of hashTask", hashDiff);
+      }
+      return false;
+    }
+    return true;
   },
 
 };

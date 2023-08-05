@@ -57,9 +57,11 @@ taskSubject
       }
       // Check for changes to the task
       const diff = utils.getObjectDifference(taskCopy, task);
-      //if (Object.keys(diff).length > 0) {
-      //  console.log("DIFF", diff);
-      //}
+      if (Object.keys(diff).length > 0) {
+        console.log("DIFF", diff);
+      } else {
+        console.log("no DIFF");
+      }
       if (coProcessor) {
         console.log("CoProcessing task " + taskCopy.id);
         //console.log("taskSubject task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
@@ -67,25 +69,28 @@ taskSubject
         task = await taskUpdate_async(wsSendTask, task, CEPFuncs);
         //console.log("CoProcessing task ", task);
       } else {
-        // We assume that any sync commands are run from the CEP function
-        if (task.processor["command"] === "update" || task.processor["command"] === "start") {
-          await taskUpdate_async(wsSendTask, taskCopy, CEPFuncs);
-        }
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
-          await commandUpdateSync_async(wsSendTask, taskCopy, diff);
+          await commandUpdateSync_async(wsSendTask, task, diff);
+        }
+        // Do we want to allow for this ? Need to be able to install the CEP
+        if (task.processor["command"] === "update" || task.processor["command"] === "start") {
+          await taskUpdate_async(wsSendTask, task, CEPFuncs);
         }
       }
       return task;
     }),
   )
   .subscribe({
-    next: (result) => {
-      if (result === null) {
+    next: async (task) => {
+      if (task === null) {
         console.log("Task processed with null result");
-      } else if (result.error) {
-        console.error('Error processing task:', result.error);
+      } else if (task.error) {
+        console.error('Error processing task:', task.error);
       } else {
+        if (!coProcessor) {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+        }
         console.log('Task processed successfully');
       }
     },
@@ -124,8 +129,8 @@ function wsSendObject(message) {
 const wsSendTask = function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
-  delete task.processor.origTask;
-  message["task"] = task;
+  const diffTask = utils.processorDiff(task);
+  message["task"] = diffTask;
   wsSendObject(message);
 }
 
@@ -198,31 +203,48 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging, id is missing")
       }
       console.log("ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
-      // Check hash
-      const hash = lastTask.meta.hash;
-      if (hash !== mergedTask.meta.hash) {
-        console.error("ERROR: Task hash does not match", task.processor.sourceProcessorId, hash, mergedTask.meta.hash);
+      // The sync arrives after activeTasksStore_async has been updated so hash mismatch?
+      // 
+      // Check hash 
+      if (!utils.checkHash(lastTask, mergedTask)) {
+        if (mergedTask.processor.initiatingProcessorId === processorId) {
+          console.error("Task hash does not match from this processor");
+        }
       }
       //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs.sync && !mergedTask.processor.coProcessingDone) {
-        console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
-        taskSubject.next(mergedTask);
+      if (coProcessor) {
+        if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs?.sync && !mergedTask.processor.coProcessingDone) {
+          console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
+          taskSubject.next(mergedTask);
+        } else {
+          // Here we are receiving an update not coprocessing so we store the task.
+          // The stored task needs to be in sync with the hub if we want to use diffs
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
+          console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
+        }
       } else {
-        // Here we are receiving an update not coprocessing so we store the task.
-        // The stored task needs to be in sync with the hub if we want to use diffs
-        await utils.activeTasksStoreSet_async(activeTasksStore_async, mergedTask);
-        console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
+        if (commandArgs?.sync || mergedTask.processor.initiatingProcessorId === processorId) {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
+          console.log("Synced task ", task.id);
+        } else {
+          taskSubject.next(mergedTask);
+        }
       }
     } else if (command === "start" || command === "join") {
       console.log("ws " + command + " id ", task.id, task.instanceId)
       // Emit the task into the taskSubject
-      if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
+      if (coProcessor) {
+        if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
+          taskSubject.next(task);
+        } else {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+          console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
+        }
+      } else if (task.processor.initiatingProcessorId !== processorId) {
+        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
         taskSubject.next(task);
-      } else {
-        await utils.activeTasksStoreSet_async(activeTasksStore_async, task);
-        console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)

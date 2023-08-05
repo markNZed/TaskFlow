@@ -35,20 +35,20 @@ try {
   throw new Error("Error validating tasks");
 }
 
-function mergeTasks(childTask, tasksObj) {
-  // Merge the taskType first so we can take APPEN_ PREPREND_ into account from tasktype
-  if (childTask.type) {
+function mergeTasks(task, parentTask) {
+  // Merge the taskType first so we can take APPEND_ PREPREND_ into account from tasktype
+  if (task.type) {
     // Need to deal with a list of components
-    const tasktemplatename = childTask.type;
+    const tasktemplatename = task.type;
     if (tasktypes[tasktemplatename]) {
       for (const key2 in tasktypes[tasktemplatename]) {
         if (key2 !== "id" && key2 !== "name" && key2 !== "parentName") {
           //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
           if (key2 === "config") {
             // ChildTask has priority so it can override default config
-            childTask[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], childTask[key2])
+            task[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], task[key2])
           } else {
-            childTask[key2] =  utils.deepMerge(childTask[key2], tasktypes[tasktemplatename][key2])
+            task[key2] =  utils.deepMerge(task[key2], tasktypes[tasktemplatename][key2])
           }
         }
       }
@@ -56,54 +56,60 @@ function mergeTasks(childTask, tasksObj) {
       console.log("Count not find task template", tasktemplatename)
     }
   }
-  for (const key in tasksObj) {
-    if (tasksObj.hasOwnProperty(key)) {
+  for (const key in parentTask) {
+    if (parentTask.hasOwnProperty(key)) {
       if (key === "label" || key === "type" || key === "meta" || key === "initiator") {
         continue;
       }
-      if (key === "config" && childTask.config) {
-        for (const configKey in tasksObj.config) {
-          // We don;t want to copy task.config.local
+      if (key === "config" && task.config) {
+        for (const configKey in parentTask.config) {
+          // We don't want to copy task.config.local
           if (configKey !== "local" && configKey !== "ceps" && configKey !== "subtasks") {
-            mergeObj(childTask.config, configKey, tasksObj.config);
+            mergeObj(task.config, configKey, parentTask.config);
           }
         }
-      } else {
-        mergeObj(childTask, key, tasksObj);
+      } else if (!key.startsWith("APPEND_") && !key.startsWith("PREPEND_")) {
+        mergeObj(task, key, parentTask);
       }
     }
   }  
 }
 
 // Could replace PREPEND_ with ...+ and APPEND with +...
-function mergeObj(childTask, key, tasksObj) {
-  if (childTask.hasOwnProperty("PREPEND_" + key)) {
-    childTask[key] = prependOperation(childTask, key, tasksObj);
-  } else if (childTask.hasOwnProperty("APPEND_" + key)) {
-    childTask[key] = appendOperation(childTask, key, tasksObj);
+function mergeObj(task, key, parentTask) {
+  if (task.hasOwnProperty("PREPEND_" + key)) {
+    task[key] = prependOperation(task, key, parentTask);
+  } else if (task.hasOwnProperty("APPEND_" + key)) {
+    task[key] = appendOperation(task, key, parentTask);
   // Don't copy PRIVATE info (specific to the task)
-  } else if (!key.startsWith("LOCAL_") && !tasksObj.hasOwnProperty("LOCAL_" + key)) {
-    if (childTask.hasOwnProperty(key)) {
-      childTask[key] = utils.deepMerge(tasksObj[key], childTask[key]);
+  } else if (!key.startsWith("LOCAL_") && !parentTask.hasOwnProperty("LOCAL_" + key)) {
+    if (task.hasOwnProperty(key)) {
+      if (key === "environments") {
+        console.log("Merge environments", parentTask[key], task[key]);
+      }
+      task[key] = utils.deepMerge(parentTask[key], task[key]);
+      if (key === "environments") {
+        console.log("Merge environments reult ", task[key]);
+      }
     } else {
-      childTask[key] = tasksObj[key];
+      task[key] = parentTask[key];
     }
   }
 }
 
-function prependOperation(taskflow, key, tasksObj) {
-  if (Array.isArray(taskflow["PREPEND_" + key])) {
-    return taskflow["PREPEND_" + key].concat(tasksObj[key]);
+function prependOperation(task, key, parentTask) {
+  if (Array.isArray(task["PREPEND_" + key])) {
+    return task["PREPEND_" + key].concat(parentTask[key]);
   } else {
-    return taskflow["PREPEND_" + key] + tasksObj[key];
+    return task["PREPEND_" + key] + parentTask[key];
   }
 }
 
-function appendOperation(taskflow, key, tasksObj) {
-  if (Array.isArray(taskflow["APPEND_" + key])) {
-    return tasksObj[key].concat(taskflow["APPEND_" + key]);
+function appendOperation(task, key, parentTask) {
+  if (Array.isArray(task["APPEND_" + key])) {
+    return parentTask[key].concat(task["APPEND_" + key]);
   } else {
-    return tasksObj[key] + taskflow["APPEND_" + key];
+    return parentTask[key] + task["APPEND_" + key];
   }
 }
 

@@ -180,7 +180,7 @@ function withTask(Component) {
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
-        await utils.activeTasksStoreSet_async(globalState.storageRef.current, updatedTask);
+        await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
         console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         //console.log("useUpdateWSFilter props.task", props.task);
         //console.log("lastTask", lastTask)
@@ -191,7 +191,7 @@ function withTask(Component) {
         // the values of the procesor with the lock will be favored.
         const thisProcessorIsSource = sourceProcessorId === globalState.processorId;
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
-        if (commandArgs.sync) {
+        if (commandArgs && commandArgs.sync) {
           modifyTask(updateDiff);
           console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {
@@ -230,41 +230,7 @@ function withTask(Component) {
           console.log("useUpdateWSFilter ", props.task.id, updatedTask);
         }
         // Important we record updateDiff as it was sent to keep in sync with Hub
-        // Check hash
-        const hash = lastTask.meta.hash;
-        if (hash !== updateDiff.meta.hash) {
-          if (updateDiff.meta.hashTask) {
-            let hashDiff;
-            console.error("Task hash does not match in update local " + hash + " remote " + updateDiff.meta.hash, lastTask, updateDiff.meta.hashTask);
-            hashDiff = utils.getObjectDifference(updateDiff.meta.hashTask, lastTask );
-            delete hashDiff.hub;
-            delete hashDiff.processor;
-            delete hashDiff.processors;
-            delete hashDiff.user;
-            delete hashDiff.users;
-            delete hashDiff.permissions;
-            delete hashDiff.meta;
-            delete hashDiff.command;
-            delete hashDiff.commandArgs;
-            console.error("Task hashDiff of lastTask", hashDiff);
-            hashDiff = utils.getObjectDifference(lastTask, updateDiff.meta.hashTask);
-            delete hashDiff.hub;
-            delete hashDiff.processor;
-            delete hashDiff.processors;
-            delete hashDiff.user;
-            delete hashDiff.users;
-            delete hashDiff.permissions;
-            delete hashDiff.meta;
-            delete hashDiff.command;
-            delete hashDiff.commandArgs;
-            console.error("Task hashDiff of hashTask", hashDiff);
-          } else {
-            console.error("Task hash does not match in update local hash" + hash + " remote hash " + updateDiff.meta.hash);
-          }
-          //throw new Error("Task hash does not match");
-        } else {
-          console.log("HASH MATCH " + hash);
-        }
+        utils.checkHash(lastTask, updateDiff);
         console.log("Storage update isSource:" + thisProcessorIsSource + " lock:" + thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
       }
     )
