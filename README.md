@@ -38,7 +38,7 @@ Tasks are processed by Task Processors, currently there are three Task Processor
 * React Task Processor runs React in a web browser
 * RxJS Task Processor runs RxJS on a server
 
-The Processors communicate with the Hub using websocket and HTTP API.
+The Processors communicate with the Hub using websocket.
 
 The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node and the Express framework.
 

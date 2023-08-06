@@ -17,12 +17,12 @@ The Hub provides the following features:
 * The Hub maintains Processor information in the `task.processor` object
   * This is simplified when communicating with a specific processor by replacing `task.processor` with `task.processor[processorId]`
     * This could allow for Processor specific `task.processor[processorId].config`
-* Processors register with the Hub via HTTP request
+* Processors register with the Hub
   * Maintains the list of active processors
 * Processors send `task.command.start` to initiate a Task
   * The Task is then dispatched to the relevant processor(s) based on the Task's environment definition
 * Synchronization of Tasks across processors
-  * Processors send Task updates to Hub via HTTP
+  * Processors send Task updates to Hub
   * The Hub sends diffential Task updates to all relevant processors via websocket
     * Supports merging of distributed Task state
     * Supports deletion of object keys (set to null)
