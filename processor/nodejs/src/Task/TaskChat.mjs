@@ -85,6 +85,8 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
       // Update the task which has the effect of setting the state to receiving on ohter Processors
       T("command", "update");
       wsSendTask(task);
+    // We could wait for the hub to synchronize and implement the receiving state
+    //case "receiving":
       const subTask = await SubTaskLLM_async(wsSendTask, task);
       T("response.LLMResponse", subTask.response.LLM);
       T("state.last", T("state.current"));

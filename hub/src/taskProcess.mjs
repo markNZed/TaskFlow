@@ -186,12 +186,22 @@ async function taskProcess_async(task, req, res) {
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task");
     }
-    console.log("From processor " + task.processor.id);
+    console.log("");
+    console.log("From processor:" + task.processor.id + " command:" + task.processor.command);
     let activeTask = {};
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
-      // Need to restore meta for checkLockConflict, checkAPIRate
-      task.meta = utils.deepMerge(activeTask.meta, task.meta);
+      if (Object.keys(activeTask).length !== 0) {
+        if (task.meta.hashDiff) {
+          // This is runing on "partial" which seems a waste
+          utils.checkHashDiff(activeTask, task);
+        }
+        // Need to restore meta for checkLockConflict, checkAPIRate
+        task.meta = utils.deepMerge(activeTask.meta, task.meta);
+      } else {
+        console.error("Should have activeTask if we have an instanceId");
+        return;
+      }
     }
     let requestId;
     if (req) {

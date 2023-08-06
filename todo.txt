@@ -1,9 +1,9 @@
 /* ToDo
 -------
-Implement hashDiff 
+ProcessorInProcessorOut - could merge?
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?
-  The sync is going to arrive after the local storage has beene updated. Due to mutex on hub
+  The sync is going to arrive after the local storage has been updated. Due to mutex on hub
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
 Coprocessing is too dispersed in Hub, needs refactoring.

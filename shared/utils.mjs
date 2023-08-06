@@ -162,6 +162,9 @@ const sharedUtils = {
     return conflict;
   },
 
+  // The function aims to compare two objects (or arrays) and return the differences between them. 
+  // If the input objects are not equal, it goes through each key in the second object (obj2) and checks if there is a corresponding key in the first object (obj1). 
+  // If there isn't, or if the corresponding value in obj1 is null, it takes the value from obj2.
   // This can return sparse arrays
   // Would be better to return undefined if no difference?
   getObjectDifference: function(obj1, obj2) {
@@ -214,6 +217,37 @@ const sharedUtils = {
     });
 
     return diffObj; // copy to avoid issues if the return value is modified
+  },
+
+  getIntersectionWithDifferentValues: function(obj1, obj2) {
+    if (_.isEqual(obj1, obj2)) {
+      return Array.isArray(obj1) ? [] : {};
+    }
+  
+    if (!_.isObject(obj1) || !_.isObject(obj2)) {
+      return null;
+    }
+  
+    let diffObj = Array.isArray(obj1) && Array.isArray(obj2) ? [] : {};
+  
+    _.each(obj1, (value, key) => {
+      if (obj2.hasOwnProperty(key)) {
+        if (_.isObject(value) && _.isObject(obj2[key])) {
+          let diff = sharedUtils.getIntersectionWithDifferentValues(value, obj2[key]);
+          if (!_.isEmpty(diff)) {
+            diffObj[key] = diff;
+          }
+        } else if (!_.isEqual(value, obj2[key])) {
+          if (Array.isArray(obj1) && obj2[key] === null) {
+            // Null treated as a placeholder in the case of arrays
+          } else {
+            diffObj[key] = value;
+          }
+        }
+      }
+    });
+  
+    return diffObj;
   },
 
   // Flatten hierarchical object and merge keys into children
@@ -304,18 +338,12 @@ const sharedUtils = {
   },
 
   taskHash: function(task) {
+    if (!task) {
+      return 0;
+    }
     // Only hash information that is shared between all processors and hub
     let taskCopy = JSON.parse(JSON.stringify(task));
-    delete taskCopy.hub;
-    delete taskCopy.processor;
-    delete taskCopy.processors;
-    delete taskCopy.user;
-    delete taskCopy.users;
-    delete taskCopy.permissions;
-    delete taskCopy.meta;
-    // The processor may have copied the commands or not
-    delete taskCopy.command;
-    delete taskCopy.commandArgs;
+    taskCopy = sharedUtils.cleanForHash(taskCopy);
     const sortedObj = sharedUtils.taskHashSortKeys(taskCopy);
     const hash = sharedUtils.djb2Hash(JSON.stringify(sortedObj));
     //console.log("HASH VALUE", hash);
@@ -338,10 +366,47 @@ const sharedUtils = {
     return activeTasksStore_async.set(task.instanceId, task);
   },
 
+  cleanForHash: function (task) {
+    let taskCopy = JSON.parse(JSON.stringify(task));
+    delete taskCopy.hub;
+    delete taskCopy.processor;
+    delete taskCopy.processors;
+    delete taskCopy.user;
+    delete taskCopy.users;
+    delete taskCopy.permissions;
+    delete taskCopy.meta;
+    // The processor may have copied the commands or not
+    delete taskCopy.command;
+    delete taskCopy.commandArgs;
+    return taskCopy;
+  },
+
   processorDiff: function(task) {
+    if (task.processor.command === "ping") {
+      return task;
+    }
     const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
     const origTask = taskCopy.processor.origTask;
     const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy);
+    //console.log("sharedUtils.getObjectDifference(origTask, taskCopy)", origTask, taskCopy);
+    // Which properties of the origTask differ from the task
+    let diffOrigTask = sharedUtils.getIntersectionWithDifferentValues(origTask, taskCopy);
+    if (diffOrigTask === null) {
+      diffOrigTask = {};
+    }
+    diffOrigTask = sharedUtils.cleanForHash(diffOrigTask);
+    //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
+    if (!diffTask.meta) {
+      diffTask.meta = {};
+    }
+    // Allows us to check only the relevant part of the origTask
+    // More specific than testing for the hash of the entire origTask
+    diffTask.meta["hashDiff"] = sharedUtils.taskHash(diffOrigTask);
+    const hashDebug = true;
+    if (hashDebug || taskCopy.meta.hashDebug) {
+      diffTask.meta["hashDiffOrigTask"] = JSON.parse(JSON.stringify(diffOrigTask));
+      diffTask.meta.hashDiffOrigTask = sharedUtils.cleanForHash(diffTask.meta.hashDiffOrigTask);
+    }
     diffTask["instanceId"] = taskCopy.instanceId;
     diffTask["id"] = taskCopy.id;
     diffTask["processor"] = taskCopy.processor;
@@ -351,9 +416,9 @@ const sharedUtils = {
   },
 
   // This is only used in the Hub so could move into the Hub utils 
-  hubDiff: function(activeTask, task) {
+  hubDiff: function(origTask, task) {
     const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
-    const diffTask = sharedUtils.getObjectDifference(activeTask, taskCopy);
+    const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy);
     if (Object.keys(diffTask).length > 0) {
       diffTask["instanceId"] = taskCopy.instanceId;
       diffTask["id"] = taskCopy.id;
@@ -368,18 +433,53 @@ const sharedUtils = {
       if (taskCopy.meta.locked) {
         diffTask.meta["locked"] = taskCopy.meta.locked;
       }
-      diffTask.meta["hash"] = activeTask.meta.hash;
+      diffTask.meta["hash"] = origTask.meta.hash;
+      // Which properties of the origTask differ from the task
+      let diffOrigTask = sharedUtils.getIntersectionWithDifferentValues(origTask, taskCopy);
+      diffOrigTask = sharedUtils.cleanForHash(diffOrigTask);
+      if (diffOrigTask === null) {
+        diffOrigTask = {};
+      }
+      // Allows us to check only the relevant part of the origTask
+      // More specific than testing for the hash of the entire origTask
+      diffTask.meta["hashDiff"] = sharedUtils.taskHash(diffOrigTask);
       // In theory we could enable the hash debug in the task
       const hashDebug = true;
       if (hashDebug || taskCopy.meta.hashDebug) {
-        diffTask.meta["hashTask"] = JSON.parse(JSON.stringify(activeTask));
-        delete diffTask.meta.hashTask.hub;
-        delete diffTask.meta.hashTask.processors;
-        delete diffTask.meta.hashTask.meta.hashTask;
+        diffTask.meta["hashTask"] = JSON.parse(JSON.stringify(origTask));
+        diffTask.meta.hashTask = sharedUtils.cleanForHash(diffTask.meta.hashTask);
+        diffTask.meta["hashDiffOrigTask"] = JSON.parse(JSON.stringify(diffOrigTask));
+        diffTask.meta.hashDiffOrigTask = sharedUtils.cleanForHash(diffTask.meta.hashDiffOrigTask);
       }
       delete diffTask.hub.origTask; // Only used internally
     }
     return diffTask;
+  },
+
+  checkHashDiff: function(origTask, task) {
+    const taskCopy = JSON.parse(JSON.stringify(task));
+    const expectedHash = task.meta.hashDiff;
+    let diffOrigTask = sharedUtils.getIntersectionWithDifferentValues(origTask, taskCopy);
+    if (diffOrigTask === undefined) {
+      diffOrigTask = {};
+    }
+    const localHash = sharedUtils.taskHash(diffOrigTask);
+    if (expectedHash !== localHash) {
+      if (task.meta.hashDiffOrigTask) {
+        //console.error("Remote hashDiffOrigTask", task.meta.hashDiffOrigTask);
+        let hashDiff = sharedUtils.getObjectDifference(origTask, task.meta.hashDiffOrigTask);
+        hashDiff = sharedUtils.cleanForHash(hashDiff);
+        console.error("checkHashDiff hashDiff from remote", hashDiff);
+      }
+      diffOrigTask = sharedUtils.cleanForHash(diffOrigTask);
+      console.error("Local diffOrigTask", diffOrigTask);
+      console.error("Remote diffOrigTask", task.meta.hashDiffOrigTask);
+      console.error("ERROR: Task hashDiff does not match local:" + localHash + " remote:" + expectedHash);
+      return false;
+    } else {
+      //console.log("checkHashDiff OK");
+    }
+    return true;
   },
 
   checkHash: function(origTask, updatedTask) {
@@ -391,31 +491,16 @@ const sharedUtils = {
         let hashDiff;
         //console.error("Task hash does not match in update local:" + hashOrigTask + " remote:" + hashUpdatedTask); //, origTask, updatedTask.meta.hashTask);
         hashDiff = sharedUtils.getObjectDifference(updatedTask.meta.hashTask, origTask );
-        delete hashDiff.hub;
-        delete hashDiff.processor;
-        delete hashDiff.processors;
-        delete hashDiff.user;
-        delete hashDiff.users;
-        delete hashDiff.permissions;
-        delete hashDiff.meta;
-        delete hashDiff.command;
-        delete hashDiff.commandArgs;
+        hashDiff = sharedUtils.cleanForHash(hashDiff);
         console.error("Task hashDiff of origTask", hashDiff);
         hashDiff = sharedUtils.getObjectDifference(origTask, updatedTask.meta.hashTask);
-        delete hashDiff.hub;
-        delete hashDiff.processor;
-        delete hashDiff.processors;
-        delete hashDiff.user;
-        delete hashDiff.users;
-        delete hashDiff.permissions;
-        delete hashDiff.meta;
-        delete hashDiff.command;
-        delete hashDiff.commandArgs;
+        hashDiff = sharedUtils.cleanForHash(hashDiff);
         console.error("Task hashDiff of hashTask", hashDiff);
       }
       return false;
     }
-    return true;
+    //return true;
+    return sharedUtils.checkHashDiff(origTask, updatedTask);
   },
 
   taskInProcessorOut: function(task, processorId) {
@@ -439,6 +524,14 @@ const sharedUtils = {
       task.processor["commandArgs"] = {};
     }
     task.processor["id"] = processorId;
+    const diffTask = sharedUtils.processorDiff(task);
+    return diffTask;
+  },
+
+  ProcessorInProcessorOut: function(lastTask, task) {
+    // We could check the task.meta.hash against lastTask.meta.hash and avoid the following steps
+    delete task.processor.origTask;
+    task.processor["origTask"] = JSON.parse(JSON.stringify(lastTask));
     const diffTask = sharedUtils.processorDiff(task);
     return diffTask;
   },

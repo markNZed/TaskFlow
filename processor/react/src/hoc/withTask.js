@@ -176,14 +176,19 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
-        console.log("useUpdateWSFilter updateDiff", updateDiff);
+        //console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
+        //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
         await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
-        console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
-        //console.log("useUpdateWSFilter props.task", props.task);
-        //console.log("lastTask", lastTask)
+        //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
+        delete updatedTask.processor.origTask;
+        // deep copy to avoid self-reference
+        updatedTask.processor["origTask"] = JSON.parse(JSON.stringify(updatedTask)); 
+        if (!updateDiff.processor) {
+          updateDiff["processor"] = {};
+        }
+        updateDiff.processor["origTask"] = updatedTask.processor.origTask; 
         // If the resource has been locked by another processor then we ignore whatever was done locally
         // If this is the source processor then we want to keep any change made to the task since the update was sent
         // There may be meta data like task.meta.lock that we want updated on the source processor
@@ -195,43 +200,23 @@ function withTask(Component) {
           modifyTask(updateDiff);
           console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {
-          // Just update task.meta & the task.input
-          const currentMetaDiff = utils.deepMerge(props.task.meta, updateDiff.meta);
-          modifyTask({"meta": currentMetaDiff});
-          console.log("useUpdateWSFilter from this processor", currentMetaDiff)
+          // Just update task.meta & task.processor (for the processor.origTask)
+          const currentMeta = utils.deepMerge(props.task.meta, updateDiff.meta);
+          const currentProcessor = utils.deepMerge(props.task.processor, updateDiff.processor);
+          modifyTask({"meta": currentMeta, "processor": currentProcessor});
+          console.log("useUpdateWSFilter from this processor");
         } else if (thisProcessorHasLock) {
           // Keep the current input and any changes received
-          // We do not want to use lastTask because it may overwrite changes on the inputs 
-          // coming from outside the Task.
-          let currentInputDiff = {};
-          currentInputDiff["input"] = utils.deepMerge(props.task.input, updateDiff.input);
-          let modifiedLastTask = utils.deepMerge(lastTask, currentInputDiff);
-          let currentTaskDiff = utils.getObjectDifference(modifiedLastTask, props.task);
-          //console.log("modifiedLastTask.meta.hash " + modifiedLastTask?.meta?.hash + " props.task.meta.hash " + props.task.meta.hash + " updateDiff " + updateDiff.meta.hash);
-          // It is possible to get a diff in the task.state because we locally advance that e.g.
-          // update sets to received, local sets to input, then receive update that is still in state recieved
-          // Updates to props.task are related to the rendering so it seems we may miss updates because
-          // the setState has not yet run/completed.
-          // Ignore the task.meta.hash because it will be out of date becaues lastTask is directly modified above
-          // It may not have reached props.task and will look like a difference
-          if (currentTaskDiff?.meta?.hash) {
-            currentTaskDiff.meta["hash"] = lastTask.meta.hash;
-          }
-          if (utils.checkConflicts(currentTaskDiff, updateDiff)) {
-            console.error("CONFLICT currentTaskDiff, updateDiff, lastTask ", currentTaskDiff, updateDiff, lastTask);
-          }
-          // Probably better to do a partial update using p => (....) or maybe modifyTask ?
+          // We do not want to use lastTask.input because it may overwrite changes on the inputs coming from outside the Task.
           delete updateDiff.input
           modifyTask(updateDiff);
-          //props.setTask(modifiedLastTask);
           console.log("useUpdateWSFilter has lock ", props.task.id);
         } else {
           props.setTask(updatedTask);
           console.log("useUpdateWSFilter ", props.task.id, updatedTask);
         }
-        // Important we record updateDiff as it was sent to keep in sync with Hub
         utils.checkHash(lastTask, updateDiff);
-        console.log("Storage update isSource:" + thisProcessorIsSource + " lock:" + thisProcessorHasLock, props.task.id, updateDiff, updatedTask);
+        console.log("Storage update isSource:" + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, "updateDiff, updatedTask", updateDiff, updatedTask);
       }
     )
 

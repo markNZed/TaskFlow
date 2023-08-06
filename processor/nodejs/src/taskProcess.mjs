@@ -20,18 +20,6 @@ export async function taskProcess_async(wsSendTask, task) {
         updatedTask.error = e.message;
         updatedTask.command = "update";
       }
-
-        // This needs more testing
-        // When not a coprocessor what do we want to do?
-        // Which command should we support here?
-        // This is similar to the old do_task
-        if (updatedTask?.command === "update") {
-          console.log("taskProcess_async sending");
-          wsSendTask(updatedTask);
-        } else {
-          console.log("taskProcess_async nothing to do");
-        }
-
       // Returning null is  away of doing nothing
       if (updatedTask !== null) {
         if (updatedTask.error) {
@@ -49,9 +37,8 @@ export async function taskProcess_async(wsSendTask, task) {
           wsSendTask(task);
         } else if (updatedTask?.command === "update") {
           console.log("taskProcess_async sending");
-          //wsSendTask(updatedTask);
           try {
-            wsSendTask(task);
+            wsSendTask(updatedTask);
           } catch (error) {
             console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
           }

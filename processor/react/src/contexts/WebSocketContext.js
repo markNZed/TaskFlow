@@ -37,18 +37,24 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
-    if (m.task?.processor?.command === "ping") {
+    if (m.task?.processor?.command !== "ping") {
+      console.log("sendJsonMessagePlusRef ", m.task);
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     sendJsonMessage(m);
   };
 
-  const wsSendTask = function (task) {
+  const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
     task = utils.taskInProcessorOut(task, globalState.processorId);
+    // Next want to send the diff considering the latest task storage state
+    if (task.instanceId) {
+      const lastTask = await globalState.storageRef.current.get(task.instanceId);
+      task = utils.ProcessorInProcessorOut(lastTask, task);
+    }
     if (globalState.user) {
-      task.user["id"] = globalState.user.userId;
+      task.user = {"id": globalState.user.userId};
     }
     message["task"] = task;
     sendJsonMessagePlusRef.current(message);
