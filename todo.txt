@@ -1,10 +1,6 @@
 /* ToDo
 -------
-Collaborate broken
-  Joining sems to break - lose prompt after that
-  Can caus clash 
-Is the storage being shared across processors?
-ProcessorInProcessorOut - could merge?
+meta.debug option
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?
   The sync is going to arrive after the local storage has been updated. Due to mutex on hub

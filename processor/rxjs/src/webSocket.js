@@ -113,13 +113,8 @@ function wsSendObject(message) {
 
 const wsSendTask = async function (task) {
   //console.log("wsSendTask " + message)
-  let message = {}; 
-  task = utils.taskInProcessorOut(task, processorId)
-  // Next want to send the diff considering the latest task storage state
-  if (task.instanceId) {
-    const lastTask = await activeTasksStore_async.get(task.instanceId);
-    task = utils.ProcessorInProcessorOut(lastTask, task);
-  }  
+  let message = {};
+  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async) 
   message["task"] = task;
   wsSendObject(message);
 }
@@ -191,6 +186,8 @@ const connectWebSocket = () => {
       if (coProcessor) {
         if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs?.sync && !mergedTask.processor.coProcessingDone) {
           console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
+          delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
+          mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
           taskSubject.next(mergedTask);
         } else {
           // Here we are receiving an update not coprocessing so we store the task.
@@ -204,6 +201,8 @@ const connectWebSocket = () => {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
           console.log("Synced task ", task.id);
         } else {
+          delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
+          mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
           taskSubject.next(mergedTask);
         }
       }

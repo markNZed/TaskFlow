@@ -11,6 +11,7 @@ const sharedUtils = {
     const processor = JSON.parse(JSON.stringify(processorIn));
     let result = sharedUtils.deepMerge(prevState, update);
     result.processor = processor;
+    //sharedUtils.removeNullKeys(result);
     return result;
   },
 
@@ -18,6 +19,7 @@ const sharedUtils = {
     const hub = JSON.parse(JSON.stringify(hubIn));
     let result = sharedUtils.deepMerge(prevState, update);
     result.hub = hub;
+    //sharedUtils.removeNullKeys(result);
     return result;
   },
 
@@ -362,11 +364,29 @@ const sharedUtils = {
     return hash;
   },
 
+  removeNullKeys: function(obj) {
+    // Base case: if the input isn't an object, return it as is
+    if (typeof obj !== 'object' || obj === null) return obj;
+
+    // Iterate over the object's keys
+    for (let key in obj) {
+        // If the current key's value is null, delete the key
+        if (obj[key] === null) {
+            delete obj[key];
+        }
+        // Otherwise, if it's an object or array, recursively call removeNullKeys on it
+        else if (typeof obj[key] === 'object') {
+            obj[key] = sharedUtils.removeNullKeys(obj[key]);
+        }
+    }
+    return obj;
+  },
+
   processorActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta["hash"] = sharedUtils.taskHash(task);
     delete task.processor.origTask; // delete so we do not have ans old copy in origTask
-    // deep copy to avoid self-reference
-    task.processor["origTask"] = JSON.parse(JSON.stringify(task)); 
+    task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
+    //sharedUtils.removeNullKeys(task);
     await activeTasksStore_async.set(task.instanceId, task);
     return task;
   },
@@ -376,6 +396,7 @@ const sharedUtils = {
     delete task.hub.origTask; // delete so we do not have ans old copy in origTask
     // deep copy to avoid self-reference
     task.hub["origTask"] = JSON.parse(JSON.stringify(task)); 
+    //sharedUtils.removeNullKeys(task);
     await activeTasksStore_async.set(task.instanceId, task);
     return task;
   },
@@ -401,7 +422,7 @@ const sharedUtils = {
     }
     const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
     const origTask = taskCopy.processor.origTask;
-    console.log("processorDiff in origTask.request, task.request", origTask?.request, task.request);
+    //console.log("processorDiff in origTask.output, task.output", origTask?.output, task.output);
     const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy) || {};
     //console.log("sharedUtils.getObjectDifference(origTask, taskCopy)", origTask, taskCopy);
     // Which properties of the origTask differ from the task
@@ -414,6 +435,7 @@ const sharedUtils = {
     if (!diffTask.meta) {
       diffTask.meta = {};
     }
+    diffTask.meta["hash"] = taskCopy?.meta?.hash;
     // Allows us to check only the relevant part of the origTask
     // More specific than testing for the hash of the entire origTask
     diffTask.meta["hashDiff"] = sharedUtils.taskHash(diffOrigTask);
@@ -427,13 +449,13 @@ const sharedUtils = {
     diffTask["processor"] = taskCopy.processor;
     diffTask["user"] = taskCopy.user || {};
     delete diffTask.processor.origTask; // Only used internally
-    console.log("processorDiff out task.request", diffTask.request);
+    //console.log("processorDiff out task.output", diffTask.output);
     return diffTask;
   },
 
   // This is only used in the Hub so could move into the Hub utils 
   hubDiff: function(origTask, task) {
-    console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
+    //console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
     const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
     const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy) || {};
     if (Object.keys(diffTask).length > 0) {
@@ -470,7 +492,7 @@ const sharedUtils = {
       }
       delete diffTask.hub.origTask; // Only used internally
     }
-    console.log("hubDiff diffTask.request", diffTask.request);
+    //console.log("hubDiff diffTask.request", diffTask.request);
     return diffTask;
   },
 
@@ -521,8 +543,8 @@ const sharedUtils = {
     return sharedUtils.checkHashDiff(origTask, updatedTask);
   },
 
-  taskInProcessorOut: function(task, processorId) {
-    console.log("taskInProcessorOut input task.request", task.request);
+  taskInProcessorOut_async: async function(task, processorId, activeTasksStore_async) {
+    //console.log("taskInProcessorOut input task.output", task.output);
     if (!task.command) {
       console.error("ERROR: Missing task.command", task);
       throw new Error(`Missing task.command`);
@@ -541,17 +563,22 @@ const sharedUtils = {
     }
     delete task.commandArgs
     task.processor["id"] = processorId;
-    const diffTask = sharedUtils.processorDiff(task);
-    console.log("taskInProcessorOut output task.request", task.request);
-    return diffTask;
-  },
-
-  ProcessorInProcessorOut: function(lastTask, task) {
-    // We could check the task.meta.hash against lastTask.meta.hash and avoid the following steps
-    delete task.processor.origTask; // delete so we do not have ans old copy in origTask
-    task.processor["origTask"] = JSON.parse(JSON.stringify(lastTask));
-    const diffTask = sharedUtils.processorDiff(task);
-    console.log("ProcessorInProcessorOut task.request", task.request);
+    let diffTask = sharedUtils.processorDiff(task);
+    //console.log("taskInProcessorOut diffTask task.output", task.output);
+    // Send the diff considering the latest task storage state
+    if (diffTask.instanceId) {
+      const lastTask = await activeTasksStore_async.get(diffTask.instanceId);
+      if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
+        delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask
+        diffTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask));
+        diffTask = sharedUtils.processorDiff(diffTask);
+        //console.log("taskInProcessorOut_async latest task storage task.output", diffTask.output);
+      } else {
+        //console.log("taskInProcessorOut lastTask.id, lastTask.meta.hash, diffTask.meta.hash", lastTask.id, lastTask.meta.hash, diffTask.meta.hash);
+      }
+    } else {
+      //console.log("taskInProcessorOut_async no diffTask.instanceId");
+    }
     return diffTask;
   },
 

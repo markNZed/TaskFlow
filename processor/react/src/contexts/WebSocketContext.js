@@ -47,12 +47,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    task = utils.taskInProcessorOut(task, globalState.processorId);
-    // Next want to send the diff considering the latest task storage state
-    if (task.instanceId) {
-      const lastTask = await globalState.storageRef.current.get(task.instanceId);
-      task = utils.ProcessorInProcessorOut(lastTask, task);
-    }
+    task = await utils.taskInProcessorOut_async(task, globalState.processorId, globalState?.storageRef?.current);
     if (globalState.user) {
       task.user = {"id": globalState.user.userId};
     }

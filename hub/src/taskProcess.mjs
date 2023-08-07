@@ -57,12 +57,12 @@ function checkLockConflict(task, activeTask) {
     if (lock && activeTask && !activeTask.meta?.locked) {
       task.meta.locked = lockProcessorId;
       console.log("LOCKED ",task.id, task.meta.locked);
-    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockProcessorId) {
-      task.meta.locked = null;
-      console.log("UNLOCK implicit",task.id, task.meta.locked);
     } else if (unlock) {
       task.meta.locked = null;
       console.log("UNLOCK explicit",task.id, task.meta.locked);
+    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockProcessorId) {
+      task.meta.locked = null;
+      console.log("UNLOCK implicit",task.id, task.meta.locked);
     }
     
     if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockProcessorId && !lockBypass && !unlock) {

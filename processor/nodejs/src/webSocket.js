@@ -39,12 +39,7 @@ const wsSendTask = async function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
   // taskInProcessorOut will return a diff taking into account task.processor.origTask
-  task = utils.taskInProcessorOut(task, processorId);
-  // Next want to send the diff considering the latest task storage state
-  if (task.instanceId) {
-    const lastTask = await activeTasksStore_async.get(task.instanceId);
-    task = utils.ProcessorInProcessorOut(lastTask, task);
-  }
+  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
   message["task"] = task;
   wsSendObject(message);
 }

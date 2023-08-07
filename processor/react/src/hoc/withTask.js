@@ -174,15 +174,14 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
-        console.log("useUpdateWSFilter updateDiff", updateDiff);
+        //console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
+        //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         utils.checkHash(lastTask, updateDiff);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
         updatedTask = await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
-        console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
-        // Because we are using updatedTask after processorActiveTasksStoreSet_async we duplicate the
-        // tansfer of origTask here. Could also globalState.storageRef.current.get
+        //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
+        // Keep the origTask up to date i th eactive task
         if (!updateDiff.processor) {
           updateDiff["processor"] = {};
         }
