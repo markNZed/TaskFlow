@@ -36,8 +36,17 @@ const wsSendTask = async function (task, processorId) {
   if (!task?.hub?.command) {
     throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
-  //console.log("wsSendTask", task)
+  //console.log("wsSendTask task.request", task.request)
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
+  // hubDiff will remove processors and users
+  let processor;
+  if (task.processors) {
+    processor = JSON.parse(JSON.stringify(task.processors[processorId]));
+  }
+  let user;
+  if (task.users && task.user.id) {
+    user = JSON.parse(JSON.stringify(task.users[task.user.id]));
+  }
   let message = {}
   let activeTask = {};
   // We can only have an activeTask for an update command
@@ -60,10 +69,10 @@ const wsSendTask = async function (task, processorId) {
   //console.log("wsSendTask " + command + " message state", message["task"].state);
   // For example task.command === "partial" does not have task.processors
   //console.log("wsSendTask task.hub", task.hub);
-  if (task?.processors) {
+  if (processor) {
     //console.log("wsSendTask task.processors", processorId, task.processors);
     //deep copy because we are going to edit the object
-    task.processor = JSON.parse(JSON.stringify(task.processors[processorId]));
+    task["processor"] = processor;
     task.processor["command"] = null;
     task.processor["commandArgs"] = null;
     delete task.processors;
@@ -78,11 +87,11 @@ const wsSendTask = async function (task, processorId) {
   }
   task.processor["initiatingProcessorId"] = initiatingProcessorId;
   task.processor["sourceProcessorId"] = sourceProcessorId;
-  if (task?.users) {
+  if (user) {
     if (!task?.user?.id) {
       console.log("wsSendTask no user", task);
     }
-    task.user = JSON.parse(JSON.stringify(task.users[task.user.id]));
+    task["user"] = user;
     delete task.users;
   }
   task.meta = task.meta || {};
@@ -93,6 +102,7 @@ const wsSendTask = async function (task, processorId) {
   }
   delete task.hub.origTask;
   message["task"] = task;
+  //console.log("wsSendTask task.request", task.request)
   wsSendObject(processorId, message);
 }
 
@@ -197,6 +207,7 @@ function initWebSocketServer(server) {
           task.hub.sourceProcessorId = processorId;
           task.hub["coProcessingPosition"] = null;
           if (wasLastCoProcessor) {
+            console.log("");
             if (task.hub.command !== "partial") {
               console.log("Finished with coProcessors", task.id, processorId);
               console.log("initiatingProcessorId", task.hub["initiatingProcessorId"]);
@@ -205,17 +216,14 @@ function initWebSocketServer(server) {
           }
           // Updates through WS can only come from RxJS for now
           if (task.hub.command === "update") {
-            console.log("");
             console.log("WS update", task.id, " from:" + task.hub.sourceProcessorId);
             commandUpdate_async(task);
           }
           if (task.hub.command === "start") {
-            console.log("");
             console.log("WS start", task.id, " from:" + task.hub.sourceProcessorId);
             commandStart_async(task);
           }
           if (task.hub.command === "error") {
-            console.log("");
             console.log("WS error", task.id, " from:" + task.hub.sourceProcessorId);
             commandError_async(task);
           }

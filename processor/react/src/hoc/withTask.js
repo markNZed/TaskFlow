@@ -22,7 +22,6 @@ function withTask(Component) {
 
     const { globalState, mergeGlobalState } = useGlobalStateContext();
     const [isMounted, setIsMounted] = useState();
-    const [isLocked, setIsLocked] = useState(false);
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
     const [childTask, setChildTask] = useState();
@@ -55,18 +54,17 @@ function withTask(Component) {
       }
     }, [props.task]);
     
-
-    useEffect(() => {
+    const checkLocked = () => {
       if (props.task?.meta?.locked) {
         if (props.task.meta.locked === globalState.processorId) {
-          setIsLocked(false);
+          return false;
         } else {
-          setIsLocked(true);
+          return true;
         }
-      } else if (isLocked) {
-        setIsLocked(false);
+      } else {
+        return false;
       }
-    }, [props.task]);
+    }
 
     useEffect(() => {
       const useAddress = props.task?.config?.local?.useAddress;
@@ -122,7 +120,7 @@ function withTask(Component) {
       if (familyId) {
         let diff;
         if (prevTask && publishedRef.current) {
-          diff = utils.getObjectDifference(prevTask, props.task);
+          diff = utils.getObjectDifference(prevTask, props.task) || {};
         } else {
           diff = props.task;
         }
@@ -176,15 +174,15 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMounted, props.task,
       async (updateDiff) => {
-        //console.log("useUpdateWSFilter updateDiff", updateDiff);
+        console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
-        //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
+        console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
+        utils.checkHash(lastTask, updateDiff);
         let updatedTask = utils.deepMerge(lastTask, updateDiff)
-        await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
-        //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
-        delete updatedTask.processor.origTask;
-        // deep copy to avoid self-reference
-        updatedTask.processor["origTask"] = JSON.parse(JSON.stringify(updatedTask)); 
+        updatedTask = await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
+        console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
+        // Because we are using updatedTask after processorActiveTasksStoreSet_async we duplicate the
+        // tansfer of origTask here. Could also globalState.storageRef.current.get
         if (!updateDiff.processor) {
           updateDiff["processor"] = {};
         }
@@ -206,7 +204,6 @@ function withTask(Component) {
           modifyTask({"meta": currentMeta, "processor": currentProcessor});
           console.log("useUpdateWSFilter from this processor");
         } else if (thisProcessorHasLock) {
-          // Keep the current input and any changes received
           // We do not want to use lastTask.input because it may overwrite changes on the inputs coming from outside the Task.
           delete updateDiff.input
           modifyTask(updateDiff);
@@ -215,7 +212,6 @@ function withTask(Component) {
           props.setTask(updatedTask);
           console.log("useUpdateWSFilter ", props.task.id, updatedTask);
         }
-        utils.checkHash(lastTask, updateDiff);
         console.log("Storage update isSource:" + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, "updateDiff, updatedTask", updateDiff, updatedTask);
       }
     )
@@ -386,7 +382,7 @@ function withTask(Component) {
         }
         let diff;
         if (prevTaskState) {
-          diff = utils.getObjectDifference(prevTaskState, state);
+          diff = utils.getObjectDifference(prevTaskState, state) || {};
         } else {
           diff = state;
         }
@@ -438,7 +434,7 @@ function withTask(Component) {
           const prevTaskState = prevTasksState[i];
           let diff;
           if (prevTaskState) {
-            diff = utils.getObjectDifference(prevTaskState, state);
+            diff = utils.getObjectDifference(prevTaskState, state) || {};
           } else {
             diff = state;
           }
@@ -531,7 +527,7 @@ function withTask(Component) {
       handleModifyChildTask,
       modifyChildTask,
       checkIfStateReady,
-      isLocked,
+      checkLocked,
     };
 
     return <WithDebugComponent {...componentProps} />;

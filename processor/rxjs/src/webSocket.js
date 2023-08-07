@@ -56,7 +56,7 @@ taskSubject
         await func(functionName, wsSendTask, origTask, task, args);
       }
       // Check for changes to the task
-      const diff = utils.getObjectDifference(taskCopy, task);
+      const diff = utils.getObjectDifference(taskCopy, task) || {};
       if (Object.keys(diff).length > 0) {
         console.log("DIFF", diff);
       } else {

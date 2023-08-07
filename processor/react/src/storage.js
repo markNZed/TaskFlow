@@ -6,9 +6,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { kvsIndexedDB } from "@kvs/indexeddb";
 
-export const openStorage = async () => {
+export const openStorage = async (id) => {
   const storage = await kvsIndexedDB({
-    name: "activeTasks",
+    name: "activeTasks" + id,
     version: 1,
   });
 

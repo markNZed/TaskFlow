@@ -61,7 +61,7 @@ const TaskChat = (props) => {
     user,
     onDidMount,
     componentName,
-    isLocked,
+    checkLocked,
   } = props;
 
   const [submitPrompt, setSubmitPrompt] = useState(false);
@@ -142,7 +142,7 @@ const TaskChat = (props) => {
         }
         break;
       case "mentionAddress":
-        if (transitionTo("mentionAddress") && !isLocked) {
+        if (transitionTo("mentionAddress") && !checkLocked()) {
           // Add the input too for the user
           const promptText = "Location: " + task.state?.address;
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
@@ -158,7 +158,7 @@ const TaskChat = (props) => {
         }
         break;
       case "send":
-        if (transitionTo("send") && !isLocked) {
+        if (transitionTo("send") && !checkLocked()) {
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
             "output.LLMResponse": {role: "assistant", text: "", user: "assistant", id: uuidv4()},
@@ -181,7 +181,7 @@ const TaskChat = (props) => {
         }
         break;
       case "received":
-        if (!isLocked) {
+        if (!checkLocked()) {
           // If we set nextState at the same time as command then there is a risk that the 
           // task.state.current updates before the command is sent.
           // By setting nextState after the transition we minimize this risk.

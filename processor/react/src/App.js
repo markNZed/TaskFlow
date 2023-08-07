@@ -162,15 +162,17 @@ function App({ activeWorkerCount, workerId }) {
   // Of course this will forego the privacy guarantees of private browsing...
   useEffect(() => {
     const initializeStorage = async () => {
-      const storageInstance = await openStorage();
+      // For now we have each tab as a separate processor
+      // So we need to have separate storage to avoid conflicts
+      // Ultimatley there should be one processor per user on the browser
+      const storageInstance = await openStorage(globalState.processorId);
       storageRef.current = storageInstance;
       mergeGlobalState({ storageRef });
     };
-
-    initializeStorage();
-  }, []);
-
-  const MemoizedTaskflows = React.memo(Taskflows);
+    if (globalState?.processorId) {
+      initializeStorage();
+    }
+  }, [globalState?.processorId]);
 
   return (
     <Routes>

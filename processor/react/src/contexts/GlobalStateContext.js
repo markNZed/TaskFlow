@@ -35,7 +35,7 @@ export function GlobalStateProvider({ children }) {
 
   useEffect(() => {
     if (prevGlobalState) {
-      const diff = utils.getObjectDifference(prevGlobalState, globalState,);
+      const diff = utils.getObjectDifference(prevGlobalState, globalState) || {};
       if (Object.keys(diff).length > 0) {
         console.log("globalState changes:", diff);
       }

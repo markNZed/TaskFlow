@@ -286,7 +286,8 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
       }       
     }
     if (!found) {
-      throw new Error("No processor found for environment " + environment);
+      console.error("No processor found for environment " + environment);
+      //throw new Error("No processor found for environment " + environment);
     }
   }
 
@@ -349,7 +350,9 @@ async function taskStart_async(
     // Note that instanceId may change due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
 
-    task = utils.deepMerge(task, initTask);
+    if (Object.keys(initTask).length > 0) {
+      task = utils.deepMerge(task, initTask);
+    }
 
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'processors', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
@@ -407,6 +410,7 @@ async function taskStart_async(
     task.meta["requestsThisMinute"] = task.meta.requestsThisMinute ?? 0;
     task.meta["requestCount"] = task.meta.requestCount ?? 0;
     task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
+    task.meta["updatedAt"] = task.meta.updatedAt ?? Date.now();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
@@ -415,9 +419,12 @@ async function taskStart_async(
     task.processors[processorId] = task.processors[processorId] ?? {};
     task.processors[processorId]["id"] = processorId;
     
-    task.users[task.user.id] = task.users[task.user.id] ?? {};
-    task.users[task.user.id] = utils.deepMerge(users[task.user.id], task.users[task.user.id]);
-
+    if (task.users[task.user.id]) {
+      task.users[task.user.id] = utils.deepMerge(users[task.user.id], task.users[task.user.id]);
+    } else {
+      task.users[task.user.id] = users[task.user.id];
+    }
+    
     // This is only for task.config 
     task = supportMultipleLanguages(task, users);
 

@@ -15,7 +15,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
     if (globalState.storageRef) {
       globalState.storageRef.current.set(task.instanceId, task);
       //const value = await storageRef.current.get("a1");
-      console.log("Storage start ", task.id, task.instanceId);
+      console.log("Storage start(error) ", task.id, task.instanceId);
     } else {
       console.log("Storage not ready ", task.id, task.instanceId);
     }

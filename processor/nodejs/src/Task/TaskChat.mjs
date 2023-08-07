@@ -89,6 +89,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
     //case "receiving":
       const subTask = await SubTaskLLM_async(wsSendTask, task);
       T("response.LLMResponse", subTask.response.LLM);
+      T("request.prompt", null);
       T("state.last", T("state.current"));
       T("state.current", "received");
       T("commandArgs.lockBypass", true);
@@ -102,7 +103,7 @@ const TaskChat_async = async function (taskName, wsSendTask, task) {
   if (cacheEnabled) {
     // Store in cache
     // We only want to store the changes made to the task
-    const diff = utils.getObjectDifference(origTask, task);
+    const diff = utils.getObjectDifference(origTask, task) || {};
     await cacheStore_async.set(cacheKeySeed, diff);
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }

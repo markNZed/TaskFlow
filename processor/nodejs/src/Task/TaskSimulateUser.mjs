@@ -136,7 +136,7 @@ const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
   if (cacheEnabled) {
     // Store in cache
     // We only want to store the changes made to the task
-    const diff = utils.getObjectDifference(origTask, task);
+    const diff = utils.getObjectDifference(origTask, task) || {};
     await cacheStore_async.set(cacheKeySeed, diff);
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }

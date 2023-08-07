@@ -43,7 +43,7 @@ function processorInHubOut(task, activeTask, requestId) {
     coProcessingDone,
     coProcessing,
   };
-  //console.log("processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
+  console.log("processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
 }
 
@@ -54,15 +54,15 @@ function checkLockConflict(task, activeTask) {
     const lockBypass = task.hub.commandArgs.lockBypass || false;
     const lockProcessorId = task.hub.initiatingProcessorId;
     
-    if (unlock) {
-      task.meta.locked = null;
-    }
-    
     if (lock && activeTask && !activeTask.meta?.locked) {
       task.meta.locked = lockProcessorId;
       console.log("LOCKED ",task.id, task.meta.locked);
     } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockProcessorId) {
       task.meta.locked = null;
+      console.log("UNLOCK implicit",task.id, task.meta.locked);
+    } else if (unlock) {
+      task.meta.locked = null;
+      console.log("UNLOCK explicit",task.id, task.meta.locked);
     }
     
     if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockProcessorId && !lockBypass && !unlock) {
@@ -75,9 +75,9 @@ function checkLockConflict(task, activeTask) {
       const differenceInMinutes = (now - updatedAt) / 1000 / 60;
       
       if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log(`Task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked}`);
+        console.log(`UNLOCK task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked} updatedAt ${updatedAt}`);
       } else {
-        console.log(`Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
+        console.log(`CONFLICT Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new RequestError("Task locked", 423);
       }
     }
@@ -155,7 +155,8 @@ function processError(task, tasks) {
 }
 
 async function processOutput_async(task, outputStore) {
-  if (task.output) {
+  // Check task.output is not empty as empty will override via deepMerge
+  if (task.output && Object.keys(task.output).length > 0) {
     let output = await outputStore.get(task.familyId);
     if (!output) {
       output = {};

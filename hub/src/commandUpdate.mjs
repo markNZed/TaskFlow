@@ -95,7 +95,7 @@ export async function commandUpdate_async(task, res) {
       }
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
     } else {
-       task = utils.deepMergeHub(activeTask, task, task.hub);
+      task = utils.deepMergeHub(activeTask, task, task.hub);
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
