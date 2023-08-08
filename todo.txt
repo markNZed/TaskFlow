@@ -1,10 +1,14 @@
 /* ToDo
 -------
+Collaborate broken with coprocessor ?
+  task.processors is missing
+  Not storing start task so can't retore processors
 meta.debug option
 Add RxJS processor - test that it can switch between coprocessor and processor role
   environments should not be inherited ?
   The sync is going to arrive after the local storage has been updated. Due to mutex on hub
   Check if still OK as coprocessor
+    Not starting tasks.
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
 Coprocessing is too dispersed in Hub, needs refactoring.

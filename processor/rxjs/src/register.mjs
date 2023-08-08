@@ -59,8 +59,8 @@ const register_async = async () => {
     hubId = data.hubId;
     return data;
   } catch (error) {
-    const statusText = response.statusText; // Text description of the status
-    const statusCode = response.status; // HTTP status 
+    const statusText = response?.statusText; // Text description of the status
+    const statusCode = response?.status; // HTTP status 
     console.log("Error while converting JSON:", error.message, statusCode, statusText);
   }
 

@@ -41,6 +41,11 @@ try {
     fs.writeFileSync(hubIdFile, hubId);
 }
 
+// Can be modified in the register route
 let haveCoProcessor = false;
 
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoProcessor };
+function setHaveCoProcessor(value) {
+    haveCoProcessor = value;
+}
+
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoProcessor, setHaveCoProcessor };

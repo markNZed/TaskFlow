@@ -31,29 +31,22 @@ export async function commandStart_async(task, res) {
     }
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     // If we have one or more coprocessor 
-    console.log("haveCoProcessor " + haveCoProcessor + " task.hub.coProcessing " + task.hub.coProcessing + " task.hub.coProcessingDone " + task.hub.coProcessingDone);
+    console.log("commandStart_async haveCoProcessor " + haveCoProcessor + " coProcessing:" + task.hub.coProcessing + " coProcessingDone:" + task.hub.coProcessingDone);
     if (haveCoProcessor) {
-      // If this is not coming from a coprocessor
       if (task.hub.coProcessingDone) {
-        utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
         taskSync_async(task.instanceId, task);
+        await utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
       } else if (!task.hub.coProcessing) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {
+            await taskSync_async(startTask.instanceId, startTask);
             utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
-            return startTask;
-          })
-          .then(async (syncTask) => {
-            taskSync_async(syncTask.instanceId, syncTask);
           })
       }
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
-        .then(async (syncTask) => {
-          taskSync_async(syncTask.instanceId, syncTask);
-          return syncTask;
-        })
         .then(async (startTask) => {
+          await taskSync_async(startTask.instanceId, startTask);
           utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
         })
     }

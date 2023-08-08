@@ -22,9 +22,11 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
     let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
     let environments = [];
     if (activeTaskProcessors) {
-      for (let processorId of activeProcessors.keys()) {
-        if (activeTaskProcessors.includes(processorId)) {
-          const processorData = activeProcessors.get(processorId);
+      // For each of the processors associated with this task
+      // build a list of environments that are already active 
+      for (let taskProcessorId of activeTaskProcessors) {
+        const processorData = activeProcessors.get(taskProcessorId);
+        if (processorData) {
           doesContain = true;
           environments.push(...processorData.environments);
           //console.log("Adding environments to task " + activeTask.id, processorData.environments)
@@ -34,9 +36,14 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
     // Check that we have at least one environment active
     
     if (doesContain) {
-      const allEnvironmentsPresent = activeTask.environments.every(env => environments.includes(env));
-      console.log("activeTask.environments", activeTask.environments, "environments", environments, "allEnvironmentsPresent", allEnvironmentsPresent);
-      if (!allEnvironmentsPresent) {
+      if (activeTask.environments && activeTask.environments.length > 0) {
+        const allEnvironmentsPresent = activeTask.environments.every(env => environments.includes(env));
+        //console.log("activeTask.environments:", activeTask.environments, "processor environments:", environments, "allEnvironmentsPresent:", allEnvironmentsPresent);
+        if (!allEnvironmentsPresent) {
+          doesContain = false;
+        }
+      } else {
+        console.log("activeTask.environments empty");
         doesContain = false;
       }
     }
@@ -55,8 +62,11 @@ async function processInstanceAsync(task, instanceId, mode) {
       console.log(`Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
+      //console.log("processInstanceAsync task", task);
       task["hub"]["command"] = "start";
-      task.state["current"] = "start";
+      if (task?.state?.current) {
+        task.state["current"] = "start";
+      }
       task.meta["updateCount"] = 0;
       task.meta["locked"] = null;
       await activeTasksStore_async.delete(instanceId);
@@ -418,7 +428,7 @@ async function taskStart_async(
     // Set task.processor.id after copying info from prevTask
     task.processors[processorId] = task.processors[processorId] ?? {};
     task.processors[processorId]["id"] = processorId;
-    
+
     if (task.users[task.user.id]) {
       task.users[task.user.id] = utils.deepMerge(users[task.user.id], task.users[task.user.id]);
     } else {

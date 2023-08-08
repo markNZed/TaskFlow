@@ -11,7 +11,7 @@ import { utils } from "./utils.mjs";
 import { coProcessor } from "../config.mjs";
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
-  let updatedTask = {};
+  let updatedTask = null;
   try {
     console.log("taskProcess_async", task.id);
     console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
@@ -54,7 +54,12 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         // The updatedTask.processor will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
       }
-      console.log("taskProcess_async wsSendTask", diffTask.id);
+      console.log("taskProcess_async wsSendTask", updatedTask.id);
+      // Becaus wsSendTask is expecting a task
+      if (!updatedTask.command) {
+        updatedTask.command = task.processor.command;
+        updatedTask.commandArgs = task.processor.commandArgs;
+      }
       wsSendTask(updatedTask);
     } else {
       // This needs more testing

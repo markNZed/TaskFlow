@@ -207,7 +207,7 @@ const connectWebSocket = () => {
         }
       }
     } else if (command === "start" || command === "join") {
-      console.log("ws " + command + " id ", task.id, task.instanceId)
+      console.log("ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       // Emit the task into the taskSubject
       if (coProcessor) {
         if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {

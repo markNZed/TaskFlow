@@ -43,7 +43,7 @@ try {
     fs.writeFileSync(processorIdFile, processorId);
 }
 
-const coProcessor = false;
+const coProcessor = true;
 
 console.log(`Processor ID: ${processorId}`);
 

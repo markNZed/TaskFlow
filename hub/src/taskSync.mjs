@@ -88,6 +88,9 @@ const taskSync_async = async (key, value) => {
     }
   }
 
+  //  We do not want coProcessingDone passed on to child tasks
+  taskCopy.hub.coProcessingDone = false;
+
   const initiatingProcessorId = taskCopy.hub.initiatingProcessorId || sourceProcessorId;
   taskCopy.hub.sourceProcessorId = initiatingProcessorId
 

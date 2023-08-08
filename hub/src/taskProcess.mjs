@@ -33,6 +33,7 @@ function processorInHubOut(task, activeTask, requestId) {
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
   task.processors = activeTaskProcessors;
+  task.users = activeTask?.users || {};
   task.hub = {
     command,
     commandArgs,
@@ -192,14 +193,14 @@ async function taskProcess_async(task, req, res) {
     let activeTask = {};
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
-      if (Object.keys(activeTask).length !== 0) {
+      if (activeTask && Object.keys(activeTask).length !== 0) {
         if (task.meta.hashDiff) {
-          // This is runing on "partial" which seems a waste
+          // This is running on "partial" which seems a waste
           utils.checkHashDiff(activeTask, task);
         }
         // Need to restore meta for checkLockConflict, checkAPIRate
         task.meta = utils.deepMerge(activeTask.meta, task.meta);
-      } else {
+      } else if (task.processor.command !== "start" || !task.processor.coProcessing) {
         console.error("Should have activeTask if we have an instanceId");
         return;
       }
@@ -211,7 +212,9 @@ async function taskProcess_async(task, req, res) {
     task = processorInHubOut(task, activeTask, requestId);
     if (task.hub.command !== "partial") {
       task = checkLockConflict(task, activeTask);
-      task = checkAPIRate(task, activeTask);
+      if (!task.hub.coProcessing) {
+        task = checkAPIRate(task, activeTask);
+      }
       task = processError(task, tasks);
     }
     // Deep copy
@@ -219,7 +222,7 @@ async function taskProcess_async(task, req, res) {
     if (task.error) {
       error = JSON.parse(JSON.stringify(task.error));
     }
-    if (task.hub.command !== "partial") {
+    if (task.hub.command === "update" || task.hub.command === "start") {
       // We may receive a diff where familyId is not sent but
       // we need familyId to set the outputStore_async
       task.familyId = task.familyId || activeTask.familyId;
