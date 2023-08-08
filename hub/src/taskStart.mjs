@@ -414,6 +414,7 @@ async function taskStart_async(
     task.hub["command"] = task.hub.command ?? "start";
     task.hub["sourceProcessorId"] = processorId;
     task.hub["initiatingProcessorId"] = processorId;
+    task.hub["coProcessingDone"] = false;
     
     // Initialize meta object
     // If already set (e.g. joining the task) keep the current values

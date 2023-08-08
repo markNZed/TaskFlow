@@ -8,7 +8,6 @@ import { activeTasksStore_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
-import { haveCoProcessor } from "../config.mjs";
 
 export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
@@ -30,30 +29,11 @@ export async function commandStart_async(task, res) {
       };
     }
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    // If we have one or more coprocessor 
-    console.log("commandStart_async haveCoProcessor " + haveCoProcessor + " coProcessing:" + task.hub.coProcessing + " coProcessingDone:" + task.hub.coProcessingDone + " instanceId:" + task.instanceId);
-    if (haveCoProcessor) {
-      // End of coprocessing
-      if (task.hub.coProcessingDone) {
-        // If this task has been started
-        if (!commandArgs.id && !commandArgs.init) {
-          await taskSync_async(task.instanceId, task);
-          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
-        } else {
-          taskStart_async(initTask, authenticate, processorId, prevInstanceId)
-            .then(async (startTask) => {
-              await taskSync_async(startTask.instanceId, startTask);
-              utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
-            })
-        }
-      // Beginning of coprocessing
-      } else if (!task.hub.coProcessing) {
-        // Send on for coprocessing
-        await taskSync_async(task.instanceId, task);
-        utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
-      } else {
-        throw new Error("Neither beginning nor end of coprocessing.");
-      }
+    console.log("commandStart_async id:" + task.id);
+    // If this task has been started then send otherwise start it then send
+    if (task.type) {
+      await taskSync_async(task.instanceId, task);
+      utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
         .then(async (startTask) => {

@@ -14,7 +14,7 @@ let broadcastCount = 0;
 const taskSync_async = async (key, value) => {
 
   //console.log("taskSync_async", key, value.processor)
-  
+
   // key may be undefined if this is a start task that is being forwarded to coprocessor
   if (key) {
     await instancesStore_async.set(key, value);
@@ -49,6 +49,7 @@ const taskSync_async = async (key, value) => {
   
   // Pass to the first co-processor if we should coprocess first
   // Maybe isCoProcessor is redundant given that we set hub.coProcessing
+  // Update commands with sync option from the coprocessor will be skipped because of isCoProcessor
   if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcssing) {
     console.log("Start coprocessing");
     // Start Co-Processing

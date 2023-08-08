@@ -1,15 +1,13 @@
 /* ToDo
 -------
+Need to test error task
 meta.debug option
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
   Just log the history of transactions through the hub and allow for filtering/display via table
 Coprocessing is dispersed across Hub, needs refactoring.
-  The following files in hub: storage, registerRoutes, commandError, commandStart, commandUpdate, taskProcess, taskSync, webSocket
-    Ideally commandError, commandStart, commandUpdate would not need to know about the coprocessing
-      Basic isuse is that the command is skipped in the case of sending to co-processor
-      The taskProcess could immedaitley send to coProcssor
-    Can tsak.hub.coProcessing be combined with task.processor.isCoProcessor ?
+  The following files in hub: storage, registerRoutes, taskProcess, taskSync, webSocket
+    Can hub.coProcessing be combined with task.processor.isCoProcessor ?
       Coprocessor needs to receive tasks as a processor as well as stream processing
 Task that monitors a collaborativ discussion and via another route alows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across

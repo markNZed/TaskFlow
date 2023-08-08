@@ -148,19 +148,16 @@ function initWebSocketServer(server) {
         let task = j.task;
         task = await taskProcess_async(task);
 
+        // taskProcess_async has sent task to coprocessor
+        if (task === null) {
+          return;
+        }
+
         const byteSize = Buffer.byteLength(message, 'utf8');
         console.log(`Message size in bytes: ${byteSize} from ${task?.hub?.sourceProcessorId}`);
 
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs
-
-        if (haveCoProcessor && !task.hub.coProcessing) {
-          // Send to first coprocessor
-          await taskSync_async(task.instanceId, task);
-          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
-          return;
-          // We will receive the task again from th coprocessor
-        }
 
         const coProcessors = Array.from(activeCoProcessors.keys());
         const wasLastCoProcessor = task.hub?.coProcessingPosition === (coProcessors.length - 1);

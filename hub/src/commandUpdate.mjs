@@ -8,7 +8,6 @@ import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
-import { haveCoProcessor } from "../config.mjs";
 import { Mutex } from 'async-mutex';
 
 const mutexes = new Map();
@@ -35,11 +34,6 @@ async function doneTask_async(task) {
     }
     let processorId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
     task.processor = task.processors[processorId];
-    task.hub.coProcessingDone = false;
-    // Seems weird having this here. 
-    if (haveCoProcessor) {
-      //task.hub.coProcessing = false;
-    }
     task.hub.commandArgs = {
       init: initTask,
       prevInstanceId: task.instanceId,
@@ -99,15 +93,7 @@ export async function commandUpdate_async(task, res) {
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
-    if (haveCoProcessor) {
-      if (task.hub.coProcessingDone) {
-        await doUpdate(commandArgs, task, res);       
-      } else {
-        taskSync_async(task.instanceId, task);
-      }
-    } else {
-      await doUpdate(commandArgs, task, res);       
-    }
+    await doUpdate(commandArgs, task, res);       
   } catch (error) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
     console.error(msg);

@@ -11,6 +11,8 @@ import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
 import { utils } from './utils.mjs';
+import taskSync_async from "./taskSync.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 function processorInHubOut(task, activeTask, requestId) {
   const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
@@ -228,7 +230,14 @@ async function taskProcess_async(task, req, res) {
       task.familyId = task.familyId || activeTask.familyId;
       task = await processOutput_async(task, outputStore_async);
     }
-    if (res) {
+    if (haveCoProcessor && !task.hub.coProcessing && !task.processor.isCoProcessor) {
+      // Send to first coprocessor
+      // We will receive the task back from the coprocessor through websocket
+      await taskSync_async(task.instanceId, task);
+      utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+      return null;
+    // If HTTP without coprocessing then we return (this is no longer used)
+    } else if (res) {
       const result = await processCommand_async(task, res);
       if (error !== undefined) {
         // Maybe throw from here ?
