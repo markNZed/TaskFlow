@@ -107,6 +107,12 @@ const TaskLLMIO = (props) => {
       case "start":
         nextState = nextConfigState;
         break;
+      case "error":
+        // For error testing
+        if (transition()) {
+          modifyTask({ "command": "update" });
+        } 
+        break;
       case "display":
         setResponseText(task.config.local.display);
         break;

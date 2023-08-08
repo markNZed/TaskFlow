@@ -30,6 +30,9 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
       T("state.current", "received");
       T("command", "update");
       break;
+    case "error":
+      T("error", {message: "Testing an error from SM"});
+      break;
     case "start":
     case "received":
     case "display":

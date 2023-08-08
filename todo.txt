@@ -1,10 +1,13 @@
 /* ToDo
 -------
 Need to test error task
+ TaskLLMIO_async 
+   Exercise
+   How about a dedicated test task so it error directly
 meta.debug option
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
-  Just log the history of transactions through the hub and allow for filtering/display via table
+  Log the history of transactions through the hub and allow for filtering/display via table
 Coprocessing is dispersed across Hub, needs refactoring.
   The following files in hub: storage, registerRoutes, taskProcess, taskSync, webSocket
     Can hub.coProcessing be combined with task.processor.isCoProcessor ?

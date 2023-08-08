@@ -24,6 +24,8 @@ export async function taskProcess_async(wsSendTask, task) {
       if (updatedTask !== null) {
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
+          updatedTask["command"] = "update";
+          delete updatedTask.commandArgs;
         }
         if (updatedTask?.command === "start") {
           // This is not working/used yet

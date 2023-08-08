@@ -231,14 +231,15 @@ function withTask(Component) {
         alert("Task error: " + errorTask.response.text);
         // Probably better to "remount" the component
         // This can be done by changing the Key where the component is instantiated
-        modifyState("start");
+        // Going back to the start state can create an error loop
+        //modifyState("start");
       }
     )
 
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
     // This is specific to how React handles setState 
     const modifyState = (state) => {
-      //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
+      console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
       if (state && state !== props.task.state.current) {
         stateRef.current = state;

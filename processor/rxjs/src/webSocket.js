@@ -193,7 +193,7 @@ const connectWebSocket = () => {
           // Here we are receiving an update not coprocessing so we store the task.
           // The stored task needs to be in sync with the hub if we want to use diffs
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-          console.log("Skip update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
+          console.log("Stored update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
         }
       } else {
         // Do not want to pass sync through CEP. Stop looping if we updated the task from this processor
@@ -214,7 +214,25 @@ const connectWebSocket = () => {
           taskSubject.next(task);
         } else {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-          console.log("Skip ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
+          console.log("Stored ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
+        }
+      } else {
+        // To stop looping if we start a task from this processor
+        if (task.processor.initiatingProcessorId === processorId) {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+        } else {
+          taskSubject.next(task);
+        }
+      }
+    } else if (command === "error") {
+      console.log("ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
+      // Emit the task into the taskSubject
+      if (coProcessor) {
+        if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
+          taskSubject.next(task);
+        } else {
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+          console.log("Stored ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
         }
       } else {
         // To stop looping if we start a task from this processor

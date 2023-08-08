@@ -30,7 +30,7 @@ Task Processors can provide more or less complicated user interfaces, for exampl
 
 ## Task Hub Co-Processor
 
-A Task Processor may register as a Task Hub Co-Processor in which case it follows a different protocol. A Task Hub Co-Processor reveives each task sent to the hub and can operate on that task before returning it to the hub. When a Task Processor sends a task update to the Hub, like all other Task Processors assocaited with the task, it also receives the update from the hub. The Task Hub Co-Processor can intercept a task update modify the task. 
+A Task Processor may register as a Task Hub Co-Processor in which case it follows a different protocol. A Task Hub Co-Processor reveives each task sent to the hub and can operate on that task before returning it to the hub. When a Task Processor sends a task update to the Hub, like all other Task Processors assocaited with the task, it also receives the update from the hub. The Task Hub Co-Processor can intercept a task update modify the task. The Task Hub Co-Processor sees all tasks that go through the hub while a Task Processor will only see tasks that are associated with the environment it provides.
 
 ## Future
 

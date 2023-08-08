@@ -31,7 +31,7 @@ export async function commandStart_async(task, res) {
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     console.log("commandStart_async id:" + task.id);
     // If this task has been started then send otherwise start it then send
-    if (task.type) {
+    if (!initTask.id) {
       await taskSync_async(task.instanceId, task);
       utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
     } else {
