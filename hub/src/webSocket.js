@@ -7,9 +7,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocketServer } from "ws";
 import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
+import { haveCoProcessor } from "../config.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandError_async } from "./commandError.mjs";
+import taskSync_async from "./taskSync.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 
 /**
@@ -40,11 +42,11 @@ const wsSendTask = async function (task, processorId) {
   task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
   // hubDiff will remove processors and users
   let processor;
-  if (task.processors) {
+  if (task.processors && task.processors[processorId]) {
     processor = JSON.parse(JSON.stringify(task.processors[processorId]));
   }
   let user;
-  if (task.users && task.user.id) {
+  if (task.users && task.user.id && task.users[task.user.id]) {
     user = JSON.parse(JSON.stringify(task.users[task.user.id]));
   }
   let message = {}
@@ -151,7 +153,14 @@ function initWebSocketServer(server) {
 
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs
-        // Currently update/sync requests via websocket are only coming from co-processor
+
+        if (haveCoProcessor && !task.hub.coProcessing) {
+          // Send to first coprocessor
+          await taskSync_async(task.instanceId, task);
+          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+          return;
+          // We will receive the task again from th coprocessor
+        }
 
         const coProcessors = Array.from(activeCoProcessors.keys());
         const wasLastCoProcessor = task.hub?.coProcessingPosition === (coProcessors.length - 1);

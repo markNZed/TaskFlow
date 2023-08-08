@@ -14,7 +14,13 @@ let broadcastCount = 0;
 const taskSync_async = async (key, value) => {
 
   //console.log("taskSync_async", key, value.processor)
-  await instancesStore_async.set(key, value);
+  
+  // key may be undefined if this is a start task that is being forwarded to coprocessor
+  if (key) {
+    await instancesStore_async.set(key, value);
+  } else if (!haveCoProcessor) {
+    throw new Error("taskSync_async missing key" + JSON.stringify(value));
+  }
 
   // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
@@ -42,6 +48,7 @@ const taskSync_async = async (key, value) => {
   const skipCoProcssing = skipCoProcessingCommands.includes(command);
   
   // Pass to the first co-processor if we should coprocess first
+  // Maybe isCoProcessor is redundant given that we set hub.coProcessing
   if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcssing) {
     console.log("Start coprocessing");
     // Start Co-Processing

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async, activeCoProcessors, instancesStore_async, activeProcessors } from "./storage.mjs";
+import { activeTasksStore_async, instancesStore_async, activeProcessors } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { haveCoProcessor } from "../config.mjs";

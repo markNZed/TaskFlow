@@ -31,17 +31,28 @@ export async function commandStart_async(task, res) {
     }
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     // If we have one or more coprocessor 
-    console.log("commandStart_async haveCoProcessor " + haveCoProcessor + " coProcessing:" + task.hub.coProcessing + " coProcessingDone:" + task.hub.coProcessingDone);
+    console.log("commandStart_async haveCoProcessor " + haveCoProcessor + " coProcessing:" + task.hub.coProcessing + " coProcessingDone:" + task.hub.coProcessingDone + " instanceId:" + task.instanceId);
     if (haveCoProcessor) {
+      // End of coprocessing
       if (task.hub.coProcessingDone) {
-        taskSync_async(task.instanceId, task);
-        await utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+        // If this task has been started
+        if (!commandArgs.id && !commandArgs.init) {
+          await taskSync_async(task.instanceId, task);
+          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+        } else {
+          taskStart_async(initTask, authenticate, processorId, prevInstanceId)
+            .then(async (startTask) => {
+              await taskSync_async(startTask.instanceId, startTask);
+              utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
+            })
+        }
+      // Beginning of coprocessing
       } else if (!task.hub.coProcessing) {
-        taskStart_async(initTask, authenticate, processorId, prevInstanceId)
-          .then(async (startTask) => {
-            await taskSync_async(startTask.instanceId, startTask);
-            utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
-          })
+        // Send on for coprocessing
+        await taskSync_async(task.instanceId, task);
+        utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+      } else {
+        throw new Error("Neither beginning nor end of coprocessing.");
       }
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)

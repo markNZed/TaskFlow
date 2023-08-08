@@ -393,11 +393,16 @@ const sharedUtils = {
 
   hubActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta["hash"] = sharedUtils.taskHash(task);
-    delete task.hub.origTask; // delete so we do not have ans old copy in origTask
+    delete task.hub.origTask; // delete so we do not have an old copy in origTask
     // deep copy to avoid self-reference
     task.hub["origTask"] = JSON.parse(JSON.stringify(task)); 
     //sharedUtils.removeNullKeys(task);
-    await activeTasksStore_async.set(task.instanceId, task);
+    // If there is no type then this is a start request do we do not store it
+    if (task.type) {
+      await activeTasksStore_async.set(task.instanceId, task);
+    } else {
+      console.log("WARNING: hubActiveTasksStoreSet_async called with no type", task.id);
+    }
     return task;
   },
 
