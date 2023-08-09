@@ -2,7 +2,7 @@ FROM node:18-buster-slim
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl && \
+    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl iputils-ping && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

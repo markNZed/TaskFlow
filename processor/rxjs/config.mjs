@@ -10,6 +10,12 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import * as dotenv from "dotenv";
 dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const TASKHUB_URL = process.env.TASKHUB_URL || "http://localhost:5001/hub";
 const hubSocketUrl = process.env.hubSocketUrl || "ws://localhost:5001/hub/ws";
@@ -29,7 +35,7 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const CONFIG_DIR = process.env.CONFIG_DIR || "./config";
+const CONFIG_DIR = process.env.CONFIG_DIR || path.join(__dirname, './config');
 
 let processorId;
 const processorIdFile = './db/processorId.txt';

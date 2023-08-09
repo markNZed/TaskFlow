@@ -54,7 +54,9 @@ const tasks = [
   {
     config: {
       nextTask: "summarize",
-      response: "Hello"
+      local: {
+        instruction: "Hello",
+      },
     },
     name: "start",
     parentName: "example",
