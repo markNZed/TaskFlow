@@ -3,4 +3,5 @@ dead
 node_modules
 *.swp
 ./config
+package-lock.json
 

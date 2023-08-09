@@ -1,12 +1,19 @@
 The following is for development where the NodeJS Task Processor and React Task Processor directories are mounted in the Docker container.
 
-<br> git clone https://github.com/markNZed/taskflow.git
-<br> cd taskflow/infra/docker
+<br> `git clone https://github.com/markNZed/taskflow.git``
+<br> `cd taskflow/infra/docker`
 <br> Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable
 <br> `docker-compose build`
-<br> `docker-compose up`
+<br> `docker-compose up -d`
 <br> Access the React Task Processor at http://localhost:3000 
+NOTE: It can take quite some time for the npm install to complete
 WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome.
+
+To interact with the servers:
+<br> `docker exec -it $(docker ps -qf "name=docker_taskflow-demo") /bin/bash`
+<br> Connect to the screen window manager to view the server instances `screen -r`
+<br> There are 4 screen windows, use `Ctrl-c 0` to switch to th first one. 
+
 
 # Notes
 
