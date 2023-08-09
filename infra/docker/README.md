@@ -12,7 +12,7 @@ WARNING: There have been issues with Firefox and insecure websocket on localhost
 To interact with the servers:
 <br> `docker exec -it $(docker ps -qf "name=docker_taskflow-demo") /bin/bash`
 <br> Connect to the screen window manager to view the server instances `screen -r`
-<br> There are 4 screen windows, use `Ctrl-c 0` to switch to th first one. 
+<br> There are 5 screen windows, use `Ctrl-c 0` to switch to the first one. 
 
 
 # Notes

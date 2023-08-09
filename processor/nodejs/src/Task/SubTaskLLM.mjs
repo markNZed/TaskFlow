@@ -331,22 +331,25 @@ async function ChatGPTAPI_request_async(params) {
   // This is a hack to get parameters into the API
   // We should be able to change this on the fly, I requested a feature
   // https://github.com/transitive-bullshit/chatgpt-api/issues/434
-  const api = new ChatGPTAPI({
-    apiKey: process.env.OPENAI_API_KEY,
-    getMessageById: async (id) => {
-      //console.log("getMessageById", id, messages[(id - 1)])
-      return messages[(id - 1)];
-    },
-    upsertMessage: async (id) => {
-      // Not used
-    },
-    completionParams: {
-      top_p: 1.0,
-    },
-    maxResponseTokens: maxResponseTokens,
-    maxModelTokens: maxTokens,
-    debug: debug,
-  });
+  let api;
+  if (!dummyAPI) {
+    api = new ChatGPTAPI({
+      apiKey: process.env.OPENAI_API_KEY,
+      getMessageById: async (id) => {
+        //console.log("getMessageById", id, messages[(id - 1)])
+        return messages[(id - 1)];
+      },
+      upsertMessage: async (id) => {
+        // Not used
+      },
+      completionParams: {
+        top_p: 1.0,
+      },
+      maxResponseTokens: maxResponseTokens,
+      maxModelTokens: maxTokens,
+      debug: debug,
+    });
+  }
 
   const messageParams = {
     completionParams: {

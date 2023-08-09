@@ -12,13 +12,8 @@ const tasks = [
     }
   },
   {
-    name: "exercices",
-    parentName: "root"
-  },
-  {
     name: "conversation",
-    parentName: "exercices",
-    type: "TaskConversation"
+    parentName: "root",
   },
   {
     config: {
@@ -31,19 +26,17 @@ const tasks = [
     },
     initiator: true,
     name: "chatgpt",
-    parentName: "conversation"
+    parentName: "conversation",
+    type: "TaskConversation",
   },
   {
-    config: {
-      nextTask: "start"
-    },
     name: "start",
     parentName: "chatgpt",
     type: "TaskChat"
   },
   {
     name: "taskflow",
-    parentName: "exercices",
+    parentName: "root",
     type: "TaskStepper"
   },
   {

@@ -34,4 +34,10 @@ screen -S my-session -p 4 -X stuff "cd /app/processor/react\n"
 screen -S my-session -p 4 -X stuff "npm install\n"
 screen -S my-session -p 4 -X stuff "npm start\n"
 
+# create a new window within the "my-session" screen
+screen -S my-session -X screen bash
+
+screen -S my-session -p 5 -X stuff "cd /app/\n"
+screen -S my-session -p 5 -X stuff "npm install\n"
+
 sleep infinity

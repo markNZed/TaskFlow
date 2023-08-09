@@ -17,6 +17,7 @@
     "chatgpt": "^5.1.3",
     "config": "^3.3.9",
     "cors": "^2.8.5",
+    "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-request-id": "^3.0.0",

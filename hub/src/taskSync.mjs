@@ -68,7 +68,7 @@ const taskSync_async = async (key, value) => {
         wsSendTask(taskCopy, coProcessorId);
         break;
       } else {
-        console.log("CoProcessor does not support commmand", command, coProcessorId);
+        //console.log("CoProcessor does not support commmand", command, coProcessorId);
       }
       position++;
     }
@@ -90,7 +90,7 @@ const taskSync_async = async (key, value) => {
           console.log("taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
           wsSendTask(taskCopy, coProcessorId);
         } else {
-          console.log("taskSync_async coprocessor does not support commmand", command, coProcessorId);
+          //console.log("taskSync_async coprocessor does not support commmand", command, coProcessorId);
         }
       }
     }
@@ -125,7 +125,7 @@ const taskSync_async = async (key, value) => {
           console.log("taskSync_async", command, key, processorId);
           wsSendTask(taskCopy, processorId);
         } else {
-          console.log("taskSync_async processor does not support commmand", command, processorId);
+          //console.log("taskSync_async processor does not support commmand", command, processorId);
         }
       } else {
         updatedProcessorIds = updatedProcessorIds.filter(id => id !== processorId);
