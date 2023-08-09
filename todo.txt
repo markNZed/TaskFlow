@@ -1,5 +1,8 @@
 /* ToDo
 -------
+RabbitMQ
+Frameworks to help with debug
+services should have names in config?
 Check if the demo is working.
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task

@@ -11,10 +11,12 @@ const tasks = [
       current: "start"
     }
   },
+
   {
     name: "conversation",
     parentName: "root",
   },
+
   {
     config: {
       label: "chatGPT",
@@ -34,26 +36,84 @@ const tasks = [
     parentName: "chatgpt",
     type: "TaskChat"
   },
+
   {
-    name: "taskflow",
+    config: {
+      label: "Exercice",
+      spawnTask: false,
+      services: [
+        {
+          temperature: 0.9,
+        },
+      ],
+      APPEND_cache: [
+        {
+          subTask: "SubTaskLLM",
+          seed: ["task.name"],
+          enable: true,
+        }
+      ],
+    },
+    initiator: true,
+    name: "exercise",
     parentName: "root",
     type: "TaskStepper"
   },
   {
-    name: "example",
-    parentName: "taskflow",
+    config: {
+      label: "",
+      nextTask: "summarize",
+      local: {
+        instructionTemplate: [
+          "Bonjour ",
+          "USER.label",
+          " et bienvenue dans cet entraînement au résumé écrit. Je suis l'assistant IA de Sandrine, n'hésitez pas à contacter Sandrine si vous avez des questions après cet exercice ! Vous allez produire un résumé écrit d'environ 100 mots d'un texte qui fait environ 400 mot."
+        ]
+      }
+    },
+    name: "start",
+    parentName: "exercise",
+    type: "TaskShowInstruction"
+  },
+
+  {
+    name: "stepper",
+    parentName: "root",
+  },
+
+  {
+    config: {
+      label: "Example1",
+      spawnTask: false,
+      services: [
+        {
+          temperature: 0.9,
+        },
+      ],
+      APPEND_cache: [
+        {
+          subTask: "SubTaskLLM",
+          seed: ["task.name"],
+          enable: true,
+        }
+      ],
+    },
     initiator: true,
+    name: "stepper1",
+    parentName: "stepper",
+    type: "TaskStepper",
   },
   {
     config: {
+      label: "",
       nextTask: "summarize",
       local: {
         instruction: "Hello",
       },
     },
     name: "start",
-    parentName: "example",
-    type: "TaskShowInstruction"
+    parentName: "stepper1",
+    type: "TaskShowInstruction",
   },
   {
     config: {
@@ -71,7 +131,7 @@ const tasks = [
       nextTask: "structure"
     },
     name: "summarize",
-    parentName: "example",
+    parentName: "stepper1",
     type: "TaskLLMIO"
   },
   {
@@ -87,7 +147,7 @@ const tasks = [
           promptTemplate: [
             "Provide feedback on this prompt, is it a good prompt? ",
             "\"",
-            "summarize.input",
+            "summarize.output.userInput",
             "\""
           ],
           messagesTemplate: [
@@ -95,7 +155,7 @@ const tasks = [
               role: "user",
               text: [
                 "This is a response from an earlier message",
-                "summarize.response"
+                "summarize.output.LLMtext"
               ]
             },
             {
@@ -107,7 +167,7 @@ const tasks = [
       ],
     },
     name: "structure",
-    parentName: "example",
+    parentName: "stepper1",
     type: "TaskLLMIO"
   }
 ];
