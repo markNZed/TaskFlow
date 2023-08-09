@@ -177,7 +177,7 @@ function App({ activeWorkerCount, workerId }) {
   return (
     <Routes>
       <Route exact path="/" element={<Taskflows task={task} setTask={setTask} />} />
-      <Route exact path="/db" element={<IndexedDBViewer />} />
+      <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} processorId={globalState?.processorId}/>} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>
   );

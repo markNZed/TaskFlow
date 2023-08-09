@@ -1,19 +1,15 @@
 /* ToDo
 -------
-Need to test error task
- TaskLLMIO_async 
-   Exercise
-   How about a dedicated test task so it error directly
-meta.debug option
+Check if the demo is working.
 Plan: add logging via coprocessor + browser interface, testing (in particular errors)
   Logging is the first "aspect" as well as being a system Task
   Log the history of transactions through the hub and allow for filtering/display via table
-Coprocessing is dispersed across Hub, needs refactoring.
-  The following files in hub: storage, registerRoutes, taskProcess, taskSync, webSocket
-    Can hub.coProcessing be combined with task.processor.isCoProcessor ?
-      Coprocessor needs to receive tasks as a processor as well as stream processing
-Task that monitors a collaborativ discussion and via another route alows interaction with any one of the persona
+   /db givs us th indexDB viewer
+  meta.debug option
+Task that monitors a collaborative discussion and via another route alows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
+  Does not require extending the server ?
+    Security flaw for now - a user can "fake" another task (but need the familyId)
 messagesStyle http input must be diff ?
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]
@@ -22,7 +18,7 @@ Notion of an input pipeline and output pipeline, managed by Processor
     Need to implement a queue on the task request/response ? The are no longer internal requests
     A new "request" and "response" command then the Processor can implement a queue (provide next request after previous response)
   In React the output bypasses the task but we could do something similar whereby the HoC passes the component output through the output pipeline. Could replace output.
-Should task.id be task.config.id ?
+task.id -> task.config.id
   Then task.id could replace task.instanceId
 Do we want to be able to configure CEP functionality?
   The Task provides state machine not CEP.
@@ -34,6 +30,7 @@ Dynamic task configuration
   Hub would need to be extended
   Could it dump out configurations that can be saved/reused?
   This is better than static definitions because we don't need to elaborate all possibilities in the config options
+  Maybe this does not require any new functionality on the hub - just copy form one child task to another
 NodeJS needs a notion of request ID prefixed to logging
 A Processor that is restarted does not rejoin the activeTasks ?
 RxJS V7 Processor

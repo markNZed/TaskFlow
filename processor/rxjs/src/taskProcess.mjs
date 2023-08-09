@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { taskFunctions } from "./Task/taskFunctions.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { coProcessor } from "../config.mjs";
@@ -14,7 +13,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
   try {
     console.log("taskProcess_async", task.id);
-    console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
+    console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {

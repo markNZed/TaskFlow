@@ -26,7 +26,7 @@ export async function commandUpdateSync_async(wsSendTask, task, diff) {
   };
   delete mergedTask.commandArgs.syncTask.command;
   delete mergedTask.commandArgs.syncTask.commandArgs;
-  // Because this is a fresh command sent from the coProcessor not part of the coProcessing pipeline
+  // Because this is a fresh command sent from the coprocessor not part of the coprocessing pipeline
   mergedTask.processor["coProcessing"] = false;
   mergedTask.processor["coProcessingDone"] = true; // So it is not coprocessed again
   // Because it is this processor that is the initiator of the sync

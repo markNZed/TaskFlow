@@ -13,13 +13,14 @@ const columns = [
   { key: 'value', name: 'Value', formatter: ({ row }) => JSON.stringify(row.value) }
 ];
 
-const IndexedDBViewer = () => {
+const IndexedDBViewer = ({workerId, processorId}) => {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
-      const storage = await openStorage();
+      let id = localStorage.getItem('processorId' + workerId);
+      const storage = await openStorage(id);
 
       const indexedDBData = [];
       for await (const [key, value] of storage) {
