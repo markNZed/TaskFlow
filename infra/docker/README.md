@@ -1,6 +1,6 @@
 The following is for development where the NodeJS Task Processor and React Task Processor directories are mounted in the Docker container.
 
-<br> `git clone https://github.com/markNZed/taskflow.git``
+<br> `git clone https://github.com/markNZed/taskflow.git`
 <br> `cd taskflow/infra/docker`
 <br> Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable
 <br> `docker-compose build`
