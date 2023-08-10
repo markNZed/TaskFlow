@@ -21,6 +21,7 @@ const IndexedDBViewer = ({workerId, processorId}) => {
     const fetchData = async () => {
       let id = localStorage.getItem('processorId' + workerId);
       const storage = await openStorage(id);
+      console.log("IndexedDBViewer id", id);
 
       const indexedDBData = [];
       for await (const [key, value] of storage) {
@@ -30,8 +31,10 @@ const IndexedDBViewer = ({workerId, processorId}) => {
       setData(indexedDBData);
     };
 
-    fetchData();
-  }, []);
+    if (processorId) {
+      fetchData();
+    }
+  }, [processorId]);
 
   // Filter rows based on search term
   const filteredData = data.filter(row => 

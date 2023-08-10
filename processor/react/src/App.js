@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
+  const [processorId, setProcessorId] = useState();
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const [configHash, setConfigHash] = useState();
   const [registering, setRegistering] = useState(false);
@@ -107,6 +108,7 @@ function App({ activeWorkerCount, workerId }) {
       }
     };
     if (globalState?.processorId) {
+      setProcessorId(globalState.processorId);
       fetchSession();
     }
   }, [globalState?.processorId]);
@@ -177,7 +179,7 @@ function App({ activeWorkerCount, workerId }) {
   return (
     <Routes>
       <Route exact path="/" element={<Taskflows task={task} setTask={setTask} />} />
-      <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} processorId={globalState?.processorId}/>} />
+      <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} processorId={processorId}/>} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>
   );

@@ -8,7 +8,7 @@ import { kvsIndexedDB } from "@kvs/indexeddb";
 
 export const openStorage = async (id) => {
   const storage = await kvsIndexedDB({
-    name: "activeTasks" + id,
+    name: "activeTasks-" + id,
     version: 1,
   });
 
