@@ -38,45 +38,6 @@ const tasks = [
   },
 
   {
-    config: {
-      label: "Exercice",
-      spawnTask: false,
-      services: [
-        {
-          temperature: 0.9,
-        },
-      ],
-      APPEND_cache: [
-        {
-          subTask: "SubTaskLLM",
-          seed: ["task.name"],
-          enable: true,
-        }
-      ],
-    },
-    initiator: true,
-    name: "exercise",
-    parentName: "root",
-    type: "TaskStepper"
-  },
-  {
-    config: {
-      label: "",
-      nextTask: "summarize",
-      local: {
-        instructionTemplate: [
-          "Bonjour ",
-          "USER.label",
-          " et bienvenue dans cet entraînement au résumé écrit. Je suis l'assistant IA de Sandrine, n'hésitez pas à contacter Sandrine si vous avez des questions après cet exercice ! Vous allez produire un résumé écrit d'environ 100 mots d'un texte qui fait environ 400 mot."
-        ]
-      }
-    },
-    name: "start",
-    parentName: "exercise",
-    type: "TaskShowInstruction"
-  },
-
-  {
     name: "stepper",
     parentName: "root",
   },
