@@ -2,7 +2,7 @@ The following is for development where the NodeJS Task Processor and React Task 
 
 * `git clone https://github.com/markNZed/taskflow.git`
 * `cd taskflow/infra/docker`
-* Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable or leave it empty (T@askFlow will then us a "dummy" API)
+* Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable or leave it empty (T@skFlow will then us a "dummy" API)
 * `docker-compose build`
 * `docker-compose up -d`
 * Access the React Task Processor at http://localhost:3000 
