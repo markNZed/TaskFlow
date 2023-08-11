@@ -33,6 +33,18 @@ const tasksSchema = new mongoose.Schema({
 // Mongoose should create a collecton "tasks" in the database "taskflow"
 const tasksModel = db.model('tasks', tasksSchema);
 
+function stripTask(task) {
+  // deep copy
+  const taskCopy = JSON.parse(JSON.stringify(task));
+  // There are many fields we do not want to store in the log 
+  delete taskCopy.meta.hashDiffOrigTask;
+  delete taskCopy.meta.hashTask;
+  delete taskCopy.processor.origTask;
+  if (taskCopy.type === "TaskSystemLog") {
+    delete taskCopy.response.tasks;
+  }
+}
+
 const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);
@@ -48,7 +60,7 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
             version: task.history.length + 1,
             taskData: task.currentTask
         });
-        task.currentTask = newTaskData;
+        task.currentTask = stripTask(newTaskData);
         task.markModified('history');
         task.markModified('currentTask');
         await task.save();
@@ -56,7 +68,7 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
         // If the task does not exist, create a new one and save
         const newTask = new tasksModel({
             _id: newTaskData.instanceId,
-            currentTask: newTaskData,
+            currentTask: stripTask(newTaskData),
             history: []
         });
         await newTask.save();

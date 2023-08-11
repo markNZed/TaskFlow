@@ -35,7 +35,7 @@ const tasktypes = [
   },
   {
     name: "TaskChat",
-    websocket: true,
+    streaming: true,
     // If multiple environments then it will be synchronized
     environments: ["react", "nodejs"],
     config: {
@@ -115,7 +115,7 @@ const tasktypes = [
   },
   {
     name: "TaskLLMIO",
-    websocket: true,
+    streaming: true,
     environments: ["react", "nodejs"],
     config: {
       nextStates: {

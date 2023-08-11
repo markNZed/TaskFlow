@@ -13,10 +13,10 @@ import { cacheStore_async } from "../storage.mjs";
 // state === send : this processor has control
 
 function checkTaskCache (task, T) {
-  // Loop over each object in task.config.cache if it exists
+  // Loop over each object in task.config.caching if it exists
   let enabled = false;
   let seed = T("id");
-  for (const cacheObj of task.config.cache) {
+  for (const cacheObj of task.config.caching) {
     if (cacheObj.subTask) {
       continue;
     }

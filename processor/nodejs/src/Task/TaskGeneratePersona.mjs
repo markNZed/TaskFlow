@@ -19,13 +19,13 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
       return null
     case "start":
       T("request.prompt", "Generate a random client profile");
-      T("request.service.noWebsocket", true);
+      T("request.service.noStreaming", true);
       let subTask = await SubTaskLLM_async(wsSendTask, task);
       T("output.profile", subTask.response.LLM);
       T("request.service.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
       T("request.prompt", T("output.profile"));
       const forget = T("request.service.forget");
-      T("request.service.noWebsocket", false);
+      T("request.service.noStreaming", false);
       subTask = await SubTaskLLM_async(wsSendTask, task);
       T("output.summary", subTask.response.LLM);
       T("request.service.forget", forget);

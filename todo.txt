@@ -1,16 +1,35 @@
 /* ToDo
 -------
+Add logging via coprocessor
+  Logging is the first "aspect" as well as being a system Task
+  Log the history of transactions through the hub and allow for filtering/display via table
+  Dealing with large numbers of messages
+  Could choose when to expand the history rather than sending it
+  History should only be the changes
+  A task viewer below the datagrid ?
+  Which columns to show for sorting? Time
+  How to allow for user queries ? e.g. specific user, specific time
+  Showing as a time series might be better rather than collecting by instanceId
+  Is there a standard log format ?
+    React-Log
+    React Virtualized
+    React-Flow
+  Designing the filtering UI
+    LogFilter React component for building the query
+      Could it use the JSON schema?
+    https://www.npmjs.com/package/react-querybuilder
+  Being able to view through time - like "playing" the log
+  react-data-grid https://github.com/adazzle/react-data-grid 
+    https://github.com/adazzle/react-data-grid/tree/main/website/demos
+    Could expand row by resizing?
+
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything
 Interview Qs
   Do you use a coding assistant?
 services should have names in config?
-Plan: add logging via coprocessor + browser interface, testing (in particular errors)
-  Logging is the first "aspect" as well as being a system Task
-  Log the history of transactions through the hub and allow for filtering/display via table
-   /db givs us th indexDB viewer
 meta.debug option
-Task that monitors a collaborative discussion and via another route alows interaction with any one of the persona
+Task that monitors a collaborative discussion and via another route allows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
   Does not require extending the server ?
     Security flaw for now - a user can "fake" another task (but need the familyId)

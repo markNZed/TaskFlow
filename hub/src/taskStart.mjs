@@ -420,8 +420,8 @@ async function taskStart_async(
     // If already set (e.g. joining the task) keep the current values
     task.meta["requestsThisMinute"] = task.meta.requestsThisMinute ?? 0;
     task.meta["requestCount"] = task.meta.requestCount ?? 0;
-    task.meta["createdAt"] = task.meta.createdAt ?? Date.now();
-    task.meta["updatedAt"] = task.meta.updatedAt ?? Date.now();
+    task.meta["createdAt"] = task.meta.createdAt ?? utils.updatedAt();
+    task.meta["updatedAt"] = task.meta.updatedAt ?? utils.updatedAt();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 

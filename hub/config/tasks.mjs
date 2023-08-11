@@ -3,7 +3,7 @@ const tasks = [
     config: {
       maxRequestCount: 100,
       maxRequestRate: 30,
-      cache: [],
+      caching: [],
     },
     menu: true,
     name: "root",
@@ -22,9 +22,9 @@ const tasks = [
     initiator: true,
     name: "systemlog",
     config: {
-      label: "SystemLog",
+      label: "Log",
       ceps: {
-        ".*instance.*": { // This is interpreted as a regex
+        ".*instance.*": {
           isRegex: true,
           functionName: "CEPLog",
         },
@@ -73,7 +73,7 @@ const tasks = [
           temperature: 0.9,
         },
       ],
-      APPEND_cache: [
+      APPEND_caching: [
         {
           subTask: "SubTaskLLM",
           seed: ["task.name"],

@@ -39,7 +39,7 @@ export const configSchema = yup.object()
     promptTemplate: stringOrArrayOfStrings,
   })),
   cacheKeySeed: yup.string(),
-  cache: yup.array().of(yup.object()),
+  caching: yup.array().of(yup.object()),
   local: yup.object(),
   subtasks: yup.object(),
   ceps: yup.object(),

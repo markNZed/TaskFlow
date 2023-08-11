@@ -19,7 +19,7 @@ const servicetypes = [
     dummyAPI: false,
     prompt: "",
     useCache: true,
-    noWebsocket: false,
+    noStreaming: false,
     systemMessageTemplate: "",
     cacheKeySeed: "",
   },

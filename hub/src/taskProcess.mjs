@@ -70,15 +70,15 @@ function checkLockConflict(task, activeTask) {
     
     if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockProcessorId && !lockBypass && !unlock) {
       const now = new Date();
-      let updatedAt;
+      let localUpdatedAt;
       if (task.meta.updatedAt) {
-        updatedAt = new Date(task.meta.updatedAt.date);
+        localUpdatedAt = new Date(task.meta.updatedAt.date);
       }
       
-      const differenceInMinutes = (now - updatedAt) / 1000 / 60;
+      const differenceInMinutes = (now - localUpdatedAt) / 1000 / 60;
       
-      if (differenceInMinutes > 5 || updatedAt === undefined) {
-        console.log(`UNLOCK task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked} updatedAt ${updatedAt}`);
+      if (differenceInMinutes > 5 || localUpdatedAt === undefined) {
+        console.log(`UNLOCK task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
       } else {
         console.log(`CONFLICT Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new RequestError("Task locked", 423);
@@ -102,9 +102,9 @@ function checkAPIRate(task, activeTask) {
 
     const maxRequestRate = task?.config?.maxRequestRate ?? 0;
     if (maxRequestRate && task.meta.updatedAt) {
-      const updatedAt = new Date(task.meta.updatedAt.date);
+      const localUpdatedAt = new Date(task.meta.updatedAt.date);
 
-      if (updatedAt >= resetDate) {
+      if (localUpdatedAt >= resetDate) {
         if (task.meta.requestsThisMinute >= maxRequestRate) {
           throw new RequestError(
             `Task update rate exceeded ${maxRequestRate} per minute`,

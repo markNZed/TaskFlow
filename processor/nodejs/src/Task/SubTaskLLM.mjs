@@ -93,7 +93,7 @@ async function chat_prepare_async(task) {
   let forget = false;
   let [useCache, cacheKeySeed] = checkSubTaskCache(T, task, "SubTaskLLM");
   console.log("useCache config " + useCache + " seed " + cacheKeySeed);
-  let noWebsocket = false;
+  let noStreaming = false;
 
   //console.log("prompt " + prompt);
   const services = T("config.services");
@@ -174,13 +174,13 @@ async function chat_prepare_async(task) {
   const environments = T("environments");
   // If the task is running on the nodejs processor we do not use websocket
   if (environments.length === 1 && environments[0] === "nodejs") {
-    noWebsocket = true;
-    console.log("Environment noWebsocket");
+    noStreaming = true;
+    console.log("Environment noStreaming");
   }
 
-  if (serviceConfig.noWebsocket !== undefined) {
-    noWebsocket = serviceConfig.noWebsocket;
-    console.log("Request noWebsocket");
+  if (serviceConfig.noStreaming !== undefined) {
+    noStreaming = serviceConfig.noStreaming;
+    console.log("Request noStreaming");
   }
 
   if (serviceConfig.forget !== undefined) {
@@ -254,7 +254,7 @@ async function chat_prepare_async(task) {
   return {
     systemMessage,
     messages,
-    noWebsocket,
+    noStreaming,
     prompt,
     useCache,
     modelVersion,
@@ -279,7 +279,7 @@ async function ChatGPTAPI_request_async(params) {
   const {
     systemMessage,
     messages,
-    noWebsocket,
+    noStreaming,
     prompt,
     useCache,
     modelVersion,
@@ -360,7 +360,7 @@ async function ChatGPTAPI_request_async(params) {
     systemMessage: systemMessage,
   };
 
-  if (!noWebsocket) {
+  if (!noStreaming) {
     messageParams["onProgress"] = (partialResponse) =>
       SendIncrementalWs(wsSendTask, partialResponse, instanceId);
   }
@@ -390,7 +390,7 @@ async function ChatGPTAPI_request_async(params) {
   }
 
   // Message can be sent from one of multiple sources
-  function message_from(source, text, noWebsocket, instanceId) {
+  function message_from(source, text, noStreaming, instanceId) {
     // Don't add ... when response is fully displayed
     console.log("Response from " + source + " : " + text.slice(0, 80) + " ...");
     const response = {partial: {text: text, mode: "final" }};
@@ -400,7 +400,7 @@ async function ChatGPTAPI_request_async(params) {
       command: "partial",
       processor: {},
     };
-    if (!noWebsocket) {
+    if (!noStreaming) {
       wsDelta[instanceId] = 0
       wsSendTask(partialTask);
     }
@@ -423,7 +423,7 @@ async function ChatGPTAPI_request_async(params) {
       SendIncrementalWs(wsSendTask, partialResponse, instanceId);
       //await sleep(80);
     }
-    message_from("cache", text, noWebsocket, instanceId);
+    message_from("cache", text, noStreaming, instanceId);
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
@@ -449,14 +449,14 @@ async function ChatGPTAPI_request_async(params) {
         SendIncrementalWs(wsSendTask, partialResponse, instanceId);
         await sleep(80);
       }
-      message_from("Dummy API", text, noWebsocket, instanceId);
+      message_from("Dummy API", text, noStreaming, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {
       response_text_promise = api
         .sendMessage(prompt, messageParams)
         .then((response) => {
           let text = response.text;
-          message_from("API", text, noWebsocket, instanceId);
+          message_from("API", text, noStreaming, instanceId);
           if (useCache) {
             cacheStore_async.set(computedCacheKey, response);
             console.log("cache stored key ", computedCacheKey);
@@ -465,7 +465,7 @@ async function ChatGPTAPI_request_async(params) {
         })
         .catch((error) => {
           let text = "ERROR " + error.message;
-          message_from("API", text, noWebsocket, instanceId);
+          message_from("API", text, noStreaming, instanceId);
           return text;
         });
     }

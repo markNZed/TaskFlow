@@ -13,6 +13,29 @@ import TreeItem from '@mui/lab/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
+/*
+The task keys that should be columns in datagrid (still provide an option to hide them):
+
+* meta.updatedAt
+* id
+* instanceId (but don't need to show full value)
+* familyId (but don't need to show full value)
+* type
+
+The task keys that should be initially hiddne but can be added as columns:
+
+* config.label
+* name
+* state.current
+* output (this is an object)
+* input (this is an object)
+* request (this is an object)
+* response (this is an object)
+
+How should we display objects?
+*/
+
+
 // Recursive utility function to convert taskData into a TreeItem structure
 const renderTree = (nodes, idPrefix = '') => (
   <TreeItem key={idPrefix} nodeId={idPrefix.toString()} label={nodes.id}>
@@ -24,7 +47,7 @@ const renderTree = (nodes, idPrefix = '') => (
   </TreeItem>
 );
 
-
+// We may not want to render as a tree, this is just an experiment
 const TaskDataTree = ({ taskData }) => (
   <TreeView
     defaultCollapseIcon={<ExpandMoreIcon />}
@@ -33,13 +56,6 @@ const TaskDataTree = ({ taskData }) => (
     {renderTree({ id: `Root-${taskData.instanceId}`, object: taskData })}
   </TreeView>
 );
-
-/*
-const columns = [
-  { key: 'key', name: 'Key' },
-  { key: 'value', name: 'Value', formatter: ({ row }) => JSON.stringify(row.value) }
-];
-*/
 
 const TaskSystemLog = (props) => {
 
@@ -132,33 +148,14 @@ const TaskSystemLog = (props) => {
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
       />
-      <DataGrid columns={columns} rows={filteredData} pageSize={10} />
+      <DataGrid 
+        columns={columns} 
+        rows={filteredData} 
+        pageSize={10}
+      />
     </div>
   );
 
 };
 
 export default withTask(TaskSystemLog);
-
-  // Initial experiments were with the processor storage.
-  // Leaving the code commented because we might want to do something similar.
-  /*
-  import { openStorage } from "../../storage.js";
-  useEffect(() => {
-    const fetchData = async () => {
-      const storage = await openStorage(props.processorId);
-      console.log("TaskSystemLog id", processorId);
-
-      const indexedDBData = [];
-      for await (const [key, value] of storage) {
-        indexedDBData.push({ key, value });
-      }
-      
-      setData(indexedDBData);
-    };
-
-    if (processorId) {
-      fetchData();
-    }
-  }, [processorId]);
-  */
