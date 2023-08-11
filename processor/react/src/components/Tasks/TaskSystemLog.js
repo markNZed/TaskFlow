@@ -104,18 +104,18 @@ const TaskSystemLog = (props) => {
 
   const columns = [
       {  
-        headerName: 'instanceId', 
+        name: 'instanceId', 
         width: 150,
         key: "key"
       },
       { 
-        headerName: 'Current',
+        name: 'Current',
         width: 400,
         formatter: ({ row }) => ( <TaskDataTree taskData={row.value} /> ),
         key: "value"
       },
       {  
-        headerName: 'History',
+        name: 'History',
         width: 400,
         formatter: ({ row }) => ( row.history && row.history.length > 0 ? <TaskDataTree taskData={row.history[0].taskData} />  : "No History"),
         key: "history"
