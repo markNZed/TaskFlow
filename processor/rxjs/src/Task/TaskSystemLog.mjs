@@ -45,7 +45,13 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
 
   // We really only need to store diffs
   async function updateTaskWithHistory(newTaskData) {
-    const id = newTaskData.instanceId + newTaskData.meta.updatedAt.date + newTaskData.meta.updatedAt.timezone;
+    let id = newTaskData.instanceId + newTaskData.meta.updatedAt.date + newTaskData.meta.updatedAt.timezone;
+    if (newTaskData.type === "TaskSystemLog") {
+      // we can get duplicate ids when this task is logging itself
+      let currentDateTime = new Date();
+      let currentDateTimeString = currentDateTime.toString();
+      id = newTaskData.instanceId + currentDateTimeString;
+    }
     // Fetch the existing task
     let task = await tasksModel.findOne({ 
       _id: id,
