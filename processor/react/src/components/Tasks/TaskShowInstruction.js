@@ -26,6 +26,7 @@ const TaskShowInstruction = (props) => {
     modifyTask,
     transition,
     onDidMount,
+    componentName,
   } = props;
 
   const [instructionText, setInstructionText] = useState("");
@@ -45,7 +46,7 @@ const TaskShowInstruction = (props) => {
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
-    if (transition()) { log("TaskShowInstruction State Machine State " + task.state.current) }
+    if (transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
         if (task.output.instruction) {

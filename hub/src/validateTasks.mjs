@@ -70,6 +70,7 @@ function transformKeys(obj) {
     let newKey = key.replace(/^APPEND_/, '');
     newKey = newKey.replace(/^PREPEND_/, '');
     newKey = newKey.replace(/^LOCAL_/, '');
+    newKey = newKey.replace(/^CHILDREN_/, '');
     newKey = newKey.replace(/_(FR|EN)$/, '');
     if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
       result[newKey] = transformKeys(obj[key]);  // Recursively transform keys of nested object

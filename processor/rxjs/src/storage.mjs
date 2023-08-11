@@ -9,11 +9,41 @@ import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
 dotenv.config();
+import mongoose from 'mongoose';
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 
 // Each keyv store is in a different table
 const DB_URI = "sqlite://db/main.sqlite";
+
+// use database "taskflow"
+const mongoURL = "mongodb://user:pass@mongodb:27017/taskflow?authSource=admin";
+
+mongoose.connect(mongoURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+const db = mongoose.connection;
+db.on('error', error => console.error('connection error:', error));
+db.once('open', () => {
+  console.log("Connected to MongoDB!");
+});
+
+db.once('open', async () => {
+  try {
+      const collections = Object.keys(mongoose.connection.collections);
+      for (const collectionName of collections) {
+          const collection = mongoose.connection.collections[collectionName];
+          await collection.drop();
+          console.log(`Dropped ${collectionName} collection successfully!`);
+      }
+  } catch (err) {
+      if (err.message !== 'ns not found') { // Ignore if the collection is not found
+          console.error('Error dropping collection:', err);
+      }
+  }
+});
 
 // Allows for middleware
 // Passing the websocket to avoid circular imports
@@ -57,4 +87,5 @@ export {
   activeTasksStore_async,
   taskDataStore_async,
   connections,
+  db,
 };

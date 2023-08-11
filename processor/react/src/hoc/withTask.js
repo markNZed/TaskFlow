@@ -198,6 +198,7 @@ function withTask(Component) {
           console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {
           // Just update task.meta & task.processor (for the processor.origTask)
+          // But the CEP could modify this task
           const currentMeta = utils.deepMerge(props.task.meta, updateDiff.meta);
           const currentProcessor = utils.deepMerge(props.task.processor, updateDiff.processor);
           modifyTask({"meta": currentMeta, "processor": currentProcessor});

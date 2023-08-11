@@ -21,22 +21,21 @@ const CEPFunctions = {
         return CEPFunctions[funcName];
     } else {
         throw new Error('Invalid function name ' + funcName);
-    }
+    } 
   },
 
-  myCEPFunc: async function(functionName, wsSendTask, origTask, CEPtask, args) {
+
+  CEPIncrement: async function(functionName, wsSendTask, origTask, CEPtask, args) {
     const increment = args.increment;
     // No reason to ignore start
     if (CEPtask.processor.command === "start") {
-      console.log("myCEPFunc doing nothing for start command")
+      console.log("CEPIncrement doing nothing for start command")
       return;
     }
-    /*
-    if (CEPtask.output.CEPCount === 2) {
-      console.log("myCEPFunc stopped with CEPCount " + CEPtask.output.CEPCount);
+    if (CEPtask.output.CEPCount > 100) {
+      console.log("CEPIncrement stopped with CEPCount " + CEPtask.output.CEPCount);
       return
     }
-    */
     let syncTask = {}
     syncTask["output"] = {};
     syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;

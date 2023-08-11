@@ -184,7 +184,7 @@ function Taskflows(props) {
           </Drawer>
         </Box>
 
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
           <Toolbar />
           {tasks.map(
             ({ instanceId }, idx) =>

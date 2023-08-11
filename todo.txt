@@ -1,5 +1,7 @@
 /* ToDo
 -------
+https://en.wikipedia.org/wiki/Shared-nothing_architecture
+  One alternative architecture is shared everything
 Interview Qs
   Do you use a coding assistant?
 services should have names in config?
@@ -7,7 +9,7 @@ Plan: add logging via coprocessor + browser interface, testing (in particular er
   Logging is the first "aspect" as well as being a system Task
   Log the history of transactions through the hub and allow for filtering/display via table
    /db givs us th indexDB viewer
-  meta.debug option
+meta.debug option
 Task that monitors a collaborative discussion and via another route alows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
   Does not require extending the server ?

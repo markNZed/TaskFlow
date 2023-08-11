@@ -13,6 +13,8 @@ const columns = [
   { key: 'value', name: 'Value', formatter: ({ row }) => JSON.stringify(row.value) }
 ];
 
+// This should be refactored as a Task, as per TaskSystemLog
+
 const IndexedDBViewer = ({workerId, processorId}) => {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");

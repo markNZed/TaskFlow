@@ -30,13 +30,18 @@ function App({ activeWorkerCount, workerId }) {
   const [task, setTask] = useState(); // So Taskflows.js can use the withTask pattern
 
   useEffect(() => {
-    if (globalState.processorId === undefined && workerId) {
-      let id = localStorage.getItem('processorId' + workerId);
-      if (!id) {
-        id = "react-" + uuidv4();
-        localStorage.setItem('processorId' + workerId, id);
+    if (workerId) {
+      if (globalState.workerId !== workerId) {
+        replaceGlobalState("workerId", workerId);
       }
-      replaceGlobalState("processorId", id);
+      if (globalState.processorId === undefined) {
+        let id = localStorage.getItem('processorId' + workerId);
+        if (!id) {
+          id = "react-" + uuidv4();
+          localStorage.setItem('processorId' + workerId, id);
+        }
+        replaceGlobalState("processorId", id);
+      }
     }
   }, [workerId]);
 

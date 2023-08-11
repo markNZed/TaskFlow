@@ -3,7 +3,15 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskSystemLog",
+    environments: ["react", "rxjs"],
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskSelect",
+    environments: ["react"],
     config: {
       local: {
         fields: [
@@ -20,7 +28,10 @@ const tasktypes = [
     },
     output: {
       selected: [],
-    }
+    },
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskChat",
@@ -49,6 +60,9 @@ const tasktypes = [
         }
       },
     },
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskConversation",
@@ -69,6 +83,9 @@ const tasktypes = [
         }
       },
     },
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskSimulateUser",
@@ -83,6 +100,9 @@ const tasktypes = [
           seed: [],
         }
       },
+    },
+    state: {
+      current: "start",
     },
   },
   {

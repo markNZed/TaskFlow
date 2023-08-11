@@ -7,14 +7,36 @@ const tasks = [
     },
     menu: true,
     name: "root",
-    state: {
-      current: "start"
-    }
   },
+  {
+    menu: false,
+    name: "system",
+    parentName: "root",
+  },
+  {
+    menu: false,
+    name: "user",
+    parentName: "root",
+  },
+  {
+    initiator: true,
+    name: "systemlog",
+    config: {
+      label: "SystemLog",
+      ceps: {
+        ".*instance.*": { // This is interpreted as a regex
+          isRegex: true,
+          functionName: "CEPLog",
+        },
+      },
+    },
+    parentName: "system",
+    type: "TaskSystemLog"
+  }, 
 
   {
     name: "conversation",
-    parentName: "root",
+    parentName: "user",
   },
 
   {
@@ -39,7 +61,7 @@ const tasks = [
 
   {
     name: "stepper",
-    parentName: "root",
+    parentName: "user",
   },
 
   {

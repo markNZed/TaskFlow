@@ -14,17 +14,29 @@ To interact with the servers:
 * Connect to the screen window manager to view the server instances `screen -r`
 * There are 5 screen windows, use `Ctrl-c 0` to switch to the first one
 
+To interact with mongodb inside the mongodb container:
+* `docker exec -it $(docker ps -qf "name=docker_mongodb") /bin/bash`
+* `mongosh -u user` (the default password is "pass")
+
+To interact with mongodb from another container's shell:
+* `mongosh -u user --host mongodb` (the default password is "pass")
+
 # Notes
 
 ## Dev
 This assumes T@skFlow is running behind a proxy on a docker network:
 
-<br> docker-compose -f docker-compose-dev.yml build
-<br> docker-compose -f docker-compose-dev.yml up -d
+<br> `docker-compose -f docker-compose-dev.yml build`
+<br> `docker-compose -f docker-compose-dev.yml up -d`
 
 SetupVSCode debugging in .vscode/launch.json
 
-docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash
+<br>`docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash`
+
+* `mongosh -u user --host mongodb`
+* `use taskflow`
+* `show collections`
+* `db.tasks.find()`
 
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 

@@ -9,14 +9,13 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
 
-  function myCEPFunc2(functionName, wsSendTask, task, CEPtask, args) {
+  function helloWorld(functionName, wsSendTask, task, CEPtask, args) {
     console.log("Hello World", args);
   }
 
-  CEPFunctions.register("myCEPFunc2", myCEPFunc2);
-
-  // match could be a regex ?
-  // CEP is either a function or DSL ?
+  // This shows dynamically registering a CEP 
+  // We can also register a CEP by declaring it in ./CEPFunctions.mjs
+  CEPFunctions.register("helloWorld", helloWorld);
 
   console.log(`${taskName} in state ${task.state.current}`);
 

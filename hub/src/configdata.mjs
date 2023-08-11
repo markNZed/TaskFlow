@@ -107,17 +107,43 @@ function appendOperation(task, key, parentTask) {
   }
 }
 
-function copyPrivateKeysRecursively(obj) {
+function copyLocalKeys(obj) {
   for (const key in obj) {
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
-      copyPrivateKeysRecursively(obj[key]);
-    }
-    if (key.startsWith("LOCAL_")) {
-      obj[key.slice(8)] = obj[key];
+    if (obj.hasOwnProperty(key)) {
+
+      // Recurse if it's an object and not null.
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        copyLocalKeys(obj[key]);
+      }
+
+      // Check for "LOCAL_" prefix.
+      if (key.startsWith("LOCAL_")) {
+        const newKey = key.slice(6);
+        if (!obj.hasOwnProperty(newKey)) {
+          obj[newKey] = obj[key];
+        }
+      }
+
     }
   }
   return obj;
 }
+
+function stripChildrenPrefix(obj) {
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        stripChildrenPrefix(obj[key]);
+      }
+      if (key.startsWith("CHILDREN_")) {
+        obj[key.slice(9)] = obj[key];
+        delete obj[key];
+      }
+    }
+  }
+  return obj;
+}
+
 
 // Not that this has huge side-effects
 // Transform tasks array into flattened tasks hash
@@ -173,12 +199,16 @@ function flattenTasks(tasks) {
       }
     }
 
+
     // Copy LOCAL_ keys
-    taskflow = copyPrivateKeysRecursively(taskflow);
+    taskflow = copyLocalKeys(taskflow);
     
     // Copy keys from the parent
-    const parentTaskflow = taskflowLookup[parentId];
-    mergeTasks(taskflow, parentTaskflow);
+    if (taskflowLookup[parentId]) {
+      const parentTaskflow = JSON.parse(JSON.stringify(taskflowLookup[parentId]));
+      stripChildrenPrefix(parentTaskflow);
+      mergeTasks(taskflow, parentTaskflow);
+    }
 
     // Convert relative task references to absolute
     const nextTask = taskflow?.config?.nextTask;

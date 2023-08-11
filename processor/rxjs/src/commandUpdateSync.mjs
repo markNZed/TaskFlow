@@ -12,7 +12,7 @@ export async function commandUpdateSync_async(wsSendTask, task, diff) {
   console.log("commandUpdateSync_async sync");
   const lastTask = await activeTasksStore_async.get(task.instanceId);
   if (!lastTask) {
-    throw new Error("No diff found for " + diff.instanceId);
+    throw new Error("No lastTask found for " + task.instanceId);
   }
   //console.log("commandUpdateSync_async sync processor", lastTask.processor);
   const mergedTask = utils.deepMerge(lastTask, diff);

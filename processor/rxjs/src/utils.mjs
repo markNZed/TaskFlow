@@ -138,27 +138,36 @@ const utils = {
     }
   },
 
-  createCEP: function(CEPFuncs, task, match, CEPFunc, functionName, args) {
+  createCEP: function(CEPFuncs, CEPFunctions, task, match, config) {
+    console.log("createCEP config", config)
+    const functionName = config.functionName;
+    const args = config.args;
+    const CEPFunc = CEPFunctions.get(functionName);
     // Check if the Map has an entry for match
     if (!task.familyId) {
       console.log("task", task);
       throw new Error("task.familyId is undefined");
     }
     let origMatch = match;
-    match =  match + task.familyId;
+    if (!task.id.startsWith("root.system.")) {
+      match = task.familyId + "-" + match;
+    }
+    if (config.isRegex) {
+      match = "regex:" + match;
+    }
     let funcMap = CEPFuncs.get(match);
     if (!funcMap) {
       // If not, create a new Map for match
       funcMap = new Map();
       funcMap.set(task.instanceId, [task, CEPFunc, functionName, args]); // Will need to clean this up from memory
       CEPFuncs.set(match, funcMap);
-      console.log("CEPFuncs created function for " + origMatch + " from " + task.id + " familyId " + task.familyId);  
+      console.log("CEPFuncs created function for " + origMatch + " from match " + match);  
     } else {
       // Only add the function if there isn't already an entry for this task.instanceId
       if (!funcMap.has(task.instanceId)) {
         funcMap.set(task.instanceId, [task, CEPFunc, functionName, args]);
         CEPFuncs.set(match, funcMap);
-        console.log("CEPFuncs added function for " + origMatch + " from " + task.id + " familyId " + task.familyId);
+        console.log("CEPFuncs added function for " + origMatch + " from match " + match);
       }
     }
   },

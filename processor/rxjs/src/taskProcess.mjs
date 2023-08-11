@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { coProcessor } from "../config.mjs";
+import { processorId, coProcessor } from "../config.mjs";
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
@@ -26,9 +26,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       if (task.config?.ceps) {
         for (const key in task.config.ceps) {
           if (task.config.ceps.hasOwnProperty(key)) {
-            const functionName = task.config.ceps[key].functionName;
-            const args = task.config.ceps[key].args;
-            utils.createCEP(CEPFuncs, task, key, CEPFunctions.get(functionName), functionName, args);
+            utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
           }
         }
       }
@@ -52,10 +50,14 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         console.log("taskProcess_async null so task replaces updatedTask", updatedTask.id);
         // The updatedTask.processor will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
+      } else if (updatedTask.command) {
+        // This processor wants to make a change
+        // The original processor will no longer see the change as coming from it
+        console.log("taskProcess_async initiatingProcessorId updated");
+        updatedTask.processor["initiatingProcessorId"] = processorId;
       }
-      console.log("taskProcess_async wsSendTask", updatedTask.id);
-      // Becaus wsSendTask is expecting a task
       if (!updatedTask.command) {
+        // Because wsSendTask is expecting task.command
         updatedTask.command = task.processor.command;
         updatedTask.commandArgs = task.processor.commandArgs;
       }

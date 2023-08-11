@@ -22,6 +22,29 @@ let processorWs;
 const taskSubject = new Subject();
 const CEPFuncs = new Map();
 
+// Support regex in the CEP config to match tasks
+function findCEP (CEPFuncsKeys, matchExpr) {
+  let result = CEPFuncs.get(matchExpr);
+  if (!result) {
+    // filter CEPFuncsKeys for those starting with regex:
+    const regexKeys = [...CEPFuncsKeys].filter(key => key.startsWith("regex:"));
+    // for each regexKey check if it matches the matchExpr
+    //console.log("regexKeys", regexKeys)
+    for (const regexKey of regexKeys) {
+      // strip "regex:" prefix from regexKey
+      const regexStr = regexKey.substring("regex:".length);
+      let regex = new RegExp(regexStr);
+      //console.log("regex", regex);
+      let match = regex.test(matchExpr);
+      if (match) {
+        result = CEPFuncs.get(regexKey);
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 // We will need to track activeTasks to remove CEP and cleanup unused CEPfunc
 // Maybe detect when family has no active tasks
 taskSubject
@@ -32,7 +55,7 @@ taskSubject
     }),
     */
     mergeMap(async (task) => {
-      console.log("Incoming task", task.id);
+      console.log("Incoming task id " + task.id + " command " + task.processor.command);
       const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
       // Complex event processing uses a Map of Map
       //  The outer Map matches a task identity of the task that is being processed
@@ -40,19 +63,26 @@ taskSubject
       // A task instance can initiate CEP triggered by instanceId, id, familyId
       // Maps maintain order and keys do not need to be strings
       // We always add familyId so CEP can only operate on its own family
-      let instanceSourceFuncsMap = CEPFuncs.get(task.instanceId + task.familyId) || new Map();
-      let taskSourceFuncsMap = CEPFuncs.get(task.id + task.familyId) || new Map();
-      let familySourceFuncsMap = CEPFuncs.get(task.familyId + task.familyId) || new Map();    
+      // utils.createCEP is how we create the entries
+      const CEPFuncsKeys = CEPFuncs.keys();
+      //console.log("CEPFuncs", CEPFuncs.keys());
+      //console.log("CEP looking for " + task.familyId + "-instance-" + task.instanceId);
+      let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
+      //console.log("CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
+      let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
+      //console.log("CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
+      let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId-" + task.familyId) || new Map();
+      //console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
       // Retrieve the function arrays from each Map
-      let instanceCEPFuncs = [...instanceSourceFuncsMap.values()];
-      let taskCEPFuncs = [...taskSourceFuncsMap.values()];
-      let familyCEPFuncs = [...familySourceFuncsMap.values()];  
+      let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
+      let idCEPFuncs = [...idSourceFuncsMap.values()];
+      let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
       // Flatten all CEP functions into a single array
-      let allCEPFuncs = [...instanceCEPFuncs, ...taskCEPFuncs, ...familyCEPFuncs];
+      let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
       //console.log("allCEPFuncs", allCEPFuncs);
       // Run each CEP function serially
       for (const [origTask, func, functionName, args] of allCEPFuncs) {
-        console.log(`Running CEP function ${functionName} with ${args}`);
+        console.log(`Running CEP function ${functionName} with args:`, args);
         await func(functionName, wsSendTask, origTask, task, args);
       }
       // Check for changes to the task
@@ -60,25 +90,34 @@ taskSubject
       if (Object.keys(diff).length > 0) {
         console.log("DIFF", diff);
       } else {
-        console.log("no DIFF");
+        console.log("no DIFF", taskCopy?.state?.current, task?.state?.current);
       }
       if (coProcessor) {
         console.log("CoProcessing task " + taskCopy.id);
         //console.log("taskSubject task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
         //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+        if (task.processor.command === "update") {
+          console.log("CoProcessing task.state ", task?.state);
+          const diff = utils.getObjectDifference(taskCopy, task) || {};
+          if (Object.keys(task).length > 0 && Object.keys(diff).length > 0) {
+            console.log("CoProcessing diff ", diff);
+            //await commandUpdateSync_async(wsSendTask, task, diff);
+          }
+        }
+        //wsSendTask(task);
         //console.log("CoProcessing task ", task);
       } else {
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
           await commandUpdateSync_async(wsSendTask, task, diff);
         }
-        // Do we want to allow for this ? Need to be able to install the CEP
+        // Process the task to install the CEP
         if (task.processor["command"] === "update" || task.processor["command"] === "start") {
           await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
-      return task;
+      return taskCopy;
     }),
   )
   .subscribe({
