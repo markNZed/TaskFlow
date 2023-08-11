@@ -14,14 +14,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 /*
-The task keys that should be columns in datagrid (still provide an option to hide them):
-
-* meta.updatedAt
-* id
-* instanceId (but don't need to show full value)
-* familyId (but don't need to show full value)
-* type
-
 The task keys that should be initially hiddne but can be added as columns:
 
 * config.label
@@ -33,6 +25,7 @@ The task keys that should be initially hiddne but can be added as columns:
 * response (this is an object)
 
 How should we display objects?
+How can we modify .App max-width from 1200 to 100% when in this Task ?
 */
 
 
@@ -72,6 +65,12 @@ const TaskSystemLog = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
+  // This is a hack to override the width of the App (max of 1200px) when presenting this Task
+  const element = document.getElementById('appDiv');
+  if (element) {
+    element.style.maxWidth = '100%';
+  }
+
   // Task state machine
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
@@ -86,14 +85,19 @@ const TaskSystemLog = (props) => {
         console.log("tasks", task.response.tasks);
         // Build the correct structure 
         let responseData = [];
-        task.response.tasks.forEach((t) => {
-          responseData.push({
-            id: t.currentTask.instanceId,
-            key: t.currentTask.instanceId,
-            value: t.currentTask,
-            history: t.history, // An array
+        if (task.response.tasks && task.response.tasks.length > 0) {
+          task.response.tasks.forEach((t) => {
+            responseData.push({
+              id: t.current.id,
+              familyId: t.current.familyId,
+              type: t.current.type,
+              instanceId: t.current.instanceId,
+              key: t.current.instanceId + t.updatedAt.date,
+              current: t.current,
+              updatedAt: t.updatedAt.date,
+            });
           });
-        });        
+        }      
         setData(responseData);
         nextState = "query";
         break;
@@ -108,7 +112,7 @@ const TaskSystemLog = (props) => {
   // Filter rows based on search term
   const filteredData = data.filter(row => 
     row.key.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    JSON.stringify(row.value).toLowerCase().includes(searchTerm.toLowerCase())
+    JSON.stringify(row.current).toLowerCase().includes(searchTerm.toLowerCase())
   );
   console.log("filteredData", filteredData);
 
@@ -119,23 +123,51 @@ const TaskSystemLog = (props) => {
   };
 
   const columns = [
-      {  
-        name: 'instanceId', 
-        width: 150,
-        key: "key"
+    {  
+      name: 'instanceId', 
+      width: 50,
+      key: "key",
+      flex: 1,
+    },
+    {  
+      name: 'id', 
+      width: 150,
+      key: "id",
+      flex: 1,
+    },
+    {  
+      name: 'familyId', 
+      width: 50,
+      key: "familyId",
+      flex: 1,
+    },
+    {  
+      name: 'type', 
+      width: 150,
+      key: "type",
+      flex: 1,
+    },
+    {  
+      name: 'updatedAt', 
+      width: 200,
+      formatter: ({ row }) => {
+        if (row.updatedAt) {
+            const date = new Date(row.updatedAt);
+            const timeString = date.toTimeString().split(' ')[0]; // Extracts hh:mm:ss
+            return <time dateTime={row.updatedAt}>{date.toDateString()} {timeString}</time>;
+        }
+        return null;
       },
-      { 
-        name: 'Current',
-        width: 400,
-        formatter: ({ row }) => ( <TaskDataTree taskData={row.value} /> ),
-        key: "value"
-      },
-      {  
-        name: 'History',
-        width: 400,
-        formatter: ({ row }) => ( row.history && row.history.length > 0 ? <TaskDataTree taskData={row.history[0].taskData} />  : "No History"),
-        key: "history"
-      }
+      key: "updatedAt",
+      flex: 1,
+    },
+    { 
+      name: 'Current',
+      flexGrow: 1,
+      formatter: ({ row }) => ( <TaskDataTree taskData={row.current} /> ),
+      key: "current",
+      flex: 1,
+    },
   ];
 
   return (

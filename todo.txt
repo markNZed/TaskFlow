@@ -1,5 +1,8 @@
 /* ToDo
 -------
+Make sure only register same CEP once
+ the instanceId changes so it creates a new one
+ maybe system should only have one ?
 Add logging via coprocessor
   Logging is the first "aspect" as well as being a system Task
   Log the history of transactions through the hub and allow for filtering/display via table
@@ -22,6 +25,7 @@ Add logging via coprocessor
   react-data-grid https://github.com/adazzle/react-data-grid 
     https://github.com/adazzle/react-data-grid/tree/main/website/demos
     Could expand row by resizing?
+  Need to log as a time series
 
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything

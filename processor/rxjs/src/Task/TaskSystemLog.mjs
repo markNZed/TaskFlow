@@ -12,22 +12,14 @@ import mongoose from 'mongoose';
 
 // Because any is defined as a Mixed type we need to use markModified
 // If it has a schema then Mongoos can detect the change
-const taskHistorySchema = new mongoose.Schema({
-  version: {
-      type: Number,
-      default: 1
-  },
-  timestamp: {
-      type: Date,
-      default: Date.now
-  },
-  taskData: mongoose.Mixed
-});
-
 const tasksSchema = new mongoose.Schema({
   _id: String,
-  currentTask: mongoose.Mixed,
-  history: [taskHistorySchema]
+  instanceId: String,
+  current: mongoose.Mixed,
+  updatedAt: {
+    date: Date,
+    timezone: String
+  },
 });
 
 // Mongoose should create a collecton "tasks" in the database "taskflow"
@@ -43,6 +35,7 @@ function stripTask(task) {
   if (taskCopy.type === "TaskSystemLog") {
     delete taskCopy.response.tasks;
   }
+  return taskCopy;
 }
 
 const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs) {
@@ -52,24 +45,32 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
 
   // We really only need to store diffs
   async function updateTaskWithHistory(newTaskData) {
+    const id = newTaskData.instanceId + newTaskData.meta.updatedAt.date + newTaskData.meta.updatedAt.timezone;
     // Fetch the existing task
-    let task = await tasksModel.findById(newTaskData.instanceId);
+    let task = await tasksModel.findOne({ 
+      _id: id,
+      updatedAt: newTaskData.meta.updatedAt  // Use updatedAt in the query
+    });
     if (task) {
-        // Push the current task data into the history
-        task.history.push({
-            version: task.history.length + 1,
-            taskData: task.currentTask
-        });
-        task.currentTask = stripTask(newTaskData);
-        task.markModified('history');
-        task.markModified('currentTask');
+        task.current = stripTask(newTaskData);
+        task.updatedAt = {
+          date: newTaskData.meta.updatedAt.date,
+          timezone: newTaskData.meta.updatedAt.timezone
+        };
+        task.instanceId = newTaskData.instanceId;
+        task.markModified('current');
+        task.markModified('updatedAt');
         await task.save();
     } else {
         // If the task does not exist, create a new one and save
         const newTask = new tasksModel({
-            _id: newTaskData.instanceId,
-            currentTask: stripTask(newTaskData),
-            history: []
+            _id: id,
+            current: stripTask(newTaskData),
+            updatedAt: {
+              date: newTaskData.meta.updatedAt.date,
+              timezone: newTaskData.meta.updatedAt.timezone
+            },
+            instanceId: newTaskData.instanceId,
         });
         await newTask.save();
     }

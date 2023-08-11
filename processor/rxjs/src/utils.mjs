@@ -164,7 +164,7 @@ const utils = {
       console.log("CEPFuncs created function for " + origMatch + " from match " + match);  
     } else {
       // Only add the function if there isn't already an entry for this task.instanceId
-      if (!funcMap.has(task.instanceId)) {
+      if (!funcMap.has(task.instanceId) && !task.id.startsWith("root.system.")) {
         funcMap.set(task.instanceId, [task, CEPFunc, functionName, args]);
         CEPFuncs.set(match, funcMap);
         console.log("CEPFuncs added function for " + origMatch + " from match " + match);
