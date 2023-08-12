@@ -23,9 +23,14 @@ Add logging via coprocessor
     https://www.npmjs.com/package/react-querybuilder
   Being able to view through time - like "playing" the log
   react-data-grid https://github.com/adazzle/react-data-grid 
-    https://github.com/adazzle/react-data-grid/tree/main/website/demos
+    https://adazzle.github.io/react-data-grid/#/common-features // Not aligned with latet code ?
+    https://github.com/adazzle/react-data-grid/tree/main/website/demos // Not aligned with latet code ?
+    View the index.ts in node_models to get an ide aof the interface
     Could expand row by resizing?
-  Need to log as a time series
+  Priorities:
+    Filtering columns
+  Issues:
+    Coprocessor will not log sync messages that are not processed by the rxjs pipeline
 
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything

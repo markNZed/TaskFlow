@@ -22,6 +22,8 @@
     "npm": "^9.6.4",
     "react": "^18.2.0",
     "react-data-grid": "^7.0.0-beta.30",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-native-dotenv": "^3.4.8",
     "react-query": "^3.39.3",
