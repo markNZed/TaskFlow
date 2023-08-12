@@ -1,9 +1,9 @@
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag, useDrop, useContext } from 'react-dnd';
 import { headerRenderer } from 'react-data-grid';
 
-function DraggableHeaderRenderer(props) {
+function DraggableHeaderRenderer({ setFilters, ...props }) {
 
-  const { onColumnsReorder, column } = props;
+  const { onColumnsReorder, column, filters } = props;
 
   const [{ isDragging }, drag] = useDrag({
     type: 'COLUMN_DRAG',
@@ -24,7 +24,21 @@ function DraggableHeaderRenderer(props) {
     })
   });
 
-  return (
+  const filterStyles = {
+    inlineSize: '100%',
+    padding: '4px',
+    fontSize: '14px'
+  };
+
+  function inputStopPropagation(event) {
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.stopPropagation();
+    }
+  }
+
+  const useFilter = true;
+
+  return useFilter ? (
     <div
       ref={ref => {
         drag(ref);
@@ -33,12 +47,45 @@ function DraggableHeaderRenderer(props) {
       style={{
         opacity: isDragging ? 0.5 : 1,
         backgroundColor: isOver ? '#ececec' : undefined,
-        cursor: 'move'
+        cursor: 'move',
+        height: 30,
       }}
+      className={'filter-cell'} // Added this to get filter input showing in the cell
     >
+    <>
       {headerRenderer({ column, ...props })}
+      <div>
+        <input
+          {...props }
+          style={filterStyles}
+          value={filters[column.key]}
+          onChange={(e) =>
+            setFilters({
+              ...filters,
+              [column.key]: e.target.value
+            })
+          }
+          onKeyDown={inputStopPropagation}
+        />
+      </div>
+      </>
+    </div>
+  ) : (
+    <div
+        ref={ref => {
+          drag(ref);
+          drop(ref);
+        }}
+        style={{
+          opacity: isDragging ? 0.5 : 1,
+          backgroundColor: isOver ? '#ececec' : undefined,
+          cursor: 'move'
+        }}
+      >
+        {headerRenderer({ column, ...props })}
     </div>
   );
+
 }
 
 export default DraggableHeaderRenderer;

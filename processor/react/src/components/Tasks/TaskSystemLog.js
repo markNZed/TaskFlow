@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useContext } from "react";
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
@@ -18,7 +18,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 /*
-The task keys that should be initially hidden but can be added as columns:
+The task keys that could be initially hidden but can be added as columns:
 
 * config.label
 * name
@@ -37,10 +37,19 @@ The row sorting is not working with the header sorting
 // Recursive utility function to convert taskData into a TreeItem structure
 // Needed to override height, --rdg-row-height, lineHeight because TreeItem is picking it up from the datagrid
 const renderTree = (nodes, idPrefix = '') => (
-  <TreeItem style={{height: 'auto', lineHeight: '30px !important', '--rdg-row-height': 'auto'}} key={idPrefix} nodeId={idPrefix.toString()} label={nodes.id}>
+  <TreeItem style={{height: 'auto', lineHeight: '30px', '--rdg-row-height': '30px'}} key={idPrefix} nodeId={idPrefix.toString()} label={nodes.id}>
     {Array.isArray(nodes.object) || (typeof nodes.object === 'object' && nodes.object !== null)
-      ? Object.entries(nodes.object).map(([key, value], idx) => 
-          renderTree({ id: key, object: value }, `${idPrefix}-${idx}`)
+      ? Object.entries(nodes.object)
+        .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))  // Sorting alphabetically
+        .map(([key, value], idx) => 
+          {
+            if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+              return renderTree({ id: key, object: value }, `${idPrefix}-${idx}`)
+            } else {
+              const content = key + ": " + value + "<br>";
+              return <div dangerouslySetInnerHTML={{ __html: content }} />;
+            }
+          }
         )
       : JSON.stringify(nodes.object)}
   </TreeItem>
@@ -76,6 +85,8 @@ function getComparator(sortColumn) {
       throw new Error(`unsupported sortColumn: "${sortColumn}"`);
   }
 }
+
+const FilterContext = React.createContext();
 
 function createColumns() {
   const columns = [
@@ -155,6 +166,9 @@ function createColumns() {
   return columns;
 }
 
+// Context is needed to read filter values otherwise columns are
+// re-created when filters are changed and filter loses focus
+
 const TaskSystemLog = (props) => {
 
   const {
@@ -169,11 +183,22 @@ const TaskSystemLog = (props) => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [rows, setRows] = useState([]);
   const [sortedRows, setSortedRows] = useState([]); 
+  const [filteredRows, setFilteredRows] = useState(rows);
   const [columns, setColumns] = useState(createColumns());
   const [sortColumns, setSortColumns] = useState([]);
   const onSortColumnsChange = useCallback((sortColumns) => {
     setSortColumns(sortColumns.slice(-1));
   }, []);
+  const [filters, setFilters] = useState(
+    {
+      updatedAt: '',
+      instanceId: '',
+      taskId: '',
+      familyId: '',
+      type: '',
+      processorId: '',
+    }
+  );
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
@@ -234,13 +259,28 @@ const TaskSystemLog = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
+  // Could use memo here?
+  useEffect(() => {
+    const result = rows.filter((r) => {
+      return (
+        (filters.updatedAt ? r.updatedAt.includes(filters.updatedAt) : true) &&
+        (filters.instanceId ? r.instanceId.includes(filters.instanceId) : true) &&
+        (filters.taskId ? r.taskId.includes(filters.taskId) : true) &&
+        (filters.familyId ? r.familyId.includes(filters.familyId) : true) &&
+        (filters.type ? r.type.includes(filters.type) : true) &&
+        (filters.v ? r.processorId.includes(filters.processorId) : true)
+      );
+    });
+    console.log("filteredRows", result);
+    setFilteredRows(result);
+  }, [rows, filters]);
+
   useEffect(() => {
     if (sortColumns.length === 0) {
-      setSortedRows(rows); // Update sortedRows state here
+      setSortedRows(filteredRows);
       return;
     }
-    
-    const newSortedRows = [...rows].sort((a, b) => {
+    const newSortedRows = [...filteredRows].sort((a, b) => {
       for (const sort of sortColumns) {
         const comparator = getComparator(sort.columnKey);
         const compResult = comparator(a, b);
@@ -250,14 +290,23 @@ const TaskSystemLog = (props) => {
       }
       return 0;
     });
+    setSortedRows(newSortedRows);
+  }, [filteredRows, sortColumns]);
 
-    setSortedRows(newSortedRows); // Update sortedRows state here
-  }, [rows, sortColumns]);
+  // Create a component so we can useContext inside it
+  function HeaderRendererComponent({ handleColumnsReorder, ...props }) {
+    const filters = useContext(FilterContext);
+    return (
+      <DraggableHeaderRenderer
+        {...props}
+        filters={filters}
+        setFilters={setFilters}
+        onColumnsReorder={handleColumnsReorder}
+      />
+    );
+  }
 
   const draggableColumns = useMemo(() => {
-    function headerRenderer(props) {
-      return <DraggableHeaderRenderer {...props} onColumnsReorder={handleColumnsReorder} />;
-    }
     function handleColumnsReorder(sourceKey, targetKey) {
       const sourceColumnIndex = columns.findIndex((c) => c.key === sourceKey);
       const targetColumnIndex = columns.findIndex((c) => c.key === targetKey);
@@ -270,21 +319,34 @@ const TaskSystemLog = (props) => {
       setColumns(reorderedColumns);
     }
     return columns.map((c) => {
-      return { ...c, headerRenderer };
+      return { ...c, 
+        headerRenderer: (headerProps) => <HeaderRendererComponent {...headerProps} handleColumnsReorder={handleColumnsReorder} setFilters={setFilters} />
+      };
     });
   }, [columns]);
 
   useEffect(() => {
-    // Filter rows based on search term
+    // Filter rows based on global search term
     // This will be inefficient with large datasets
     const filteredData = data.filter(row => 
       row.key.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
       JSON.stringify(row.current).toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
-    console.log("filteredData", filteredData);
-
+    console.log("global filteredData", filteredData);
     setRows(filteredData);
   }, [data, debouncedSearchTerm]);
+
+  // Not used yet, could be connected to a button
+  function clearFilters() {
+    setFilters(    {
+      updatedAt: '',
+      instanceId: '',
+      taskId: '',
+      familyId: '',
+      type: '',
+      processorId: '',
+    });
+  }
 
   const handleUpdateButtonClick = () => {
     if (task.state.current === "query") {
@@ -320,37 +382,32 @@ const TaskSystemLog = (props) => {
         onChange={e => setSearchTerm(e.target.value)}
       />
       <DndProvider backend={HTML5Backend}>
-        <DataGrid 
-          columns={draggableColumns}
-          sortColumns={sortColumns}
-          onSortColumnsChange={onSortColumnsChange}
-          rows={sortedRows}
-          onRowsChange={onRowsChange}
-          pageSize={10}
-          defaultColumnOptions={{
-            sortable: true,
-            resizable: true
-          }}
-          rowHeight={(prop) => { 
-            if (prop.row.expanderType === 'DETAIL') {
-              return 200;
-            } else { 
-              return 30; 
-            }
-          }}
-          /*
-          onCellKeyDown={(_, event) => {
-            if (event.isDefaultPrevented()) {
-              // skip parent grid keyboard navigation if nested grid handled it
-              event.preventGridDefault();
-            }
-          }}
-          */
-          rowKeyGetter={(row) => (row.key)}
-          className="fill-grid"
-          enableVirtualization={false}
-          style={{ overflowY: 'hidden' }}
-        />
+        <FilterContext.Provider value={filters}>
+          <DataGrid 
+            columns={draggableColumns}
+            sortColumns={sortColumns}
+            onSortColumnsChange={onSortColumnsChange}
+            rows={sortedRows}
+            onRowsChange={onRowsChange}
+            pageSize={10}
+            defaultColumnOptions={{
+              sortable: true,
+              resizable: true
+            }}
+            rowHeight={(prop) => { 
+              if (prop.row.expanderType === 'DETAIL') {
+                return 200;
+              } else { 
+                return 30; 
+              }
+            }}
+            rowKeyGetter={(row) => (row.key)}
+            enableVirtualization={false} // Why this?
+            style={{ overflowY: 'hidden' }} // So we scroll inside the expanded cell not in the data grid
+            headerRowHeight={70}
+            //className={filterContainerClassname}
+          />
+        </FilterContext.Provider>
       </DndProvider>
     </div>
   );

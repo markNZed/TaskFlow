@@ -28,7 +28,7 @@ Add logging via coprocessor
     View the index.ts in node_models to get an ide aof the interface
     Could expand row by resizing?
   Priorities:
-    Filtering columns
+    Build query term to send to MongoDB based on the task maybe with https://www.npmjs.com/package/react-querybuilder ?
   Issues:
     Coprocessor will not log sync messages that are not processed by the rxjs pipeline
 
