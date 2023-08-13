@@ -1,5 +1,7 @@
 /* ToDo
 -------
+If the arrray is empty then it is not removing it?
+Autostart of system tasksSystme tasks should not run on system tasks
 Deleting of tasks for CEP
 Make sure only register same CEP once
  the instanceId changes so it creates a new one
@@ -17,13 +19,14 @@ Add logging via coprocessor
     Coprocessor will not log sync messages that are not processed by the rxjs pipeline
     https://github.com/adazzle/react-data-grid/issues/3043
     Sending empty query
-    Not emptying previous result if query returns empty ?
     Date picker for datatype date
-    Warning: Each child in a list should have a unique "key" prop.
+    React warnings e.g. Warning: React does not recognize the `sortDirection`
   Ideas:
     Streaming of a query to the browser e.g. tail
     React-Flow
     Testing
+    Replace the filtering inputs with a page option for the query builder
+      Need a way to run the query in browser
 
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything

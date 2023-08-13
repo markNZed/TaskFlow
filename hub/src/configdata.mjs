@@ -68,7 +68,7 @@ function mergeTasks(task, parentTask) {
             mergeObj(task.config, configKey, parentTask.config);
           }
         }
-      } else if (!key.startsWith("APPEND_") && !key.startsWith("PREPEND_")) {
+      } else {
         mergeObj(task, key, parentTask);
       }
     }
@@ -81,7 +81,7 @@ function mergeObj(task, key, parentTask) {
     task[key] = prependOperation(task, key, parentTask);
   } else if (task.hasOwnProperty("APPEND_" + key)) {
     task[key] = appendOperation(task, key, parentTask);
-  // Don't copy PRIVATE info (specific to the task)
+  // Don't copy LOCAL info (specific to the task)
   } else if (!key.startsWith("LOCAL_") && !parentTask.hasOwnProperty("LOCAL_" + key)) {
     if (task.hasOwnProperty(key)) {
       task[key] = utils.deepMerge(parentTask[key], task[key]);
@@ -144,6 +144,20 @@ function stripChildrenPrefix(obj) {
   return obj;
 }
 
+function stripAppendKeys(obj) {
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        stripChildrenPrefix(obj[key]);
+      }
+      if (key.startsWith("APPEND_")) {
+        const keyToAppend = key.slice(9);
+        delete obj[keyToAppend];
+      }
+    }
+  }
+  return obj;
+}
 
 // Not that this has huge side-effects
 // Transform tasks array into flattened tasks hash
@@ -199,7 +213,6 @@ function flattenTasks(tasks) {
       }
     }
 
-
     // Copy LOCAL_ keys
     taskflow = copyLocalKeys(taskflow);
     
@@ -207,6 +220,7 @@ function flattenTasks(tasks) {
     if (taskflowLookup[parentId]) {
       const parentTaskflow = JSON.parse(JSON.stringify(taskflowLookup[parentId]));
       stripChildrenPrefix(parentTaskflow);
+      stripAppendKeys(parentTaskflow);
       mergeTasks(taskflow, parentTaskflow);
     }
 
@@ -302,14 +316,16 @@ for (const groupKey in groups) {
 async function saveTasks(tasks) {
   const tasksJson = JSON.stringify(tasks, null, 2);
   let existingTasks;
+  const filePath = '/tmp/tasks.json';
 
   try {
     const data = await fs.readFile('/tmp/tasks.json', 'utf8');
     existingTasks = JSON.parse(data);
+    console.log('Successfully read tasks from file ' + filePath);
   } catch (error) {
     if (error.code === 'ENOENT') { // file does not exist
-      await fs.writeFile('/tmp/tasks.json', tasksJson);
-      console.log('Successfully wrote tasks to file');
+      await fs.writeFile(filePath, tasksJson);
+      console.log('Successfully wrote tasks to file ' + filePath);
       return;
     } else {
       console.error('Error reading file', error);
@@ -324,7 +340,7 @@ async function saveTasks(tasks) {
     console.log('No differences found');
   }
 }
-//await saveTasks(tasks);
+await saveTasks(tasks);
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 

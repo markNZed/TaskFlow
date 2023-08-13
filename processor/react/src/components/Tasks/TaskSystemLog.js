@@ -266,7 +266,7 @@ const TaskSystemLog = (props) => {
         type: t.current.type,
         instanceId: t.current.instanceId,
         processorId: t.current.processor.initiatingProcessorId,
-        key: t.current.instanceId + t.updatedAt.date,
+        key: t._id,
         current: t.current,
         state: t.current?.state?.current,
         user: t.current.user.id,
@@ -393,10 +393,11 @@ const TaskSystemLog = (props) => {
     });
   }
 
-  const handleQueryComplete = (query) => {
+  const handleQueryComplete = (queryBuilder, query) => {
     if (task.state.current === "query") {
       modifyTask({ 
         "request.query": query, 
+        "request.queryBuilder": queryBuilder,
         "request.page": page,
         "request.limit": limit,
         "command": "update" 
@@ -469,6 +470,8 @@ const TaskSystemLog = (props) => {
           { name: 'current.state.current', label: 'State' },
           { name: 'current.user.id', label: 'User ID' },
         ]}
+        queryHistory={task.state.queryHistory}
+        queryHistoryPtr={task.state.queryHistoryPtr}
       />
       {/*
       <input

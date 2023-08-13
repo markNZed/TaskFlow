@@ -46,13 +46,10 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
 
   // We really only need to store diffs
   async function updateTaskWithHistory(newTaskData) {
-    let id = newTaskData.instanceId + newTaskData.meta.updatedAt.date + newTaskData.meta.updatedAt.timezone;
-    if (newTaskData.type === "TaskSystemLog") {
-      // we can get duplicate ids when this task is logging itself
-      let currentDateTime = new Date();
-      let timeInMilliseconds = currentDateTime.getTime();
-      id = newTaskData.instanceId + timeInMilliseconds;
-    }
+    // Could use a random number ?
+    let currentDateTime = new Date();
+    let timeInMilliseconds = currentDateTime.getTime();
+    let id = newTaskData.instanceId + timeInMilliseconds;
     // Fetch the existing task
     let task = await tasksModel.findOne({ 
       _id: id,
@@ -123,6 +120,27 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
         T("response.total", total);
         T("state.last", T("state.current"));
         T("state.current", "response");
+        let queryHistory = T("state.queryHistory");
+        let queryHistoryPtr = T("state.queryHistoryPtr");
+        let currentHistoryQuery;
+        if (queryHistory) {
+          currentHistoryQuery = queryHistory[queryHistoryPtr]
+        }
+        // Only add to history if it is a new query
+        const diff = utils.getObjectDifference(currentHistoryQuery, T("request.queryBuilder")) || {};
+        if (Object.keys(diff).length > 0) {
+          if (!queryHistory) {
+            queryHistory = new Array(20).fill(null);
+            queryHistoryPtr = 0;
+          } else if (queryHistoryPtr >= 10) { // 10 entries in the circular buffer
+            queryHistoryPtr = 0;
+          } else {
+            queryHistoryPtr++;
+          }
+          queryHistory[queryHistoryPtr] = T("request.queryBuilder");
+          T("state.queryHistory", queryHistory);
+          T("state.queryHistoryPtr", queryHistoryPtr);
+        }
         T("command", "update");
       }
       break;

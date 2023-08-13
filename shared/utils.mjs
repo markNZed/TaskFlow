@@ -63,9 +63,10 @@ const sharedUtils = {
         }
       }
 
-      if (prevState.length > update.length) {
-        output.push(...prevState.slice(update.length));
-      }
+      // We do not include the longer prevState, so the update can remove items from the end
+      //if (prevState.length > update.length) {
+      //  output.push(...prevState.slice(update.length));
+      //}
 
       return output;
     }
@@ -190,8 +191,12 @@ const sharedUtils = {
       return undefined;
     }
 
-    if (!_.isObject(obj2) || _.isEmpty(obj2) || obj1 === undefined) {
+    if (!_.isObject(obj2) || obj1 === undefined) {
       return obj2;
+    }
+
+    if (_.isEmpty(obj2)) {
+      return null;
     }
 
     // obj2 is an object
@@ -226,7 +231,9 @@ const sharedUtils = {
       }
     });
 
-    if (_.isEmpty(diffObj)) {
+    // If null then this is being used to delete the object
+    // That could happen when obj2 was empty e.g. {} or []
+    if (diffObj !== null && _.isEmpty(diffObj)) {
       diffObj = undefined;
     }
 
