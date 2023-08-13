@@ -10,6 +10,7 @@
     "@mui/icons-material": "^5.11.11",
     "@mui/lab": "^5.0.0-alpha.124",
     "@mui/material": "^5.11.15",
+    "@react-querybuilder/material": "^6.5.1",
     "@tanstack/react-query-devtools": "^4.24.12",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { defaultValidator, formatQuery, QueryBuilder } from 'react-querybuilder';
 import 'react-querybuilder/dist/query-builder.css';
+import { QueryBuilderMaterial } from '@react-querybuilder/material';
 
 const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryPtr }) => {
   const [query, setQuery] = useState({
@@ -94,12 +95,14 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
   
   return (
     <div>
-      <QueryBuilder 
-        fields={fields} 
-        query={query} 
-        onQueryChange={handleQueryChange}
-        validator={defaultValidator}
-      />
+      <QueryBuilderMaterial>
+        <QueryBuilder 
+          fields={fields} 
+          query={query} 
+          onQueryChange={handleQueryChange}
+          validator={defaultValidator}
+        />
+      </QueryBuilderMaterial>
       <div style={{ marginLeft: '1rem' }}>
           <pre>{formatQuery(query, 'mongodb')}</pre>
       </div>

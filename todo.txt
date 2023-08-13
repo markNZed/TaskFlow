@@ -21,6 +21,7 @@ Add logging via coprocessor
     Sending empty query
     Date picker for datatype date
     React warnings e.g. Warning: React does not recognize the `sortDirection`
+    Default order by updatedAt
   Ideas:
     Streaming of a query to the browser e.g. tail
     React-Flow
