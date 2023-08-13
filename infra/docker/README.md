@@ -36,7 +36,7 @@ SetupVSCode debugging in .vscode/launch.json
 * `mongosh -u user --host mongodb`
 * `use taskflow`
 * `show collections`
-* `db.tasks.find()`
+* `db.tasks.find({"current.user.id": {"$regex": "mark"}})`
 
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 

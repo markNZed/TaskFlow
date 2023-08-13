@@ -75,7 +75,7 @@ function App({ activeWorkerCount, workerId }) {
         }
       } else {
         setConfigHash(globalState.configHash);
-        console.log("etConfigHash", globalState.configHash);
+        console.log("setConfigHash", globalState.configHash);
       }
     }
   }, [globalState]);

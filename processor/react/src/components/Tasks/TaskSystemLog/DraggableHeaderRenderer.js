@@ -53,7 +53,9 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
       className={'filter-cell'} // Added this to get filter input showing in the cell
     >
     <>
-      {headerRenderer({ column, ...props })}
+      <div style={{textAlign: 'center'}}>
+        {headerRenderer({ column, ...props })}
+      </div>
       <div>
         <input
           {...props }
@@ -79,7 +81,8 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
         style={{
           opacity: isDragging ? 0.5 : 1,
           backgroundColor: isOver ? '#ececec' : undefined,
-          cursor: 'move'
+          cursor: 'move',
+          textAlign: 'center'
         }}
       >
         {headerRenderer({ column, ...props })}

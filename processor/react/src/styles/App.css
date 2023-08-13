@@ -330,6 +330,11 @@ form img {
   border-block-end: 1px solid var(--rdg-border-color);
 }
 
+.fill-grid {
+  flex-grow: 1;
+  overflow: auto;
+}
+
 /**
  * ==============================================
  * Dot Typing

@@ -100,7 +100,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         commandArgs = task.processor.commandArgs;
       }
       if (command !== "pong") {
-        //console.log("App webSocket command", command,  commandArgs, message.task.id, message.task);
+        console.log("App webSocket command", command,  commandArgs, message.task.id);
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here
         message.command = command;

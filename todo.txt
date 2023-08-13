@@ -1,36 +1,26 @@
 /* ToDo
 -------
+Deleting of tasks for CEP
 Make sure only register same CEP once
  the instanceId changes so it creates a new one
  maybe system should only have one ?
 Add logging via coprocessor
-  Logging is the first "aspect" as well as being a system Task
-  Log the history of transactions through the hub and allow for filtering/display via table
-  Dealing with large numbers of messages
-  Could choose when to expand the history rather than sending it
-  History should only be the changes
-  A task viewer below the datagrid ?
-  Which columns to show for sorting? Time
-  How to allow for user queries ? e.g. specific user, specific time
-  Showing as a time series might be better rather than collecting by instanceId
-  Is there a standard log format ?
-    React-Log
-    React Virtualized
-    React-Flow
-  Designing the filtering UI
-    LogFilter React component for building the query
-      Could it use the JSON schema?
-    https://www.npmjs.com/package/react-querybuilder
   Being able to view through time - like "playing" the log
   react-data-grid https://github.com/adazzle/react-data-grid 
-    https://adazzle.github.io/react-data-grid/#/common-features // Not aligned with latet code ?
-    https://github.com/adazzle/react-data-grid/tree/main/website/demos // Not aligned with latet code ?
-    View the index.ts in node_models to get an ide aof the interface
-    Could expand row by resizing?
+    https://github.com/adazzle/react-data-grid/tree/main/website/demos // Not aligned with latest code ?
+    View the index.ts in node_models to get an idea of the interface
   Priorities:
-    Build query term to send to MongoDB based on the task maybe with https://www.npmjs.com/package/react-querybuilder ?
+    Dealing with large numbers of messages
+    Let the data-grid stretch down when expanding a row
+    Could react-querybuilder use the Task JSON schema?
   Issues:
     Coprocessor will not log sync messages that are not processed by the rxjs pipeline
+    https://github.com/adazzle/react-data-grid/issues/3043
+    Sending empty query
+  Ideas:
+    Streaming of a query to the browser e.g. tail
+    React-Flow
+    Testing
 
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything

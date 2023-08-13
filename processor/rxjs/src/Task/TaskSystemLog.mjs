@@ -7,6 +7,7 @@ import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
 import { db } from "../storage.mjs";
 import mongoose from 'mongoose';
+import { parseFilter } from 'mongodb-query-parser';
 
 // in the MongoDB object __v represents the version of the document
 
@@ -49,8 +50,8 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
     if (newTaskData.type === "TaskSystemLog") {
       // we can get duplicate ids when this task is logging itself
       let currentDateTime = new Date();
-      let currentDateTimeString = currentDateTime.toString();
-      id = newTaskData.instanceId + currentDateTimeString;
+      let timeInMilliseconds = currentDateTime.getTime();
+      id = newTaskData.instanceId + timeInMilliseconds;
     }
     // Fetch the existing task
     let task = await tasksModel.findOne({ 
@@ -82,13 +83,17 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
     }
   }
 
-  async function fetchTasksAsync() {
+  async function fetchTasksAsync(query, page = 1, limit = 100) {
     try {
-      const tasks = await tasksModel.find({}).limit(10); // limiting during testing/debug
-      return tasks;
+      const parsedQuery = parseFilter(query);
+      const skip = (page - 1) * limit;
+      console.log("fetchTasksAsync", parsedQuery, skip, limit);
+      const tasks = await tasksModel.find(parsedQuery).skip(skip).limit(limit);
+      const total = await tasksModel.countDocuments(parsedQuery);
+      return { tasks, total };
     } catch (err) {
       console.error('Error fetching tasks:', err);
-      return [];
+      return { tasks: [], total: 0 };
     }
   }
 
@@ -110,8 +115,12 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
       break;
     case "query":
       console.log("State query with request.query", T("request.query"));
-      if (T("request.query") === "all") {
-        T("response.tasks", await fetchTasksAsync());
+      if (T("request.query")) {
+        console.log("State query " + T("request.query") + " with request.page " + T("request.page"));
+        const { tasks, total } = await fetchTasksAsync(T("request.query"), T("request.page"), T("request.limit"))
+        console.log("Returned total", total);
+        T("response.tasks", tasks);
+        T("response.total", total);
         T("state.last", T("state.current"));
         T("state.current", "response");
         T("command", "update");
