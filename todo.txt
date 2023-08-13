@@ -22,6 +22,11 @@ Add logging via coprocessor
     Date picker for datatype date
     React warnings e.g. Warning: React does not recognize the `sortDirection`
     Default order by updatedAt
+    When the data is paginated I guess the sort needs to be run on the server.
+      handle the onGridSort event provided by the library. 
+      const results = await collection.find(query).sort(sortCriteria).toArray();
+      Maybe just maintain a sort criteria state
+    Mingo is a lightweight library that allows you to use MongoDB-style query syntax on arrays of objects in JavaScript.
   Ideas:
     Streaming of a query to the browser e.g. tail
     React-Flow

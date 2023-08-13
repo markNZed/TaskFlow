@@ -11,37 +11,32 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
     ],
   });
 
-  const [submittedQuery, setSubmittedQuery] = useState();
+  const [mongodbQuery, setMongodbQuery] = useState();
   const [submit, setSubmit] = useState(false);
   const [queryHistoryLocalPtr, setQueryHistoryLocalPtr] = useState(queryHistoryPtr);
-  const queryHistoryLength = queryHistory ? queryHistory.length : 0;
+  const [queryHistoryOffset, setQueryHistoryOffset] = useState(0);
   const [disablePrev, setDisablePrev] = useState(false);
   const [disableNext, setDisableNext] = useState(true);
+  const queryHistoryLength = queryHistory ? queryHistory.length : 0;
 
   useEffect(() => {
-    if (submittedQuery && submit) {
-      onQueryComplete(query, submittedQuery);
-      setSubmittedQuery(null);
+    if (mongodbQuery && submit) {
+      onQueryComplete(query, mongodbQuery);
+      setMongodbQuery(null);
       setSubmit(false);
     }
-  }, [submittedQuery, submit]);
-
+  }, [mongodbQuery, submit]);
+  
+  // When queryHistoryPtr changes we reset the history
   useEffect(() => {
     setQueryHistoryLocalPtr(queryHistoryPtr);
     setDisablePrev(false);
     setDisableNext(true);
+    setQueryHistoryOffset(0);
   }, [queryHistoryPtr]);
 
-  useEffect(() => {
-    console.log("query", query);
-  }, [query]);
-
-  useEffect(() => {
-    console.log("queryHistoryLocalPtr", queryHistoryLocalPtr, queryHistoryPtr);
-  }, [queryHistoryLocalPtr]);
-
   const handleSubmit = () => {
-    setSubmittedQuery(formatQuery(query, 'mongodb'));
+    setMongodbQuery(formatQuery(query, 'mongodb'));
     setSubmit(true);
   };
 
@@ -49,48 +44,46 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
     setQuery(newQuery);
   };
 
+  useEffect(() => {
+    if (queryHistoryOffset === 0) {
+      setDisableNext(true);
+    } 
+  }, [queryHistoryOffset]);
+
   const handlePreviousQuery = () => {
     let currentQueryHistoryLocalPtr = queryHistoryLocalPtr;
     const previousQuery = queryHistory[currentQueryHistoryLocalPtr];
-    if (previousQuery) {
-      console.log("previousQuery", previousQuery);
-      setQuery(previousQuery);
-      currentQueryHistoryLocalPtr--;
-      console.log("currentQueryHistoryLocalPtr, queryHistoryPtr", currentQueryHistoryLocalPtr, queryHistoryPtr);
-      if (currentQueryHistoryLocalPtr < 0) {
-        currentQueryHistoryLocalPtr = queryHistoryLength - 1;
-        while (!queryHistory[currentQueryHistoryLocalPtr]) {
-          currentQueryHistoryLocalPtr--;
-        }
-      }
-      if (currentQueryHistoryLocalPtr === queryHistoryPtr) {
-        setDisablePrev(true);
-        setDisableNext(false);
-      } else {
-        setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
-        setDisableNext(false);
+    currentQueryHistoryLocalPtr--;
+    // If reached beginning of circular buffer 
+    if (currentQueryHistoryLocalPtr < 0) {
+      // buffer may have null entries that we skip 
+      currentQueryHistoryLocalPtr = queryHistoryLength - 1;
+      while (!queryHistory[currentQueryHistoryLocalPtr]) {
+        currentQueryHistoryLocalPtr--;
       }
     }
+    setQuery(previousQuery);
+    if (currentQueryHistoryLocalPtr === queryHistoryPtr) {
+      setDisablePrev(true);
+    } else {
+      setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
+      setQueryHistoryOffset(queryHistoryOffset-1);
+    }
+    setDisableNext(false);
   };
 
   const handleNextQuery = () => {
     let currentQueryHistoryLocalPtr = queryHistoryLocalPtr;
     const nextQuery = queryHistory[queryHistoryLocalPtr];
-    if (nextQuery) {
-      console.log("nextQuery", nextQuery);
-      setQuery(nextQuery);
-      currentQueryHistoryLocalPtr++;
-      if (currentQueryHistoryLocalPtr > queryHistoryLength - 1) {
-        currentQueryHistoryLocalPtr = 0;
-      }      
-      if (queryHistoryLocalPtr === queryHistoryPtr) {
-        setDisableNext(true);
-        setDisablePrev(false);
-      } else {
-        setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
-        setDisablePrev(false);
-      }
-    }
+    currentQueryHistoryLocalPtr++;
+    // If reached end of circular buffer 
+    if (currentQueryHistoryLocalPtr === queryHistoryLength) {
+      currentQueryHistoryLocalPtr = 0;
+    }      
+    setQuery(nextQuery);
+    setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
+    setQueryHistoryOffset(queryHistoryOffset+1);
+    setDisablePrev(false);
   };
   
   return (
@@ -104,14 +97,14 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
         />
       </QueryBuilderMaterial>
       <div style={{ marginLeft: '1rem' }}>
-          <pre>{formatQuery(query, 'mongodb')}</pre>
+          <pre>{queryHistoryOffset}:{formatQuery(query, 'mongodb')}</pre>
       </div>
       {queryHistory && (
-        <button onClick={handlePreviousQuery} disabled={disablePrev}>Previous</button>
+        <button onClick={handlePreviousQuery} disabled={disablePrev}>&lt;</button>
       )}
       <button onClick={handleSubmit}>Submit Query</button>
       {queryHistory && (
-        <button onClick={handleNextQuery} disabled={disableNext}>Next</button>
+        <button onClick={handleNextQuery} disabled={disableNext}>&gt;</button>
       )}
     </div>
   );
