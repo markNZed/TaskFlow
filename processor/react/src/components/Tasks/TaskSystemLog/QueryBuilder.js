@@ -37,12 +37,10 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete }) => {
         onQueryChange={handleQueryChange}
         validator={defaultValidator}
       />
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
-        <button onClick={handleSubmit}>Submit Query</button>
-        <div style={{ marginLeft: '1rem' }}>
+      <div style={{ marginLeft: '1rem' }}>
           <pre>{formatQuery(query, 'mongodb')}</pre>
-        </div>
       </div>
+      <button onClick={handleSubmit}>Submit Query</button>
     </div>
   );
 };

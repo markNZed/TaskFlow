@@ -17,6 +17,9 @@ Add logging via coprocessor
     Coprocessor will not log sync messages that are not processed by the rxjs pipeline
     https://github.com/adazzle/react-data-grid/issues/3043
     Sending empty query
+    Not emptying previous result if query returns empty ?
+    Date picker for datatype date
+    Warning: Each child in a list should have a unique "key" prop.
   Ideas:
     Streaming of a query to the browser e.g. tail
     React-Flow

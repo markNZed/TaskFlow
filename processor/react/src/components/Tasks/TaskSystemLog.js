@@ -234,7 +234,7 @@ const TaskSystemLog = (props) => {
     }
   );
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20); // entries per page
+  const [limit, setLimit] = useState(100); // entries per page
   const [totalCount, setTotalCount] = useState(0);
 
   // onDidMount so any initial conditions can be established before updates arrive
