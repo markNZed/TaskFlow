@@ -52,7 +52,6 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
 
   const handlePreviousQuery = () => {
     let currentQueryHistoryLocalPtr = queryHistoryLocalPtr;
-    const previousQuery = queryHistory[currentQueryHistoryLocalPtr];
     currentQueryHistoryLocalPtr--;
     // If reached beginning of circular buffer 
     if (currentQueryHistoryLocalPtr < 0) {
@@ -62,28 +61,38 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
         currentQueryHistoryLocalPtr--;
       }
     }
-    setQuery(previousQuery);
-    if (currentQueryHistoryLocalPtr === queryHistoryPtr) {
-      setDisablePrev(true);
-    } else {
+    const previousQuery = queryHistory[currentQueryHistoryLocalPtr];
+    if (previousQuery) {
+      setQuery(previousQuery);
+      if (currentQueryHistoryLocalPtr === queryHistoryPtr) {
+        setQueryHistoryOffset(0);
+        setDisableNext(true);
+      } else {
+        setQueryHistoryOffset(queryHistoryOffset-1);
+        setDisableNext(false);
+      }
       setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
-      setQueryHistoryOffset(queryHistoryOffset-1);
+    } else {
+      setDisablePrev(true);
     }
-    setDisableNext(false);
   };
 
   const handleNextQuery = () => {
     let currentQueryHistoryLocalPtr = queryHistoryLocalPtr;
-    const nextQuery = queryHistory[queryHistoryLocalPtr];
     currentQueryHistoryLocalPtr++;
     // If reached end of circular buffer 
     if (currentQueryHistoryLocalPtr === queryHistoryLength) {
       currentQueryHistoryLocalPtr = 0;
     }      
-    setQuery(nextQuery);
-    setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
-    setQueryHistoryOffset(queryHistoryOffset+1);
-    setDisablePrev(false);
+    const nextQuery = queryHistory[currentQueryHistoryLocalPtr];
+    if (nextQuery) {
+      setQuery(nextQuery);
+      setQueryHistoryLocalPtr(currentQueryHistoryLocalPtr);
+      setQueryHistoryOffset(queryHistoryOffset+1);
+      setDisablePrev(false);
+    } else {
+      setDisableNext(true);
+    }
   };
   
   return (
