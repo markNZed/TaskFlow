@@ -8,9 +8,9 @@ import React, { useEffect, useState, useMemo, useCallback, useContext } from "re
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
-import DraggableHeaderRenderer from './TaskSystemLog/DraggableHeaderRenderer';
-import CellExpanderFormatter from './TaskSystemLog/CellExpanderFormatter';
-import TaskSystemLogQueryBuilder from './TaskSystemLog/QueryBuilder';
+import DraggableHeaderRenderer from './TaskSystemLogViewer/DraggableHeaderRenderer';
+import CellExpanderFormatter from './TaskSystemLogViewer/CellExpanderFormatter';
+import TaskSystemLogViewerQueryBuilder from './TaskSystemLogViewer/QueryBuilder';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ReactJson from '@microlink/react-json-view'
@@ -20,17 +20,27 @@ The task keys that could be initially hidden but can be added as columns:
 
 * config.label
 * name
-* state.current
 * output (this is an object)
 * input (this is an object)
 * request (this is an object)
 * response (this is an object)
 
-How should we display objects?
-Why was headerRenderer so poorly documented?
-Center the headers
-The row sorting is not working with the header sorting
-Mingo is a lightweight library that allows you to use MongoDB-style query syntax on arrays of objects in JavaScript.
+Being able to view through time - like "playing" the log
+react-data-grid https://github.com/adazzle/react-data-grid 
+  https://github.com/adazzle/react-data-grid/tree/main/website/demos // Not aligned with latest code ?
+  View the index.ts in node_models to get an idea of the interface
+Issues:
+  Coprocessor will not log sync messages that are not processed by the rxjs pipeline
+  https://github.com/adazzle/react-data-grid/issues/3043
+  Date picker for datatype date
+  React warnings e.g. Warning: React does not recognize the `sortDirection`
+Ideas:
+  Streaming of a query to the browser e.g. tail
+  React-Flow
+  Testing
+  Could react-querybuilder use the Task JSON schema?
+  Replace the filtering inputs with a page option for the query builder
+    Mingo provides MongoDB-style query syntax on arrays of objects in JavaScript
 */
 
 const rowDetailHeight = 500;
@@ -163,7 +173,7 @@ function createColumns() {
 // Context is needed to read filter values otherwise columns are
 // re-created when filters are changed and filter loses focus
 
-const TaskSystemLog = (props) => {
+const TaskSystemLogViewer = (props) => {
 
   const {
     log,
@@ -356,17 +366,13 @@ const TaskSystemLog = (props) => {
   }
 
   function transformToMongoSortCriteria(sortDescriptors) {
-    console.log("sortDescriptors", sortDescriptors);
-
     const mongoSortCriteria = {};
-
     sortDescriptors.forEach(descriptor => {
         const direction = (descriptor.direction === 'ASC') ? 1 : -1;
         mongoSortCriteria[descriptor.columnKey] = direction;
     });
-
     return mongoSortCriteria;
-}
+  }
 
   const handleQueryComplete = (queryBuilder, query) => {
     const sortCriteria = transformToMongoSortCriteria(sortColumns);
@@ -436,7 +442,7 @@ const TaskSystemLog = (props) => {
   return (
     <div style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column'}}>
       <h2>System Log Viewer</h2>
-      <TaskSystemLogQueryBuilder 
+      <TaskSystemLogViewerQueryBuilder 
         onQueryComplete={handleQueryComplete} 
         fields={[
           { name: 'current.meta.updatedAt.date', label: 'Updated At', datatype: 'date', },
@@ -497,4 +503,4 @@ const TaskSystemLog = (props) => {
 
 };
 
-export default withTask(TaskSystemLog);
+export default withTask(TaskSystemLogViewer);

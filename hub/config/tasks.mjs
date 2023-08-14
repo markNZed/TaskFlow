@@ -19,10 +19,8 @@ const tasks = [
     parentName: "root",
   },
   {
-    initiator: true,
     name: "systemlog",
     config: {
-      label: "Log",
       ceps: {
         ".*instance.*": {
           isRegex: true,
@@ -33,7 +31,15 @@ const tasks = [
     parentName: "system",
     type: "TaskSystemLog"
   }, 
-
+  {
+    initiator: true,
+    name: "systemlogviewer",
+    config: {
+      label: "Log",
+    },
+    parentName: "system",
+    type: "TaskSystemLogViewer"
+  }, 
   {
     name: "conversation",
     parentName: "user",

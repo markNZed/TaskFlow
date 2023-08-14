@@ -4,6 +4,18 @@ import { CACHE_ENABLE } from "../config.mjs";
 const tasktypes = [
   {
     name: "TaskSystemLog",
+    environments: ["rxjs"],
+    config: {
+      autoStartEnvironment: "rxjs",
+      autoStartOnce: true,
+      autoStartCoProcessor: true,
+    },
+    state: {
+      current: "start",
+    },
+  },
+  {
+    name: "TaskSystemLogViewer",
     environments: ["react", "rxjs"],
     state: {
       current: "start",

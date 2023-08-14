@@ -19,6 +19,7 @@ var users = await utils.load_data_async(CONFIG_DIR, "users");
 var groups = await utils.load_data_async(CONFIG_DIR, "groups");
 var tasks = await utils.load_data_async(CONFIG_DIR, "tasks");
 var tasktypes = await utils.load_data_async("../config", "tasktypes");
+var autoStartTasks = {};
 
 // We adopt a DRY strategy in the code and config files
 // But not in the data structures that are generated from the config for the code
@@ -165,71 +166,71 @@ function flattenTasks(tasks) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
-  var taskflowLookup = {};
-  tasks.forEach(function (taskflow) {
+  var taskLookup = {};
+  tasks.forEach(function (task) {
     // Debug option 
     let debug = false;
-    //if (taskflow.name.includes("chatgptzeroshot")) {debug = true;}
-    if (debug) {console.log("Taskflow: " + taskflow?.name)}
+    //if (task.name.includes("chatgptzeroshot")) {debug = true;}
+    if (debug) {console.log("Taskflow: " + task?.name)}
 
-    const parentId = parent2id[taskflow.parentName]
+    const parentId = parent2id[task.parentName]
     
     // Defensive programming
-    if (taskflow.name !== "root" && !parentId) {
+    if (task.name !== "root" && !parentId) {
       throw new Error(
         "Error: Taskflow parentName " +
-          taskflow.parentName +
+          task.parentName +
           " does not exist in parent2id");
     }
     
     // Add id
     var id;
-    if (taskflow.name === "root") {
+    if (task.name === "root") {
       id = "root";
     } else {
-      id = parentId + "." + taskflow.name;
+      id = parentId + "." + task.name;
     }
-    if (taskflowLookup[id]) {
-      throw new Error("Error: Duplicate taskflow " + id);
+    if (taskLookup[id]) {
+      throw new Error("Error: Duplicate task " + id);
     }
-    taskflow["id"] = id;
+    task["id"] = id;
 
-    if (!taskflow.config) {
-      taskflow['config'] = {}
+    if (!task.config) {
+      task['config'] = {}
     }
-    if (taskflow.config?.label === undefined) {
-      taskflow.config["label"] = utils.capitalizeFirstLetter(taskflow.name);
+    if (task.config?.label === undefined) {
+      task.config["label"] = utils.capitalizeFirstLetter(task.name);
     }
-    taskflow["meta"] = {};
-    if (taskflow.name !== "root") {
-      taskflow.meta["parentId"] = parentId;
+    task["meta"] = {};
+    if (task.name !== "root") {
+      task.meta["parentId"] = parentId;
     }
     if (id !== "root") {
-      let parent = taskflowLookup[parentId]
+      let parent = taskLookup[parentId]
       if (parent.meta.childrenId) {
-        parent.meta.childrenId.push(taskflow.id);
+        parent.meta.childrenId.push(task.id);
       } else {
-        parent.meta["childrenId"] = [taskflow.id];
+        parent.meta["childrenId"] = [task.id];
       }
     }
 
     // Copy LOCAL_ keys
-    taskflow = copyLocalKeys(taskflow);
+    task = copyLocalKeys(task);
     
     // Copy keys from the parent
-    if (taskflowLookup[parentId]) {
-      const parentTaskflow = JSON.parse(JSON.stringify(taskflowLookup[parentId]));
+    if (taskLookup[parentId]) {
+      const parentTaskflow = JSON.parse(JSON.stringify(taskLookup[parentId]));
       stripChildrenPrefix(parentTaskflow);
       stripAppendKeys(parentTaskflow);
-      mergeTasks(taskflow, parentTaskflow);
+      mergeTasks(task, parentTaskflow);
     }
 
     // Convert relative task references to absolute
-    const nextTask = taskflow?.config?.nextTask;
+    const nextTask = task?.config?.nextTask;
     if (nextTask && !nextTask.includes(".")) {
-      taskflow.config.nextTask = parentId + "." + nextTask;
+      task.config.nextTask = parentId + "." + nextTask;
     }
-    const nextTaskTemplate = taskflow?.config?.nextTaskTemplate;
+    const nextTaskTemplate = task?.config?.nextTaskTemplate;
     if (nextTaskTemplate) {
       for (const key in nextTaskTemplate) {
         if (nextTaskTemplate.hasOwnProperty(key)) {
@@ -239,24 +240,32 @@ function flattenTasks(tasks) {
         }
       }
     }
+
+    if (task?.config?.autoStartEnvironment) {
+      autoStartTasks[task.id] = {
+        startEnvironment: task.config.autoStartEnvironment,
+        startEnvironments: task.environments,
+        once: task.config.autoStartOnce,
+      }
+    }
     
-    taskflowLookup[id] = taskflow;
-    parent2id[taskflow.name] = id;
+    taskLookup[id] = task;
+    parent2id[task.name] = id;
     // Build children data
     if (children[parentId]) {
-      children[parentId].push(taskflow.id);
+      children[parentId].push(task.id);
     } else {
-      children[parentId] = [taskflow.id];
+      children[parentId] = [task.id];
     }
   });
 
   // Replace array of tasks with hash
   // Array just made it easier for the user to specify parents in the config file
-  return taskflowLookup;
+  return taskLookup;
 }
 
 // This has side-effects, modifying tasks in-place
-// Could check that each taskflow has a 'start' task
+// Could check that each task has a 'start' task
 tasks = flattenTasks(tasks);
 //console.log(JSON.stringify(tasks, null, 2))
 
@@ -304,8 +313,7 @@ for (const groupKey in groups) {
 }
 //console.log(JSON.stringify(users, null, 2))
 
-
-/**
+/*
  * Save tasks to a file if the file does not exist.
  * If the file exists then perform a diff.
  * This is useful during refactoring to make sure intentional changes are made.
@@ -354,4 +362,5 @@ Object.keys(tasks).forEach(key => {
 function getConfigHash() {
   return utils.djb2Hash(JSON.stringify([users, groups, tasktypes, tasks]));
 }
-export { users, groups, tasktypes, tasks, getConfigHash };
+
+export { users, groups, tasktypes, tasks, getConfigHash, autoStartTasks };

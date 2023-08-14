@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
-import { users, groups, tasks } from "./configdata.mjs";
+import { users, groups, tasks, autoStartTasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import taskSync_async from "./taskSync.mjs";
@@ -228,7 +228,7 @@ function supportMultipleLanguages(task, users) {
   // Eventually replace with a standard solution
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
   const user = users[task.user.id];
-  const language = user.language || "EN";
+  const language = user?.language || "EN";
   // Array of the objects
   let configs = [task.config];
   if (task.config?.local) {
@@ -253,19 +253,24 @@ function supportMultipleLanguages(task, users) {
   return task;
 }
 
-function allocateTaskToProcessors(task, processorId, activeProcessors) {
+function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart) {
   // Build list of processors/environments that need to receive this task
   let taskProcessors = []
 
-  if (!task.environments) {
+  if (!task.environments && !autoStart) {
     throw new Error("No environments in task " + task.id);
   }
 
   //console.log("task.environments", task.environments);
 
+  // If the task only runs on coprocessor
+  if (task.config.autoStartCoProcessor) {
+    return [];
+  }
   // Allocate the task to processors that supports the environment(s) requested
   const sourceProcessor = activeProcessors.get(processorId);
-  for (const environment of task.environments) {
+  let environments = task.environments;
+  for (const environment of environments) {
     // Favor the source Task Processor if we need that environment
     let found = false;
     if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
@@ -360,6 +365,8 @@ async function taskStart_async(
     // Note that instanceId may change due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
 
+    const autoStart = initTask?.autoStart;
+
     if (Object.keys(initTask).length > 0) {
       task = utils.deepMerge(task, initTask);
     }
@@ -410,9 +417,10 @@ async function taskStart_async(
     // Side-effect on task.familyd
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
+
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = task.hub.command ?? "start";
-    task.hub["sourceProcessorId"] = processorId;
+    task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
     task.hub["initiatingProcessorId"] = processorId;
     task.hub["coProcessingDone"] = false;
     
@@ -445,7 +453,7 @@ async function taskStart_async(
     task = processTemplates(task, task.config, outputs, task.familyId);
     task = processTemplates(task, task.config.local, outputs, task.familyId);
 
-    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors)
+    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors, autoStart)
 
     await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 

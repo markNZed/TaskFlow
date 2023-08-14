@@ -5,26 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
-import { db } from "../storage.mjs";
-import mongoose from 'mongoose';
 import { parseFilter } from 'mongodb-query-parser';
+import { tasksModel } from "./SchemaTasks.mjs"
 
 // in the MongoDB object __v represents the version of the document
-
-// Because any is defined as a Mixed type we need to use markModified
-// If it has a schema then Mongoos can detect the change
-const tasksSchema = new mongoose.Schema({
-  _id: String,
-  instanceId: String,
-  current: mongoose.Schema.Types.Mixed,
-  updatedAt: {
-    date: {type: Date, index: true},
-    timezone: String
-  },
-});
-
-// Mongoose should create a collecton "tasks" in the database "taskflow"
-const tasksModel = db.model('tasks', tasksSchema);
 
 function stripTask(task) {
   // deep copy
@@ -114,44 +98,6 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
   switch (task.state.current) {
     case "start":
       CEPFunctions.register("CEPLog", CEPLog);
-      T("state.last", T("state.current"));
-      T("state.current", "query");
-      break;
-    case "query":
-      console.log("State query with request.query", T("request.query"));
-      if (T("request.query")) {
-        console.log("State query " + T("request.query") + " with request.page " + T("request.page"));
-        const { tasks, total } = await fetchTasksAsync(T("request.query"), T("request.sortCriteria"), T("request.page"), T("request.limit"))
-        console.log("Returned total", total);
-        T("response.tasks", tasks);
-        T("response.total", total);
-        T("state.last", T("state.current"));
-        T("state.current", "response");
-        let queryHistory = T("state.queryHistory");
-        let queryHistoryPtr = T("state.queryHistoryPtr");
-        let currentHistoryQuery;
-        if (queryHistory) {
-          currentHistoryQuery = queryHistory[queryHistoryPtr]
-        }
-        // Only add to history if it is a new query
-        const diff = utils.getObjectDifference(currentHistoryQuery, T("request.queryBuilder")) || {};
-        if (Object.keys(diff).length > 0) {
-          if (!queryHistory) {
-            queryHistory = new Array(20).fill(null);
-            queryHistoryPtr = 0;
-          } else if (queryHistoryPtr >= 10) { // 10 entries in the circular buffer
-            queryHistoryPtr = 0;
-          } else {
-            queryHistoryPtr++;
-          }
-          queryHistory[queryHistoryPtr] = T("request.queryBuilder");
-          T("state.queryHistory", queryHistory);
-          T("state.queryHistoryPtr", queryHistoryPtr);
-        }
-        T("command", "update");
-      }
-      break;
-    case "response":
       break;
     default:
       console.log("WARNING unknown state : " + task.state.current);

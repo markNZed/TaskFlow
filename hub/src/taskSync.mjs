@@ -25,7 +25,7 @@ const taskSync_async = async (key, value) => {
   // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   let sourceProcessorId = taskCopy.hub.sourceProcessorId;
-  if (!sourceProcessorId) {
+  if (!sourceProcessorId && !taskCopy.config.autoStartCoProcessor) {
     throw new Error("taskSync_async missing sourceProcessorId" + JSON.stringify(taskCopy));
   }
   const has = await activeTasksStore_async.has(key);
