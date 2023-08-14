@@ -120,6 +120,9 @@ const tasktypes = [
   {
     name: "TaskStepper",
     environments: ["react"],
+    state: {
+      current: "start",
+    },
   },
   {
     name: "TaskGrid",

@@ -10,19 +10,6 @@ import { tasksModel } from "./SchemaTasks.mjs"
 
 // in the MongoDB object __v represents the version of the document
 
-function stripTask(task) {
-  // deep copy
-  const taskCopy = JSON.parse(JSON.stringify(task));
-  // There are many fields we do not want to store in the log 
-  delete taskCopy.meta.hashDiffOrigTask;
-  delete taskCopy.meta.hashTask;
-  delete taskCopy.processor.origTask;
-  if (taskCopy.type === "TaskSystemLogViewer") {
-    delete taskCopy.response.tasks;
-  }
-  return taskCopy;
-}
-
 const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);

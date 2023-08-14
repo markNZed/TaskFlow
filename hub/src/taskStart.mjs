@@ -257,7 +257,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart
   // Build list of processors/environments that need to receive this task
   let taskProcessors = []
 
-  if (!task.environments && !autoStart) {
+  if (!task.environments) {
     throw new Error("No environments in task " + task.id);
   }
 
@@ -269,8 +269,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart
   }
   // Allocate the task to processors that supports the environment(s) requested
   const sourceProcessor = activeProcessors.get(processorId);
-  let environments = task.environments;
-  for (const environment of environments) {
+  for (const environment of task.environments) {
     // Favor the source Task Processor if we need that environment
     let found = false;
     if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {

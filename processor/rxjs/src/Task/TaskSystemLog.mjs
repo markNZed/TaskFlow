@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
-import { parseFilter } from 'mongodb-query-parser';
 import { tasksModel } from "./SchemaTasks.mjs"
 
 // in the MongoDB object __v represents the version of the document
