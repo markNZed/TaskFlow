@@ -13,7 +13,7 @@ export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
   let processorId = task.hub.sourceProcessorId;
   try {
-    console.log(task.hub.requestId + " commandStart_async " + commandArgs.id + " from " + processorId);
+    console.log("commandStart_async commandArgs.id" + commandArgs.id + " from " + processorId);
     let initTask;
     let authenticate = true;
     if (commandArgs.init) {

@@ -27,7 +27,9 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   console.log("--------- WebSocketProvider ---------");
 
-  const { globalState } = useGlobalStateContext();
+  const logPingPong = true;
+
+  const { globalState, replaceGlobalState } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();
 
   // The default is 10 but we have at least 3 listeners per task
@@ -40,6 +42,9 @@ export function WebSocketProvider({ children, socketUrl }) {
     if (m.task?.processor?.command !== "ping") {
       console.log("sendJsonMessagePlusRef ", m.task);
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
+    }
+    if (m.task?.processor?.command === "ping" && logPingPong) {
+      console.log("Ping");
     }
     sendJsonMessage(m);
   };
@@ -70,7 +75,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (!globalState.hubId) {
         // This should cause the App to re-register with the hub
         // Reassigning the same value will create an event 
-        //replaceGlobalState("hubId", null);
+        replaceGlobalState("hubId", null);
       }
       wsSendTask(utils.taskPing());
       const intervalId = setInterval(() => {
@@ -109,8 +114,8 @@ export function WebSocketProvider({ children, socketUrl }) {
         messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index
         webSocketEventEmitter.emit(command, task);
-      } else if (command === "pong") {
-        //console.log("App webSocket received pong", message);
+      } else if (command === "pong" && logPingPong) {
+        console.log("Pong");
       } else {
         console.log("App webSocket unexpected message", message);
       }

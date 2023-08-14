@@ -8,15 +8,12 @@ import React, { useEffect, useState, useMemo, useCallback, useContext } from "re
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
-import TreeView from '@mui/lab/TreeView';
-import TreeItem from '@mui/lab/TreeItem';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DraggableHeaderRenderer from './TaskSystemLog/DraggableHeaderRenderer';
 import CellExpanderFormatter from './TaskSystemLog/CellExpanderFormatter';
 import TaskSystemLogQueryBuilder from './TaskSystemLog/QueryBuilder';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import ReactJson from '@microlink/react-json-view'
 
 /*
 The task keys that could be initially hidden but can be added as columns:
@@ -33,56 +30,10 @@ How should we display objects?
 Why was headerRenderer so poorly documented?
 Center the headers
 The row sorting is not working with the header sorting
+Mingo is a lightweight library that allows you to use MongoDB-style query syntax on arrays of objects in JavaScript.
 */
 
-// Recursive utility function to convert taskData into a TreeItem structure
-// Needed to override height, --rdg-row-height, lineHeight because TreeItem is picking it up from the datagrid
-const renderTree = (nodes, idPrefix = '') => (
-  <TreeItem style={{height: 'auto', lineHeight: '30px', '--rdg-row-height': '30px'}} key={idPrefix} nodeId={idPrefix.toString()} label={nodes.id}>
-    {Array.isArray(nodes.object) || (typeof nodes.object === 'object' && nodes.object !== null)
-      ? Object.entries(nodes.object)
-        .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))  // Sorting alphabetically
-        .map(([key, value], idx) => 
-          {
-            if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-              return renderTree({ id: key, object: value }, `${idPrefix}-${idx}`)
-            } else {
-              const content = key + ": " + value + "<br>";
-              return <div dangerouslySetInnerHTML={{ __html: content }} />;
-            }
-          }
-        )
-      : JSON.stringify(nodes.object)}
-  </TreeItem>
-);
-
-const extractNodeIds = (nodes, idPrefix = '') => {
-  const currentId = idPrefix.toString();
-  if (Array.isArray(nodes.object) || (typeof nodes.object === 'object' && nodes.object !== null)) {
-    return Object.entries(nodes.object)
-      .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
-      .reduce((acc, [key, value], idx) => {
-        const childIdPrefix = `${idPrefix}-${idx}`;
-        if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-          return acc.concat(childIdPrefix, extractNodeIds({ id: key, object: value }, childIdPrefix));
-        }
-        return acc;
-      }, [currentId]);
-  }
-  return [currentId];
-};
-
-// We may not want to render as a tree, this is just an experiment
-const TaskDataTree = ({ taskData }) => (
-  <TreeView
-    defaultExpanded={extractNodeIds(taskData)}
-    defaultCollapseIcon={<ExpandMoreIcon />}
-    defaultExpandIcon={<ChevronRightIcon />}
-    style={{ overflowY: 'auto', maxHeight: '200px' }}
-  >
-    {renderTree({ id: `Root-${taskData?.instanceId}`, object: taskData })}
-  </TreeView>
-);
+const rowDetailHeight = 500;
 
 function getComparator(sortColumn) {
   switch (sortColumn) {
@@ -125,7 +76,18 @@ function createColumns() {
       },
       formatter({ row, tabIndex, onRowChange }) {
         if (row.expanderType === 'DETAIL') {
-          return (<TaskDataTree taskData={row.current} />);
+          return (
+            <ReactJson 
+              src={row.current} 
+              style={{lineHeight: '15px', '--rdg-row-height': '15px', overflowY:'auto', maxHeight: rowDetailHeight + 'px'}}
+              name={null}
+              indentWidth={2}
+              collapseStringsAfterLength={80}
+              displayDataTypes={false}
+              sortKeys={true}
+              quotesOnKeys={false}
+            />
+          );
         }
         return (
           <CellExpanderFormatter
@@ -393,9 +355,25 @@ const TaskSystemLog = (props) => {
     });
   }
 
+  function transformToMongoSortCriteria(sortDescriptors) {
+    console.log("sortDescriptors", sortDescriptors);
+
+    const mongoSortCriteria = {};
+
+    sortDescriptors.forEach(descriptor => {
+        const direction = (descriptor.direction === 'ASC') ? 1 : -1;
+        mongoSortCriteria[descriptor.columnKey] = direction;
+    });
+
+    return mongoSortCriteria;
+}
+
   const handleQueryComplete = (queryBuilder, query) => {
+    const sortCriteria = transformToMongoSortCriteria(sortColumns);
+    console.log("sortCriteria", sortCriteria);
     if (task.state.current === "query") {
       modifyTask({ 
+        "request.sortCriteria": sortCriteria,
         "request.query": query, 
         "request.queryBuilder": queryBuilder,
         "request.page": page,
@@ -497,7 +475,7 @@ const TaskSystemLog = (props) => {
             }}
             rowHeight={(prop) => { 
               if (prop.row.expanderType === 'DETAIL') {
-                return 200;
+                return rowDetailHeight;
               } else { 
                 return 30; 
               }
