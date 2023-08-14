@@ -68,23 +68,6 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
     }
   }
 
-  async function fetchTasksAsync(query, sortCriteria, page = 1, limit = 100) {
-    try {
-      const parsedQuery = parseFilter(query);
-      const skip = (page - 1) * limit;
-      if (!sortCriteria || Object.keys(sortCriteria).length === 0) {
-        sortCriteria = { "updatedAt.date": -1 }; // descending order
-      }
-      console.log("fetchTasksAsync", parsedQuery, sortCriteria, skip, limit);
-      const tasks = await tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(limit);
-      const total = await tasksModel.countDocuments(parsedQuery);
-      return { tasks, total };
-    } catch (err) {
-      console.error('Error fetching tasks:', err);
-      return { tasks: [], total: 0 };
-    }
-  }
-
   async function CEPLog(functionName, wsSendTask, task, CEPtask, args) {
     console.log("CEPLog updateOne", CEPtask.id, CEPtask.instanceId);
     if (CEPtask.instanceId) {
