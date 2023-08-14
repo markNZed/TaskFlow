@@ -81,29 +81,29 @@ router.post("/", async (req, res) => {
   // After each processor registers then we can check if there are tasks to autostart
   // Check if there are autoStartTasks 
   if (Object.keys(autoStartTasks).length > 0) {
-    console.log("Autostart tasks", autoStartTasks);
+    //console.log("Autostart tasks", autoStartTasks);
     let activeEnvironments = [];
     activeProcessors.forEach(item => {
       activeEnvironments.push(...item.environments);
     });
     activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
     Object.keys(autoStartTasks).forEach(taskId => {
-      console.log("Autostart task", taskId);
+      //console.log("Autostart task", taskId);
       const autoStartEnvironment = autoStartTasks[taskId].startEnvironment;
       let startEnvironments = autoStartTasks[taskId].startEnvironments;
       if (environments.includes(autoStartEnvironment)) {
-        console.log("environments.includes(autoStartEnvironment)");
+        //console.log("environments.includes(autoStartEnvironment)");
         let allEnvironmentsAvailable = true;
         // get the environments for this task
         // Is each startEnvironment avialable in environments ?
         startEnvironments.forEach(startEnvironment => {
           if (!environments.includes(startEnvironment)) {
-            console.log("startEnvironment " + startEnvironment + " not available", environments);
+            //console.log("startEnvironment " + startEnvironment + " not available", environments);
             allEnvironmentsAvailable = false;
           }
         })
         if (allEnvironmentsAvailable) {
-          console.log("allEnvironmentsAvailable");
+          //console.log("allEnvironmentsAvailable");
           const initTask = {
             id: taskId,
             user: {id: userId},

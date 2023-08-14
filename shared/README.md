@@ -35,13 +35,18 @@ The task.config.cache object allows for flexible cache rules, it is an array of 
 The task.config.subtasks.SubTaskNAME.cache controls caching in the SubTask
 The task.config.subtasks.SubTaskNAME.seed sets the cache seed in the SubTask, it is an array of strings or paths in the task object e.g. ["task.name"] or ["123"]
 
-`task.config.services` storea an array of service configurations
+`task.config.services` stores an array of service configurations
 
-`task.id` is referring to the configuration `id``. It is a dot separated path of the parent Tasks (the configuration is inherited).
+`task.id` is referring to the configuration `id`. It is a dot separated path of the parent Tasks (the configuration is inherited). There are two principle categories of tasks: system tasks and user tasks. System Tasks have an id starting with `root.system.` and user tasks have an id starting with `root.user.` 
+
+Tasks can be configured to start automatically with the `task.config` parameters `autoStartEnvironment`, `autoStartOnce`, `autoStartCoProcessor`. An example of this is the TaskSystemLog task type which starts once on the Task Hub Coprocessor.
 
 `task.hash` can be used on the Task Processor to validate the task storage is in sync with the Task Hub. The utility function taskHash applies a hash on a JSON string of a recursivley key ordered partial Task object. This is reproducible in other programming languages by replicating the key ordering method, the JSON string representation, and the hash function. Only the Task Hub generates the hash and only the Task Processors optionally check the hash i.e., a Task Processor could ignore the hash. Because the update and sync send diffs based on local storage the hash can highlight issues that may otherwise be harder to find.
 
 The `task.meta.lock` is not considered for `sync` commands.
+
+Tasks are configured as a Javascript object in in hub/config/tasks.mjs A task can refer to a parent with `parentName` which will search for a task that was previously defined with this name. Note that the same name could be used in different positions of the task hierarchy, in which case the task most recently configured will match. A `meta.childrenIds` array can be used to specify the id of one or more `task.id` and this allows for a task to reuse part of an existing task sequence, for example, TaskTest can be placed above a task to test the behavior of the task without that task configuration mentioning TaskTest.
+
 
 task.commands:
 * start

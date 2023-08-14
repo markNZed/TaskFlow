@@ -61,6 +61,7 @@ const tasksSchema = yup.array().of(yup.object()
     state: yup.object({
       current: yup.string(),
     }),
+    meta: yup.object(),
   })
   .noUnknown(true)
 );

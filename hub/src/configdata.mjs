@@ -201,7 +201,9 @@ function flattenTasks(tasks) {
     if (task.config?.label === undefined) {
       task.config["label"] = utils.capitalizeFirstLetter(task.name);
     }
-    task["meta"] = {};
+    if (!task["meta"]) {
+      task["meta"] = {};
+    }
     if (task.name !== "root") {
       task.meta["parentId"] = parentId;
     }

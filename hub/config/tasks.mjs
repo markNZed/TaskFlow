@@ -5,19 +5,20 @@ const tasks = [
       maxRequestRate: 30,
       caching: [],
     },
-    menu: true,
+    menu: false,
     name: "root",
   },
   {
-    menu: false,
     name: "system",
     parentName: "root",
+    menu: true,
   },
   {
-    menu: false,
+    CHILDREN_menu: true,
     name: "user",
     parentName: "root",
   },
+
   {
     name: "systemlog",
     config: {
@@ -158,7 +159,19 @@ const tasks = [
     name: "structure",
     parentName: "stepper1",
     type: "TaskLLMIO"
-  }
+  },
+
+  {
+    name: "testing",
+    initiator: true, // Needed to see this, maybe because it had no children?
+    config: {
+    },
+    parentName: "system",
+    meta: {
+      childrenId: ["root.user.conversation.chatgpt"],
+    },
+    type: "TaskTest",
+  },  
 ];
 
 export { tasks };
