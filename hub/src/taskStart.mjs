@@ -416,7 +416,6 @@ async function taskStart_async(
     // Side-effect on task.familyd
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
-
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = task.hub.command ?? "start";
     task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
@@ -461,7 +460,7 @@ async function taskStart_async(
 
     task.hub.origTask = JSON.parse(JSON.stringify(task));
 
-    console.log("Started task id " + task.id);
+    console.log("Started task.id:", task.id);
 
     return task;
   }

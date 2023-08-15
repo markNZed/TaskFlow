@@ -124,8 +124,6 @@ taskSubject
     next: async (task) => {
       if (task === null) {
         console.log("Task processed with null result");
-      } else if (task.error) {
-        console.error('Error processing task:', task.error);
       } else {
         if (!coProcessor) {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);

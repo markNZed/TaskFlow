@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Error testing: misnamed service type
 Deleting of tasks for CEP
 Add a test using Task
   Formalize state machine

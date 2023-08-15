@@ -20,7 +20,7 @@ async function errorTask_async(task) {
   const sourceProcessor = activeProcessors.get(processorId);
   task.error.environments = sourceProcessor.environments;
   let nextTaskId = task.hub.commandArgs.errorTask;
-  console.log("Task " + task.id + " error, next " + nextTaskId);
+  console.log("errorTask_async task " + task.id + " error, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
 
   const text = `${task.error.message} from task.id ${task.id} on processor ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
@@ -35,7 +35,8 @@ async function errorTask_async(task) {
       environments: task.environments,
       hub: {
         command: "error",
-        sourceProcessorId: task.hub.sourceProcessorId,
+        sourceProcessorId: task.hub.initiatingProcessorId,
+        commandArgs: { unlock: true },
       },
     }
     task.hub.commandArgs = {
@@ -51,7 +52,7 @@ async function errorTask_async(task) {
 
 export async function commandError_async(task, res) {
   try {
-    console.log(task.hub.requestId + " errorCommnad_async " + task.id);
+    console.log("errorCommnad_async " + task.id);
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
@@ -70,7 +71,7 @@ export async function commandError_async(task, res) {
     if (res) {
       throw new RequestError(msg, 500, error);
     } else {
-      throw new Error(msg);
+      throw new Error(error);
     }
   }
 }

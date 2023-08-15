@@ -17,15 +17,16 @@ export async function taskProcess_async(wsSendTask, task) {
         updatedTask = task;
         // Strictly we should not be updating the task object in the processor
         // Could set updatedTask.processor.command = "error" ?
-        updatedTask.error = e.message;
+        updatedTask.error = {message: e.message};
         updatedTask.command = "update";
+        updatedTask.commandArgs = {lockBypass: true};
       }
       // Returning null is  away of doing nothing
       if (updatedTask !== null) {
         if (updatedTask.error) {
           console.error("Task error ", updatedTask.error)
           updatedTask["command"] = "update";
-          delete updatedTask.commandArgs;
+          updatedTask["commandArgs"] = {lockBypass: true};
         }
         if (updatedTask?.command === "start") {
           // This is not working/used yet

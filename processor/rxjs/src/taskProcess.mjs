@@ -14,7 +14,10 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   try {
     console.log("taskProcess_async", task.id);
     console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
-    if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
+    if (task.processor["command"] === "error") {
+      console.log("RxJS Task Processor error so skipping Task Fuction id:" + task.id);
+      updatedTask = task;
+    } else if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {
       console.log("RxJS Task Processor unknown component " + task.type);
@@ -37,11 +40,12 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     updatedTask = task;
     // Strictly we should not be updating the task object in the processor
     // Could set updatedTask.processor.command = "error" ?
-    updatedTask.error = e.message;
+    updatedTask.error = {message: e.message};
     updatedTask.command = "update";
+    updatedTask.commandArgs = {lockBypass: true};
   }
   if (updatedTask?.error) {
-    console.error("Task error ", updatedTask.error)
+    console.error("Task error: ", updatedTask.error)
   }
   try {
     if (coProcessor) {
