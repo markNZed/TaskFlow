@@ -27,7 +27,9 @@ function App({ activeWorkerCount, workerId }) {
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const storageRef = useRef(null);
-  const [task, setTask] = useState(); // So Taskflows.js can use the withTask pattern
+  // So Taskflows.js can use the withTask pattern
+  // Need to provide an empty object not null
+  const [task, setTask] = useState({});
 
   useEffect(() => {
     if (workerId) {

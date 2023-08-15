@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Error testing: misnamed service type
 Deleting of tasks for CEP
 Add a test using Task
   Formalize state machine
@@ -8,6 +9,8 @@ Add a test using Task
       How could we intercept the SubTask
         Override the configuration to point to a different SubTask that acts as a stub
           Could stub the service this way
+  How would be batch tests?
+    TaskBatch that would modify TaskTest config fsm on the fly
 FSM
   https://github.com/statelyai/xstate to provide common FSM?
   Event processing could be on the Processor but it would not see events of Tasks on another Processor
@@ -302,6 +305,8 @@ Notes/Idea
   Refactoring with jscodeshift, see example in config repository
   Should a task that requests to start a Task also be updated by the Hub?
   A GraphQL based API into the Task family may be a useful abstraction that can be offloaded to a Co-Processor
+  Stately Studio
+    We will be building visual tooling for not just managing actor logic (state machines & statecharts) but also visualization of entire actor systems (architecture diagrams) and the communication between actors (sequence diagrams). This will be a huge step forward for visually understanding and debugging complex systems, and we’re excited to share more about this in the future.
 
 Architecture
 ------------

@@ -43,6 +43,7 @@ export const configSchema = yup.object()
   local: yup.object(),
   subtasks: yup.object(),
   ceps: yup.object(),
+  fsm: yup.string(),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

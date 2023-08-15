@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import { useMachine } from '@xstate/react';
-import { createMachine } from 'xstate';
+import { fsm } from '../../shared/fsm/TaskTest/one';
 
 // PLACEHOLDER - under development and not working
 
@@ -17,34 +17,52 @@ Task Process
 Task States
   
 ToDo:
-
+  
 */
-
-const toggleMachine = createMachine({
-  id: 'toggle',
-  initial: 'inactive',
-  states: {
-    inactive: {
-      on: { TOGGLE: 'active' }
-    },
-    active: {
-      on: { TOGGLE: 'inactive' }
-    }
-  }
-});
 
 function TaskTest(props) {
 
-  const [state, setState] = useMachine(toggleMachine);
+  const {
+    log,
+    task,
+    modifyTask,
+    fsm,
+  } = props;
 
+  const [state, send] = useMachine(fsm, {
+    actions: {
+      alertHi: () => {
+        alertHiFunc()
+      }
+    }
+  });
+
+  function alertHiFunc() {
+    alert("Hi");
+  }
+
+  /*
+  useEffect(() => {
+    send({
+      type: 'DATA_CHANGED',
+      data,
+    });
+  }, [data, send]);
+  */
+  
   return (
-    <div>
-      <button onClick={() => setState('TOGGLE')}>
-        {state.value === 'inactive'
-          ? 'Click to activate'
-          : 'Active! Click to deactivate'}
-      </button>
-    </div>
+    <>
+      <div>
+        <button onClick={() => send('TOGGLE')}>
+          {state.value === 'inactive'
+            ? 'Click to activate'
+            : 'Active! Click to deactivate'}
+        </button>
+      </div>
+      <div>
+        {state.matches('resolved') && <p>Loading...</p>}
+      </div>
+    </>
   );
 
 };

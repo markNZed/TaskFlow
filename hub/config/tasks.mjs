@@ -165,6 +165,7 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
+      fsm: "chat",
     },
     parentName: "system",
     meta: {

@@ -44,14 +44,34 @@ function withTask(Component) {
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
     const handleModifyChildStateRef = useRef(null);
     const handleModifyChildTaskRef = useRef(null);
+    const [fsm, setFsm] = useState();
 
+    // Load the FSM if it exists otherwise set fsm to a string value
+    // We only render the child component once fsm is set, to ensure useMachine has a valid input.
+    useEffect(() => {
+      if (props.task?.config?.fsm) {
+        const importPath = `${props.task.type}/${props.task.config.fsm}.mjs`;
+        // webpack needs to be able to resolve the context (the base directory)
+        import('../shared/fsm/' + importPath)
+          .then((module) => {
+            setFsm(module.fsm);
+          })
+          .catch((error) => {
+            console.error(`Failed to load FSM at ${importPath}:`, error);
+            // Handle the error, e.g., set some error state or show an error message
+            setFsm("Not available");
+          });
+      } else {
+        setFsm("Not configured");
+      }
+    }, []);
+
+    // For debug/inspection form the browser console
     if (!window.tasks) {
       window.tasks = {};
     }
     useEffect(() => {
-      if (props.task) {
-        window.tasks[props.task.id] = props.task;
-      }
+      window.tasks[props.task.id] = props.task;
     }, [props.task]);
     
     const checkLocked = () => {
@@ -529,7 +549,14 @@ function withTask(Component) {
       modifyChildTask,
       checkIfStateReady,
       checkLocked,
+      fsm,
     };
+
+    // This is a way of ensuring that the fsm is loaded before useMachine is called on it
+    // If no FSM is configured then fsm will default to a string
+    if (!fsm) {
+      return (<div>Loading FSM...</div>)
+    }
 
     return <WithDebugComponent {...componentProps} />;
   }
