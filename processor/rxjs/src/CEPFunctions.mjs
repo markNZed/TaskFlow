@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 "use strict";
-import { commandUpdateSync_async } from "./commandUpdateSync.mjs";
+import { commandUpdate_async } from "./commandUpdate.mjs";
 import { utils } from "./utils.mjs";
 
 const CEPFunctions = {
@@ -25,24 +25,24 @@ const CEPFunctions = {
   },
 
 
-  CEPIncrement: async function(functionName, wsSendTask, origTask, CEPtask, args) {
+  CEPIncrement: async function(functionName, wsSendTask, CEPinstanceId, task, args) {
     const increment = args.increment;
     // No reason to ignore start
-    if (CEPtask.processor.command === "start") {
+    if (task.processor.command === "start") {
       console.log("CEPIncrement doing nothing for start command")
       return;
     }
-    if (CEPtask.output.CEPCount > 100) {
-      console.log("CEPIncrement stopped with CEPCount " + CEPtask.output.CEPCount);
+    if (task.output.CEPCount > 100) {
+      console.log("CEPIncrement stopped with CEPCount " + task.output.CEPCount);
       return
     }
-    let syncTask = {}
-    syncTask["output"] = {};
-    syncTask.output["CEPCount"] = CEPtask.output.CEPCount ? CEPtask.output.CEPCount + increment : 1;
-    console.log("CEPCount", CEPtask.output.CEPCount, increment);
-    await commandUpdateSync_async(wsSendTask, CEPtask, syncTask);
-    console.log("TaskConversation " + functionName + " called on " + CEPtask.id + " set by " + origTask.id);
-    CEPtask.output.modifiedBy = origTask.id;
+    let syncDiff = {}
+    syncDiff["output"] = {};
+    syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : 1;
+    console.log("CEPCount", task.output.CEPCount, increment);
+    await commandUpdate_async(wsSendTask, task, syncDiff, true);
+    console.log("TaskConversation " + functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);
+    task.output.modifiedBy = CEPinstanceId;
   },
 
 };

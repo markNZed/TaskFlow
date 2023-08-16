@@ -78,6 +78,9 @@
         "config": {
           "$ref": "./genericV02schema.json#/definitions/Config"
         },
+        "fsm": {
+          "$ref": "./genericV02schema.json#/definitions/FSM"
+        },
         "state": {
           "$ref": "./genericV02schema.json#/definitions/State"
         },

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /app/processor/nodejs
+cd /app/processor/rxjs
 npm install
-screen -d -m npm start
+screen -d -m npm start 2>&1 | tee rxjs.log
 sleep infinity

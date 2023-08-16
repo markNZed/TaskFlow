@@ -419,7 +419,7 @@ async function taskStart_async(
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = task.hub.command ?? "start";
     task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
-    task.hub["initiatingProcessorId"] = processorId;
+    task.hub["initiatingProcessorId"] = autoStart ? "autostart" : processorId;
     task.hub["coProcessingDone"] = false;
     
     // Initialize meta object

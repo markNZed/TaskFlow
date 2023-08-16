@@ -6,6 +6,7 @@ const servicetypes = [
   },
   {
     name: "openaigpt",
+    API: "openaigpt",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     temperature: 0,
     maxTokens: 4000,

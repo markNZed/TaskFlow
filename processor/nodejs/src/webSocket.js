@@ -85,7 +85,7 @@ const connectWebSocket = () => {
     }
     if (command !== "pong") {
       console.log(""); //empty line
-      console.log("processorWs ", command, commandArgs);
+      console.log("processorWs ", command, task.id, commandArgs);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);

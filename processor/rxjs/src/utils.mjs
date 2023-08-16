@@ -149,7 +149,7 @@ const utils = {
       throw new Error("task.familyId is undefined");
     }
     let origMatch = match;
-    if (!task.id.startsWith("root.system.")) {
+    if (!task.id.startsWith("root.system.") || !config.isRegex) {
       match = task.familyId + "-" + match;
     }
     if (config.isRegex) {
@@ -159,13 +159,13 @@ const utils = {
     if (!funcMap) {
       // If not, create a new Map for match
       funcMap = new Map();
-      funcMap.set(task.instanceId, [task, CEPFunc, functionName, args]); // Will need to clean this up from memory
+      funcMap.set(task.instanceId, [task.instanceId, CEPFunc, functionName, args]); // Will need to clean this up from memory
       CEPFuncs.set(match, funcMap);
       console.log("CEPFuncs created function for " + origMatch + " from match " + match);  
     } else {
       // Only add the function if there isn't already an entry for this task.instanceId
       if (!funcMap.has(task.instanceId) && !task.id.startsWith("root.system.")) {
-        funcMap.set(task.instanceId, [task, CEPFunc, functionName, args]);
+        funcMap.set(task.instanceId, [task.instanceId, CEPFunc, functionName, args]);
         CEPFuncs.set(match, funcMap);
         console.log("CEPFuncs added function for " + origMatch + " from match " + match);
       }

@@ -55,6 +55,7 @@ function getComparator(sortColumn) {
     case 'processorId':
     case 'state':
     case 'user':
+    case 'command':
       return (a, b) => {
         if (typeof a[sortColumn] === 'string' && typeof b[sortColumn] === 'string') {
             return a[sortColumn].localeCompare(b[sortColumn]);
@@ -132,7 +133,7 @@ function createColumns() {
     },
     {  
       name: 'id', 
-      width: 150,
+      width: 300,
       key: "taskId",
       flex: 1,
     },
@@ -164,6 +165,12 @@ function createColumns() {
       name: 'user', 
       width: 150,
       key: "user",
+      flex: 1,
+    },
+    {  
+      name: 'command', 
+      width: 100,
+      key: "command",
       flex: 1,
     },
   ];
@@ -203,6 +210,7 @@ const TaskSystemLogViewer = (props) => {
       processorId: '',
       state: '',
       user: '',
+      command: '',
     }
   );
   const [page, setPage] = useState(1);
@@ -242,6 +250,7 @@ const TaskSystemLogViewer = (props) => {
         current: t.current,
         state: t.current?.state?.current,
         user: t.current.user.id,
+        command: t.current.processor.command,
         updatedAt: t.updatedAt.date,
     }));
   }, [task.response.tasks]);
@@ -282,6 +291,7 @@ const TaskSystemLogViewer = (props) => {
         (filters.type ? r.type.includes(filters.type) : true) &&
         (filters.state ? r.state.includes(filters.state) : true) &&
         (filters.user ? r.user.includes(filters.user) : true) &&
+        (filters.command ? r.command.includes(filters.command) : true) &&
         (filters.v ? r.processorId.includes(filters.processorId) : true)
       );
     });
@@ -362,6 +372,7 @@ const TaskSystemLogViewer = (props) => {
       processorId: '',
       state: '',
       user: '',
+      command: '',
     });
   }
 
@@ -453,6 +464,7 @@ const TaskSystemLogViewer = (props) => {
           { name: 'current.processor.id', label: 'Processor ID' },
           { name: 'current.state.current', label: 'State' },
           { name: 'current.user.id', label: 'User ID' },
+          { name: 'current.processor.command', label: 'Command' },
         ]}
         queryHistory={task.state.queryHistory}
         queryHistoryPtr={task.state.queryHistoryPtr}

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 
-const TaskTest_async = async function (taskName, wsSendTask, task) {
+const TaskSystemTest_async = async function (taskName, wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
 
   console.log(`${taskName} in state ${task.state.current}`);
@@ -14,4 +14,4 @@ const TaskTest_async = async function (taskName, wsSendTask, task) {
   return null;
 };
 
-export { TaskTest_async };
+export { TaskSystemTest_async };

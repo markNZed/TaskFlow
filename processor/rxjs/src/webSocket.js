@@ -11,7 +11,7 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
-import { commandUpdateSync_async } from "./commandUpdateSync.mjs";
+import { commandUpdate_async } from "./commandUpdate.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -65,14 +65,16 @@ taskSubject
       // We always add familyId so CEP can only operate on its own family
       // utils.createCEP is how we create the entries
       const CEPFuncsKeys = CEPFuncs.keys();
-      //console.log("CEPFuncs", CEPFuncs.keys());
+      console.log("CEPFuncs", CEPFuncs.keys());
       //console.log("CEP looking for " + task.familyId + "-instance-" + task.instanceId);
       let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
       //console.log("CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
+      //console.log("CEP looking for " + task.familyId + "-id-" + task.id);
       let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
       //console.log("CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
-      let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId-" + task.familyId) || new Map();
-      //console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
+      console.log("CEP looking for " + task.familyId + "-familyId");
+      let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
+      console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
       // Retrieve the function arrays from each Map
       let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
       let idCEPFuncs = [...idSourceFuncsMap.values()];
@@ -81,9 +83,9 @@ taskSubject
       let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
       //console.log("allCEPFuncs", allCEPFuncs);
       // Run each CEP function serially
-      for (const [origTask, func, functionName, args] of allCEPFuncs) {
+      for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
         console.log(`Running CEP function ${functionName} with args:`, args);
-        await func(functionName, wsSendTask, origTask, task, args);
+        await func(functionName, wsSendTask, CEPInstanceId, task, args);
       }
       // Check for changes to the task
       const diff = utils.getObjectDifference(taskCopy, task) || {};
@@ -94,27 +96,35 @@ taskSubject
       }
       if (coProcessor) {
         console.log("CoProcessing task " + taskCopy.id);
-        //console.log("taskSubject task.processor.coProcessing", task.processor.coProcessing, "task.processor.coProcessingDone", task.processor.coProcessingDone);
+        console.log("taskSubject coProcessing", task.processor.coProcessing, "coProcessingDone", task.processor.coProcessingDone, "commandArgs", task.processor.commandArgs);
         //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
-        task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+        if (task.processor.initiatingProcessorId !== processorId && !task.processor.commandArgs?.sync && !task.processor.coProcessingDone) {
+          task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+        } else {
+          console.log("Skipped taskProcess", task.processor.initiatingProcessorId, processorId,task.processor.commandArgs?.sync, task.processor.coProcessingDone)
+        }
+        /*
         if (task.processor.command === "update") {
-          console.log("CoProcessing task.state ", task?.state);
+          console.log("CoProcessing task.state ", task?.state.current);
           const diff = utils.getObjectDifference(taskCopy, task) || {};
           if (Object.keys(task).length > 0 && Object.keys(diff).length > 0) {
             console.log("CoProcessing diff ", diff);
-            //await commandUpdateSync_async(wsSendTask, task, diff);
+            //await commandUpdate_async(wsSendTask, task, diff, true);
           }
         }
+        */
         //wsSendTask(task);
         //console.log("CoProcessing task ", task);
       } else {
+        /*
         if (Object.keys(diff).length > 0) {
           console.log("DIFF", diff);
-          await commandUpdateSync_async(wsSendTask, task, diff);
+          await commandUpdate_async(wsSendTask, task, diff, true);
         }
+        */
         // Process the task to install the CEP
-        if (task.processor["command"] === "update" || task.processor["command"] === "start") {
-          await taskProcess_async(wsSendTask, task, CEPFuncs);
+        if (task.processor.initiatingProcessorId !== processorId && !task.processor.commandArgs?.sync) {
+          task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
       return taskCopy;
@@ -125,7 +135,7 @@ taskSubject
       if (task === null) {
         console.log("Task processed with null result");
       } else {
-        if (!coProcessor) {
+        if (!coProcessor || task.processor.coProcessingDone) {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
         }
         console.log('Task processed successfully');
@@ -210,7 +220,6 @@ const connectWebSocket = () => {
       }
       console.log("ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       // The sync arrives after activeTasksStore_async has been updated so hash mismatch?
-      // 
       // Check hash 
       if (!utils.checkHash(lastTask, mergedTask)) {
         if (mergedTask.processor.initiatingProcessorId === processorId) {
@@ -221,63 +230,33 @@ const connectWebSocket = () => {
       //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
       if (coProcessor) {
-        if (mergedTask.processor.initiatingProcessorId !== processorId && !commandArgs?.sync && !mergedTask.processor.coProcessingDone) {
-          console.log("processorWs mergedTask.processor.coProcessing", mergedTask.processor.coProcessing, "mergedTask.processor.coProcessingDone", mergedTask.processor.coProcessingDone);
-          delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-          mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
-          taskSubject.next(mergedTask);
-        } else {
-          // Here we are receiving an update not coprocessing so we store the task.
-          // The stored task needs to be in sync with the hub if we want to use diffs
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-          console.log("Stored update initiatingProcessorId", task.processor.initiatingProcessorId, "processorId", processorId, "sync", commandArgs.sync, "coProcessingDone", task.processor.coProcessingDone);
-        }
+        console.log("processorWs coProcessing", mergedTask.processor.coProcessing, "coProcessingDone", mergedTask.processor.coProcessingDone);
+        delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
+        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
+        taskSubject.next(mergedTask);
       } else {
         // Do not want to pass sync through CEP. Stop looping if we updated the task from this processor
-        if (commandArgs?.sync || mergedTask.processor.initiatingProcessorId === processorId) {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-          console.log("Synced task ", task.id);
-        } else {
-          delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-          mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
-          taskSubject.next(mergedTask);
-        }
+        delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
+        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
+        taskSubject.next(mergedTask);
       }
     } else if (command === "start" || command === "join") {
-      console.log("ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
+      console.log("ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
       // Emit the task into the taskSubject
       if (coProcessor) {
-        if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
-          taskSubject.next(task);
-        } else {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-          console.log("Stored ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
-        }
+        taskSubject.next(task);
       } else {
         // To stop looping if we start a task from this processor
-        if (task.processor.initiatingProcessorId === processorId) {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-        } else {
-          taskSubject.next(task);
-        }
+        taskSubject.next(task);
       }
     } else if (command === "error") {
       console.log("ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       // Emit the task into the taskSubject
       if (coProcessor) {
-        if (task.processor.sourceProcessorId !== processorId && !task.processor.coProcessingDone) {
-          taskSubject.next(task);
-        } else {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-          console.log("Stored ", command, task.processor.sourceProcessorId, "processorId", processorId, "coProcessingDone", task.processor.coProcessingDone);
-        }
+        taskSubject.next(task);
       } else {
         // To stop looping if we start a task from this processor
-        if (task.processor.initiatingProcessorId === processorId) {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-        } else {
-          taskSubject.next(task);
-        }
+        taskSubject.next(task);
       }
     } else if (command === "pong") {
       //console.log("ws pong received", message)

@@ -21,7 +21,7 @@ function withTask(Component) {
   function TaskComponent(props) {
 
     const { globalState, mergeGlobalState } = useGlobalStateContext();
-    const [isMounted, setIsMounted] = useState();
+    const isMountedRef = useRef();
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
     const [childTask, setChildTask] = useState();
@@ -159,8 +159,23 @@ function withTask(Component) {
       // This is called during the rendering of the Task and even though
       // this is a HoC we get warnings for changing state during rendering
       // So adding this delay will update outside of the rendering of Task
-      setTimeout(() => setIsMounted(true), 0);
+      setTimeout(() => {
+        // Using a ref as state may not get updated if the component is not rendered
+        isMountedRef.current = true;
+      }, 0);
     }
+    useEffect(() => {
+      const checkMount = () => {
+        if (props.task.id && !isMountedRef.current) {
+          throw new Error("handleChildDidMount was not called within 10 seconds " + props.task.id);
+        }
+      };
+      const timeoutId = setTimeout(checkMount, 10000);
+      // This return function will be called if the component is unmounted before the timeout triggers
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }, []);
 
     // React does not seem to gaurantee this is called in the parent before the child
     useEffect(() => {
@@ -192,7 +207,7 @@ function withTask(Component) {
       }
     }, [startTaskReturned]);
 
-    useUpdateWSFilter(isMounted, props.task,
+    useUpdateWSFilter(isMountedRef, props.task,
       async (updateDiff) => {
         //console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);

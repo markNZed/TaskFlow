@@ -25,7 +25,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
     // messageQueue is an object not an array so we can delete from the object during iteration
     const keys = Object.keys(messageQueue);
     // sort the keyys so we process the oldest first
-    keys.sort();
+    keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     //console.log("keys", keys);
     for (let key of keys) {
       const message = messageQueue[key];

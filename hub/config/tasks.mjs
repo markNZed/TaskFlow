@@ -162,16 +162,54 @@ const tasks = [
   },
 
   {
+    config: {
+      label: "0-Shot",
+      services: [
+        {
+          type: "openaigpt.chatgptzeroshot",
+        }
+      ],
+    },
+    initiator: true,
+    name: "zeroshot",
+    parentName: "conversation",
+    permissions: [
+      "mark.hampton@ieee.org"
+    ],
+    type: "TaskConversation"
+  },
+  {
+    config: {
+    },
+    name: "start",
+    parentName: "zeroshot",
+    type: "TaskChat"
+  },
+
+  {
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
       fsm: "chat",
+      ceps: {
+        "id-root.user.conversation.zeroshot.start": {
+          functionName: "serviceStub",
+          args: {
+            type: "openaigpt.chatgptzeroshot",
+            key: "API", 
+            value: "openaistub"
+          },
+        },
+        "familyId": {
+          functionName: "familyIds",
+        }
+      },
     },
     parentName: "system",
     meta: {
-      childrenId: ["root.user.conversation.chatgpt"],
+      childrenId: ["root.user.conversation.zeroshot"],
     },
-    type: "TaskTest",
+    type: "TaskSystemTest",
   },  
 ];
 

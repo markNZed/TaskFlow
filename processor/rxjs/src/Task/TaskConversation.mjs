@@ -9,7 +9,7 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
 
-  function helloWorld(functionName, wsSendTask, task, CEPtask, args) {
+  function helloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
     console.log("Hello World", args);
   }
 

@@ -6,17 +6,19 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
 import { tasksModel } from "./SchemaTasks.mjs"
+import { coProcessor } from "../../config.mjs";
 
 // in the MongoDB object __v represents the version of the document
 
+// Fields we do not want to store in the log 
 function stripTask(task) {
   // deep copy
   const taskCopy = JSON.parse(JSON.stringify(task));
-  // There are many fields we do not want to store in the log 
-  delete taskCopy.meta.hashDiffOrigTask;
+  //delete taskCopy.meta.hashDiffOrigTask; 
   delete taskCopy.meta.hashTask;
   delete taskCopy.processor.origTask;
-  if (taskCopy.type === "TaskSystemLog") {
+  //TaskSystemLogViewer is not loged so we could remove this
+  if (taskCopy.type === "TaskSystemLogViewer") {
     delete taskCopy.response.tasks;
   }
   return taskCopy;
@@ -67,13 +69,17 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
     }
   }
 
-  async function CEPLog(functionName, wsSendTask, task, CEPtask, args) {
-    console.log("CEPLog updateOne", CEPtask.id, CEPtask.instanceId);
-    if (CEPtask.instanceId) {
-      await updateTaskWithHistory(CEPtask);
+  async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
+    console.log("CEPLog updateOne", task.id, task.instanceId);
+    if (task.instanceId && task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
+      if (!coProcessor || task.processor.coProcessingDone ) {
+        await updateTaskWithHistory(task);
+      } else {
+        console.log("Skipped logging because not coProcessingDone");
+      }
     } else {
       // Should log even when there is no instanceId - not sure what to do for index in that case
-      console.log("Skipped logging because no instanceId");
+      console.log("Skipped logging because no instanceId or TaskSystemLog");
     }
   }
 
