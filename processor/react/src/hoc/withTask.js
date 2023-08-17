@@ -275,7 +275,7 @@ function withTask(Component) {
     // Manage the last state with a ref because we can't gaurantee when the task.state.last will be updated
     // This is specific to how React handles setState 
     const modifyState = (state) => {
-      console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
+      //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
       if (state && state !== props.task.state.current) {
         stateRef.current = state;

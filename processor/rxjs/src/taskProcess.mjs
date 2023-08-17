@@ -17,6 +17,9 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     if (task.processor["command"] === "error") {
       console.log("RxJS Task Processor error so skipping Task Fuction id:" + task.id);
       updatedTask = task;
+    } else if (task.processor?.commandArgs?.sync) {
+      console.log("RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
+      updatedTask = task;
     } else if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {

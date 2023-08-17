@@ -78,7 +78,7 @@ export async function commandUpdate_async(task, res) {
   const release = await mutex.acquire();
   //console.log("commandUpdate_async lock", task.instanceId);
   try {
-    const activeTask = await activeTasksStore_async.get(task.instanceId)
+    let activeTask = await activeTasksStore_async.get(task.instanceId)
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
@@ -87,6 +87,9 @@ export async function commandUpdate_async(task, res) {
       if (commandArgs?.done) {
         throw new Error("Not expecting sync of done task");
       }
+      // We are syncing so switch active task
+      // Should limit this so we can only update in the same family (except for system tasks)
+      activeTask = await activeTasksStore_async.get(commandArgs.syncTask.instanceId);
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);

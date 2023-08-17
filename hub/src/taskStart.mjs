@@ -193,6 +193,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
     task.meta["prevInstanceId"] = prevTask.meta.prevInstanceId || prevTask.instanceId;
+    task.meta["parentInstanceId"] = prevTask.instanceId;
     // Copying processor information from previous task instance
     // In the case where the task sequence advances on another processor 
     // we need to be able to associate a more recent tasks with an older

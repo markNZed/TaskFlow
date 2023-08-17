@@ -1,34 +1,18 @@
 /* ToDo
 -------
-Probably logging twice - as it goes through copro - should just log when done?
-If initiated by coprocssor then done is set - still need to process for CEP?
-Not logging the update ?
-  For logging keep the hash diff ?
+Experiment with @xstate/inspect
+Why is is not firing sometimes ?
+https://opencollective.com/
+Maybe start should be two commands: start + init
+How to report pass/fail ?
+  Dev header with info 
 Restarting rxjs will lose the TaskSystemLog
   Need to track this on the Hub - don't delete autostart, mark as active or not
-Dealing with hierarchy of tasks - 
-  Track the family
 How to combine debug logging with task.meta.debug ?
   Conditional breakpoints in VSCode works well
 Deleting of tasks for CEP
 Add a test using Task
   Each test being a specific state machine.
-    First test could be root.user.testing.zeroshot.start and simulate user input. 
-      How could we intercept the SubTask
-        Override the configuration to point to a different SubTask that acts as a stub
-          Could stub the service this way
-          Enter a string - check that the stub getes that as a prompt
-          Stub sends response - check that this gets displayed
-            How to check the contents in the browser?
-              Use div ids ?
-          States:
-            start
-            react:userInput
-            nodejs:userInput
-            nodejs:llmResponse
-            react: llmResponse
-    Implement the services in nodejs so we can stub root.openaigpt with root.openaistub
-      Associate ChatGPTAPI_request_async with root.openaigpt ?
   How to batch tests?
     TaskSystemBatch that would modify TaskSystemTest config fsm on the fly
     Could build an array of FSM then run through that.

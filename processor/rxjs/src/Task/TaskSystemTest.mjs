@@ -7,6 +7,7 @@ import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
 import { commandUpdate_async } from "../commandUpdate.mjs";
 import { activeTasksStore_async } from "../storage.mjs";
+import TreeModel from 'tree-model';
 
 /*
   For TaskChat we want to swap service type openaigpt for openaistub
@@ -21,7 +22,7 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
     const value = args.value;
     const type = args.type;
     //task.config.services
-    if (task.processor.command === "start") {
+    if (task.processor.command === "start" && task?.config?.services) {
       for (const service of task.config.services) {
         if (service.type === type) {
           service[key] = value;
@@ -35,28 +36,49 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
   }
 
   async function familyIds(functionName, wsSendTask, CEPinstanceId, task, args) {
-    if (task.processor.command === "start" && task.instanceId !== CEPinstanceId) {
-      // Sending to the TaskSystemTest
-      const CEPtask = await activeTasksStore_async.get(CEPinstanceId);
-      let familyIds = {};
-      if (CEPtask.state.familyIds) {
-        familyIds = JSON.parse(JSON.stringify(CEPtask.state.familyIds));
+    if (task.processor.command === "start" && CEPinstanceId && !task.processor?.commandArgs?.id) {
+      let CEPtask;
+      // In this case we are starting the TaskSystemTest
+      if (CEPinstanceId === task.instanceId) {
+        CEPtask = task;
+        if (!CEPtask.state) {
+          console.log("State is not there", CEPtask);
+          CEPtask.state = {};
+        }
+      } else {
+        CEPtask = await activeTasksStore_async.get(CEPinstanceId);
       }
-      if (!Object.keys(familyIds).includes(task.instanceId)) {
-        familyIds[task.instanceId] = {id: task.id};
+      const familyTree = new TreeModel();
+      let root;
+      if (CEPtask.state.familyTree) {
+        root = familyTree.parse(CEPtask.state.familyTree);
+      } else {
+        root = familyTree.parse({id: CEPinstanceId, taskInstanceId: CEPinstanceId, taskId: CEPtask.id, type: CEPtask.type});
+      }
+      console.log("familyTree", familyTree, root);
+      let node = root.first(node => node.model.id === task.instanceId);
+      if (!node) {
+        node = familyTree.parse({id: task.instanceId, taskInstanceId: task.instanceId, taskId: task.id, type: task.type});
+        // Find the parentInstanceId
+        console.log("task.meta.parentInstanceId", task.meta.parentInstanceId);
+        if (!task.meta.parentInstanceId) {
+          root.addChild(node);
+        } else {
+          const parentNode = root.first(node => node.model.id === task.meta.parentInstanceId);
+          parentNode.addChild(node);
+        }
         let diff = {
           state: {
-            familyIds,
+            familyTree: root.model,
           }
         };
-        console.log("familyIds adding instanceId", familyIds);
+        console.log("familyTree diff", diff);
         await commandUpdate_async(wsSendTask, CEPtask, diff);
       }
+
     }
   }
 
-
-  // This shows dynamically registering a CEP 
   // We can also register a CEP by declaring it in ./CEPFunctions.mjs
   CEPFunctions.register("serviceStub", serviceStub);
   CEPFunctions.register("familyIds", familyIds);

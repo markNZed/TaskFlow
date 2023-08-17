@@ -65,16 +65,16 @@ taskSubject
       // We always add familyId so CEP can only operate on its own family
       // utils.createCEP is how we create the entries
       const CEPFuncsKeys = CEPFuncs.keys();
-      console.log("CEPFuncs", CEPFuncs.keys());
+      //console.log("CEPFuncs", CEPFuncs.keys());
       //console.log("CEP looking for " + task.familyId + "-instance-" + task.instanceId);
       let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
       //console.log("CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
       //console.log("CEP looking for " + task.familyId + "-id-" + task.id);
       let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
       //console.log("CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
-      console.log("CEP looking for " + task.familyId + "-familyId");
+      //console.log("CEP looking for " + task.familyId + "-familyId");
       let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
-      console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
+      //console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
       // Retrieve the function arrays from each Map
       let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
       let idCEPFuncs = [...idSourceFuncsMap.values()];
@@ -98,7 +98,7 @@ taskSubject
         console.log("CoProcessing task " + taskCopy.id);
         console.log("taskSubject coProcessing", task.processor.coProcessing, "coProcessingDone", task.processor.coProcessingDone, "commandArgs", task.processor.commandArgs);
         //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
-        if (task.processor.initiatingProcessorId !== processorId && !task.processor.commandArgs?.sync && !task.processor.coProcessingDone) {
+        if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         } else {
           console.log("Skipped taskProcess", task.processor.initiatingProcessorId, processorId,task.processor.commandArgs?.sync, task.processor.coProcessingDone)
@@ -123,7 +123,7 @@ taskSubject
         }
         */
         // Process the task to install the CEP
-        if (task.processor.initiatingProcessorId !== processorId && !task.processor.commandArgs?.sync) {
+        if (task.processor.initiatingProcessorId !== processorId) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
