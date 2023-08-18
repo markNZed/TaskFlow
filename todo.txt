@@ -1,7 +1,7 @@
 /* ToDo
 -------
-Maybe the issue is that we don't always pick up changes to textarea by React
-  Seems textarea.value may not be set sometimes?
+https://testing-library.com/docs/react-testing-library/intro/
+Forcing s state: interpreter.start(state)
 Experiment with @xstate/inspect
 Why is is not firing sometimes ?
 https://opencollective.com/

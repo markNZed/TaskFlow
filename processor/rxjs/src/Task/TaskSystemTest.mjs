@@ -61,9 +61,13 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
           utils.logTask(task, "No parentInstanceId", node);
           root.addChild(node);
         } else {
-          utils.logTask(task, "Found parentInstanceId", node);
           const parentNode = root.first(node => node.model.id === task.meta.parentInstanceId);
-          parentNode.addChild(node);
+          if (parentNode) {
+            utils.logTask(task, "Found parentInstanceId", node);
+            parentNode.addChild(node);
+          } else {
+            utils.logTask(task, "No parentNode", node);
+          }
         }
         let diff = {
           state: {

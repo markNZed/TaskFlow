@@ -16,6 +16,8 @@ const taskSync_async = async (key, value) => {
   //utils.logTask(value, "taskSync_async", key, value.processor)
 
   // key may be undefined if this is a start task that is being forwarded to coprocessor
+  // A start command could arrive without familyId set on the value and this would lose
+  // failyId which created other issues with loading the prevInstanceId in taskStart
   if (key && value.hub.command != "start") {
     utils.logTask(value, "taskSync_async familyId", value.familyId, value.hub.command);
     await instancesStore_async.set(key, value);

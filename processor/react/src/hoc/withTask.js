@@ -46,6 +46,17 @@ function withTask(Component) {
     const handleModifyChildTaskRef = useRef(null);
     const [fsm, setFsm] = useState();
 
+    // In HOC create a syncTask function
+    function syncTask(syncTask) {
+      modifyTask({ 
+        "command": "update",
+        "commandArgs": {
+          sync: true,
+          syncTask: syncTask,
+        }
+      });
+    }
+
     // Load the FSM if it exists otherwise set fsm to a string value
     // We only render the child component once fsm is set, to ensure useMachine has a valid input.
     useEffect(() => {
@@ -565,6 +576,7 @@ function withTask(Component) {
       checkIfStateReady,
       checkLocked,
       fsm,
+      syncTask,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it

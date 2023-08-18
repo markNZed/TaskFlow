@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { createMachine, forwardTo, send, assign } from 'xstate';
-import TreeModel from 'tree-model';
 
 export const fsm = createMachine({
   predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
@@ -14,26 +13,8 @@ export const fsm = createMachine({
   states: {
     start: {
       on: {
-        CHAT_FOUND: {
-          target: 'taskChatFound',
-          actions: assign({
-            familyTreeNode: (context, event) => event.familyTreeNode
-          }),
-        },
-        FAMILY: { actions: forwardTo('checkTaskService') }
-      },
-      invoke: {
-        id: 'checkTaskService',
-        src: 'checkTaskService',
-      },
-    },
-    taskChatFound: {
-      on: {
-        PROMPT: {
-          target: 'promptFound',
-          actions: assign({
-            data: (context, event) => event.data
-          }),
+        TEXTAREA: {
+          target: 'textareaFound',
         },
       },
       entry: [
@@ -42,39 +23,51 @@ export const fsm = createMachine({
           message: 'Entering taskChatFound state'
         },
         { 
-          type: 'updateTask'
+          type: 'queryExpect', 
+          action: 'findTextarea',
         }
       ],
     },
-    promptFound: {
-      entry: [
-        {
-          type: 'logMsg',
-          message: 'Found prompt'
-        },
-        'submitPrompt',
-      ],
+    textareaFound: {
       on: {
-        RESPONSE: {
-          target: 'checkResponse',
-          actions: assign({
-            data: (context, event) => event.data
-          }),
-        }
-      }
-    },
-    checkResponse: {
-      on : {
-          PASS: 'pass',
-          FAIL: 'fail'
+        PROMPT_SEEN: {
+          target: 'promptSeen',
+          actions: {
+            type: 'taskAction',
+            action: 'submitPrompt',
+          },
+        },
       },
       entry: [
         {
           type: 'logMsg',
-          message: 'Checking response'
+          message: 'Entering textareaFound state'
         },
-        'checkResponse',
-      ]
+        { 
+          type: 'taskAction', 
+          action: 'enterPrompt',
+        },
+        { 
+          type: 'queryExpect', 
+          action: 'findPrompt',
+        },
+      ],
+    },
+    promptSeen: {
+      entry: [
+        {
+          type: 'logMsg',
+          message: 'Entering promptSeen state'
+        },
+        { 
+          type: 'queryExpect', 
+          action: 'findResponse',
+        }
+      ],
+      on: {
+        PASS: 'pass',
+        FAIL: 'fail',
+      }
     },
     pass: {
       entry: [
@@ -102,7 +95,7 @@ export const fsm = createMachine({
       alert(action.message);
     },
     logMsg: (context, event, { action }) => {
-      console.log(action.message);
+      console.log(action.message, context.data, Date());
     }
   },
   delays: {
@@ -112,25 +105,7 @@ export const fsm = createMachine({
     /* ... */
   },
   services: {
-    checkTaskService: (context, event) => (callback, onReceive) => {
-      onReceive((event) => {
-        //console.log("event", event);
-        if (event.type === 'FAMILY') {
-          // Perform the check
-          const task = context.taskRef.current;
-          //console.log("task", task);
-          if (task && task.state.familyTree) {
-            const root = new TreeModel().parse(task.state.familyTree);
-            const chat = root.first(node => node.model.type === "TaskChat");
-            //console.log("chat", chat);
-            if (chat) {
-              // Send an event back to the machine
-              callback({type: 'CHAT_FOUND', familyTreeNode: chat});
-            }
-          }
-        }
-      })
-    },
+    /* ... */
   },
 });
   
