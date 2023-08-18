@@ -11,7 +11,6 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
-import { commandUpdate_async } from "./commandUpdate.mjs";
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -29,7 +28,7 @@ function findCEP (CEPFuncsKeys, matchExpr) {
     // filter CEPFuncsKeys for those starting with regex:
     const regexKeys = [...CEPFuncsKeys].filter(key => key.startsWith("regex:"));
     // for each regexKey check if it matches the matchExpr
-    //console.log("regexKeys", regexKeys)
+    //utils.logTask(task, "regexKeys", regexKeys)
     for (const regexKey of regexKeys) {
       // strip "regex:" prefix from regexKey
       const regexStr = regexKey.substring("regex:".length);
@@ -55,7 +54,7 @@ taskSubject
     }),
     */
     mergeMap(async (task) => {
-      console.log("Incoming task id " + task.id + " command " + task.processor.command);
+      utils.logTask(task, "Incoming task id " + task.id + " command " + task.processor.command);
       const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
       // Complex event processing uses a Map of Map
       //  The outer Map matches a task identity of the task that is being processed
@@ -65,60 +64,60 @@ taskSubject
       // We always add familyId so CEP can only operate on its own family
       // utils.createCEP is how we create the entries
       const CEPFuncsKeys = CEPFuncs.keys();
-      //console.log("CEPFuncs", CEPFuncs.keys());
-      //console.log("CEP looking for " + task.familyId + "-instance-" + task.instanceId);
+      //utils.logTask(task, "CEPFuncs", CEPFuncs.keys());
+      //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
       let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
-      //console.log("CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
-      //console.log("CEP looking for " + task.familyId + "-id-" + task.id);
+      //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
+      //utils.logTask(task, "CEP looking for " + task.familyId + "-id-" + task.id);
       let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
-      //console.log("CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
-      //console.log("CEP looking for " + task.familyId + "-familyId");
+      //utils.logTask(task, "CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
+      //utils.logTask(task, "CEP looking for " + task.familyId + "-familyId");
       let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
-      //console.log("CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
+      //utils.logTask(task, "CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
       // Retrieve the function arrays from each Map
       let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
       let idCEPFuncs = [...idSourceFuncsMap.values()];
       let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
       // Flatten all CEP functions into a single array
       let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
-      //console.log("allCEPFuncs", allCEPFuncs);
+      //utils.logTask(task, "allCEPFuncs", allCEPFuncs);
       // Run each CEP function serially
       for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
-        console.log(`Running CEP function ${functionName} with args:`, args);
+        utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
         await func(functionName, wsSendTask, CEPInstanceId, task, args);
       }
       // Check for changes to the task
       const diff = utils.getObjectDifference(taskCopy, task) || {};
       if (Object.keys(diff).length > 0) {
-        console.log("DIFF", diff);
+        utils.logTask(task, "DIFF", diff);
       } else {
-        console.log("no DIFF", taskCopy?.state?.current, task?.state?.current);
+        utils.logTask(task, "no DIFF", taskCopy?.state?.current, task?.state?.current);
       }
       if (coProcessor) {
-        console.log("CoProcessing task " + taskCopy.id);
-        console.log("taskSubject coProcessing", task.processor.coProcessing, "coProcessingDone", task.processor.coProcessingDone, "commandArgs", task.processor.commandArgs);
-        //console.log("taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
+        utils.logTask(task, "CoProcessing task " + taskCopy.id);
+        utils.logTask(task, "taskSubject coProcessing", task.processor.coProcessing, "coProcessingDone", task.processor.coProcessingDone, "commandArgs", task.processor.commandArgs);
+        //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         } else {
-          console.log("Skipped taskProcess", task.processor.initiatingProcessorId, processorId,task.processor.commandArgs?.sync, task.processor.coProcessingDone)
+          utils.logTask(task, "Skipped taskProcess", task.processor.initiatingProcessorId, processorId,task.processor.commandArgs?.sync, task.processor.coProcessingDone)
         }
         /*
         if (task.processor.command === "update") {
-          console.log("CoProcessing task.state ", task?.state.current);
+          utils.logTask(task, "CoProcessing task.state ", task?.state.current);
           const diff = utils.getObjectDifference(taskCopy, task) || {};
           if (Object.keys(task).length > 0 && Object.keys(diff).length > 0) {
-            console.log("CoProcessing diff ", diff);
+            utils.logTask(task, "CoProcessing diff ", diff);
             //await commandUpdate_async(wsSendTask, task, diff, true);
           }
         }
         */
         //wsSendTask(task);
-        //console.log("CoProcessing task ", task);
+        //utils.logTask(task, "CoProcessing task ", task);
       } else {
         /*
         if (Object.keys(diff).length > 0) {
-          console.log("DIFF", diff);
+          utils.logTask(task, "DIFF", diff);
           await commandUpdate_async(wsSendTask, task, diff, true);
         }
         */
@@ -133,12 +132,12 @@ taskSubject
   .subscribe({
     next: async (task) => {
       if (task === null) {
-        console.log("Task processed with null result");
+        utils.logTask(task, "Task processed with null result");
       } else {
         if (!coProcessor || task.processor.coProcessingDone) {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
         }
-        console.log('Task processed successfully');
+        utils.logTask(task, 'Task processed successfully');
       }
     },
     error: (e) => console.error(e),
@@ -159,9 +158,12 @@ function wsSendObject(message) {
 }
 
 const wsSendTask = async function (task) {
-  //console.log("wsSendTask " + message)
+  //utils.logTask(task, "wsSendTask " + message)
   let message = {};
-  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async) 
+  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
+  task.meta = task.meta || {};
+  task.meta.prevMessageId = task.meta.messageId;
+  task.meta.messageId = utils.nanoid8();
   message["task"] = task;
   wsSendObject(message);
 }
@@ -206,11 +208,10 @@ const connectWebSocket = () => {
       console.error("Missing task in message");
       return;
     }
-    //console.log("task.processor", task.processor);
+    //utils.logTask(task, "task.processor", task.processor);
     if (command !== "pong") {
-      console.log(""); //empty line
-      //console.log("processorWs " + command)
-      console.log("processorWs coProcessingDone " + task.processor.coProcessingDone + " coProcessing " + task.processor.coProcessing);
+      //utils.logTask(task, "processorWs " + command)
+      utils.logTask(task, "processorWs coProcessingDone " + task.processor.coProcessingDone + " coProcessing " + task.processor.coProcessing);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(task.instanceId);
@@ -218,7 +219,7 @@ const connectWebSocket = () => {
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }
-      console.log("ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
+      utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       // The sync arrives after activeTasksStore_async has been updated so hash mismatch?
       // Check hash 
       if (!utils.checkHash(lastTask, mergedTask)) {
@@ -226,11 +227,10 @@ const connectWebSocket = () => {
           console.error("Task hash does not match from this processor");
         }
       }
-      //console.log("processorWs updating activeTasksStore_async processor", mergedTask.processor);
-      //console.log("processorWs updating activeTasksStore_async meta", mergedTask.meta);
+      //utils.logTask(task, "processorWs updating activeTasksStore_async processor", mergedTask.processor);
+      //utils.logTask(task, "processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
       if (coProcessor) {
-        console.log("processorWs coProcessing", mergedTask.processor.coProcessing, "coProcessingDone", mergedTask.processor.coProcessingDone);
         delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);
@@ -240,8 +240,8 @@ const connectWebSocket = () => {
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);
       }
-    } else if (command === "start" || command === "join") {
-      console.log("ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
+    } else if (command === "start" || command === "join" || command === "init") {
+      utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
       // Emit the task into the taskSubject
       if (coProcessor) {
         taskSubject.next(task);
@@ -250,7 +250,7 @@ const connectWebSocket = () => {
         taskSubject.next(task);
       }
     } else if (command === "error") {
-      console.log("ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
+      utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       // Emit the task into the taskSubject
       if (coProcessor) {
         taskSubject.next(task);
@@ -259,12 +259,12 @@ const connectWebSocket = () => {
         taskSubject.next(task);
       }
     } else if (command === "pong") {
-      //console.log("ws pong received", message)
+      //utils.logTask(task, "ws pong received", message)
     } else if (command === "register") {
-      console.log("ws register request received")
+      utils.logTask(task, "ws register request received")
       register_async();
     } else if (command === "error") {
-      console.log("ws error received but not doing anything yet")
+      utils.logTask(task, "ws error received but not doing anything yet")
     } else {
       console.log("Unexpected message command ", command)
     }

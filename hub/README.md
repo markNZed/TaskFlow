@@ -8,6 +8,7 @@ Information for the Task Hub is held in the `task.hub` object. Only the Task Hub
   * partial
   * update
   * start
+  * init
   * error
   * register
   * pong

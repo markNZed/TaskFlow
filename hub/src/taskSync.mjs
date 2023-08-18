@@ -13,10 +13,11 @@ let broadcastCount = 0;
 
 const taskSync_async = async (key, value) => {
 
-  //console.log("taskSync_async", key, value.processor)
+  //utils.logTask(value, "taskSync_async", key, value.processor)
 
   // key may be undefined if this is a start task that is being forwarded to coprocessor
-  if (key) {
+  if (key && value.hub.command != "start") {
+    utils.logTask(value, "taskSync_async familyId", value.familyId, value.hub.command);
     await instancesStore_async.set(key, value);
   } else if (!haveCoProcessor) {
     throw new Error("taskSync_async missing key" + JSON.stringify(value));
@@ -25,7 +26,8 @@ const taskSync_async = async (key, value) => {
   // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
   let sourceProcessorId = taskCopy.hub.sourceProcessorId;
-  if (!sourceProcessorId && !taskCopy.config.autoStartCoProcessor) {
+  // Config can be missing from a start task
+  if (!sourceProcessorId && !taskCopy?.config?.autoStartCoProcessor) {
     throw new Error("taskSync_async missing sourceProcessorId" + JSON.stringify(taskCopy));
   }
   const has = await activeTasksStore_async.has(key);
@@ -45,13 +47,13 @@ const taskSync_async = async (key, value) => {
   const coProcessorIds = Array.from(activeCoProcessors.keys());
   const isCoProcessor = coProcessorIds.includes(sourceProcessorId);
   const skipCoProcessingCommands = ["partial"];
-  const skipCoProcssing = skipCoProcessingCommands.includes(command);
+  const skipCoProcessing = skipCoProcessingCommands.includes(command);
   
   // Pass to the first co-processor if we should coprocess first
   // Maybe isCoProcessor is redundant given that we set hub.coProcessing
   // Update commands with sync option from the coprocessor will be skipped because of isCoProcessor
-  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcssing) {
-    console.log("Start coprocessing");
+  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcessing) {
+    utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
     // Send to the first Co-Processor that supports the command 
     let position = 0;
@@ -59,7 +61,10 @@ const taskSync_async = async (key, value) => {
       const coProcessorData = activeCoProcessors.get(coProcessorId);
       if (coProcessorData.commandsAccepted.includes(command)) {
         taskCopy.hub.coProcessingPosition = position;
-        console.log("taskSync_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
+        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
+        if (!taskCopy.processors) {
+          taskCopy.processors = {};
+        }
         if (!taskCopy.processors[coProcessorId]) {
           taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
         }
@@ -68,7 +73,7 @@ const taskSync_async = async (key, value) => {
         wsSendTask(taskCopy, coProcessorId);
         break;
       } else {
-        //console.log("CoProcessor does not support commmand", command, coProcessorId);
+        //utils.logTask(taskCopy, "CoProcessor does not support commmand", command, coProcessorId);
       }
       position++;
     }
@@ -87,10 +92,10 @@ const taskSync_async = async (key, value) => {
       const coProcessorData = activeCoProcessors.get(coProcessorId);
       if (coProcessorData) {
         if (coProcessorData.commandsAccepted.includes(command)) {
-          console.log("taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
+          utils.logTask(taskCopy, "taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
           wsSendTask(taskCopy, coProcessorId);
         } else {
-          //console.log("taskSync_async coprocessor does not support commmand", command, coProcessorId);
+          //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coProcessorId);
         }
       }
     }
@@ -107,7 +112,7 @@ const taskSync_async = async (key, value) => {
   // foreach processorId in processorIds send the task to the processor
   const processorIds = await activeTaskProcessorsStore_async.get(key);
   if (processorIds) {
-    //console.log("taskSync_async task " + taskCopy.id + " from " + initiatingProcessorId);
+    //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingProcessorId);
     let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
     for (const processorId of processorIds) {
       if (command === "join" && processorId !== initiatingProcessorId) {
@@ -116,20 +121,20 @@ const taskSync_async = async (key, value) => {
       const processorData = activeProcessors.get(processorId);
       if (processorData) {
         if (!taskCopy.processors) {
-          console.log("taskCopy missing processors", command );
+          utils.logTask(taskCopy, "taskCopy missing processors", command );
         }
         if (!taskCopy.processors[processorId]) {
-          console.log("taskCopy missing processor", command, processorId );
+          utils.logTask(taskCopy, "taskCopy missing processor", command, processorId );
         }
         if (processorData.commandsAccepted.includes(command)) {
-          console.log("taskSync_async", command, key, processorId);
+          utils.logTask(taskCopy, "taskSync_async", command, key, processorId);
           wsSendTask(taskCopy, processorId);
         } else {
-          //console.log("taskSync_async processor does not support commmand", command, processorId);
+          //utils.logTask(taskCopy, "taskSync_async processor does not support commmand", command, processorId);
         }
       } else {
         updatedProcessorIds = updatedProcessorIds.filter(id => id !== processorId);
-        console.log(`Processor ${processorId} not found in active processors. It will be removed from activeTaskProcessorsStore_async`);
+        utils.logTask(taskCopy, `Processor ${processorId} not found in active processors. It will be removed from activeTaskProcessorsStore_async`);
       }
     }
     // Update activeTaskProcessorsStore_async with the updatedProcessorIds only if the processors have changed
@@ -137,9 +142,9 @@ const taskSync_async = async (key, value) => {
       await activeTaskProcessorsStore_async.set(key, updatedProcessorIds);
     }
   } else {
-    console.log("taskSync_async no processorIds", key, value);
+    utils.logTask(taskCopy, "taskSync_async no processorIds", key, value);
   }
-  //console.log("taskSync_async after", key, value.processor);
+  //utils.logTask(taskCopy, "taskSync_async after", key, value.processor);
   return value;
 
 };

@@ -21,7 +21,7 @@ async function SubTaskLLM_async(wsSendTask, task) {
   let params = await chatPrepare_async(taskCopy);
   params["wsSendTask"] = wsSendTask;
   const functionName = params.serviceConfig.API + "_async";
-  console.log("params.serviceConfig", params.serviceConfig);
+  //console.log("params.serviceConfig", params.serviceConfig);
   taskCopy.response.LLM = await callFunctionByName(functionName, params);
   return taskCopy;
 }
@@ -94,9 +94,7 @@ async function chatPrepare_async(task) {
   }
 
   if (openaigptServices[0]) {
-    console.log("serviceConfig before openaigptServices[0]", serviceConfig)
     serviceConfig = utils.deepMerge(serviceConfig, openaigptServices[0]);
-    console.log("serviceConfig after openaigptServices[0]", serviceConfig)
   }
   if (T("request.service")) {
     serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));

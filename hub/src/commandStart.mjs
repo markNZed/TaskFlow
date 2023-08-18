@@ -4,16 +4,17 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
+import { activeTasksStore_async, instancesStore_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
+import { haveCoProcessor } from "../config.mjs";
 
 export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
   let processorId = task.hub.sourceProcessorId;
   try {
-    console.log("commandStart_async id:" + task.id + " from processorId:" + processorId);
+    utils.logTask(task, "commandStart_async id:" + task.id + " from processorId:" + processorId);
     let initTask;
     let authenticate = true;
     if (commandArgs.init) {
@@ -28,14 +29,16 @@ export async function commandStart_async(task, res) {
         user: {id: task.user.id},
       };
     }
+    utils.logTask(task, "commandStart_async commandArgs.prevInstanceId, task.instanceId", commandArgs.prevInstanceId, task.instanceId);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     // If this task has been started then send otherwise start it then send
-    if (!initTask.id) {
+    if (haveCoProcessor && !task.hub.coProcessingDone) {
       await taskSync_async(task.instanceId, task);
       utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
         .then(async (startTask) => {
+          await instancesStore_async.set(startTask.instanceId, startTask);
           await taskSync_async(startTask.instanceId, startTask);
           utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
         })

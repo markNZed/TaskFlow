@@ -238,7 +238,12 @@ const TaskSystemLogViewer = (props) => {
   // Separate out transformedData for useMemo
   const transformedData = useMemo(() => {
     if (!task.response.tasks) return [];
-    return task.response.tasks.map(t => ({
+    return task.response.tasks.map(t => {
+      let command = t.current.processor.command;
+      if (command === "update" && t.current.processor?.commandArgs?.sync) {
+        command += "(sync)";
+      }
+      return {
         expanderType: 'MASTER',
         expanded: false,
         taskId: t.current.id,
@@ -250,9 +255,10 @@ const TaskSystemLogViewer = (props) => {
         current: t.current,
         state: t.current?.state?.current,
         user: t.current.user.id,
-        command: t.current.processor.command,
+        command: command,
         updatedAt: t.updatedAt.date,
-    }));
+      };
+    });
   }, [task.response.tasks]);
 
   // Task state machine

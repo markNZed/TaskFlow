@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
   let userId = utils.getUserId(req);
 
   if (commandsAccepted === undefined) {
-    commandsAccepted = ["partial", "update", "start", "join", "pong", "register", "error"];
+    commandsAccepted = ["partial", "update", "init", "join", "pong", "register", "error"];
   }
   // Not used yet but could e usful for interfacing with a third party service
   if (messagesStyle === undefined) {
@@ -113,10 +113,10 @@ router.post("/", async (req, res) => {
           task["hub"] = {};
           task.hub["commandArgs"] = {
             init: initTask,
-            prevInstanceId: task.instanceId,
             authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
           }
           task.hub["command"] = "start";
+          task.hub["sourceProcessorId"] = "hub";
           task["processor"] = {};
           task["processor"]["id"] = processorId;
           console.log("Autostarting task ", task, initTask);

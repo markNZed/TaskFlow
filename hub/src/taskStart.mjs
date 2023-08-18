@@ -56,24 +56,24 @@ async function processInstanceAsync(task, instanceId, mode) {
   if (instance) {
     let { activeTask, doesContain } = await checkActiveTaskAsync(instanceId, activeProcessors);
     if (activeTask && doesContain) {
-      console.log("Task already active", instanceId);
+      utils.logTask(task, "Task already active", instanceId);
       task = activeTask;
       task["hub"]["command"] = "join";
-      console.log(`Joining ${mode} for ${task.id}`);
+      utils.logTask(task, `Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
-      //console.log("processInstanceAsync task", task);
-      task["hub"]["command"] = "start";
+      //utils.logTask(task, "processInstanceAsync task", task);
+      task["hub"]["command"] = "init";
       if (task?.state?.current) {
         task.state["current"] = "start";
       }
       task.meta["updateCount"] = 0;
       task.meta["locked"] = null;
       await activeTasksStore_async.delete(instanceId);
-      console.log(`Restarting ${mode} ${instanceId} for ${task.id}`);
+      utils.logTask(task, `Restarting ${mode} ${instanceId} for ${task.id}`);
     }
   } else {
-    console.log(`Initiating ${mode} with instanceId ${instanceId}`);
+    utils.logTask(task, `Initiating ${mode} with instanceId ${instanceId}`);
   }
   return task;
 }
@@ -102,7 +102,7 @@ function processTemplateArrays(obj, task, outputs, familyId) {
       // Substitute variables with previous outputs
       const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
       const matches = regex.exec(curr);
-      //console.log("curr ", curr, " matches", matches)
+      //utils.logTask(task, "curr ", curr, " matches", matches)
       if (matches && !isAllCaps(matches[1])) {
         const path = curr.split('.');
         let outputPath;
@@ -117,7 +117,7 @@ function processTemplateArrays(obj, task, outputs, familyId) {
         if (outputs[outputPath][matches[2]] === undefined) {
           throw new Error("outputStore " + familyId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
         }
-        //console.log("Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
+        //utils.logTask(task, "Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
         return acc.concat(outputs[outputPath][matches[2]]);
       } else {
         const regex = /^(USER)\.([^\s.]+)$/;
@@ -177,13 +177,13 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
     let instanceIds = await familyStore_async.get(task.familyId);
     if (!instanceIds) {
       await familyStore_async.set(task.familyId, [task.instanceId]);
-      console.log("Initiating family " + task.familyId + " with instanceId: " + task.instanceId);
+      utils.logTask(task, "Initiating family " + task.familyId + " with instanceId: " + task.instanceId);
     } else if (!instanceIds.includes(task.instanceId)) {
       instanceIds.push(task.instanceId);
       await familyStore_async.set(task.familyId, instanceIds);
-      console.log("Adding to family " + task.familyId + " instanceId: " + task.instanceId);
+      utils.logTask(task, "Adding to family " + task.familyId + " instanceId: " + task.instanceId);
     } else {
-      console.log("Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
+      utils.logTask(task, "Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
     }
   }
   return task;
@@ -262,7 +262,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart
     throw new Error("No environments in task " + task.id);
   }
 
-  //console.log("task.environments", task.environments);
+  //utils.logTask(task, "task.environments", task.environments);
 
   // If the task only runs on coprocessor
   if (task.config.autoStartCoProcessor) {
@@ -310,7 +310,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart
     throw new Error("No processors allocated for task " + task.id);
   }
 
-  console.log("Allocated new task " + task.id + " to processors ", taskProcessors);
+  utils.logTask(task, "Allocated new task " + task.id + " to processors ", taskProcessors);
 
   return taskProcessors;
 }
@@ -328,7 +328,7 @@ async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskPro
   } else {
     await activeTaskProcessorsStore_async.set(task.instanceId, taskProcessors);
   }
-  //console.log("Processors with task instance " + task.instanceId, taskProcessors);
+  //utils.logTask(task, "Processors with task instance " + task.instanceId, taskProcessors);
   // Record which tasks have this processor
   await Promise.all(
     taskProcessors.map(async (processorId) => {
@@ -341,7 +341,7 @@ async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskPro
       } else {
         await activeProcessorTasksStore_async.set(processorId, [task.instanceId]);
       }
-      //console.log("Added task instance " + task.instanceId + " to processor " + processorId);
+      //utils.logTask(task, "Added task instance " + task.instanceId + " to processor " + processorId);
     })
   );
 }
@@ -360,7 +360,7 @@ async function taskStart_async(
     // Instantiate new task
     let task = JSON.parse(JSON.stringify(tasks[initTask.id])); // deep copy
 
-    //console.log("Task template", task)
+    //utils.logTask(task, "Task template", task)
 
     // Note that instanceId may change due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
@@ -374,7 +374,7 @@ async function taskStart_async(
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'processors', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
-    //console.log("Task after merge", task)
+    //utils.logTask(task, "Task after merge", task)
 
     checkUserPermissions(task, groups, authenticate)
 
@@ -403,13 +403,18 @@ async function taskStart_async(
     if (!task.config.oneFamily && !task.config.collaborateGroupId) {
       // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
       if (prevTask) {
-        console.log("Using prev familyId", prevTask.familyId);
+        utils.logTask(task, "Using prev familyId", prevTask.familyId);
         task.familyId = prevTask.familyId;
+        if (!task.familyId) {
+          task.familyId = prevTask.instanceId;
+          utils.logTask(task, "No familyId in prevTask", prevTask);
+          utils.logTask(task, "No familyId prevInstanceId", prevInstanceId);
+        }
       } else if (initTask.familyId) { 
-        console.log("Using init familyId", initTask.familyId);
+        utils.logTask(task, "Using init familyId", initTask.familyId);
         task.familyId = initTask.familyId;
       } else {
-        console.log("Using instanceId familyId", task.instanceId);
+        utils.logTask(task, "Using instanceId familyId", task.instanceId);
         task.familyId = task.instanceId;
       }
     }
@@ -418,7 +423,7 @@ async function taskStart_async(
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
     // Initialize task.hub.sourceProcessorId
-    task.hub["command"] = task.hub.command ?? "start";
+    task.hub["command"] = "init";
     task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
     task.hub["initiatingProcessorId"] = autoStart ? "autostart" : processorId;
     task.hub["coProcessingDone"] = false;
@@ -461,7 +466,7 @@ async function taskStart_async(
 
     task.hub.origTask = JSON.parse(JSON.stringify(task));
 
-    console.log("Started task.id:", task.id);
+    utils.logTask(task, "Init task.id:", task.id, task.familyId);
 
     return task;
   }

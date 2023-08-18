@@ -14,7 +14,6 @@ const tasktypes = [
     environments: ["rxjs"],
     config: {
       autoStartEnvironment: "rxjs",
-      autoStartOnce: true,
       autoStartCoProcessor: true,
     },
     state: {

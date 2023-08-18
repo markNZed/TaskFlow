@@ -13,7 +13,7 @@ import { tasksModel } from "./SchemaTasks.mjs"
 const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);
-  console.log(`${taskName} in state ${task?.state?.current}`);
+  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   async function fetchTasksAsync(query, sortCriteria, page = 1, limit = 100) {
     try {
@@ -22,7 +22,7 @@ const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CE
       if (!sortCriteria || Object.keys(sortCriteria).length === 0) {
         sortCriteria = { "updatedAt.date": -1 }; // descending order
       }
-      console.log("fetchTasksAsync", parsedQuery, sortCriteria, skip, limit);
+      utils.logTask(task, "fetchTasksAsync", parsedQuery, sortCriteria, skip, limit);
       const tasks = await tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(limit);
       const total = await tasksModel.countDocuments(parsedQuery);
       return { tasks, total };
@@ -38,11 +38,11 @@ const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CE
       T("state.current", "query");
       break;
     case "query":
-      console.log("State query with request.query", T("request.query"));
+      utils.logTask(task, "State query with request.query", T("request.query"));
       if (T("request.query")) {
-        console.log("State query " + T("request.query") + " with request.page " + T("request.page"));
+        utils.logTask(task, "State query " + T("request.query") + " with request.page " + T("request.page"));
         const { tasks, total } = await fetchTasksAsync(T("request.query"), T("request.sortCriteria"), T("request.page"), T("request.limit"))
-        console.log("Returned total", total);
+        utils.logTask(task, "Returned total", total);
         T("response.tasks", tasks);
         T("response.total", total);
         T("state.last", T("state.current"));
@@ -74,7 +74,7 @@ const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CE
     case "response":
       break;
     default:
-      console.log("WARNING unknown state : " + task.state.current);
+      utils.logTask(task, "WARNING unknown state : " + task.state.current);
       return null;
   }
 

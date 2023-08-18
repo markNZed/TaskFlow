@@ -15,11 +15,11 @@ const mutexes = new Map();
 async function doneTask_async(task) {
   // Should be an assertion
   if (!task.hub.commandArgs?.done) {
-    console.log("task", task);
+    utils.logTask(task, "task", task);
     throw new Error("Called doneTask_async on a task that is not done");
   }
   let nextTaskId = task.hub.commandArgs?.nextTaskId;
-  console.log("Task " + task.id + " done, next " + nextTaskId);
+  utils.logTask(task, "Task " + task.id + " done, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
   // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
   // !!!
@@ -47,11 +47,11 @@ async function doneTask_async(task) {
 
 async function doUpdate(commandArgs, task, res) {
   if (commandArgs?.done) {
-    console.log("Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
+    utils.logTask(task, "Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     await doneTask_async(task);
   } else {
     task.meta.updateCount = task.meta.updateCount + 1;
-    console.log("Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
+    utils.logTask(task, "Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     // Don't await so the HTTP response may get back before the websocket update
     await taskSync_async(task.instanceId, task)
       .then(async () => {
@@ -68,6 +68,7 @@ export async function commandUpdate_async(task, res) {
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
+  let processorId = task.hub.sourceProcessorId;
   // Get or create the mutex for this instanceId
   let mutex = mutexes.get(task.instanceId);
   if (!mutex) {
@@ -76,8 +77,9 @@ export async function commandUpdate_async(task, res) {
   }
   // Lock the mutex
   const release = await mutex.acquire();
-  //console.log("commandUpdate_async lock", task.instanceId);
+  //utils.logTask(task, "commandUpdate_async lock", task.instanceId);
   try {
+    utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
     let activeTask = await activeTasksStore_async.get(task.instanceId)
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
@@ -89,13 +91,18 @@ export async function commandUpdate_async(task, res) {
       }
       // We are syncing so switch active task
       // Should limit this so we can only update in the same family (except for system tasks)
-      activeTask = await activeTasksStore_async.get(commandArgs.syncTask.instanceId);
+      if (commandArgs.syncTask.instanceId) {
+        activeTask = await activeTasksStore_async.get(commandArgs.syncTask.instanceId);
+      }
+      if (!activeTask) {
+        throw new Error("No active task " + commandArgs.syncTask.instanceId);
+      }
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
     task.meta.updateCount = activeTask.meta.updateCount;
-    console.log(task.meta.broadcastCount + " commandUpdate_async " + task.id);
+    utils.logTask(task, task.meta.broadcastCount + " commandUpdate_async " + task.id);
     await doUpdate(commandArgs, task, res);       
   } catch (error) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
@@ -103,12 +110,12 @@ export async function commandUpdate_async(task, res) {
     if (res) {
       throw new RequestError(msg, 500, error);
     } else {
-      console.log("commandUpdate_async task", task);
+      utils.logTask(task, "commandUpdate_async task", task);
       throw new Error(msg);
     }
   } finally {
     // Always release the lock
-    //console.log("commandUpdate_async release", task.instanceId);
+    //utils.logTask(task, "commandUpdate_async release", task.instanceId);
     release();
   }
 }

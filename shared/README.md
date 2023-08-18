@@ -50,6 +50,7 @@ Tasks are configured as a Javascript object in in hub/config/tasks.mjs A task ca
 
 task.commands:
 * start
+* init
 * update
 * partial
 * nop

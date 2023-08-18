@@ -12,7 +12,7 @@ import { utils } from "./utils.mjs";
 async function errorTask_async(task) {
   // Should be an assertion
   if (!task.hub.commandArgs?.errorTask) {
-    console.log("task", task);
+    utils.logTask(task, "task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
   const processorId = task.hub.sourceProcessorId;
@@ -20,7 +20,7 @@ async function errorTask_async(task) {
   const sourceProcessor = activeProcessors.get(processorId);
   task.error.environments = sourceProcessor.environments;
   let nextTaskId = task.hub.commandArgs.errorTask;
-  console.log("errorTask_async task " + task.id + " error, next " + nextTaskId);
+  utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
   await instancesStore_async.set(task.instanceId, task);
 
   const text = `${task.error.message} from task.id ${task.id} on processor ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
@@ -52,7 +52,7 @@ async function errorTask_async(task) {
 
 export async function commandError_async(task, res) {
   try {
-    console.log("errorCommnad_async " + task.id);
+    utils.logTask(task, "errorCommnad_async " + task.id);
     const activeTask = await activeTasksStore_async.get(task.instanceId);
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);

@@ -130,15 +130,9 @@ function TaskSystemTest(props) {
           setInputPrompt(textarea.value);
       }
       // Check chat container for response changes
-      const chatDiv = document.querySelector('#chat-container');
-      if (chatDiv) {
-        const wrapperDivs = chatDiv.querySelectorAll('div.wrapper');
-        if (wrapperDivs.length > 0) {
-          const lastWrapperDiv = wrapperDivs[wrapperDivs.length - 1];
-          if (lastWrapperDiv && lastWrapperDiv.innerText !== response) {
-            setResponse(lastWrapperDiv.innerText);
-          }
-        }
+      const chatDiv = document.querySelector('#chat-container > div:nth-last-child(2)');
+      if (chatDiv && chatDiv.innerText !== response) {
+        setResponse(chatDiv.innerText);
       }
     }, 200); // Poll every 200ms
     return () => {

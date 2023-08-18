@@ -12,21 +12,21 @@ import { processorId, coProcessor } from "../config.mjs";
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
   try {
-    console.log("taskProcess_async", task.id);
-    console.log("taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
+    utils.logTask(task, "taskProcess_async", task.id);
+    utils.logTask(task, "taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
     if (task.processor["command"] === "error") {
-      console.log("RxJS Task Processor error so skipping Task Fuction id:" + task.id);
+      utils.logTask(task, "RxJS Task Processor error so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (task.processor?.commandArgs?.sync) {
-      console.log("RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
+      utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
     } else {
-      console.log("RxJS Task Processor unknown component " + task.type);
+      utils.logTask(task, "RxJS Task Processor unknown component " + task.type);
     }
-    // Create the CEP during the start of the command
-    if (task.processor["command"] === "start") {
+    // Create the CEP during the init of the task
+    if (task.processor["command"] === "init") {
       // How about overriding a match. createCEP needs more review/testing
       // Create two functions
       if (task.config?.ceps) {
@@ -36,7 +36,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
           }
         }
       }
-      //console.log("taskProcess_async CEPFuncs", CEPFuncs);
+      //utils.logTask(task, "taskProcess_async CEPFuncs", CEPFuncs);
     }
   } catch (e) {
     console.error(e);
@@ -54,13 +54,13 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     if (coProcessor) {
       if (updatedTask === null) {
         updatedTask = task;
-        console.log("taskProcess_async null so task replaces updatedTask", updatedTask.id);
+        utils.logTask(updatedTask, "taskProcess_async null so task replaces updatedTask", updatedTask.id);
         // The updatedTask.processor will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
       } else if (updatedTask.command) {
         // This processor wants to make a change
         // The original processor will no longer see the change as coming from it
-        console.log("taskProcess_async initiatingProcessorId updated");
+        utils.logTask(updatedTask, "taskProcess_async initiatingProcessorId updated");
         updatedTask.processor["initiatingProcessorId"] = processorId;
       }
       if (!updatedTask.command) {
@@ -75,14 +75,14 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       // Which command should we support here?
       // This is similar to the old do_task
       if (updatedTask?.command === "update") {
-        console.log("taskProcess_async sending");
+        utils.logTask(updatedTask, "taskProcess_async sending");
         wsSendTask(updatedTask);
       } else {
-        console.log("taskProcess_async nothing to do");
+        utils.logTask(updatedTask, "taskProcess_async nothing to do");
       }
     }
   } catch (error) {
-    console.log("taskProcess_async updatedTask", updatedTask);
+    utils.logTask(updatedTask, "taskProcess_async updatedTask", updatedTask);
     console.error(`Command ${updatedTask.command} failed to send ${error}`);
   }
   //wsSendTask(updatedTask);

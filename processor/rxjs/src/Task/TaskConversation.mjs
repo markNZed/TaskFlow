@@ -10,14 +10,14 @@ const TaskConversation_async = async function (taskName, wsSendTask, task, CEPFu
   const T = utils.createTaskValueGetter(task);
 
   function helloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
-    console.log("Hello World", args);
+    utils.logTask(task, "Hello World", args);
   }
 
   // This shows dynamically registering a CEP 
   // We can also register a CEP by declaring it in ./CEPFunctions.mjs
   CEPFunctions.register("helloWorld", helloWorld);
 
-  console.log(`${taskName} in state ${task.state.current}`);
+  utils.logTask(task, `${taskName} in state ${task.state.current}`);
 
   return null;
 };

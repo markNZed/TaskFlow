@@ -2,6 +2,7 @@ import _ from "lodash";
 import assert from 'assert';
 import pkg from 'intl';
 const { DateTimeFormat } = pkg;
+import { nanoid } from 'nanoid';
 
 // Without this we cannot make partial updates to objects in the Task
 
@@ -399,6 +400,7 @@ const sharedUtils = {
   },
 
   hubActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
+    task.meta = task.meta || {};
     task.meta["hash"] = sharedUtils.taskHash(task);
     delete task.hub.origTask; // delete so we do not have an old copy in origTask
     // deep copy to avoid self-reference
@@ -620,6 +622,17 @@ const sharedUtils = {
       processor: {},
       command: "ping",
     }
+  },
+
+  nanoid8: function() {
+    return nanoid(8);
+  },
+
+  logTask: function(task, ...message) {
+    const prevMessageId = task?.meta?.prevMessageId || "";
+    const messageId = task?.meta?.messageId || "";
+    const id = task?.id || "";
+    console.log(prevMessageId, messageId, id, ...message);
   },
 
 };

@@ -9,6 +9,7 @@ import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
 import { utils } from "../utils/utils";
+import { v4 as uuidv4 } from "uuid";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -56,6 +57,9 @@ export function WebSocketProvider({ children, socketUrl }) {
     if (globalState.user) {
       task.user = {"id": globalState.user.userId};
     }
+    task.meta = task.meta || {};
+    task.meta.prevMessageId = task.meta.messageId;
+    task.meta.messageId = utils.nanoid8();
     message["task"] = task;
     sendJsonMessagePlusRef.current(message);
   }

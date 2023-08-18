@@ -11,7 +11,6 @@ import { taskProcess_async } from "../taskProcess.mjs";
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  console.log(""); // Empty line
   console.log("/hub/api/task");
   let userId = utils.getUserId(req);
   if (userId) {

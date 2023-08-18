@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 
-function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
+function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
   
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
@@ -30,12 +30,12 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
     for (let key of keys) {
       const message = messageQueue[key];
       //console.log("message", message, key);
-      if (message && message?.command && (message.command === "start" || message.command === "join")) {
+      if (message && message?.command && (message.command === "init" || message.command === "join")) {
         //console.log("message", message, key);
-        //console.log("useStartWSFilter " + initialTask + " startTaskId " + startTaskId + " startPrevInstanceId " + startPrevInstanceId);
+        //console.log("useInitWSFilter " + initialTask + " startTaskId " + startTaskId + " startPrevInstanceId " + startPrevInstanceId);
         if ((startTaskId && message.task.id === startTaskId) ||
             (startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId)) {
-          //console.log("useStartWSFilter startTaskId && message.task.id === startTaskId", startTaskId && message.task.id === startTaskId);
+          //console.log("useInitWSFilter startTaskId && message.task.id === startTaskId", startTaskId && message.task.id === startTaskId);
           //console.log("startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId", startPrevInstanceId && message.task.meta.prevInstanceId === startPrevInstanceId)
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
@@ -45,16 +45,16 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
           setStartTaskId(null);
           setStartPrevInstanceId(null);
           await onStart(taskCopy);
-          //console.log("useStartWSFilter handleUpdate delete key", messageQueue);
+          //console.log("useInitWSFilter handleUpdate delete key", messageQueue);
         }
       }
     }
-    //console.log("useStartWSFilter useEffect after messageQueue", messageQueue);
+    //console.log("useInitWSFilter useEffect after messageQueue", messageQueue);
   };
 
   useEffect(() => {
     if (initialTask?.command === "start") {
-      console.log("useStartWSFilter initialTask", initialTask);
+      console.log("useInitWSFilter initialTask", initialTask);
       setStartTaskId(initialTask.commandArgs.id);
       setStartPrevInstanceId(initialTask.commandArgs.prevInstanceId || initialTask.instanceId);
     }
@@ -64,16 +64,16 @@ function useStartWSFilter(useGlobalStateContext, initialTask, onStart) {
     if (!webSocketEventEmitter) {
       return;
     }
-    //console.log("useStartWSFilter useEffect adding handleStart startTaskId", startTaskId);
-    webSocketEventEmitter.on("start", handleStart);
+    //console.log("useInitWSFilter useEffect adding handleStart startTaskId", startTaskId);
+    webSocketEventEmitter.on("init", handleStart);
     webSocketEventEmitter.on("join", handleStart);
     return () => {
-      //console.log("useStartWSFilter useEffect removing handleStart startTaskId", startTaskId);
-      webSocketEventEmitter.removeListener("start", handleStart);
+      //console.log("useInitWSFilter useEffect removing handleStart startTaskId", startTaskId);
+      webSocketEventEmitter.removeListener("init", handleStart);
       webSocketEventEmitter.removeListener("join", handleStart);
     };
   }, [startTaskId]);
   
 }
 
-export default useStartWSFilter;
+export default useInitWSFilter;

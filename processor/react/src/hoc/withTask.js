@@ -5,7 +5,7 @@ import useStartTask from "../hooks/useStartTask";
 import withDebug from "./withDebug";
 import _ from "lodash";
 import useUpdateWSFilter from "../hooks/useUpdateWSFilter";
-import useStartWSFilter from "../hooks/useStartWSFilter";
+import useInitWSFilter from "../hooks/useInitWSFilter";
 import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
@@ -251,9 +251,9 @@ function withTask(Component) {
       }
     )
 
-    useStartWSFilter(useGlobalStateContext, props.task, 
+    useInitWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
-        console.log("useStartWSFilter withTask " + props.task.id + " started", newTask);
+        console.log("useInitWSFilter withTask " + props.task.id + " started", newTask);
         setInitTask(null);
         newTask.processor["origTask"] = JSON.parse(JSON.stringify(newTask)); // deep copy to avoid self-reference
         setStartTaskReturned(newTask);

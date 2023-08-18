@@ -8,11 +8,11 @@ import { utils } from "../utils.mjs";
 const TaskChat_async = async function (taskName, wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
 
-  console.log(`${taskName} in state ${task?.state?.current}`);
+  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   // If we set the command here then we can't override it from CEP
   //T("command", "nop");
-  //console.log("TaskChat", task)
+  //utils.logTask(task, "TaskChat", task)
   return task;
 };
 

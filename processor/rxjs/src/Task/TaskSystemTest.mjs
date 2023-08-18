@@ -22,7 +22,7 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
     const value = args.value;
     const type = args.type;
     //task.config.services
-    if (task.processor.command === "start" && task?.config?.services) {
+    if (task.processor.command === "init" && task?.config?.services) {
       for (const service of task.config.services) {
         if (service.type === type) {
           service[key] = value;
@@ -30,21 +30,19 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
         }
         // Your code logic for each service entry
       }
-      console.log("task.config.services", type, key, value);
+      utils.logTask(task, "task.config.services", type, key, value);
       return;
     }
   }
 
+  // This sync the familyTree but we are not using this if we test via UI 
   async function familyIds(functionName, wsSendTask, CEPinstanceId, task, args) {
-    if (task.processor.command === "start" && CEPinstanceId && !task.processor?.commandArgs?.id) {
+    utils.logTask(task, "familyIds command", task.processor.command);
+    if (task.processor.command === "init") {
       let CEPtask;
       // In this case we are starting the TaskSystemTest
       if (CEPinstanceId === task.instanceId) {
         CEPtask = task;
-        if (!CEPtask.state) {
-          console.log("State is not there", CEPtask);
-          CEPtask.state = {};
-        }
       } else {
         CEPtask = await activeTasksStore_async.get(CEPinstanceId);
       }
@@ -55,15 +53,15 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
       } else {
         root = familyTree.parse({id: CEPinstanceId, taskInstanceId: CEPinstanceId, taskId: CEPtask.id, type: CEPtask.type});
       }
-      console.log("familyTree", familyTree, root);
+      //utils.logTask(task, "familyTree", familyTree, root);
       let node = root.first(node => node.model.id === task.instanceId);
       if (!node) {
         node = familyTree.parse({id: task.instanceId, taskInstanceId: task.instanceId, taskId: task.id, type: task.type});
-        // Find the parentInstanceId
-        console.log("task.meta.parentInstanceId", task.meta.parentInstanceId);
         if (!task.meta.parentInstanceId) {
+          utils.logTask(task, "No parentInstanceId", node);
           root.addChild(node);
         } else {
+          utils.logTask(task, "Found parentInstanceId", node);
           const parentNode = root.first(node => node.model.id === task.meta.parentInstanceId);
           parentNode.addChild(node);
         }
@@ -72,10 +70,9 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
             familyTree: root.model,
           }
         };
-        console.log("familyTree diff", diff);
+        utils.logTask(task, "familyTree diff", diff);
         await commandUpdate_async(wsSendTask, CEPtask, diff);
       }
-
     }
   }
 
@@ -83,7 +80,7 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
   CEPFunctions.register("serviceStub", serviceStub);
   CEPFunctions.register("familyIds", familyIds);
 
-  console.log(`${taskName} in state ${task?.state?.current}`);
+  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   return task;
 };

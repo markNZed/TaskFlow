@@ -40,6 +40,9 @@ const wsSendTask = async function (task) {
   let message = {}; 
   // taskInProcessorOut will return a diff taking into account task.processor.origTask
   task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
+  task.meta = task.meta || {};
+  task.meta.prevMessageId = task.meta.messageId;
+  task.meta.messageId = utils.nanoid8();
   message["task"] = task;
   wsSendObject(message);
 }
@@ -107,7 +110,7 @@ const connectWebSocket = () => {
       if (!commandArgs?.sync) {
         await taskProcess_async(wsSendTask, mergedTask);
       }
-    } else if (command === "start" || command === "join") {
+    } else if (command === "start" || command === "join" || command === "init") {
       await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);
       await taskProcess_async(wsSendTask, message.task)
     } else if (command === "pong") {

@@ -1,13 +1,12 @@
 /* ToDo
 -------
+Maybe the issue is that we don't always pick up changes to textarea by React
+  Seems textarea.value may not be set sometimes?
 Experiment with @xstate/inspect
 Why is is not firing sometimes ?
 https://opencollective.com/
-Maybe start should be two commands: start + init
 How to report pass/fail ?
   Dev header with info 
-Restarting rxjs will lose the TaskSystemLog
-  Need to track this on the Hub - don't delete autostart, mark as active or not
 How to combine debug logging with task.meta.debug ?
   Conditional breakpoints in VSCode works well
 Deleting of tasks for CEP

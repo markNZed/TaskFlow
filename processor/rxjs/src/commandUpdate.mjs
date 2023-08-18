@@ -8,16 +8,16 @@ import { activeTasksStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 
 export async function commandUpdate_async(wsSendTask, task, diff, sync = false) { 
-  console.log("commandUpdate_async sync");
+  utils.logTask(task, "commandUpdate_async sync");
   const lastTask = await activeTasksStore_async.get(task.instanceId);
   if (!lastTask) {
     throw new Error("No lastTask found for " + task.instanceId);
   }
   if (!diff || Object.keys(diff).length === 0) {
-    console.log("No diff so update cancelled.", diff);
+    utils.logTask(task, "No diff so update cancelled.", diff);
     return;
   }
-  //console.log("commandUpdate_async sync processor", lastTask.processor);
+  //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
   const mergedTask = utils.deepMerge(lastTask, diff);
   // Deep copy task.processor to avoif changes to task that was passed in
   mergedTask.processor = JSON.parse(JSON.stringify(task.processor)); 
@@ -37,7 +37,7 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
   // Because it is this processor that is the initiator of the sync
   mergedTask.processor["initiatingProcessorId"] = null;
   try {
-    //console.log("commandUpdate_async mergedTask.state", mergedTask.state);
+    //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
     wsSendTask(mergedTask);
   } catch (error) {
     console.error(`Command ${mergedTask.command} failed to fetch ${error}`);

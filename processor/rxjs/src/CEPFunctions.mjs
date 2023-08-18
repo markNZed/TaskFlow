@@ -27,21 +27,26 @@ const CEPFunctions = {
 
   CEPIncrement: async function(functionName, wsSendTask, CEPinstanceId, task, args) {
     const increment = args.increment;
-    // No reason to ignore start
-    if (task.processor.command === "start") {
-      console.log("CEPIncrement doing nothing for start command")
+    // We cannot send an update to a command tha has not already been stored as active
+    // Otherwise the diff communication will fail.
+    if (task.processor.command === "start" || task.processor.command === "init") {
+      utils.logTask(task, "CEPIncrement doing nothing for start and init command")
+      return;
+    }
+    if (task.processor.commandArgs.sync) {
+      utils.logTask(task, "CEPIncrement doing nothing for sync")
       return;
     }
     if (task.output.CEPCount > 100) {
-      console.log("CEPIncrement stopped with CEPCount " + task.output.CEPCount);
+      utils.logTask(task, "CEPIncrement stopped with CEPCount " + task.output.CEPCount);
       return
     }
     let syncDiff = {}
     syncDiff["output"] = {};
     syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : 1;
-    console.log("CEPCount", task.output.CEPCount, increment);
+    utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
     await commandUpdate_async(wsSendTask, task, syncDiff, true);
-    console.log("TaskConversation " + functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);
+    utils.logTask(task, "TaskConversation " + functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);
     task.output.modifiedBy = CEPinstanceId;
   },
 

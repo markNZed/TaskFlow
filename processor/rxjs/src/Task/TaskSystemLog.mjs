@@ -27,7 +27,7 @@ function stripTask(task) {
 const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);
-  console.log(`${taskName} in state ${task?.state?.current}`);
+  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   // We really only need to store diffs
   async function updateTaskWithHistory(newTaskData) {
@@ -70,16 +70,16 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
   }
 
   async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
-    console.log("CEPLog updateOne", task.id, task.instanceId);
+    utils.logTask(task, "CEPLog updateOne", task.id, task.instanceId);
     if (task.instanceId && task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
       if (!coProcessor || task.processor.coProcessingDone ) {
         await updateTaskWithHistory(task);
       } else {
-        console.log("Skipped logging because not coProcessingDone");
+        utils.logTask(task, "Skipped logging because not coProcessingDone");
       }
     } else {
       // Should log even when there is no instanceId - not sure what to do for index in that case
-      console.log("Skipped logging because no instanceId or TaskSystemLog");
+      utils.logTask(task, "Skipped logging because no instanceId or TaskSystemLog");
     }
   }
 
@@ -88,7 +88,7 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
       CEPFunctions.register("CEPLog", CEPLog);
       break;
     default:
-      console.log("WARNING unknown state : " + task.state.current);
+      utils.logTask(task, "WARNING unknown state : " + task.state.current);
       return null;
   }
 
