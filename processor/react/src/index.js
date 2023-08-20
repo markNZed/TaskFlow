@@ -13,6 +13,15 @@ import { GlobalStateProvider } from "./contexts/GlobalStateContext";
 import { EventSourceProvider } from './contexts/EventSourceContext';
 import { hubSocketUrl } from "./config";
 import { BrowserRouter as Router } from "react-router-dom";
+import { inspect } from '@xstate/inspect';
+
+/*
+inspect({
+  //iframe: true,
+  iframe: () => document.querySelector('iframe.xstate')
+  //targetWindow: window,
+});
+*/
 
 // service-worker.js is in the public folder
 // it needed to be added to index.html as well

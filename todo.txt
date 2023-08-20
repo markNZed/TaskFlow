@@ -1,5 +1,26 @@
 /* ToDo
 -------
+Build fsm config
+  task.config.fsm.machine could merge with task.config.fsm.name if defined
+    config could provide shortcuts for defining te FSM e.g. using xutils.mjs
+  library of queries and actions
+    could be per Task in shared fsm 
+      merge with task.config.fsm.queries in withTask
+  Call createMachine from the Processor ?
+  // Experiment with shortcut ...myFunc()
+  // If we taskQuery('findTextarea') then could assume on section
+  function myFunc() {
+    return {
+      on: {
+        FOUND_PROMPT: 'foundPrompt',
+      }
+    };
+  }
+  taskAction could support arguments and can then use for config?
+  genBasicState([entry[], on[]])
+  Move queries from library
+https://github.com/statelyai/xstate-viz
+  
 https://testing-library.com/docs/react-testing-library/intro/
 Forcing s state: interpreter.start(state)
 Experiment with @xstate/inspect

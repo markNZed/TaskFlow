@@ -11,6 +11,7 @@ import { register_async, hubId } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
+import { releaseResource } from './taskLock.mjs';
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -95,7 +96,6 @@ taskSubject
       }
       if (coProcessor) {
         utils.logTask(task, "CoProcessing task " + taskCopy.id);
-        utils.logTask(task, "taskSubject coProcessing", task.processor.coProcessing, "coProcessingDone", task.processor.coProcessingDone, "commandArgs", task.processor.commandArgs);
         //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
@@ -135,6 +135,7 @@ taskSubject
         utils.logTask(task, "Task processed with null result");
       } else {
         if (!coProcessor || task.processor.coProcessingDone) {
+          releaseResource(task.instanceId);
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
         }
         utils.logTask(task, 'Task processed successfully');
@@ -158,7 +159,7 @@ function wsSendObject(message) {
 }
 
 const wsSendTask = async function (task) {
-  //utils.logTask(task, "wsSendTask " + message)
+  utils.logTask(task, "wsSendTask ");
   let message = {};
   task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
   task.meta = task.meta || {};
@@ -235,7 +236,6 @@ const connectWebSocket = () => {
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);
       } else {
-        // Do not want to pass sync through CEP. Stop looping if we updated the task from this processor
         delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);

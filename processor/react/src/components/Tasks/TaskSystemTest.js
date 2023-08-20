@@ -10,13 +10,15 @@ import DynamicComponent from "../Generic/DynamicComponent";
 import { useMachine } from '@xstate/react';
 import TreeModel from 'tree-model';
 import { inspect } from '@xstate/inspect';
+import useGlobalStateContext from "../../contexts/GlobalStateContext";
+import { library } from "../../shared/fsm/TaskSystemTest/library.mjs"
+import { xutils } from "../../shared/fsm/xutils.mjs"
 
 inspect({
-  //url: "https://statecharts.io/inspect",
-  iframe: false
+  //iframe: false,
+  iframe: () => document.querySelector('iframe.xstate'),
+  url: "https://stately.ai/viz?inspect"
 });
-
-// PLACEHOLDER - under development and not working
 
 /*
 Task Process
@@ -41,200 +43,181 @@ function TaskSystemTest(props) {
   // without this we will not setup the hooks for the websocket
   props.onDidMount();
 
+  const { replaceGlobalState } =  useGlobalStateContext();
+
   // We pass a ref to the task so we do not lose the task state when React sets it
   const TaskRef = useRef();
   const [state, send, service] = useMachine(fsm, {
     context: { taskRef: TaskRef },
     actions: {
       taskAction: taskAction,
-      queryAction: queryAction,
-      queryExpect: queryExpect,
+      taskQuery: taskQuery,
+      pass: pass,
+      fail: fail,
+      logMsg: (context, event, { action }) => {
+        console.log(action.message, context.data);
+      },
     },
-    devTools: true,
+    devTools: task.config.fsm.inspect ? true : false,
   });
-  const queryExpectRefs = useRef({
-    findTextarea: {
-      query: 'textarea[name="prompt"]',
-      field: "value",
-      event: "TEXTAREA",
-      active: false,
-      debug: true,
-    },
-    findPrompt: {
-      query: 'textarea[name="prompt"]',
-      expect: "Hello World!",
-      field: "value",
-      event: "PROMPT_SEEN",
-    },
-    findResponse: {
-      query: '#chat-container > div:nth-last-child(2)',
-      expect: "test text",
-      field: "innerText",
-      eventTrue: "PASS",
-    },
-  });
-  const taskActionRefs = useRef({
-    enterPrompt: {
-      type: "TaskChat",
-      input: "promptText",
-      value: "Hello World!",
-      event: "PROMPTED",
-    },
-    submitPrompt: {
-      type: "TaskChat",
-      input: "submitPrompt",
-      value: true,
-      event: "PROMPT_SUBMITTED",
-    },
-});
-  const queryActionRefs = useRef({
-    enterPrompt: {
-      query: 'textarea[name="prompt"]',
-      value: "Hello World!",
-      field: "value",
-      event: "PROMPTED",
-    },
-    submitPrompt: {
-      query: 'button.send-button',
-      functionName: "click",
-      event: "PROMPT_SUBMITTED",
-    },
-});
+  const queriesRef = useRef();
+  const actionsRef = useRef();
+  const startedRef = useRef(false);
+  const [result, setResult] = useState();
+  const timeoutId = useRef();
+
+  function pass(context, event, actionMeta) {
+    setResult(true);
+  }
+
+  function fail(context, event, actionMeta) {
+    setResult(false);
+  }
+
+  useEffect(() => {
+    if (result === undefined) {
+      timeoutId.current = setTimeout(() => {
+        //clearInterval(intervalId);
+        console.log('Stopped polling after 30 seconds');
+        send('TIMEOUT');
+      }, 30000); // Stop polling after 30 seconds
+    } else if (result) {
+      clearInterval(timeoutId.current);
+      console.log("PASSED");
+    } else {
+      clearInterval(timeoutId.current);
+      console.log("FAILED");
+    }
+  }, [result]);
+
+  useEffect(() => {
+    if (task?.config?.fsm && !startedRef.current) {
+      // Using queriesRef to store information so we make a copy to avoif changing the task
+      if (task.config.fsm.queries && !queriesRef.current) {
+        console.log("Setting queriesRef.current", task.config.fsm.queries);
+        queriesRef.current = JSON.parse(JSON.stringify(task.config.fsm.queries));
+        // Deep merge with the library
+
+      }
+      // Using actionsRef to store information so we make a copy to avoif changing the task
+      if (task.config.fsm.actions && !actionsRef.current) {
+        console.log("Setting actionsRef.current", task.config.fsm.actions);
+        actionsRef.current = JSON.parse(JSON.stringify(task.config.fsm.actions));
+      }
+      // Merge the library of queries/actions
+      if (library?.queries) {
+        queriesRef.current = {...queriesRef.current, ...library.queries};
+        console.log("Merged queriesRef.current", queriesRef.current);
+      }
+      if (library?.actions) {
+        actionsRef.current = {...actionsRef.current, ...library.actions};
+        console.log("Merged actionsRef.current", actionsRef.current);
+      }
+      // Send start event once after we have used task.config?fsm
+      send('START');
+      startedRef.current = true;
+    }
+  }, [task?.config?.fsm]);
+
+  useEffect(() => {
+    if (task?.config?.fsm?.inspect) {
+      replaceGlobalState("xstateInspect", true);
+    }
+  }, [task?.config?.fsm]);
 
   // For debug messages
-  service.subscribe((state) => {
-    //console.log(state);
-  });
+  useEffect(() => {
+    const subscription = service.subscribe((state) => {
+      // simple state logging
+      log(`${props.componentName} FSM State ${state.value} Event ${state.event.type}`)
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [service]); // note: service should never change
 
   useEffect(() => {
     TaskRef.current = task;
   }, [task]);
 
-  function taskAction(context, event, actionMeta) {
-    const action = actionMeta.action.action;
-    const msg = "taskAction " + action;
-    console.log(msg);
-    const taskActionData = taskActionRefs.current[action];
-    if (!taskActionData) {
-      console.log("taskActionRefs.current", taskActionRefs.current);
-      throw new Error("Action " + action + " not implemented");
-    }
-    // Create a function that will be called every 250ms
-    const pollForTask = () => {
-      const task = context.taskRef.current;
-      console.log(msg, "pollForTask", task.state.familyTree);
-      if (task.state.familyTree) {
-        const root = new TreeModel().parse(task.state.familyTree);
-        const node = root.first(node => node.model.type === taskActionData.type);
-        if (node) {
-          clearInterval(intervalId); // Clear the interval when the node is found
-          let diff = {
-            id: node.model.taskId,
-            instanceId: node.model.taskInstanceId,
-          };
-          diff["input"] = {[taskActionData.input]: taskActionData.value};
-          console.log(msg, diff);
-          syncTask(diff);
-        }
+  function activate(msg, ref, context, event, actionMeta) {
+    const id = actionMeta.action.id;
+    console.log(msg, id);
+    let taskData = ref.current[id];
+    if (!taskData) {
+      if (actionMeta.action.args) {
+        // We are creating a task action
+        ref.current[id] = {};
+        console.error(msg, "Did not find id creating", id);
+      } else {
+        console.error(msg, "missing id", id);
       }
-    };
-    // Call the pollForTask function every 250ms
-    const intervalId = setInterval(pollForTask, 250);
-    // Optionally, you can clear the interval after a certain time if the node is not found
-    setTimeout(() => {
-      clearInterval(intervalId);
-      console.log('Stopped polling after a certain time');
-    }, 10000); // Stop polling after 10 seconds
+    }
+    taskData.taskRef = context.taskRef;
+    if (actionMeta.action.args) {
+      taskData = { ...taskData, ...actionMeta.action.args };
+    }
+    taskData.active = true;
+    console.log("Merged taskData", taskData);
+    ref.current[id] = taskData;
   }
   
-
-  function queryExpect(context, event, actionMeta) {
-    const action = actionMeta.action.action;
-    console.log('queryExpect', action);
-    const queryExpectData = queryExpectRefs.current[action];
-    if (queryExpectData) {
-      queryExpectData.active = true;
-    }
+  function taskQuery(context, event, actionMeta) {
+    activate("taskQuery", queriesRef, context, event, actionMeta);
   }
 
-  // React does not allow us to simply update the value
-  // We probably need to use something like https://testing-library.com/docs/react-testing-library/intro/
-  // But it may be better to allow tasks to drive tasks through the input anyway
-  function queryAction(context, event, actionMeta) {
-    const action = actionMeta.action.action;
-    const msg = "queryAction " + action;
-    console.log(msg);
-    const queryActionData = queryActionRefs.current[action];
-    if (queryActionData) {
-      const element = document.querySelector(queryActionData.query)
-      if (element) {
-        const functionName = queryActionData.functionName;
-        if (functionName) {
-          if (functionName === "click") {
-            console.log("click", element);
-            element.click();
-          }
-        } else {
-          console.log(msg, queryActionData.field,"of", element, "set to", queryActionData.value);
-          element[queryActionData.field] = queryActionData.value;
-        }
-        console.log(msg, "event", queryActionData.event, "for", action, "with delay", queryActionData.delay, Date());
-        if (queryActionData.delay) {
-          setTimeout(() => {
-            send({
-              type: queryActionData.event,
-            });
-          }, queryActionData.delay);
-        } else {
-          send(queryActionData.event);
-        }
-      } else {
-        console.log(msg, "no element", queryActionRefs.current[action]);
-      }
-    } else {
-      console.log(msg, "no queryActionData");
-    }
+  function taskAction(context, event, actionMeta) {
+    activate("taskAction", actionsRef, context, event, actionMeta);
   }
 
-  function queryUI(key, value) {
-    let { query, element, field, event, expect, eventTrue, eventFalse, debug, oldValue, delay } = value;
+  function queryUI(id, data) {
+    let { query, element, field, event, expect, eventTrue, eventFalse, debug, oldValue, delay } = data;
     let newValue;
-    if (debug) {console.log("queryUI", query);}
+    const msg = "queryUI id:" + id;
+    if (debug) {console.log(msg, "queryUI", query);}
     if (!document.contains(element)) {
-      if (debug) {console.log("!document.contains(element)", query);}
-      queryExpectRefs.current[key].element = document.querySelector(query);
+      if (debug) {console.log(msg, "!document.contains(element)", query);}
+      queriesRef.current[id].element = document.querySelector(query);
     }
-    element = queryExpectRefs.current[key].element;
+    element = queriesRef.current[id].element;
     if (element) {
       newValue = element[field];
-      queryExpectRefs.current[key].oldValue = newValue;
-      if (debug) {console.log("newValue", query, newValue);}
+      queriesRef.current[id].oldValue = newValue;
+      if (debug) {console.log(msg, "newValue", newValue);}
     }
     if (newValue !== oldValue) {
-      if (debug) {console.log("newValue !== oldValue", query, newValue, oldValue);}
+      let eventType = event;
+      if (!eventType) {
+        eventType = id;
+        eventType = xutils.convertToSnakeCase(id);
+        eventType = xutils.query2event(eventType);
+      }
+      if (debug) {console.log(msg, "newValue !== oldValue", query, newValue, oldValue);}
       if ((newValue !== null && newValue !== undefined) && (!expect || expect === newValue)) {
-        if (debug) {console.log("send", query, eventTrue ? eventTrue : event, "delay", delay);}
+        if (debug) {console.log(msg, "send", query, eventTrue ? eventTrue : event, "delay", delay);}
         if (delay) {
           setTimeout(() => {
             send({
-              type: eventTrue ? eventTrue : event,
+              type: eventTrue ? eventTrue : eventType,
               data: newValue,
             });
           }, delay);          
         } else {
           send({
-            type: eventTrue ? eventTrue : event,
+            type: eventTrue ? eventTrue : eventType,
             data: newValue,
           });
         }
         return true; // Will stop this query
       } else if (eventFalse) {
-        if (debug) {console.log("send", query, eventFalse, "delay", delay);}
+        if (debug) {console.log(msg, "send", query, eventFalse, "delay", delay);}
         if (delay) {
-          send({
-            type: eventFalse,
-            data: newValue,
-          }, {delay: delay});
+          setTimeout(() => {
+            send({
+              type: eventFalse,
+              data: newValue,
+            });
+          }, delay);          
         } else {
           send({
             type: eventFalse,
@@ -246,37 +229,90 @@ function TaskSystemTest(props) {
     return false;
   }
 
-  // We can't always see events when React is updating the DOM
-  // So we do not rely on events
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      // for each queryExpectRefs
-      let toRemove = [];
-      const queryExpectKeys = Object.keys(queryExpectRefs.current);
-      queryExpectKeys.forEach((key) => {
-        if (!queryExpectRefs.current[key]) {
-          console.log("queryExpectRefs.current[key] is null", key);
+  function actionUI(id, data) {
+    let { event, debug, delay, input, value, taskRef, type } = data;
+    const msg = "actionUI " + type + " input " + input;
+    const task = taskRef.current;
+    if (debug) {console.log(msg, "pollForTask", task.state)};
+    if (task.state.familyTree) {
+      if (debug) {console.log(msg, "task.state.familyTree", task.state.familyTree)};
+      const root = new TreeModel().parse(task.state.familyTree);
+      const node = root.first(node => node.model.type === type);
+      if (node) {
+        if (debug) {console.log(msg, "node", node)};
+        let eventType = event;
+        if (!eventType) {
+          eventType = id;
+          eventType = xutils.convertToSnakeCase(id);
+          eventType = xutils.action2event(eventType);
         }
-        if (queryExpectRefs.current[key].active) {
-          if (queryUI(key, queryExpectRefs.current[key])) {
-            toRemove.push(key);
+        let diff = {
+          id: node.model.taskId,
+          instanceId: node.model.taskInstanceId,
+        };
+        diff["input"] = {[input]: value};
+        if (debug) {console.log(msg, diff)};
+        syncTask(diff);
+        if (debug) {console.log(msg, "sending", eventType)};
+        if (delay) {
+          setTimeout(() => {
+            send({
+              type: eventType,
+            });
+          }, delay);
+        } else {
+          send({type: eventType});
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  useEffect(() => {
+    const polling = () => {
+      const taskActionKeys = Object.keys(actionsRef.current);
+      taskActionKeys.forEach((key) => {
+        //console.log("taskActionKeys ", key, actionsRef.current[key].active);
+        if (actionsRef.current[key].active) {
+          if (actionsRef.current[key].debug) {
+            console.log("Action " + key + " active.");
+          }
+          if (actionUI(key, actionsRef.current[key])) {
+            console.log("Action " + key + " inactive.");
+            actionsRef.current[key].active = false;
           }
         }
       });
-      toRemove.forEach((key) => {
-        delete queryExpectRefs.current[key]
-      })
-    }, 250); // Poll every 200ms
+      const taskQueryKeys = Object.keys(queriesRef.current);
+      taskQueryKeys.forEach((key) => {
+        //console.log("taskQueryKeys ", key, queriesRef.current[key].active);
+        if (queriesRef.current[key].active) {
+          if (queriesRef.current[key].debug) {
+            console.log("Query " + key + " active.");
+          }
+          if (queryUI(key, queriesRef.current[key])) {
+            console.log("Query " + key + " inactive.");
+            queriesRef.current[key].active = false;
+          }
+        }
+      });
+    }
+    let intervalId;
+    if (result === undefined) {
+      intervalId = setInterval(polling, 300);
+    }
     return () => {
-        console.log("Observers disconnect");
+        console.log("taskAction and taskQuery polling disconnect");
         clearInterval(intervalId);
     };
-  }, []);
+  }, [result]);
   
   // The div SystemTest has display set to "contents" so it does not disrupt flex layout
   // That is not supported in the Edge browser
   return (
     <>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <div id="SystemTest"  style={{display: "contents"}}>
       {/*<div>sent:{sent ? 'true' : 'false'}</div>*/}
       {props.childTask && (
@@ -290,6 +326,7 @@ function TaskSystemTest(props) {
         />
       )}
       </div>
+    </div>
     </>
   );
 

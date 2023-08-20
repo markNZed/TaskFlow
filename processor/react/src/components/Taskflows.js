@@ -22,6 +22,7 @@ import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
 import { utils } from "../utils/utils";
 import { appLabel } from "../config";
+import IFrame from './Generic/IFrame.js'
 
 // If there is only one agent then do not show side menu
 
@@ -206,6 +207,7 @@ function Taskflows(props) {
           <div className={`${globalState.user?.interface !== "debug" ? "hide" : ""}`}>
             <ObjectDisplay data={globalState} />
           </div>
+          <IFrame />
         </Box>
 
       </Stack>

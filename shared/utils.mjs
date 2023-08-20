@@ -635,6 +635,38 @@ const sharedUtils = {
     console.log(prevMessageId, messageId, id, ...message);
   },
 
+  findCyclicReference: function(obj) {
+    const visited = new WeakMap();
+    const path = [];
+  
+    function isCyclic(obj, key) {
+      if (typeof obj !== 'object' || obj === null) {
+        return null;
+      }
+  
+      if (visited.has(obj)) {
+        return visited.get(obj).concat([key]);
+      }
+  
+      visited.set(obj, path.concat([key]));
+  
+      for (let k in obj) {
+        if (obj.hasOwnProperty(k)) {
+          path.push(k);
+          const cyclePath = isCyclic(obj[k], k);
+          if (cyclePath) {
+            return cyclePath;
+          }
+          path.pop();
+        }
+      }
+  
+      return null;
+    }
+  
+    return isCyclic(obj);
+  },
+
 };
 
 export { sharedUtils };

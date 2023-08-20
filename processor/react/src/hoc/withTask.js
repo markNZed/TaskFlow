@@ -10,6 +10,7 @@ import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
 import { useEventSource } from '../contexts/EventSourceContext';
+import { createMachine } from 'xstate';
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -60,22 +61,42 @@ function withTask(Component) {
     // Load the FSM if it exists otherwise set fsm to a string value
     // We only render the child component once fsm is set, to ensure useMachine has a valid input.
     useEffect(() => {
-      if (props.task?.config?.fsm) {
-        const importPath = `${props.task.type}/${props.task.config.fsm}.mjs`;
+      let fsm;
+      if (props.task?.fsm) {
+        console.log("props.task.fsm", props.task.fsm);
+        fsm = props.task.fsm;
+      } else if (props.task?.config?.fsm) {
+        const importPath = `${props.task.type}/${props.task.config.fsm.name}.mjs`;
         // webpack needs to be able to resolve the context (the base directory)
         import('../shared/fsm/' + importPath)
-          .then((module) => {
-            setFsm(module.fsm);
-          })
-          .catch((error) => {
-            console.error(`Failed to load FSM at ${importPath}:`, error);
-            // Handle the error, e.g., set some error state or show an error message
-            setFsm("Not available");
-          });
+        .then((module) => {
+          console.log("module ", importPath, module.fsm);
+          fsm = module.fsm;
+          if (props.task?.config?.fsm?.merge) {
+            console.log("props.task.fsm.merge", props.task.config.fsm.merge);
+            fsm = utils.deepMerge(fsm, props.task.config.fsm.merge);
+          }
+          if (fsm) {
+            console.log("createMachine", fsm);
+            setFsm(createMachine(fsm));
+          }
+        })
+        .catch((error) => {
+          console.error(`Failed to load FSM at ${importPath}:`, error);
+          // Handle the error, e.g., set some error state or show an error message
+          setFsm("Not available");
+        });
       } else {
         setFsm("Not configured");
       }
     }, []);
+
+    // Allow for dynamic reconfiguration of the fsm - needs testing
+    useEffect(() => {
+      if (props.task?.fsm) {
+        setFsm(props.task.fsm);
+      }
+    }, [props.task.fsm]);
 
     // For debug/inspection form the browser console
     if (!window.tasks) {

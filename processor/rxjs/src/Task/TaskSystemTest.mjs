@@ -38,7 +38,8 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
   // This sync the familyTree but we are not using this if we test via UI 
   async function familyIds(functionName, wsSendTask, CEPinstanceId, task, args) {
     utils.logTask(task, "familyIds command", task.processor.command);
-    if (task.processor.command === "init") {
+    // Only run this when going through the coprocessor the first time
+    if (task.processor.command === "init" && !task.processor.coProcessingDone) {
       let CEPtask;
       // In this case we are starting the TaskSystemTest
       if (CEPinstanceId === task.instanceId) {
@@ -46,27 +47,27 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
       } else {
         CEPtask = await activeTasksStore_async.get(CEPinstanceId);
       }
-      const familyTree = new TreeModel();
+      const tree = new TreeModel();
       let root;
       if (CEPtask.state.familyTree) {
-        root = familyTree.parse(CEPtask.state.familyTree);
+        root = tree.parse(CEPtask.state.familyTree);
       } else {
-        root = familyTree.parse({id: CEPinstanceId, taskInstanceId: CEPinstanceId, taskId: CEPtask.id, type: CEPtask.type});
+        root = tree.parse({id: CEPinstanceId, taskInstanceId: CEPinstanceId, taskId: CEPtask.id, type: CEPtask.type});
       }
-      //utils.logTask(task, "familyTree", familyTree, root);
+      //utils.logTask(task, "familyTree", root);
       let node = root.first(node => node.model.id === task.instanceId);
       if (!node) {
-        node = familyTree.parse({id: task.instanceId, taskInstanceId: task.instanceId, taskId: task.id, type: task.type});
+        node = tree.parse({id: task.instanceId, taskInstanceId: task.instanceId, taskId: task.id, type: task.type});
+        let parentNode;
         if (!task.meta.parentInstanceId) {
           utils.logTask(task, "No parentInstanceId", node);
-          root.addChild(node);
         } else {
-          const parentNode = root.first(node => node.model.id === task.meta.parentInstanceId);
+          parentNode = root.first(node => node.model.id === task.meta.parentInstanceId);
           if (parentNode) {
-            utils.logTask(task, "Found parentInstanceId", node);
             parentNode.addChild(node);
+            utils.logTask(task, "Found parentInstanceId so adding node");
           } else {
-            utils.logTask(task, "No parentNode", node);
+            utils.logTask(task, "No parentNode for parentInstanceId", task.meta.parentInstanceId);
           }
         }
         let diff = {
@@ -74,8 +75,11 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
             familyTree: root.model,
           }
         };
-        utils.logTask(task, "familyTree diff", diff);
-        await commandUpdate_async(wsSendTask, CEPtask, diff);
+        utils.logTask(task, "New state.familyTree", JSON.stringify(diff, null, 2));
+        // We send a sync which updates much faster because it sets coProcessingDone
+        // Otherwise we can get race conditions with the next task reading an old state of state.familyTree
+        // How can we more robustly fix this ?
+        await commandUpdate_async(wsSendTask, CEPtask, diff, true);
       }
     }
   }

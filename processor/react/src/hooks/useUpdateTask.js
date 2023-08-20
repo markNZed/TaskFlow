@@ -32,6 +32,7 @@ const useUpdateTask = (task, setTask) => {
           setTask((p) => utils.deepMerge(p, updating));
           wsSendTask(snapshot);
         } catch (error) {
+          //console.log(utils.findCyclicReference(task));
           console.log(error)
           setUpdateTaskError(error.message);
           setTask(null);

@@ -1,3 +1,5 @@
+import { taskAction, taskQuery, logMsg } from '../src/shared/fsm/xutils.mjs';
+
 const tasks = [
   {
     config: {
@@ -190,7 +192,37 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
-      fsm: "chat",
+      fsm: {
+        name: "chat",
+        inspect: false, 
+        merge: {
+          states: {
+            start: {
+              entry: [
+                taskQuery('findTextarea'),
+              ],
+              on: {
+                FOUND_TEXTAREA: 'foundTextarea',
+              },
+            },
+          },
+        },
+        queries: { // Note that some queries are defined in the library
+          findTextarea: {
+            query: 'textarea[name="prompt"]',
+            field: "value",
+            debug: false,
+          },
+        },
+        actions: { // Note that some actions are defined in the library
+          enterPrompt: {
+            type: "TaskChat",
+            input: "promptText",
+            value: "Hello World!",
+            debug: true,
+          },
+        },
+      },
       ceps: {
         "id-root.user.conversation.zeroshot.start": {
           functionName: "serviceStub",
