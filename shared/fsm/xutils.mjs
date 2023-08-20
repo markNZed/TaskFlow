@@ -52,29 +52,25 @@ xutils.query2event = function(eventType) {
   return eventType;
 }
 
+// This is not yet making use of the optional arguments to taskQuery and taskAction
+// Could detect the entry is an array or hash and then deal with arguments also
 xutils.actionThenQuery = function(state, actions, queries) {
   let entry = [];
   let on = {};
   for (const action of actions) {
-    console.log("actionThenQuery action", action);
     entry.push(xutils.taskAction(action));
   }
   for (const query of queries) {
-    console.log("actionThenQuery query", query);
     entry.push(xutils.taskQuery(query));
     let eventType = xutils.convertToSnakeCase(query);
-    console.log("actionThenQuery convertToSnakeCase eventType", eventType);
     eventType = xutils.query2event(eventType);
-    console.log("actionThenQuery query2event eventType", eventType);
     const nextState = xutils.toCamelCase(eventType);
-    console.log("actionThenQuery nextState", nextState);
     on[eventType] = nextState;
   }
   let result = {[state]: {
     "entry": entry,
     "on": on,
   }};
-  console.log("Result", result);
   return result;
 }
 
