@@ -3,6 +3,13 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskDummy",
+    environments: ["react"],
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskSystemTest",
     environments: ["nodejs", "react", "rxjs"],
     state: {

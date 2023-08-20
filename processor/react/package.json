@@ -21,6 +21,7 @@
     "events": "^3.3.0",
     "function-bind": "^1.1.1",
     "install": "^0.13.0",
+    "jsoneditor-react18": "^0.5.0",
     "lodash": "^4.17.21",
     "natural-sort": "^1.0.0",
     "node-polyfill-webpack-plugin": "^2.0.1",
@@ -38,6 +39,7 @@
     "react-scripts": "5.0.1",
     "react-use-websocket": "^4.3.1",
     "tree-model": "^1.0.7",
+    "vanilla-jsoneditor": "^0.17.10",
     "web-vitals": "^2.1.4",
     "workbox-cdn": "^5.1.4",
     "xstate": "^4.38.2"

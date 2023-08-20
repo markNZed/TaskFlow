@@ -1,4 +1,4 @@
-import { taskAction, taskQuery, logMsg } from '../src/shared/fsm/xutils.mjs';
+import { actionThenQuery } from '../src/shared/fsm/xutils.mjs';
 
 const tasks = [
   {
@@ -175,9 +175,6 @@ const tasks = [
     initiator: true,
     name: "zeroshot",
     parentName: "conversation",
-    permissions: [
-      "mark.hampton@ieee.org"
-    ],
     type: "TaskConversation"
   },
   {
@@ -194,27 +191,20 @@ const tasks = [
     config: {
       fsm: {
         name: "chat",
-        inspect: false, 
+        inspect: true, 
         merge: {
           states: {
-            start: {
-              entry: [
-                taskQuery('findTextarea'),
-              ],
-              on: {
-                FOUND_TEXTAREA: 'foundTextarea',
-              },
-            },
+            ...actionThenQuery('start', [], ['findTextarea']),
           },
         },
-        queries: { // Note that some queries are defined in the library
+        queries: { // Note that more queries are defined in the library
           findTextarea: {
             query: 'textarea[name="prompt"]',
             field: "value",
             debug: false,
           },
         },
-        actions: { // Note that some actions are defined in the library
+        actions: { // Note that more actions are defined in the library
           enterPrompt: {
             type: "TaskChat",
             input: "promptText",
@@ -243,6 +233,17 @@ const tasks = [
     },
     type: "TaskSystemTest",
   },  
+
+  {
+    config: {
+      label: "Dummy",
+    },
+    initiator: true,
+    name: "dummy",
+    parentName: "user",
+    type: "TaskDummy"
+  },
+  
 ];
 
 export { tasks };

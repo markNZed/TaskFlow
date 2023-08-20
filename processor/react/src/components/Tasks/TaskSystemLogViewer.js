@@ -270,6 +270,15 @@ const TaskSystemLogViewer = (props) => {
       case "start":
         break;
       case "query":
+        if (task.input.query) {
+          // Transfer the input into a request that update the task
+          // Also clear down the input
+          modifyTask({ 
+            "input.query": null,
+            "request": task.input.query,
+            "command": "update" 
+          });
+        }
         break;
       case "response":
         console.log("tasks", task.response.tasks);
@@ -394,16 +403,14 @@ const TaskSystemLogViewer = (props) => {
   const handleQueryComplete = (queryBuilder, query) => {
     const sortCriteria = transformToMongoSortCriteria(sortColumns);
     console.log("sortCriteria", sortCriteria);
-    if (task.state.current === "query") {
-      modifyTask({ 
-        "request.sortCriteria": sortCriteria,
-        "request.query": query, 
-        "request.queryBuilder": queryBuilder,
-        "request.page": page,
-        "request.limit": limit,
-        "command": "update" 
-      });
-    }
+    // Use the task input so it can be driven by other tasks
+    modifyTask({ 
+      "input.query.sortCriteria": sortCriteria,
+      "input.query.query": query, 
+      "input.query.queryBuilder": queryBuilder,
+      "input.query.page": page,
+      "input.query.limit": limit,
+    });
     console.log("handleQueryComplete page:", page, "limit:", limit, "query:", query);
   }
 

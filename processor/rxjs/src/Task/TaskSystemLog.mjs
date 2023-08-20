@@ -8,69 +8,37 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 import { tasksModel } from "./SchemaTasks.mjs"
 import { coProcessor } from "../../config.mjs";
 
-// in the MongoDB object __v represents the version of the document
-
-// Fields we do not want to store in the log 
-function stripTask(task) {
-  // deep copy
-  const taskCopy = JSON.parse(JSON.stringify(task));
-  //delete taskCopy.meta.hashDiffOrigTask; 
-  delete taskCopy.meta.hashTask;
-  delete taskCopy.processor.origTask;
-  //TaskSystemLogViewer is not loged so we could remove this
-  if (taskCopy.type === "TaskSystemLogViewer") {
-    delete taskCopy.response.tasks;
-  }
-  return taskCopy;
-}
-
 const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);
   utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
-  // We really only need to store diffs
+  // Store a task in the DB
+  // Could reduce storage usage by storing diffs but not worth the effort now
   async function updateTaskWithHistory(newTaskData) {
-    // Could use a random number ?
+    // Could also append a random number but we do not expect multiple log events in the same millisecond
+    // for the same task
     let currentDateTime = new Date();
     let timeInMilliseconds = currentDateTime.getTime();
     let id = newTaskData.instanceId + timeInMilliseconds;
-    // Fetch the existing task
-    let task = await tasksModel.findOne({ 
-      _id: id,
-      updatedAt: newTaskData.meta.updatedAt  // Use updatedAt in the query
-    });
-    // The start task may not have meta.updatedAt
-    let updatedAt;
-    if (newTaskData.meta.updatedAt) {
-      updatedAt = {
-        date: newTaskData.meta.updatedAt.date,
-        timezone: newTaskData.meta.updatedAt.timezone
-      }
-    } else {
+    // We are recording a timeseries of each update so do not expect to find an existing entry
+    // The start task does not have meta.updatedAt so we create a timestamp if it is missing
+    let updatedAt = newTaskData.meta.updatedAt
+    if (!updatedAt) {
       updatedAt = utils.updatedAt();
     }
-    if (task) {
-        task.current = stripTask(newTaskData);
-        task.updatedAt = updatedAt;
-        task.instanceId = newTaskData.instanceId;
-        task.markModified('current');
-        task.markModified('updatedAt');
-        await task.save();
-    } else {
-        // If the task does not exist, create a new one and save
-        const newTask = new tasksModel({
-            _id: id,
-            current: stripTask(newTaskData),
-            updatedAt: updatedAt,
-            instanceId: newTaskData.instanceId,
-        });
-        await newTask.save();
-    }
+    // If the task does not exist, create a new one and save
+    const newTask = new tasksModel({
+        _id: id,
+        current: stripTask(newTaskData),
+        updatedAt: updatedAt,
+        instanceId: newTaskData.instanceId,
+    });
+    await newTask.save();
   }
 
   async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
-    utils.logTask(task, "CEPLog updateOne", task.id, task.instanceId);
+    // We do not want to log the TaskSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
     if (task.instanceId && task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
       if (!coProcessor || task.processor.coProcessingDone ) {
         await updateTaskWithHistory(task);
@@ -94,6 +62,17 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
 
   return task;
 };
+
+// Task fields we do not want to store in the log 
+function stripTask(task) {
+  // deep copy
+  const taskCopy = JSON.parse(JSON.stringify(task));
+  // hashDiffOrigTask is for debug of the hash but it also helps spot what changes in the task
+  //delete taskCopy.meta.hashDiffOrigTask; 
+  delete taskCopy.meta.hashTask;
+  delete taskCopy.processor.origTask;
+  return taskCopy;
+}
 
 export { TaskSystemLog_async };
 
