@@ -54,10 +54,8 @@ function checkTaskCache (task, T) {
   return [enabled, seed];
 }
 
-const TaskSimulateUser_async = async function (taskName, wsSendTask, task) {
+const TaskSimulateUser_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
-
-  console.log(`${taskName} in state ${task.state.current}`);
 
   // Cache
   const [cacheEnabled, cacheKeySeed] = checkTaskCache(task, T);

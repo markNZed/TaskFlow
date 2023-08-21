@@ -121,6 +121,14 @@ export function createColumns(rowDetailHeight) {
         key: "command",
         flex: 1,
       },
+      {  
+        name: 'coprocessing',
+        queryDatatype: "boolean",
+        dataPath: "current.processor.coProcessingDone",
+        width: 50,
+        key: "coprocessing",
+        flex: 1,
+      },
     ];
     return columns;
   }

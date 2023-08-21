@@ -29,7 +29,7 @@ const tasktypes = [
   },
   {
     name: "TaskSystemLogViewer",
-    environments: ["react", "rxjs"],
+    environments: ["react"], // We assume it is also running on the coprocessor
     config: {
       rowDetailHeight: 500,
       pageSize: 100,

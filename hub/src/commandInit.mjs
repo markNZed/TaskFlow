@@ -7,6 +7,7 @@ import { utils } from "./utils.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
+import { haveCoProcessor } from "../config.mjs";
 
 export async function commandInit_async(task, res) {
   const commandArgs = task.hub.commandArgs;

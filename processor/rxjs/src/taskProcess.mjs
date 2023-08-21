@@ -21,7 +21,9 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
-      updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task, CEPFuncs);
+      utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, CEPFuncs);
+      utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
     } else {
       utils.logTask(task, "RxJS Task Processor unknown component " + task.type);
     }

@@ -8,10 +8,8 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 import { tasksModel } from "./SchemaTasks.mjs"
 import { coProcessor } from "../../config.mjs";
 
-const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs) {
-
+const TaskSystemLog_async = async function (wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
-  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   // Store a task in the DB
   // Could reduce storage usage by storing diffs but not worth the effort now
@@ -20,7 +18,7 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
     // for the same task
     let currentDateTime = new Date();
     let timeInMilliseconds = currentDateTime.getTime();
-    let id = newTaskData.instanceId + timeInMilliseconds;
+    let id = newTaskData.instanceId ? newTaskData.instanceId + timeInMilliseconds : timeInMilliseconds;
     // We are recording a timeseries of each update so do not expect to find an existing entry
     // The start task does not have meta.updatedAt so we create a timestamp if it is missing
     let updatedAt = newTaskData.meta.updatedAt
@@ -34,20 +32,19 @@ const TaskSystemLog_async = async function (taskName, wsSendTask, task, CEPFuncs
         updatedAt: updatedAt,
         instanceId: newTaskData.instanceId,
     });
+    //utils.logTask(task, "newTask", newTask);
     await newTask.save();
   }
 
   async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
     // We do not want to log the TaskSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
-    if (task.instanceId && task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
-      if (!coProcessor || task.processor.coProcessingDone ) {
-        await updateTaskWithHistory(task);
-      } else {
-        utils.logTask(task, "Skipped logging because not coProcessingDone");
-      }
+    if (task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
+      // We will log twice when coprocessing but this is necessary to debug coprocessing
+      await updateTaskWithHistory(task);
+      utils.logTask(task, "Logged");
     } else {
       // Should log even when there is no instanceId - not sure what to do for index in that case
-      utils.logTask(task, "Skipped logging because no instanceId or TaskSystemLog");
+      utils.logTask(task, "Skipped logging because task type", task.type);
     }
   }
 

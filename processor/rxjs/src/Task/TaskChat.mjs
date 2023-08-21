@@ -5,10 +5,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
 
-const TaskChat_async = async function (taskName, wsSendTask, task, CEPFuncs) {
+const TaskChat_async = async function (wsSendTask, task, CEPFuncs) {
   const T = utils.createTaskValueGetter(task);
-
-  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   // If we set the command here then we can't override it from CEP
   //T("command", "nop");

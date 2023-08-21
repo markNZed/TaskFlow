@@ -1,6 +1,6 @@
 /* ToDo
 -------
-Review of TaskSystemLogViewer.js
+Deal with filtering coProcessing in systemLog viewer (option)
 Distributed task with FSM
   Forcing state: interpreter.start(state)
 One approach to code review:
@@ -373,7 +373,8 @@ Comparison with similar systems
   Algovera
     Not open sourced (yet)
     Langchain as backend
-    Text as primary interface for specifying taskflowsTaskflow as first class object
+    Text as primary interface for specifying taskflows
+    Taskflow as first class object
   https://dust.tt/
     Chaining, version control, connections
   https://www.multi.tech/ (MultiFlow)
@@ -391,6 +392,12 @@ Comparison with similar systems
      Messages: DDP uses a small set of message types to communicate data changes, including added, changed, removed, ready, nosub, result, updated, and more. 
   https://github.com/ParisNeo/lollms-webui
     This project aims to provide a user-friendly interface to access and utilize various LLM models for a wide range of tasks. Whether you need help with writing, coding, organizing data, generating images, or seeking answers to your questions, LoLLMS WebUI has got you covered.
+  Resarch Assistants
+    Elicit
+    ResearchAIde 
+    wizdom.ai
+    Iris.ai 
+
 
 Test Plan
 ---------

@@ -7,15 +7,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
-const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
+const TaskGeneratePersona_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
-
-  console.log(`${taskName} in state ${task.state.current}`);
 
   switch (task.state.current) {
     case undefined:
     case "generated":
-      console.log(`${taskName} does nothing in state ${task.state.current}`);
+      console.log(`${task.type} does nothing in state ${task.state.current}`);
       return null
     case "start":
       T("request.prompt", "Generate a random client profile");
@@ -38,7 +36,7 @@ const TaskGeneratePersona_async = async function (taskName, wsSendTask, task) {
       console.log("ERROR unknown state : " + task.state.current);
   }
 
-  console.log(`Returning from ${taskName}`);
+  console.log(`Returning from ${task.type}`);
   return task;
 };
 

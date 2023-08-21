@@ -14,7 +14,8 @@ import TreeModel from 'tree-model';
   root.user.testing.zeroshot.start
 */
 
-const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFuncs) {
+const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
+  
   const T = utils.createTaskValueGetter(task);
 
   function serviceStub(functionName, wsSendTask, CEPinstanceId, task, args) {
@@ -87,8 +88,6 @@ const TaskSystemTest_async = async function (taskName, wsSendTask, task, CEPFunc
   // We can also register a CEP by declaring it in ./CEPFunctions.mjs
   CEPFunctions.register("serviceStub", serviceStub);
   CEPFunctions.register("familyIds", familyIds);
-
-  utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
   return task;
 };

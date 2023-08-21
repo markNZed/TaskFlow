@@ -5,13 +5,16 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { taskFunctions } from "./Task/taskFunctions.mjs";
+import { utils } from "./utils.mjs";
 
 export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
     let idx = 0;
     if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
       try {
-        updatedTask = await taskFunctions[`${task.type}_async`](task.type, wsSendTask, task);
+        utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
+        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task);
+        utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
       } catch (e) {
         console.error(e);
         updatedTask = task;

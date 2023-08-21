@@ -24,6 +24,7 @@ export function releaseResource(key) {
     console.log(`Released by key: ${key}`);
     releases.delete(key); // Remove the release function after releasing the lock
   } else {
-    console.warn(`No lock found for key: ${key}`);
+    // We expect most tasks will not be locked so no need to warn
+    //console.warn(`No lock found for key: ${key}`);
   }
 }

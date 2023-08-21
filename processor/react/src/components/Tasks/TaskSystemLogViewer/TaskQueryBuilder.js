@@ -7,7 +7,7 @@ const TaskQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryP
   const [query, setQuery] = useState({
     combinator: 'and',
     rules: [
-      { field: 'current.id', operator: 'notNull', value: '' },
+      { field: 'updatedAt.date', operator: 'notNull', value: 'null' },
     ],
   });
 

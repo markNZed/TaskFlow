@@ -7,10 +7,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
-const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
+const TaskLLMIO_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
-
-  console.log(`${taskName} in state ${task.state.current}`);
 
   switch (task.state.current) {
     case "input":
@@ -38,7 +36,7 @@ const TaskLLMIO_async = async function (taskName, wsSendTask, task) {
     case "display":
     case "wait":
     case "stop":
-      console.log(`${taskName} does nothing in state ${task.state.current}`);
+      console.log(`${task.type} does nothing in state ${task.state.current}`);
       return null;
     default:
       console.log("WARNING unknown state : " + task.state.current);

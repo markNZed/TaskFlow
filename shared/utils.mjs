@@ -361,11 +361,10 @@ const sharedUtils = {
 
   taskHash: function(task) {
     if (!task) {
-      return 0;
+      return 0; // should error here?
     }
     // Only hash information that is shared between all processors and hub
-    let taskCopy = JSON.parse(JSON.stringify(task));
-    taskCopy = sharedUtils.cleanForHash(taskCopy);
+    const taskCopy = sharedUtils.cleanForHash(task);
     const sortedObj = sharedUtils.taskHashSortKeys(taskCopy);
     const hash = sharedUtils.djb2Hash(JSON.stringify(sortedObj));
     //console.log("HASH VALUE", hash);
@@ -391,9 +390,10 @@ const sharedUtils = {
   },
 
   processorActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
-    task.meta["hash"] = sharedUtils.taskHash(task);
+    task.meta = task.meta || {};
     delete task.processor.origTask; // delete so we do not have ans old copy in origTask
     task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
+    task.meta["hash"] = sharedUtils.taskHash(task);
     //sharedUtils.removeNullKeys(task);
     await activeTasksStore_async.set(task.instanceId, task);
     return task;
@@ -401,16 +401,14 @@ const sharedUtils = {
 
   hubActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta = task.meta || {};
-    task.meta["hash"] = sharedUtils.taskHash(task);
     delete task.hub.origTask; // delete so we do not have an old copy in origTask
-    // deep copy to avoid self-reference
-    task.hub["origTask"] = JSON.parse(JSON.stringify(task)); 
+    task.hub["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
+    task.meta["hash"] = sharedUtils.taskHash(task);
     //sharedUtils.removeNullKeys(task);
     // If there is no type then this is a start request do we do not store it
+    // Since introducing init we probably don't need to worry about this
     if (task.type) {
       await activeTasksStore_async.set(task.instanceId, task);
-    } else {
-      console.log("WARNING: hubActiveTasksStoreSet_async called with no type", task.id);
     }
     return task;
   },
@@ -469,6 +467,9 @@ const sharedUtils = {
 
   // This is only used in the Hub so could move into the Hub utils 
   hubDiff: function(origTask, task) {
+    if (task.processor.command === "pong") {
+      return task;
+    }
     //console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
     const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
     const diffTask = sharedUtils.getObjectDifference(origTask, taskCopy) || {};
@@ -540,8 +541,10 @@ const sharedUtils = {
     const hashOrigTask = origTask.meta.hash;
     const hashUpdatedTask = updatedTask.meta.hash;
     if (hashOrigTask !== hashUpdatedTask) {
-      console.error("ERROR: Task hash does not match", hashOrigTask, hashUpdatedTask);
+      console.error("ERROR: Task hash does not match origTask.meta.hash:", hashOrigTask, "updatedTask.meta.hash:", hashUpdatedTask);
       if (updatedTask.meta.hashTask) {
+        console.error("updatedTask.meta.hashTask", updatedTask.meta.hashTask, "origTask", origTask);
+        console.error("updatedTask.meta.hashTask hash:", sharedUtils.taskHash(updatedTask.meta.hashTask), "origTask hash:", sharedUtils.taskHash(origTask));
         let hashDiff;
         //console.error("Task hash does not match in update local:" + hashOrigTask + " remote:" + hashUpdatedTask); //, origTask, updatedTask.meta.hashTask);
         hashDiff = sharedUtils.getObjectDifference(updatedTask.meta.hashTask, origTask) || {};

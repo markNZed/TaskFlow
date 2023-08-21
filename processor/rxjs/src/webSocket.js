@@ -100,7 +100,7 @@ taskSubject
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
         } else {
-          utils.logTask(task, "Skipped taskProcess", task.processor.initiatingProcessorId, processorId,task.processor.commandArgs?.sync, task.processor.coProcessingDone)
+          utils.logTask(task, "Skipped taskProcess")
         }
         /*
         if (task.processor.command === "update") {
@@ -135,10 +135,10 @@ taskSubject
         utils.logTask(task, "Task processed with null result");
       } else {
         if (!coProcessor || task.processor.coProcessingDone) {
-          releaseResource(task.instanceId);
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+          releaseResource(task.instanceId);
+          utils.logTask(task, 'Task processed successfully');
         }
-        utils.logTask(task, 'Task processed successfully');
       }
     },
     error: (e) => console.error(e),
@@ -159,7 +159,7 @@ function wsSendObject(message) {
 }
 
 const wsSendTask = async function (task) {
-  utils.logTask(task, "wsSendTask ");
+  //utils.logTask(task, "wsSendTask ");
   let message = {};
   task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
   task.meta = task.meta || {};

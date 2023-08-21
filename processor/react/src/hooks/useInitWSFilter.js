@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
+import { utils } from "../utils/utils";
 
 function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
   
@@ -13,7 +14,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
     // We are not using this storage yet
     // We will need to clean it up
     if (globalState.storageRef) {
-      globalState.storageRef.current.set(task.instanceId, task);
+      await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, task);
       //const value = await storageRef.current.get("a1");
       console.log("Storage start ", task.id, task.instanceId);
     } else {

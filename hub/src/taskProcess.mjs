@@ -32,6 +32,8 @@ function processorInHubOut(task, activeTask, requestId) {
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
+  task.processor.coProcessing = null;
+  task.processor.coProcessingDone = null;
   task.processor.coProcessingPosition = null;
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));

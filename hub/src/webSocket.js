@@ -213,7 +213,7 @@ function initWebSocketServer(server) {
           task.hub["coProcessingPosition"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
-              utils.logTask(task, "Finished with coProcessors", task.id, processorId);
+              utils.logTask(task, "Finished with coProcessors id:", task.id, "processorId:", processorId);
               utils.logTask(task, "initiatingProcessorId", task.hub["initiatingProcessorId"]);
             }
             task.hub["coProcessingDone"] = true;

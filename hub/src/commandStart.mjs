@@ -33,6 +33,7 @@ export async function commandStart_async(task, res) {
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (haveCoProcessor && !task.hub.coProcessingDone) {
       await taskSync_async(task.instanceId, task);
+      // Not sure if we need to store this - are we storing on the Processors? Could get out of sync when usnig task to start another task
       utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)

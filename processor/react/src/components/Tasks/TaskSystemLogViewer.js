@@ -74,6 +74,7 @@ const TaskSystemLogViewer = (props) => {
   }, []);
   const [filters, setFilters] = useState(initFilters(initialColumns));
   const [page, setPage] = useState(1);
+  const [prevPage, setPrevPage] = useState(1);
   const [pageSize, setPageSize] = useState(initPageSize); // entries per page
   const [totalCount, setTotalCount] = useState(0);
   // Need the context becausee we don't want to pass filters and setFilters as props 
@@ -121,6 +122,7 @@ const TaskSystemLogViewer = (props) => {
       if (command === "update" && t.current.processor?.commandArgs?.sync) {
         transformedFields["command"] += "(sync)";
       }
+      transformedFields["coprocessing"] = transformedFields["coprocessing"] ? "true" : "false";
       return transformedFields;
     });
   }, [task.response.tasks]);
@@ -274,7 +276,10 @@ const TaskSystemLogViewer = (props) => {
 
   // User selects a new page of results
   useEffect(() => {
-    handleQueryComplete();
+    if (prevPage !== page) {
+      handleQueryComplete();
+      setPrevPage(page);
+    }
   }, [page]);
 
   // Manage the expanding of hidden row with Task data

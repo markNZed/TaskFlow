@@ -28,7 +28,7 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   console.log("--------- WebSocketProvider ---------");
 
-  const logPingPong = true;
+  const logPingPong = false;
 
   const { globalState, replaceGlobalState } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();

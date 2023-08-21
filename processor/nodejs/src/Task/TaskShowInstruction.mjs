@@ -6,10 +6,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 
-const TaskShowInstruction_async = async function (taskName, wsSendTask, task) {
+const TaskShowInstruction_async = async function (wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);
-
-  console.log(`${taskName} in state ${task.state.current}`);
   
   switch (task.state.current) {
     case "start":
@@ -20,7 +18,7 @@ const TaskShowInstruction_async = async function (taskName, wsSendTask, task) {
       break;
     case undefined:
     case "response":
-      console.log(`${taskName} does nothing in state ${task.state.current}`);
+      console.log(`${task.type} does nothing in state ${task.state.current}`);
       return null
     default:
       console.log("ERROR unknown state : " + task.state.current);
@@ -29,7 +27,7 @@ const TaskShowInstruction_async = async function (taskName, wsSendTask, task) {
   // This task can be used as an errorTask so an error here risks to 
   // create a loop ?
 
-  console.log(`Returning from ${taskName} task.id`);
+  console.log(`Returning from ${task.type} task.id`);
   return task;
 };
 
