@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { parseFilter } from 'mongodb-query-parser';
 import { tasksModel } from "./SchemaTasks.mjs"
+import { formatQuery } from 'react-querybuilder';
 
 // in the MongoDB object __v represents the version of the document
 
@@ -14,19 +15,32 @@ const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CE
   const T = utils.createTaskValueGetter(task);
   utils.logTask(task, `${taskName} in state ${task?.state?.current}`);
 
-  // Ftch tasks from the DB both sorted and paginated 
-  async function fetchTasksAsync(query, sortCriteria, page = 1, limit = 100) {
+  function transformToMongoSortCriteria(sortDescriptors) {
+    const mongoSortCriteria = {};
+    if (sortDescriptors) {
+      sortDescriptors.forEach(descriptor => {
+          const direction = (descriptor.direction === 'ASC') ? 1 : -1;
+          mongoSortCriteria[descriptor.columnKey] = direction;
+      });
+    }
+    return mongoSortCriteria;
+  }
+
+  // Fetch tasks from the DB both sorted and paginated 
+  async function fetchTasksAsync(queryBuilder, sortColumns, page = 1, pageSize) {
     try {
-      const parsedQuery = parseFilter(query);
+      const mongoQuery = formatQuery(queryBuilder, 'mongodb');
+      const parsedQuery = parseFilter(mongoQuery);
+      let sortCriteria = transformToMongoSortCriteria(sortColumns);
       // Skip ahead to the page of results being requested
-      const skip = (page - 1) * limit;
+      const skip = (page - 1) * pageSize;
       // Defaul tsort criteria
       if (!sortCriteria || Object.keys(sortCriteria).length === 0) {
         sortCriteria = { "updatedAt.date": -1 }; // descending order
       }
-      utils.logTask(task, "fetchTasksAsync", parsedQuery, sortCriteria, skip, limit);
+      utils.logTask(task, "fetchTasksAsync", parsedQuery, sortCriteria, skip, pageSize);
       // Concurrent requests
-      const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(limit);
+      const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(pageSize);
       const totalPromise = tasksModel.countDocuments(parsedQuery);
       const [tasks, total] = await Promise.all([tasksPromise, totalPromise]);
       return { tasks, total };
@@ -46,9 +60,9 @@ const TaskSystemLogViewer_async = async function (taskName, wsSendTask, task, CE
       break;
     // Process a query
     case "query":
-      if (T("request.query")) {
-        utils.logTask(task, "State query " + T("request.query") + " with request.page " + T("request.page"));
-        const { tasks, total } = await fetchTasksAsync(T("request.query"), T("request.sortCriteria"), T("request.page"), T("request.limit"))
+      if (T("request.queryBuilder")) {
+        utils.logTask(task, "State query " + T("request.queryBuilder") + " with request.page " + T("request.page"));
+        const { tasks, total } = await fetchTasksAsync(T("request.queryBuilder"), T("request.sortColumns"), T("request.page"), T("request.pageSize"))
         utils.logTask(task, "Returned total", total);
         T("response.tasks", tasks);
         T("response.total", total);

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function CellExpanderFormatter(props) {
+function CellExpander(props) {
   const { tabIndex, expanded, onCellExpand } = props;
 
   const styles = {
@@ -32,4 +32,4 @@ function CellExpanderFormatter(props) {
   );
 }
 
-export default CellExpanderFormatter;
+export default CellExpander;

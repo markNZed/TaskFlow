@@ -3,7 +3,7 @@ import { defaultValidator, formatQuery, QueryBuilder } from 'react-querybuilder'
 import 'react-querybuilder/dist/query-builder.css';
 import { QueryBuilderMaterial } from '@react-querybuilder/material';
 
-const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryPtr }) => {
+const TaskQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryPtr }) => {
   const [query, setQuery] = useState({
     combinator: 'and',
     rules: [
@@ -11,21 +11,11 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
     ],
   });
 
-  const [mongodbQuery, setMongodbQuery] = useState();
-  const [submit, setSubmit] = useState(false);
   const [queryHistoryLocalPtr, setQueryHistoryLocalPtr] = useState(queryHistoryPtr);
   const [queryHistoryOffset, setQueryHistoryOffset] = useState(0);
   const [disablePrev, setDisablePrev] = useState(false);
   const [disableNext, setDisableNext] = useState(true);
   const queryHistoryLength = queryHistory ? queryHistory.length : 0;
-
-  useEffect(() => {
-    if (mongodbQuery && submit) {
-      onQueryComplete(query, mongodbQuery);
-      setMongodbQuery(null);
-      setSubmit(false);
-    }
-  }, [mongodbQuery, submit]);
   
   // When queryHistoryPtr changes we reset the history
   useEffect(() => {
@@ -36,8 +26,7 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
   }, [queryHistoryPtr]);
 
   const handleSubmit = () => {
-    setMongodbQuery(formatQuery(query, 'mongodb'));
-    setSubmit(true);
+    onQueryComplete(query);
   };
 
   const handleQueryChange = (newQuery) => {
@@ -119,4 +108,4 @@ const TaskSystemLogQueryBuilder = ({ fields, onQueryComplete, queryHistory, quer
   );
 };
 
-export default TaskSystemLogQueryBuilder;
+export default TaskQueryBuilder;

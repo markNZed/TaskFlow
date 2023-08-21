@@ -1,12 +1,22 @@
 /* ToDo
 -------
-https://reviewable.io requires pull request
-  https://www.exasol.com/resource/how-to-do-a-full-review-of-your-repository-contents-on-github/
+Review of TaskSystemLogViewer.js
 Distributed task with FSM
   Forcing state: interpreter.start(state)
+One approach to code review:
+  1) Create a new github repo that has an empty master branch
+  2) Archive the code to be reviewed: git archive --format=tar --output=../empty-repo/repo.tar HEAD
+  3) Create a new branch in the empty repo: git checkout -b review-branch
+  4) Untar the archive in the empty repo: tar -xvf repo.tar
+  5) Add the files and push: git add .;git push --set-upstream origin review-branch
+  6) Open a PR on github so any file can be reviewed
+https://reviewable.io requires pull request and seems suited to small changes
 Selecting menu item second time could restart the task - decide what to do within the task e.g. processor.command.restart
 functionName: "familyIds" familyTree ?
-Default FSM name
+Default FSM name e.g. default.js would be loaded if it exists
+  The task could also define the FSM
+    This probably makes it easirt to see what is going on.
+      So this could be the default
 Install CEP from Task (maybe in the TaskType config?)
 Add xstate-viz server path on proxy and choose port
 Should queries be configured per Processor?

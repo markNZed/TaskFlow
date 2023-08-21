@@ -1,9 +1,13 @@
+import React, { useEffect, useState, useRef } from "react";
 import { useDrag, useDrop, useContext } from 'react-dnd';
 import { headerRenderer } from 'react-data-grid';
 
-function DraggableHeaderRenderer({ setFilters, ...props }) {
+function DragFilterHeader({ setFilters, ...props }) {
 
-  const { onColumnsReorder, column, filters } = props;
+  const { onColumnsReorder, onSort, column, filters } = props;
+  const [debouncedFilterInput, setDebouncedFilterInput] = useState(filters[column.key]);
+  const [filterInput, setFilterInput] = useState(filters[column.key]);
+  const useFilter = column.disableFilter ? false : true;
 
   const [{ isDragging }, drag] = useDrag({
     type: 'COLUMN_DRAG',
@@ -24,6 +28,26 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
     })
   });
 
+  useEffect(() => {
+    if (debouncedFilterInput !== filters[column.key]) {
+      setFilters({
+        ...filters,
+        [column.key]: debouncedFilterInput,
+      });
+    }
+  }, [debouncedFilterInput]);
+
+  // The debounce time is long because when filters is set then the parent will re-render
+  // causing this component to unmount and we lose focus
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedFilterInput(filterInput);
+    }, 1000); // Delay in ms
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [filterInput]);
+
   const filterStyles = {
     inlineSize: '100%',
     padding: '4px',
@@ -35,8 +59,6 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
       event.stopPropagation();
     }
   }
-
-  const useFilter = true;
 
   return useFilter ? (
     <div
@@ -54,19 +76,13 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
     >
     <>
       <div style={{textAlign: 'center'}}>
-        {headerRenderer({ column, ...props })}
+        {headerRenderer({ column, onSort })}
       </div>
       <div>
         <input
-          {...props }
           style={filterStyles}
-          value={filters[column.key]}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              [column.key]: e.target.value
-            })
-          }
+          value={filterInput}
+          onChange={(e) => setFilterInput(e.target.value) }
           onKeyDown={inputStopPropagation}
         />
       </div>
@@ -85,10 +101,10 @@ function DraggableHeaderRenderer({ setFilters, ...props }) {
           textAlign: 'center'
         }}
       >
-        {headerRenderer({ column, ...props })}
+        {headerRenderer({ column, onSort })}
     </div>
   );
 
 }
 
-export default DraggableHeaderRenderer;
+export default DragFilterHeader;
