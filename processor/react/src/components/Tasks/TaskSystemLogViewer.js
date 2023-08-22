@@ -169,7 +169,7 @@ const TaskSystemLogViewer = (props) => {
   }, [rows, filters]);
 
   // Generate function for sorting rows based on column
-  // At the moment there is nothgin specific but we could use the queryDatatype to select a filter function
+  // At the moment there is nothing specific but we could use the queryDatatype to select a filter function
   function getComparator(sortColumn) {
     switch (sortColumn) {
       default:
@@ -254,8 +254,8 @@ const TaskSystemLogViewer = (props) => {
     });
   }, [visibleColumns]);
 
-    // Filter visible rows based on global search term
-    useEffect(() => {
+  // Filter visible rows based on global search term
+  useEffect(() => {
     const filteredData = data.filter(row => 
       row.key.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
       JSON.stringify(row.current).toLowerCase().includes(debouncedSearchTerm.toLowerCase())

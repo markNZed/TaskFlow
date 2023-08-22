@@ -113,11 +113,11 @@
       },
       "required": [],
       "title": "State"
+    },
+    "FSM": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "FSM"
     }
-  },
-  "FSM": {
-    "type": "object",
-    "additionalProperties": true,
-    "title": "FSM"
   }
 }

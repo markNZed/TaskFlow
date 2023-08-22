@@ -14,6 +14,8 @@ services:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:5001:5001"
       - "127.0.0.1:5002:5002"
+    networks:
+      - taskflow
 
   mongodb:
     image: mongodb/mongodb-community-server:latest
@@ -24,6 +26,12 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
       - dbdata:/data/db
+    networks:
+      - taskflow
 
 volumes:
   dbdata:
+
+networks:
+    taskflow:
+       external: true

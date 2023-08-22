@@ -1,5 +1,8 @@
 FROM node:18-buster-slim
 
+# Set bash as the default shell
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl iputils-ping && \
@@ -20,8 +23,9 @@ RUN yarn global add nodemon eslint prettier jest
 
 WORKDIR /app
 
-# Install TypeScript
 RUN npm install -g typescript
+
+RUN npm install -g quicktype
 
 EXPOSE 3000
 EXPOSE 5000

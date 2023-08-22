@@ -1,7 +1,18 @@
 /* ToDo
 -------
 Distributed task with FSM
+  TaskShowInstruction
+    Replace FSM on React and confirm things are working
   Forcing state: interpreter.start(state)
+Major features that need to be implemented before major refactoring
+  Dynamic Task configurations
+  Debug support per Task
+    How to combine debug logging with task.meta.debug ?
+    Conditional breakpoints in VSCode works well
+Extend testing
+  Batch testing
+    TaskCron to regularly check things
+    TaskGit to get local status of repo
 One approach to code review:
   1) Create a new github repo that has an empty master branch
   2) Archive the code to be reviewed: git archive --format=tar --output=../empty-repo/repo.tar HEAD
@@ -11,7 +22,7 @@ One approach to code review:
   6) Open a PR on github so any file can be reviewed
   The above should be doable inside a single repo - create branch delete everything, create another branch from that and add everything at once
 Selecting menu item second time could restart the task - decide what to do within the task e.g. processor.command.restart
-Default FSM name e.g. default.js would be loaded if it exists
+Default FSM name e.g. default.js could be loaded if it exists (avoids needing to add config)
   The task could also define the FSM
     This probably makes it easier to see what is going on but only works if the task runs on one processor
       So this could be the default
@@ -22,13 +33,12 @@ Generic TaskEdit that would allow for presentation/editing of any task in the fa
   Could configure to limit access to specific fields
     Ideally could us schema but could also guess at the type (usr could override)
   Need a submit button for JSON Editor to update the task - also run validation first
+  See TaskDummy for a demo of jsoneditor-react18
 https://github.com/statelyai/xstate-viz
 https://testing-library.com/docs/react-testing-library/intro/
 https://opencollective.com/
 How to report pass/fail ?
   Dev header with info 
-How to combine debug logging with task.meta.debug ?
-  Conditional breakpoints in VSCode works well
 Deleting of tasks for CEP
 How to batch tests?
   TaskSystemBatch that would modify TaskSystemTest config fsm on the fly
@@ -37,7 +47,6 @@ https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything
 Interview Qs
   Do you use a coding assistant?
-meta.debug option
 Task that monitors a collaborative discussion and via another route allows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
   Does not require extending the server ?
@@ -63,7 +72,9 @@ Do we want to be able to configure CEP functionality?
     See Processor README.md for mathjs etc
 Dynamic task configuration
   Hub would need to be extended
-  Could it dump out configurations that can be saved/reused?
+    Can the configuration be a task
+      Could hardcode the autostart of a task on the coprocessor that returns config
+      How much could be delegated to tasks? e.g. taskStart, authorization, permissions, masking, scheduling
   This is better than static definitions because we don't need to elaborate all possibilities in the config options
   Maybe this does not require any new functionality on the hub - just copy from one child task to another
    TaskInherit would be a CEP that catches the start of a task and reconfigures it on the coprocessor before it is launched?
@@ -76,6 +87,9 @@ A scheduler should be able to provide a cron like feature
     Seems nice to be able to have  CEP that "wakes" up
     Mayb a JS library can help e.g. an array of cron times
     Maintain an array of jobs and calculate the wait time in a loop for the next wakeup
+  TaskCount
+    Like a cron but based on the number of interactions
+      When task entry X reaches Y then send request A to task B
 After experimenting with RxJS processor we may want to use a similar approach in React Processor
   Run RxJS in on the Shared Worker
     Eventually use this instead of lifting state
@@ -84,12 +98,12 @@ Tasks could be simple and composed
   This means there is no need to modify the "internals" of a Task
   It also creates a lot of repeated code in the Task Functions 
   It also means a lot of configuration to construct more complicated tasks from many components
-  Supporting both seems possible.
+  Supporting both simple and complicated seems possible.
 Add schemas for task.config.local as per tasktypes.mjs and use this to check tasks in configdata
 The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
   Should enforce the use of taskUpdate instead of driving children
     Could remove the idea of a child task from React
-Taskflows.js could be a task then would have task.user available and could remove globalState.user
+Taskflows.js should be a task then would have task.user available and could remove globalState.user
 Should the servicetype be copied into task.config.services?
   The servicetype is on the Processor while config is on the Hub
 Should the Processor also implement rate limiting?

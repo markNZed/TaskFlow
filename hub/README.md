@@ -80,8 +80,8 @@ Then to run: `npm start`
   * Scheduling
   * Diff generation
   * Dispatch
-  * Privacy filtering
-* Aspects that are orthogonal to the pipeline
+  * Privacy masking
+* Aspects that are orthogonal to the pipeline (potentially Tasks)
   * Monitoring
   * Logging
   * Debug

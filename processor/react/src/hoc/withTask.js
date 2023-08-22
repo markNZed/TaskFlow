@@ -21,7 +21,7 @@ function withTask(Component) {
 
   function TaskComponent(props) {
 
-    const { globalState, mergeGlobalState } = useGlobalStateContext();
+    const { globalState, mergeGlobalState, replaceGlobalState } = useGlobalStateContext();
     const isMountedRef = useRef();
     const [prevTask, setPrevTask] = useState();
     const [initTask, setInitTask] = useState();
@@ -58,6 +58,23 @@ function withTask(Component) {
       });
     }
 
+    useEffect(() => {
+      if (props.task?.config?.fsm?.inspect) {
+        replaceGlobalState("xstateInspect", true);
+      }
+    }, [props.task?.config?.fsm]);  
+
+    const loadModule = async (importPath) => {
+      try {
+        const module = await import(importPath);
+        console.log('The module was successfully loaded:', module);
+        return module;
+      } catch (error) {
+        console.error('Failed to load the module:', error);
+        return false;
+      }
+    };
+
     // Load the FSM if it exists otherwise set fsm to a string value
     // We only render the child component once fsm is set, to ensure useMachine has a valid input.
     useEffect(() => {
@@ -88,6 +105,15 @@ function withTask(Component) {
         });
       } else {
         setFsm("Not configured");
+        /*
+        const importPath = `${props.task.type}/default.mjs`;
+        const module = loadModule(importPath)
+        if (module) {
+          fsm = module.fsm;
+        } else {
+          setFsm("Not configured");
+        }
+        */
       }
     }, []);
 

@@ -119,12 +119,6 @@ function TaskSystemTest(props) {
     }
   }, [task?.config?.fsm]);
 
-  useEffect(() => {
-    if (task?.config?.fsm?.inspect) {
-      replaceGlobalState("xstateInspect", true);
-    }
-  }, [task?.config?.fsm]);
-
   // For debug messages
   useEffect(() => {
     const subscription = service.subscribe((state) => {
