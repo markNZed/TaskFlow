@@ -6,7 +6,7 @@ The following is for development where the NodeJS Task Processor and React Task 
 * `docker-compose build`
 * `docker network create taskflow`
 * `docker-compose up -d`
-* Access the React Task Processor at http://localhost:3000 
+* Access the React Task Processor at http://localhost:3000
 * NOTE: It can take many minutes for the npm install to complete
 * WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome
 
