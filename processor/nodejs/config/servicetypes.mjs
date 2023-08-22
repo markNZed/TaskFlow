@@ -42,5 +42,12 @@ const servicetypes = [
         ],
     */
   },
+  {
+    name: "chatgptzeroshot",
+    parentType: "openaigpt",
+    label: "ChatGPT Zero Shot",
+    systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
+    forget: true,
+  },
 ];
 export { servicetypes };

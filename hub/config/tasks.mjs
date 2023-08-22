@@ -178,8 +178,6 @@ const tasks = [
     type: "TaskConversation"
   },
   {
-    config: {
-    },
     name: "start",
     parentName: "zeroshot",
     type: "TaskChat"

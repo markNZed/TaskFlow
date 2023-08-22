@@ -14,7 +14,7 @@ RUN wget -qO /usr/local/bin/websocat https://github.com/vi/websocat/releases/lat
 RUN chmod a+x /usr/local/bin/websocat
 #websocat --version
 
-# We a reusing 4.4. at the moment becaus of issues on Mac Docker 
+# We a reusing 4.4. at the moment because of issues on MacOS Docker 
 #RUN curl -fsSL https://pgp.mongodb.com/server-6.0.asc | gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor
 #RUN echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /#etc/apt/sources.list.d/mongodb-org-6.0.list
 #RUN apt-get update && \
@@ -25,11 +25,14 @@ RUN yarn global add nodemon eslint prettier jest
 
 WORKDIR /app
 
+RUN npm update -g
 RUN npm install -g typescript
-
 RUN npm install -g quicktype
 
-# RUN cd /app/processor/nodejs/node_modules/@tensorflow/tfjs-node/deps/lib && ln -s libtensorflow.so.2.9.1 libtensorflow.so.2
+# Instead of the hacks below I deleted node_modules/@tensorflow and rann npm install again
+# RUN cd /app/processor/nodejs/node_modules/@tensorflow/tfjs-node/deps/lib && \
+#     ln -s libtensorflow.so.2.9.1 libtensorflow.so.2 && \
+#     ln -s libtensorflow_framework.so.2.9.1 libtensorflow_framework.so.2
 # RUN npm rebuild @tensorflow/tfjs-node --build-addon-from-source
 
 EXPOSE 3000

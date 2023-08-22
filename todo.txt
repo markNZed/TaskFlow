@@ -1,5 +1,6 @@
 /* ToDo
 -------
+How could dummy text work from chatGPT but no 0-Shot?
 Distributed task with FSM
   TaskShowInstruction
     Replace FSM on React and confirm things are working

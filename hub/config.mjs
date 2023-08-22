@@ -13,7 +13,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // This is used for the allowedOrigins
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "http://localhost:3000/react,http://127.0.0.1:3000/react";
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "http://localhost:3000";
 
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
