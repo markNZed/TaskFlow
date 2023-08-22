@@ -2,6 +2,7 @@ FROM node:18-buster-slim
 
 # Set bash as the default shell
 SHELL ["/bin/bash", "-c"]
+ENV SHELL /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
