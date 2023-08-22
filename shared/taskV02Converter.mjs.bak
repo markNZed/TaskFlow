@@ -211,5 +211,5 @@ const typeMap = {
 
 export {
     taskConverterToJson,
-    toTaskConverter,
+    "toTaskConverter": toTaskConverter,
 };
