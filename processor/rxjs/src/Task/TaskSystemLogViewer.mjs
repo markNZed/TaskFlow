@@ -8,8 +8,6 @@ import { parseFilter } from 'mongodb-query-parser';
 import { tasksModel } from "./SchemaTasks.mjs"
 import { formatQuery } from 'react-querybuilder';
 
-// in the MongoDB object __v represents the version of the document
-
 const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
 
   const T = utils.createTaskValueGetter(task);

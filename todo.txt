@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Deal with filtering coProcessing in systemLog viewer (option)
 Distributed task with FSM
   Forcing state: interpreter.start(state)
 One approach to code review:
@@ -10,14 +9,12 @@ One approach to code review:
   4) Untar the archive in the empty repo: tar -xvf repo.tar
   5) Add the files and push: git add .;git push --set-upstream origin review-branch
   6) Open a PR on github so any file can be reviewed
-https://reviewable.io requires pull request and seems suited to small changes
+  The above should be doable inside a single repo - create branch delete everything, create another branch from that and add everything at once
 Selecting menu item second time could restart the task - decide what to do within the task e.g. processor.command.restart
-functionName: "familyIds" familyTree ?
 Default FSM name e.g. default.js would be loaded if it exists
   The task could also define the FSM
-    This probably makes it easirt to see what is going on.
+    This probably makes it easier to see what is going on but only works if the task runs on one processor
       So this could be the default
-Install CEP from Task (maybe in the TaskType config?)
 Add xstate-viz server path on proxy and choose port
 Should queries be configured per Processor?
   Not needed as processor will not use them and overhead is not high

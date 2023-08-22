@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 export const library = {
   queries: {
-    /* Defined in the task config
+    /* Defined in the task config to demo combining of definitions with task config
     findTextarea: {
       query: 'textarea[name="prompt"]',
       field: "value",
@@ -27,7 +27,7 @@ export const library = {
     },
   },
   actions: {
-    /* Defined in the task config
+    /* Defined in the task config to demo combining of definitions with task config
     enterPrompt: {
       type: "TaskChat",
       input: "promptText",

@@ -37,8 +37,8 @@ const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
   }
 
   // This sync the familyTree but we are not using this if we test via UI 
-  async function familyIds(functionName, wsSendTask, CEPinstanceId, task, args) {
-    utils.logTask(task, "familyIds command", task.processor.command);
+  async function familyTree(functionName, wsSendTask, CEPinstanceId, task, args) {
+    utils.logTask(task, "familyTree command", task.processor.command);
     // Only run this when going through the coprocessor the first time
     if (task.processor.command === "init" && !task.processor.coProcessingDone) {
       let CEPtask;
@@ -87,7 +87,19 @@ const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
 
   // We can also register a CEP by declaring it in ./CEPFunctions.mjs
   CEPFunctions.register("serviceStub", serviceStub);
-  CEPFunctions.register("familyIds", familyIds);
+  CEPFunctions.register("familyTree", familyTree);
+
+  // Here we install the CEP from the task but this could also be done through the Task config
+  const match = "id-" + task.config.local.targetTaskId;
+  const config = {
+    functionName: "serviceStub",
+    args: {
+      type: "openaigpt.chatgptzeroshot",
+      key: "API", 
+      value: "openaistub"
+    },
+  }
+  utils.createCEP(CEPFuncs, CEPFunctions, task, match, config);
 
   return task;
 };

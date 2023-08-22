@@ -85,6 +85,7 @@ function transformKeys(obj) {
 }
 
 export const validateTasks = async (tasks) => {
+  //console.log("Validating tasks", tasks);
   const transformedTasks = tasks.map(taskflow => transformKeys(taskflow));
   await tasksSchema.validate(transformedTasks, { strict: true, noUnknown: true });
   console.log("Valid tasks");

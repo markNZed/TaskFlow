@@ -76,11 +76,11 @@ function TaskSystemTest(props) {
 
   useEffect(() => {
     if (result === undefined) {
+      const delay = task.config.local.timeout || 30000;
       timeoutId.current = setTimeout(() => {
-        //clearInterval(intervalId);
-        console.log('Stopped polling after 30 seconds');
+        console.log(`Stopped polling after ${delay / 1000} seconds`);
         send('TIMEOUT');
-      }, 30000); // Stop polling after 30 seconds
+      }, delay); // Stop polling after 30 seconds
     } else if (result) {
       clearInterval(timeoutId.current);
       console.log("PASSED");

@@ -189,10 +189,15 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
+      local: {
+        targetTaskId: "root.user.conversation.zeroshot.start",
+        timeout: 10000, // 10 seconds
+      },
       fsm: {
         name: "chat",
         inspect: true, 
         merge: {
+          // The start state is defined here to demonstrate merging of states from task configs
           states: {
             ...actionThenQuery('start', [], ['findTextarea']),
           },
@@ -213,19 +218,9 @@ const tasks = [
           },
         },
       },
-      ceps: {
-        "id-root.user.conversation.zeroshot.start": {
-          functionName: "serviceStub",
-          args: {
-            type: "openaigpt.chatgptzeroshot",
-            key: "API", 
-            value: "openaistub"
-          },
-        },
-        "familyId": {
-          functionName: "familyIds",
-        }
-      },
+      // This task is using CEP
+      //   serviceStub is created via this tasks's coprocessor Task Function
+      //   familyId is created via the TaskType configuration
     },
     parentName: "system",
     meta: {

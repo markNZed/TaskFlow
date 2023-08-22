@@ -118,8 +118,8 @@ export function WebSocketProvider({ children, socketUrl }) {
         messageQueueIdx = messageQueueIdx + 1;
         // Could eventaully just emit the index
         webSocketEventEmitter.emit(command, task);
-      } else if (command === "pong" && logPingPong) {
-        console.log("Pong");
+      } else if (command === "pong") {
+        logPingPong && console.log("Pong");
       } else {
         console.log("App webSocket unexpected message", message);
       }

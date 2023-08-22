@@ -58,10 +58,10 @@ const utils = {
     let result = {};
     try {
       result = (await import(config_dir + "/" + name + ".mjs"))[name];
-      //console.log("Importing data " + config_dir + '/' + name + ".mjs ")
+      //console.log("load_data_async importing data " + config_dir + '/' + name + ".mjs ")
     } catch (error) {
       console.log(
-        "No " + name + " at " + config_dir + "/" + name + ".mjs " + error
+        "load_data_async no " + name + " at " + config_dir + "/" + name + ".mjs " + error
       );
     }
     return result;

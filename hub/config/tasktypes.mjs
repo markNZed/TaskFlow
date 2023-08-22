@@ -11,7 +11,14 @@ const tasktypes = [
   },
   {
     name: "TaskSystemTest",
-    environments: ["nodejs", "react", "rxjs"],
+    config: {
+      ceps: {
+        "familyId": {
+          functionName: "familyTree",
+        },
+      },
+    },
+    environments: ["nodejs", "react"], // Assumes we have a coprocessor
     state: {
       current: "start",
     },
