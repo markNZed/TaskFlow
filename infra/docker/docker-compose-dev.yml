@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: taskflow:latest
+    depends_on:
+      - mongodb
     volumes: 
       - ../..:/app
       - ./root:/root # For SSH and gitconfig
@@ -17,7 +19,9 @@ services:
       - web-proxy
 
   mongodb:
-    image: mongodb/mongodb-community-server:latest
+    # Had issues with docker on MacOS with the latest so went back to 4.4
+    #image: mongodb/mongodb-community-server:latest
+    image: mongodb/mongodb-community-server:4.4.22-ubuntu2004
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=user
       - MONGODB_INITDB_ROOT_PASSWORD=pass

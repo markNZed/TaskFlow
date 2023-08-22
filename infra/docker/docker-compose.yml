@@ -7,6 +7,8 @@ services:
     image: taskflow:latest
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - mongodb
     volumes: 
       - ../..:/app
     ports:
@@ -18,12 +20,12 @@ services:
       - taskflow
 
   mongodb:
-    image: mongodb/mongodb-community-server:latest
-    ports:
-      - "127.0.0.1:27017:27017"
+    # Had issues with docker on MacOS with the latest so went back to 4.4
+    #image: mongodb/mongodb-community-server:latest
+    image: mongodb/mongodb-community-server:4.4.22-ubuntu2004
     environment:
-      - MONGODB_INITDB_ROOT_USERNAME=user
-      - MONGODB_INITDB_ROOT_PASSWORD=pass
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
       - dbdata:/data/db
     networks:
