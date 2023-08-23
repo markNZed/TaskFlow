@@ -2,11 +2,17 @@
 
 echo $V
 quicktype --lang js --src-lang schema -o task${V}Converter.mjs task${V}Schema.json
-# Need to use -i.bak may be related to https://riptutorial.com/sed/example/22784/in-place-editing-without-specifying-a-backup-file-overrides-read-only-permissions
-sed -i.bak 's/module\.exports = {/export {/' task${V}Converter.mjs
-sed -i.bak "s/task${V}ConverterToJson/taskConverterToJson/g" task${V}Converter.mjs
-sed -i.bak "s/toTask${V}Converter/toTaskConverter/g" task${V}Converter.mjs
-sed -i.bak "s/Task${V}Converter/TaskConverter/g" task${V}Converter.mjs
-sed -i.bak 's/"taskConverterToJson": //' task${V}Converter.mjs
-sed -i.bak 's/"toTaskConverter": //' task${V}Converter.mjs
+
+# Create a temporary file and apply all sed modifications to it
+tmp_file=$(mktemp)
+
+sed 's/module\.exports = {/export {/' task${V}Converter.mjs > "$tmp_file"
+sed -e "s/task${V}ConverterToJson/taskConverterToJson/g" \
+    -e "s/toTask${V}Converter/toTaskConverter/g" \
+    -e "s/Task${V}Converter/TaskConverter/g" \
+    -e 's/"taskConverterToJson": //' \
+    -e 's/"toTaskConverter": //' "$tmp_file" > task${V}Converter.mjs
+
+# Clean up temporary file
+rm "$tmp_file"
 
