@@ -23,7 +23,7 @@ const useStartTask = (task, setTask) => {
         const updating = { "command": null, "commandArgs": null };
         utils.setNestedProperties(updating);
         setTask((p) => utils.deepMerge(p, updating));
-        utils.log("useStartTask", snapshot.id);
+        utils.log("useStartTask from ", snapshot.id, "launching", snapshot.commandArgs.id);
         wsSendTask(snapshot);
       } catch (error) {
         console.log(error)

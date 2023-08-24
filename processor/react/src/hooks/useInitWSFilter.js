@@ -5,8 +5,6 @@ import { utils } from "../utils/utils";
 function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
   
   const { globalState } = useGlobalStateContext();
-  const [eventQueue, setEventQueue] = useState([]);
-  const [working, setWorking] = useState(false);
   const [startTaskId, setStartTaskId] = useState();
   const [startPrevInstanceId, setStartPrevInstanceId] = useState();
 

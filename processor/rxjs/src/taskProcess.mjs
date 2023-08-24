@@ -17,6 +17,9 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     if (task.processor["command"] === "error") {
       utils.logTask(task, "RxJS Task Processor error so skipping Task Fuction id:" + task.id);
       updatedTask = task;
+    } else if (task.processor["command"] === "start") {
+      utils.logTask(task, "RxJS Task Processor start so skipping Task Fuction id:" + task.id);
+      updatedTask = task;
     } else if (task.processor?.commandArgs?.sync) {
       utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
@@ -25,7 +28,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, CEPFuncs);
       utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
     } else {
-      utils.logTask(task, "RxJS Task Processor unknown component " + task.type);
+      utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);
     }
     // Create the CEP during the init of the task
     if (task.processor["command"] === "init") {

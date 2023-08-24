@@ -1,6 +1,10 @@
 /* ToDo
 -------
-How could dummy text work from chatGPT but no 0-Shot?
+We need another way of managing the familyTree - TaskFamilyTree
+instancesStore_async on hub - should have single store with index that can separate active and inactive
+https://github.com/ant-design/ant-design
+The stepper sets the state to exit - it should not act directly on the state, use task.input
+Point to private extensions of config rather than redirecting the entire config directory
 Distributed task with FSM
   TaskShowInstruction
     Replace FSM on React and confirm things are working

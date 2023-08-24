@@ -214,10 +214,14 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     // Also we do not want to update a task that errored
     if (!prevTask.done && !task.id.endsWith(".error")) {
       if (await activeTasksStore_async.has(prevTask.instanceId)) {
+        /*
+        This has been removed for now becaus sending an update can impact the state machine
+        and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
         await utils.hubActiveTasksStoreSet_async(activeTasksStore_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
+        */
       }
     }
   }

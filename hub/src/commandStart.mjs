@@ -14,7 +14,7 @@ export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
   let processorId = task.hub.sourceProcessorId;
   try {
-    utils.logTask(task, "commandStart_async id:" + task.id + " from processorId:" + processorId);
+    utils.logTask(task, "commandStart_async from processorId:" + processorId);
     let initTask;
     let authenticate = true;
     if (commandArgs.init) {
@@ -29,12 +29,25 @@ export async function commandStart_async(task, res) {
         user: {id: task.user.id},
       };
     }
-    utils.logTask(task, "commandStart_async commandArgs.prevInstanceId, task.instanceId", commandArgs.prevInstanceId, task.instanceId);
+    utils.logTask(task, "commandStart_async coProcessingDone:", task.hub.coProcessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    if (haveCoProcessor && !task.hub.coProcessingDone) {
-      await taskSync_async(task.instanceId, task);
-      // Not sure if we need to store this - are we storing on the Processors? Could get out of sync when usnig task to start another task
-      utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+    if (haveCoProcessor) {
+      if (task.hub.coProcessingDone) {
+        taskStart_async(initTask, authenticate, processorId, prevInstanceId)
+          .then(async (startTask) => {
+            await instancesStore_async.set(startTask.instanceId, startTask);
+            await taskSync_async(startTask.instanceId, startTask);
+            //utils.logTask(task, "commandStart_async startTask.processors", startTask.processors);
+            //utils.logTask(task, "commandStart_async startTask.processor", startTask.processor);
+            //utils.logTask(task, "commandStart_async startTask.hub", startTask.hub);
+            utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
+          })
+      } else {
+        await taskSync_async(task.instanceId, task);
+        // Should not store this - are we storing on the Processors? 
+        // Start should not function as an update. Could get out of sync when using task to start another task.
+        //utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+      }
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
         .then(async (startTask) => {

@@ -13,9 +13,9 @@ function IFrame() {
       width: '1600px',
       height: '500px',
       border: '0',
-      display: globalState.xstateInspect ? 'block' : 'none',
+      display: globalState.xStateDevTools ? 'block' : 'none',
     };
-  }, [globalState.xstateInspect]);
+  }, [globalState.xStateDevTools]);
 
   const iframeElement = (
     <iframe

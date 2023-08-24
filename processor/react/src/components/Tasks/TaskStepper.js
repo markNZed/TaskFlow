@@ -84,6 +84,7 @@ function TaskStepper(props) {
         if (stepperNavigation.task) {
           if (stepperNavigation.direction === "forward") {
             props.modifyChildState("exit");
+            props.modifyChildTask({"input.exit": true});
             setStepperNavigation({task: null, direction: null})
             nextState = "waitForDone";
           } else if (stepperNavigation.direction === "back") {
@@ -103,6 +104,7 @@ function TaskStepper(props) {
         break;
       case "waitForDone":
         if (stepDone) {
+          props.modifyChildTask({"input.exit": false});
           // The stepper requests a new Task
           // will set startTask or startTaskError
           modifyTask({
@@ -207,6 +209,7 @@ function TaskStepper(props) {
                   setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                   parentTask={task}
                   handleModifyChildState={props.handleModifyChildState}
+                  handleModifyChildTask={props.handleModifyChildTask}
                 />
               )}
             </AccordionDetails>

@@ -87,8 +87,7 @@ const connectWebSocket = () => {
       return;
     }
     if (command !== "pong") {
-      console.log(""); //empty line
-      console.log("processorWs ", command, task.id, commandArgs);
+      console.log("processorWs.onmessage ", command, task.id, commandArgs);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(message.task.instanceId);
@@ -110,7 +109,11 @@ const connectWebSocket = () => {
       if (!commandArgs?.sync) {
         await taskProcess_async(wsSendTask, mergedTask);
       }
-    } else if (command === "start" || command === "join" || command === "init") {
+    // We should not receive start commands on a Task Processor (unless it is a coprocessor)
+    } else if (command === "start") {
+      console.log("Task:", message.task);
+      throw new Error("Unexpected start command")
+    } else if (command === "join" || command === "init") {
       await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);
       await taskProcess_async(wsSendTask, message.task)
     } else if (command === "pong") {

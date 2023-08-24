@@ -46,6 +46,19 @@ function withTask(Component) {
     const handleModifyChildStateRef = useRef(null);
     const handleModifyChildTaskRef = useRef(null);
     const [fsm, setFsm] = useState();
+    const taskRef = useRef();
+    const noopMachine = {
+      predictableActionArguments: true,
+      id: 'noop',
+      initial: 'idle',
+      states: {
+        idle: {}
+      }
+    };
+
+    useEffect(() => {
+      taskRef.current = props.task;
+    }, [props.task]);
 
     // In HOC create a syncTask function
     function syncTask(syncTask) {
@@ -59,36 +72,25 @@ function withTask(Component) {
     }
 
     useEffect(() => {
-      if (props.task?.config?.fsm?.inspect) {
-        replaceGlobalState("xstateInspect", true);
+      if (props.task?.config?.fsm?.devTools) {
+        replaceGlobalState("xStateDevTools", true);
       }
     }, [props.task?.config?.fsm]);  
 
-    const loadModule = async (importPath) => {
-      try {
-        const module = await import(importPath);
-        console.log('The module was successfully loaded:', module);
-        return module;
-      } catch (error) {
-        console.error('Failed to load the module:', error);
-        return false;
-      }
-    };
-
-    // Load the FSM if it exists otherwise set fsm to a string value
-    // We only render the child component once fsm is set, to ensure useMachine has a valid input.
-    useEffect(() => {
-      let fsm;
-      if (props.task?.fsm) {
-        console.log("props.task.fsm", props.task.fsm);
-        fsm = props.task.fsm;
-      } else if (props.task?.config?.fsm) {
-        const importPath = `${props.task.type}/${props.task.config.fsm.name}.mjs`;
-        // webpack needs to be able to resolve the context (the base directory)
-        import('../shared/fsm/' + importPath)
+    const loadFsmModule = async (importPath, name) => {
+      console.log("loadFsmModule", '../shared/fsm/' + importPath);
+      // To allow for the preprocessing to pick up the initial path we give the path as a string constant to import
+      import('../shared/fsm/' + importPath)
         .then((module) => {
-          console.log("module ", importPath, module.fsm);
-          fsm = module.fsm;
+          console.log("module ", importPath);
+          let fsm = module.getFsm(props.task);
+          const fsmDefaults = {
+            predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
+            preserveActionOrder: true, // will be the default in v5
+            id: props.task.id + "-" + name,
+            initial: 'start',
+          };
+          fsm = utils.deepMerge(fsmDefaults, fsm);
           if (props.task?.config?.fsm?.merge) {
             console.log("props.task.fsm.merge", props.task.config.fsm.merge);
             fsm = utils.deepMerge(fsm, props.task.config.fsm.merge);
@@ -96,24 +98,36 @@ function withTask(Component) {
           if (fsm) {
             console.log("createMachine", fsm);
             setFsm(createMachine(fsm));
+          } else {
+            console.log("No fsm found");
+            setFsm(createMachine(noopMachine));
           }
         })
         .catch((error) => {
-          console.error(`Failed to load FSM at ${importPath}:`, error);
-          // Handle the error, e.g., set some error state or show an error message
-          setFsm("Not available");
-        });
-      } else {
-        setFsm("Not configured");
-        /*
+          if (error.message.includes("Cannot find module")) {
+            console.log(`Failed to load FSM at ${'../shared/fsm/' + importPath}`);
+          } else {
+            console.error(`Failed to load FSM at ${'../shared/fsm/' + importPath}`, error);
+          }
+          setFsm(createMachine(noopMachine));
+        });  
+    };
+
+    // Load the FSM if it exists otherwise set fsm to a string value
+    // We only render the child component once fsm is set, to ensure useMachine has a valid input.
+    useEffect(() => {
+      if (props.task?.fsm) {
+        setFsm(createMachine(props.task.fsm));
+      } else if (props.task?.config?.fsm?.name) {
+        const importPath = `${props.task.type}/${props.task.config.fsm.name}.mjs`;
+        // webpack needs to be able to resolve the context (the base directory)
+        loadFsmModule(importPath, props.task.config.fsm.name);
+      } else if (props.task?.type) {
         const importPath = `${props.task.type}/default.mjs`;
-        const module = loadModule(importPath)
-        if (module) {
-          fsm = module.fsm;
-        } else {
-          setFsm("Not configured");
-        }
-        */
+        loadFsmModule(importPath, 'default');
+      } else {
+        console.log("No FSM");
+        setFsm(createMachine(noopMachine));
       }
     }, []);
 
@@ -624,11 +638,12 @@ function withTask(Component) {
       checkLocked,
       fsm,
       syncTask,
+      taskRef,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it
     // If no FSM is configured then fsm will default to a string
-    if (!fsm) {
+    if (fsm === undefined) {
       return (<div>Loading FSM...</div>)
     }
 

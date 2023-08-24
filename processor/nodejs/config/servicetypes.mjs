@@ -5,6 +5,11 @@ const servicetypes = [
     name: "root",
   },
   {
+    name: "openaistub",
+    API: "openaistub",
+    parentType: "root",
+  },
+  {
     name: "openaigpt",
     API: "openaigpt",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
@@ -37,7 +42,7 @@ const servicetypes = [
             },
             {
                 role: 'assistant',
-                text: `OK. You made a spelling mistake "amake" `,
+                text: `OK. You made a spelling mistake: "amake" should be "make"`,
             },
         ],
     */

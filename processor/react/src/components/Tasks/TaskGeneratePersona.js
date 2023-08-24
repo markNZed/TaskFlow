@@ -36,6 +36,7 @@ const TaskGeneratePersona = (props) => {
   } = props;
 
   const [responseText, setResponseText] = useState("");
+  const [startedConversation, setStartedConversation] = useState(false);
   const responseTextRef = useRef("");
   const [socketResponses, setSocketResponses] = useState([]);
 
@@ -92,18 +93,31 @@ const TaskGeneratePersona = (props) => {
         setResponseText(task.config.local.display);
         break;
       case "generated":
-        setResponseText(task.output.summary);
-        const startTaskId = props.task.meta.childrenId[0];
-        modifyTask({
-          "command": "start",
-          "commandArgs": {
-            id: startTaskId,
-          }
-        });
+        // Without startedConversation we can receive an update (e.g. the children count) that causes
+        // a transition back into state generated. The sync can have this effect if state is modified.
+        if (!startedConversation) {
+          setResponseText(task.output.summary);
+          const startTaskId = props.task.meta.childrenId[0];
+          modifyTask({
+            "command": "start",
+            "commandArgs": {
+              id: startTaskId,
+            }
+          });
+          setStartedConversation(true);
+        }
         nextState = "wait";
+        break;
       case "wait":
+        if (transition()) {
+          // We want to get all the Processors into the wait state
+          modifyTask({
+            "command": "update",
+          });
+        }
+        break;
       default:
-        console.log("Default state : " + task.state.current);
+        console.log(`${componentName} Default state: ${task.state.current}`);
     }
     // Manage state.current and state.last
     props.modifyState(nextState);

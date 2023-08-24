@@ -583,7 +583,7 @@ const sharedUtils = {
     let diffTask = sharedUtils.processorDiff(task);
     //console.log("taskInProcessorOut diffTask task.output", task.output);
     // Send the diff considering the latest task storage state
-    if (diffTask.instanceId) {
+    if (diffTask.instanceId && command != "start") {
       const lastTask = await activeTasksStore_async.get(diffTask.instanceId);
       if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
         delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask
@@ -635,7 +635,8 @@ const sharedUtils = {
     const prevMessageId = task?.meta?.prevMessageId || "";
     const messageId = task?.meta?.messageId || "";
     const id = task?.id || "";
-    console.log(prevMessageId, messageId, id, ...message);
+    const instanceId = task?.instanceId || "";
+    console.log(prevMessageId + "->" + messageId, id, instanceId, ...message);
   },
 
   findCyclicReference: function(obj) {

@@ -198,15 +198,18 @@ async function chatPrepare_async(task) {
   // Replace MODEL variables in systemMessageTemplate
   if (serviceConfig.systemMessageTemplate) {
     let systemMessageTemplate = serviceConfig.systemMessageTemplate;
-    console.log("systemMessageTemplate " + systemMessageTemplate);
+    console.log("systemMessageTemplate ", systemMessageTemplate);
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Using replace with a callback function
-    systemMessage = systemMessageTemplate.replace(regex, (match, p1, p2) => {
-      if (!serviceConfig[p2]) {
-        throw new Error("serviceConfig " + p2 + " does not exist");
-      }
-      return serviceConfig[p2]
+    let systemMessages = systemMessageTemplate.map((template) => {
+      return template.replace(regex, (match, p1, p2) => {
+        if (!serviceConfig[p2]) {
+          throw new Error(`serviceConfig ${p2} does not exist`);
+        }
+        return serviceConfig[p2];
+      });
     });
+    systemMessage = systemMessages.join(); 
     console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
   }
 

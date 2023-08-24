@@ -88,6 +88,8 @@ To learn more about the React Task Processor, see [README.md](processor/react/RE
 
 To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
 
+For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
+
 T@skFlow will play nicely with other libraries such as:
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
 * [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)

@@ -71,8 +71,8 @@ An optional interpreter is provided that you can use to run your statecharts. Th
 
 */
 
-const fsm = createMachine(
-  {
+export function getFsm(task) {
+  return {
     predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
     preserveActionOrder: true, // will be the default in v5
     id: 'toggle',
@@ -125,38 +125,37 @@ const fsm = createMachine(
         },
       },
     },
-  },
-  {
-    actions: {
-      /* ... */
-      login: (context, event) => {
-        console.log('login', context.elapsed, event);
+  };
+    /*
+    {
+      actions: {
+        login: (context, event) => {
+          console.log('login', context.elapsed, event);
+        },
+        logout: (context, event) => {
+          console.log('logout', context.elapsed, event);
+        },
+        alertMetaMessage: (context, event) => {
+          console.log('alertMetaMessage', context, event);
+        },
+        alertHi: () => {
+          alert("Hi");
+        },
       },
-      logout: (context, event) => {
-        console.log('logout', context.elapsed, event);
+      delays: {
       },
-      alertMetaMessage: (context, event) => {
-        console.log('alertMetaMessage', context, event);
+      guards: {
       },
-      alertHi: () => {
-        alert("Hi");
+      services: {
       },
     },
-    delays: {
-      /* ... */
-    },
-    guards: {
-      /* ... */
-    },
-    services: {
-      /* ... */
-    },
-  },
-);
+    */
+}
 
 //https://xstate.js.org/docs/guides/states.html#state-meta-data
 console.log("fsm.states.failure.states.timeout.meta.message", fsm.states.failure.states.timeout.meta.message, fsm);
 
+/*
 let fsm2;
 try { // try block is not needed
   fsm2 = fsm.withConfig({
@@ -178,3 +177,4 @@ try { // try block is not needed
 
 export {fsm, fsm2};
 //export default fsm;
+*/

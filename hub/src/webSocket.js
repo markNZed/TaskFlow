@@ -103,7 +103,7 @@ const wsSendTask = async function (task, processorId) {
   }
   delete task.hub.origTask;
   message["task"] = task;
-  //utils.logTask(task, "wsSendTask task", task.state);
+  //utils.logTask(task, "wsSendTask task.hub", task.hub);
   wsSendObject(processorId, message);
 }
 
@@ -220,19 +220,19 @@ function initWebSocketServer(server) {
           }
           // Updates through WS can only come from RxJS for now
           if (task.hub.command === "update") {
-            utils.logTask(task, "WS update", task.id, " from:" + task.hub.sourceProcessorId);
+            utils.logTask(task, "WS update from:" + task.hub.sourceProcessorId);
             commandUpdate_async(task);
           }
           if (task.hub.command === "start") {
-            utils.logTask(task, "WS start", task.id, " from:" + task.hub.sourceProcessorId);
+            utils.logTask(task, "WS start from:" + task.hub.sourceProcessorId);
             commandStart_async(task);
           }
           if (task.hub.command === "init") {
-            utils.logTask(task, "WS init", task.id, " from:" + task.hub.sourceProcessorId);
+            utils.logTask(task, "WS init from:" + task.hub.sourceProcessorId);
             commandInit_async(task);
           }
           if (task.hub.command === "error") {
-            utils.logTask(task, "WS error", task.id, " from:" + task.hub.sourceProcessorId);
+            utils.logTask(task, "WS error from:" + task.hub.sourceProcessorId);
             commandError_async(task);
           }
           if (task.hub.command === "partial") {   

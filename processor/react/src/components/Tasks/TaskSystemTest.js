@@ -36,7 +36,6 @@ function TaskSystemTest(props) {
     task,
     modifyTask,
     syncTask,
-    fsm,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
@@ -46,9 +45,8 @@ function TaskSystemTest(props) {
   const { replaceGlobalState } =  useGlobalStateContext();
 
   // We pass a ref to the task so we do not lose the task state when React sets it
-  const TaskRef = useRef();
-  const [state, send, service] = useMachine(fsm, {
-    context: { taskRef: TaskRef },
+  const [state, send, service] = useMachine(props.fsm, {
+    context: { taskRef: props.taskRef },
     actions: {
       taskAction: taskAction,
       taskQuery: taskQuery,
@@ -58,7 +56,7 @@ function TaskSystemTest(props) {
         console.log(action.message, context.data);
       },
     },
-    devTools: task.config.fsm.inspect ? true : false,
+    devTools: task.config.fsm.devTools ? true : false,
   });
   const queriesRef = useRef();
   const actionsRef = useRef();
@@ -129,10 +127,6 @@ function TaskSystemTest(props) {
       subscription.unsubscribe();
     };
   }, [service]); // note: service should never change
-
-  useEffect(() => {
-    TaskRef.current = task;
-  }, [task]);
 
   function activate(msg, ref, context, event, actionMeta) {
     const id = actionMeta.action.id;

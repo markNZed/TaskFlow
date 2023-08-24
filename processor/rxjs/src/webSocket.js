@@ -135,7 +135,12 @@ taskSubject
         utils.logTask(task, "Task processed with null result");
       } else {
         if (!coProcessor || task.processor.coProcessingDone) {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+          // We do not store the start as this would be treating th start command like an update
+          if (task.processor.command !== "start") {
+            await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+          } else {
+            utils.logTask(task, 'Not storing start');
+          }
           releaseResource(task.instanceId);
           utils.logTask(task, 'Task processed successfully');
         }
@@ -212,7 +217,7 @@ const connectWebSocket = () => {
     //utils.logTask(task, "task.processor", task.processor);
     if (command !== "pong") {
       //utils.logTask(task, "processorWs " + command)
-      utils.logTask(task, "processorWs coProcessingDone " + task.processor.coProcessingDone + " coProcessing " + task.processor.coProcessing);
+      utils.logTask(task, "processorWs coProcessingDone:" + task.processor.coProcessingDone + " coProcessing:" + task.processor.coProcessing);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(task.instanceId);
@@ -240,6 +245,7 @@ const connectWebSocket = () => {
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);
       }
+    // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
       // Emit the task into the taskSubject
