@@ -1,42 +1,29 @@
+/* eslint-disable xstate/prefer-predictable-action-arguments */
 /*
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// @ts-check
-
+// State name should represent what can happen (i.e. actions) in that state
+// Actions should start with verbs
+// Action that runs on entry should have the same name as the state
+// There are default events for each state with the same name (and case) as the state that will cause a transition to the new state
 export function getFsm(initialTask) {
-  return {
-    on: { EXIT: 'exitState' },
+  return {  
     states: {
       start: {
-        always: { target: 'response', cond: 'instructionCached' },
-        on: { 'STATE_RESPONSE': 'response' },
+        always: { target: 'displayInstruction', cond: 'instructionCached' },
       },
-      response: {
-        
-        after: {
-          0: { actions: 'setInstruction', cond: 'newText' } // Delay of 0ms
-        },
-        
-        /*
-        entry: {
-          actions: 'setInstruction', cond: 'newText'
-        },
-        */
-        //always: { actions: 'setInstruction', cond: 'newText' },
-        on: {
-          SET_INSTRUCTION: {
-            actions : 'setInstruction',
-          }
-        },
+      displayInstruction: {
+        entry: 'displayInstruction',
+        on: { NEW_INSTRUCTION: { actions: 'displayInstruction' } }
       },
-      exitState: {
-        entry: 'exitAction',
+      finish: {
+        entry: 'finish',
       },
     },
-  };
-};
+  }
+}
   
   

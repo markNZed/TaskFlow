@@ -74,5 +74,20 @@ xutils.actionThenQuery = function(state, actions, queries) {
   return result;
 }
 
-export const { taskAction, taskQuery, logMsg, actionThenQuery } = xutils;
+// Function to add default events to an XState machine based on its states
+xutils.addDefaultEventsBasedOnStates = function(machineConfig) {
+  const newMachineConfig = JSON.parse(JSON.stringify(machineConfig)); // Deep clone
+  // Ensure there is a top-level "on" property
+  if (newMachineConfig.on === undefined) {
+    newMachineConfig['on'] = {};
+  }
+  // Add default events based on states
+  Object.keys(newMachineConfig.states).forEach(state => {
+    //const snakeCasedEvent = xutils.convertToSnakeCase(state);
+    newMachineConfig['on'][state] = state;
+  });
+  return newMachineConfig;
+}
+
+export const { taskAction, taskQuery, logMsg, actionThenQuery, addDefaultEvents } = xutils;
 export { xutils }

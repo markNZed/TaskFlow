@@ -11,6 +11,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
 import { useEventSource } from '../contexts/EventSourceContext';
 import { createMachine } from 'xstate';
+import { xutils } from '../shared/fsm/xutils.mjs';
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -96,6 +97,10 @@ function withTask(Component) {
             fsm = utils.deepMerge(fsm, props.task.config.fsm.merge);
           }
           if (fsm) {
+            // Add events for transitions to all states
+            console.log("Before addDefaultEvents", fsm);
+            fsm = xutils.addDefaultEventsBasedOnStates(fsm);
+            console.log("After addDefaultEvents", fsm);
             console.log("createMachine", fsm);
             setFsm(createMachine(fsm));
           } else {

@@ -24,6 +24,7 @@ The `/app/shared` directory is soft linked from `/app/hub/src/shared`, `/app/pro
 The React procssor runs in a web browser (perference for Firefox).
 From the Javascript console in Web Developer tools the current Task objects can be read in the variable `window.tasks`.
 The NodeJS processor can use a dummy API (to reduce the risk of wasting money on OpenAI API calls), set `DUMMY_OPENAI=true` in `/app/processor/nodejs/.env`.
+The System > Log Task provides insights into the sequence of task messages that have gone through coprocessing on the Task Hub.
 
 ## Tips
 

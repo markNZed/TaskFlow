@@ -7,6 +7,8 @@
     "generate-converter-help": "quicktype --help"
   },
   "devDependencies": {
+    "eslint": "^8.47.0",
+    "eslint-plugin-xstate": "^1.1.2",
     "nodemon": "^2.0.22",
     "quicktype": "^23.0.30"
   },

@@ -13,11 +13,10 @@ const TaskShowInstruction_async = async function (wsSendTask, task) {
     case "start":
       T("output.instruction", T("config.local.instruction"));
       T("state.last", T("state.current"));
-      T("state.current", "response");
+      T("state.current", "displayInstruction");
       T("command", "update");
       break;
-    case undefined:
-    case "response":
+    case "displayInstruction":
       console.log(`${task.type} does nothing in state ${task.state.current}`);
       return null
     default:
