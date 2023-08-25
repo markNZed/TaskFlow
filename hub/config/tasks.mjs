@@ -193,7 +193,8 @@ const tasks = [
       },
       fsm: {
         name: "chat",
-        devTools: true, 
+        useMachine: true,
+        //devTools: true, 
         merge: {
           // The start state is defined here to demonstrate merging of states from task configs
           states: {

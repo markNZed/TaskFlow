@@ -9,6 +9,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // Actions should start with verbs
 // Action that runs on entry should have the same name as the state
 // There are default events for each state with the same name (and case) as the state that will cause a transition to the new state
+// choose: for conditional actions 
 export function getFsm(initialTask) {
   return {  
     states: {

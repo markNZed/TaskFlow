@@ -15,12 +15,12 @@ import { createColumns } from './TaskSystemLogViewer/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button, Menu, MenuItem, Checkbox } from '@mui/material';
+import useGlobalStateContext from "../../contexts/GlobalStateContext";
 
 /*
 Review Qs
   * Given the features we are using are there better free data grid alternatives?
   * How to deal with DragFilterHeader losing focus on remounting?
-  * What is a clean way to deal with const element = document.getElementById('appDiv');
   * Is createContext really needed as it seems we re-render anyway
 
 Issues:
@@ -80,15 +80,16 @@ const TaskSystemLogViewer = (props) => {
   // Need the context becausee we don't want to pass filters and setFilters as props 
   // That would create a rendering loop when calling setFilters
   const FilterContext = React.createContext();
+  const { globalState, replaceGlobalState } = useGlobalStateContext();
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  // This is a hack to override the width of the App (max of 1200px) when presenting this Task
-  const element = document.getElementById('appDiv');
-  if (element) {
-    element.style.maxWidth = '100%';
-  }
+  useEffect(() => {
+    if (globalState.lastSelectedTaskId && globalState.lastSelectedTaskId === task.id) {
+      replaceGlobalState("maxWidth", "100%");
+    }
+  }, [globalState.lastSelectedTaskId]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

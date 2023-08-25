@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import { inspect } from '@xstate/inspect';
 
@@ -8,30 +8,34 @@ import { inspect } from '@xstate/inspect';
 function IFrame() {
 
   const { globalState } =  useGlobalStateContext();
+  const iframeRef = useRef();
 
-  const iframeStyle = useMemo(() => {
-
+  if (globalState.xStateDevTools && iframeRef) {
     inspect({
-      //iframe: false,
-      iframe: () => document.querySelector('iframe.xstate'),
+      iframe: false,
+      //iframe: () => iframeRef.current,
       url: "https://stately.ai/viz?inspect"
     });
+  }
 
-    return {
-      width: '1600px',
-      height: '500px',
-      border: '0',
-      display: globalState.xStateDevTools ? 'block' : 'none',
+  const iframeElement = useMemo(() => {
+    const iframeStyle = {
+        width: '1600px',
+        height: '500px',
+        border: '0',
+        display: 'block',
     };
+    if (globalState.xStateDevTools) {
+      return <iframe
+        ref={iframeRef}
+        style={iframeStyle}
+        title="XState Inspect"
+        className="xstate"
+      />
+    } else {
+      return null;
+    }
   }, [globalState.xStateDevTools]);
-
-  const iframeElement = (
-    <iframe
-      style={iframeStyle}
-      title="XState Inspect"
-      className="xstate"
-    />
-  );
 
   return (
     <div>

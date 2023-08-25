@@ -184,7 +184,10 @@ const tasktypes = [
     config: {
       local: {
         instruction: "",
-      }
+      },
+      fsm: {
+        useMachine: true,
+      },
     },
     state: {
       current: "start",

@@ -1,5 +1,10 @@
 /* ToDo
 -------
+tasktype cannot configure fsm: { useMachine: true} ?
+useMachine allows for the updating of actions and guards etc
+Reset of the task on React still needs an update sent to reset "for real" or we create a new instance?
+  Restarting is not working with Systemtest - why?
+The integration with the XState Viz is perhaps problematic when we change the FSM by updating it
 We need another way of managing the familyTree - TaskFamilyTree
 instancesStore_async on hub - should have single store with index that can separate active and inactive
 https://github.com/ant-design/ant-design

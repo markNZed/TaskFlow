@@ -14,12 +14,6 @@ import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import { library } from "../../shared/fsm/TaskSystemTest/library.mjs"
 import { xutils } from "../../shared/fsm/xutils.mjs"
 
-inspect({
-  //iframe: false,
-  iframe: () => document.querySelector('iframe.xstate'),
-  url: "https://stately.ai/viz?inspect"
-});
-
 /*
 Task Process
 
@@ -36,16 +30,26 @@ function TaskSystemTest(props) {
     task,
     modifyTask,
     syncTask,
+    fsmMachine,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
   // without this we will not setup the hooks for the websocket
   props.onDidMount();
 
+  /*
+  // Each time this component is mounted reset the task state
+  useEffect(() => {
+    if (send && task?.state?.current !== 'start') {
+      send(task.state.current);
+    }
+  }, []);
+  */
+
   const { replaceGlobalState } =  useGlobalStateContext();
 
   // We pass a ref to the task so we do not lose the task state when React sets it
-  const [state, send, service] = useMachine(props.fsm, {
+  const [state, send, service] = useMachine(fsmMachine, {
     context: { taskRef: props.taskRef },
     actions: {
       taskAction: taskAction,

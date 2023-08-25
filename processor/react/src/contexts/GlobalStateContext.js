@@ -18,14 +18,15 @@ export function GlobalStateProvider({ children }) {
 
   console.log("--------- GlobalStateProvider ---------");
 
-  const globalStatInit = {
+  const globalStateInit = {
     langModel: "gpt-3.5-turbo",
     temperature: 0,
     maxTokens: 4000,
+    maxWidth: "800px",
   };
 
-  const [globalState, setGlobalState] = useState(globalStatInit);
-  const [prevGlobalState, setPrevGlobalState] = useState(globalStatInit);
+  const [globalState, setGlobalState] = useState(globalStateInit);
+  const [prevGlobalState, setPrevGlobalState] = useState(globalStateInit);
 
   useEffect(() => {
     if (prevGlobalState !== globalState) {

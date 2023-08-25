@@ -25,6 +25,8 @@ const TaskShowInstruction = (props) => {
     log,
     task,
     modifyTask,
+    fsmMachine,
+    addLogging,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
@@ -32,44 +34,21 @@ const TaskShowInstruction = (props) => {
 
   const [instructionText, setInstructionText] = useState("");
 
-  // Add logging to actions and guards
-  function addLogging(functions, descriptor) {
-    const loggedFunctions = {};
-    for (const [key, value] of Object.entries(functions)) {
-      loggedFunctions[key] = function(context, event) {
-        const result = value(context, event);
-        let msg = [];
-        if (descriptor === 'action') {
-          msg = [`${key} ${descriptor}`];     
-        } else {
-          msg = [`${key} ${descriptor}`, value(context, event)];
-        }
-        console.log("FSM ", ...msg);
-        return result;
-      };
-    }
-    return loggedFunctions;
-  }
-  const logActions = actions => addLogging(actions, 'action');
-  const logGuards = guards => addLogging(guards, 'guard');
-
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
   // Actions receive arguemnts (context, event) which we could choose to use here
-  const actions = logActions({
-    displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
+  const actions = addLogging({
+    displayInstruction: () => {console.log("Task:", task); return task.output.instruction ? setInstructionText(task.output.instruction) : undefined},
     finish: () => modifyTask({ "state.done": true }),
   });
-
   // Guards receive arguemnts (context, event) which we could choose to use here
-  const guards = logGuards({
-    instructionCached: () => task.output.instruction ? true : false,
-    newInstruction: () => instructionText !== task.output.instruction ? true : false,
+  const guards = addLogging({
+    instructionCached: () => {console.log("Task:", task); return task.output.instruction ? true : false},
+    newInstruction: () => {console.log("Task:", task); return instructionText !== task.output.instruction ? true : false},
   });
 
   // We can't move useMachine into HoC because we need to wait for props.fsm and we create that delay with the HoC at the moment
-  const [fsmState, fsmSend, fsmService] = useMachine(props.fsm, {
-    context: {},
+  const [fsmState, fsmSend, fsmService] = useMachine(fsmMachine, {
     actions,
     guards,
     devTools: task.config?.fsm?.devTools ? true : false,
@@ -77,27 +56,29 @@ const TaskShowInstruction = (props) => {
 
   // Synchronise XState FSM with task.state
   useEffect(() => {
-    modifyTask({ "state.current": fsmState.value });
+    if (fsmState && fsmState.value !== props.task?.state?.current) {
+      modifyTask({ "state.current": fsmState.value });
+    }
   }, [fsmState]);
 
   // Synchronise task.state with FSM
   useEffect(() => {
-    if (task.state.current && task.state.current !== fsmState.value) {
+    if (task?.state?.current && fsmState && task.state.current !== fsmState.value) {
       fsmSend(task.state.current);
     }
-  }, [task.state.current]);
+  }, [task?.state?.current]);
 
   /*
-  Generate events based on state - declare after the FSM so we have access to fsmState and fsmEvent
-  The delay is neccessary for React side-effects to take effect
   The events are provided by the Task Function and the FSM can "assmeble" a behavior with these events
   fsmState has other useful properties that you may want to use, such as:
     context: An object that holds the extended state (or "context") of the machine.
     changed: A boolean that represents whether the state changed in the last transition.
     event: The event that caused the transition.
     actions: An array of actions that should be executed for the current transition.
+  The delay is neccessary for React side-effects to take effect
   */
   useEffect(() => {
+    if (!fsmState) {return}
     setTimeout(() => {
       // events not related to a particular state
       if (task.input.exit && fsmState.value !== 'finish') {
@@ -120,19 +101,6 @@ const TaskShowInstruction = (props) => {
     }, 0);
   }, [fsmState, task]);
 
-  // Don't want to specify actions in a service - would make it impossible to reconfigure
-  useEffect(() => {
-    const subscription = fsmService.subscribe((state) => {
-      log(`${props.componentName} FSM State ${state.value} Event ${state.event.type}`, state.event, state); // For debug messages
-    });
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fsmService]); // note: service should never change
-
-  // The mental model is an event triggers a transition, so we need to create events
-  // But how to limit event firing to a particular state
-
   // Each time this component is mounted reset the task state
   useEffect(() => {
     // This can write over the update
@@ -141,7 +109,7 @@ const TaskShowInstruction = (props) => {
   }, []);
 
   /*
-  // Task state machine
+  // Original task state machine
   // Unique for each component that requires steps
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}

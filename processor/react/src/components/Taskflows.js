@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "../styles/App.css";
 import "../styles/normal.css";
 import SideMenu from "./SideMenu/SideMenu";
@@ -39,35 +39,51 @@ function Taskflows(props) {
   // We maintain a list of tasksIds so we can quickly find the relevant task
   // if it has been previousyl created in tasks
   const [tasksIds, setTasksIds] = useState([]);
-  const [tasksStackId, setTasksStackId] = useState([]);
+  const [taskKeys, setTaskKeys] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel);
   const [hideSide, setHideSide] = useState(false);
   const [drawWidth, setDrawWidth] = useState(220);
+  const [counter, setCounter] = useState(0);
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
-    if (selectedTaskId && 
-        (tasksIds.length === 0 || selectedTaskId !== tasksIds[tasksIdx])
-    ) {
+    if (selectedTaskId) {
+      /*
+      // For now we are loading a new instance instead of reseting (resetting requires coordinating processors)
+      // The counter is used in the key of the component
+      // If it chenages then this can "reset" the Task as it will be re-mounted.
+      // This only happens if we click on the task in the menu while using the same task
+      if (selectedTaskId === tasksIds[tasksIdx]) {
+        setCounter(prevCounter => prevCounter + 1);
+        setTaskKeys(prevTaskKeys => {
+          const updated = [...prevTaskKeys];
+          updated[tasksIdx] = updated[tasksIdx] + counter;
+          return updated;
+        });
+      }
+      */
       const start = selectedTaskId;
       const index = tasksIds.indexOf(start);
-      if (index === -1) {
+      // If we select a task in the menu while using it then start the task again (new instanceId)
+      if (index === -1 || selectedTaskId === tasksIds[tasksIdx]) {
         setTask({
           command: "start",
           commandArgs: {
             id: selectedTaskId,
           }
         });
-        setTasksStackId((p) => [...p, selectedTaskId]);
         console.log("Taskflows start", selectedTaskId)
       } else {
         setTasksIdx(index);
       }
       setTitle(globalState.taskflowsTree[selectedTaskId].label);
       replaceGlobalState("selectedTaskId", null);
+      replaceGlobalState("lastSelectedTaskId", selectedTaskId);
+      replaceGlobalState("maxWidth", "800px");
+      replaceGlobalState("xStateDevTools", false);
     }
     // If we only have one start task and the Processor has registered with the hub
     if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
@@ -87,6 +103,7 @@ function Taskflows(props) {
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
       setTasksIds((p) => [...p, startTask.id]);
+      setTaskKeys((p) => [...p, startTask.instanceId]);
     }
   }, [startTask]);
 
@@ -117,7 +134,7 @@ function Taskflows(props) {
   }, [tasks]);
 
   return (
-    <div className="App" id="appDiv">
+    <div className="App" style={{maxWidth: globalState.maxWidth}}>
       <AppBar
         position="fixed"
         sx={{
@@ -191,7 +208,7 @@ function Taskflows(props) {
             ({ instanceId }, idx) =>
               (
                 <div
-                  key={`unique${instanceId}`}
+                  key={taskKeys[idx]}
                   className={`${tasksIdx !== idx ? "hide" : "flex-grow"}`}
                 >
                   <DynamicComponent
