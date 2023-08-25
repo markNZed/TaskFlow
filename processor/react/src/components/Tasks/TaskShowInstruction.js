@@ -38,13 +38,13 @@ const TaskShowInstruction = (props) => {
   // But a point of actions is to allow for side-effects!
   // Actions receive arguemnts (context, event) which we could choose to use here
   const actions = addLogging({
-    displayInstruction: () => {console.log("Task:", task); return task.output.instruction ? setInstructionText(task.output.instruction) : undefined},
+    displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
     finish: () => modifyTask({ "state.done": true }),
   });
   // Guards receive arguemnts (context, event) which we could choose to use here
   const guards = addLogging({
-    instructionCached: () => {console.log("Task:", task); return task.output.instruction ? true : false},
-    newInstruction: () => {console.log("Task:", task); return instructionText !== task.output.instruction ? true : false},
+    instructionCached: () => task.output.instruction ? true : false,
+    newInstruction: () => instructionText !== task.output.instruction ? true : false,
   });
 
   // We can't move useMachine into HoC because we need to wait for props.fsm and we create that delay with the HoC at the moment
