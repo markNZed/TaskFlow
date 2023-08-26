@@ -67,7 +67,7 @@ const TaskShowInstruction = (props) => {
   */
   useEffect(() => {
     if (!fsmState) {return}
-    setTimeout(() => {
+    //setTimeout(() => {
       // events not related to a particular state
       if (task.input.exit && fsmState.value !== 'finish') {
         fsmSend('finish');
@@ -86,7 +86,7 @@ const TaskShowInstruction = (props) => {
         default:
           console.log("FSM ERROR unknown state : " + fsmState.value);
       }
-    }, 0);
+    //}, 0);
   }, [fsmState, task]);
 
   // Each time this component is mounted reset the task state
