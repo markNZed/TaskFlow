@@ -659,7 +659,7 @@ function withTask(Component) {
     */
 
     return (
-      <FsmContext.Provider value={{fsmSend, fsmState, setFsmState, setFsmSend, setFsmService}}> 
+      <FsmContext.Provider value={{fsmSend: fsmSend?.func, fsmState, setFsmState, setFsmSend, setFsmService}}> 
         <WithDebugComponent {...componentProps} /> 
       </FsmContext.Provider>
     );
