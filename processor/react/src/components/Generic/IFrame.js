@@ -10,11 +10,11 @@ function IFrame() {
   const { globalState } =  useGlobalStateContext();
   const iframeRef = useRef();
 
-  if (globalState.xStateDevTools && iframeRef) {
+  if (globalState.xStateDevTools && iframeRef.current) {
     inspect({
-      iframe: false,
-      //iframe: () => iframeRef.current,
-      url: "https://stately.ai/viz?inspect"
+      //iframe: false,
+      iframe: () => iframeRef.current,
+      //url: "https://stately.ai/viz?inspect"
     });
   }
 
@@ -25,16 +25,13 @@ function IFrame() {
         border: '0',
         display: 'block',
     };
-    if (globalState.xStateDevTools) {
-      return <iframe
-        ref={iframeRef}
-        style={iframeStyle}
-        title="XState Inspect"
-        className="xstate"
-      />
-    } else {
-      return null;
-    }
+    // Always return the iFrame so the inspect call can find it
+    return <iframe
+      ref={iframeRef}
+      style={iframeStyle}
+      title="XState Inspect"
+      className="xstate"
+    />
   }, [globalState.xStateDevTools]);
 
   return (

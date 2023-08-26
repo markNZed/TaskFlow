@@ -5,12 +5,21 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import React, { useEffect, useState } from "react";
-import { useMachine } from '@xstate/react';
 import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils";
 import { xutils } from "../../shared/fsm/xutils";
+import Fsm from "../Fsm";
+
+/* 
+To use the XState FSM
+  import Fsm from "../Fsm";
+  const { fsmSend, fsmState } = props.useShareFsm();
+  define actions/guards
+  generate events
+  <Fsm {...props} actions={actions} guards={guards} />
+*/
 
 /*
 Task Process
@@ -32,7 +41,7 @@ const TaskShowInstruction = (props) => {
   props.onDidMount();
 
   const [instructionText, setInstructionText] = useState("");
-  const { setFsmState, setFsmSend, setFsmService } = props.useShareFsm();
+  const { fsmSend, fsmState } = props.useShareFsm();
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
@@ -46,13 +55,6 @@ const TaskShowInstruction = (props) => {
     instructionCached: () => task.output.instruction ? true : false,
     newInstruction: () => instructionText !== task.output.instruction ? true : false,
   });
-
-  // We don't move useMachine into HoC because we want to wait on the creation of fsmMachine
-  const [fsmState, fsmSend, fsmService] = useMachine(props.fsmMachine, { actions, guards, devTools: props.devTools });
-  // Provide fsmState, fsmSend, fsmService to the HoC through useShareFsm context
-  props.useSynchronizeVariable(setFsmState, fsmState);
-  props.useSynchronizeFunction(setFsmSend, fsmSend);
-  props.useSynchronizeVariable(setFsmService, fsmService);
 
   /*
   The events are provided by the Task Function and the FSM can "assemble" a behavior with these events
@@ -95,25 +97,28 @@ const TaskShowInstruction = (props) => {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <Paper
-        elevation={3}
-        style={{
-          overflow: "auto",
-          textAlign: "justify",
-          padding: "16px",
-        }}
-      >
-        {instructionText && instructionText.split("\\n").map((line, index) => (
-          <Typography 
-            style={{ marginTop: "16px" }} 
-            key={index}
-            className="text2html"
-            dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
-          />
-        ))}
-      </Paper>
-    </div>
+    <>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Paper
+          elevation={3}
+          style={{
+            overflow: "auto",
+            textAlign: "justify",
+            padding: "16px",
+          }}
+        >
+          {instructionText && instructionText.split("\\n").map((line, index) => (
+            <Typography 
+              style={{ marginTop: "16px" }} 
+              key={index}
+              className="text2html"
+              dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
+            />
+          ))}
+        </Paper>
+      </div>
+      <Fsm {...props} actions={actions} guards={guards} />
+    </>
   );
 };
 

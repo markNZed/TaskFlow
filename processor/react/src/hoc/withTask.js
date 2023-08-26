@@ -78,58 +78,8 @@ function withTask(Component) {
       });
     }
 
-    // Helper function to synchronize individual state variables.
-    const useSynchronizeVariable = (setSharedVariable, variable) => {
-      useEffect(() => {
-        setSharedVariable(variable);
-      }, [setSharedVariable, variable]);
-    };
-
-    // Helper function to synchronize individual state variables.
-    // React treats functions provided to set as an updater for need to wrap with object
-    const useSynchronizeFunction = (setSharedVariable, func) => {
-      useEffect(() => {
-        setSharedVariable({func: func});
-      }, [setSharedVariable, func]);
-    };
-    
-    // Synchronise XState FSM with task.state
     useEffect(() => {
-      if (fsmState && fsmState.value !== props.task?.state?.current) {
-        modifyTask({ "state.current": fsmState.value });
-      }
-    }, [fsmState]);
-
-    // Synchronise task.state with FSM
-    useEffect(() => {
-      if (fsmSend && props.task?.state?.current) {
-        if (props.task?.state?.current && fsmState && props.task.state.current !== fsmState.value) {
-          fsmSend.func(props.task.state.current);
-        }
-      }
-    }, [props.task?.state?.current]);
-
-    useEffect(() => {
-      if (fsm && props.task?.config?.fsm?.useMachine) {
-        console.log("Creating machine", fsm);
-        setFsmMachine(createMachine(fsm));
-      }
-    }, [fsm]); 
-
-    useEffect(() => {
-      if (fsmService) {
-        console.log("Creating service", fsmService);
-        const subscription = fsmService.subscribe((state) => {
-          utils.logWithComponent(componentName, `FSM State ${state.value} Event ${state.event.type}`, state.event, state); // For debug messages
-        });
-        return () => {
-          subscription.unsubscribe();
-        };
-      }
-    }, [fsmService]);
-
-    useEffect(() => {
-      if (props.task?.config?.fsm?.devTools) {
+      if (props.task?.config?.fsm?.devTools && !globalState.xStateDevTools) {
         replaceGlobalState("xStateDevTools", true);
       }
     }, [props.task?.config?.fsm?.devTools]);  
@@ -184,6 +134,13 @@ function withTask(Component) {
         console.log("No FSM");
       }
     }, []);
+
+    useEffect(() => {
+      if (fsm && props.task?.config?.fsm?.useMachine) {
+        console.log("Creating machine", fsm);
+        setFsmMachine(createMachine(fsm));
+      }
+    }, [fsm]); 
 
     // For debug/inspection from the browser console
     if (!window.tasks) {
@@ -686,10 +643,7 @@ function withTask(Component) {
       syncTask,
       taskRef,
       fsmMachine,
-      devTools: props.task.config?.fsm?.devTools ? true : false,
       useShareFsm,
-      useSynchronizeVariable,
-      useSynchronizeFunction,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it
@@ -705,7 +659,7 @@ function withTask(Component) {
     */
 
     return (
-      <FsmContext.Provider value={{setFsmState, setFsmSend, setFsmService}}> 
+      <FsmContext.Provider value={{fsmSend, fsmState, setFsmState, setFsmSend, setFsmService}}> 
         <WithDebugComponent {...componentProps} /> 
       </FsmContext.Provider>
     );

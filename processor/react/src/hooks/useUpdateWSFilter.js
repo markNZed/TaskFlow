@@ -42,15 +42,17 @@ function useUpdateWSFilter(isMountedRef, initialTask, onUpdate) {
 
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
+  // Set the instance after isMountedRef and senstive to onUpdate so we get an event
   useEffect(() => {
-    if (initialTask?.instanceId !== instanceId) {
+    if (initialTask?.instanceId !== instanceId && isMountedRef.current) {
       setInstanceId(initialTask.instanceId);
     }
-  }, [initialTask]);
+  }, [initialTask, onUpdate]);
 
   // This being sensitive to task seems overkill
   // Can the task be passed in as a parameter to onUpdate?
   useEffect(() => {
+    //console.log("useUpdateWSFilter useEffect", webSocketEventEmitter, isMountedRef.current, instanceId);
     if (!webSocketEventEmitter || !isMountedRef.current || !instanceId) {
       return;
     }

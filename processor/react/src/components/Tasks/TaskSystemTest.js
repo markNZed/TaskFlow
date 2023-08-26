@@ -9,7 +9,6 @@ import withTask from "../../hoc/withTask";
 import DynamicComponent from "../Generic/DynamicComponent";
 import { useMachine } from '@xstate/react';
 import TreeModel from 'tree-model';
-import { inspect } from '@xstate/inspect';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import { library } from "../../shared/fsm/TaskSystemTest/library.mjs"
 import { xutils } from "../../shared/fsm/xutils.mjs"
