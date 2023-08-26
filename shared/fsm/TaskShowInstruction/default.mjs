@@ -26,5 +26,4 @@ export function getFsm(initialTask) {
     },
   }
 }
-  
-  
+

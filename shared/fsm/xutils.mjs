@@ -89,5 +89,32 @@ xutils.addDefaultEventsBasedOnStates = function(machineConfig) {
   return newMachineConfig;
 }
 
-export const { taskAction, taskQuery, logMsg, actionThenQuery, addDefaultEvents } = xutils;
+// Add logging to actions and guards
+xutils.addLogging = function(functions, descriptor) {
+  const loggedFunctions = {};
+  for (const [key, value] of Object.entries(functions)) {
+    loggedFunctions[key] = function(context, event) {
+      const result = value(context, event);
+      let msg = [];
+      if (descriptor === 'action') {
+        msg = [`${key} ${descriptor}`];     
+      } else {
+        msg = [`${key} ${descriptor}`, value(context, event)];
+      }
+      console.log("FSM", ...msg);
+      return result;
+    };
+  }
+  return loggedFunctions;
+}
+
+xutils.logActions = function(actions) {
+  return xutils.addLogging(actions, 'action');
+}
+
+xutils.logGuards = function(guards) {
+  return xutils.addLogging(guards, 'guard');
+}
+
+export const { taskAction, taskQuery, logMsg, actionThenQuery, addDefaultEvents, addLogging } = xutils;
 export { xutils }

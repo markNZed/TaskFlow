@@ -10,6 +10,7 @@ import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils";
+import { xutils } from "../../shared/fsm/xutils";
 
 /*
 Task Process
@@ -25,51 +26,36 @@ const TaskShowInstruction = (props) => {
     log,
     task,
     modifyTask,
-    fsmMachine,
-    addLogging,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
   const [instructionText, setInstructionText] = useState("");
+  const { setFsmState, setFsmSend, setFsmService } = props.useShareFsm();
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
-  // Actions receive arguemnts (context, event) which we could choose to use here
-  const actions = addLogging({
+  // Actions receive arguments (context, event) which we could choose to use here
+  const actions = xutils.logActions({
     displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
     finish: () => modifyTask({ "state.done": true }),
   });
-  // Guards receive arguemnts (context, event) which we could choose to use here
-  const guards = addLogging({
+  // Guards receive arguments (context, event) which we could choose to use here
+  const guards = xutils.logGuards({
     instructionCached: () => task.output.instruction ? true : false,
     newInstruction: () => instructionText !== task.output.instruction ? true : false,
   });
 
-  // We can't move useMachine into HoC because we need to wait for props.fsm and we create that delay with the HoC at the moment
-  const [fsmState, fsmSend, fsmService] = useMachine(fsmMachine, {
-    actions,
-    guards,
-    devTools: task.config?.fsm?.devTools ? true : false,
-  });
-
-  // Synchronise XState FSM with task.state
-  useEffect(() => {
-    if (fsmState && fsmState.value !== props.task?.state?.current) {
-      modifyTask({ "state.current": fsmState.value });
-    }
-  }, [fsmState]);
-
-  // Synchronise task.state with FSM
-  useEffect(() => {
-    if (task?.state?.current && fsmState && task.state.current !== fsmState.value) {
-      fsmSend(task.state.current);
-    }
-  }, [task?.state?.current]);
+  // We don't move useMachine into HoC because we want to wait on the creation of fsmMachine
+  const [fsmState, fsmSend, fsmService] = useMachine(props.fsmMachine, { actions, guards, devTools: props.devTools });
+  // Provide fsmState, fsmSend, fsmService to the HoC through useShareFsm context
+  props.useSynchronizeVariable(setFsmState, fsmState);
+  props.useSynchronizeFunction(setFsmSend, fsmSend);
+  props.useSynchronizeVariable(setFsmService, fsmService);
 
   /*
-  The events are provided by the Task Function and the FSM can "assmeble" a behavior with these events
+  The events are provided by the Task Function and the FSM can "assemble" a behavior with these events
   fsmState has other useful properties that you may want to use, such as:
     context: An object that holds the extended state (or "context") of the machine.
     changed: A boolean that represents whether the state changed in the last transition.
@@ -107,39 +93,6 @@ const TaskShowInstruction = (props) => {
     task.state.current = "start";
     task.state.done = false;
   }, []);
-
-  /*
-  // Original task state machine
-  // Unique for each component that requires steps
-  useEffect(() => {
-    if (!props.checkIfStateReady()) {return}
-    let nextState;
-    if (transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
-    switch (task.state.current) {
-      case "start":
-        if (task.output.instruction) {
-          log("Instruction cached React Task Processor side");
-          nextState = "response";
-        }
-        break;
-      case "response":
-        if (instructionText !== task.output.instruction) {
-          setInstructionText(task.output.instruction);
-        }
-        break;
-      case "exit":
-        if (transition()) {
-          modifyTask({ "state.done": true });
-        }
-        break
-      default:
-        console.log("ERROR unknown state : " + task.state.current);
-    }
-    // Manage state.current and state.last
-    props.modifyState(nextState);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task]);
-  */
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
