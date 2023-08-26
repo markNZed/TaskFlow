@@ -7,7 +7,7 @@ module.exports = {
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended",
-        "plugin:xstate/recommended",
+        "plugin:xstate/recommended_v4",
     ],
     "overrides": [
         {
@@ -28,7 +28,7 @@ module.exports = {
     },
     "plugins": [
         "react",
-        "xstate"
+        "xstate",
     ],
     "rules": {
         'xstate/prefer-predictable-action-arguments': 'off',
