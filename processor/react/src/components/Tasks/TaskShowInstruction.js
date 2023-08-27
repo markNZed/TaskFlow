@@ -37,11 +37,11 @@ const TaskShowInstruction = (props) => {
     modifyTask,
   } = props;
 
-  // onDidMount so any initial conditions can be established before updates arrive
-  props.onDidMount();
-
   const [instructionText, setInstructionText] = useState("");
   const { fsmSend, fsmState } = props.useShareFsm();
+
+  // onDidMount so any initial conditions can be established before updates arrive
+  props.onDidMount();
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
@@ -69,6 +69,7 @@ const TaskShowInstruction = (props) => {
     if (!fsmState) {return}
       // events not related to a particular state
       if (task.input.exit && fsmState.value !== 'finish') {
+        log("Task Exit", task.input.exit);
         fsmSend('finish');
       }
       // events associated with particular states
@@ -81,6 +82,8 @@ const TaskShowInstruction = (props) => {
           }
           break;
         case 'finish':
+          break;
+        case 'init':
           break;
         default:
           console.log("FSM ERROR unknown state : " + fsmState.value);

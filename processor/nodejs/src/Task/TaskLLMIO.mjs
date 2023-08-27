@@ -15,7 +15,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
       T("state.last", T("state.current"));
       T("state.current", "stop");
       return task;
-    case "response":
+    case "response": {
       T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("command", "update");
@@ -28,6 +28,7 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
       T("state.current", "received");
       T("command", "update");
       break;
+    }
     case "error":
       T("error", {message: "Testing an error from SM"});
       break;
@@ -43,7 +44,6 @@ const TaskLLMIO_async = async function (wsSendTask, task) {
       return null;
   }
 
-  console.log("Returning from TaskLLMIO "); // + response_text)
   //T("error", {message: "Testing an error"});
   return task;
 };

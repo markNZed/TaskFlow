@@ -76,7 +76,7 @@ const TaskChat_async = async function (wsSendTask, task) {
 
   switch (task.state.current) {
     case "mentionAddress":
-    case "send":
+    case "send": { // create code block to avoid linting issue with declaring const in the block
       T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("output.sending", false);
@@ -94,6 +94,7 @@ const TaskChat_async = async function (wsSendTask, task) {
       T("commandArgs.lockBypass", true);
       T("command", "update");
       break;
+    }
     default:
       console.log("WARNING unknown state : " + task.state.current);
       return null;
@@ -109,7 +110,6 @@ const TaskChat_async = async function (wsSendTask, task) {
 
   //T("error", {message: "Testing Error"});
 
-  console.log("Returning from TaskChat_async", task.id);
   return task;
 };
 

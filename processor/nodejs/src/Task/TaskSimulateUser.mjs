@@ -76,7 +76,7 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
   // Could return msgs instead of response.text
   switch (task.state.current) {
     case "introduction":
-    case "send":
+    case "send": {
       const entryState = task.state.current;
       T("state.last", T("state.current"));
       T("state.current", "receiving");
@@ -99,7 +99,7 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
         let msgs = ST("output.msgs");
         msgs.shift(); // Remove the first entry
         if (msgs && msgs.length > 0) {
-          msgs.forEach(function(item, index) {
+          msgs.forEach(function(item) {
             if (item !== null) {
               if (item.role === "user") {
                 item.role = "assistant";
@@ -125,7 +125,8 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
       T("state.current", "received");
       T("commandArgs.unlock", true);
       T("command", "update");
-       break;
+      break;
+    }
     default:
       console.log("WARNING unknown state : " + task.state.current);
       return null;
@@ -139,7 +140,6 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }
 
-  console.log("Returning from TaskSimulateUser_async", task.id);
   return task;
 };
 

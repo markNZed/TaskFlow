@@ -14,7 +14,7 @@ const TaskGeneratePersona_async = async function (wsSendTask, task) {
     case "generated":
       console.log(`${task.type} does nothing in state ${task.state.current}`);
       return null
-    case "start":
+    case "start": {
       T("request.prompt", "Generate a random client profile");
       T("request.service.noStreaming", true);
       let subTask = await SubTaskLLM_async(wsSendTask, task);
@@ -31,13 +31,14 @@ const TaskGeneratePersona_async = async function (wsSendTask, task) {
       T("state.current", "generated");
       T("command", "update");
       break;
+    }
     case "wait":
       console.log(`${task.type} waiting in state ${task.state.current}`);
+      break;
     default:
       console.log("ERROR unknown state : " + task.state.current);
   }
 
-  console.log(`Returning from ${task.type}`);
   return task;
 };
 

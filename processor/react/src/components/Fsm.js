@@ -48,6 +48,8 @@ function Fsm(props) {
     }
   }, [fsmService]);
 
+  // Ff the machine is in the init state then it should jump to task.state.current
+
   // Synchronise XState FSM with task.state
   useEffect(() => {
     if (fsmState && fsmState.value !== task?.state?.current) {

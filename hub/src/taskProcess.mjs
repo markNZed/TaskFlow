@@ -98,39 +98,27 @@ function checkLockConflict(task, activeTask) {
 }
 
 function checkAPIRate(task) {
-  if (task.meta) {
-    const currentDate = new Date();
-    const resetDate = new Date(
-      currentDate.getUTCFullYear(),
-      currentDate.getUTCMonth(),
-      currentDate.getUTCDate(),
-      currentDate.getUTCHours(),
-      currentDate.getUTCMinutes()
-    );
+  const maxRequestRate = task?.config?.maxRequestRate ?? 0; 
+  if (maxRequestRate && task?.meta?.lastUpdatedAt) {
+    const lastUpdatedAt = new Date(task.meta.lastUpdatedAt.date);
+    const updatedAt = new Date(task.meta.updatedAt.date);
 
-    const maxRequestRate = task?.config?.maxRequestRate ?? 0;
-    if (maxRequestRate && task.meta.updatedAt) {
-      const localUpdatedAt = new Date(task.meta.updatedAt.date);
-
-      if (localUpdatedAt >= resetDate) {
-        if (task.meta.requestsThisMinute >= maxRequestRate) {
-          throw new RequestError(
-            `Task update rate exceeded ${maxRequestRate} per minute`,
-            409
-          );
-        }
-      } else {
-        task.meta.requestsThisMinute = 0;
-      }
-
+    if (lastUpdatedAt.getUTCMinutes() !== updatedAt.getUTCMinutes()) {
+      //console.log("checkAPIRate", lastUpdatedAt.getUTCMinutes(), updatedAt.getUTCMinutes())
+      task.meta.requestsThisMinute = 0;
+    } else {
       task.meta.requestsThisMinute++;
+      //console.log("checkAPIRate requestsThisMinute", task.meta.requestsThisMinute);
+    }
+
+    if (task.meta.requestsThisMinute >= maxRequestRate) {
+      task.error = {message: `Task update rate exceeded ${maxRequestRate} per minute`};
     }
 
     const maxRequestCount = task?.config?.maxRequestCount;
     if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
       utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
       task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
-      //throw new RequestError("Task request count exceeded", 409);
     }
     //utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
     task.meta.requestCount++;
@@ -140,7 +128,7 @@ function checkAPIRate(task) {
 
 function checkErrorRate(task) {
   if (task.error || task?.hub?.command === "error" || (task.id && task.id.endsWith(".error"))) {
-    console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
+    //console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
     const currentDate = new Date();
     const resetDate = new Date(
       currentDate.getUTCFullYear(),
@@ -239,6 +227,8 @@ async function taskProcess_async(task, req, res) {
         }
         // Need to restore meta for checkLockConflict, checkAPIRate
         task.meta = utils.deepMerge(activeTask.meta, task.meta);
+        // Need to restore config for checkAPIRate
+        task.config = utils.deepMerge(activeTask.config, task.config);
       } else if (task.processor.command !== "start") {
         console.error("Should have activeTask if we have an instanceId");
         return;

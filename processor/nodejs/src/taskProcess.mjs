@@ -33,8 +33,9 @@ const loadFsmModule_async = async (task) => {
     const fsmDefaults = {
       predictableActionArguments: true,
       preserveActionOrder: true,
-      id: name,
-      initial: 'start',
+      id: task.id + "-" + name,
+      // This is a hack to get around rehydrating. interpeter.start(stateName) ignores entry actions.
+      initial: task.state.current || 'init',
     };
     fsmConfig = utils.deepMerge(fsmDefaults, fsmConfig);
     if (task?.config?.fsm?.merge) {
@@ -62,7 +63,7 @@ export async function taskProcess_async(wsSendTask, task) {
         const fsmConfig = await loadFsmModule_async(task);
         let machine;
         if (fsmConfig && task.config?.fsm?.useMachine) {
-          console.log("Before creating machine", fsmConfig);
+          //console.log("Before creating machine", fsmConfig);
           machine = createMachine(fsmConfig);
         }
         utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);

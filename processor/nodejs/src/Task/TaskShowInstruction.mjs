@@ -11,20 +11,22 @@ const TaskShowInstruction_async = async function (wsSendTask, task, machine) {
 
   // Send function cannot be set until after we have the interpreter
   // But we need to provide actions to the interpreter
-  let sendRef = () => {
+  let fsmSend = () => {
     console.warn('Placeholder send function invoked. This should be replaced.');
   };
 
   const actions = {
+    rehydrate: () => task.state.current === "init" ? fsmSend("start") : fsmSend(task.state.current),
     nodejsStart: () => {
+      console.log("nodejsStart");
       T("output.instruction", T("config.local.instruction"));
-      sendRef('displayInstruction'); // will transition to the state "displayInstruction" maybe a better name? goToDisplayInstruction
+      fsmSend('displayInstruction'); // will transition to the state "displayInstruction" maybe a better name? goToDisplayInstruction
     },
   };
 
   const guards = {};
 
-  // Automatically create missing guards (ohterwise we get errors for guards running on other processors)
+  // Automatically create missing guards (otherwise we get errors for guards running on other processors)
   // Should move into a utility function
   const stateNodes = Object.keys(machine.states);
   const allGuards = stateNodes.reduce((acc, stateName) => {
@@ -56,9 +58,10 @@ const TaskShowInstruction_async = async function (wsSendTask, task, machine) {
       // Handle state changes, call wsSendTask, or other side-effects.
     });
 
-  sendRef = fsm.send; // So we can use send from within actions
+  fsmSend = fsm.send; // So we can use send from within actions
 
-  fsm.start(task.state.current);
+  // fsm.start(task.state.current); // Does not pick up the entry action
+  fsm.start();
 
   // waitFor is a one-time operation that resolves when a specific condition is met.
   /*
@@ -67,19 +70,22 @@ const TaskShowInstruction_async = async function (wsSendTask, task, machine) {
   );
   */
 
-  const fsmState = fsm.snapshot;
-  if (fsmState !== task.state.current) {
+  const fsmState = fsm.getSnapshot().value;
+  if (fsmState && fsmState !== task.state.current) {
+    console.log("Updating state from", task.state.current, "to", fsmState);
     T("state.last", T("state.current"));
     T("state.current", fsmState);
     T("command", "update");
+  } else {
+    console.log("No state change", fsmState);
   }
 
   // Stop the interpreter to clean up
   fsm.stop();
 
-  // This task can be used as an errorTask so an error here risks to create a loop ?
+  // This task can be used as an errorTask so an error here risks to create a loop
+  // There is an errorRate limit on the hub to catch this (but it will crash the hub)
 
-  console.log(`Returning from ${task.type} in state ${task.state.current}`);
   return task;
 };
 

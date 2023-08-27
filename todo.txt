@@ -1,5 +1,9 @@
 /* ToDo
 -------
+Bug:
+  if (command === "join") {
+      commandArgs = { ...commandArgs, ...{ lockBypass: true } };
+    }
 tasktype cannot configure fsm: { useMachine: true} ?
 Reset of the task on React still needs an update sent to reset "for real" or we create a new instance?
   Restarting is not working with Systemtest - why?
@@ -14,7 +18,9 @@ TaskCreateTask
     Chat interaction
       Validation/ESlint
         Testing
-  Dynamic Task as per dynamic config  
+  Dynamic Task as per dynamic config
+    Needs to modify tasktypes (anoher Task)
+  Also need to create new servicetypes but that is on the nodejs processor
 Major features that need to be implemented before major refactoring
   Dynamic Task configurations
   Debug support per Task

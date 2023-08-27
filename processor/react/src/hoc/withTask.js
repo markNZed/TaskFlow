@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { utils } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
@@ -10,7 +10,7 @@ import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
 import { useEventSource } from '../contexts/EventSourceContext';
-import { createMachine, interpret } from 'xstate';
+import { createMachine } from 'xstate';
 import { xutils } from '../shared/fsm/xutils.mjs';
 
 // When a task is shared then changes are detected at each wrapper
@@ -94,9 +94,9 @@ function withTask(Component) {
           const fsmDefaults = {
             predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
             preserveActionOrder: true, // will be the default in v5
-            //id: props.task.id + "-" + name,
-            id: name,
-            initial: 'start',
+            id: props.task.id + "-" + name,
+            // This is a hack to get around rehydrating. interpeter.start(stateName) ignores entry actions.
+            initial: props.task.state.current || 'init',
           };
           fsm = utils.deepMerge(fsmDefaults, fsm);
           if (props.task?.config?.fsm?.merge) {
@@ -140,7 +140,28 @@ function withTask(Component) {
         console.log("Creating machine", fsm);
         setFsmMachine(createMachine(fsm));
       }
-    }, [fsm]); 
+    }, [fsm]);
+
+    // This is an ugly hack to make sure that the fsmSend command is available
+    // So it can be used in an action while the FSM context may still be synchronising
+    let resolveFsmSendReady; // Declare variable to hold the resolve function
+    const fsmSendReady = new Promise((resolve) => {
+      resolveFsmSendReady = resolve; // Assign the resolve function to the variable
+    });
+    useEffect(() => {
+      console.log("useEffect fsmSend", fsmSend);
+      if (fsmSend) {
+        resolveFsmSendReady(); // Resolve the promise when fsmSend is initialized
+      }
+    }, [fsmSend]);
+    const safeFsmSend = async (event) => {
+      console.log("safeFsmSend await")
+      if (!fsmSend) {
+        await fsmSendReady;
+      }
+      console.log("fsmSend.func", event)
+      fsmSend.func(event);
+    };
 
     // For debug/inspection from the browser console
     if (!window.tasks) {
@@ -659,7 +680,7 @@ function withTask(Component) {
     */
 
     return (
-      <FsmContext.Provider value={{fsmSend: fsmSend?.func, fsmState, setFsmState, setFsmSend, setFsmService}}> 
+      <FsmContext.Provider value={{fsmSend: safeFsmSend, fsmState, setFsmState, setFsmSend, setFsmService}}> 
         <WithDebugComponent {...componentProps} /> 
       </FsmContext.Provider>
     );
