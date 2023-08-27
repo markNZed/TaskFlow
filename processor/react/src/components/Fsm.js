@@ -62,7 +62,7 @@ function Fsm(props) {
     if (task?.state?.current) {
       if (fsmSend) {
         if (task?.state?.current && fsmState && task.state.current !== fsmState.value) {
-          fsmSend(task.state.current);
+          fsmSend("GOTO" + task.state.current);
         }
       } else {
         console.error("Missed event task.state.current", task.state.current)

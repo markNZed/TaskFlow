@@ -84,7 +84,7 @@ xutils.addDefaultEventsBasedOnStates = function(machineConfig) {
   // Add default events based on states
   Object.keys(newMachineConfig.states).forEach(state => {
     //const snakeCasedEvent = xutils.convertToSnakeCase(state);
-    newMachineConfig['on'][state] = state;
+    newMachineConfig['on']["GOTO" + state] = state;
   });
   return newMachineConfig;
 }

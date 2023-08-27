@@ -149,7 +149,7 @@ function withTask(Component) {
       resolveFsmSendReady = resolve; // Assign the resolve function to the variable
     });
     useEffect(() => {
-      console.log("useEffect fsmSend", fsmSend);
+      //console.log("useEffect fsmSend", fsmSend);
       if (fsmSend) {
         resolveFsmSendReady(); // Resolve the promise when fsmSend is initialized
       }

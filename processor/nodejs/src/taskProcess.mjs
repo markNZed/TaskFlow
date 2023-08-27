@@ -10,8 +10,6 @@ import { xutils } from './shared/fsm/xutils.mjs';
 import { createMachine } from 'xstate';
 import { activeTaskFsm } from "./storage.mjs";
 
-
-
 const loadFsmModule_async = async (task) => {
   let importPath;
   let name;
@@ -58,26 +56,28 @@ const loadFsmModule_async = async (task) => {
   }
 };
 
-
 export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
     if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
       try {
-        let machine;
-        let fsmHolder = {fsm: null};
+        let fsmHolder = {
+          fsm: {}, 
+          machine: null, 
+          send: () => {console.error('Send function should be replaced.');}
+        };
         if (activeTaskFsm.has(task.instanceId)) {
           fsmHolder["fsm"] = activeTaskFsm.get(task.instanceId);
         } else {
           const fsmConfig = await loadFsmModule_async(task);
           if (fsmConfig && task.config?.fsm?.useMachine) {
             //console.log("Before creating machine", fsmConfig);
-            machine = createMachine(fsmConfig);
+            fsmHolder.machine = createMachine(fsmConfig);
           }
         }
         utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, machine, fsmHolder);
+        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, fsmHolder);
         if (fsmHolder.fsm) {
-          console.log("Updating activeTaskFsm", fsmHolder.fsm);
+          console.log("Updating activeTaskFsm");
           activeTaskFsm.set(task.instanceId, fsmHolder.fsm);
         } else {
           console.log("No activeTaskFsm");

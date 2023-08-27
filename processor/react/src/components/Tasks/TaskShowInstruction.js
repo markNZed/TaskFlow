@@ -37,11 +37,11 @@ const TaskShowInstruction = (props) => {
     modifyTask,
   } = props;
 
-  const [instructionText, setInstructionText] = useState("");
-  const { fsmSend, fsmState } = props.useShareFsm();
-
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
+
+  const [instructionText, setInstructionText] = useState("");
+  const { fsmSend, fsmState } = props.useShareFsm();
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
@@ -50,6 +50,7 @@ const TaskShowInstruction = (props) => {
     displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
     finish: () => modifyTask({ "state.done": true }),
   });
+  
   // Guards receive arguments (context, event) which we could choose to use here
   const guards = xutils.logGuards({
     instructionCached: () => task.output.instruction ? true : false,
@@ -70,7 +71,7 @@ const TaskShowInstruction = (props) => {
       // events not related to a particular state
       if (task.input.exit && fsmState.value !== 'finish') {
         log("Task Exit", task.input.exit);
-        fsmSend('finish');
+        fsmSend('GOTOfinish');
       }
       // events associated with particular states
       switch (fsmState.value) {
@@ -92,7 +93,6 @@ const TaskShowInstruction = (props) => {
 
   // Each time this component is mounted reset the task state
   useEffect(() => {
-    // This can write over the update
     task.state.current = "start";
     task.state.done = false;
   }, []);

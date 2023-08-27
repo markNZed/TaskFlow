@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Need to deal with cleaning up when tasks stop e.g nodejs activeTaskFsm
 Bug:
   if (command === "join") {
       commandArgs = { ...commandArgs, ...{ lockBypass: true } };
