@@ -8,6 +8,9 @@ import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { xutils } from './shared/fsm/xutils.mjs';
 import { createMachine } from 'xstate';
+import { activeTaskFsm } from "./storage.mjs";
+
+
 
 const loadFsmModule_async = async (task) => {
   let importPath;
@@ -60,14 +63,25 @@ export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
     if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
       try {
-        const fsmConfig = await loadFsmModule_async(task);
         let machine;
-        if (fsmConfig && task.config?.fsm?.useMachine) {
-          //console.log("Before creating machine", fsmConfig);
-          machine = createMachine(fsmConfig);
+        let fsmHolder = {fsm: null};
+        if (activeTaskFsm.has(task.instanceId)) {
+          fsmHolder["fsm"] = activeTaskFsm.get(task.instanceId);
+        } else {
+          const fsmConfig = await loadFsmModule_async(task);
+          if (fsmConfig && task.config?.fsm?.useMachine) {
+            //console.log("Before creating machine", fsmConfig);
+            machine = createMachine(fsmConfig);
+          }
         }
         utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, machine);
+        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, machine, fsmHolder);
+        if (fsmHolder.fsm) {
+          console.log("Updating activeTaskFsm", fsmHolder.fsm);
+          activeTaskFsm.set(task.instanceId, fsmHolder.fsm);
+        } else {
+          console.log("No activeTaskFsm");
+        }
         utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
       } catch (e) {
         console.error(e);
