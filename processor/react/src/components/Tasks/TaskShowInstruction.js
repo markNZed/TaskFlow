@@ -47,14 +47,14 @@ const TaskShowInstruction = (props) => {
   // But a point of actions is to allow for side-effects!
   // Actions receive arguments (context, event) which we could choose to use here
   const actions = xutils.logActions({
-    displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
-    finish: () => modifyTask({ "state.done": true }),
+    react_displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
+    react_finish: () => modifyTask({ "state.done": true }),
   });
   
   // Guards receive arguments (context, event) which we could choose to use here
   const guards = xutils.logGuards({
-    instructionCached: () => task.output.instruction ? true : false,
-    newInstruction: () => instructionText !== task.output.instruction ? true : false,
+    react_instructionCached: () => task.output.instruction ? true : false,
+    react_newInstruction: () => instructionText !== task.output.instruction ? true : false,
   });
 
   /*

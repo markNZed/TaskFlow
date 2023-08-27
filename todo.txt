@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Add XState support to rxjs
 Need to deal with cleaning up when tasks stop e.g nodejs activeTaskFsm
 Bug:
   if (command === "join") {
@@ -13,7 +14,12 @@ instancesStore_async on hub - should have single store with index that can separ
 https://github.com/ant-design/ant-design
 The stepper sets the state to exit - it should not act directly on the state, use task.input
 Point to private extensions of config rather than redirecting the entire config directory
-TaskCreateTask
+Major features to be implemented before refactoring
+  Dynamic Task configurations
+  Debug support per Task
+    How to combine debug logging with task.meta.debug ?
+    Conditional breakpoints in VSCode works well
+  TaskCreateTask
   Identify closest existng task
     Chat interaction
       Validation/ESlint
@@ -21,11 +27,6 @@ TaskCreateTask
   Dynamic Task as per dynamic config
     Needs to modify tasktypes (anoher Task)
   Also need to create new servicetypes but that is on the nodejs processor
-Major features that need to be implemented before major refactoring
-  Dynamic Task configurations
-  Debug support per Task
-    How to combine debug logging with task.meta.debug ?
-    Conditional breakpoints in VSCode works well
 Extend testing
   Batch testing
     TaskCron to regularly check things

@@ -16,15 +16,15 @@ export function getFsm(initialTask) {
   return {  
     states: {
       start: {
-        entry: 'nodejsStart',
-        always: { target: 'displayInstruction', cond: 'instructionCached' },
+        entry: 'nodejs_start',
+        always: { target: 'displayInstruction', cond: 'react_instructionCached' },
       },
       displayInstruction: {
-        entry: 'displayInstruction',
-        on: { NEW_INSTRUCTION: { actions: 'displayInstruction' } }
+        entry: 'react_displayInstruction',
+        on: { NEW_INSTRUCTION: { actions: 'react_displayInstruction' } }
       },
       finish: {
-        entry: 'finish',
+        entry: 'react_finish',
       },
     },
   }

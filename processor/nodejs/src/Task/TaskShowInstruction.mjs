@@ -11,7 +11,7 @@ const TaskShowInstruction_async = async function (wsSendTask, task, fsmHolder) {
   const T = utils.createTaskValueGetter(task);
 
   const actions = {
-    nodejsStart: () => {
+    nodejs_start: () => {
       T("output.instruction", T("config.local.instruction"));
       fsmHolder.send('GOTOdisplayInstruction');
     },
