@@ -54,83 +54,82 @@ const loadFsmModule_async = async (task) => {
       throw error;
     }
   }
-};
+}
 
 export async function taskProcess_async(wsSendTask, task) {
-    let updatedTask = {};
-    if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
-      try {
-        let fsmHolder = {
-          fsm: {}, 
-          machine: null, 
-          send: () => {console.error('Send function should be replaced.');}
-        };
-        if (activeTaskFsm.has(task.instanceId)) {
-          fsmHolder["fsm"] = activeTaskFsm.get(task.instanceId);
-        } else {
-          const fsmConfig = await loadFsmModule_async(task);
-          if (fsmConfig && task.config?.fsm?.useMachine) {
-            //console.log("Before creating machine", fsmConfig);
-            fsmHolder.machine = createMachine(fsmConfig);
-          }
-        }
-        utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, fsmHolder);
-        if (fsmHolder.fsm) {
-          console.log("Updating activeTaskFsm");
-          activeTaskFsm.set(task.instanceId, fsmHolder.fsm);
-        } else {
-          console.log("No activeTaskFsm");
-        }
-        utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
-      } catch (e) {
-        console.error(e);
-        updatedTask = task;
-        // Strictly we should not be updating the task object in the processor
-        // Could set updatedTask.processor.command = "error" ?
-        updatedTask.error = {message: e.message};
-        updatedTask.command = "update";
-        updatedTask.commandArgs = {lockBypass: true};
-        if (updatedTask.type === "TaskShowInstruction") {
-          throw e; // To avoid cycles
+  let updatedTask = {};
+  if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
+    try {
+      let fsmHolder = {
+        fsm: {}, 
+        machine: null, 
+        send: () => {console.error('Send function should be replaced.');}
+      };
+      if (activeTaskFsm.has(task.instanceId)) {
+        fsmHolder["fsm"] = activeTaskFsm.get(task.instanceId);
+      } else {
+        const fsmConfig = await loadFsmModule_async(task);
+        if (fsmConfig && task.config?.fsm?.useMachine) {
+          //console.log("Before creating machine", fsmConfig);
+          fsmHolder.machine = createMachine(fsmConfig);
         }
       }
-      // Returning null is  away of doing nothing
-      if (updatedTask !== null) {
-        if (updatedTask.error) {
-          console.error("Task error ", updatedTask.error)
-          updatedTask["command"] = "update";
-          updatedTask["commandArgs"] = {lockBypass: true};
+      utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, fsmHolder);
+      if (fsmHolder.fsm) {
+        console.log("Updating activeTaskFsm");
+        activeTaskFsm.set(task.instanceId, fsmHolder.fsm);
+      } else {
+        console.log("No activeTaskFsm");
+      }
+      utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
+    } catch (e) {
+      console.error(e);
+      updatedTask = task;
+      // Strictly we should not be updating the task object in the processor
+      // Could set updatedTask.processor.command = "error" ?
+      updatedTask.error = {message: e.message};
+      updatedTask.command = "update";
+      updatedTask.commandArgs = {lockBypass: true};
+      if (updatedTask.type === "TaskShowInstruction") {
+        throw e; // To avoid cycles
+      }
+    }
+    // Returning null is  away of doing nothing
+    if (updatedTask !== null) {
+      if (updatedTask.error) {
+        console.error("Task error ", updatedTask.error)
+        updatedTask["command"] = "update";
+        updatedTask["commandArgs"] = {lockBypass: true};
+      }
+      if (updatedTask?.command === "start") {
+        // This is not working/used yet
+        throw new Error("start not implemented yet");
+        /*
+        const task = {
+          user: {id: updatedtask.user.id},
+          startId: updatedTask.commandArgs.id,
+          hub: {},
+          command: "start",
         }
-        if (updatedTask?.command === "start") {
-          // This is not working/used yet
-          throw new Error("start not implemented yet");
-          /*
-          const task = {
-            user: {id: updatedtask.user.id},
-            startId: updatedTask.commandArgs.id,
-            hub: {},
-            command: "start",
-          }
-          wsSendTask(task);
-          */
-        } else if (updatedTask?.command === "update") {
-          console.log("taskProcess_async sending");
-          try {
-            wsSendTask(updatedTask);
-          } catch (error) {
-            console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
-          }
-        } else {
-          console.log("taskProcess_async nothing to do");
+        wsSendTask(task);
+        */
+      } else if (updatedTask?.command === "update") {
+        console.log("taskProcess_async sending");
+        try {
+          wsSendTask(updatedTask);
+        } catch (error) {
+          console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
         }
       } else {
-        console.log("taskProcess_async null " + task.id);
+        console.log("taskProcess_async nothing to do");
       }
     } else {
-      console.log("NodeJS Task Processor unknown component " + task.type);
-      //console.log("taskFunctions", taskFunctions);
-      updatedTask = task;
+      console.log("taskProcess_async null " + task.id);
     }
-
+  } else {
+    console.log("NodeJS Task Processor unknown component " + task.type);
+    //console.log("taskFunctions", taskFunctions);
+    updatedTask = task;
+  }
 }
