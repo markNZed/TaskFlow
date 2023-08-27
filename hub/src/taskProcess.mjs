@@ -15,6 +15,11 @@ import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
 import { haveCoProcessor } from "../config.mjs";
 
+// Could try to detect error cycles
+const maxErrorRate = 20; // per minute
+let lastErrorDate;
+let errorCountThisMinute = 0;
+
 function processorInHubOut(task, activeTask, requestId) {
   const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
@@ -92,7 +97,7 @@ function checkLockConflict(task, activeTask) {
   return task;
 }
 
-function checkAPIRate(task, activeTask) {
+function checkAPIRate(task) {
   if (task.meta) {
     const currentDate = new Date();
     const resetDate = new Date(
@@ -132,6 +137,32 @@ function checkAPIRate(task, activeTask) {
   }
   return task;
 }
+
+function checkErrorRate(task) {
+  if (task.error || task?.hub?.command === "error" || (task.id && task.id.endsWith(".error"))) {
+    console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
+    const currentDate = new Date();
+    const resetDate = new Date(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate(),
+      currentDate.getUTCHours(),
+      currentDate.getUTCMinutes()
+    );
+    const maxRequestRate = maxErrorRate ?? 0;
+    if (maxRequestRate) {
+      if (lastErrorDate && resetDate > lastErrorDate) {
+        errorCountThisMinute = 0;
+      }
+      errorCountThisMinute++;
+      lastErrorDate = resetDate;
+      if (errorCountThisMinute > maxRequestRate) {
+        throw new Error(`Hub error rate exceeded ${maxRequestRate} per minute`);
+      }
+    }
+  }
+}
+
 
 function findClosestErrorTask(taskId, tasks) {
   const taskLevels = taskId.split('.');
@@ -198,6 +229,7 @@ async function taskProcess_async(task, req, res) {
     utils.logTask(task, "");
     utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command);
     let activeTask = {};
+    checkErrorRate(task);
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
@@ -220,7 +252,7 @@ async function taskProcess_async(task, req, res) {
     if (task.hub.command !== "partial") {
       task = checkLockConflict(task, activeTask);
       if (!task.hub.coProcessing) {
-        task = checkAPIRate(task, activeTask);
+        task = checkAPIRate(task);
       }
       task = processError(task, tasks);
     }
@@ -265,9 +297,11 @@ async function taskProcess_async(task, req, res) {
     } else {
       utils.logTask(task, "Error in /hub/api/task " + err.message, task);
       throw err;
+      /*
       if (res) {
         res.status(500).json({ error: "Error in /hub/api/task " + err.message });
       }
+      */
     }
   }
   return task;

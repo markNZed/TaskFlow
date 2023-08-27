@@ -49,15 +49,15 @@ const loadFsmModule_async = async (task) => {
       console.log(`Failed to load FSM at ${'./shared/fsm/' + importPath}`);
     } else {
       console.error(`Failed to load FSM at ${'./shared/fsm/' + importPath}`, error);
+      throw error;
     }
-    throw error;  // Re-throw the error if you want to catch it later
   }
 };
 
 
 export async function taskProcess_async(wsSendTask, task) {
     let updatedTask = {};
-    if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
+    if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
       try {
         const fsmConfig = await loadFsmModule_async(task);
         let machine;
@@ -90,6 +90,7 @@ export async function taskProcess_async(wsSendTask, task) {
         if (updatedTask?.command === "start") {
           // This is not working/used yet
           throw new Error("start not implemented yet");
+          /*
           const task = {
             user: {id: updatedtask.user.id},
             startId: updatedTask.commandArgs.id,
@@ -97,6 +98,7 @@ export async function taskProcess_async(wsSendTask, task) {
             command: "start",
           }
           wsSendTask(task);
+          */
         } else if (updatedTask?.command === "update") {
           console.log("taskProcess_async sending");
           try {

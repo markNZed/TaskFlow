@@ -16,8 +16,7 @@ const TaskShowInstruction_async = async function (wsSendTask, task, machine) {
   };
 
   const actions = {
-    nodejsStart: (context, event, metaAction) => {
-      console.log("action nodejsStart");
+    nodejsStart: () => {
       T("output.instruction", T("config.local.instruction"));
       sendRef('displayInstruction'); // will transition to the state "displayInstruction" maybe a better name? goToDisplayInstruction
     },
@@ -68,9 +67,10 @@ const TaskShowInstruction_async = async function (wsSendTask, task, machine) {
   );
   */
 
-  if (fsm.state.value !== task.state.current) {
+  const fsmState = fsm.snapshot;
+  if (fsmState !== task.state.current) {
     T("state.last", T("state.current"));
-    T("state.current", fsm.state.value);
+    T("state.current", fsmState);
     T("command", "update");
   }
 
