@@ -5,6 +5,16 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { interpret } from 'xstate';
 
+export function updateStates(T, fsmHolder) {
+  const fsmState = fsmHolder.fsm.getSnapshot().value;
+  if (fsmState && fsmState !== T("state.current")) {
+    console.log("updateStates from", T("state.current"), "to", fsmState);
+    T("state.last", T("state.current"));
+    T("state.current", fsmState);
+    T("command", "update");
+  }
+}
+
 export function initiateFsm(T, fsmHolder, actions = {}, guards = {}, singleStep = false) {
 
   let fsm = fsmHolder.fsm;

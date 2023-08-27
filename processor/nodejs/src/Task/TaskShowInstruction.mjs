@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
-import { initiateFsm } from "./fsm.mjs";
+import { initiateFsm, updateStates } from "./fsm.mjs";
 
 const TaskShowInstruction_async = async function (wsSendTask, task, fsmHolder) {
 
@@ -19,13 +19,8 @@ const TaskShowInstruction_async = async function (wsSendTask, task, fsmHolder) {
 
   initiateFsm(T, fsmHolder, actions);
 
-  const fsmState = fsmHolder.fsm.getSnapshot().value;
-  if (fsmState && fsmState !== T("state.current")) {
-    console.log("Updating state from", T("state.current"), "to", fsmState);
-    T("state.last", T("state.current"));
-    T("state.current", fsmState);
-    T("command", "update");
-  }
+  // Transfer state of fsm to task.state
+  updateStates(T, fsmHolder);
 
   // This task can be used as an errorTask so an error here risks to create a loop
   // There is an errorRate limit on the hub to catch this (but it will crash the hub)
