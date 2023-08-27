@@ -1,22 +1,19 @@
-import { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import { inspect } from '@xstate/inspect';
-
-// useMemo so the iFrame does not get rerendered
-// XState Inspect needs to find it when it is called
 
 function IFrame() {
 
   const { globalState } =  useGlobalStateContext();
   const iframeRef = useRef();
 
-  if (globalState.xStateDevTools && iframeRef.current) {
-    inspect({
-      //iframe: false,
-      iframe: () => iframeRef.current,
-      //url: "https://stately.ai/viz?inspect"
-    });
-  }
+  useEffect(() => {
+    if (globalState.xStateDevTools && iframeRef.current) {
+      inspect({
+        iframe: () => iframeRef.current,
+      });
+    }
+  }, [globalState.xStateDevTools, iframeRef.current]);
 
   const iframeElement = useMemo(() => {
     const iframeStyle = {
@@ -25,13 +22,14 @@ function IFrame() {
         border: '0',
         display: 'block',
     };
-    // Always return the iFrame so the inspect call can find it
-    return <iframe
-      ref={iframeRef}
-      style={iframeStyle}
-      title="XState Inspect"
-      className="xstate"
-    />
+    return (
+      <iframe
+        ref={iframeRef}
+        style={iframeStyle}
+        title="XState Inspect"
+        className="xstate"
+      />
+    );
   }, [globalState.xStateDevTools]);
 
   return (
@@ -39,7 +37,6 @@ function IFrame() {
       {iframeElement}
     </div>
   );
-
 }
 
 export default IFrame;
