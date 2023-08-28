@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
+import { activeTaskProcessorsStore_async, instancesStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { haveCoProcessor } from "../config.mjs";
@@ -37,17 +37,10 @@ const taskSync_async = async (key, value) => {
   if (!sourceProcessorId && !taskCopy?.config?.autoStartCoProcessor) {
     throw new Error("taskSync_async missing sourceProcessorId" + JSON.stringify(taskCopy));
   }
-  const has = await activeTasksStore_async.has(key);
   if (!taskCopy?.hub?.command) {
     throw new Error("taskSync_async missing command" + JSON.stringify(taskCopy));
   }
   let command = taskCopy.hub.command;
-  let commandArgs = taskCopy.hub.commandArgs;
-  if (has) {
-    if (command === "join") {
-      commandArgs = { ...commandArgs, ...{ lockBypass: true } };
-    }
-  }
 
   const coProcessorIds = Array.from(activeCoProcessors.keys());
   const isCoProcessor = coProcessorIds.includes(sourceProcessorId);

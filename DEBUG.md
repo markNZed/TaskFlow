@@ -32,3 +32,8 @@ The System > Log Task provides insights into the sequence of task messages that 
 
 * Regular expressions in "Filter Output" of Javascript console: wrap your regex pattern in forward slashes (/).
 * React Dev Tools
+
+### VS Code
+
+* To view the log files install the ANSI Color extension then preview the file to see prettified view
+* The log files can be "cleared" without restartin the server e.g. `truncate -s 0 hub/hub.log`

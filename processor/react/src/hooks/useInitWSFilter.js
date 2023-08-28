@@ -53,7 +53,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
 
   useEffect(() => {
     if (initialTask?.command === "start") {
-      console.log("useInitWSFilter initialTask", initialTask);
+      //console.log("useInitWSFilter initialTask", initialTask);
       setStartTaskId(initialTask.commandArgs.id);
       setStartPrevInstanceId(initialTask.commandArgs.prevInstanceId || initialTask.instanceId);
     }

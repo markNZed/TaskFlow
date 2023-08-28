@@ -1,13 +1,14 @@
 /* ToDo
 -------
-Need to deal with cleaning up when tasks stop e.g nodejs activeTaskFsm
-Bug:
-  if (command === "join") {
-      commandArgs = { ...commandArgs, ...{ lockBypass: true } };
-    }
+Collaborate will keep info in the caches and db. How can we clear out a specific familyId ?
+  Could prefix the family ID for collaboration with a unique hub ID
+    Could use hub Id if it were not stored
+TaskChat name must be "start" ? 
+Need to clean up when tasks stop e.g nodejs activeTaskFsm
 tasktype cannot configure fsm: { useMachine: true} ?
 We need another way of managing the familyTree - TaskFamilyTree
 instancesStore_async on hub - should have single store with index that can separate active and inactive
+  Could also be the opportunity to move that to MongoDB
 https://github.com/ant-design/ant-design
 The stepper sets the state to exit - it should not act directly on the state, use task.input
   Review all Tasks and ensure not accessing internals of children
@@ -23,7 +24,7 @@ Major features to be implemented before refactoring
       Validation/ESlint
         Testing
   Dynamic Task as per dynamic config
-    Needs to modify tasktypes (anoher Task)
+    Needs to modify tasktypes (another Task)
   Also need to create new servicetypes but that is on the nodejs processor
 Extend testing
   Batch testing

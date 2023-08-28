@@ -5,10 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
-import { users, groups, tasks, autoStartTasks } from "./configdata.mjs";
+import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
-import taskSync_async from "./taskSync.mjs";
 
 // Test handling of error
 
@@ -43,7 +42,7 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
           doesContain = false;
         }
       } else {
-        console.log("activeTask.environments empty");
+        console.error("activeTask.environments empty");
         doesContain = false;
       }
     }
@@ -58,15 +57,15 @@ async function processInstanceAsync(task, instanceId, mode) {
     if (activeTask && doesContain) {
       utils.logTask(task, "Task already active", instanceId);
       task = activeTask;
-      task["hub"]["command"] = "join";
+      task.hub["command"] = "join";
+      task.hub["commandArgs"] = { lockBypass: true };
       utils.logTask(task, `Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
       //utils.logTask(task, "processInstanceAsync task", task);
       task["hub"]["command"] = "init";
-      if (task?.state?.current) {
-        task.state["current"] = "start";
-      }
+      // Assumes that we have a state entry
+      task.state["current"] = "start";
       task.meta["updateCount"] = 0;
       task.meta["locked"] = null;
       await activeTasksStore_async.delete(instanceId);
@@ -258,11 +257,12 @@ function supportMultipleLanguages(task, users) {
   return task;
 }
 
-function allocateTaskToProcessors(task, processorId, activeProcessors, autoStart) {
+function allocateTaskToProcessors(task, processorId, activeProcessors) {
   // Build list of processors/environments that need to receive this task
   let taskProcessors = []
 
   if (!task.environments) {
+    console.error("No environments in task", task);
     throw new Error("No environments in task " + task.id);
   }
 
@@ -387,7 +387,7 @@ async function taskStart_async(
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
       // Maybe this could be added to schema
-      task["instanceId"] = (task.id + task.user.id).replace(/\./g, '-');
+      task["instanceId"] = (task.id + "-" + task.user.id).replace(/\./g, '-');
       task.familyId = task.instanceId;
       task = await processInstanceAsync(task, task.instanceId, "oneFamily");
     }
@@ -398,7 +398,7 @@ async function taskStart_async(
       if (checkUserGroup(task.groupId, task.user.id)) {
         // '.' is not used in keys or it breaks setNestedProperties
         // Maybe this could be added to schema
-        task["instanceId"] = (task.id + task.groupId).replace(/\./g, '-');
+        task["instanceId"] = (task.id + "-" + task.groupId).replace(/\./g, '-');
         task.familyId = task.instanceId;
         task = await processInstanceAsync(task, task.instanceId, "collaborate");
       }

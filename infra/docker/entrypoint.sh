@@ -1,21 +1,23 @@
 #!/bin/bash
 
+# We use `tee -a` so that tee will append after we run e.g. `truncate -s 0 hub/hub.log``
+
 screen -S my-session -d -m
 screen -S my-session -p 0 -X stuff "cd /app/hub\n"
 screen -S my-session -p 0 -X stuff "npm install\n"
-screen -S my-session -p 0 -X stuff "npm run debug 2>&1 | tee hub.log\n"
+screen -S my-session -p 0 -X stuff "rm -f hub.log; npm run debug 2>&1 | tee -a hub.log\n"
 
 # create a new window within the "my-session" screen
 screen -S my-session -X screen bash
 screen -S my-session -p 1 -X stuff "cd /app/processor/nodejs\n"
 screen -S my-session -p 1 -X stuff "npm install\n"
-screen -S my-session -p 1 -X stuff "npm run debug 2>&1 | tee nodejs.log\n"
+screen -S my-session -p 1 -X stuff "rm -f nodejs.log; npm run debug 2>&1 | tee -a nodejs.log\n"
 
 # create a new window within the "my-session" screen
 screen -S my-session -X screen bash
 screen -S my-session -p 2 -X stuff "cd /app/processor/rxjs\n"
 screen -S my-session -p 2 -X stuff "npm install\n"
-screen -S my-session -p 2 -X stuff "npm run debug 2>&1 | tee rxjs.log\n"
+screen -S my-session -p 2 -X stuff "rm -f hub.rxjs; npm run debug 2>&1 | tee -a rxjs.log\n"
 
 # create a new window within the "my-session" screen
 screen -S my-session -X screen bash

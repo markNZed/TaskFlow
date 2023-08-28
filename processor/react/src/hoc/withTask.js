@@ -155,11 +155,11 @@ function withTask(Component) {
       }
     }, [fsmSend]);
     const safeFsmSend = async (event) => {
-      console.log("safeFsmSend await")
+      //console.log("safeFsmSend await")
       if (!fsmSend) {
         await fsmSendReady;
       }
-      console.log("fsmSend.func", event)
+      //console.log("fsmSend.func", event)
       fsmSend.func(event);
     };
 
