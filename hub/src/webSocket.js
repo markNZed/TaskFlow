@@ -192,13 +192,13 @@ function initWebSocketServer(server) {
             if (!ws) {
               utils.logTask(task, "Lost websocket for ", coProcessorId, connections.keys());
             } else {
-              utils.logTask(task, "Websocket coprocessor chain", command, key, coProcessorId);
+              utils.logTask(task, "Websocket coprocessor chain", coProcessorId);
               // If the task is only on one co-processor at a time then we could just use task.coprocessor ?
               if (!task.processors[coProcessorId]) {
                 task.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
               }
-              taskCopy.hub["coProcessing"] = true;
-              taskCopy.hub["coProcessingDone"] = false;
+              task.hub["coProcessing"] = true;
+              task.hub["coProcessingDone"] = false;
               wsSendTask(task, coProcessorId);
             }
           }
@@ -301,6 +301,6 @@ function initWebSocketServer(server) {
     });
 
   });
-};
+}
 
 export { initWebSocketServer, wsSendTask };

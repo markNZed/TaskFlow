@@ -226,9 +226,8 @@ async function taskProcess_async(task, req, res) {
           utils.checkHashDiff(activeTask, task);
         }
         // Need to restore meta for checkLockConflict, checkAPIRate
-        task.meta = utils.deepMerge(activeTask.meta, task.meta);
         // Need to restore config for checkAPIRate
-        task.config = utils.deepMerge(activeTask.config, task.config);
+        task = utils.deepMerge(activeTask, task);
       } else if (task.processor.command !== "start") {
         console.error("Should have activeTask if we have an instanceId");
         return;
@@ -261,7 +260,7 @@ async function taskProcess_async(task, req, res) {
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket
       await taskSync_async(task.instanceId, task);
-      utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+      //utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
       return null;
     // If HTTP without coprocessing then we return (this is no longer used)
     } else if (res) {

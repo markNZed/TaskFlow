@@ -5,9 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocket } from "ws";
-import { filter, mergeMap, tap, map, Subject } from 'rxjs';
+import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, processorId, coProcessor } from "../config.mjs";
-import { register_async, hubId } from "./register.mjs";
+import { register_async } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
@@ -135,12 +135,7 @@ taskSubject
         utils.logTask(task, "Task processed with null result");
       } else {
         if (!coProcessor || task.processor.coProcessingDone) {
-          // We do not store the start as this would be treating th start command like an update
-          if (task.processor.command !== "start") {
-            await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-          } else {
-            utils.logTask(task, 'Not storing start');
-          }
+          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
           releaseResource(task.instanceId);
           utils.logTask(task, 'Task processed successfully');
         }
@@ -269,8 +264,6 @@ const connectWebSocket = () => {
     } else if (command === "register") {
       utils.logTask(task, "ws register request received")
       register_async();
-    } else if (command === "error") {
-      utils.logTask(task, "ws error received but not doing anything yet")
     } else {
       console.log("Unexpected message command ", command)
     }

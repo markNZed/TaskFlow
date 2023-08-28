@@ -1,5 +1,10 @@
 /* ToDo
 -------
+task.type is "disappearnign"
+Start collaborate, works between two browser tabs, then reload both tabs, then fails to start
+  Failed to load component undefined: Error: Cannot find module './undefined'
+    instanceId: "root-user-conversation-collaborate-start-collaborate" does not have type
+      Maybe bcause the instance store is not up to date?
 Collaborate will keep info in the caches and db. How can we clear out a specific familyId ?
   Could prefix the family ID for collaboration with a unique hub ID
     Could use hub Id if it were not stored

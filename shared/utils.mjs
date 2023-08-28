@@ -424,7 +424,10 @@ const utils = {
     task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
-    await activeTasksStore_async.set(task.instanceId, task);
+    // We do not store the start as this would be treating the start command like an update
+    if (task.processor.command != "start") {
+      await activeTasksStore_async.set(task.instanceId, task);
+    }
     return task;
   },
 
@@ -434,9 +437,8 @@ const utils = {
     task.hub["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
-    // If there is no type then this is a start request do we do not store it
-    // Since introducing init we probably don't need to worry about this
-    if (task.type) {
+    // We do not store the start as this would be treating the start command like an update
+    if (task.hub.command != "start") {
       await activeTasksStore_async.set(task.instanceId, task);
     }
     return task;
