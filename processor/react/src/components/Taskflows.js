@@ -47,6 +47,7 @@ function Taskflows(props) {
   const [counter, setCounter] = useState(0);
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
+  const [isLogsActive,setIslogs]=useState(false);
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
@@ -139,11 +140,12 @@ function Taskflows(props) {
     //console.log("Tasks ", tasks, tasksIdx)
   }, [tasks]);
 
-   const appDivStyle={
+  const appDivStyle={
     maxWidth:'100%'
   }
+
   return (
-    <div className="App" style={{maxWidth: globalState.maxWidth}}>
+    <div className="App" style={isLogsActive===true?appDivStyle:{}}>
       <AppBar
         position="fixed"
         sx={{
@@ -227,6 +229,7 @@ function Taskflows(props) {
                     task={tasks[idx]}
                     setTask={(t) => setTasksTask(t, idx)} // Pass idx as an argument
                     parentTask={null}
+                    handleLogsActive={(e)=>setIslogs(e)}
                   />
                 </div>
               )

@@ -43,7 +43,9 @@ const TaskSystemLogViewer = (props) => {
     task,
     modifyTask,
     transition,
+    handleLogsActive,
   } = props;
+
 
   // Setup the initial filters dynamically based on initialColumns
   function initFilters(columns) {
@@ -99,6 +101,11 @@ const TaskSystemLogViewer = (props) => {
       clearTimeout(handler);
     };
   }, [searchTerm]);
+
+  useEffect(()=>{
+    handleLogsActive(true);
+    
+  },[])
 
   // Build the correct data structure for react-data-grid 
   // The mapping comes from initialColumns except when processing e.g. command
