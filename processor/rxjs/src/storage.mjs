@@ -12,6 +12,7 @@ dotenv.config();
 import mongoose from 'mongoose';
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
+var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
 
 // Each keyv store is in a different table
 const DB_URI = "sqlite://db/main.sqlite";
@@ -65,7 +66,7 @@ function newKeyV(uri, table, setCallback = null) {
     };
   }
   return keyv;
-};
+}
 
 // We could have one keyv store and use prefix for different tables
 
@@ -87,5 +88,6 @@ export {
   activeTasksStore_async,
   taskDataStore_async,
   connections,
+  activeTaskFsm,
   db,
 };

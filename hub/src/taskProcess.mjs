@@ -15,6 +15,11 @@ import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
 import { haveCoProcessor } from "../config.mjs";
 
+// Could try to detect error cycles
+const maxErrorRate = 20; // per minute
+let lastErrorDate;
+let errorCountThisMinute = 0;
+
 function processorInHubOut(task, activeTask, requestId) {
   const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
@@ -92,8 +97,38 @@ function checkLockConflict(task, activeTask) {
   return task;
 }
 
-function checkAPIRate(task, activeTask) {
-  if (task.meta) {
+function checkAPIRate(task) {
+  const maxRequestRate = task?.config?.maxRequestRate ?? 0; 
+  if (maxRequestRate && task?.meta?.lastUpdatedAt) {
+    const lastUpdatedAt = new Date(task.meta.lastUpdatedAt.date);
+    const updatedAt = new Date(task.meta.updatedAt.date);
+
+    if (lastUpdatedAt.getUTCMinutes() !== updatedAt.getUTCMinutes()) {
+      //console.log("checkAPIRate", lastUpdatedAt.getUTCMinutes(), updatedAt.getUTCMinutes())
+      task.meta.requestsThisMinute = 0;
+    } else {
+      task.meta.requestsThisMinute++;
+      //console.log("checkAPIRate requestsThisMinute", task.meta.requestsThisMinute);
+    }
+
+    if (task.meta.requestsThisMinute >= maxRequestRate) {
+      task.error = {message: `Task update rate exceeded ${maxRequestRate} per minute`};
+    }
+
+    const maxRequestCount = task?.config?.maxRequestCount;
+    if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
+      utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
+      task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
+    }
+    //utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
+    task.meta.requestCount++;
+  }
+  return task;
+}
+
+function checkErrorRate(task) {
+  if (task.error || task?.hub?.command === "error" || (task.id && task.id.endsWith(".error"))) {
+    //console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
     const currentDate = new Date();
     const resetDate = new Date(
       currentDate.getUTCFullYear(),
@@ -102,36 +137,20 @@ function checkAPIRate(task, activeTask) {
       currentDate.getUTCHours(),
       currentDate.getUTCMinutes()
     );
-
-    const maxRequestRate = task?.config?.maxRequestRate ?? 0;
-    if (maxRequestRate && task.meta.updatedAt) {
-      const localUpdatedAt = new Date(task.meta.updatedAt.date);
-
-      if (localUpdatedAt >= resetDate) {
-        if (task.meta.requestsThisMinute >= maxRequestRate) {
-          throw new RequestError(
-            `Task update rate exceeded ${maxRequestRate} per minute`,
-            409
-          );
-        }
-      } else {
-        task.meta.requestsThisMinute = 0;
+    const maxRequestRate = maxErrorRate ?? 0;
+    if (maxRequestRate) {
+      if (lastErrorDate && resetDate > lastErrorDate) {
+        errorCountThisMinute = 0;
       }
-
-      task.meta.requestsThisMinute++;
+      errorCountThisMinute++;
+      lastErrorDate = resetDate;
+      if (errorCountThisMinute > maxRequestRate) {
+        throw new Error(`Hub error rate exceeded ${maxRequestRate} per minute`);
+      }
     }
-
-    const maxRequestCount = task?.config?.maxRequestCount;
-    if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
-      utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
-      task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
-      //throw new RequestError("Task request count exceeded", 409);
-    }
-    //utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
-    task.meta.requestCount++;
   }
-  return task;
 }
+
 
 function findClosestErrorTask(taskId, tasks) {
   const taskLevels = taskId.split('.');
@@ -198,6 +217,7 @@ async function taskProcess_async(task, req, res) {
     utils.logTask(task, "");
     utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command);
     let activeTask = {};
+    checkErrorRate(task);
     if (task.instanceId !== undefined) {
       activeTask = await activeTasksStore_async.get(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
@@ -207,6 +227,8 @@ async function taskProcess_async(task, req, res) {
         }
         // Need to restore meta for checkLockConflict, checkAPIRate
         task.meta = utils.deepMerge(activeTask.meta, task.meta);
+        // Need to restore config for checkAPIRate
+        task.config = utils.deepMerge(activeTask.config, task.config);
       } else if (task.processor.command !== "start") {
         console.error("Should have activeTask if we have an instanceId");
         return;
@@ -220,7 +242,7 @@ async function taskProcess_async(task, req, res) {
     if (task.hub.command !== "partial") {
       task = checkLockConflict(task, activeTask);
       if (!task.hub.coProcessing) {
-        task = checkAPIRate(task, activeTask);
+        task = checkAPIRate(task);
       }
       task = processError(task, tasks);
     }
@@ -265,9 +287,11 @@ async function taskProcess_async(task, req, res) {
     } else {
       utils.logTask(task, "Error in /hub/api/task " + err.message, task);
       throw err;
+      /*
       if (res) {
         res.status(500).json({ error: "Error in /hub/api/task " + err.message });
       }
+      */
     }
   }
   return task;

@@ -8,9 +8,8 @@ import { parseFilter } from 'mongodb-query-parser';
 import { tasksModel } from "./SchemaTasks.mjs"
 import { formatQuery } from 'react-querybuilder';
 
-const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
-
-  const T = utils.createTaskValueGetter(task);
+// eslint-disable-next-line no-unused-vars
+const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   function transformToMongoSortCriteria(sortDescriptors) {
     const mongoSortCriteria = {};
@@ -35,7 +34,7 @@ const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
       if (!sortCriteria || Object.keys(sortCriteria).length === 0) {
         sortCriteria = { "updatedAt.date": -1 }; // descending order
       }
-      utils.logTask(task, "fetchTasksAsync", parsedQuery, sortCriteria, skip, pageSize);
+      utils.logTask(T(), "fetchTasksAsync", parsedQuery, sortCriteria, skip, pageSize);
       // Concurrent requests
       const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(pageSize);
       const totalPromise = tasksModel.countDocuments(parsedQuery);
@@ -48,7 +47,7 @@ const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
   }
 
   // State machine actions selected based on current state
-  switch (task.state.current) {
+  switch (T("state.current")) {
     // On the React processor queries can be sent from the query state
     // here we transition to the query state that indicates this processor is ready
     case "start":
@@ -58,9 +57,9 @@ const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
     // Process a query
     case "query":
       if (T("request.queryBuilder")) {
-        utils.logTask(task, "State query " + T("request.queryBuilder") + " with request.page " + T("request.page"));
+        utils.logTask(T(), "State query " + T("request.queryBuilder") + " with request.page " + T("request.page"));
         const { tasks, total } = await fetchTasksAsync(T("request.queryBuilder"), T("request.sortColumns"), T("request.page"), T("request.pageSize"))
-        utils.logTask(task, "Returned total", total);
+        utils.logTask(T(), "Returned total", total);
         T("response.tasks", tasks);
         T("response.total", total);
         T("state.last", T("state.current"));
@@ -95,11 +94,11 @@ const TaskSystemLogViewer_async = async function (wsSendTask, task, CEPFuncs) {
     case "response":
       break;
     default:
-      utils.logTask(task, "WARNING unknown state : " + task.state.current);
+      utils.logTask(T(), "WARNING unknown state : " + T("state.current"));
       return null;
   }
 
-  return task;
+  return T();
 };
 
 export { TaskSystemLogViewer_async };

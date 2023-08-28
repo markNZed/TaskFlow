@@ -1,30 +1,30 @@
 /* ToDo
 -------
+Need to deal with cleaning up when tasks stop e.g nodejs activeTaskFsm
+Bug:
+  if (command === "join") {
+      commandArgs = { ...commandArgs, ...{ lockBypass: true } };
+    }
 tasktype cannot configure fsm: { useMachine: true} ?
-useMachine allows for the updating of actions and guards etc
-Reset of the task on React still needs an update sent to reset "for real" or we create a new instance?
-  Restarting is not working with Systemtest - why?
-The integration with the XState Viz is perhaps problematic when we change the FSM by updating it
 We need another way of managing the familyTree - TaskFamilyTree
 instancesStore_async on hub - should have single store with index that can separate active and inactive
 https://github.com/ant-design/ant-design
 The stepper sets the state to exit - it should not act directly on the state, use task.input
+  Review all Tasks and ensure not accessing internals of children
 Point to private extensions of config rather than redirecting the entire config directory
-TaskCreateTask
-  Identify closest existng task
-    Chat interaction
-      Validation/ESlint
-        Testing
-  Dynamic Task as per dynamic config  
-Distributed task with FSM
-  TaskShowInstruction
-    Replace FSM on React and confirm things are working
-  Forcing state: interpreter.start(state)
-Major features that need to be implemented before major refactoring
+Major features to be implemented before refactoring
   Dynamic Task configurations
   Debug support per Task
     How to combine debug logging with task.meta.debug ?
     Conditional breakpoints in VSCode works well
+  TaskCreateTask
+  Identify closest existng task
+    Chat interaction
+      Validation/ESlint
+        Testing
+  Dynamic Task as per dynamic config
+    Needs to modify tasktypes (anoher Task)
+  Also need to create new servicetypes but that is on the nodejs processor
 Extend testing
   Batch testing
     TaskCron to regularly check things

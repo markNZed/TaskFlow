@@ -6,27 +6,27 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 const xutils = {};
 
-xutils.taskAction = function(id, ...args) {
+xutils.taskAction = function(id, args) {
   return {
     type: 'taskAction',
-    id: id,
-    args: args,
+    id,
+    args: {...args},
   };
 }
   
-xutils. taskQuery = function(id, ...args) {
+xutils.taskQuery = function(id, args) {
   return { 
     type: 'taskQuery', 
-    id: id,
-    args: args,
+    id,
+    args: {...args},
   };
 }
 
-xutils.logMsg = function(message, ...args) {
+xutils.logMsg = function(message, args) {
   return {
     type: 'logMsg',
     message: message,
-    args: args,
+    args: {...args},
   };
 }
 
@@ -54,14 +54,14 @@ xutils.query2event = function(eventType) {
 
 // This is not yet making use of the optional arguments to taskQuery and taskAction
 // Could detect the entry is an array or hash and then deal with arguments also
-xutils.actionThenQuery = function(state, actions, queries) {
+xutils.actionThenQuery = function(state, actions, queries, debug = false) {
   let entry = [];
   let on = {};
   for (const action of actions) {
-    entry.push(xutils.taskAction(action));
+    entry.push(xutils.taskAction(action, {debug}));
   }
   for (const query of queries) {
-    entry.push(xutils.taskQuery(query));
+    entry.push(xutils.taskQuery(query, {debug}));
     let eventType = xutils.convertToSnakeCase(query);
     eventType = xutils.query2event(eventType);
     const nextState = xutils.toCamelCase(eventType);
@@ -84,10 +84,37 @@ xutils.addDefaultEventsBasedOnStates = function(machineConfig) {
   // Add default events based on states
   Object.keys(newMachineConfig.states).forEach(state => {
     //const snakeCasedEvent = xutils.convertToSnakeCase(state);
-    newMachineConfig['on'][state] = state;
+    newMachineConfig['on']["GOTO" + state] = state;
   });
   return newMachineConfig;
 }
 
-export const { taskAction, taskQuery, logMsg, actionThenQuery, addDefaultEvents } = xutils;
+// Add logging to actions and guards
+xutils.addLogging = function(functions, descriptor) {
+  const loggedFunctions = {};
+  for (const [key, value] of Object.entries(functions)) {
+    loggedFunctions[key] = function(context, event) {
+      const result = value(context, event);
+      let msg = [];
+      if (descriptor === 'action') {
+        msg = [`${key} ${descriptor}`];     
+      } else {
+        msg = [`${key} ${descriptor}`, value(context, event)];
+      }
+      console.log("FSM", ...msg);
+      return result;
+    };
+  }
+  return loggedFunctions;
+}
+
+xutils.logActions = function(actions) {
+  return xutils.addLogging(actions, 'action');
+}
+
+xutils.logGuards = function(guards) {
+  return xutils.addLogging(guards, 'guard');
+}
+
+export const { taskAction, taskQuery, logMsg, actionThenQuery, addDefaultEvents, addLogging } = xutils;
 export { xutils }

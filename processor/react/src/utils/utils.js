@@ -1,7 +1,7 @@
 import { appAbbrev } from "../config";
 import _ from "lodash";
 import debug from "debug";
-import { sharedUtils } from "../shared/utils.mjs"
+import { utils as sharedUtils } from "../shared/utils.mjs"
 
 const utils = {
 
@@ -64,7 +64,7 @@ const utils = {
     const processKey = (obj, key, value) => {
       if (key.includes(".")) {
         const [head, ...tail] = key.split(".");
-        if (!obj.hasOwnProperty(head)) {
+        if (!obj[head]) {
           obj[head] = {};
         }
         processKey(obj[head], tail.join("."), value);

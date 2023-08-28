@@ -12,11 +12,11 @@ import { cacheStore_async } from "../storage.mjs";
 
 // state === send : this processor has control
 
-function checkTaskCache (task, T) {
-  // Loop over each object in task.config.caching if it exists
+function checkTaskCache (T) {
+  // Loop over each object in T("config.caching") if it exists
   let enabled = false;
   let seed = T("id");
-  for (const cacheObj of task.config.caching) {
+  for (const cacheObj of T("config.caching")) {
     if (cacheObj.subTask) {
       continue;
     }
@@ -26,10 +26,10 @@ function checkTaskCache (task, T) {
       console.log("cacheObj.environments", "nodejs");
       enabled = true;
     }
-    if (cacheObj.states && !cacheObj.states.includes(task.state.current)) {
+    if (cacheObj.states && !cacheObj.states.includes(T("state.current"))) {
       continue;
     } else {
-      console.log("cacheObj.states", task.state.current);
+      console.log("cacheObj.states", T("state.current"));
       enabled = true;
     }
     if (enabled && cacheObj.enable === undefined) {
@@ -54,11 +54,10 @@ function checkTaskCache (task, T) {
   return [enabled, seed];
 }
 
-const TaskSimulateUser_async = async function (wsSendTask, task) {
-  const T = utils.createTaskValueGetter(task);
+const TaskSimulateUser_async = async function (wsSendTask, T) {
 
   // Cache
-  const [cacheEnabled, cacheKeySeed] = checkTaskCache(task, T);
+  const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);
   let cachedDiff;
   let origTask = {};
   if (cacheEnabled) {
@@ -67,46 +66,46 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
     if (cachedDiff) {
       console.log("Found cached value for " + cacheKeySeed + " diff " + JSON.stringify(cachedDiff));
       // How do we know what to do with it? Depends on state?
-      const mergedTask = utils.deepMerge(task, cachedDiff);
+      const mergedTask = utils.deepMerge(T(), cachedDiff);
       return mergedTask;
     }
-    origTask = JSON.parse(JSON.stringify(task));
+    origTask = JSON.parse(JSON.stringify(T()));
   }
 
   // Could return msgs instead of response.text
-  switch (task.state.current) {
+  switch (T("state.current")) {
     case "introduction":
-    case "send":
-      const entryState = task.state.current;
+    case "send": {
+      const entryState = T("state.current");
       T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
       // Could error here. How to chek?
-      wsSendTask(task);
+      wsSendTask(T());
       if (entryState === "introduction") {
-        const simulationPrompt = { role: "user", text: task.config.local.introductionPrompt, user: task.user.label };
+        const simulationPrompt = { role: "user", text: T("config.local.introductionPrompt"), user: T("user.label") };
         T("output.simulationPrompt", simulationPrompt);
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
         T("request.prompt", T("output.simulationPrompt.text"));
-        const subTask = await SubTaskLLM_async(wsSendTask, task);
+        const subTask = await SubTaskLLM_async(wsSendTask, T());
         T("output.simulationResponse.text", subTask.response.LLM);
       } else {
-        let subTask = JSON.parse(JSON.stringify(task));
+        let subTask = JSON.parse(JSON.stringify(T()));
         const ST = utils.createTaskValueGetter(subTask);
         let msgs = ST("output.msgs");
         msgs.shift(); // Remove the first entry
         if (msgs && msgs.length > 0) {
-          msgs.forEach(function(item, index) {
+          msgs.forEach(function(item) {
             if (item !== null) {
               if (item.role === "user") {
                 item.role = "assistant";
                 item.user = "assistant";
               } else if (item.role === "assistant") {
                 item.role = "user";
-                item.user = task.user.label;
+                item.user = T("user.label");
               }
             }
           });
@@ -125,22 +124,22 @@ const TaskSimulateUser_async = async function (wsSendTask, task) {
       T("state.current", "received");
       T("commandArgs.unlock", true);
       T("command", "update");
-       break;
+      break;
+    }
     default:
-      console.log("WARNING unknown state : " + task.state.current);
+      console.log("WARNING unknown state : " + T("state.current"));
       return null;
     }
 
   if (cacheEnabled) {
     // Store in cache
     // We only want to store the changes made to the task
-    const diff = utils.getObjectDifference(origTask, task) || {};
+    const diff = utils.getObjectDifference(origTask, T()) || {};
     await cacheStore_async.set(cacheKeySeed, diff);
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }
 
-  console.log("Returning from TaskSimulateUser_async", task.id);
-  return task;
+  return T();
 };
 
 export { TaskSimulateUser_async };

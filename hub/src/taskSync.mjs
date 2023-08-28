@@ -15,6 +15,11 @@ const taskSync_async = async (key, value) => {
 
   //utils.logTask(value, "taskSync_async", key, value.processor)
 
+  if (value.meta) {
+    value.meta.lastUpdatedAt = value.meta.updatedAt;
+    value.meta.updatedAt = utils.updatedAt();
+  }
+
   // key may be undefined if this is a start task that is being forwarded to coprocessor
   // A start command could arrive without familyId set on the value and this would lose
   // failyId which created other issues with loading the prevInstanceId in taskStart
@@ -41,8 +46,6 @@ const taskSync_async = async (key, value) => {
   if (has) {
     if (command === "join") {
       commandArgs = { ...commandArgs, ...{ lockBypass: true } };
-    } else if (command === "update") {
-      taskCopy.meta.updatedAt = utils.updatedAt();
     }
   }
 

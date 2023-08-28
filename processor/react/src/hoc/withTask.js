@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { utils } from "../utils/utils";
 import useUpdateTask from "../hooks/useUpdateTask";
 import useStartTask from "../hooks/useStartTask";
@@ -10,10 +10,13 @@ import useErrorWSFilter from "../hooks/useErrorWSFilter";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
 import { useEventSource } from '../contexts/EventSourceContext';
-import { createMachine, interpret } from 'xstate';
+import { createMachine } from 'xstate';
 import { xutils } from '../shared/fsm/xutils.mjs';
 
 // When a task is shared then changes are detected at each wrapper
+
+// Context must be defined at module scope not within the function (would be re-rendered)
+const FsmContext = React.createContext();
 
 function withTask(Component) {
   const WithDebugComponent = withDebug(Component);
@@ -46,17 +49,18 @@ function withTask(Component) {
     const [familyTaskDiff, setFamilyTaskDiff] = useState();
     const handleModifyChildStateRef = useRef(null);
     const handleModifyChildTaskRef = useRef(null);
+    const taskRef = useRef();
     const [fsm, setFsm] = useState();
     const [fsmMachine, setFsmMachine] = useState();
-    const [actions, setActions] = useState({});
-    const [guards, setGuards] = useState({});
-    const taskRef = useRef();
-    const [fsmState, setFsmState] = useState(null); // holds the current state of the machine
-    const [fsmService, setFsmService] = useState(null); // holds the service
-    const fsmSend = (event, payload) => {
-      if (fsmService) {
-        fsmService.send(event, payload);
+    const [fsmState, setFsmState] = useState(); 
+    const [fsmService, setFsmService] = useState();
+    const [fsmSend, setFsmSend] = useState(); 
+    const useShareFsm = () => {
+      const context = useContext(FsmContext);
+      if (!context) {
+        throw new Error('useShared must be used within a SharedProvider');
       }
+      return context;
     };
 
     useEffect(() => {
@@ -74,100 +78,8 @@ function withTask(Component) {
       });
     }
 
-    /*
-    // Synchronise XState FSM with task.state
     useEffect(() => {
-      if (fsmState && fsmState.value !== props.task?.state?.current) {
-        modifyTask({ "state.current": fsmState.value });
-      }
-    }, [fsmState]);
-
-    // Synchronise task.state with FSM
-    useEffect(() => {
-      if (fsm) {
-        if (props.task?.state?.current && fsmState && props.task.state.current !== fsmState.value) {
-          fsmSend(props.task.state.current);
-        }
-      }
-    }, [props.task?.state?.current]);
-    */
-
-    // Add logging to actions and guards
-    function addLogging(functions, descriptor) {
-      const loggedFunctions = {};
-      for (const [key, value] of Object.entries(functions)) {
-        loggedFunctions[key] = function(context, event) {
-          const result = value(context, event);
-          let msg = [];
-          if (descriptor === 'action') {
-            msg = [`${key} ${descriptor}`];     
-          } else {
-            msg = [`${key} ${descriptor}`, value(context, event)];
-          }
-          console.log("FSM ", ...msg);
-          return result;
-        };
-      }
-      return loggedFunctions;
-    }
-
-    /*
-    const passActions = useCallback((actions) => {
-      setActions(addLogging(actions, 'action'));
-    }, []);
-
-    const passGuards = useCallback((guards) => {
-      setGuards(addLogging(guards, 'guards'));
-    }, []);
-    */
-
-    useEffect(() => {
-      if (fsm && props.task?.config?.fsm?.useMachine) {
-        console.log("Starting machine", fsm, actions, guards);
-        //const machine = createMachine(fsm, { actions, guards, devTools: props.task?.config?.fsm?.devTools ? true : false });
-        const machine = createMachine(fsm);
-        setFsmMachine(machine);
-      }
-    }, [fsm]); 
-
-    /*
-    useEffect(() => {
-      if (fsm) {
-        console.log("Starting machine", fsm, actions, guards);
-        const machine = createMachine(fsm, { actions, guards, devTools: props.task?.config?.fsm?.devTools ? true : false });
-        // Create and start the service
-        const service = interpret(machine)
-          .onTransition((state) => {
-            // Update fsmState whenever a transition occurs
-            setFsmState(state);
-          })
-          .start(props.task?.state?.current || 'start');
-        setFsmService(service);
-        setFsmMachine(machine);
-        // Stop the service when the component unmounts
-        return () => {
-          service.stop();
-        };
-      }
-    }, [fsm]); 
-    */
-
-    /*
-    // Don't want to specify actions in a service - would make it impossible to reconfigure
-    useEffect(() => {
-      if (fsmService) {
-        const subscription = fsmService.subscribe((state) => {
-          utils.log(`${props.componentName} FSM State ${state.value} Event ${state.event.type}`, state.event, state); // For debug messages
-        });
-        return () => {
-          subscription.unsubscribe();
-        };
-      }
-    }, [fsmService]); // note: service should never change
-    */
-
-    useEffect(() => {
-      if (props.task?.config?.fsm?.devTools) {
+      if (props.task?.config?.fsm?.devTools && !globalState.xStateDevTools) {
         replaceGlobalState("xStateDevTools", true);
       }
     }, [props.task?.config?.fsm?.devTools]);  
@@ -182,9 +94,9 @@ function withTask(Component) {
           const fsmDefaults = {
             predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
             preserveActionOrder: true, // will be the default in v5
-            //id: props.task.id + "-" + name,
-            id: name,
-            initial: 'start',
+            id: props.task.id + "-" + name,
+            // This is a hack to get around rehydrating. interpeter.start(stateName) ignores entry actions.
+            initial: props.task.state.current || 'init',
           };
           fsm = utils.deepMerge(fsmDefaults, fsm);
           if (props.task?.config?.fsm?.merge) {
@@ -222,6 +134,34 @@ function withTask(Component) {
         console.log("No FSM");
       }
     }, []);
+
+    useEffect(() => {
+      if (fsm && props.task?.config?.fsm?.useMachine) {
+        console.log("Creating machine", fsm);
+        setFsmMachine(createMachine(fsm));
+      }
+    }, [fsm]);
+
+    // This is an ugly hack to make sure that the fsmSend command is available
+    // So it can be used in an action while the FSM context may still be synchronising
+    let resolveFsmSendReady; // Declare variable to hold the resolve function
+    const fsmSendReady = new Promise((resolve) => {
+      resolveFsmSendReady = resolve; // Assign the resolve function to the variable
+    });
+    useEffect(() => {
+      //console.log("useEffect fsmSend", fsmSend);
+      if (fsmSend) {
+        resolveFsmSendReady(); // Resolve the promise when fsmSend is initialized
+      }
+    }, [fsmSend]);
+    const safeFsmSend = async (event) => {
+      console.log("safeFsmSend await")
+      if (!fsmSend) {
+        await fsmSendReady;
+      }
+      console.log("fsmSend.func", event)
+      fsmSend.func(event);
+    };
 
     // For debug/inspection from the browser console
     if (!window.tasks) {
@@ -724,16 +664,8 @@ function withTask(Component) {
       syncTask,
       taskRef,
       fsmMachine,
-      /*
-      fsmState, 
-      fsmSend, 
-      fsmService,
-      passActions,
-      passGuards,
-      */
-      addLogging,
+      useShareFsm,
     };
-
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it
     // If no FSM is configured then fsm will default to a string
@@ -747,7 +679,12 @@ function withTask(Component) {
     }
     */
 
-    return <WithDebugComponent {...componentProps} />;
+    return (
+      <FsmContext.Provider value={{fsmSend: safeFsmSend, fsmState, setFsmState, setFsmSend, setFsmService}}> 
+        <WithDebugComponent {...componentProps} /> 
+      </FsmContext.Provider>
+    );
+
   }
 
   TaskComponent.displayName = componentName;

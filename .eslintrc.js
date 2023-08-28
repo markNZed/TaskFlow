@@ -7,7 +7,7 @@ module.exports = {
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended",
-        "plugin:xstate/recommended",
+        "plugin:xstate/recommended_v4",
     ],
     "overrides": [
         {
@@ -22,13 +22,20 @@ module.exports = {
             }
         }
     ],
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
         "ecmaVersion": "latest",
-        "sourceType": "module"
+        "sourceType": "module",
+        "requireConfigFile": false,
+        "babelOptions": {
+            "plugins": [
+            "@babel/plugin-syntax-import-assertions"
+            ]
+        }
     },
     "plugins": [
         "react",
-        "xstate"
+        "xstate",
     ],
     "rules": {
         'xstate/prefer-predictable-action-arguments': 'off',

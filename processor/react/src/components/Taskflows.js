@@ -69,6 +69,12 @@ function Taskflows(props) {
       const index = tasksIds.indexOf(start);
       // If we select a task in the menu while using it then start the task again (new instanceId)
       if (index === -1 || selectedTaskId === tasksIds[tasksIdx]) {
+        if (selectedTaskId === tasksIds[tasksIdx]) {
+          // Remove the instanceId so it will not be rendered (see conditional in the returned jsx)
+          const t = JSON.parse(JSON.stringify(tasks[tasksIdx]));
+          delete t.instanceId;
+          utils.setArrayState(setTasks, tasksIdx, t)
+        }
         setTask({
           command: "start",
           commandArgs: {
@@ -209,6 +215,7 @@ function Taskflows(props) {
           <Toolbar />
           {tasks.map(
             ({ instanceId }, idx) =>
+              instanceId && 
               (
                 <div
                   key={taskKeys[idx]}

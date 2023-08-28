@@ -12,11 +12,11 @@ import { cacheStore_async } from "../storage.mjs";
 
 // state === sending : this processor has control
 
-function checkTaskCache (task, T) {
-  // Loop over each object in task.config.caching if it exists
+function checkTaskCache (T) {
+  // Loop over each object in T("config.caching") if it exists
   let enabled = false;
   let seed = T("id");
-  for (const cacheObj of task.config.caching) {
+  for (const cacheObj of T("config.caching")) {
     if (cacheObj.subTask) {
       continue;
     }
@@ -26,10 +26,10 @@ function checkTaskCache (task, T) {
       console.log("cacheObj.environments", "nodejs");
       enabled = true;
     }
-    if (cacheObj.states && !cacheObj.states.includes(task.state.current)) {
+    if (cacheObj.states && !cacheObj.states.includes(T("state.current"))) {
       continue;
     } else {
-      console.log("cacheObj.states", task.state.current);
+      console.log("cacheObj.states", T("state.current"));
       enabled = true;
     }
     if (enabled && cacheObj.enable === undefined) {
@@ -54,12 +54,10 @@ function checkTaskCache (task, T) {
   return [enabled, seed];
 }
 
-const TaskChat_async = async function (wsSendTask, task) {
-  
-  const T = utils.createTaskValueGetter(task);
+const TaskChat_async = async function (wsSendTask, T) {
 
   // Cache
-  const [cacheEnabled, cacheKeySeed] = checkTaskCache(task, T);
+  const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);
   let cachedDiff;
   let origTask = {};
   if (cacheEnabled) {
@@ -68,25 +66,25 @@ const TaskChat_async = async function (wsSendTask, task) {
     if (cachedDiff) {
       console.log("Found cached value for " + cacheKeySeed + " diff " + JSON.stringify(cachedDiff));
       // How do we know what to do with it? Depends on state?
-      const mergedTask = utils.deepMerge(task, cachedDiff);
+      const mergedTask = utils.deepMerge(T(), cachedDiff);
       return mergedTask;
     }
-    origTask = JSON.parse(JSON.stringify(task));
+    origTask = JSON.parse(JSON.stringify(T()));
   }
 
-  switch (task.state.current) {
+  switch (T("state.current")) {
     case "mentionAddress":
-    case "send":
+    case "send": { // create code block to avoid linting issue with declaring const in the block
       T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("output.sending", false);
       T("commandArgs.lockBypass", true);
       // Update the task which has the effect of setting the state to receiving on ohter Processors
       T("command", "update");
-      wsSendTask(task);
+      wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
-      const subTask = await SubTaskLLM_async(wsSendTask, task);
+      const subTask = await SubTaskLLM_async(wsSendTask, T());
       T("response.LLMResponse", subTask.response.LLM);
       T("request.prompt", null);
       T("state.last", T("state.current"));
@@ -94,23 +92,23 @@ const TaskChat_async = async function (wsSendTask, task) {
       T("commandArgs.lockBypass", true);
       T("command", "update");
       break;
+    }
     default:
-      console.log("WARNING unknown state : " + task.state.current);
+      console.log("WARNING unknown state : " + T("state.current"));
       return null;
   }
 
   if (cacheEnabled) {
     // Store in cache
     // We only want to store the changes made to the task
-    const diff = utils.getObjectDifference(origTask, task) || {};
+    const diff = utils.getObjectDifference(origTask, T()) || {};
     await cacheStore_async.set(cacheKeySeed, diff);
     console.log("Stored in cache " + cacheKeySeed + " diff " + JSON.stringify(diff));
   }
 
   //T("error", {message: "Testing Error"});
 
-  console.log("Returning from TaskChat_async", task.id);
-  return task;
+  return T();
 };
 
 export { TaskChat_async };
