@@ -133,6 +133,9 @@ function Taskflows(props) {
     //console.log("Tasks ", tasks, tasksIdx)
   }, [tasks]);
 
+   const appDivStyle={
+    maxWidth:'100%'
+  }
   return (
     <div className="App" style={{maxWidth: globalState.maxWidth}}>
       <AppBar
