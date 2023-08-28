@@ -10,6 +10,14 @@ T@skFlow combines software, AI models, and human interaction in a unique way. A 
 
 T@skFlow provides a flexible infrastructure for human-computer interaction. The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
+# Motivation
+
+The potential of large langauge models (LLM) like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore, LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture value from new services.
+
+The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a technology of ethics i.e., using technology to prefer certain moral outcomes over other possible outcomes. T@skFlow is intended to support a new way of thinking.
+
+# Core Concepts
+
 ## Task
 
 Tasks consist of:
@@ -26,9 +34,13 @@ The concept of **Task Instance** refers to a particular object conforming to the
 
 The concept of **Task Context** refers to the complete data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
 
-A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Task Processor using task.command and `task.commandArgs` Only Task Functions write to `task.command`
+A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Task Processor using `task.command` and `task.commandArgs` Only Task Functions write to `task.command`
 
 The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide features for managing the state machine.
+
+### Task Function Machine
+
+A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM dynamics. For example, TaskSystemTest provides generic functions to drive the input and check the output of Tasks, different configurations of TaskSystmeTest can test different Tasks.
 
 ## Task Processor
 
@@ -46,9 +58,11 @@ The React Task Processor (user interface) provides a kernel for evaluating Task 
 
 The RxJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the RxJS Task Processor without user interaction. The RxJS Task Processor uses Node, Express, and RxJS.
 
+For more information see the Task Processor [README.md](processor/README.md).
+
 ### Task Environment
 
-The Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment. A Task Processor could provide multiple Task Environments.
+Each Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment. A Task Processor could provide multiple Task Environments.
 
 ### SubTask
 
@@ -58,11 +72,11 @@ There may be side-effects from a SubTask, for example, it may return partial res
 
 ## Task Hub
 
-Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see [README.md](hub/README.md)
+Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see the Task Hub [README.md](hub/README.md).
 
 ### Task Hub Co-Processor
 
-A Task Hub Co-Processor offloads processing from the Task Hub. The Task Hub Co-Processor is a Task processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor may provide a bridge to other systems e.g., logging, monitoring, testing, debugging, etc.
+A Task Hub Co-Processor offloads processing from the Task Hub. The Task Hub Co-Processor is a Task Processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor may provide a bridge to other systems e.g., logging, monitoring, testing, debugging, etc.
 
 #### CEP
 
@@ -70,23 +84,17 @@ Complex event processing (CEP) functions monitor the stream of Tasks and respond
 
 ## Error Handling
 
-If a Task Function sets task.error and the Task is updated then the Task Hub will detect this and set task.hub.command to "error" then set task.hub.commandArgs.errorTask to `task.config.errorTask` or the nearest error task (task.id ends in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
-
-# Motivation
-
-The potential of large langauge models like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate high quality natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture parts of the value new services will provide.
-
-The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a technology of ethics i.e., using technology to prefer certain moral outcomes over other possible outcomes. T@skFlow is intended to support a new way of thinking.
+If a Task Function sets `task.error` and the Task is updated then the Task Hub will detect this and set `task.hub.command` to "error" then set `task.hub.commandArgs.errorTask` to `task.config.errorTask` or the nearest error task (task.id ending in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
 
 # Getting Started
 
-To run T@skFlow with docker, see [README.md](infra/docker/README.md) in the docker directory.
+To run T@skFlow with docker, see the [README.md](infra/docker/README.md) in the infra/docker directory.
 
-To learn more about the NodeJS Task Processor, see [README.md](processor/nodejs/README.md) in the NodeJS Task Processor directory.
+To learn more about the NodeJS Task Processor, see the [README.md](processor/nodejs/README.md) in the NodeJS Task Processor directory.
 
-To learn more about the React Task Processor, see [README.md](processor/react/README.md) in the React Task Processor directory.
+To learn more about the React Task Processor, see the [README.md](processor/react/README.md) in the React Task Processor directory.
 
-To learn more about the Task object, see [README.md](shared/README.md) in the shared directory.
+To learn more about the Task object, see the [README.md](shared/README.md) in the shared directory.
 
 For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
 
