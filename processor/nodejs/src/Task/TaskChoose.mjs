@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
-import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
 const model = await use.load();
@@ -16,11 +15,10 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-const TaskChoose_async = async function (wsSendTask, task) {
-  const T = utils.createTaskValueGetter(task);
+const TaskChoose_async = async function (wsSendTask, T) {
 
   T("response.LLM", null); // Avoid using previously stored response
-  const subTask = await SubTaskLLM_async(wsSendTask, task);
+  const subTask = await SubTaskLLM_async(wsSendTask, T());
   T("response.LLM", subTask.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
@@ -69,7 +67,7 @@ const TaskChoose_async = async function (wsSendTask, task) {
     T("error", error);
   }
 
-  return task;
+  return T();
 };
 
 export { TaskChoose_async };

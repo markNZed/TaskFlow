@@ -14,9 +14,8 @@ import TreeModel from 'tree-model';
   root.user.testing.zeroshot.start
 */
 
-const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
-  
-  const T = utils.createTaskValueGetter(task);
+// eslint-disable-next-line no-unused-vars
+const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   function serviceStub(functionName, wsSendTask, CEPinstanceId, task, args) {
     const key = args.key;
@@ -37,6 +36,7 @@ const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
   }
 
   // This sync the familyTree but we are not using this if we test via UI 
+  // eslint-disable-next-line no-unused-vars
   async function familyTree(functionName, wsSendTask, CEPinstanceId, task, args) {
     utils.logTask(task, "familyTree command", task.processor.command);
     // Only run this when going through the coprocessor the first time
@@ -90,7 +90,7 @@ const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
   CEPFunctions.register("familyTree", familyTree);
 
   // Here we install the CEP from the task but this could also be done through the Task config
-  const match = "id-" + task.config.local.targetTaskId;
+  const match = "id-" + T("config.local.targetTaskId");
   const config = {
     functionName: "serviceStub",
     args: {
@@ -99,9 +99,9 @@ const TaskSystemTest_async = async function (wsSendTask, task, CEPFuncs) {
       value: "openaistub"
     },
   }
-  utils.createCEP(CEPFuncs, CEPFunctions, task, match, config);
+  utils.createCEP(CEPFuncs, CEPFunctions, T(), match, config);
 
-  return task;
+  return T();
 };
 
 export { TaskSystemTest_async };

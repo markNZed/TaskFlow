@@ -6,76 +6,17 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { xutils } from './shared/fsm/xutils.mjs';
-import { createMachine } from 'xstate';
 import { activeTaskFsm } from "./storage.mjs";
-
-const loadFsmModule_async = async (task) => {
-  let importPath;
-  let name;
-  if (task?.fsm) {
-    console.log("loadFsmModule_async returning task.fsm");
-    return task.fsm;
-  } else if (task?.config?.fsm?.name) {
-    importPath = `${task.type}/${task.config.fsm.name}.mjs`;
-    name = task.config.fsm.name;
-    console.log("loadFsmModule_async task.config.fsm.name", task.config.fsm.name);
-  } else if (task.type) {
-    importPath = `${task.type}/default.mjs`;
-    name = 'default';
-    console.log("loadFsmModule_async default");
-  } else {
-    console.log("No FSM");
-    return null;
-  }
-  try {
-    const module = await import('./shared/fsm/' + importPath);
-    let fsmConfig = module.getFsm(task);
-    const fsmDefaults = {
-      predictableActionArguments: true,
-      preserveActionOrder: true,
-      id: task.id + "-" + name,
-      // This is a hack to get around rehydrating. interpeter.start(stateName) ignores entry actions.
-      initial: task.state.current || 'init',
-    };
-    fsmConfig = utils.deepMerge(fsmDefaults, fsmConfig);
-    if (task?.config?.fsm?.merge) {
-      fsmConfig = utils.deepMerge(fsmConfig, task.config.fsm.merge);
-    }
-    if (fsmConfig) {
-      fsmConfig = xutils.addDefaultEventsBasedOnStates(fsmConfig);
-    }
-    return fsmConfig;
-  } catch (error) {
-    if (error.message.includes("Cannot find module")) {
-      console.log(`Failed to load FSM at ${'./shared/fsm/' + importPath}`);
-    } else {
-      console.error(`Failed to load FSM at ${'./shared/fsm/' + importPath}`, error);
-      throw error;
-    }
-  }
-}
+import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 
 export async function taskProcess_async(wsSendTask, task) {
   let updatedTask = {};
   if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
     try {
-      let fsmHolder = {
-        fsm: {}, 
-        machine: null, 
-        send: () => {console.error('Send function should be replaced.');}
-      };
-      if (activeTaskFsm.has(task.instanceId)) {
-        fsmHolder["fsm"] = activeTaskFsm.get(task.instanceId);
-      } else {
-        const fsmConfig = await loadFsmModule_async(task);
-        if (fsmConfig && task.config?.fsm?.useMachine) {
-          //console.log("Before creating machine", fsmConfig);
-          fsmHolder.machine = createMachine(fsmConfig);
-        }
-      }
+      let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, fsmHolder);
+      const T = utils.createTaskValueGetter(task);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder);
       if (fsmHolder.fsm) {
         console.log("Updating activeTaskFsm");
         activeTaskFsm.set(task.instanceId, fsmHolder.fsm);

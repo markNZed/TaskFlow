@@ -5,12 +5,12 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { initiateFsm, updateStates } from "../shared/processor/fsm.mjs";
 
-const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder) {
+// eslint-disable-next-line no-unused-vars
+const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   const actions = {
     nodejs_start: () => {
-      T("output.instruction", T("config.local.instruction"));
-      fsmHolder.send('GOTOdisplayInstruction');
+      console.log("TaskShowInstruction_async nodejs_start");
     },
   };
 

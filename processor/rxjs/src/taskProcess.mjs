@@ -8,6 +8,8 @@ import { taskFunctions } from "./Task/taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { processorId, coProcessor } from "../config.mjs";
+import { activeTaskFsm } from "./storage.mjs";
+import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
@@ -23,9 +25,11 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     } else if (task.processor?.commandArgs?.sync) {
       utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
-    } else if (taskFunctions.hasOwnProperty(`${task.type}_async`)) {
+    } else if (taskFunctions && taskFunctions[`${task.type}_async`]) {
+      let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, task, CEPFuncs);
+      const T = utils.createTaskValueGetter(task);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs);
       utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);
@@ -36,7 +40,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       // Create two functions
       if (task.config?.ceps) {
         for (const key in task.config.ceps) {
-          if (task.config.ceps.hasOwnProperty(key)) {
+          if (task.config.ceps[key]) {
             utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
           }
         }

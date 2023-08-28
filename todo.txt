@@ -1,6 +1,6 @@
 /* ToDo
 -------
-Add XState support to rxjs
+XState FSM should be defined in JSON not JS
 Need to deal with cleaning up when tasks stop e.g nodejs activeTaskFsm
 Bug:
   if (command === "join") {
@@ -8,11 +8,12 @@ Bug:
     }
 tasktype cannot configure fsm: { useMachine: true} ?
 Reset of the task on React still needs an update sent to reset "for real" or we create a new instance?
-  Restarting is not working with Systemtest - why?
+  Restarting is not working with SystemTest - why?
 We need another way of managing the familyTree - TaskFamilyTree
 instancesStore_async on hub - should have single store with index that can separate active and inactive
 https://github.com/ant-design/ant-design
 The stepper sets the state to exit - it should not act directly on the state, use task.input
+  Review all Tasks and ensure not accessing internals of children
 Point to private extensions of config rather than redirecting the entire config directory
 Major features to be implemented before refactoring
   Dynamic Task configurations

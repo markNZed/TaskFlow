@@ -6,11 +6,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
 
-const TaskConversation_async = async function (wsSendTask, task, CEPFuncs) {
-  const T = utils.createTaskValueGetter(task);
+// eslint-disable-next-line no-unused-vars
+const TaskConversation_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   function helloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
-    utils.logTask(task, "Hello World", args);
+    utils.logTask(T(), "Hello World", args);
   }
 
   // This shows dynamically registering a CEP 

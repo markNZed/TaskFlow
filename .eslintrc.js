@@ -22,9 +22,16 @@ module.exports = {
             }
         }
     ],
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
         "ecmaVersion": "latest",
-        "sourceType": "module"
+        "sourceType": "module",
+        "requireConfigFile": false,
+        "babelOptions": {
+            "plugins": [
+            "@babel/plugin-syntax-import-assertions"
+            ]
+        }
     },
     "plugins": [
         "react",

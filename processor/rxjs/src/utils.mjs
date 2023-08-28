@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { sharedUtils } from "./shared/utils.mjs";
+import { utils as sharedUtils } from "./shared/utils.mjs";
 
 const utils = {
 
@@ -75,7 +75,7 @@ const utils = {
       };
 
       if (message.role === "system") {
-        error("Not expecting system message here");
+        throw Error("Not expecting system message here");
       } else {
         await messageStore_async.set(id, chatMessage);
       }
@@ -98,44 +98,6 @@ const utils = {
 
   capitalizeFirstLetter: function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
-  },
-
-  getNestedValue: function (obj, path) {
-    return path.split(".").reduce((prev, curr) => {
-      return prev && prev[curr] !== undefined ? prev[curr] : undefined;
-    }, obj);
-  },
-
-  setNestedValue: function (obj, path, value) {
-    const pathArray = path.split(".");
-    const lastKey = pathArray.pop();
-    const target = pathArray.reduce((prev, curr) => {
-      return (prev[curr] = prev[curr] || {});
-    }, obj);
-
-    target[lastKey] = value;
-  },
-
-  createTaskValueGetter: function(task) {
-    return function (path, value) {
-      if (arguments.length === 2) {
-        utils.setNestedValue(task, path, value);
-        //console.log("createTaskValueGetter set ", path, value)
-      } else {
-        const res = utils.getNestedValue(task, path);
-        //console.log("createTaskValueGetter get ", path, res)
-        return res;
-      }
-    };
-  },
-
-  // Adding key of object as id in object
-  add_index : function(config) {
-    for (const key in config) {
-      if (config.hasOwnProperty(key)) {
-        config[key]["id"] = key;
-      }
-    }
   },
 
   createCEP: function(CEPFuncs, CEPFunctions, task, match, config) {

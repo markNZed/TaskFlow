@@ -1,0 +1,22 @@
+{
+  "states": {
+    "start": {
+      "entry": "nodejs_start",
+      "always": {
+        "target": "displayInstruction",
+        "cond": "react_instructionCached"
+      }
+    },
+    "displayInstruction": {
+      "entry": "react_displayInstruction",
+      "on": {
+        "NEW_INSTRUCTION": {
+          "actions": "react_displayInstruction"
+        }
+      }
+    },
+    "finish": {
+      "entry": "react_finish"
+    }
+  }
+}

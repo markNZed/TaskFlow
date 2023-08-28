@@ -3,7 +3,73 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { interpret } from 'xstate';
+import { createMachine, interpret } from 'xstate';
+import { utils } from "../utils.mjs";
+import { xutils } from '../fsm/xutils.mjs';
+
+export const getFsmHolder_async  = async (task, activeFsm) => {
+  const fsmHolder = {
+    fsm: {}, 
+    machine: null, 
+    send: () => {console.error('Send function should be replaced.');}
+  };
+  if (activeFsm) {
+    fsmHolder["fsm"] = activeFsm;
+  } else {
+    const fsmConfig = await loadFsmModule_async(task);
+    if (fsmConfig && task.config?.fsm?.useMachine) {
+      //console.log("Before creating machine", fsmConfig);
+      fsmHolder.machine = createMachine(fsmConfig);
+    }
+  }
+  return fsmHolder;
+}
+
+const loadFsmModule_async = async (task) => {
+  let importPath;
+  let name;
+  if (task?.fsm) {
+    //console.log("loadFsmModule_async returning task.fsm");
+    return task.fsm;
+  } else if (task?.config?.fsm?.name) {
+    importPath = `${task.type}/${task.config.fsm.name}.mjs`;
+    name = task.config.fsm.name;
+    //console.log("loadFsmModule_async task.config.fsm.name", task.config.fsm.name);
+  } else if (task.type) {
+    importPath = `${task.type}/default.mjs`;
+    name = 'default';
+    //console.log("loadFsmModule_async default");
+  } else {
+    console.log("No FSM");
+    return null;
+  }
+  try {
+    const module = await import('../fsm/' + importPath);
+    let fsmConfig = module.getFsm(task);
+    const fsmDefaults = {
+      predictableActionArguments: true,
+      preserveActionOrder: true,
+      id: task.id + "-" + name,
+      // This is a hack to get around rehydrating. interpeter.start(stateName) ignores entry actions.
+      initial: task.state.current || 'init',
+    };
+    fsmConfig = utils.deepMerge(fsmDefaults, fsmConfig);
+    if (task?.config?.fsm?.merge) {
+      fsmConfig = utils.deepMerge(fsmConfig, task.config.fsm.merge);
+    }
+    if (fsmConfig) {
+      fsmConfig = xutils.addDefaultEventsBasedOnStates(fsmConfig);
+    }
+    return fsmConfig;
+  } catch (error) {
+    if (error.message.includes("Cannot find module")) {
+      console.log(`Failed to load FSM at ${'../fsm/' + importPath}`);
+    } else {
+      console.error(`Failed to load FSM at ${'../fsm/' + importPath}`, error);
+      throw error;
+    }
+  }
+}
 
 export function updateStates(T, fsmHolder) {
   const fsmState = fsmHolder.fsm.getSnapshot().value;

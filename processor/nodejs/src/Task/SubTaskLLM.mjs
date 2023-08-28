@@ -18,7 +18,8 @@ serviceTypes = utils.flattenObjects(serviceTypes);
 
 async function SubTaskLLM_async(wsSendTask, task) {
   const taskCopy = JSON.parse(JSON.stringify(task));
-  let params = await chatPrepare_async(taskCopy);
+  const T = utils.createTaskValueGetter(taskCopy);
+  let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;
   const functionName = params.serviceConfig.API + "_async";
   //console.log("params.serviceConfig", params.serviceConfig);
@@ -39,12 +40,12 @@ function callFunctionByName(functionName, params) {
   }
 }
 
-function checkSubTaskCache (T, task, subTaskName) {
-  // Loop over each object in task.config.subtas if it exists
+function checkSubTaskCache (T, subTaskName) {
+  // Loop over each object in T("config.subtasks") if it exists
   let enabled = false;
   let seed = T("id");
-  if (task.config.subtasks) {
-    const subTaskConfig = task.config.subtasks[subTaskName];
+  if (T("config.subtasks")) {
+    const subTaskConfig = T("config.subtasks")[subTaskName];
     if (subTaskConfig) {
       if (subTaskConfig.useCache !== undefined) {
         enabled = subTaskConfig.useCache;
@@ -66,13 +67,12 @@ function checkSubTaskCache (T, task, subTaskName) {
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
 // Also using serviceTypes
-async function chatPrepare_async(task) {
-  const T = utils.createTaskValueGetter(task);
+async function chatPrepare_async(T) {
 
   const instanceId = T("instanceId");
   let systemMessage = "";
   let forget = false;
-  let [useCache, cacheKeySeed] = checkSubTaskCache(T, task, "SubTaskLLM");
+  let [useCache, cacheKeySeed] = checkSubTaskCache(T, "SubTaskLLM");
   console.log("useCache config " + useCache + " seed " + cacheKeySeed);
   let noStreaming = false;
 
@@ -88,9 +88,9 @@ async function chatPrepare_async(task) {
   let type = openaigptServices[0].type;
   let serviceConfig = serviceTypes["root."+type];
   if (!serviceConfig) {
-    console.log("No serviceType for ", task.id, type);
+    console.log("No serviceType for ", T("id"), type);
   } else {
-    console.log("ServiceType for ", task.id, serviceConfig.name, serviceConfig.modelVersion);
+    console.log("ServiceType for ", T("id"), serviceConfig.name, serviceConfig.modelVersion);
   }
 
   if (openaigptServices[0]) {
@@ -123,7 +123,7 @@ async function chatPrepare_async(task) {
     //console.log("Request.prompt " + prompt)
   } 
 
-  if (T("task.config?.subtasks?.SubTaskLLM?.promptWithTime")) {
+  if (T("config.subtasks.SubTaskLLM.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -226,8 +226,8 @@ async function chatPrepare_async(task) {
   }
 
   // Check if we need to preprocess
-  if (task.config?.subtasks?.SubTaskLLM?.regexProcessPrompt) {
-    for (const [regexStr, replacement] of task.config.subtasks.SubTaskLLM.regexProcessPrompt) {
+  if (T("config.subtasks.SubTaskLLM.regexProcessPrompt")) {
+    for (const [regexStr, replacement] of T("config.subtasks.SubTaskLLM.regexProcessPrompt")) {
       let { pattern, flags } = utils.parseRegexString(regexStr);
       let regex = new RegExp(pattern, flags);
       prompt = prompt.replace(regex, replacement);

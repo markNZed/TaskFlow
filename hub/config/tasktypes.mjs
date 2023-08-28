@@ -180,7 +180,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "nodejs"],
+    environments: ["react", "nodejs", "rxjs"], // Added rxjs for testing of XState FSM
     config: {
       local: {
         instruction: "",

@@ -6,10 +6,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
 import { tasksModel } from "./SchemaTasks.mjs"
-import { coProcessor } from "../../config.mjs";
 
-const TaskSystemLog_async = async function (wsSendTask, task, CEPFuncs) {
-  const T = utils.createTaskValueGetter(task);
+// eslint-disable-next-line no-unused-vars
+const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   // Store a task in the DB
   // Could reduce storage usage by storing diffs but not worth the effort now
@@ -32,10 +31,11 @@ const TaskSystemLog_async = async function (wsSendTask, task, CEPFuncs) {
         updatedAt: updatedAt,
         instanceId: newTaskData.instanceId,
     });
-    //utils.logTask(task, "newTask", newTask);
+    //utils.logTask(T(), "newTask", newTask);
     await newTask.save();
   }
 
+  // eslint-disable-next-line no-unused-vars
   async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
     // We do not want to log the TaskSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
     if (task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
@@ -48,16 +48,16 @@ const TaskSystemLog_async = async function (wsSendTask, task, CEPFuncs) {
     }
   }
 
-  switch (task.state.current) {
+  switch (T("state.current")) {
     case "start":
       CEPFunctions.register("CEPLog", CEPLog);
       break;
     default:
-      utils.logTask(task, "WARNING unknown state : " + task.state.current);
+      utils.logTask(T(), "WARNING unknown state : " + T("state.current"));
       return null;
   }
 
-  return task;
+  return T();
 };
 
 // Task fields we do not want to store in the log 

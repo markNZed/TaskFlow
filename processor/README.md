@@ -26,8 +26,11 @@ The Task Processor receives commands from the Hub via `task.hub.command` and onl
 
 The Task Processor abstraction is useful during development. For example, create a new Task Processor by copying and renaming an existing one, then allocate a single Task Function to this new processor and remove it from the old processor, now you can experiment with refactoring the Task Processor without breaking all Task Functions. 
 
-A Task Processor provides Task Functions which may be further decomposed into finite state machines (FSM), SubTasks, Services. The `task.fsm` object provides an XState representation of a statee machine. A Task can be configured to us a particular state machine. SubTasks are functions that receive a Task as input and return a Task as output. Services typically wrap a 3rd party API.  
+A Task Processor provides Task Functions which may be further decomposed into finite state machines (FSM), SubTasks, Services. The `task.fsm` object provides an XState representation of a statee machine. A Task can be configured to us a particular state machine. SubTasks are functions that receive a Task as input and return a Task as output. Services typically wrap a 3rd party API.
 
+## Sharing Task Functionality
+
+In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 
 
 ## Task Hub Co-Processor
 

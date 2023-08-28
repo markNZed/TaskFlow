@@ -58,7 +58,7 @@ function mergeTasks(task, parentTask) {
     }
   }
   for (const key in parentTask) {
-    if (parentTask.hasOwnProperty(key)) {
+    if (parentTask[key]) {
       if (key === "label" || key === "type" || key === "meta" || key === "initiator") {
         continue;
       }
@@ -78,13 +78,13 @@ function mergeTasks(task, parentTask) {
 
 // Could replace PREPEND_ with ...+ and APPEND with +...
 function mergeObj(task, key, parentTask) {
-  if (task.hasOwnProperty("PREPEND_" + key)) {
+  if (task["PREPEND_" + key]) {
     task[key] = prependOperation(task, key, parentTask);
-  } else if (task.hasOwnProperty("APPEND_" + key)) {
+  } else if (task["APPEND_" + key]) {
     task[key] = appendOperation(task, key, parentTask);
   // Don't copy LOCAL info (specific to the task)
-  } else if (!key.startsWith("LOCAL_") && !parentTask.hasOwnProperty("LOCAL_" + key)) {
-    if (task.hasOwnProperty(key)) {
+  } else if (!key.startsWith("LOCAL_") && !parentTask["LOCAL_" + key]) {
+    if (task[key]) {
       task[key] = utils.deepMerge(parentTask[key], task[key]);
      } else {
       task[key] = parentTask[key];
@@ -110,7 +110,7 @@ function appendOperation(task, key, parentTask) {
 
 function copyLocalKeys(obj) {
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (obj[key]) {
 
       // Recurse if it's an object and not null.
       if (typeof obj[key] === 'object' && obj[key] !== null) {
@@ -120,7 +120,7 @@ function copyLocalKeys(obj) {
       // Check for "LOCAL_" prefix.
       if (key.startsWith("LOCAL_")) {
         const newKey = key.slice(6);
-        if (!obj.hasOwnProperty(newKey)) {
+        if (!obj[newKey]) {
           obj[newKey] = obj[key];
         }
       }
@@ -132,7 +132,7 @@ function copyLocalKeys(obj) {
 
 function stripChildrenPrefix(obj) {
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (obj[key]) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         stripChildrenPrefix(obj[key]);
       }
@@ -147,7 +147,7 @@ function stripChildrenPrefix(obj) {
 
 function stripAppendKeys(obj) {
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (obj[key]) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         stripChildrenPrefix(obj[key]);
       }
@@ -235,7 +235,7 @@ function flattenTasks(tasks) {
     const nextTaskTemplate = task?.config?.nextTaskTemplate;
     if (nextTaskTemplate) {
       for (const key in nextTaskTemplate) {
-        if (nextTaskTemplate.hasOwnProperty(key)) {
+        if (nextTaskTemplate[key]) {
           if (!nextTaskTemplate[key].includes(".")) {
             nextTaskTemplate[key] = parentId + "." + nextTaskTemplate[key];
           }
@@ -276,7 +276,7 @@ users = utils.flattenObjects(users);
 
 //Create a group for each user
 for (const userKey in users) {
-  if (users.hasOwnProperty(userKey)) {
+  if (users[userKey]) {
     //console.log("Creating group for user " + userKey)
     if (!groups[userKey]) {
       const group = {
@@ -293,9 +293,9 @@ groups = utils.flattenObjects(groups);
 
 //Add list of groups to each user (a view in a DB)
 for (const groupKey in groups) {
-  if (groups.hasOwnProperty(groupKey)) {
+  if (groups[groupKey]) {
     const group = groups[groupKey];
-    assert(group.hasOwnProperty("users"), "Group " + groupKey + " has no users");
+    assert(group["users"], "Group " + groupKey + " has no users");
     group.users.forEach(function (id) {
       // Groups may have users that do not exist
       if (!users[id]) {

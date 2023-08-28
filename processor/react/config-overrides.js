@@ -41,12 +41,30 @@ module.exports = {
   },
 
   webpack: function (config, env) {
+
     config.resolve.modules = [path.join(__dirname, "shared", "src")].concat(
       config.resolve.modules
     );
     config.resolve.modules = [path.resolve(__dirname, "src")].concat(
       config.resolve.modules
     );
+
+    // Add Babel plugin
+    const babelLoaderFilter = rule =>
+      rule.loader &&
+      rule.loader.includes('babel') &&
+      rule.options &&
+      rule.options.presets;
+    // Find the Babel loader rule and modify it
+    let loaders = config.module.rules.find(rule => Array.isArray(rule.oneOf))
+      .oneOf;
+    loaders.forEach(loader => {
+      if (babelLoaderFilter(loader)) {
+        loader.options.plugins = loader.options.plugins || [];
+        loader.options.plugins.push('@babel/plugin-syntax-import-assertions');
+      }
+    });
+
     return config;
   },
 
