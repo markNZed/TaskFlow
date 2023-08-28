@@ -1,6 +1,5 @@
 /* ToDo
 -------
-task.type is "disappearnign"
 Start collaborate, works between two browser tabs, then reload both tabs, then fails to start
   Failed to load component undefined: Error: Cannot find module './undefined'
     instanceId: "root-user-conversation-collaborate-start-collaborate" does not have type
