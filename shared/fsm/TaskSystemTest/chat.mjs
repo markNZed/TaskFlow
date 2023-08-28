@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { actionThenQuery } from '../xutils.mjs';
 
+// eslint-disable-next-line no-unused-vars
 export function getFsm(initialTask) {
   return {
     initial: 'init',
@@ -17,8 +18,8 @@ export function getFsm(initialTask) {
         on: { START: 'start'},
       },
       // start state is defined in task.config.fsm.merge (to demonstrate the merge feature)
-      ...actionThenQuery('foundTextarea', ['enterPrompt'], ['findPrompt']),
-      ...actionThenQuery('foundPrompt', ['submitPrompt'], ['findResponse']),
+      ...actionThenQuery( 'foundTextarea', ['enterPrompt'], ['findPrompt'], /*true/*debug*/ ),
+      ...actionThenQuery( 'foundPrompt', ['submitPrompt'], ['findResponse'], /*true/*debug*/ ),
       foundResponse: {
         entry: 'pass',
         type: 'final', // Will ignore future events e.g. TIMEOUT
@@ -29,6 +30,6 @@ export function getFsm(initialTask) {
       },
     },
   }
-};
+}
   
   

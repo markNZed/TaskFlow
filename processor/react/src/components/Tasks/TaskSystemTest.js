@@ -149,7 +149,7 @@ function TaskSystemTest(props) {
       taskData = { ...taskData, ...actionMeta.action.args };
     }
     taskData.active = true;
-    console.log("Merged taskData", taskData);
+    //console.log("Merged taskData id:", id, taskData);
     ref.current[id] = taskData;
   }
   
