@@ -9,8 +9,8 @@ import { initiateFsm, updateStates } from "../shared/processor/fsm.mjs";
 const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   const actions = {
-    "rxjscopro_start": () => {
-      console.log("TaskShowInstruction_async rxjscopro_start");
+    rxjs_start: () => {
+      console.log("TaskShowInstruction_async rxjs_start");
     },
   };
 

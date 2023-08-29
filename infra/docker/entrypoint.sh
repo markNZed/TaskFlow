@@ -24,7 +24,7 @@ screen -S my-session -p 2 -X stuff "rm -f rxjslog.; npm run debug 2>&1 | tee -a 
 screen -S my-session -X screen bash
 screen -S my-session -p 3 -X stuff "cd /app/processor/rxjs\n"
 # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-screen -S my-session -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && rm -f rxjs-copro.log; npm run debug-copro 2>&1 | tee -a rxjs-copro.log\n"
+screen -S my-session -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && rm -f rxjscopro.log; npm run debug-copro 2>&1 | tee -a rxjscopro.log\n"
 
 # create a new window within the "my-session" screen
 screen -S my-session -X screen bash

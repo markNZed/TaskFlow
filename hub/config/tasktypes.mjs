@@ -25,9 +25,9 @@ const tasktypes = [
   },
   {
     name: "TaskSystemLog",
-    environments: ["rxjs"],
+    environments: ["rxjscopro"],
     config: {
-      autoStartEnvironment: "rxjs",
+      autoStartEnvironment: "rxjscopro",
       autoStartCoProcessor: true,
     },
     state: {
@@ -36,7 +36,7 @@ const tasktypes = [
   },
   {
     name: "TaskSystemLogViewer",
-    environments: ["react"], // We assume it is also running on the coprocessor
+    environments: ["react", "rxjscopro"],
     config: {
       rowDetailHeight: 500,
       pageSize: 100,
@@ -180,7 +180,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "nodejs", "rxjs"], // Added rxjs for testing of XState FSM
+    environments: ["react", "nodejs", "rxjs", "rxjscopro"], // Added rxjs & rxjscopro for testing of XState FSM
     config: {
       local: {
         instruction: "",

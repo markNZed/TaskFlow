@@ -1,6 +1,6 @@
 /* ToDo
 -------
-RxJS autostart?
+On rxjs ERROR: Task hash does not match
 Running Redis
   redis-om-node
   https://github.com/JoaoOtavioS/redis-map but very new

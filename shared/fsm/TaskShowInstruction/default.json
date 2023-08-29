@@ -1,7 +1,7 @@
 {
   "states": {
     "start": {
-      "entry": "nodejs_start",
+      "entry": ["nodejs_start", "rxjs_start", "rxjscopro_start"],
       "always": {
         "target": "displayInstruction",
         "cond": "react_instructionCached"

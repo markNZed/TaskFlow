@@ -39,12 +39,12 @@ services:
       - web-proxy
     depends_on:
       - taskflow-hub
-  taskflow-rxjs-copro:
+  taskflow-rxjscopro:
     image: taskflow-prod:latest
     volumes:
       - ../../processor/rxjs:/app/processor/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-rxjs-copro.sh"]
+    entrypoint: ["/entrypoint-rxjscopro.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:
