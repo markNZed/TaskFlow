@@ -32,7 +32,19 @@ services:
     volumes:
       - ../../processor/rxjs:/app/processor/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-nodejs.sh"]
+    entrypoint: ["/entrypoint-rxjs.sh"]
+    environment:
+      - TASKHUB_URL=http://localhost:5001/hub
+    networks:
+      - web-proxy
+    depends_on:
+      - taskflow-hub
+  taskflow-rxjs-copro:
+    image: taskflow-prod:latest
+    volumes:
+      - ../../processor/rxjs:/app/processor/rxjs
+      - ../../shared:/app/shared
+    entrypoint: ["/entrypoint-rxjs-copro.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:
@@ -56,12 +68,23 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
-      - dbdata:/data/db
+      - mongodbdata:/data/db
+    networks:
+      - web-proxy
+  redis-stack-svc:
+    image: redis/redis-stack:latest
+    # use REDIS_ARGS for redis-stack-server instead of command arguments
+    # Writes to disk every 10 minutes if at least 1 change.
+    environment:
+      - REDIS_ARGS=--save 600 1
+    volumes:
+      - my-redis-data:/data
     networks:
       - web-proxy
 
 volumes:
-  dbdata:
+  mongodbdata:
+  my-redis-data:
 
 networks:
   web-proxy:

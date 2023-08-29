@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "../utils.mjs";
 import { CEPFunctions } from "../CEPFunctions.mjs";
-import { tasksModel } from "./SchemaTasks.mjs"
+import { tasksModel } from "./TaskSystemLog/tasksModel.mjs"
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {

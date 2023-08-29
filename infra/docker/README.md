@@ -22,7 +22,30 @@ To interact with mongodb inside the mongodb container:
 To interact with mongodb from another container's shell:
 * `mongosh -u user --host mongodb` (the default password is "pass")
 
+To interact with redis from another container:
+* `redis-cli -h redis-stack-svc`
+* Run commands in the redis-cli shell e.g. `redis-stack-svc:6379> info`
+
 # Notes
+
+On th server running the Redis container I ran `sysctl vm.overcommit_memory=1``
+
+## T@skFlow Ntwork Services
+
+Overview of the services/ports:
+
+* 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
+* 5000 NodeJS Task Processor
+* 5001 Task Hub
+* 5002 RxJS Task Processor
+* 5003 RxJS Task Hub Coprocessor
+* 9229 Task Hub node debug
+* 9230 NodeJS Task Processor node debug
+* 9231 RxJS Task Processor node debug
+* 9232 RxJS Task Hub Coprocessor node debug
+* 27017 MongoDB (on mongodb container)
+* 6379 Redis (on redis-stack-svc container)
+* 8001 RedisInsight (on redis-stack-svc container)
 
 ## Dev
 This assumes T@skFlow is running behind a proxy on a docker network:

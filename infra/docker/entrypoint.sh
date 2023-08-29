@@ -2,7 +2,8 @@
 
 # We use `tee -a` so that tee will append after we run e.g. `truncate -s 0 hub/hub.log``
 
-screen -S my-session -d -m
+# Create a new detached screen session named "my-session"
+screen -S my-session -d -m bash
 screen -S my-session -p 0 -X stuff "cd /app/hub\n"
 screen -S my-session -p 0 -X stuff "npm install\n"
 screen -S my-session -p 0 -X stuff "rm -f hub.log; npm run debug 2>&1 | tee -a hub.log\n"
@@ -17,7 +18,13 @@ screen -S my-session -p 1 -X stuff "rm -f nodejs.log; npm run debug 2>&1 | tee -
 screen -S my-session -X screen bash
 screen -S my-session -p 2 -X stuff "cd /app/processor/rxjs\n"
 screen -S my-session -p 2 -X stuff "npm install\n"
-screen -S my-session -p 2 -X stuff "rm -f hub.rxjs; npm run debug 2>&1 | tee -a rxjs.log\n"
+screen -S my-session -p 2 -X stuff "rm -f rxjslog.; npm run debug 2>&1 | tee -a rxjs.log\n"
+
+# create a new window within the "my-session" screen
+screen -S my-session -X screen bash
+screen -S my-session -p 2 -X stuff "cd /app/processor/rxjs\n"
+# We do not npm install here because we can assume that rxjs is doing that
+screen -S my-session -p 2 -X stuff "rm -f rxjs-copro.log; npm run debug-copro 2>&1 | tee -a rxjs-copro.log\n"
 
 # create a new window within the "my-session" screen
 screen -S my-session -X screen bash

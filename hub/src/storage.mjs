@@ -4,10 +4,9 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { utils } from "./utils.mjs";
-import {} from "../config.mjs";
 import Keyv from "keyv";
-import KeyvBetterSqlite3 from "keyv-better-sqlite3";
+import KeyvRedis from "@keyv/redis";
+import Redis from "ioredis";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -15,78 +14,50 @@ var connections = new Map(); // Stores WebSocket instances with unique session I
 var activeProcessors = new Map();
 var activeCoProcessors = new Map();
 
-// This extends KeyvBetterSqlite3 to allow for iteration
-// I was using it but then refactored it out.
-// Still seems like a good idea to keep it around.
-class ExtendedKeyvBetterSqlite3 extends KeyvBetterSqlite3 {
-  async *iterate() {
-    const selectAllQuery = this.entry.select().toString();
-    const rows = this.db.prepare(selectAllQuery).all();
-    for (const row of rows) {
-      const key = row.key.startsWith('keyv:') ? row.key.substring(5) : row.key;
-      const value = JSON.parse(row.value).value;
-      yield { key, value };
-    }
-  }
-}
+// I had issue swith the redis library stil ltrying localhost, it works with ioredis
+const redisClient = new Redis('redis://redis-stack-svc:6379');
 
-// Each keyv store is in a different table
-const DB_URI = "sqlite://db/main.sqlite";
+redisClient.on('error', function(err) {
+  console.log('Could not establish a connection with redis. ' + err);
+});
 
-// Allows for middleware intercepting set calls to the DB
-// This is not great for debug because we can lose the call stack for debug
-// Currently not using it
-function newKeyV(uri, table, setCallback = null) {
-  const store = new ExtendedKeyvBetterSqlite3({
-    uri: uri,
-    table: table,
-  });
-  const keyv = new Keyv({ store });
-  const originalSet = keyv.set.bind(keyv);
-  keyv.set = async function(key, value, ttl) {
-    // Middleware logic before setting the value
-    if (typeof setCallback === 'function') {
-      value = await setCallback(key, value);
-      //console.log("Setting table", table, "key", key, "value", value)
-    }
-    let result = null;
-    if (value !== null) {
-      result = await originalSet(key, value, ttl);
-    }
-    return result;
-  };
-  // Creating an alias for the getAll method
-  keyv.iterate = store.iterate.bind(store)
+redisClient.on('connect', function() {
+  console.log('Connected to redis successfully');
+});
+
+function newKeyV(redisClient, namespace) {
+  const store = new KeyvRedis(redisClient);
+  //console.log(`Using Redis Client for ${namespace} with config:`, redisClient.options);
+  const keyv = new Keyv({ store, namespace });
   return keyv;
-};
+}
 
 // We could have one keyv store and use prefix for different tables
 
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const instancesStore_async = newKeyV(DB_URI, "instances");
+const instancesStore_async = newKeyV(redisClient, "instances");
 // Schema:
 //   Key: familyId || taskId + userId || taskId + groupId
 //   Value: array of instanceId
-const familyStore_async = newKeyV(DB_URI, "threads");
+const familyStore_async = newKeyV(redisClient, "threads");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-//const activeTasksStore_async = newKeyV(DB_URI, "activeTasks", logActiveTasksStore);
-const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
+const activeTasksStore_async = newKeyV(redisClient, "activeTasks");
 // Schema:
 //   Key: instanceId
 //   Value: array of processorIds
-const activeTaskProcessorsStore_async = newKeyV(DB_URI, "activeTaskProcessors");
+const activeTaskProcessorsStore_async = newKeyV(redisClient, "activeTaskProcessors");
 // Schema:
 //   Key: processorId
 //   Value: array of instanceIds
-const activeProcessorTasksStore_async = newKeyV(DB_URI, "activeProcessorTasks");
+const activeProcessorTasksStore_async = newKeyV(redisClient, "activeProcessorTasks");
 // Schema:
 //   Key: familyId
 //   Value: {taskId : output}
-const outputStore_async = newKeyV(DB_URI, "outputsStore_async");
+const outputStore_async = newKeyV(redisClient, "outputsStore_async");
 
 export {
   instancesStore_async,

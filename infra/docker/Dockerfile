@@ -3,6 +3,7 @@ FROM node:18-buster-slim
 # Set bash as the default shell
 SHELL ["/bin/bash", "-c"]
 ENV SHELL /bin/bash
+RUN chsh -s /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -28,6 +29,9 @@ WORKDIR /app
 RUN npm update -g
 RUN npm install -g typescript
 RUN npm install -g quicktype
+RUN npm install pm2 -g
+
+RUN apt-get install -y redis-tools
 
 # Instead of the hacks below I deleted node_modules/@tensorflow and rann npm install again
 # RUN cd /app/processor/nodejs/node_modules/@tensorflow/tfjs-node/deps/lib && \

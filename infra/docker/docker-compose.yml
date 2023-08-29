@@ -12,10 +12,11 @@ services:
     volumes: 
       - ../..:/app
     ports:
-      - "127.0.0.1:3000:3000"
-      - "127.0.0.1:5000:5000"
-      - "127.0.0.1:5001:5001"
-      - "127.0.0.1:5002:5002"
+      - "127.0.0.1:3000:3000" # React
+      - "127.0.0.1:5000:5000" # NodeJs
+      - "127.0.0.1:5001:5001" # Hub
+      - "127.0.0.1:5002:5002" # RxJS
+      - "127.0.0.1:5003:5003" # RxJS Coprocessor
     networks:
       - taskflow
 
@@ -27,12 +28,24 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
-      - dbdata:/data/db
+      - mongodbdata:/data/db
+    networks:
+      - taskflow
+
+  redis-stack-svc:
+    image: redis/redis-stack:latest
+    # use REDIS_ARGS for redis-stack-server instead of command arguments
+    # Writes to disk every 10 minutes if at least 1 change.
+    environment:
+      - REDIS_ARGS=--save 600 1
+    volumes:
+      - my-redis-data:/data
     networks:
       - taskflow
 
 volumes:
-  dbdata:
+  mongodbdata:
+  my-redis-data:
 
 networks:
     taskflow:

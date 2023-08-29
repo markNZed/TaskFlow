@@ -4,10 +4,10 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { taskFunctions } from "./Task/taskFunctions.mjs";
+import { taskFunctions } from "./taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, coProcessor } from "../config.mjs";
+import { processorId, COPROCESSOR } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 
@@ -60,7 +60,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     console.error("Task error: ", updatedTask.error)
   }
   try {
-    if (coProcessor) {
+    if (COPROCESSOR) {
       if (updatedTask === null) {
         updatedTask = task;
         utils.logTask(updatedTask, "taskProcess_async null so task replaces updatedTask", updatedTask.id);

@@ -1,12 +1,20 @@
 /* ToDo
 -------
-Start collaborate, works between two browser tabs, then reload both tabs, then fails to start
-  Failed to load component undefined: Error: Cannot find module './undefined'
-    instanceId: "root-user-conversation-collaborate-start-collaborate" does not have type
-      Maybe bcause the instance store is not up to date?
+RxJS autostart?
+Running Redis
+  redis-om-node
+  https://github.com/JoaoOtavioS/redis-map but very new
+PM2 for process management
+  Ecosystem File
+  pm2 startup (on boot ?)
+  Just use to run two instance of RxJS for now.
+Possibility of sending all messages to a procssor (need to have another processor - maybe rxjs, can we point at a custom Tasks directory?)
+Review of utils - > move to hub and processor dir
 Collaborate will keep info in the caches and db. How can we clear out a specific familyId ?
   Could prefix the family ID for collaboration with a unique hub ID
     Could use hub Id if it were not stored
+      A Task ? But Task Function does not have access. 
+        Delete command with argument for familyId 
 TaskChat name must be "start" ? 
 Need to clean up when tasks stop e.g nodejs activeTaskFsm
 tasktype cannot configure fsm: { useMachine: true} ?
@@ -22,13 +30,14 @@ Major features to be implemented before refactoring
   Debug support per Task
     How to combine debug logging with task.meta.debug ?
     Conditional breakpoints in VSCode works well
+    Explore more about import debug from "debug"; 
   TaskCreateTask
-  Identify closest existng task
-    Chat interaction
-      Validation/ESlint
-        Testing
-  Dynamic Task as per dynamic config
-    Needs to modify tasktypes (another Task)
+    Identify closest existing task
+      Chat interaction
+        Validation/ESlint
+          Testing
+    Dynamic Task as per dynamic config
+      Needs to modify tasktypes (another Task)
   Also need to create new servicetypes but that is on the nodejs processor
 Extend testing
   Batch testing

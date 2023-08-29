@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
-import { hubSocketUrl, processorId, coProcessor } from "../config.mjs";
+import { hubSocketUrl, processorId, COPROCESSOR } from "../config.mjs";
 import { register_async } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
@@ -94,7 +94,7 @@ taskSubject
       } else {
         utils.logTask(task, "no DIFF", taskCopy?.state?.current, task?.state?.current);
       }
-      if (coProcessor) {
+      if (COPROCESSOR) {
         utils.logTask(task, "CoProcessing task " + taskCopy.id);
         //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
@@ -134,7 +134,7 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (!coProcessor || task.processor.coProcessingDone) {
+        if (!COPROCESSOR || task.processor.coProcessingDone) {
           await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
           releaseResource(task.instanceId);
           utils.logTask(task, 'Task processed successfully');
@@ -231,7 +231,7 @@ const connectWebSocket = () => {
       //utils.logTask(task, "processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //utils.logTask(task, "processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (coProcessor) {
+      if (COPROCESSOR) {
         delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
         mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
         taskSubject.next(mergedTask);
@@ -244,7 +244,7 @@ const connectWebSocket = () => {
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
       // Emit the task into the taskSubject
-      if (coProcessor) {
+      if (COPROCESSOR) {
         taskSubject.next(task);
       } else {
         // To stop looping if we start a task from this processor
@@ -253,7 +253,7 @@ const connectWebSocket = () => {
     } else if (command === "error") {
       utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       // Emit the task into the taskSubject
-      if (coProcessor) {
+      if (COPROCESSOR) {
         taskSubject.next(task);
       } else {
         // To stop looping if we start a task from this processor

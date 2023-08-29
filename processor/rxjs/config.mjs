@@ -37,8 +37,16 @@ if (process.env.MAP_USER_JSON) {
 
 const CONFIG_DIR = process.env.CONFIG_DIR || path.join(__dirname, './config');
 
+let COPROCESSOR;
+if (process.env.COPROCESSOR) {
+  COPROCESSOR = process.env.COPROCESSOR === "true";
+} else {
+  COPROCESSOR = false;
+}
+console.log("COPROCESSOR", COPROCESSOR);
+
 let processorId;
-const processorIdFile = './db/processorId.txt';
+const processorIdFile = COPROCESSOR ? './db/coProcessorId.txt' : './db/processorId.txt';
 try {
     // Try to read the id from a file
     processorId = fs.readFileSync(processorIdFile, 'utf-8');
@@ -49,8 +57,24 @@ try {
     fs.writeFileSync(processorIdFile, processorId);
 }
 
-const coProcessor = true;
+let WS_PORT;
+if (process.env.WS_PORT) {
+  WS_PORT = process.env.WS_PORT;
+} else if (COPROCESSOR) {
+  WS_PORT = 5003;
+} else {
+  WS_PORT = 5002;
+}
+
+let TASK_DIR;
+if (process.env.TASK_DIR) {
+  TASK_DIR = process.env.TASK_DIR;
+} else if (COPROCESSOR) {
+  TASK_DIR = "TaskCoProcessor";
+} else {
+  TASK_DIR = 'Task';
+}
 
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, coProcessor };
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, COPROCESSOR, TASK_DIR, WS_PORT };

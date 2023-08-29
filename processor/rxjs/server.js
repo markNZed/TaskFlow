@@ -16,7 +16,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { appName } from "./config.mjs";
+import { appName, COPROCESSOR, WS_PORT } from "./config.mjs";
 import miscRoutes from "./src/routes/miscRoutes.js";
 import { connectWebSocket } from "./src/webSocket.js";
 
@@ -65,6 +65,6 @@ const serverOptions = {};
 const server = http.createServer(serverOptions, app);
 server.setTimeout(300000);
 
-const port = process.env.WS_PORT || 5002;
-server.listen(port, () => console.log(appName + " RxJS Task Processor started on port " + port));
+const serverName = COPROCESSOR ? "RxJS Task Hub Coprocessor" : "RxJS Task Processor";
+server.listen(WS_PORT, () => console.log(appName + " " + serverName + " started on port " + WS_PORT));
 connectWebSocket();

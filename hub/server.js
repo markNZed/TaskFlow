@@ -44,8 +44,8 @@ app.use(bodyParser.json());
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
 let allowedOrigins = [];
-if (process.env.ALLOWED_ORIGINS) {
-  allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+if (ALLOWED_ORIGINS) {
+  allowedOrigins = ALLOWED_ORIGINS.split(',');
 }
 allowedOrigins = allowedOrigins.map(o => {
   const url = new URL(o);
