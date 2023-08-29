@@ -60,6 +60,9 @@ services:
     entrypoint: ["/entrypoint-hub.sh"]
     networks:
       - web-proxy
+    depends_on:
+      - mongodb
+      - redis-stack-svc
   mongodb:
     image: mongodb/mongodb-community-server:latest
     ports:

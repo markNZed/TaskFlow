@@ -7,6 +7,7 @@ services:
     image: taskflow:latest
     depends_on:
       - mongodb
+      - redis-stack-svc
     volumes: 
       - ../..:/app
       - ./root:/root # For SSH and gitconfig
