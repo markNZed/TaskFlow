@@ -70,7 +70,7 @@ let TASK_DIR;
 if (process.env.TASK_DIR) {
   TASK_DIR = process.env.TASK_DIR;
 } else if (COPROCESSOR) {
-  TASK_DIR = "TaskCoProcessor";
+  TASK_DIR = "TaskCoprocessor";
 } else {
   TASK_DIR = 'Task';
 }
