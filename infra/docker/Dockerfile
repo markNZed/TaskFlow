@@ -7,7 +7,7 @@ RUN chsh -s /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl iputils-ping && \
+    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl iputils-ping redis-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -31,7 +31,6 @@ RUN npm install -g typescript
 RUN npm install -g quicktype
 RUN npm install pm2 -g
 
-RUN apt-get install -y redis-tools
 
 # Instead of the hacks below I deleted node_modules/@tensorflow and rann npm install again
 # RUN cd /app/processor/nodejs/node_modules/@tensorflow/tfjs-node/deps/lib && \
