@@ -11,4 +11,4 @@ Then to run: `npm start`
 
 Can set the port for the websocket server with environment variable WS_PORT (defaults to 5002)
 
-This Task Processor can function as a Task Hub CoProcessor or as a Task Processor. Id the .env variable COPROCESSOR is 'true' then the TASK_DIR will default to `src/TaskCoprocessor` rather than `src/Task`. 
+This Task Processor can function as a Task Hub Coprocessor or as a Task Processor. Id the .env variable COPROCESSOR is 'true' then the TASK_DIR will default to `src/TaskCoprocessor` rather than `src/Task`. 
