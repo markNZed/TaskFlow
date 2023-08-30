@@ -46,7 +46,7 @@ if (process.env.COPROCESSOR) {
 console.log("COPROCESSOR", COPROCESSOR);
 
 let processorId;
-const processorIdFile = COPROCESSOR ? './db/coProcessorId.txt' : './db/processorId.txt';
+const processorIdFile = COPROCESSOR ? './db/coprocessorId.txt' : './db/processorId.txt';
 try {
     // Try to read the id from a file
     processorId = fs.readFileSync(processorIdFile, 'utf-8');

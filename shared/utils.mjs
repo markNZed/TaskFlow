@@ -276,7 +276,7 @@ const utils = {
     }
   
     if (!_.isObject(obj1) || !_.isObject(obj2)) {
-      return null;
+      return undefined;
     }
   
     let diffObj = Array.isArray(obj1) && Array.isArray(obj2) ? [] : {};
@@ -465,12 +465,15 @@ const utils = {
     }
     const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
     const origTask = taskCopy.processor.origTask;
+    if (!origTask) {
+      return task;
+    }
     //console.log("processorDiff in origTask.output, task.output", origTask?.output, task.output);
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
     //console.log("utils.getObjectDifference(origTask, taskCopy)", origTask, taskCopy);
     // Which properties of the origTask differ from the task
     let diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-    if (diffOrigTask === null) {
+    if (diffOrigTask === undefined) {
       diffOrigTask = {};
     }
     diffOrigTask = utils.cleanForHash(diffOrigTask);
@@ -501,6 +504,9 @@ const utils = {
     if (task.processor.command === "pong") {
       return task;
     }
+    if (!origTask) {
+      return task;
+    }
     //console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
     const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
@@ -522,7 +528,7 @@ const utils = {
       // Which properties of the origTask differ from the task
       let diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
       diffOrigTask = utils.cleanForHash(diffOrigTask);
-      if (diffOrigTask === null) {
+      if (diffOrigTask === undefined) {
         diffOrigTask = {};
       }
       // Allows us to check only the relevant part of the origTask
@@ -611,10 +617,13 @@ const utils = {
     }
     delete task.commandArgs
     task.processor["id"] = processorId;
+    if (command === "start" || command === "partial") {
+      return task;
+    }
     let diffTask = utils.processorDiff(task);
     //console.log("taskInProcessorOut diffTask task.output", task.output);
     // Send the diff considering the latest task storage state
-    if (diffTask.instanceId && command != "start") {
+    if (diffTask.instanceId) {
       const lastTask = await activeTasksStore_async.get(diffTask.instanceId);
       if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
         delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask

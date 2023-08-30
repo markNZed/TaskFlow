@@ -188,17 +188,25 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   return task;
 }
 
-async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async) {
+async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async /*, activeTasksStore_async*/) {
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
+    // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
+    // nextTask on another processor, then the originator can associate the task with it's original request
     task.meta["prevInstanceId"] = prevTask.meta.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
     // Copying processor information from previous task instance
     // In the case where the task sequence advances on another processor 
-    // we need to be able to associate a more recent tasks with an older
+    // we need to be able to associate more recent tasks with an older
     // task that is waiting on the next task.
     task.processors = prevTask.processors;
-    task.processor = prevTask.processor;
+    // With a coprocessor and an initial start command there is no instnaceId
+    // The processors cannot be restored because there is no start task stored
+    if (!prevTask.processor) {
+      task.processor = {id: processorId};
+    } else {
+      task.processor = prevTask.processor;
+    }
     task.processor["command"] = null;
     task.processor["commandArgs"] = null;
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
@@ -211,18 +219,18 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     await instancesStore_async.set(prevTask.instanceId, prevTask);
     // The prevTask task may be "done" so no longer active
     // Also we do not want to update a task that errored
+    /*
     if (!prevTask.done && !task.id.endsWith(".error")) {
-      if (await activeTasksStore_async.has(prevTask.instanceId)) {
-        /*
+      if (await activeTasksStore_async.get(prevTask.instanceId)) {
         This has been removed for now becaus sending an update can impact the state machine
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
         await utils.hubActiveTasksStoreSet_async(activeTasksStore_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
-        */
       }
     }
+    */
   }
   return task;
 }

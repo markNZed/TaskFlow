@@ -15,7 +15,7 @@ var connections = new Map(); // Stores WebSocket instances with unique session I
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
 
 // Each keyv store is in a different table
-const DB_URI = COPROCESSOR ? "sqlite://db/main-copro.sqlite" : "sqlite://db/main.sqlite";
+const DB_URI = COPROCESSOR ? "sqlite://db/maincopro.sqlite" : "sqlite://db/main.sqlite";
 
 // use database "taskflow"
 const mongoURL = "mongodb://user:pass@mongodb:27017/taskflow?authSource=admin";

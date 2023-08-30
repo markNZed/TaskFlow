@@ -1,6 +1,16 @@
 /* ToDo
 -------
-On rxjs ERROR: Task hash does not match
+We could store just a list of active task instances and then fetch the task
+  Then us Redis as a cache to spped up the fetching of the task
+  All tasks written to MongoDB + Redis (eventually can use write-behind)
+  Use a set to store the active instanceIds
+  const fooRedis = new Redis({ keyPrefix: "foo:" });
+  fooRedis.set("bar", "baz"); // Actually sends SET foo:bar baz
+Redis  
+  A secondary index maps each attribute to a set of primary keys that have that attribute. In Redis, you need to create a Redis Search index on your data before you can query it.
+write-behind caching
+TaskSystemConfig on coprocssor can operate on the Redis instance used by the hub  
+  configdata needs to use Redis (tasktypes too I guess)
 Running Redis
   redis-om-node
   https://github.com/JoaoOtavioS/redis-map but very new

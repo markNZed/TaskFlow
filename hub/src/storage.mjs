@@ -14,7 +14,7 @@ var connections = new Map(); // Stores WebSocket instances with unique session I
 var activeProcessors = new Map();
 var activeCoProcessors = new Map();
 
-// I had issue swith the redis library stil ltrying localhost, it works with ioredis
+// I had issue swith the redis library still trying localhost, it works with ioredis
 const redisClient = new Redis('redis://redis-stack-svc:6379');
 
 redisClient.on('error', function(err) {
@@ -33,6 +33,9 @@ function newKeyV(redisClient, namespace) {
 }
 
 // We could have one keyv store and use prefix for different tables
+
+// Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
+//const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });
 
 // Schema:
 //   Key: instanceId

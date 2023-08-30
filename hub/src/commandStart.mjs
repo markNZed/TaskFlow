@@ -44,9 +44,7 @@ export async function commandStart_async(task, res) {
           })
       } else {
         await taskSync_async(task.instanceId, task);
-        // Should not store this - are we storing on the Processors? 
         // Start should not function as an update. Could get out of sync when using task to start another task.
-        //utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
       }
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
