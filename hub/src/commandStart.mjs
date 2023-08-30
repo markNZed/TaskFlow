@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async, instancesStore_async } from "./storage.mjs";
+import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
@@ -35,12 +35,11 @@ export async function commandStart_async(task, res) {
       if (task.hub.coProcessingDone) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {
-            await instancesStore_async.set(startTask.instanceId, startTask);
             await taskSync_async(startTask.instanceId, startTask);
             //utils.logTask(task, "commandStart_async startTask.processors", startTask.processors);
             //utils.logTask(task, "commandStart_async startTask.processor", startTask.processor);
             //utils.logTask(task, "commandStart_async startTask.hub", startTask.hub);
-            utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
+            utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
           })
       } else {
         await taskSync_async(task.instanceId, task);
@@ -49,9 +48,8 @@ export async function commandStart_async(task, res) {
     } else {
       taskStart_async(initTask, authenticate, processorId, prevInstanceId)
         .then(async (startTask) => {
-          await instancesStore_async.set(startTask.instanceId, startTask);
           await taskSync_async(startTask.instanceId, startTask);
-          utils.hubActiveTasksStoreSet_async(activeTasksStore_async, startTask);
+          utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
         })
     }
     // We can use this for the websocket so thre is no res provided in that case  

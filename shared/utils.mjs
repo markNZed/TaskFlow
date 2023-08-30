@@ -426,12 +426,13 @@ const utils = {
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
     if (task.processor.command != "start") {
+      //console.log("processorActiveTasksStoreSet_async", task);
       await activeTasksStore_async.set(task.instanceId, task);
     }
     return task;
   },
 
-  hubActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
+  hubActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
     delete task.hub.origTask; // delete so we do not have an old copy in origTask
     task.hub["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
@@ -439,7 +440,8 @@ const utils = {
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
     if (task.hub.command != "start") {
-      await activeTasksStore_async.set(task.instanceId, task);
+      //console.log("hubActiveTasksStoreSet_async task.state", task.state);
+      await setActiveTask_async(task);
     }
     return task;
   },
@@ -578,18 +580,19 @@ const utils = {
     const hashOrigTask = origTask.meta.hash;
     const hashUpdatedTask = updatedTask.meta.hash;
     if (hashOrigTask !== hashUpdatedTask) {
-      console.error("ERROR: Task hash does not match origTask.meta.hash:", hashOrigTask, "updatedTask.meta.hash:", hashUpdatedTask);
+      console.error("ERROR: Task hash does not match origTask.meta.hash:", origTask.meta.hash, "updatedTask.meta.hash:", updatedTask.meta.hash);
+      //console.error("ERROR: Task hash does not match hashOrigTask:", hashOrigTask, "hashUpdatedTask:", hashUpdatedTask);
       if (updatedTask.meta.hashTask) {
-        console.error("updatedTask.meta.hashTask", updatedTask.meta.hashTask, "origTask", origTask);
+        //console.error("updatedTask.meta.hashTask", updatedTask.meta.hashTask, "origTask", origTask);
         console.error("updatedTask.meta.hashTask hash:", utils.taskHash(updatedTask.meta.hashTask), "origTask hash:", utils.taskHash(origTask));
         let hashDiff;
         //console.error("Task hash does not match in update local:" + hashOrigTask + " remote:" + hashUpdatedTask); //, origTask, updatedTask.meta.hashTask);
         hashDiff = utils.getObjectDifference(updatedTask.meta.hashTask, origTask) || {};
         hashDiff = utils.cleanForHash(hashDiff);
-        console.error("Task hashDiff of origTask", hashDiff);
+        console.error("Diff of local task compared to task on remote", hashDiff);
         hashDiff = utils.getObjectDifference(origTask, updatedTask.meta.hashTask) || {};
         hashDiff = utils.cleanForHash(hashDiff);
-        console.error("Task hashDiff of hashTask", hashDiff);
+        console.error("Diff of remote task relative to local task", hashDiff);
       }
       return false;
     }

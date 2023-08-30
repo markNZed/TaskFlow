@@ -18,8 +18,8 @@ export function getFsm(initialTask) {
         on: { START: 'start'},
       },
       // start state is defined in task.config.fsm.merge (to demonstrate the merge feature)
-      ...actionThenQuery( 'foundTextarea', ['enterPrompt'], ['findPrompt']/*, true/*debug*/ ),
-      ...actionThenQuery( 'foundPrompt', ['submitPrompt'], ['findResponse']/*, true/*debug*/ ),
+      ...actionThenQuery( 'foundTextarea', ['enterPrompt'], ['findPrompt'], true/*debug*/ ),
+      ...actionThenQuery( 'foundPrompt', ['submitPrompt'], ['findResponse'], true/*debug*/ ),
       foundResponse: {
         entry: 'pass',
         type: 'final', // Will ignore future events e.g. TIMEOUT

@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { activeTasksStore_async, instancesStore_async, activeProcessors } from "./storage.mjs";
+import { setActiveTask_async, getActiveTask_async, activeProcessors } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
@@ -21,7 +21,7 @@ async function errorTask_async(task) {
   task.error.environments = sourceProcessor.environments;
   let nextTaskId = task.hub.commandArgs.errorTask;
   utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
-  await instancesStore_async.set(task.instanceId, task);
+  await setActiveTask_async(task);
 
   const text = `${task.error.message} from task.id ${task.id} on processor ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
 
@@ -46,14 +46,14 @@ async function errorTask_async(task) {
     };
     await commandStart_async(task);
     //await taskStart_async(initTask, false, task.hub.sourceProcessorId, task.instanceId);
-    // In theory the taskStart_async will update activeTasksStore_async and that will send the task to the correct processor(s)
+    // In theory the taskStart_async will update activeTasksStore and that will send the task to the correct processor(s)
   }
 }
 
 export async function commandError_async(task, res) {
   try {
     utils.logTask(task, "errorCommnad_async " + task.id);
-    const activeTask = await activeTasksStore_async.get(task.instanceId);
+    const activeTask = await getActiveTask_async(task.instanceId);
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
@@ -61,7 +61,7 @@ export async function commandError_async(task, res) {
     if (!task.hub.commandArgs?.errorTask) {
       // We are receiving an error after coprocessing
       await taskSync_async(task.instanceId, task);
-      utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+      utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
     } else {
       await errorTask_async(task);
     }

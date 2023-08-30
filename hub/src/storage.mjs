@@ -47,7 +47,7 @@ const instancesStore_async = newKeyV(redisClient, "instances");
 const familyStore_async = newKeyV(redisClient, "threads");
 // Schema:
 //   Key: instanceId
-//   Value: task object
+//   Value: boolean indicating the task is active
 const activeTasksStore_async = newKeyV(redisClient, "activeTasks");
 // Schema:
 //   Key: instanceId
@@ -62,6 +62,28 @@ const activeProcessorTasksStore_async = newKeyV(redisClient, "activeProcessorTas
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(redisClient, "outputsStore_async");
 
+async function getActiveTask_async(instanceId) {
+  if (await activeTasksStore_async.has(instanceId)) {
+    return await instancesStore_async.get(instanceId);
+  } else {
+    return undefined;
+  }
+}
+
+async function setActiveTask_async(task) {
+  await Promise.all([
+    instancesStore_async.set(task.instanceId, task),
+    activeTasksStore_async.set(task.instanceId, true)
+  ]);
+}
+
+async function deleteActiveTask_async(instanceId) {
+  await Promise.all([
+    activeTasksStore_async.delete(instanceId),
+    activeTaskProcessorsStore_async.delete(instanceId)
+  ]);
+}
+
 export {
   instancesStore_async,
   familyStore_async,
@@ -72,4 +94,7 @@ export {
   activeCoProcessors,
   outputStore_async,
   connections,
+  getActiveTask_async,
+  deleteActiveTask_async,
+  setActiveTask_async,
 };

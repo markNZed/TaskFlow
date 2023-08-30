@@ -33,6 +33,10 @@ const CEPFunctions = {
       utils.logTask(task, "CEPIncrement doing nothing for start and init command")
       return;
     }
+    if (!task.processor.coProcessingDone) {
+      utils.logTask(task, "CEPIncrement ignoring task during coprocessing");
+      return
+    }
     if (task.processor.commandArgs.sync) {
       utils.logTask(task, "CEPIncrement doing nothing for sync")
       return;
@@ -43,7 +47,8 @@ const CEPFunctions = {
     }
     let syncDiff = {}
     syncDiff["output"] = {};
-    syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : 1;
+    syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : increment;
+    syncDiff.output["CEPinitiatingProcessorId"] = task.processor.initiatingProcessorId;
     utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
     await commandUpdate_async(wsSendTask, task, syncDiff, true);
     utils.logTask(task, "TaskConversation " + functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);

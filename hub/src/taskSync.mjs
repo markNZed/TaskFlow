@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTaskProcessorsStore_async, instancesStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
+import { activeTaskProcessorsStore_async, activeProcessors, activeCoProcessors, getActiveTask_async } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { haveCoProcessor } from "../config.mjs";
@@ -25,10 +25,11 @@ const taskSync_async = async (key, value) => {
   // failyId which created other issues with loading the prevInstanceId in taskStart
   if (key && value.hub.command != "start") {
     utils.logTask(value, "taskSync_async familyId", value.familyId, value.hub.command);
-    await instancesStore_async.set(key, value);
   } else if (!haveCoProcessor) {
     throw new Error("taskSync_async missing key" + JSON.stringify(value));
   }
+
+  const activeTask = await getActiveTask_async(value.instanceId);
 
   // We store excatly what was sent to us
   const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
@@ -68,7 +69,7 @@ const taskSync_async = async (key, value) => {
         }
         taskCopy.hub["coProcessing"] = true;
         taskCopy.hub["coProcessingDone"] = false;
-        wsSendTask(taskCopy, coProcessorId);
+        wsSendTask(taskCopy, coProcessorId, activeTask);
         break;
       } else {
         //utils.logTask(taskCopy, "CoProcessor does not support commmand", command, coProcessorId);
@@ -91,7 +92,7 @@ const taskSync_async = async (key, value) => {
       if (coProcessorData) {
         if (coProcessorData.commandsAccepted.includes(command)) {
           utils.logTask(taskCopy, "taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
-          wsSendTask(taskCopy, coProcessorId);
+          wsSendTask(taskCopy, coProcessorId, activeTask);
         } else {
           //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coProcessorId);
         }
@@ -126,7 +127,7 @@ const taskSync_async = async (key, value) => {
         }
         if (processorData.commandsAccepted.includes(command)) {
           utils.logTask(taskCopy, "taskSync_async", command, key, processorId);
-          wsSendTask(taskCopy, processorId);
+          wsSendTask(taskCopy, processorId, activeTask);
         } else {
           //utils.logTask(taskCopy, "taskSync_async processor does not support commmand", command, processorId);
         }

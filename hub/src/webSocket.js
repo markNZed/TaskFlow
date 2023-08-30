@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
+import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -33,7 +33,7 @@ function wsSendObject(processorId, message = {}) {
   }
 }
 
-const wsSendTask = async function (task, processorId) {
+const wsSendTask = async function (task, processorId, activeTask) {
   if (!task?.hub?.command) {
     throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
@@ -49,10 +49,8 @@ const wsSendTask = async function (task, processorId) {
     user = JSON.parse(JSON.stringify(task.users[task.user.id]));
   }
   let message = {}
-  let activeTask = {};
   // We can only have an activeTask for an update command
   if (task.hub.command === "update") {
-    activeTask = await activeTasksStore_async.get(task.instanceId);
     //utils.logTask(task, "wsSendTask " + command + " activeTask state", activeTask.state);
     //utils.logTask(task, "wsSendTask " + command + " task state", task.state);
     let diff = {}
@@ -103,7 +101,7 @@ const wsSendTask = async function (task, processorId) {
   }
   delete task.hub.origTask;
   message["task"] = task;
-  //utils.logTask(task, "wsSendTask task.hub", task.hub);
+  //utils.logTask(task, "wsSendTask task.meta.hashTask", task?.meta?.hashTask);
   wsSendObject(processorId, message);
 }
 

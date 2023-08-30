@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import RequestError from './routes/RequestError.mjs';
 import { tasks } from "./configdata.mjs";
-import { activeTasksStore_async, outputStore_async } from "./storage.mjs";
+import { getActiveTask_async, outputStore_async } from "./storage.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
@@ -219,7 +219,7 @@ async function taskProcess_async(task, req, res) {
     let activeTask = {};
     checkErrorRate(task);
     if (task.instanceId !== undefined) {
-      activeTask = await activeTasksStore_async.get(task.instanceId);
+      activeTask = await getActiveTask_async(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
         if (task.meta.hashDiff) {
           // This is running on "partial" which seems a waste
@@ -228,9 +228,9 @@ async function taskProcess_async(task, req, res) {
         // Need to restore meta for checkLockConflict, checkAPIRate
         // Need to restore config for checkAPIRate
         task = utils.deepMerge(activeTask, task);
-      } else if (task.processor.command !== "start") {
-        console.error("Should have activeTask if we have an instanceId");
-        return;
+      } else if (task.processor.command !== "start" && task.processor.command !== "init") {
+        console.error("Should have activeTask if we have an instanceId", task);
+        throw new Error("Should have activeTask if we have an instanceId");
       }
     }
     let requestId;
@@ -260,7 +260,6 @@ async function taskProcess_async(task, req, res) {
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket
       await taskSync_async(task.instanceId, task);
-      //utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
       return null;
     // If HTTP without coprocessing then we return (this is no longer used)
     } else if (res) {

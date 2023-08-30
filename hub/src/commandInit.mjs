@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
+import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 
@@ -13,7 +13,7 @@ export async function commandInit_async(task, res) {
   try {
     utils.logTask(task, "commandInit_async id:" + task.id + " from processorId:" + processorId);
     await taskSync_async(task.instanceId, task);
-    utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+    utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
     // We can use this for the websocket so there is no res provided in that case  
     if (res) {
       res.status(200).send("ok");

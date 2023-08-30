@@ -7,12 +7,12 @@ const utils = {
 
   ...sharedUtils,
 
-  hasOnlyResponseKey: function (obj) {
+  hasOnlyResponseKey: function(obj) {
     const keys = Object.keys(obj);
     return keys.length === 1 && keys[0] === "response";
   },
 
-  getCallerName: function (stackTrace) {
+  getCallerName: function(stackTrace) {
     let callerName = ":unknown";
     // Find caller name for both Chrome and Firefox
     for (const line of stackTrace) {
@@ -49,7 +49,7 @@ const utils = {
     log(...message);
   },
 
-  setArrayState: function (setArray, idx, t) {
+  setArrayState: function(setArray, idx, t) {
     setArray((prevElements) => {
       const updatedElements = [...prevElements]; // create a copy of the previous state array
       const changedElement =
@@ -60,7 +60,7 @@ const utils = {
   },
 
   // Support for dot notation in Task keys
-  setNestedProperties: function (obj, path = null, value = null) {
+  setNestedProperties: function(obj, path = null, value = null) {
     const processKey = (obj, key, value) => {
       if (key.includes(".")) {
         const [head, ...tail] = key.split(".");
@@ -102,7 +102,7 @@ const utils = {
     return obj;
   },
 
-  replaceNewlinesWithParagraphs: function (text) {
+  replaceNewlinesWithParagraphs: function(text) {
     let html = ""
     if (text) {
       // Split the text on one or more newline characters to get an array of lines

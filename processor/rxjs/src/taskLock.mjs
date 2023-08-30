@@ -21,7 +21,7 @@ export function releaseResource(key) {
   const release = releases.get(key);
   if (release) {
     release();
-    console.log(`Released by key: ${key}`);
+    console.log(`Released lock with key: ${key}`);
     releases.delete(key); // Remove the release function after releasing the lock
   } else {
     // We expect most tasks will not be locked so no need to warn

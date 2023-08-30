@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "./utils.mjs";
-import { activeTasksStore_async, activeTaskProcessorsStore_async, instancesStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, deleteActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
@@ -20,11 +20,10 @@ async function doneTask_async(task) {
   }
   let nextTaskId = task.hub.commandArgs?.nextTaskId;
   utils.logTask(task, "Task " + task.id + " done, next " + nextTaskId);
-  await instancesStore_async.set(task.instanceId, task);
+  await setActiveTask_async(task);
   // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
   // !!!
-  activeTasksStore_async.delete(task.instanceId);
-  activeTaskProcessorsStore_async.delete(task.instanceId);
+  deleteActiveTask_async(task.instanceId);
   if (nextTaskId) {
     const initTask = {
       id: nextTaskId,
@@ -41,7 +40,7 @@ async function doneTask_async(task) {
     }
     await commandStart_async(task);
     //await taskStart_async(initTask, false, processorId, task.instanceId);
-    // In theory commandStart_async will update activeTasksStore_async and that will send the task to the correct processor(s)
+    // In theory commandStart_async will update activeTasksStore and that will send the task to the correct processor(s)
   }
 }
 
@@ -55,7 +54,7 @@ async function doUpdate(commandArgs, task, res) {
     // Don't await so the HTTP response may get back before the websocket update
     await taskSync_async(task.instanceId, task)
       .then(async () => {
-        utils.hubActiveTasksStoreSet_async(activeTasksStore_async, task);
+        utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
       });
     // We can use this for the websocket so thre is no res provided in that case  
     if (res) {
@@ -80,7 +79,7 @@ export async function commandUpdate_async(task, res) {
   //utils.logTask(task, "commandUpdate_async lock", task.instanceId);
   try {
     utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
-    let activeTask = await activeTasksStore_async.get(task.instanceId)
+    let activeTask = await getActiveTask_async(task.instanceId)
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
@@ -92,7 +91,7 @@ export async function commandUpdate_async(task, res) {
       // We are syncing so switch active task
       // Should limit this so we can only update in the same family (except for system tasks)
       if (commandArgs.syncTask.instanceId) {
-        activeTask = await activeTasksStore_async.get(commandArgs.syncTask.instanceId);
+        activeTask = await getActiveTask_async(commandArgs.syncTask.instanceId);
       }
       if (!activeTask) {
         throw new Error("No active task " + commandArgs.syncTask.instanceId);

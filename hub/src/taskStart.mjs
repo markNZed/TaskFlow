@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, familyStore_async, activeTasksStore_async, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { users, groups, tasks } from "./configdata.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
@@ -15,7 +15,7 @@ import { utils } from "./utils.mjs";
 // It makes use of many helper functions defined above it.
 
 async function checkActiveTaskAsync(instanceId, activeProcessors) {
-  let activeTask = await activeTasksStore_async.get(instanceId);
+  let activeTask = await getActiveTask_async(instanceId);
   let doesContain = false;
   if (activeTask) {
     let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
@@ -68,7 +68,7 @@ async function processInstanceAsync(task, instanceId, mode) {
       task.state["current"] = "start";
       task.meta["updateCount"] = 0;
       task.meta["locked"] = null;
-      await activeTasksStore_async.delete(instanceId);
+      await deleteActiveTask_async(instanceId);
       utils.logTask(task, `Restarting ${mode} ${instanceId} for ${task.id}`);
     }
   } else {
@@ -188,7 +188,7 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   return task;
 }
 
-async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async /*, activeTasksStore_async*/) {
+async function updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instancesStore_async, setActiveTask_async*/) {
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
     // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
@@ -212,6 +212,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
+    /*
     // Update all the active prevTask with new child
     prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
     prevTask.meta.childrenInstanceId.push(task.instanceId);
@@ -219,14 +220,13 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId, instances
     await instancesStore_async.set(prevTask.instanceId, prevTask);
     // The prevTask task may be "done" so no longer active
     // Also we do not want to update a task that errored
-    /*
     if (!prevTask.done && !task.id.endsWith(".error")) {
-      if (await activeTasksStore_async.get(prevTask.instanceId)) {
+      if (await getActiveTask_async(prevTask.instanceId)) {
         This has been removed for now becaus sending an update can impact the state machine
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.hub.command = "update";
         prevTask.hub.sourceProcessorId = "hub";
-        await utils.hubActiveTasksStoreSet_async(activeTasksStore_async, prevTask);
+        await utils.hubActiveTasksStoreSet_async(setActiveTask_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
     }
@@ -449,7 +449,7 @@ async function taskStart_async(
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
-    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId, instancesStore_async, activeTasksStore_async);
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instancesStore_async, setActiveTask_async*/);
     // Set task.processor.id after copying info from prevTask
     task.processors[processorId] = task.processors[processorId] ?? {};
     task.processors[processorId]["id"] = processorId;
