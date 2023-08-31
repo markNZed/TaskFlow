@@ -44,10 +44,19 @@ const tasks = [
     type: "TaskSystemLogViewer"
   }, 
   {
+    initiator: true,
+    name: "systemtasksconfig",
+    config: {
+      label: "Tasks Config",
+    },
+    parentName: "system",
+    type: "TaskSystemTasksConfig"
+  }, 
+  
+  {
     name: "conversation",
     parentName: "user",
   },
-
   {
     config: {
       label: "chatGPT",

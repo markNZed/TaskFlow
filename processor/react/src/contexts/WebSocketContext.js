@@ -4,12 +4,11 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
 import { utils } from "../utils/utils";
-import { v4 as uuidv4 } from "uuid";
 
 class WebSocketEventEmitter extends EventEmitter {}
 

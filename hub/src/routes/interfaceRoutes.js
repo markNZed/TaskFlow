@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { utils } from "../utils.mjs";
-import { users, groups, tasks } from "../configdata.mjs";
+import { usersStore_async, groupsStore_async, tasksStore_async } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -17,24 +17,26 @@ router.post("/", async (req, res) => {
   console.log("/hub/api/interface");
   let userId = utils.getUserId(req);
   let authorised_tasks = {};
-  for (const key in tasks) {
-    if (utils.authenticatedTask(tasks[key], userId, groups)) {
-      authorised_tasks[key] = tasks[key];
+  // Must use key, value as this is the entries in tasksStore_async 
+  for await (const { key, value } of tasksStore_async.iterate()) {
+    //console.log("key, value", key, value);
+    if (await utils.authenticatedTask_async(value, userId, groupsStore_async)) {
+      authorised_tasks[key] = value;
     }
   }
   // If a taskflow is authorized then the path to that taskflow is authorized
   for (const key in authorised_tasks) {
-    let id = tasks[key].id
+    let id = authorised_tasks[key].id
     let paths = id.split('.');
     let result = [];
     for (let i = 0; i < paths.length; i++) {
       result.push(paths.slice(0, i + 1).join('.'));
     }
-    result.forEach(path => {
+    for (const path of result) {
       if (!authorised_tasks[path]) {
-        authorised_tasks[path] = tasks[path];
+        authorised_tasks[path] = await tasksStore_async.get(path);
       }
-    });
+    }    
   }
   //console.log("authorised_tasks ", authorised_tasks)
   let tasksTree = {};
@@ -68,12 +70,13 @@ router.post("/", async (req, res) => {
   }
   //console.log("tasksTree ", tasksTree)
   if (userId) {
-    console.log("Send Task tree ", userId);
+    const user = await usersStore_async.get(userId);
+    console.log("Send Task tree", userId, user);
     res.send({
       user: {
         userId: userId,
-        interface: users[userId]?.interface,
-        label: users[userId]?.label,
+        interface: user?.interface,
+        label: user?.label,
       },
       hubId: hubId,
       taskflowsTree: tasksTree,

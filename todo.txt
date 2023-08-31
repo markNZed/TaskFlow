@@ -1,5 +1,13 @@
 /* ToDo
 -------
+Janssen Project for login there is a commerial offering Gluu
+Ant Design
+  https://developer.okta.com/blog/2020/09/16/ant-design-react-app
+  https://ant.design/theme-editor
+Made a request to https://pro.reactflow.dev
+you cannot directly chain await and ?. together
+Do we want getConfigHash ?
+Can get rid of usersMap etc
 We could store just a list of active task instances and then fetch the task
   Then us Redis as a cache to spped up the fetching of the task
   All tasks written to MongoDB + Redis (eventually can use write-behind)

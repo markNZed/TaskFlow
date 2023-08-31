@@ -4,8 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
-import { users, groups, tasks } from "./configdata.mjs";
+import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 
@@ -77,11 +76,12 @@ async function processInstanceAsync(task, instanceId, mode) {
   return task;
 }
 
-function checkUserGroup(groupId, userId) {
-  if (!groups[groupId]?.users) {
+async function checkUserGroup_async(groupId, userId) {
+  const group = await groupsStore_async.get(groupId);
+  if (!group?.users) {
     throw new Error("No users in group " + groupId);
   }
-  if (!groups[groupId].users.includes(userId)) {
+  if (!group?.users.includes(userId)) {
     throw new Error(`User ${userId} not in group ${groupId}`);
   } else {
     console.log("User in group", groupId, userId);
@@ -93,10 +93,10 @@ function isAllCaps(str) {
   return /^[A-Z\s]+$/.test(str);
 }
 
-function processTemplateArrays(obj, task, outputs, familyId) {
+async function processTemplateArrays_async(obj, task, outputs, familyId) {
   // Do substitution on arrays of strings and return a string
   if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
-    const user = users[task.user.id];
+    const user = await usersStore_async.get(task.user.id);
     return obj.reduce(function (acc, curr) {
       // Substitute variables with previous outputs
       const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
@@ -132,16 +132,16 @@ function processTemplateArrays(obj, task, outputs, familyId) {
   } else {
     for (const key in obj) {
       if (Array.isArray(obj[key])) {
-        obj[key] = processTemplateArrays(obj[key], task, outputs, familyId);
+        obj[key] = await processTemplateArrays_async(obj[key], task, outputs, familyId);
       } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-        processTemplateArrays(obj[key], task, outputs, familyId);
+        await processTemplateArrays_async(obj[key], task, outputs, familyId);
       }
     }
   }
   return obj
 }
 
-function processTemplates(task, obj, outputs, familyId) {
+async function processTemplates_async(task, obj, outputs, familyId) {
   if (!obj) {
     return task;
   }
@@ -149,23 +149,26 @@ function processTemplates(task, obj, outputs, familyId) {
   for (const [key, value] of Object.entries(obj)) {
     // If the value is an object, then recurse
     if (typeof value === 'object' && value !== null) {
-        processTemplates(task, value, outputs, familyId);
+      await processTemplates_async(task, value, outputs, familyId);
     }
 
     // If the key ends with "Template", process it
     if (key.endsWith('Template')) {
         const strippedKey = key.replace('Template', '');
         const templateCopy = JSON.parse(JSON.stringify(value));
-        obj[strippedKey] = processTemplateArrays(templateCopy, task, outputs, familyId);
+        obj[strippedKey] = await processTemplateArrays_async(templateCopy, task, outputs, familyId);
     }
   }
   return task;
 }
 
-function checkUserPermissions(task, groups, authenticate) {
+async function checkUserPermissions_async(task, groupsStore_async, authenticate) {
   // Check if the user has permissions
-  if (authenticate && !utils.authenticatedTask(task, task.user.id, groups)) {
-    throw new Error("Task authentication failed");
+  if (authenticate) {
+    const authenticated = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
+    if (!authenticated) {
+      throw new Error("Task authentication failed");
+    }
   }
 }
 
@@ -235,11 +238,11 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instanc
   return task;
 }
 
-function supportMultipleLanguages(task, users) {
+async function supportMultipleLanguages_async(task, usersStore_async) {
   // Multiple language support for config fields
   // Eventually replace with a standard solution
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
-  const user = users[task.user.id];
+  const user = await usersStore_async.get(task.user.id);
   const language = user?.language || "EN";
   // Array of the objects
   let configs = [task.config];
@@ -365,12 +368,13 @@ async function taskStart_async(
     prevInstanceId,
   ) {
     
-    if (!tasks[initTask.id]) {
+    const initTaskConfig = await tasksStore_async.get(initTask.id);
+    if (!initTaskConfig) {
       throw new Error("Could not find task with id " + initTask.id)
     }
 
     // Instantiate new task
-    let task = JSON.parse(JSON.stringify(tasks[initTask.id])); // deep copy
+    let task = JSON.parse(JSON.stringify(initTaskConfig)); // deep copy
 
     //utils.logTask(task, "Task template", task)
 
@@ -388,7 +392,7 @@ async function taskStart_async(
 
     //utils.logTask(task, "Task after merge", task)
 
-    checkUserPermissions(task, groups, authenticate)
+    await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
     const prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
        
@@ -403,7 +407,7 @@ async function taskStart_async(
     if (task.config.collaborateGroupId) {
       // GroupId should be an array of group Ids?
       task.groupId = task.config.collaborateGroupId;
-      if (checkUserGroup(task.groupId, task.user.id)) {
+      if (await checkUserGroup_async(task.groupId, task.user.id)) {
         // '.' is not used in keys or it breaks setNestedProperties
         // Maybe this could be added to schema
         task["instanceId"] = (task.id + "-" + task.groupId).replace(/\./g, '-');
@@ -454,20 +458,21 @@ async function taskStart_async(
     task.processors[processorId] = task.processors[processorId] ?? {};
     task.processors[processorId]["id"] = processorId;
 
+    const user = await usersStore_async.get(task.user.id);
     if (task.users[task.user.id]) {
-      task.users[task.user.id] = utils.deepMerge(users[task.user.id], task.users[task.user.id]);
+      task.users[task.user.id] = utils.deepMerge(user, task.users[task.user.id]);
     } else {
-      task.users[task.user.id] = users[task.user.id];
+      task.users[task.user.id] = user;
     }
     
     // This is only for task.config 
-    task = supportMultipleLanguages(task, users);
+    task = await supportMultipleLanguages_async(task, usersStore_async);
 
     // Templating functionality
     const outputs = await outputStore_async.get(task.familyId);
     // Using side-effects to update task.config
-    task = processTemplates(task, task.config, outputs, task.familyId);
-    task = processTemplates(task, task.config.local, outputs, task.familyId);
+    task = await processTemplates_async(task, task.config, outputs, task.familyId);
+    task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
     const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors, autoStart)
 

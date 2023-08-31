@@ -137,54 +137,17 @@ const utils = {
     return taskCopy;
   },
 
-  filter_in: function (tasktypes, tasks, task) {
-    if (!task?.id) {
-      console.log("ERROR Task has no id ", task);
-    }
-    //console.log("BEFORE ", task)
-    let filter_list = [];
-    let filter_for_react = [];
-    if (task?.filter_for_react) {
-      filter_list = filter_list.concat(task.filter_for_react);
-      filter_for_react = filter_for_react.concat(task.filter_for_react);
-    }
-    filter_list = Array.from(new Set(filter_list)); // uniquify
-    filter_for_react = Array.from(new Set(filter_for_react)); // uniquify
-    if (filter_list.length < 1) {
-      console.log("Warning: the task ", task, " is missing filter");
-    }
-    const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
-    for (const key in taskCopy) {
-      if (!filter_list.includes(key)) {
-        delete taskCopy[key];
-        if (
-          !filter_for_react.includes(key) &&
-          !key.startsWith("APPEND_") &&
-          !key.startsWith("PREPEND_")
-        ) {
-          console.log(
-            "Warning: Unknown task key not returned to React Task Processor " +
-              key +
-              " in task id " +
-              task.id
-          );
-        }
-      }
-    }
-    //console.log("AFTER ", filter_list, taskCopy)
-    return taskCopy;
-  },
-
-  authenticatedTask: function (task, userId, groups) {
+  authenticatedTask_async: async function (task, userId, groupsStore_async) {
     let authenticated = false;
     if (task?.permissions) {
-      task.permissions.forEach((group_name) => {
-        if (!groups[group_name]?.users) {
-          console.log("Group " + group_name + " has no users", groups[group_name]);
-        } else if (groups[group_name].users.includes(userId)) {
+      for (const group_name of task.permissions) {
+        let group = await groupsStore_async.get(group_name);
+        if (!group?.users) {
+          console.log("Group " + group_name + " has no users", group);
+        } else if (group.users.includes(userId)) {
           authenticated = true;
         }
-      });
+      }
     } else {
       authenticated = true;
     }

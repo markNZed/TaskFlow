@@ -365,4 +365,4 @@ function getConfigHash() {
   return utils.djb2Hash(JSON.stringify([users, groups, tasktypes, tasks]));
 }
 
-export { users, groups, tasktypes, tasks, getConfigHash, autoStartTasks };
+export { getConfigHash, users, groups, tasktypes, tasks, autoStartTasks };

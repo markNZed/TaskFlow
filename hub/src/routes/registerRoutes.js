@@ -5,9 +5,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors, activeCoProcessors } from "../storage.mjs";
+import { activeProcessors, activeCoProcessors, autoStartTasksStore_async } from "../storage.mjs";
 import { hubId, setHaveCoProcessor } from "../../config.mjs";
-import { getConfigHash, autoStartTasks } from "../configdata.mjs";
+import { getConfigHash } from "../configdata.mjs";
 import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
 import * as dotenv from "dotenv";
@@ -80,61 +80,58 @@ router.post("/", async (req, res) => {
 
   // After each processor registers then we can check if there are tasks to autostart
   // Check if there are autoStartTasks 
-  if (Object.keys(autoStartTasks).length > 0) {
-    //console.log("Autostart tasks", autoStartTasks);
-    let activeEnvironments = [];
-    activeProcessors.forEach(item => {
-      activeEnvironments.push(...item.environments);
-    });
-    activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
-    Object.keys(autoStartTasks).forEach(taskId => {
-      //console.log("Autostart task", taskId);
-      const autoStartEnvironment = autoStartTasks[taskId].startEnvironment;
-      let startEnvironments = autoStartTasks[taskId].startEnvironments;
-      if (environments.includes(autoStartEnvironment)) {
-        //console.log("environments.includes(autoStartEnvironment)");
-        let allEnvironmentsAvailable = true;
-        // get the environments for this task
-        // Is each startEnvironment avialable in environments ?
-        startEnvironments.forEach(startEnvironment => {
-          if (!environments.includes(startEnvironment)) {
-            //console.log("startEnvironment " + startEnvironment + " not available", environments);
-            allEnvironmentsAvailable = false;
-          }
-        })
-        if (allEnvironmentsAvailable) {
-          //console.log("allEnvironmentsAvailable");
-          const initTask = {
-            id: taskId,
-            user: {id: userId},
-            autoStart: true,
-          }
-          let task = {id: "autoStart"};
-          task["hub"] = {};
-          task.hub["commandArgs"] = {
-            init: initTask,
-            authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
-          }
-          task.hub["command"] = "start";
-          task.hub["sourceProcessorId"] = "hub";
-          task["processor"] = {};
-          task["processor"]["id"] = processorId;
-          console.log("Autostarting task ", task, initTask);
-          commandStart_async(task);
-          if (autoStartTasks[taskId].once) {
-            delete autoStartTasks[taskId];
-          }
-        } else {
-          console.log("Not autostarting task allEnvironmentsAvailable false");
+  let countAutoStartTasks = 0;
+  let activeEnvironments = [];
+  activeProcessors.forEach(item => {
+    activeEnvironments.push(...item.environments);
+  });
+  activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
+  for await (const { key: taskId, value: autoStartTask } of autoStartTasksStore_async.iterate()) {
+    countAutoStartTasks++;
+    //console.log("Autostart task", taskId, autoStartTask);
+    const autoStartEnvironment = autoStartTask.startEnvironment;
+    let startEnvironments = autoStartTask.startEnvironments;
+    if (environments.includes(autoStartEnvironment)) {
+      //console.log("environments.includes(autoStartEnvironment)");
+      let allEnvironmentsAvailable = true;
+      // get the environments for this task
+      // Is each startEnvironment avialable in environments ?
+      startEnvironments.forEach(startEnvironment => {
+        if (!environments.includes(startEnvironment)) {
+          //console.log("startEnvironment " + startEnvironment + " not available", environments);
+          allEnvironmentsAvailable = false;
+        }
+      })
+      if (allEnvironmentsAvailable) {
+        //console.log("allEnvironmentsAvailable");
+        const initTask = {
+          id: taskId,
+          user: {id: userId},
+          autoStart: true,
+        }
+        let task = {id: "autoStart"};
+        task["hub"] = {};
+        task.hub["commandArgs"] = {
+          init: initTask,
+          authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
+        }
+        task.hub["command"] = "start";
+        task.hub["sourceProcessorId"] = "hub";
+        task["processor"] = {};
+        task["processor"]["id"] = processorId;
+        console.log("Autostarting task ", task, initTask);
+        commandStart_async(task);
+        if (autoStartTask.once) {
+          await autoStartTasksStore_async.delete(taskId);
         }
       } else {
-        console.log("Not autostarting task environments",environments, "does not include " + autoStartEnvironment);
+        console.log("Not autostarting task allEnvironmentsAvailable false");
       }
-    });
-  } else {
-    console.log("No autostart tasks", autoStartTasks);
+    } else {
+      console.log("Not autostarting task environments",environments, "does not include " + autoStartEnvironment);
+    }
   }
-
+  console.log(countAutoStartTasks + " autostart tasks");
 });
 
 // Export the router

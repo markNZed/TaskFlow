@@ -5,8 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import RequestError from './routes/RequestError.mjs';
-import { tasks } from "./configdata.mjs";
-import { getActiveTask_async, outputStore_async } from "./storage.mjs";
+import { getActiveTask_async, outputStore_async, tasksStore_async } from "./storage.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
@@ -152,12 +151,12 @@ function checkErrorRate(task) {
 }
 
 
-function findClosestErrorTask(taskId, tasks) {
+async function findClosestErrorTask_async(taskId, tasksStore_async) {
   const taskLevels = taskId.split('.');
   for (let i = taskLevels.length - 1; i >= 0; i--) {
     taskLevels[i] = "error";
     const errorTaskId = taskLevels.join('.');
-    if (tasks[errorTaskId]) {
+    if (await tasksStore_async.get(errorTaskId)) {
       return errorTaskId;
     }
     taskLevels.splice(i, 1);
@@ -165,13 +164,13 @@ function findClosestErrorTask(taskId, tasks) {
   return null;
 }
 
-function processError(task, tasks) {
+async function processError_async(task, tasksStore_async) {
   if (task.error) {
     let errorTask;
     if (task.config && task.config.errorTask) {
       errorTask = task.config.errorTask;
     } else {
-      errorTask = findClosestErrorTask(task.id, tasks);
+      errorTask = await findClosestErrorTask_async(task.id, tasksStore_async);
     }
     task.hub.command = "error";
     task.hub.commandArgs = { errorTask };
@@ -243,7 +242,7 @@ async function taskProcess_async(task, req, res) {
       if (!task.hub.coProcessing) {
         task = checkAPIRate(task);
       }
-      task = processError(task, tasks);
+      task = await processError_async(task, tasksStore_async);
     }
     // Deep copy
     let error;
