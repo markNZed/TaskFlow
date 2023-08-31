@@ -214,7 +214,7 @@ async function taskProcess_async(task, req, res) {
       throw new Error("Missing task.processor in /hub/api/task");
     }
     utils.logTask(task, "");
-    utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command);
+    utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " state:" + task?.state?.current);
     let activeTask = {};
     checkErrorRate(task);
     if (task.instanceId !== undefined) {

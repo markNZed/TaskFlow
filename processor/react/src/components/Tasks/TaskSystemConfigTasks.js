@@ -36,9 +36,12 @@ const TaskSystemTasksConfig = (props) => {
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {
-    // This can write over the update
-    task.state.current = "start";
-    task.state.done = false;
+    if (task.processor.command !== "init") {
+      // This can write over the update
+      // This overrides the setting of the state during init
+      task.state.current = "start";
+      task.state.done = false;
+    }
   }, []);
 
   // Task state machine

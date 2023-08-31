@@ -31,16 +31,11 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       const T = utils.createTaskValueGetter(task);
       updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs);
       utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
-      // We do not want to cycle the init if the Task does not change the command
-      if (task.processor["command"] === "init" && task.processor.coProcessingDone && !task.command) {
-        utils.logTask(task, "RxJS Task Processor init processed:" + task.id);
-        return task;
-      }
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);
     }
     // Create the CEP during the init of the task
-    if (task.processor["command"] === "init" && !task.processor.coProcessingDone) {
+    if (task.processor["command"] === "init") {
       // How about overriding a match. createCEP needs more review/testing
       // Create two functions
       if (task.config?.ceps) {

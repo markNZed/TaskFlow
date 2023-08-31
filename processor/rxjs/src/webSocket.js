@@ -99,31 +99,10 @@ taskSubject
         //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
-        // This allows us to initialise by transforming the final init task to an update task
-        } else if (task.processor.command === "init") {
-          await taskProcess_async(wsSendTask, task, CEPFuncs);
         } else {
           utils.logTask(task, "Skipped taskProcess")
         }
-        /*
-        if (task.processor.command === "update") {
-          utils.logTask(task, "CoProcessing task.state ", task?.state.current);
-          const diff = utils.getObjectDifference(taskCopy, task) || {};
-          if (Object.keys(task).length > 0 && Object.keys(diff).length > 0) {
-            utils.logTask(task, "CoProcessing diff ", diff);
-            //await commandUpdate_async(wsSendTask, task, diff, true);
-          }
-        }
-        */
-        //wsSendTask(task);
-        //utils.logTask(task, "CoProcessing task ", task);
       } else {
-        /*
-        if (Object.keys(diff).length > 0) {
-          utils.logTask(task, "DIFF", diff);
-          await commandUpdate_async(wsSendTask, task, diff, true);
-        }
-        */
         // Process the task to install the CEP
         if (task.processor.initiatingProcessorId !== processorId) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
@@ -245,7 +224,7 @@ const connectWebSocket = () => {
       }
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
-      utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:",task.commandArgs);
+      utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
       // Emit the task into the taskSubject
       if (COPROCESSOR) {
         taskSubject.next(task);

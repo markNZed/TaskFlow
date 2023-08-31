@@ -17,13 +17,13 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
 
   switch (T("state.current")) {
     case "start": {
-      if (T("processor.coProcessingDone")) {
+      if (!T("processor.coProcessingDone")) {
         console.log("Calling buildTree_async");
         const configTree = await buildTree_async();
+        console.log("Calling buildTree_async done");
         T("state.configTree", configTree);
         T("state.last", T("state.current"));
         T("state.current", "response");
-        T("command", "update");
       }
       break;
     }
