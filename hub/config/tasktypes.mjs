@@ -1,10 +1,13 @@
 
-import { CACHE_ENABLE } from "../config.mjs";
+import { CACHE_ENABLE, REDIS_URL } from "../config.mjs";
 
 const tasktypes = [
   {
-    name: "TaskSystemTasksConfig",
+    name: "TaskSystemConfigTasks",
     environments: ["react", "rxjscopro"],
+    config: {
+      redisUrl: REDIS_URL,
+    },
     state: {
       current: "start",
     },

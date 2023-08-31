@@ -15,10 +15,13 @@
     "quicktype": "^23.0.30"
   },
   "dependencies": {
+    "@keyv/redis": "^2.7.0",
     "dotenv": "^16.0.3",
     "fs-extra": "^11.1.1",
     "graphql": "^16.7.1",
     "intl": "^1.2.5",
+    "ioredis": "^5.3.2",
+    "keyv": "^4.5.3",
     "nanoid": "^4.0.2",
     "xstate": "^4.38.2"
   }

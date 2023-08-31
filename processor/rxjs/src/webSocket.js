@@ -99,6 +99,9 @@ taskSubject
         //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
         if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
           task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+        // This allows us to initialise by transforming the final init task to an update task
+        } else if (task.processor.command === "init") {
+          await taskProcess_async(wsSendTask, task, CEPFuncs);
         } else {
           utils.logTask(task, "Skipped taskProcess")
         }

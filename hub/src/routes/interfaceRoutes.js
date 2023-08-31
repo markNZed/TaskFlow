@@ -71,7 +71,7 @@ router.post("/", async (req, res) => {
   //console.log("tasksTree ", tasksTree)
   if (userId) {
     const user = await usersStore_async.get(userId);
-    console.log("Send Task tree", userId, user);
+    //console.log("Send Task tree", userId, user);
     res.send({
       user: {
         userId: userId,

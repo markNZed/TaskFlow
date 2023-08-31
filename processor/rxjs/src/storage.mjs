@@ -4,23 +4,17 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { COPROCESSOR } from "../config.mjs";
-import Keyv from "keyv";
-import KeyvBetterSqlite3 from "keyv-better-sqlite3";
+import { COPROCESSOR, MONGO_URL } from "../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
 import mongoose from 'mongoose';
+import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
+import { processorId } from "../config.mjs";
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
 
-// Each keyv store is in a different table
-const DB_URI = COPROCESSOR ? "sqlite://db/maincopro.sqlite" : "sqlite://db/main.sqlite";
-
-// use database "taskflow"
-const mongoURL = "mongodb://user:pass@mongodb:27017/taskflow?authSource=admin";
-
-mongoose.connect(mongoURL, {
+mongoose.connect(MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
@@ -46,42 +40,23 @@ db.once('open', async () => {
   }
 });
 
-// Allows for middleware
-// Passing the websocket to avoid circular imports
-function newKeyV(uri, table, setCallback = null) {
-  const keyv = new Keyv({
-    store: new KeyvBetterSqlite3({
-      uri: uri,
-      table: table,
-    }),
-  });
-  if (typeof setCallback === 'function') {
-    const originalSet = keyv.set.bind(keyv);
-    keyv.set = async function(wsSendTask, key, value, ttl) {
-      // Middleware logic before setting the value
-      //console.log("Setting table", table, "key", key, "value", value)
-      setCallback(wsSendTask, keyv, key, value);
-      const result = await originalSet(key, value, ttl);
-      return result;
-    };
-  }
-  return keyv;
-}
-
-// We could have one keyv store and use prefix for different tables
+const coprocessorPrefix = COPROCESSOR ? "copro:" : "";
+const keyvPrefix = processorId + ":" + coprocessorPrefix;
 
 // Schema:
 //   Key: hash
 //   Value: object
-const cacheStore_async = newKeyV(DB_URI, "cache");
+const cacheStore_async = newKeyV(redisClient, keyvPrefix + "cache");
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
+const activeTasksStore_async = newKeyV(redisClient, keyvPrefix + "activeTasks");
 // Schema:
 //   Key: task.id
 //   Value: data object
-const taskDataStore_async = newKeyV(DB_URI, "taskData");
+const taskDataStore_async = newKeyV(redisClient, keyvPrefix + "taskData");
+
+const tasksStore_async = newKeyV(redisClient, "tasks"); // This is shared with Hub
 
 export {
   cacheStore_async,
@@ -90,4 +65,5 @@ export {
   connections,
   activeTaskFsm,
   db,
+  tasksStore_async,
 };

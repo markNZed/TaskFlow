@@ -44,15 +44,19 @@ const tasks = [
     type: "TaskSystemLogViewer"
   }, 
   {
+    name: "config",
+    parentName: "system",
+  },
+  {
     initiator: true,
     name: "systemtasksconfig",
     config: {
-      label: "Tasks Config",
+      label: "Tasks",
     },
-    parentName: "system",
-    type: "TaskSystemTasksConfig"
+    parentName: "config",
+    type: "TaskSystemConfigTasks"
   }, 
-  
+
   {
     name: "conversation",
     parentName: "user",

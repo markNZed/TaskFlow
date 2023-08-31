@@ -50,7 +50,9 @@ const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) 
 
   switch (T("state.current")) {
     case "start":
-      CEPFunctions.register("CEPLog", CEPLog);
+      if (!T("processor.coProcessingDone")) {
+        CEPFunctions.register("CEPLog", CEPLog);
+      }
       break;
     default:
       utils.logTask(T(), "WARNING unknown state : " + T("state.current"));

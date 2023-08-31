@@ -5,29 +5,16 @@ Ant Design
   https://developer.okta.com/blog/2020/09/16/ant-design-react-app
   https://ant.design/theme-editor
 Made a request to https://pro.reactflow.dev
-you cannot directly chain await and ?. together
 Do we want getConfigHash ?
-Can get rid of usersMap etc
-We could store just a list of active task instances and then fetch the task
-  Then us Redis as a cache to spped up the fetching of the task
-  All tasks written to MongoDB + Redis (eventually can use write-behind)
-  Use a set to store the active instanceIds
-  const fooRedis = new Redis({ keyPrefix: "foo:" });
-  fooRedis.set("bar", "baz"); // Actually sends SET foo:bar baz
 Redis  
-  A secondary index maps each attribute to a set of primary keys that have that attribute. In Redis, you need to create a Redis Search index on your data before you can query it.
-write-behind caching
-TaskSystemConfig on coprocssor can operate on the Redis instance used by the hub  
-  configdata needs to use Redis (tasktypes too I guess)
-Running Redis
-  redis-om-node
-  https://github.com/JoaoOtavioS/redis-map but very new
+  A secondary index maps each attribute to a set of primary keys that have that attribute. 
+  In Redis, you need to create a Redis Search index on your data before you can query it.
+  Write-behind caching
 PM2 for process management
   Ecosystem File
   pm2 startup (on boot ?)
   Just use to run two instance of RxJS for now.
 Possibility of sending all messages to a procssor (need to have another processor - maybe rxjs, can we point at a custom Tasks directory?)
-Review of utils - > move to hub and processor dir
 Collaborate will keep info in the caches and db. How can we clear out a specific familyId ?
   Could prefix the family ID for collaboration with a unique hub ID
     Could use hub Id if it were not stored

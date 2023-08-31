@@ -26,6 +26,7 @@ From the Javascript console in Web Developer tools the current Task objects can 
 The NodeJS processor can use a dummy API (to avoid wasting money on OpenAI API calls), set `DUMMY_OPENAI=true` in `/app/processor/nodejs/.env`.
 The System > Log Task provides insights into the sequence of task messages that have gone through coprocessing on the Task Hub.
 The script `./restartServers.sh` provides a simple way to restart all the servers during development (by touching the server.js files).
+The `hub/src/configdata.mjs` can generate a file `/tmp/tasks.json` which can be copied using a linux shell to `/app/dead` so it can be loaded into VS Code but ignored by git. This shows the task object after initialisation. The `hub/src/configdata.mjs` module uses that file to perform a diff and print to the screen/log which can be a way to see the impacts of changes to the tasks configuration. The diff can be "reset" by deleting `/tmp/tasks.json`.
 
 ## Tips
 
