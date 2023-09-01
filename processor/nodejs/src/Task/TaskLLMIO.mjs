@@ -9,11 +9,9 @@ const TaskLLMIO_async = async function (wsSendTask, T) {
 
   switch (T("state.current")) {
     case "input":
-      T("state.last", T("state.current"));
       T("state.current", "stop");
       return T();
     case "response": {
-      T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("command", "update");
       // Here we update the task which has the effect of setting the state to receiving
@@ -21,7 +19,6 @@ const TaskLLMIO_async = async function (wsSendTask, T) {
       // The response needs to be available for other tasks to point at
       const subTask = await SubTaskLLM_async(wsSendTask, T()); 
       T("output.LLMtext", subTask.response.LLM);
-      T("state.last", T("state.current"));
       T("state.current", "received");
       T("command", "update");
       break;

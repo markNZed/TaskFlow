@@ -53,6 +53,13 @@ const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
 //   Value: data object
 const taskDataStore_async = newKeyV(DB_URI, "taskData");
 
+await Promise.all([
+  cacheStore_async.clear(),
+  activeTasksStore_async.clear(),
+  taskDataStore_async.clear(),
+]);
+console.log("Cleared all KeyV");
+
 export {
   cacheStore_async,
   activeTasksStore_async,

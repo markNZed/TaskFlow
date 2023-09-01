@@ -458,6 +458,10 @@ const utils = {
     // The processor may have copied the commands or not
     delete taskCopy.command;
     delete taskCopy.commandArgs;
+    // Because this is unique to each processor (we could have a hash for each processor)
+    if (taskCopy?.state?.last) {
+      delete taskCopy.state.last;
+    }
     return taskCopy;
   },
 
@@ -600,6 +604,19 @@ const utils = {
     return utils.checkHashDiff(origTask, updatedTask);
   },
 
+  // Rename e.g. processorToTaskFunction, taskFunctionToProcessor, processorToHub, hubToProcessor
+  processorInTaskOut: function(task) {
+    if (task.processor.stateLast) {
+      // Diffs may not have the state information
+      // Maybe we do not need to update in this case?
+      if (!task.state) {
+        task.state = {};
+      }
+      task.state["last"] = task.processor.stateLast;
+    }
+    return task;
+  },
+
   taskInProcessorOut_async: async function(task, processorId, activeTasksStore_async) {
     //console.log("taskInProcessorOut input task.output", task.output);
     if (!task.command) {
@@ -619,6 +636,11 @@ const utils = {
       task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
     }
     delete task.commandArgs
+    // Record the state of the task as it leaves the processor
+    if (task?.state?.current) {
+      task.processor["stateLast"] = task.state.current;
+      delete task.state.last;
+    }
     task.processor["id"] = processorId;
     if (command === "start" || command === "partial") {
       return task;

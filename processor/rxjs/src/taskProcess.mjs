@@ -16,7 +16,12 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   try {
     utils.logTask(task, "taskProcess_async", task.id);
     utils.logTask(task, "taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
-    if (task.processor["command"] === "error") {
+    task = utils.processorInTaskOut(task);
+    const processorMatch = task.processor.initiatingProcessorId === processorId;
+    if (processorMatch) {
+      utils.logTask(task, "RxJS Task Processor from this processor so skipping Task Fuction id:" + task.id);
+      updatedTask = task;
+    } else if (task.processor["command"] === "error") {
       utils.logTask(task, "RxJS Task Processor error so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (task.processor["command"] === "start") {

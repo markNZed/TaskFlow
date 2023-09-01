@@ -119,7 +119,7 @@ const TaskGeneratePersona = (props) => {
       default:
         console.log(`${componentName} Default state: ${task.state.current}`);
     }
-    // Manage state.current and state.last
+    // Manage state.current
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);

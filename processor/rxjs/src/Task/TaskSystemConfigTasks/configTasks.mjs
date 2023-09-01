@@ -5,36 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { tasksStore_async } from "../../storage.mjs";
-import _ from 'lodash';
 
 // We want CRUD operations for the config
 
 export const buildTree_async = async () => {
-
-  function removeSameProperties(objA, objB) {
-    if ((!_.isObject(objA) && _.isObject(objB)) || 
-        (_.isObject(objA) && !_.isObject(objB))
-    ) {
-      return;
-    }
-    for (const key in objB) {
-      if ((!_.isObject(objA[key]) && _.isObject(objB[key])) ||
-          (_.isObject(objA[key]) && !_.isObject(objB[key]))
-      ) {
-        // Do nothing
-      } else if (_.isEqual(objA[key], objB[key])) {
-        // If the property in objB is the same as that in objA, delete it
-        delete objB[key];
-      } else if (_.isObject(objB[key]) && _.isObject(objA[key])) {
-        // If the property is another object, dive deeper
-        removeSameProperties(objA[key], objB[key]);
-        // If after removing properties recursively, an object becomes empty, remove it too
-        if (_.isEmpty(objB[key])) {
-          delete objB[key];
-        }
-      }
-    }
-  }
 
   // Object to hold nodes by their id for quick access
   const nodesById = {
@@ -60,8 +34,6 @@ export const buildTree_async = async () => {
       key: id,
       children: [],
       parentId: task?.meta?.parentId,
-      task: task,
-      taskDiff: {},
     };
 
     // Add the node to the nodesById object
@@ -73,7 +45,7 @@ export const buildTree_async = async () => {
     if (id === 'root') continue; // Skip the root node
     
     const node = nodesById[id];
-    const { parentId, task } = node; // Assume this information is available in the node
+    const { parentId } = node; // Assume this information is available in the node
 
     if (!parentId || !nodesById[parentId]) {
       console.warn(`Missing or invalid parent ID for node with id:${id} parentId:${parentId} Attaching to root.`);
@@ -82,12 +54,6 @@ export const buildTree_async = async () => {
     } else {
       delete node.parentId;
     }
-
-    // Calculate the taskDiff
-    const parentTask = nodesById[parentId].task;
-    const diff = JSON.parse(JSON.stringify(task));
-    removeSameProperties(parentTask, diff)
-    node.taskDiff = diff;
     
     // Attach node to its parent
     nodesById[parentId].children.push(node);

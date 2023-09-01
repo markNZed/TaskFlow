@@ -165,6 +165,7 @@ function TaskSystemTest(props) {
     let { query, element, field, event, expect, eventTrue, eventFalse, debug, oldValue, delay } = data;
     let newValue;
     const msg = "queryUI id:" + id;
+    query = "#SystemTest " + query; // Scope the queries within the SystemTest div
     if (debug) {console.log(msg, "queryUI", query);}
     if (!document.contains(element)) {
       if (debug) {console.log(msg, "!document.contains(element)", query);}

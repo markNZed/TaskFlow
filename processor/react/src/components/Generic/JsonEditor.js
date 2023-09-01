@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { JsonEditor as Editor } from 'jsoneditor-react18';
 
-const JsonEditor = ({ initialData, onDataChanged }) => {
+const JsonEditor = ({ initialData, onDataChanged, ...restProps }) => {
   const [editorData, setEditorData] = useState(initialData);
   const [editorKey, setEditorKey] = useState(0);
 
@@ -23,7 +23,7 @@ const JsonEditor = ({ initialData, onDataChanged }) => {
 
   return (
     <div>
-      <Editor key={editorKey} value={editorData} onChange={handleChange} />
+      <Editor key={editorKey} value={editorData} onChange={handleChange} {...restProps} />
     </div>
   );
 }

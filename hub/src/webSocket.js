@@ -101,7 +101,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
   }
   delete task.hub.origTask;
   message["task"] = task;
-  //utils.logTask(task, "wsSendTask task.state.current", task?.state?.current);
+  //utils.logTask(task, "wsSendTask task.processor.stateLast", task.processor.stateLast, task.processor.id);
   wsSendObject(processorId, message);
 }
 

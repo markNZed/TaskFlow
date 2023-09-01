@@ -141,7 +141,7 @@ function TaskStepper(props) {
       default:
         console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
     }
-    // Manage state.current and state.last
+    // Manage state.current
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, startTask, startTaskError, stepperNavigation, stepDone]);

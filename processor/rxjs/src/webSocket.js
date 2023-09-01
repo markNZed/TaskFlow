@@ -55,7 +55,7 @@ taskSubject
     }),
     */
     mergeMap(async (task) => {
-      utils.logTask(task, "Incoming task id " + task.id + " command " + task.processor.command);
+      utils.logTask(task, "Incoming task command:" + task.processor.command + " initiatingProcessorId:" + task.processor.initiatingProcessorId);
       const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
       // Complex event processing uses a Map of Map
       //  The outer Map matches a task identity of the task that is being processed
@@ -97,15 +97,15 @@ taskSubject
       if (COPROCESSOR) {
         utils.logTask(task, "CoProcessing task " + taskCopy.id);
         //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
-        if (task.processor.initiatingProcessorId !== processorId && !task.processor.coProcessingDone) {
-          task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+        if (task.processor.coProcessingDone) {
+          utils.logTask(task, "Skipped taskProcess coProcessingDone:", task.processor.coProcessingDone);
         } else {
-          utils.logTask(task, "Skipped taskProcess")
+          await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       } else {
         // Process the task to install the CEP
         if (task.processor.initiatingProcessorId !== processorId) {
-          task = await taskProcess_async(wsSendTask, task, CEPFuncs);
+          await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
       return taskCopy;
@@ -148,6 +148,7 @@ const wsSendTask = async function (task) {
   task.meta.prevMessageId = task.meta.messageId;
   task.meta.messageId = utils.nanoid8();
   message["task"] = task;
+  //console.log("wsSendTask state:", task?.state?.current)
   wsSendObject(message);
 }
 
@@ -219,7 +220,10 @@ const connectWebSocket = () => {
         taskSubject.next(mergedTask);
       } else {
         delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
+        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
+        // We need to update the storage for the case where an update will generate another update
+        // that second update "from here" needs to use the correct task for generating its diff
+        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
         taskSubject.next(mergedTask);
       }
     // Only the coprocessor should receive start (it is transformed into an init on the hub)

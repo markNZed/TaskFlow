@@ -77,7 +77,6 @@ const TaskSimulateUser_async = async function (wsSendTask, T) {
     case "introduction":
     case "send": {
       const entryState = T("state.current");
-      T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
@@ -118,9 +117,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T) {
         const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }
-
       // Send to sync latest outputs via Hub, should also unlock
-      T("state.last", T("state.current"));
       T("state.current", "received");
       T("commandArgs.unlock", true);
       T("command", "update");

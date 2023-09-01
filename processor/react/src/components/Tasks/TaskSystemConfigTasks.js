@@ -54,13 +54,30 @@ const TaskSystemTasksConfig = (props) => {
     switch (task.state.current) {
       case "start":
         break;
-      case "response":
+      case "loaded":
         setConfigTree(task.state.configTree);
+        // Should manage task.input from this processor
+        // General rule: if we set a field on a processor then clear it down on the same processor
+        if (task.input.selectedTaskId) {
+          modifyTask({
+            "input.selectedTaskId": null,
+            "request.selectedTaskId": task.input.selectedTaskId,
+            "command": "update",
+          })
+        }
+        break;
+      case "taskLoaded":
+        setSelectedTask(task.response.task);
+        setSelectedTaskDiff(task.response.taskDiff);
+        modifyTask({
+          "request.selectedTaskId": null,
+        })
+        nextState = "loaded";
         break;
       default:
         console.log(`${props.componentName} State Machine ERROR unknown state : `, task.state.current);
     }
-    // Manage state.current and state.last
+    // Manage state.current
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
@@ -76,8 +93,9 @@ const TaskSystemTasksConfig = (props) => {
       return;
     }
     // Assuming each node has a task and taskDiff object
-    setSelectedTask(node.task);
-    setSelectedTaskDiff(node.taskDiff);
+    modifyTask({
+      "input.selectedTaskId": node.key,
+    })
   };
 
   const handleDragEnd = ({event, node}) => {
@@ -111,9 +129,13 @@ const TaskSystemTasksConfig = (props) => {
           />
         </div>
         <div>
-          <h2>Selected Task Diff</h2>
+          <h2>Parent Diff</h2>
           {selectedTaskDiff ? (
-            <JsonEditor initialData={selectedTaskDiff} onDataChanged={handleDataChanged} />
+            <JsonEditor 
+              initialData={selectedTaskDiff} 
+              onDataChanged={handleDataChanged}
+              sortObjectKeys={true}
+            />
           ) : (
             <p>No task selected.</p>
           )}
@@ -121,7 +143,12 @@ const TaskSystemTasksConfig = (props) => {
         <div>
           <h2>Selected Task</h2>
           {selectedTask ? (
-            <JsonEditor initialData={selectedTask} onDataChanged={handleDataChanged} />
+            <JsonEditor 
+              initialData={selectedTask} 
+              onDataChanged={handleDataChanged}
+              history={true}
+              sortObjectKeys={true}
+            />
           ) : (
             <p>No task selected.</p>
           )}

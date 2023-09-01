@@ -208,7 +208,7 @@ const TaskChat = (props) => {
         }
         break;
     }
-    // Manage state.current and state.last
+    // Manage state.current
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, responseText]);

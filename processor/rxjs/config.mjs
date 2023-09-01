@@ -52,7 +52,8 @@ try {
     processorId = fs.readFileSync(processorIdFile, 'utf-8');
 } catch (e) {
     // If the file does not exist, generate a new id
-    processorId = "rxjs-" + uuidv4();
+    processorId = COPROCESSOR ? "rxjscopro-" : "rxjs-";
+    processorId += uuidv4();
     // Save the id to a file for future use
     fs.writeFileSync(processorIdFile, processorId);
 }

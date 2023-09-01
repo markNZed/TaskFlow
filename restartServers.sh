@@ -7,8 +7,8 @@ files=("hub/hub.log" "processor/nodejs/nodejs.log" "processor/rxjs/rxjs.log" "pr
 
 # Loop through the array and touch each file
 for file in "${files[@]}"; do
-  rm -f "$file"
-  echo "Removed $file"
+  truncate -s 0 "$file"
+  echo "Truncate $file"
 done
 
 files=("hub/server.js" "processor/nodejs/server.js" "processor/rxjs/server.js")

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import RequestError from './routes/RequestError.mjs';
-import { getActiveTask_async, outputStore_async, tasksStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async } from "./storage.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
@@ -42,6 +42,13 @@ function processorInHubOut(task, activeTask, requestId) {
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
   task.processors = activeTaskProcessors;
+  /*
+  // For each processor in task.processors log the stateLast
+  for (const key in task.processors) {
+    const processor = task.processors[key];
+    console.log(`Processor: ${key}, StateLast: ${processor.stateLast}`);
+  }
+  */
   task.users = activeTask?.users || {};
   task.hub = {
     command,
@@ -237,6 +244,11 @@ async function taskProcess_async(task, req, res) {
       requestId = req.id;
     }
     task = processorInHubOut(task, activeTask, requestId);
+    // Update the processor information
+    if (activeTask) {
+      activeTask.processors = task.processors;
+      await setActiveTask_async(activeTask);
+    }
     if (task.hub.command !== "partial") {
       task = checkLockConflict(task, activeTask);
       if (!task.hub.coProcessing) {

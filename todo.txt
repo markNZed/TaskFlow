@@ -1,6 +1,8 @@
 /* ToDo
 -------
-System Log Viewer broken
+Clearing of KeyV needs to be configurable
+Does keyV store meta data like updatedAt?
+Copying/editing of config
 Janssen Project for login there is a commerial offering Gluu
 Ant Design
   https://developer.okta.com/blog/2020/09/16/ant-design-react-app

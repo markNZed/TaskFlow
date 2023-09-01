@@ -64,31 +64,47 @@ async function deleteActiveTask_async(instanceId) {
 }
 
 const usersStore_async = newKeyV(redisClient, "users");
+
+const groupsStore_async = newKeyV(redisClient, "groups");
+
+const tasktypesStore_async = newKeyV(redisClient, "tasktypes");
+
+const tasksStore_async = newKeyV(redisClient, "tasks");
+
+const autoStartTasksStore_async = newKeyV(redisClient, "autoStartTasks");
+
+await Promise.all([
+  instancesStore_async.clear(),
+  familyStore_async.clear(),
+  activeTasksStore_async.clear(),
+  activeTaskProcessorsStore_async.clear(),
+  activeProcessorTasksStore_async.clear(),
+  outputStore_async.clear(),
+  usersStore_async.clear(),
+  groupsStore_async.clear(),
+  tasktypesStore_async.clear(),
+  tasksStore_async.clear(),
+  autoStartTasksStore_async.clear(),
+]);
+console.log("Cleared all KeyV");
+
 for (const [key, value] of Object.entries(users)) {
   usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
 }
-
-const groupsStore_async = newKeyV(redisClient, "groups");
 for (const [key, value] of Object.entries(groups)) {
   groupsStore_async.set(key, value).catch(err => console.log('groupsStore_async set error:', err));
 }
-
-const tasktypesStore_async = newKeyV(redisClient, "tasktypes");
 for (const [key, value] of Object.entries(tasktypes)) {
   tasktypesStore_async.set(key, value).catch(err => console.log('tasktypesStore_async set error:', err));
 }
-
-const tasksStore_async = newKeyV(redisClient, "tasks");
 for (const [key, value] of Object.entries(tasks)) {
   tasksStore_async.set(key, value).catch(err => console.log('tasksStore_async set error:', err));
 }
-
-const autoStartTasksStore_async = newKeyV(redisClient, "autoStartTasks");
-console.log("autoStartTasks", autoStartTasks);
 for (const [key, value] of Object.entries(autoStartTasks)) {
-  console.log("autoStartTasks", key, value);
   autoStartTasksStore_async.set(key, value).catch(err => console.log('autoStartTasksStore_async set error:', err));
 }
+
+console.log("Initialized usersStore_async, groupsStore_async, tasktypesStore_async, tasksStore_async, autoStartTasksStore_async");
 
 export {
   instancesStore_async,

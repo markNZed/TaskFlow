@@ -13,6 +13,7 @@ export async function taskProcess_async(wsSendTask, task) {
   let updatedTask = {};
   if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
     try {
+      task = utils.processorInTaskOut(task);
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
       const T = utils.createTaskValueGetter(task);

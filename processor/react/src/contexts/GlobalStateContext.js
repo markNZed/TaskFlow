@@ -22,7 +22,8 @@ export function GlobalStateProvider({ children }) {
     langModel: "gpt-3.5-turbo",
     temperature: 0,
     maxTokens: 4000,
-    maxWidth: "800px",
+    maxWidth: "100%",
+    maxWidthDefault: "100%",
   };
 
   const [globalState, setGlobalState] = useState(globalStateInit);

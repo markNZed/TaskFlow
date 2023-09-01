@@ -385,7 +385,7 @@ function withTask(Component) {
             })
           )
         );
-      } else if (props.task.state.current != props.task.state.last) {
+      } else if (props.task.state.current !== props.task.state.last) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }

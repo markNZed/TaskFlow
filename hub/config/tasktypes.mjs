@@ -4,7 +4,7 @@ import { CACHE_ENABLE, REDIS_URL } from "../config.mjs";
 const tasktypes = [
   {
     name: "TaskSystemConfigTasks",
-    environments: ["react", "rxjscopro"],
+    environments: ["react", "rxjs"],
     config: {
       redisUrl: REDIS_URL,
     },

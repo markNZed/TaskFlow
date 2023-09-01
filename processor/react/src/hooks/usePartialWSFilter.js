@@ -3,7 +3,6 @@ import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketCon
 
 function usePartialWSFilter(initialTask, onMessage) {
 
-
   const [instanceId, setInstanceId] = useState();
 
   const handleMessage = (task) => {
@@ -17,7 +16,8 @@ function usePartialWSFilter(initialTask, onMessage) {
     // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
   useEffect(() => {
-    if (initialTask?.instanceId) {
+    if (initialTask?.instanceId && initialTask.instanceId !== instanceId) {
+      console.log("initialTask?.instanceId", initialTask?.instanceId, instanceId);
       setInstanceId(initialTask.instanceId);
     }
   }, [initialTask]);

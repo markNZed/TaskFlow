@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
+import { utils } from "../utils/utils";
 
 // The wbsocket is re-rendering which causes the useUpdateWSFilter to rerender which
 // loses the state, so can't remember the task
@@ -30,6 +31,7 @@ function useUpdateWSFilter(isMountedRef, initialTask, onUpdate) {
           //console.log("useUpdateWSFilter handleUpdate calling onUpdate", taskUpdate);
           // Important to wait so that the task is saved to storage before it is retrieved again
           processingRef.current = true;
+          message.task = utils.processorInTaskOut(message.task);
           await onUpdate(message.task);
           delete messageQueue[key];
           processingRef.current = false;

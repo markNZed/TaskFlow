@@ -51,7 +51,6 @@ const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPF
     // On the React processor queries can be sent from the query state
     // here we transition to the query state that indicates this processor is ready
     case "start":
-      T("state.last", T("state.current"));
       T("state.current", "query");
       break;
     // Process a query
@@ -62,7 +61,6 @@ const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPF
         utils.logTask(T(), "Returned total", total);
         T("response.tasks", tasks);
         T("response.total", total);
-        T("state.last", T("state.current"));
         T("state.current", "response");
         let queryHistory = T("state.queryHistory");
         let queryHistoryPtr = T("state.queryHistoryPtr");

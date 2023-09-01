@@ -24,7 +24,6 @@ const TaskGeneratePersona_async = async function (wsSendTask, T) {
       T("output.summary", subTask.response.LLM);
       T("request.service.forget", forget);
       T("state.request", {}); // clear - do we need to do this here?
-      T("state.last", T("state.current"));
       T("state.current", "generated");
       T("command", "update");
       break;

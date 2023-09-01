@@ -88,7 +88,7 @@ function Taskflows(props) {
       setTitle(globalState.taskflowsTree[selectedTaskId].label);
       replaceGlobalState("selectedTaskId", null);
       replaceGlobalState("lastSelectedTaskId", selectedTaskId);
-      replaceGlobalState("maxWidth", "800px");
+      replaceGlobalState("maxWidth", globalState.maxWidthDefault);
       replaceGlobalState("xStateDevTools", false);
     }
     // If we only have one start task and the Processor has registered with the hub

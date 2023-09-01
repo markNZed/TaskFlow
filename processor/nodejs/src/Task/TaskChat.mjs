@@ -75,7 +75,6 @@ const TaskChat_async = async function (wsSendTask, T) {
   switch (T("state.current")) {
     case "mentionAddress":
     case "send": { // create code block to avoid linting issue with declaring const in the block
-      T("state.last", T("state.current"));
       T("state.current", "receiving");
       T("output.sending", false);
       T("commandArgs.lockBypass", true);
@@ -87,7 +86,6 @@ const TaskChat_async = async function (wsSendTask, T) {
       const subTask = await SubTaskLLM_async(wsSendTask, T());
       T("response.LLMResponse", subTask.response.LLM);
       T("request.prompt", null);
-      T("state.last", T("state.current"));
       T("state.current", "received");
       T("commandArgs.lockBypass", true);
       T("command", "update");

@@ -58,6 +58,14 @@ const taskDataStore_async = newKeyV(redisClient, keyvPrefix + "taskData");
 
 const tasksStore_async = newKeyV(redisClient, "tasks"); // This is shared with Hub
 
+await Promise.all([
+  cacheStore_async.clear(),
+  activeTasksStore_async.clear(),
+  taskDataStore_async.clear(),
+  //tasksStore_async.clear(), We do not clear this because it is controlled by Hub
+]);
+console.log("Cleared all KeyV");
+
 export {
   cacheStore_async,
   activeTasksStore_async,
