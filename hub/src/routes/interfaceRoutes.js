@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { utils } from "../utils.mjs";
-import { usersStore_async, groupsStore_async, tasksStore_async } from "../storage.mjs";
+import { usersStore_async } from "../storage.mjs";
 import { hubId } from "../../config.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();

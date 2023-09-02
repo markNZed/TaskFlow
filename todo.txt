@@ -1,6 +1,8 @@
 /* ToDo
 -------
-processor.shared in README
+Ability to move configurations
+  Requires mods to the meta etc - not so simple
+Copy of configurations should be easier 
 Deleting the taskConfig with diff changes is problematic
   It is an array so setting to null is not enough
   Could have similar issues with menu tree

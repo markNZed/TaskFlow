@@ -92,14 +92,14 @@ const TaskSystemTasksConfig = (props) => {
         }
         break;
       case "actionDone":
+          modifyTask({
+            "request.action": null,
+            "request.actionId": null,
+          })
           if (task.request.action === "read") {
             setSelectedTask(task.response.task);
             setSelectedTaskDiff(task.response.taskDiff);
           } else {
-            modifyTask({
-              "request.action": null,
-              "request.actionId": null,
-            })
             // Here we should refresh the TaskSystemMenu
             if (task.processor.shared.menuInstanceId) {
               const syncTask = {

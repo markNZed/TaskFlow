@@ -28,6 +28,8 @@ The Task Processor abstraction is useful during development. For example, create
 
 A Task Processor provides Task Functions which may be further decomposed into finite state machines (FSM), SubTasks, Services. The `task.fsm` object provides an XState representation of a statee machine. A Task can be configured to us a particular state machine. SubTasks are functions that receive a Task as input and return a Task as output. Services typically wrap a 3rd party API.
 
+The object `task.processor.shared` provides a "global" space for data to be shared with all Tasks on the processor (other fields of `task.processor`` may be Task specific).
+
 ## Sharing Task Functionality
 
 In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 

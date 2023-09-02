@@ -87,28 +87,26 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
         configTreeUpdatedAt = Date();
         done = true;
       } else if (action === "create") {
-        if (!await taskRead_async(actionId + ".new")) {
-          const newTask = await taskRead_async(actionId);
-          newTask.meta = newTask.meta || {};
-          newTask.meta.childrenId = [];
-          newTask.meta.parentId = newTask.id;
-          newTask.id += ".new";
-          newTask.parentName = newTask.name;
-          newTask.name += "new";
-          newTask.config = newTask.config || {};
-          newTask.config.label = newTask.config.label || "";
-          newTask.config.label += " NEW";
-          await taskCreate_async(newTask);
-          const parentTask = await taskRead_async(actionId);
-          parentTask.meta.childrenId = parentTask.meta.childrenId || [];
-          parentTask.meta.childrenId.push(newTask.id);
-          await taskUpdate_async(parentTask);
-          console.log("create ", newTask.id);
-          configTreeUpdatedAt = Date();
-          done = true;
-        } else {
-          console.log("duplicate id", actionId + ".new");
-        }
+        const newTask = await taskRead_async(actionId);
+        const childrenCount = newTask.meta.childrenId ? newTask.meta.childrenId.length : 0;
+        const postfix = "new" + childrenCount;
+        newTask.meta = newTask.meta || {};
+        newTask.meta.childrenId = [];
+        newTask.meta.parentId = newTask.id;
+        newTask.id += "." + postfix;
+        newTask.parentName = newTask.name;
+        newTask.name += postfix;
+        newTask.config = newTask.config || {};
+        newTask.config.label = newTask.config.label || "";
+        newTask.config.label += " " + postfix;
+        await taskCreate_async(newTask);
+        const parentTask = await taskRead_async(actionId);
+        parentTask.meta.childrenId = parentTask.meta.childrenId || [];
+        parentTask.meta.childrenId.push(newTask.id);
+        await taskUpdate_async(parentTask);
+        console.log("create ", newTask.id);
+        configTreeUpdatedAt = Date();
+        done = true;
       }
       if (done) {
         [nodesById, configTree] = await m_buildTree_async(configTreeUpdatedAt);
