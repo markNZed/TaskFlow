@@ -105,11 +105,6 @@ function App({ activeWorkerCount, workerId }) {
         const user = data.user;
         mergeGlobalState({ user });
         console.log("Set user: ", user);
-        // Should have a separate API
-        if (data?.taskflowsTree) {
-          const taskflowsTree = data.taskflowsTree;
-          mergeGlobalState({ taskflowsTree });
-        }
       } catch (err) {
         console.log(err.message);
       }

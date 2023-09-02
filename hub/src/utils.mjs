@@ -127,34 +127,6 @@ const utils = {
     return text;
   },
 
-  filter_in_list: function (task, filter_list) {
-    const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
-    for (const key in taskCopy) {
-      if (!filter_list.includes(key)) {
-        delete taskCopy[key];
-      }
-    }
-    return taskCopy;
-  },
-
-  authenticatedTask_async: async function (task, userId, groupsStore_async) {
-    let authenticated = false;
-    if (task?.permissions) {
-      for (const group_name of task.permissions) {
-        let group = await groupsStore_async.get(group_name);
-        if (!group?.users) {
-          console.log("Group " + group_name + " has no users", group);
-        } else if (group.users.includes(userId)) {
-          authenticated = true;
-        }
-      }
-    } else {
-      authenticated = true;
-    }
-    //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
-    return authenticated;
-  },
-
   capitalizeFirstLetter: function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },

@@ -23,53 +23,98 @@ ToDo:
 
 function TaskSystemMenu(props) {
 
-    const { globalState } = useGlobalStateContext();
-    const [mobileViewOpen, setMobileViewOpen] = useState(false);
-    const [drawWidth, setDrawWidth] = useState(220);
+  const {
+    log,
+    task,
+    modifyTask,
+    onDidMount,
+  } = props;
 
-    const handleToggle = () => {
-        setMobileViewOpen(!mobileViewOpen);
-      };
+  // onDidMount so any initial conditions can be established before updates arrive
+  onDidMount();
 
-    return (
-      <>
-        <div style={{ width: '100%', height: '100%' }}>
-          <Drawer
-            variant="temporary"
-            open={mobileViewOpen}
-            onClose={handleToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
-            sx={{
-              display: { xs: "block", sm: "none" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawWidth,
-                position: 'relative', // override fixed position
-              },
-            }}
-          >
-            <SideMenu onClose={handleToggle} interfaceType={globalState.user?.interface} />
-          </Drawer>
+  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const [mobileViewOpen, setMobileViewOpen] = useState(false);
+  const [drawWidth, setDrawWidth] = useState(220);
+  const [tasksTree, setTasksTree] = useState([]);
 
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawWidth,
-                position: 'relative', // override fixed position
-              },
-            }}
-            open
-          >
-            <SideMenu onClose={() => (null)}  interfaceType={globalState.user?.interface}/>
-          </Drawer>
-        </div>
-      </>  
-    )
+  // Task state machine
+  useEffect(() => {
+    // modifyState may have been called by not yet updated test.state.current
+    if (!props.checkIfStateReady()) {return}
+    let nextState; 
+    // Log each transition, other events may cause looping over a state
+    if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
+    switch (task.state.current) {
+      case "start":
+        break;
+      case "loaded":
+        setTasksTree(task.state.tasksTree);
+        replaceGlobalState("tasksTree", task.state.tasksTree); // mergeGlobalState did not delete ?
+        //console.log("task.state.tasksTree", task.state.tasksTree);
+        nextState = "ready";
+        break;
+      case "ready":
+        if (task.input.update) {
+          modifyTask({
+            "input.update": null,
+            "state.current": "start", // Refresh the menu
+            "command": "update",
+            "state.tasksTree" : null, // Hack around array delete is not working
+          })
+        }
+        break;
+      default:
+        console.log(`${props.componentName} State Machine ERROR unknown state : `, task.state.current);
+    }
+    // Manage state.current
+    props.modifyState(nextState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task]);
+
+  const handleToggle = () => {
+      setMobileViewOpen(!mobileViewOpen);
+  };
+
+  return (
+    <>
+      <div style={{ width: '100%', height: '100%' }}>
+        <Drawer
+          variant="temporary"
+          open={mobileViewOpen}
+          onClose={handleToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawWidth,
+              position: 'relative', // override fixed position
+            },
+          }}
+        >
+          <SideMenu onClose={handleToggle} interfaceType={globalState.user?.interface} />
+        </Drawer>
+
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawWidth,
+              position: 'relative', // override fixed position
+            },
+          }}
+          open
+        >
+          <SideMenu onClose={() => (null)}  interfaceType={globalState.user?.interface}/>
+        </Drawer>
+      </div>
+    </>  
+  )
     
 }
 

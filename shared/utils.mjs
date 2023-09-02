@@ -420,7 +420,7 @@ const utils = {
 
   processorActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta = task.meta || {};
-    delete task.processor.origTask; // delete so we do not have ans old copy in origTask
+    delete task.processor.origTask; // delete so we do not have an old copy in origTask
     task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
@@ -634,6 +634,8 @@ const utils = {
     if (task.commandArgs) {
       // Deep copy because we are going to clear
       task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
+    } else {
+      task.processor["commandArgs"] = null;
     }
     delete task.commandArgs
     // Record the state of the task as it leaves the processor
@@ -743,6 +745,34 @@ const utils = {
         config[key]["id"] = key;
       }
     }
+  },
+
+  filter_in_list: function (task, filter_list) {
+    const taskCopy = { ...task }; // or const objCopy = Object.assign({}, obj);
+    for (const key in taskCopy) {
+      if (!filter_list.includes(key)) {
+        delete taskCopy[key];
+      }
+    }
+    return taskCopy;
+  },
+
+  authenticatedTask_async: async function (task, userId, groupsStore_async) {
+    let authenticated = false;
+    if (task?.permissions) {
+      for (const group_name of task.permissions) {
+        let group = await groupsStore_async.get(group_name);
+        if (!group?.users) {
+          console.log("Group " + group_name + " has no users");
+        } else if (group.users.includes(userId)) {
+          authenticated = true;
+        }
+      }
+    } else {
+      authenticated = true;
+    }
+    //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
+    return authenticated;
   },
 
 };

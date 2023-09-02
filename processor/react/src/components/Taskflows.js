@@ -45,8 +45,11 @@ function Taskflows(props) {
   const [hideSide, setHideSide] = useState(false);
   const [drawWidth, setDrawWidth] = useState(220);
   const [counter, setCounter] = useState(0);
+  const [init, setInit] = useState(false);
+  const [taskMenu, setTaskMenu] = useState();
 
   const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
+  const taskMenuId = "root.system.menu"; // This should be a config of a Task
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
@@ -85,7 +88,7 @@ function Taskflows(props) {
       } else {
         setTasksIdx(index);
       }
-      setTitle(globalState.taskflowsTree[selectedTaskId].label);
+      setTitle(globalState.tasksTree[selectedTaskId].label);
       replaceGlobalState("selectedTaskId", null);
       replaceGlobalState("lastSelectedTaskId", selectedTaskId);
       replaceGlobalState("maxWidth", globalState.maxWidthDefault);
@@ -105,11 +108,29 @@ function Taskflows(props) {
   }, [globalState]);
 
   useEffect(() => {
+    // Load the system menu once we have the user and processorId
+    if (!init && globalState.user && globalState?.processorId) {
+      setTask({
+        command: "start",
+        commandArgs: {
+          id: taskMenuId,
+        }
+      });
+      setInit(true);
+    }
+  }, [globalState?.user, globalState?.processorId]);
+
+  useEffect(() => {
     if (startTask) {
-      setTasksIdx(tasks.length);
-      setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
-      setTasksIds((p) => [...p, startTask.id]);
-      setTaskKeys((p) => [...p, startTask.instanceId]);
+      if (startTask.id === taskMenuId) {
+        setTaskMenu(startTask);
+        replaceGlobalState("menuInstanceId", startTask.instanceId);
+      } else {
+        setTasksIdx(tasks.length);
+        setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
+        setTasksIds((p) => [...p, startTask.id]);
+        setTaskKeys((p) => [...p, startTask.instanceId]);
+      }
     }
   }, [startTask]);
 
@@ -175,37 +196,15 @@ function Taskflows(props) {
             ...(hideSide && { display: "none" }),
           }}
         >
-          <Drawer
-            variant="temporary"
-            open={mobileViewOpen}
-            onClose={handleToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
-            sx={{
-              display: { xs: "block", sm: "none" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawWidth,
-              },
-            }}
-          >
-            <SideMenu onClose={handleToggle} interfaceType={globalState.user?.interface} />
-          </Drawer>
-
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawWidth,
-              },
-            }}
-            open
-          >
-            <SideMenu onClose={() => (null)}  interfaceType={globalState.user?.interface}/>
-          </Drawer>
+          {taskMenu && (
+            <DynamicComponent
+              key={taskMenu.instanceId}
+              is={taskMenu.type}
+              task={taskMenu}
+              setTask={setTaskMenu}
+              parentTask={null}
+          />
+          )}
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>

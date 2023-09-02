@@ -55,7 +55,12 @@ const tasks = [
     },
     parentName: "config",
     type: "TaskSystemConfigTasks"
-  }, 
+  },
+  {
+    name: "menu",
+    parentName: "system",
+    type: "TaskSystemMenu"
+  },
 
   {
     name: "conversation",

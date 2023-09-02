@@ -56,7 +56,14 @@ const activeTasksStore_async = newKeyV(redisClient, keyvPrefix + "activeTasks");
 //   Value: data object
 const taskDataStore_async = newKeyV(redisClient, keyvPrefix + "taskData");
 
-const tasksStore_async = newKeyV(redisClient, "tasks"); // This is shared with Hub
+const tasksStore_async = newKeyV(redisClient, "tasks"); // Shared with Hub
+
+const usersStore_async = newKeyV(redisClient, "users"); // Shared with Hub
+
+const groupsStore_async = newKeyV(redisClient, "groups"); // Shared with Hub
+
+const tasktypesStore_async = newKeyV(redisClient, "tasktypes"); // Shared with Hub
+
 
 await Promise.all([
   cacheStore_async.clear(),
@@ -74,4 +81,7 @@ export {
   activeTaskFsm,
   db,
   tasksStore_async,
+  usersStore_async,
+  groupsStore_async,
+  tasktypesStore_async,
 };

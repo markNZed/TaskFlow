@@ -40,8 +40,8 @@ function TaskflowTree({ onClose }) {
 
   function countSubtreeLeafNodes() {
     let leafCountLocal = 0;
-    Object.keys(globalState.taskflowsTree).forEach((nodeId) => {
-      if (globalState.taskflowsTree[nodeId].leaf === true) {
+    Object.keys(globalState.tasksTree).forEach((nodeId) => {
+      if (globalState.tasksTree[nodeId].leaf === true) {
         leafCountLocal++;
       }
     });
@@ -51,7 +51,7 @@ function TaskflowTree({ onClose }) {
 
   useEffect(() => {
     if (
-      globalState.taskflowsTree &&
+      globalState.tasksTree &&
       globalState?.taskflowLeafCount !== leafCount
     ) {
       countSubtreeLeafNodes();
@@ -102,7 +102,7 @@ function TaskflowTree({ onClose }) {
       if (!initiator) {
         return "";
       }
-      globalState.taskflowsTree[id].leaf = true;
+      globalState.tasksTree[id].leaf = true;
       if (propagateDefault && node?.default) {
         handleSelectNode(null, node);
       }
@@ -117,7 +117,7 @@ function TaskflowTree({ onClose }) {
     }
   }
 
-  if (!globalState.taskflowsTree || !globalState?.hubId) {
+  if (!globalState.tasksTree || !globalState?.hubId) {
     return <div>Loading...</div>;
   }
 
@@ -130,7 +130,7 @@ function TaskflowTree({ onClose }) {
         expanded={expanded}
         onNodeToggle={handleToggle}
       >
-        {renderTree(globalState.taskflowsTree, "root", handleSelectNode, true)}
+        {renderTree(globalState.tasksTree, "root", handleSelectNode, true)}
       </TreeView>
     </div>
   );

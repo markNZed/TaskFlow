@@ -27,7 +27,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     } else if (task.processor["command"] === "start") {
       utils.logTask(task, "RxJS Task Processor start so skipping Task Fuction id:" + task.id);
       updatedTask = task;
-    } else if (task.processor?.commandArgs?.sync) {
+    } else if (COPROCESSOR && task.processor?.commandArgs?.sync) {
       utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (taskFunctions && taskFunctions[`${task.type}_async`]) {

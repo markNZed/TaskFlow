@@ -1,6 +1,23 @@
 /* ToDo
 -------
-Menu needs to become a Task - then we can update it easily
+processor.shared in README
+Deleting the taskConfig with diff changes is problematic
+  It is an array so setting to null is not enough
+  Could have similar issues with menu tree
+    A workaround could be deleting the old version so diff is not sent
+  Need a better solution for this but it would be another big change
+    Get config mods working first
+How do we drive the input of another task without UI ?
+  New command 
+    "input" which drives local task
+      Use this instead of sync in TaskSystemTasksConfig
+      How to implement ? 
+        Through globalContext ? 
+          A taskContext with a selector based on instanceId
+Create a TaskSystemContainer on React that will do most of what Taskflows.js does
+  Then we can configure it
+  Should not have a familyId ? (allowing children to create their own)
+Check if keyv/redis has iterator
 Clearing of KeyV needs to be configurable
 Does keyV store meta data like updatedAt?
 Copying/editing of config

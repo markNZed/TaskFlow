@@ -33,7 +33,6 @@ const TaskSystemTasksConfig = (props) => {
   const [selectedTaskDiff, setSelectedTaskDiff] = useState(null);
   const [rightClickedNode, setRightClickedNode] = useState(null);
 
-
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
 
@@ -64,14 +63,19 @@ const TaskSystemTasksConfig = (props) => {
         if (task.input.selectedTaskId) {
           modifyTask({
             "input.selectedTaskId": null,
-            "request.selectedTaskId": task.input.selectedTaskId,
+            "request.action" : "read",
+            "request.actionId": task.input.selectedTaskId,
+            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           })
         }
         if (task.input.submit && editedTask) {
           modifyTask({
             "input.submit": null,
-            "request.taskUpdate": editedTask,
+            "request.action" : "update",
+            "request.actionId": editedTask.id,
+            "request.actionTask": editedTask,
+            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           });
           setEditedTask(null);
@@ -82,31 +86,37 @@ const TaskSystemTasksConfig = (props) => {
             "input.actionId": null,
             "request.action": task.input.action,
             "request.actionId": task.input.actionId,
+            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           });
         }
         break;
       case "actionDone":
-          modifyTask({
-            "request.action": null,
-            "request.actionId": null,
-          })
+          if (task.request.action === "read") {
+            setSelectedTask(task.response.task);
+            setSelectedTaskDiff(task.response.taskDiff);
+          } else {
+            modifyTask({
+              "request.action": null,
+              "request.actionId": null,
+            })
+            // Here we should refresh the TaskSystemMenu
+            if (task.processor.shared.menuInstanceId) {
+              const syncTask = {
+                instanceId: task.processor.shared.menuInstanceId,
+                input: { update: true},
+              }
+              modifyTask({
+                "command": "update",
+                "commandArgs": {
+                  sync: true,
+                  syncTask,
+                }
+              })
+            }
+          }
           nextState = "loaded";
           break;
-      case "taskUpdated":
-        modifyTask({
-          "request.taskUpdate": null,
-        })
-        nextState = "loaded";
-        break;
-      case "taskLoaded":
-        setSelectedTask(task.response.task);
-        setSelectedTaskDiff(task.response.taskDiff);
-        modifyTask({
-          "request.selectedTaskId": null,
-        })
-        nextState = "loaded";
-        break;
       default:
         console.log(`${props.componentName} State Machine ERROR unknown state : `, task.state.current);
     }
