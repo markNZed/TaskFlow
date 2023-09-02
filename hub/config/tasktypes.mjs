@@ -3,6 +3,16 @@ import { CACHE_ENABLE, REDIS_URL } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskSystemMenu",
+    environments: ["react", "rxjs"],
+    config: {
+      redisUrl: REDIS_URL,
+    },
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskSystemConfigTasks",
     environments: ["react", "rxjs"],
     config: {

@@ -8,6 +8,43 @@ import { tasksStore_async } from "../../storage.mjs";
 
 // We want CRUD operations for the config
 
+export const taskCreate_async = async (task) => {
+  // Need to delete branch
+  return tasksStore_async.set(task.id, task);
+}
+
+export const taskRead_async = async (id) => {
+  // Need to delete branch
+  return tasksStore_async.get(id);
+}
+
+export const taskDelete_async = async (id) => {
+  // Need to delete branch
+  return tasksStore_async.delete(id);
+}
+
+export const taskUpdate_async = async (task) => {
+  // Need to delete branch
+  return tasksStore_async.set(task.id, task);
+}
+
+export const getAllChildrenOfNode = (nodeId, nodesById) => {
+  const result = [];
+  const traverseChildren = (currentNode) => {
+    if (currentNode.children && currentNode.children.length > 0) {
+      currentNode.children.forEach(child => {
+        result.push(child);
+        traverseChildren(nodesById[child.key]);
+      });
+    }
+  };
+  const startNode = nodesById[nodeId];
+  if (startNode) {
+    traverseChildren(startNode);
+  }
+  return result;
+};
+
 export const buildTree_async = async () => {
 
   // Object to hold nodes by their id for quick access
@@ -59,6 +96,6 @@ export const buildTree_async = async () => {
     nodesById[parentId].children.push(node);
   }
   
-  return [nodesById.root];
+  return [nodesById, [nodesById.root]];
 };
 

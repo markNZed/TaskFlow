@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useEffect, useState } from "react";
 import withTask from "../../hoc/withTask";
 import JsonEditor from '../Generic/JsonEditor.js'
-import { message, Alert, ConfigProvider, theme, Tree } from 'antd';
+import { message, Alert, ConfigProvider, theme, Tree, Spin, Button, Menu, Dropdown } from 'antd';
 
 /*
 Task Process
@@ -29,7 +29,10 @@ const TaskSystemTasksConfig = (props) => {
   const [configTree, setConfigTree] = useState([]);
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTask, setSelectedTask] = useState(null);
+  const [editedTask, setEditedTask] = useState(null);
   const [selectedTaskDiff, setSelectedTaskDiff] = useState(null);
+  const [rightClickedNode, setRightClickedNode] = useState(null);
+
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
@@ -65,6 +68,36 @@ const TaskSystemTasksConfig = (props) => {
             "command": "update",
           })
         }
+        if (task.input.submit && editedTask) {
+          modifyTask({
+            "input.submit": null,
+            "request.taskUpdate": editedTask,
+            "command": "update",
+          });
+          setEditedTask(null);
+        }
+        if (task.input.action) {
+          modifyTask({
+            "input.action": null,
+            "input.actionId": null,
+            "request.action": task.input.action,
+            "request.actionId": task.input.actionId,
+            "command": "update",
+          });
+        }
+        break;
+      case "actionDone":
+          modifyTask({
+            "request.action": null,
+            "request.actionId": null,
+          })
+          nextState = "loaded";
+          break;
+      case "taskUpdated":
+        modifyTask({
+          "request.taskUpdate": null,
+        })
+        nextState = "loaded";
         break;
       case "taskLoaded":
         setSelectedTask(task.response.task);
@@ -87,12 +120,10 @@ const TaskSystemTasksConfig = (props) => {
   }, [selectedTask]);
 
   const handleTreeSelect = (selectedKeys, info) => {
-    console.log('onSelect', selectedKeys, info);
     const {selected, selectedNodes, node, event} = info;
     if (selectedKeys.length === 0) {
       return;
     }
-    // Assuming each node has a task and taskDiff object
     modifyTask({
       "input.selectedTaskId": node.key,
     })
@@ -102,13 +133,43 @@ const TaskSystemTasksConfig = (props) => {
     console.log('onDragEnd', event, node);
   }
 
-  const handleRightClick = ({event, node}) => {
-    console.log('onRightClick', event, node);
-  }
-
   const handleDataChanged = (newData) => {
     console.log('Edited JSON data:', newData);
+    setEditedTask(newData);
   };
+
+  const handleRightClick = ({ event, node }) => {
+    event.preventDefault();
+    setRightClickedNode(node);
+  };
+
+  const handleTaskSubmit = () => {
+    if (selectedTask) {
+      modifyTask({
+        "input.submit": true,
+      });
+    }
+  };
+
+  const items = [
+    {
+      label: 'Delete',
+      key: 'delete',
+    },
+    {
+      label: 'Create',
+      key: 'create',
+    },
+  ];
+
+  const handleMenuClick = ({ item, key, keyPath, domEvent }) => {
+    //console.log("rightClickedNode", rightClickedNode);
+    //console.log("item, key, keyPath, domEvent", item, key, keyPath, domEvent);
+    modifyTask({
+      "input.action": key,
+      "input.actionId": rightClickedNode.key,
+    });
+  }
 
   return (
     <>
@@ -119,15 +180,25 @@ const TaskSystemTasksConfig = (props) => {
           token: { colorPrimary: '#000000' }
       }}>
         <div>
-          <Tree
-            treeData={configTree}
-            onSelect={handleTreeSelect}
-            draggable={true}
-            selectable={true}
-            onDragEnd={handleDragEnd}
-            onRightClick={handleRightClick}
-          />
+          <Dropdown 
+            menu={{ 
+              items, 
+              onClick: handleMenuClick,
+            }} 
+            trigger={['contextMenu']} 
+            placement={"bottomLeft"}
+          >
+            <Tree
+              treeData={configTree}
+              onSelect={handleTreeSelect}
+              draggable={true}
+              selectable={true}
+              onDragEnd={handleDragEnd}
+              onRightClick={handleRightClick}
+            />
+          </Dropdown>
         </div>
+        {/*
         <div>
           <h2>Parent Diff</h2>
           {selectedTaskDiff ? (
@@ -140,18 +211,56 @@ const TaskSystemTasksConfig = (props) => {
             <p>No task selected.</p>
           )}
         </div>
+        */}
         <div>
-          <h2>Selected Task</h2>
-          {selectedTask ? (
-            <JsonEditor 
-              initialData={selectedTask} 
-              onDataChanged={handleDataChanged}
-              history={true}
-              sortObjectKeys={true}
-            />
-          ) : (
-            <p>No task selected.</p>
+          <div>
+            {selectedTask ? (
+              <JsonEditor 
+                initialData={selectedTask} 
+                onDataChanged={handleDataChanged}
+                history={true}
+                sortObjectKeys={true}
+              />
+            ) : (
+              task.request.selectedTaskId ? (
+                <Spin />
+              ) : (
+                null
+              )
+            )}
+          </div>
+          <div>
+            { (selectedTask) ? (
+              <Button type="primary" onClick={handleTaskSubmit}>Submit</Button>
+            ) : (
+              task.request.selectedTaskId ? (
+                null
+              ) : (
+                <p>No task selected.</p>
+              )
+            )}
+          </div>
+          {/*
+          {contextMenuVisible && (
+            <Dropdown
+              menu={<RightClickMenu onDelete={handleDelete} />}
+              trigger={['click']}
+              open={true}
+              onOpenChange={(visible) => setContextMenuVisible(visible)}
+              getPopupContainer={() => document.body}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: `${menuPosition.y}px`,
+                  left: `${menuPosition.x}px`,
+                }}
+              >
+                <span style={{ opacity: 0 }}>.</span>
+              </div>
+            </Dropdown>
           )}
+          */}
         </div>
       </ConfigProvider>
     </>

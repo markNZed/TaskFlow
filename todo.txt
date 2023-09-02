@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Menu needs to become a Task - then we can update it easily
 Clearing of KeyV needs to be configurable
 Does keyV store meta data like updatedAt?
 Copying/editing of config
