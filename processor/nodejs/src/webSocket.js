@@ -54,7 +54,6 @@ const connectWebSocket = () => {
     console.log("processorWs.onOpen");
     processorWs.data = {};
     processorWs.data["didStart"] = true;
-    register_async();
     // reset connection attempts on successful connection
     connectionAttempts = 0;
     wsSendTask(utils.taskPing());

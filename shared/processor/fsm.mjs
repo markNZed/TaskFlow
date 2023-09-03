@@ -63,7 +63,7 @@ const loadFsmModule_async = async (task) => {
     return fsmConfig;
   } catch (error) {
     if (error.message.includes("Cannot find module")) {
-      console.log(`Failed to load FSM at ${'../fsm/' + importPath}`);
+      //console.log(`Failed to load FSM at ${'../fsm/' + importPath}`);
     } else {
       console.error(`Failed to load FSM at ${'../fsm/' + importPath}`, error);
       throw error;

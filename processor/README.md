@@ -30,6 +30,8 @@ A Task Processor provides Task Functions which may be further decomposed into fi
 
 The object `task.processor.shared` provides a "global" space for data to be shared with all Tasks on the processor (other fields of `task.processor`` may be Task specific).
 
+The startup seequence involves the Task Processor requesting a websocket connection, then the Task Hub will send a "register" command and there is an HTTP request/response that registers the Task Processor details. This will eventually be replaced with a System Task.
+
 ## Sharing Task Functionality
 
 In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 

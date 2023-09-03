@@ -22,6 +22,19 @@ const tasks = [
   },
 
   {
+    name: "systemshared",
+    config: {
+      ceps: {
+        ".*instance.*": {
+          isRegex: true,
+          functionName: "CEPShared",
+        },
+      },
+    },
+    parentName: "system",
+    type: "TaskSystemShared"
+  },
+  {
     name: "systemlog",
     config: {
       ceps: {

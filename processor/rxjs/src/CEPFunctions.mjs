@@ -11,6 +11,7 @@ import { utils } from "./utils.mjs";
 const CEPFunctions = {
 
   register: function(functionName, func) {
+    console.log("CEPFunctions register", functionName);
     if (typeof func === "function") {
       CEPFunctions[functionName] = func;
     }

@@ -44,6 +44,17 @@ const tasktypes = [
     },
   },
   {
+    name: "TaskSystemShared",
+    environments: ["rxjscopro"],
+    config: {
+      autoStartEnvironment: "rxjscopro",
+      autoStartCoProcessor: true,
+    },
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskSystemLog",
     environments: ["rxjscopro"],
     config: {

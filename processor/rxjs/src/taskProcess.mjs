@@ -41,12 +41,14 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     }
     // Create the CEP during the init of the task
     if (task.processor["command"] === "init") {
-      // How about overriding a match. createCEP needs more review/testing
-      // Create two functions
-      if (task.config?.ceps) {
-        for (const key in task.config.ceps) {
-          if (task.config.ceps[key]) {
-            utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
+      if (!COPROCESSOR || (COPROCESSOR && !task.processor.coProcessingDone)) {
+        // How about overriding a match. createCEP needs more review/testing
+        // Create two functions
+        if (task.config?.ceps) {
+          for (const key in task.config.ceps) {
+            if (task.config.ceps[key]) {
+              utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
+            }
           }
         }
       }

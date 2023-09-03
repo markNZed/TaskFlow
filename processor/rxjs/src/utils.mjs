@@ -106,11 +106,11 @@ const utils = {
     const args = config.args;
     const CEPFunc = CEPFunctions.get(functionName);
     // Check if the Map has an entry for match
-    if (!task.familyId) {
-      console.log("task", task);
-      throw new Error("task.familyId is undefined");
-    }
     let origMatch = match;
+    let instanceId = task.instanceId;
+    if (task.id.startsWith("root.system.")) {
+      instanceId = task.id;
+    }
     if (!task.id.startsWith("root.system.") || !config.isRegex) {
       match = task.familyId + "-" + match;
     }
@@ -121,13 +121,14 @@ const utils = {
     if (!funcMap) {
       // If not, create a new Map for match
       funcMap = new Map();
-      funcMap.set(task.instanceId, [task.instanceId, CEPFunc, functionName, args]); // Will need to clean this up from memory
+      funcMap.set(instanceId, [instanceId, CEPFunc, functionName, args]); // Will need to clean this up from memory
       CEPFuncs.set(match, funcMap);
       console.log("CEPFuncs created function for " + origMatch + " from match " + match);  
     } else {
-      // Only add the function if there isn't already an entry for this task.instanceId
-      if (!funcMap.has(task.instanceId) && !task.id.startsWith("root.system.")) {
-        funcMap.set(task.instanceId, [task.instanceId, CEPFunc, functionName, args]);
+      // Only add the function if there isn't already an entry for this instanceId
+      // Want to avoid adding system CEP every time the processor registers
+      if (!funcMap.has(instanceId)) {
+        funcMap.set(instanceId, [instanceId, CEPFunc, functionName, args]);
         CEPFuncs.set(match, funcMap);
         console.log("CEPFuncs added function for " + origMatch + " from match " + match);
       }

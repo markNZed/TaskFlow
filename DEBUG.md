@@ -39,3 +39,4 @@ The `hub/src/configdata.mjs` can generate a file `/tmp/tasks.json` which can be 
 
 * To view the log files install the ANSI Color extension then preview the file to see prettified view
 * The log files can be "cleared" without restartin the server e.g. `truncate -s 0 hub/hub.log`
+* In Preferences there is an option "Files: Readonly From Permissions" which will respect file system permissions - this is useful for respecting logs as read only

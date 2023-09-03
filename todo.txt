@@ -1,5 +1,8 @@
 /* ToDo
 -------
+Registering could/should be a task
+  use the processorId as an instanceId
+Stop the multiple registering on startup
 Ability to move configurations
   Requires mods to the meta etc - not so simple
 Copy of configurations should be easier 

@@ -113,7 +113,7 @@ function withTask(Component) {
         })
         .catch((error) => {
           if (error.message.includes("Cannot find module")) {
-            console.log(`Failed to load FSM at ${'../shared/fsm/' + importPath}`);
+            //console.log(`Failed to load FSM at ${'../shared/fsm/' + importPath}`);
           } else {
             console.error(`Failed to load FSM at ${'../shared/fsm/' + importPath}`, error);
           }

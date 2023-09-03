@@ -66,6 +66,7 @@ taskSubject
       // utils.createCEP is how we create the entries
       const CEPFuncsKeys = CEPFuncs.keys();
       //utils.logTask(task, "CEPFuncs", CEPFuncs.keys());
+      //utils.logTask(task, "CEPFuncs", CEPFuncs);
       //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
       let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
       //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
@@ -77,6 +78,7 @@ taskSubject
       //utils.logTask(task, "CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
       // Retrieve the function arrays from each Map
       let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
+      //utils.logTask(task, "CEP instanceIdCEPFuncs", instanceIdCEPFuncs);
       let idCEPFuncs = [...idSourceFuncsMap.values()];
       let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
       // Flatten all CEP functions into a single array
@@ -159,7 +161,6 @@ const connectWebSocket = () => {
     console.log("processorWs.onOpen");
     processorWs.data = {};
     processorWs.data["didStart"] = true;
-    register_async();
     // reset connection attempts on successful connection
     connectionAttempts = 0;
     wsSendTask(utils.taskPing());
