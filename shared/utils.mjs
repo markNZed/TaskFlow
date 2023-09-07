@@ -488,7 +488,9 @@ const utils = {
     // We do not store the start as this would be treating the start command like an update
     if (task.processor.command != "start") {
       //console.log("processorActiveTasksStoreSet_async", task);
-      await activeTasksStore_async.set(task.instanceId, task);
+      const taskCopy = utils.deepClone(task);
+      delete taskCopy.meta.modified; // generated on the hub
+      await activeTasksStore_async.set(taskCopy.instanceId, taskCopy);
     }
     utils.debugTask(task);
   },
@@ -503,7 +505,9 @@ const utils = {
     // We do not store the start as this would be treating the start command like an update
     if (task.hub.command != "start") {
       //console.log("hubActiveTasksStoreSet_async task.state", task.state);
-      await setActiveTask_async(task);
+      const taskCopy = utils.deepClone(task);
+      delete taskCopy.meta.modified; // generated on the hub
+      await setActiveTask_async(taskCopy);
     }
     utils.debugTask(task);
   },

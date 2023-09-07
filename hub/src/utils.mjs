@@ -131,6 +131,27 @@ const utils = {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
 
+  findKeys: function(task, ignore) {
+    const newObject = {};
+    Object.keys(task).forEach(key => {
+      if (ignore.includes(key)) {
+        return;
+      }
+      if (typeof task[key] === 'object' && task[key] !== null) {
+        newObject[key] = utils.findKeys(task[key], ignore);
+      } else {
+        newObject[key] = true;
+      }
+    });
+    return newObject;
+  },
+  
+  hubUpdating: function(task) {
+    task.meta = task.meta || {};
+    task.meta["modified"] = utils.findKeys(task, ["meta", "processor", "hub", "privacy"]);
+    return task;
+  },
+
 };
 
 export { utils };

@@ -17,6 +17,7 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 import { sharedStore_async } from "../storage.mjs";
 import { commandUpdate_async } from "../commandUpdate.mjs";
 import assert from 'assert';
+import { lockShared, releaseShared } from './TaskSystemShared/sharedLock.mjs';
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
@@ -44,10 +45,11 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
     // We only want to run this during the coprocessing of the task
     // So we can see the null values and detect the deleteion of keys in shared
     // The null values get striped out in normal task processing
-    if (task.processor.coprocessing && task.shared) {
+    if (task.processor.coprocessing && task?.meta?.modified?.shared !== undefined) {
       utils.logTask(task, "task.processor.command", task.processor.command, "task.processor.commandArgs", task.processor.commandArgs);
       let toSync = {};
-      const varNames = Object.keys(task.shared);
+      const varNames = Object.keys(task.meta.modified.shared);
+      let locksShared = []
       for (const varName of varNames) {
         const sharedEntry = await sharedStore_async.get(varName) || {};
         utils.logTask(task, "task.shared varName", varName);
@@ -58,24 +60,17 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         let updateStorage = false;
         // clarify this
         familyId = task.meta.systemFamilyId || task.familyId;
+        const lockKey = familyId + "-" + varName;
         // Add this instance if it is not already tracked
         sharedEntry[familyId] = sharedEntry[familyId] || {};
         sharedEntry[familyId]["instanceIds"] = sharedEntry[familyId]["instanceIds"] || [];
         if (!sharedEntry[familyId]["instanceIds"].includes(task.instanceId)) {
           sharedEntry[familyId]["instanceIds"].push(task.instanceId);
         }
-        //console.log("sharedEntry[familyId].value", sharedEntry[familyId]["value"]);
-        const identical = utils.deepEqual(sharedEntry[familyId].value, task.shared[varName]);
-        if (!identical) {
-          familyInstanceIds = sharedEntry[familyId].instanceIds;
-          updateStorage = true;
-          utils.logTask(task, "CEPShared isSystemTask familyInstanceIds:", familyInstanceIds, "not identical"); 
-          //console.log("CEPShared Difference", utils.getObjectDifference(sharedEntry[familyId].value, task.shared[varName], true));
-        } else {
-          utils.logTask(task, "Identical");
-          //console.log("CEPShared Difference", utils.getObjectDifference(sharedEntry[familyId].value, task.shared[varName], true));
-          continue;
-        }
+        locksShared.push(lockKey);
+        lockShared(lockKey);
+        familyInstanceIds = sharedEntry[familyId].instanceIds;
+        updateStorage = true;
         for (const instanceId of familyInstanceIds) {
           toSync[instanceId] = toSync[instanceId] || {};
           if (task.processor.command === "init") {
@@ -111,11 +106,15 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
           syncDiff["shared"] = toSync[instanceId];
           syncDiff["instanceId"] = instanceId;
           await commandUpdate_async(wsSendTask, task, syncDiff, true);
-          utils.logTask(task, "CEPShared updating with sync"); 
+          utils.logTask(task, "CEPShared updating with sync instanceId:", instanceId); 
         }
       }
+      locksShared.forEach(key => {
+        releaseShared(key);
+      });
     } else {
-      console.log("CEPShared skipping task.processor.coprocessingDone", task.processor.coprocessingDone, "task.shared", task.shared !== undefined);
+      console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
+      //console.log("Task:", JSON.stringify(task, null, 2));
     }
   }
 

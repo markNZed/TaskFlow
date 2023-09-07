@@ -528,6 +528,8 @@ async function taskStart_async(
 
     task.hub.origTask = JSON.parse(JSON.stringify(task));
 
+    task = utils.hubUpdating(task);
+
     utils.logTask(task, "Init task.id:", task.id, task.familyId);
 
     return task;

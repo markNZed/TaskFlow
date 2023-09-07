@@ -231,6 +231,7 @@ async function taskProcess_async(task, req, res) {
     utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " state:" + task?.state?.current);
     let activeTask = {};
     checkErrorRate(task);
+    task = utils.hubUpdating(task);
     if (task.instanceId !== undefined) {
       activeTask = await getActiveTask_async(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
