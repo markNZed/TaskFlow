@@ -11,6 +11,8 @@ import { formatQuery } from 'react-querybuilder';
 // eslint-disable-next-line no-unused-vars
 const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   function transformToMongoSortCriteria(sortDescriptors) {
     const mongoSortCriteria = {};
     if (sortDescriptors) {

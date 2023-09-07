@@ -6,6 +6,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // eslint-disable-next-line no-unused-vars
 const TaskConversation_async = async function (wsSendTask, T) {
+
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   return null;
 };
 

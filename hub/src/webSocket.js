@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoProcessors } from "./storage.mjs";
+import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoprocessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -78,11 +78,11 @@ const wsSendTask = async function (task, processorId, activeTask) {
   } else {
     task.processor = {};
   }
-  const { coProcessingPosition, coProcessing, coProcessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
+  const { coprocessingPosition, coprocessing, coprocessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
   if (task.processor.isCoProcessor) {
-    task.processor["coProcessingPosition"] = coProcessingPosition;
-    task.processor["coProcessing"] = coProcessing;
-    task.processor["coProcessingDone"] = coProcessingDone;
+    task.processor["coprocessingPosition"] = coprocessingPosition;
+    task.processor["coprocessing"] = coprocessing;
+    task.processor["coprocessingDone"] = coprocessingDone;
   }
   task.processor["initiatingProcessorId"] = initiatingProcessorId;
   task.processor["sourceProcessorId"] = sourceProcessorId;
@@ -102,6 +102,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
   delete task.hub.origTask;
   message["task"] = task;
   //utils.logTask(task, "wsSendTask task.processor.stateLast", task.processor.stateLast, task.processor.id);
+  utils.debugTask(task);
   wsSendObject(processorId, message);
 }
 
@@ -126,7 +127,7 @@ function initWebSocketServer(server) {
           ws.data["processorId"] = processorId;
           console.log("Websocket processorId", processorId)
         }
-        if (!activeProcessors.has(processorId) && !activeCoProcessors.has(processorId)) {
+        if (!activeProcessors.has(processorId) && !activeCoprocessors.has(processorId)) {
           // Need to register again
           let currentDateTime = new Date();
           let currentDateTimeString = currentDateTime.toString();
@@ -156,14 +157,14 @@ function initWebSocketServer(server) {
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs
 
-        const coProcessors = Array.from(activeCoProcessors.keys());
-        const wasLastCoProcessor = task.hub?.coProcessingPosition === (coProcessors.length - 1);
+        const coprocessors = Array.from(activeCoprocessors.keys());
+        const wasLastCoProcessor = task.hub?.coprocessingPosition === (coprocessors.length - 1);
 
         // Most of the coprocessing code could be moved into taskProcess_async ?
         let processorId;
-        if (task.hub.coProcessing && wasLastCoProcessor) {
-          utils.logTask(task, "wasLastCoProcessor so stop coProcessing")
-          task.hub.coProcessing = false;
+        if (task.hub.coprocessing && wasLastCoProcessor) {
+          utils.logTask(task, "wasLastCoProcessor so stop coprocessing")
+          task.hub.coprocessing = false;
           processorId = task.hub.initiatingProcessorId
           task.hub.sourceProcessorId = processorId;
         } else {
@@ -171,50 +172,50 @@ function initWebSocketServer(server) {
         }
 
         if (task.hub.command !== "partial") {
-          //utils.logTask(task, "isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coProcessingPosition " + task.hub?.coProcessingPosition + " processorId " + processorId);
+          //utils.logTask(task, "isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " processorId " + processorId);
         }
 
         // Have not tested this yet because we only have one coprocessor
         // There is very similar code in taskSync.mjs
-        if (task.processor.isCoProcessor && task.hub.coProcessing && !wasLastCoProcessor) {
+        if (task.processor.isCoProcessor && task.hub.coprocessing && !wasLastCoProcessor) {
           utils.logTask(task, "Looking for NEXT coprocessor");
-          // Send through the coProcessors
-          // The task.hub.coProcessingPosition decides which coProcessor to run
+          // Send through the coprocessors
+          // The task.hub.coprocessingPosition decides which coprocessor to run
           // It would be faster to chain the coprocessors directly as this avoids a request/response from the hub
-          task.hub.coProcessingPosition++;
+          task.hub.coprocessingPosition++;
           // Should loop over the coprocessors to deal with case where command is not supported
-          const coProcessorId = coProcessors[task.hub.coProcessingPosition];
-          const coProcessorData = activeCoProcessors.get(coProcessorId);
-          if (coProcessorData && coProcessorData.commandsAccepted.includes(task.hub.command)) {
-            const ws = connections.get(coProcessorId);
+          const coprocessorId = coprocessors[task.hub.coprocessingPosition];
+          const coprocessorData = activeCoprocessors.get(coprocessorId);
+          if (coprocessorData && coprocessorData.commandsAccepted.includes(task.hub.command)) {
+            const ws = connections.get(coprocessorId);
             if (!ws) {
-              utils.logTask(task, "Lost websocket for ", coProcessorId, connections.keys());
+              utils.logTask(task, "Lost websocket for ", coprocessorId, connections.keys());
             } else {
-              utils.logTask(task, "Websocket coprocessor chain", coProcessorId);
+              utils.logTask(task, "Websocket coprocessor chain", coprocessorId);
               // If the task is only on one co-processor at a time then we could just use task.coprocessor ?
-              if (!task.processors[coProcessorId]) {
-                task.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
+              if (!task.processors[coprocessorId]) {
+                task.processors[coprocessorId] = {id: coprocessorId, isCoProcessor: true};
               }
-              task.hub["coProcessing"] = true;
-              task.hub["coProcessingDone"] = false;
-              wsSendTask(task, coProcessorId);
+              task.hub["coprocessing"] = true;
+              task.hub["coprocessingDone"] = false;
+              wsSendTask(task, coprocessorId);
             }
           }
         }
 
-        if (!task.hub.coProcessing) {
+        if (!task.hub.coprocessing) {
           const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
           // Allows us to track where the request came from while coprocessors are in use
           processorId = task.hub.initiatingProcessorId || processorId;
           task.processor = task.processors[processorId];
           task.hub.sourceProcessorId = processorId;
-          task.hub["coProcessingPosition"] = null;
+          task.hub["coprocessingPosition"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
-              utils.logTask(task, "Finished with coProcessors id:", task.id, "processorId:", processorId);
+              utils.logTask(task, "Finished with coprocessors id:", task.id, "processorId:", processorId);
               utils.logTask(task, "initiatingProcessorId", task.hub["initiatingProcessorId"]);
             }
-            task.hub["coProcessingDone"] = true;
+            task.hub["coprocessingDone"] = true;
           }
           // Updates through WS can only come from RxJS for now
           if (task.hub.command === "update") {
@@ -272,6 +273,7 @@ function initWebSocketServer(server) {
       if (processorId) {
         connections.delete(processorId);
         activeProcessors.delete(processorId);
+        activeCoprocessors.delete(processorId);
         const activeProcessorTasks = await activeProcessorTasksStore_async.get(processorId);
         if (activeProcessorTasks) {
           // for each task delete entry from activeTaskProcessorsStore_async

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 "use strict";
-import { commandUpdate_async } from "./commandUpdate.mjs";
+//import { commandUpdate_async } from "./commandUpdate.mjs";
 import { utils } from "./utils.mjs";
 
 const CEPFunctions = {
@@ -26,6 +26,9 @@ const CEPFunctions = {
   },
 
 
+  // A demo of CEP where we are modifying the task "on the fly" during coprocessing
+  // Because we are modifying the same task instance we do not use the commandUpdate_async
+  // We cannot modify the task after coprocessing because those changes will not be dispatched
   CEPIncrement: async function(functionName, wsSendTask, CEPinstanceId, task, args) {
     const increment = args.increment;
     // We cannot send an update to a command tha has not already been stored as active
@@ -34,8 +37,8 @@ const CEPFunctions = {
       utils.logTask(task, "CEPIncrement doing nothing for start and init command")
       return;
     }
-    if (!task.processor.coProcessingDone) {
-      utils.logTask(task, "CEPIncrement ignoring task during coprocessing");
+    if (task.processor.coprocessingDone) {
+      utils.logTask(task, "CEPIncrement ignoring task after coprocessing");
       return
     }
     if (task.processor.commandArgs.sync) {
@@ -49,11 +52,13 @@ const CEPFunctions = {
     let syncDiff = {}
     syncDiff["output"] = {};
     syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : increment;
-    syncDiff.output["CEPinitiatingProcessorId"] = task.processor.initiatingProcessorId;
+    //syncDiff.output["CEPinitiatingProcessorId"] = task.processor.initiatingProcessorId;
     utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
-    await commandUpdate_async(wsSendTask, task, syncDiff, true);
-    utils.logTask(task, "TaskConversation " + functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);
-    task.output.modifiedBy = CEPinstanceId;
+    //await commandUpdate_async(wsSendTask, task, syncDiff, true);
+    utils.logTask(task, functionName + " called on " + task.id + " CEP created by " + CEPinstanceId);
+    task.output["modifiedBy"] = CEPinstanceId;
+    task.output["CEPCount"] = syncDiff.output["CEPCount"];
+    return task;
   },
 
 };

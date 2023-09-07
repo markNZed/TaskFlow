@@ -109,7 +109,7 @@ const utils = {
     let origMatch = match;
     let instanceId = task.instanceId;
     if (task.id.startsWith("root.system.")) {
-      instanceId = task.id;
+      instanceId = task.instanceId;
     }
     if (!task.id.startsWith("root.system.") || !config.isRegex) {
       match = task.familyId + "-" + match;

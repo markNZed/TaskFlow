@@ -9,6 +9,7 @@ import withTask from "../../hoc/withTask";
 import SideMenu from "../SideMenu/SideMenu";
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 import Drawer from "@mui/material/Drawer";
+import { utils } from "../../utils/utils.mjs";
 
 // PLACEHOLDER - under development and not working
 
@@ -44,7 +45,7 @@ function TaskSystemMenu(props) {
     if (!props.checkIfStateReady()) {return}
     let nextState; 
     // Log each transition, other events may cause looping over a state
-    if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
+    if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current} ${task.state.last}`) }
     switch (task.state.current) {
       case "start":
         break;
@@ -52,16 +53,16 @@ function TaskSystemMenu(props) {
         setTasksTree(task.state.tasksTree);
         replaceGlobalState("tasksTree", task.state.tasksTree); // mergeGlobalState did not delete ?
         //console.log("task.state.tasksTree", task.state.tasksTree);
-        nextState = "ready";
+        modifyTask({
+          "command": "update",
+          "state.current" : "ready"
+        });
         break;
       case "ready":
-        if (task.input.update) {
-          modifyTask({
-            "input.update": null,
-            "state.current": "start", // Refresh the menu
-            "command": "update",
-            "state.tasksTree" : null, // Hack around array delete is not working
-          })
+        if (!utils.deepEqual(task.state.tasksTree, tasksTree)) {
+          //console.log("task.state.tasksTree", task.state.tasksTree);
+          setTasksTree(task.state.tasksTree);
+          replaceGlobalState("tasksTree", task.state.tasksTree); // mergeGlobalState did not delete ?
         }
         break;
       default:
@@ -70,7 +71,7 @@ function TaskSystemMenu(props) {
     // Manage state.current
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task]);
+  }, [task, tasksTree]);
 
   const handleToggle = () => {
       setMobileViewOpen(!mobileViewOpen);

@@ -20,10 +20,11 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
   // Deep copy task.processor to avoif changes to task that was passed in
   if (sync) {
     if (!diff.instanceId) {
+      // Perhaps we should not support this and the CEP should modify the task in coprocessing to cover this case
       console.log("commandUpdate_async assuming that we are syncing self")
       diff["instanceId"] = task.instanceId
     }
-    utils.logTask(task, "commandUpdate_async requesting lock for sync", diff.instanceId);
+    //utils.logTask(task, "commandUpdate_async requesting lock for sync", diff.instanceId);
     await lockResource(diff.instanceId);
     const lastTask = await activeTasksStore_async.get(diff.instanceId);
     if (!lastTask) {
@@ -37,21 +38,21 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
     };
     delete mergedTask.commandArgs.syncTask.command;
     delete mergedTask.commandArgs.syncTask.commandArgs;
-    mergedTask.processor["coProcessingDone"] = true; // So sync is not coprocessed again, it can still be logged
+    mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
-    utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
+    //utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
     await lockResource(task.instanceId);
     const lastTask = await activeTasksStore_async.get(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);
     }
     mergedTask = utils.deepMerge(lastTask, diff);
-    mergedTask.processor["coProcessingDone"] = false;
+    mergedTask.processor["coprocessingDone"] = false;
   }
   mergedTask.processor = JSON.parse(JSON.stringify(task.processor)); 
   mergedTask["command"] = "update";
   // Because this is a fresh command sent from the coprocessor not part of the coprocessing pipeline
-  mergedTask.processor["coProcessing"] = false;
+  mergedTask.processor["coprocessing"] = false;
   // Because it is this processor that is the initiator
   mergedTask.processor["initiatingProcessorId"] = processorId; //"coprocessor";
   try {

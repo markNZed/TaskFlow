@@ -5,13 +5,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import * as dotenv from "dotenv";
+import { EMPTYDBS } from "../config.mjs";
 import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mjs";
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();
-var activeCoProcessors = new Map();
+var activeCoprocessors = new Map();
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
 //const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });
@@ -40,6 +41,10 @@ const activeProcessorTasksStore_async = newKeyV(redisClient, "activeProcessorTas
 //   Key: familyId
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(redisClient, "outputs");
+// Schema:
+//   Key: familyId (there is also a "system" entry)
+//   Value: {shared: task.shared, instanceIds: array of instanceIds}
+const sharedStore_async = newKeyV(redisClient, "shared");
 
 async function getActiveTask_async(instanceId) {
   if (await activeTasksStore_async.has(instanceId)) {
@@ -73,20 +78,23 @@ const tasksStore_async = newKeyV(redisClient, "tasks");
 
 const autoStartTasksStore_async = newKeyV(redisClient, "autoStartTasks");
 
-await Promise.all([
-  instancesStore_async.clear(),
-  familyStore_async.clear(),
-  activeTasksStore_async.clear(),
-  activeTaskProcessorsStore_async.clear(),
-  activeProcessorTasksStore_async.clear(),
-  outputStore_async.clear(),
-  usersStore_async.clear(),
-  groupsStore_async.clear(),
-  tasktypesStore_async.clear(),
-  tasksStore_async.clear(),
-  autoStartTasksStore_async.clear(),
-]);
-console.log("Cleared all KeyV");
+if (EMPTYDBS) {
+  await Promise.all([
+    instancesStore_async.clear(),
+    familyStore_async.clear(),
+    activeTasksStore_async.clear(),
+    activeTaskProcessorsStore_async.clear(),
+    activeProcessorTasksStore_async.clear(),
+    outputStore_async.clear(),
+    sharedStore_async.clear(),
+    usersStore_async.clear(),
+    groupsStore_async.clear(),
+    tasktypesStore_async.clear(),
+    tasksStore_async.clear(),
+    autoStartTasksStore_async.clear(),
+  ]);
+  console.log("Empty DB: cleared all KeyV");
+}
 
 for (const [key, value] of Object.entries(users)) {
   usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
@@ -113,8 +121,9 @@ export {
   activeTaskProcessorsStore_async,
   activeProcessorTasksStore_async,
   activeProcessors,
-  activeCoProcessors,
+  activeCoprocessors,
   outputStore_async,
+  sharedStore_async,
   connections,
   getActiveTask_async,
   deleteActiveTask_async,

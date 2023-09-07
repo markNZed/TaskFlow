@@ -9,31 +9,32 @@ import { tasksStore_async } from "../../storage.mjs";
 // We want CRUD operations for the config
 
 export const taskCreate_async = async (task) => {
-  // Need to delete branch
   return tasksStore_async.set(task.id, task);
 }
 
 export const taskRead_async = async (id) => {
-  // Need to delete branch
   return tasksStore_async.get(id);
 }
 
 export const taskDelete_async = async (id) => {
-  // Need to delete branch
   return tasksStore_async.delete(id);
 }
 
 export const taskUpdate_async = async (task) => {
-  // Need to delete branch
   return tasksStore_async.set(task.id, task);
 }
 
 export const getAllChildrenOfNode = (nodeId, nodesById) => {
   const result = [];
   const traverseChildren = (currentNode) => {
-    if (currentNode.children && currentNode.children.length > 0) {
-      currentNode.children.forEach(child => {
+    if (currentNode.children) {
+      Object.keys(currentNode.children).forEach(key => {
+        const child = currentNode.children[key];
         result.push(child);
+        if (child === null) {
+          console.log("Unexpected null object", key);
+          return; // continue
+        }
         traverseChildren(nodesById[child.key]);
       });
     }
@@ -41,18 +42,47 @@ export const getAllChildrenOfNode = (nodeId, nodesById) => {
   const startNode = nodesById[nodeId];
   if (startNode) {
     traverseChildren(startNode);
+  } else {
+    console.error(`getAllChildrenOfNode could not find node ${nodeId}`);
   }
   return result;
 };
 
+// Set the nodeId to null so its branch is deleted
+export const deleteBranch = (nodeId, configTree) => {
+  const traverseChildren = (currentNode) => {
+    if (currentNode.children) {
+      Object.keys(currentNode.children).forEach(key => {
+        const child = currentNode.children[key];
+        if (child === null) {
+          console.log("Unexpected null object", key);
+          return; // continue
+        }
+        if (child.key === nodeId) {
+          currentNode.children[key] = null;
+          console.log(`deleteBranch deleting branch ${nodeId}`);
+          return true;
+        } else if (traverseChildren(child)) {
+          return true;
+        }
+      });
+      return false;
+    }
+  };
+  traverseChildren(configTree);
+  return configTree;
+};
+
 export const buildTree_async = async () => {
+
+  console.log("buildTree_async");
 
   // Object to hold nodes by their id for quick access
   const nodesById = {
     root: {
       title: 'root',
       key: 'root',
-      children: []
+      children: {}
     }
   };
   
@@ -61,7 +91,9 @@ export const buildTree_async = async () => {
     
     // Check for duplicate IDs
     if (nodesById[id]) {
-      console.warn(`Duplicate ID found: ${id} Skipping.`);
+      if (id !== "root") {
+        console.warn(`Duplicate ID found: ${id} Skipping.`);
+      }
       continue;
     }
     
@@ -69,7 +101,7 @@ export const buildTree_async = async () => {
     const newNode = {
       title: task?.config?.label || id,
       key: id,
-      children: [],
+      children: {},
       parentId: task?.meta?.parentId,
     };
 
@@ -86,16 +118,16 @@ export const buildTree_async = async () => {
 
     if (!parentId || !nodesById[parentId]) {
       console.warn(`Missing or invalid parent ID for node with id:${id} parentId:${parentId} Attaching to root.`);
-      nodesById.root.children.push(node);
+      nodesById.root.children[node.key] = node;
       continue;
     } else {
       delete node.parentId;
     }
     
     // Attach node to its parent
-    nodesById[parentId].children.push(node);
+    nodesById[parentId].children[node.key] = node;
   }
   
-  return [nodesById, [nodesById.root]];
+  return [nodesById, nodesById.root];
 };
 

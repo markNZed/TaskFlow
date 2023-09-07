@@ -10,7 +10,18 @@ import { utils } from "../utils.mjs";
 // eslint-disable-next-line no-unused-vars
 const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
-  async function getAuthorisedTasks_async(userId, groupsStore_async) {
+  let configTreeEvent; 
+  if (T("processor.commandArgs.sync")) {
+    //console.log("TaskSystemMenu_async", T("processor.commandArgs"));
+    if (T("processor.commandArgs.syncTask.shared.configTree")) {
+      configTreeEvent = true;
+      console.log("configTreeEvent found update to shared.configTree");
+    } else {
+      return null; // Ignore sync operations
+    }
+  }
+
+  async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async) {
     //console.log("getAuthorisedTasks_async", userId);
     let authorised_tasks = {};
     let tasksTree = {};
@@ -71,7 +82,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
 
   switch (T("state.current")) {
     case "start": {
-      const tasksTree = await getAuthorisedTasks_async(T("user.id"), groupsStore_async);
+      const tasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async);
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
@@ -80,10 +91,32 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
     case "loaded":
       break;
     case "ready":
+      if (configTreeEvent) {
+        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async);
+        const oldTasksTree = T("state.tasksTree");
+        if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
+          if (oldTasksTree) {
+            for (const key of Object.keys(oldTasksTree)) {
+              if (!newTasksTree[key]) {
+                newTasksTree[key] = null;
+                //console.log("TaskSystemMenu_async set key to null", key)
+              }
+            }
+          }
+          T("state.tasksTree", newTasksTree);
+          T("command", "update");
+        }
+      }
       break;
     default:
       utils.logTask(T(), "WARNING unknown state : " + T("state.current"));
       return null;
+  }
+
+  if (T("state.tasksTree")) {
+    utils.logTask(T(), "Length of state.tasksTree", Object.keys(T("state.tasksTree")).length);
+  } else {
+    utils.logTask(T(), "No state.tasksTree Length of state.tasksTree 0");
   }
 
   return T();

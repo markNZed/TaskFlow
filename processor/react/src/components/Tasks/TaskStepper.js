@@ -11,7 +11,7 @@ import ModalComponent from '../Generic/ModalComponent';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 
 /*
 Task Process

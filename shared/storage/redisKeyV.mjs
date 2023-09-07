@@ -10,7 +10,7 @@ import * as dotenv from "dotenv";
 import path from 'path';
 console.log("Current directory:", path.resolve());
 // The path is to the config in app/shared because shared is used through symbolic links
-import { REDIS_URL } from "../config.mjs";
+import { REDIS_URL, appAbbrev } from "../config.mjs";
 dotenv.config();
 
 // I had issue swith the redis library still trying localhost, it works with ioredis
@@ -93,6 +93,7 @@ export function newKeyV(redisClient, namespace) {
   //console.log(`Using Redis Client for ${namespace} with config:`, redisClient.options);
   // Can pass TTL to keyv e.g. 24 hrs
   // const ttl = 1000 * 60 * 60 * 24;
+  namespace += appAbbrev;
   const keyv = new Keyv({ store, namespace });
 
   // Attach the iterate method to the keyv instance

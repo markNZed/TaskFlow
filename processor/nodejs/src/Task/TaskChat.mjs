@@ -16,45 +16,49 @@ function checkTaskCache (T) {
   // Loop over each object in T("config.caching") if it exists
   let enabled = false;
   let seed = T("id");
-  for (const cacheObj of T("config.caching")) {
-    if (cacheObj.subTask) {
-      continue;
-    }
-    if (cacheObj.environments && !cacheObj.environments.includes("nodejs")) {
-      continue;
-    } else {
-      console.log("cacheObj.environments", "nodejs");
-      enabled = true;
-    }
-    if (cacheObj.states && !cacheObj.states.includes(T("state.current"))) {
-      continue;
-    } else {
-      console.log("cacheObj.states", T("state.current"));
-      enabled = true;
-    }
-    if (enabled && cacheObj.enable === undefined) {
-      enabled = true;
-    } else if (!cacheObj.enable) {
-      continue;
-    }
-    if (enabled && cacheObj.seed) {
-      for (const cacheKeySeed of cacheObj.seed) {
-        if (cacheKeySeed.startsWith("task.")) {
-          seed += T(cacheKeySeed.slice(5));
-        } else {
-          seed += cacheKeySeed;
-        }
+  if (T("config.caching")) {
+    for (const cacheObj of T("config.caching")) {
+      if (cacheObj.subTask) {
+        continue;
       }
-      console.log("cacheObj.seed", seed);
-    }
-    if (enabled) {
-      break;
+      if (cacheObj.environments && !cacheObj.environments.includes("nodejs")) {
+        continue;
+      } else {
+        console.log("cacheObj.environments", "nodejs");
+        enabled = true;
+      }
+      if (cacheObj.states && !cacheObj.states.includes(T("state.current"))) {
+        continue;
+      } else {
+        console.log("cacheObj.states", T("state.current"));
+        enabled = true;
+      }
+      if (enabled && cacheObj.enable === undefined) {
+        enabled = true;
+      } else if (!cacheObj.enable) {
+        continue;
+      }
+      if (enabled && cacheObj.seed) {
+        for (const cacheKeySeed of cacheObj.seed) {
+          if (cacheKeySeed.startsWith("task.")) {
+            seed += T(cacheKeySeed.slice(5));
+          } else {
+            seed += cacheKeySeed;
+          }
+        }
+        console.log("cacheObj.seed", seed);
+      }
+      if (enabled) {
+        break;
+      }
     }
   }
   return [enabled, seed];
 }
 
 const TaskChat_async = async function (wsSendTask, T) {
+
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   // Cache
   const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);

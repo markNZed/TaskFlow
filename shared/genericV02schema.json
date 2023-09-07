@@ -85,6 +85,11 @@
       "additionalProperties": true,
       "title": "Response"
     },
+    "Shared": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "Shared"
+    },
     "State": {
       "type": "object",
       "additionalProperties": {},

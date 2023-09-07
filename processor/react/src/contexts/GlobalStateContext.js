@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useContext, useState, useEffect } from "react";
 import _, { merge } from "lodash";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 
 const GlobalStateContext = React.createContext();
 

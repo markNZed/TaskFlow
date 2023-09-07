@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 import { v4 as uuidv4 } from "uuid";
@@ -134,7 +134,7 @@ const TaskChat = (props) => {
           responseTextRef.current = "";
           setResponseText(responseTextRef.current);
         }
-        if (task.input.submitPrompt) {
+        if (task.input && task.input.submitPrompt) {
           nextState = "send";
         }
         if (task.state?.address && task.state?.lastAddress !== task.state.address) {

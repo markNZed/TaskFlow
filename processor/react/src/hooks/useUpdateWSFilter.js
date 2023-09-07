@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 
 // The wbsocket is re-rendering which causes the useUpdateWSFilter to rerender which
 // loses the state, so can't remember the task

@@ -17,6 +17,8 @@ const cosineSimilarity = (tensor1, tensor2) => {
 
 const TaskChoose_async = async function (wsSendTask, T) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   T("response.LLM", null); // Avoid using previously stored response
   const subTask = await SubTaskLLM_async(wsSendTask, T());
   T("response.LLM", subTask.response.LLM);

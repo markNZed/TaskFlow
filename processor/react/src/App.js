@@ -14,7 +14,7 @@ import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
 import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
-import { hubUrl } from "./config";
+import { hubUrl } from "./config.mjs";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";

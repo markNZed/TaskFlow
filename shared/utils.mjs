@@ -53,7 +53,10 @@ const utils = {
     return result;
   },
 
-  deepMerge: function(prevState, update) {
+  deepMerge: function(prevState, update, debug = false, depth = 0) {
+
+    if (debug && (depth === 0)) {console.log("deepMerge depth 0:", prevState, update)}
+
     if (prevState === undefined) {
       return update;
     }
@@ -62,33 +65,33 @@ const utils = {
       return prevState;
     }
 
-    if (_.isEmpty(update) || _.isEmpty(update)) {
+    if (_.isEmpty(update)) {
       return update;
     }
 
     if (Array.isArray(update)) {
-      //console.log("deepMerge array", prevState, update)
+      if (debug) {console.log("deepMerge array", prevState, update)}
       let output = [];
       const maxLength = update.length;
     
       for (let i = 0; i < maxLength; i++) {
         // Null is treated as a placeholder in the case of arrays
         if (!prevState || i >= prevState.length) {
-          //console.log("deepMerge length", prevState[i]);
+          if (debug) {console.log("deepMerge length", prevState[i])}
           output.push(update[i]);
         } else if (update[i] === null) {
-          //console.log("deepMerge null", prevState[i]);
+          if (debug) {console.log("deepMerge null", prevState[i])}
           output.push(prevState[i]);
         } else if (typeof update[i] === "object" || Array.isArray(update[i])) {
-          const merge = utils.deepMerge(prevState[i], update[i]);
-          //console.log("deepMerge merge", merge);
+          const merge = utils.deepMerge(prevState[i], update[i], debug, depth + 1);
+          if (debug) {console.log("deepMerge merge", merge)}
           if (merge === null) {
             output.push(prevState[i]);
           } else {
             output.push(merge);
           }
         } else {
-          //console.log("deepMerge other", update[i]);
+          if (debug) {console.log("deepMerge other", update[i])}
           output.push(update[i]);
         }
       }
@@ -102,12 +105,14 @@ const utils = {
     }
 
     if (typeof update === "object") {
-      //console.log("deepMerge object", update)
-      let output = { ...prevState };
+      let output = JSON.parse(JSON.stringify(prevState)) || {};
+      if (debug) {console.log("output before", JSON.parse(JSON.stringify(output)))}
+      if (debug) {console.log("update before", JSON.parse(JSON.stringify(update)))}
       for (const key in update) {
         // Null is treated as a deletion in the case of objects
         if (update[key] === null) {
           output[key] = null;
+          //output[key] = null;
           /*
           if (_.isObject(output[key])) {
             Array.isArray(output[key]) ? output[key] = [] : output[key] = {};
@@ -122,20 +127,28 @@ const utils = {
         } else if (output[key] === undefined) {
           output[key] = update[key];
         } else if (typeof update[key] === "object" || Array.isArray(update[key])) {
-          output[key] = utils.deepMerge(output[key], update[key]);
+          output[key] = utils.deepMerge(output[key], update[key], debug, depth + 1);
+        } else if (update[key] === undefined) {
+          // Leave the prevState
         } else {
           output[key] = update[key];
         }
       }
+      if (debug) {console.log("output after", JSON.parse(JSON.stringify(output)))}
       return output;
     }
 
     return update;
   },
 
-  deepCompare: function(obj1, obj2, visitedObjects = new WeakSet()) {
+  deepEqualDebug: function(obj1, obj2) {
+    return utils.deepEqual(obj1, obj2,new WeakSet(), true);
+  },
+
+  deepEqual: function(obj1, obj2, visitedObjects = new WeakSet(), debug = false) {
     // Check if objects are cyclic
     if (visitedObjects.has(obj1) || visitedObjects.has(obj2)) {
+      console.log("deepEqual cycled");
       return true;
     }
 
@@ -149,27 +162,36 @@ const utils = {
 
       // Check if the inputs have different lengths
       if (keys1.length !== keys2.length) {
+        if (debug) {console.log("deepEqual keys1.length !== keys2.length", keys1, keys2)}
         return false;
       }
 
       // Recursively compare each property
       for (let key of keys1) {
-        if (!keys2.includes(key) || !utils.deepCompare(obj1[key], obj2[key], visitedObjects)) {
+        if (!keys2.includes(key)) {
+          if (debug) {console.log("deepEqual !keys2.includes(key)", key)}
           return false;
+        } else {
+          if (!utils.deepEqual(obj1[key], obj2[key], visitedObjects, debug)) {
+            return false;
+          }
         }
       }
 
       return true;
-    } else {
+    } else if (obj1 === obj2) {
       // If inputs are not objects (or are null), use strict equality check
-      return obj1 === obj2;
+      return true;
+    } else {
+      if (debug) {console.log("deepEqual obj1 !== obj2", obj1, obj2)}
+      return false;
     }
   },
 
   /*
   In this updated function, we've added an isArray helper function that uses Array.isArray to check if a value is an array. We then use this function in our check for whether the values at a key in both objects are objects. If they are arrays, we iterate over their elements and check for conflicts, but ignore any elements that are null in either array. If the lengths of the arrays are different, we still consider that a conflict, as it's a structural difference between the two objects.
   */
-  checkConflicts: function(obj1, obj2, path = "") {
+  checkConflicts: function(obj1, obj2, pathString = "") {
     // Helper functions
     const isObject = (value) => typeof value === 'object' && value !== null;
     const isArray = (value) => Array.isArray(value);
@@ -195,13 +217,13 @@ const utils = {
             }
           } else {
             // Recursive check for nested objects
-            if (utils.checkConflicts(obj1[key], obj2[key], path + "." + key)) {
+            if (utils.checkConflicts(obj1[key], obj2[key], pathString + "." + key)) {
               conflict = true;
             }
           }
         } else if (obj1[key] !== obj2[key]) {
           // Conflict detected when values are different
-          console.log("Conflict in merge: " + path + "." + key + " " + JSON.stringify(obj1[key]) + " " + JSON.stringify(obj2[key]));
+          console.log("Conflict in merge: " + pathString + "." + key + " " + JSON.stringify(obj1[key]) + " " + JSON.stringify(obj2[key]));
           conflict = true;
         }
       }
@@ -215,29 +237,47 @@ const utils = {
   // If there isn't, or if the corresponding value in obj1 is null, it takes the value from obj2.
   // This can return sparse arrays
   // Returns undefined if no difference, null can be used to delete 
-  getObjectDifference: function(obj1, obj2) {
+  getObjectDifference: function(obj1, obj2, debug = false) {
 
-    if (obj1 === obj2 || _.isEqual(obj1, obj2)) { // deep comparison
+    if (obj1 === obj2) {
       return undefined;
     }
 
-    if (!_.isObject(obj2) || obj1 === undefined) {
+    // Keep null for delete
+    if (obj2 === null) {
       return obj2;
     }
 
-    if (_.isEmpty(obj2)) {
-      return null;
+    if (obj1 === undefined || !_.isObject(obj2)) {
+      if (debug) {console.log("getObjectDifference debug obj1 undefined", obj1, obj2)}
+      return obj2;
     }
 
-    // obj2 is an object
+    // Both empty array
+    if (Array.isArray(obj1) && Array.isArray(obj2) && _.isEmpty(obj1) && _.isEmpty(obj2)) {
+      return undefined;
+    }
+
+    // Both empty objects
+    if (_.isObject(obj1) && _.isObject(obj2) && _.isEmpty(obj1) && _.isEmpty(obj2)) {
+      return undefined;
+    }
+
+    if (_.isEmpty(obj2)) {
+      if (debug) {console.log("getObjectDifference debug obj2 empty")}
+      return obj2;
+    }
+
+    // By here obj2 is a non-empty object
     if (!_.isObject(obj1)) {
+      if (debug) {console.log("getObjectDifference debug obj1 not an object but obj2 is", obj1, obj2)}
       return obj2;
     }
 
     let diffObj = Array.isArray(obj2) ? [] : {};
 
     _.each(obj2, (value, key) => {
-      let diff = utils.getObjectDifference(obj1[key], value);
+      let diff = utils.getObjectDifference(obj1[key], value, debug);
       if (diff === undefined) {
         // Null treated as a placeholder in the case of arrays
         Array.isArray(diffObj) ? diffObj.push(null) : undefined;
@@ -262,10 +302,12 @@ const utils = {
     });
 
     // If null then this is being used to delete the object
-    // That could happen when obj2 was empty e.g. {} or []
+    // If empty then all keys were deleted
     if (diffObj !== null && _.isEmpty(diffObj)) {
       diffObj = undefined;
     }
+
+    if (debug && diffObj) {console.log("getObjectDifference diff object", diffObj)}
 
     return diffObj; // copy to avoid issues if the return value is modified
   },
@@ -400,24 +442,43 @@ const utils = {
     return hash;
   },
 
-  removeNullKeys: function(obj) {
+  removeNullKeys: function(obj, depth = 0) {
     // Base case: if the input isn't an object, return it as is
     if (typeof obj !== 'object' || obj === null) return obj;
-
+    // Don't delete null entries in arrays (used for virtual arrays)
+    if (Array.isArray(obj)) {
+      return obj.map(utils.removeNullKeys);
+    }
     // Iterate over the object's keys
+    let allNull;
     for (let key in obj) {
-        // If the current key's value is null, delete the key
+      if (allNull === undefined) {
+        allNull = true;
+      }
+      // If the current key's value is null, delete the key
+      if (obj[key] === null && depth > 0) {
+        delete obj[key];
+      // Do not delete top level objects e.g. task.request
+      } else if (_.isEmpty(obj[key]) && depth === 0) {
+      // Otherwise, if it's an non-empty object recursively call removeNullKeys
+      } else if (typeof obj[key] === 'object') {
+        obj[key] = utils.removeNullKeys(obj[key], depth + 1);
         if (obj[key] === null) {
-            delete obj[key];
+          delete obj[key];
         }
-        // Otherwise, if it's an object or array, recursively call removeNullKeys on it
-        else if (typeof obj[key] === 'object') {
-            obj[key] = utils.removeNullKeys(obj[key]);
-        }
+      }
+      if (obj[key] !== null) {
+        allNull = false;
+      }
+    }
+    if (allNull && depth > 0) {
+      //console.log("All keys are null at depth", depth, obj);
+      return null;
     }
     return obj;
   },
 
+  // This is having side-effects on task
   processorActiveTasksStoreSet_async: async function(activeTasksStore_async, task) {
     task.meta = task.meta || {};
     delete task.processor.origTask; // delete so we do not have an old copy in origTask
@@ -429,9 +490,10 @@ const utils = {
       //console.log("processorActiveTasksStoreSet_async", task);
       await activeTasksStore_async.set(task.instanceId, task);
     }
-    return task;
+    utils.debugTask(task);
   },
 
+  // This is having side-effects on task
   hubActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
     delete task.hub.origTask; // delete so we do not have an old copy in origTask
@@ -443,7 +505,7 @@ const utils = {
       //console.log("hubActiveTasksStoreSet_async task.state", task.state);
       await setActiveTask_async(task);
     }
-    return task;
+    utils.debugTask(task);
   },
 
   cleanForHash: function (task) {
@@ -462,6 +524,8 @@ const utils = {
     if (taskCopy?.state?.last) {
       delete taskCopy.state.last;
     }
+    // Sending null is used to delete so we can get mismatches when the entry is deleted
+    utils.removeNullKeys(taskCopy);
     return taskCopy;
   },
 
@@ -581,6 +645,10 @@ const utils = {
   },
 
   checkHash: function(origTask, updatedTask) {
+    if (!origTask) {
+      console.log("origTask is undefined");
+      return false;
+    }
     const hashOrigTask = origTask.meta.hash;
     const hashUpdatedTask = updatedTask.meta.hash;
     if (hashOrigTask !== hashUpdatedTask) {
@@ -614,6 +682,7 @@ const utils = {
       }
       task.state["last"] = task.processor.stateLast;
     }
+    utils.debugTask(task);
     return task;
   },
 
@@ -663,6 +732,7 @@ const utils = {
     } else {
       //console.log("taskInProcessorOut_async no diffTask.instanceId");
     }
+    utils.debugTask(diffTask);
     return diffTask;
   },
 
@@ -674,13 +744,14 @@ const utils = {
     delete hub.id;
     task.processor = task.processor || {};
     task.processor["command"] = hub.command;
-    task.processor["commandArgs"] = hub.commandArgs;
+    task.processor["commandArgs"] = hub.commandArgs || {};
     task.processor = utils.deepMerge(task.processor, hub);
     if (hub.sourceProcessorId) {
       task.processor["sourceProcessorId"] = hub.sourceProcessorId;
     } else {
       delete task.processor.sourceProcessorId;
     }
+    utils.debugTask(task);
     return task;
   },
 
@@ -774,6 +845,65 @@ const utils = {
     //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
     return authenticated;
   },
+
+  getCallerFunctionDetails: function() {
+    const stack = new Error().stack;
+    const stackLines = stack.split('\n');
+    if (stackLines[3]) {
+      const match = stackLines[3].match(/at (.*) \(?(.*):(\d+):(\d+)\)?/);
+      if (match) {
+        return {
+          functionName: match[1],
+          filePath: match[2],
+          lineNumber: match[3],
+          columnNumber: match[4]
+        };
+      }
+    }
+    return null;
+  },
+
+  deepClone: function(obj) {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(utils.deepClone);
+    }
+    const clonedObj = {};
+    // This will also clone properties
+    for (const key in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        clonedObj[key] = utils.deepClone(obj[key]);
+      }
+    }
+    return clonedObj;
+  },
+
+  assertWarning: function(condition, message) {
+    if (!condition) {
+      console.warn(`Assertion Warning: ${message}`);
+    }
+  },
+
+  debugTask: async function(task, context = "") {
+    /* eslint-disable no-unreachable */
+    return;
+    const callerDetails = this.getCallerFunctionDetails();
+    const callerDetailsText = callerDetails ? callerDetails.filePath + ":" + callerDetails.lineNumber : "";
+    const contextText = context + " " + callerDetailsText;
+    let logParts = ["debugTask"];
+    if (contextText) {
+      logParts.push(contextText);
+    }
+    logParts.push(`id: ${task.id}`);
+    logParts.push(`instanceId: ${task.instanceId}`);
+    if (task?.meta?.messageId) {
+      logParts.push(`messageId: ${task.meta.messageId}`);
+    }
+    console.log(logParts.join(' '));
+  }
 
 };
 

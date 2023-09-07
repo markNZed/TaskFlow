@@ -8,7 +8,7 @@ import React, { useContext, useRef } from "react";
 import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -52,7 +52,13 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
+    if (task.command !== "ping") {
+      console.log("Task before taskInProcessorOut_async", JSON.parse(JSON.stringify(task)));
+    }
     task = await utils.taskInProcessorOut_async(task, globalState.processorId, globalState?.storageRef?.current);
+    if (task.processor.command !== "ping") {
+      console.log("Task after taskInProcessorOut_async", JSON.parse(JSON.stringify(task)));
+    }
     if (globalState.user) {
       task.user = {"id": globalState.user.userId};
     }
@@ -60,6 +66,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     task.meta.prevMessageId = task.meta.messageId;
     task.meta.messageId = utils.nanoid8();
     message["task"] = task;
+    utils.debugTask(task);
     sendJsonMessagePlusRef.current(message);
   }
 
@@ -103,7 +110,9 @@ export function WebSocketProvider({ children, socketUrl }) {
       let commandArgs;
       let task;
       if (message?.task) {
+        utils.debugTask(message.task, "received on websocket");
         task = utils.hubInProcessorOut(message.task);
+        utils.debugTask(message.task, "after hubInProcessorOut");
         command = task.processor.command;
         commandArgs = task.processor.commandArgs;
       }
@@ -112,7 +121,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         if (command !== "partial") {
           task.processor.shared = task.processor.shared || {};
           task.processor.shared["menuInstanceId"] = globalState.menuInstanceId;
-          //console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, "state:", task?.state?.current, "task:", message.task);
+          console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, "state:", task?.state?.current, "task:", utils.deepClone(task));
         }
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here

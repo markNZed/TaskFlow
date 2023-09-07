@@ -1,5 +1,15 @@
 # Shared
 
+# Config
+
+The `config.mjs` file is shared by Task hub and Task Processors (loaded into their local config.mjs). This should actually load the variables from a JSON file. It provides:
+* appLabel
+* appName
+* appAbbrev
+* REDIS_URL
+* MONGO_URL
+* EMPTYDBS - when true then all DBs are emptied on restart
+
 # Task Definition Schema
 
 The schema is defined in JSON and [Quicktype](https://quicktype.io) is used to generate validation code.

@@ -110,7 +110,7 @@ const connectWebSocket = () => {
       }
     // We should not receive start commands on a Task Processor (unless it is a coprocessor)
     } else if (command === "start") {
-      console.log("Task:", message.task);
+      //console.log("Task:", message.task);
       throw new Error("Unexpected start command")
     } else if (command === "join" || command === "init") {
       await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);

@@ -15,8 +15,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
   try {
     utils.logTask(task, "taskProcess_async", task.id);
-    utils.logTask(task, "taskProcess_async task.processor.coProcessing", task.processor.coProcessing);
-    task = utils.processorInTaskOut(task);
+    utils.logTask(task, "taskProcess_async task.processor.coprocessing", task.processor.coprocessing);
     const processorMatch = task.processor.initiatingProcessorId === processorId;
     if (processorMatch) {
       utils.logTask(task, "RxJS Task Processor from this processor so skipping Task Fuction id:" + task.id);
@@ -28,7 +27,10 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       utils.logTask(task, "RxJS Task Processor start so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (COPROCESSOR && task.processor?.commandArgs?.sync) {
-      utils.logTask(task, "RxJS Task Processor sync so skipping Task Fuction id:" + task.id);
+      // Seems a risk of CEP operating on sync creating loops
+      // Could have a rule that sync do not operate on the same task
+      // True that in this case we can just modify the task
+      utils.logTask(task, "RxJS Task Coprocessor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
     } else if (taskFunctions && taskFunctions[`${task.type}_async`]) {
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
@@ -39,9 +41,9 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);
     }
-    // Create the CEP during the init of the task
+    // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (task.processor["command"] === "init") {
-      if (!COPROCESSOR || (COPROCESSOR && !task.processor.coProcessingDone)) {
+      if (!COPROCESSOR || (COPROCESSOR && !task.processor.coprocessingDone)) {
         // How about overriding a match. createCEP needs more review/testing
         // Create two functions
         if (task.config?.ceps) {
@@ -91,7 +93,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       // Which command should we support here?
       // This is similar to the old do_task
       if (updatedTask?.command === "update") {
-        utils.logTask(updatedTask, "taskProcess_async sending");
+        utils.logTask(updatedTask, "taskProcess_async sending update");
         wsSendTask(updatedTask);
       } else {
         utils.logTask(updatedTask, "taskProcess_async nothing to do");

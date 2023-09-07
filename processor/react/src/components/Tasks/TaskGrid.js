@@ -19,7 +19,7 @@ import React, { useState, useEffect } from "react";
 import { Grid } from "@mui/material";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 
 function TaskGrid(props) {
   const {

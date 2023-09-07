@@ -7,6 +7,8 @@ import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
 const TaskGeneratePersona_async = async function (wsSendTask, T) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   switch (T("state.current")) {
     case "generated":
       console.log(`${T("type")} does nothing in state ${T("state.current")}`);

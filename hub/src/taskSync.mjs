@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTaskProcessorsStore_async, activeProcessors, activeCoProcessors, getActiveTask_async } from "./storage.mjs";
+import { activeTaskProcessorsStore_async, activeProcessors, activeCoprocessors, getActiveTask_async } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { haveCoProcessor } from "../config.mjs";
@@ -43,36 +43,36 @@ const taskSync_async = async (key, value) => {
   }
   let command = taskCopy.hub.command;
 
-  const coProcessorIds = Array.from(activeCoProcessors.keys());
-  const isCoProcessor = coProcessorIds.includes(sourceProcessorId);
+  const coprocessorIds = Array.from(activeCoprocessors.keys());
+  const isCoProcessor = coprocessorIds.includes(sourceProcessorId);
   const skipCoProcessingCommands = ["partial"];
   const skipCoProcessing = skipCoProcessingCommands.includes(command);
   
   // Pass to the first co-processor if we should coprocess first
-  // Maybe isCoProcessor is redundant given that we set hub.coProcessing
+  // Maybe isCoProcessor is redundant given that we set hub.coprocessing
   // Update commands with sync option from the coprocessor will be skipped because of isCoProcessor
-  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coProcessing && !taskCopy.hub.coProcessingDone && !skipCoProcessing) {
+  if (haveCoProcessor && !isCoProcessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
     // Send to the first Co-Processor that supports the command 
     let position = 0;
-    for (const coProcessorId of coProcessorIds) { 
-      const coProcessorData = activeCoProcessors.get(coProcessorId);
-      if (coProcessorData.commandsAccepted.includes(command)) {
-        taskCopy.hub.coProcessingPosition = position;
-        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coProcessorId, taskCopy.hub.initiatingProcessorId);
+    for (const coprocessorId of coprocessorIds) { 
+      const coprocessorData = activeCoprocessors.get(coprocessorId);
+      if (coprocessorData.commandsAccepted.includes(command)) {
+        taskCopy.hub.coprocessingPosition = position;
+        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingProcessorId);
         if (!taskCopy.processors) {
           taskCopy.processors = {};
         }
-        if (!taskCopy.processors[coProcessorId]) {
-          taskCopy.processors[coProcessorId] = {id: coProcessorId, isCoProcessor: true};
+        if (!taskCopy.processors[coprocessorId]) {
+          taskCopy.processors[coprocessorId] = {id: coprocessorId, isCoProcessor: true};
         }
-        taskCopy.hub["coProcessing"] = true;
-        taskCopy.hub["coProcessingDone"] = false;
-        wsSendTask(taskCopy, coProcessorId, activeTask);
+        taskCopy.hub["coprocessing"] = true;
+        taskCopy.hub["coprocessingDone"] = false;
+        wsSendTask(taskCopy, coprocessorId, activeTask);
         break;
       } else {
-        //utils.logTask(taskCopy, "CoProcessor does not support commmand", command, coProcessorId);
+        //utils.logTask(taskCopy, "CoProcessor does not support commmand", command, coprocessorId);
       }
       position++;
     }
@@ -80,28 +80,28 @@ const taskSync_async = async (key, value) => {
     return value;
   }
 
-  taskCopy.hub.coProcessing = false;
+  taskCopy.hub.coprocessing = false;
 
   // Every coprocssor needs to be updated/synced
-  if (coProcessorIds) {
-    for (const coProcessorId of coProcessorIds) {
+  if (coprocessorIds) {
+    for (const coprocessorId of coprocessorIds) {
       if (command === "join") {
         continue;
       }
-      const coProcessorData = activeCoProcessors.get(coProcessorId);
-      if (coProcessorData) {
-        if (coProcessorData.commandsAccepted.includes(command)) {
-          utils.logTask(taskCopy, "taskSync_async coprocessor", command, " sent to coprocessor " + coProcessorId);
-          wsSendTask(taskCopy, coProcessorId, activeTask);
+      const coprocessorData = activeCoprocessors.get(coprocessorId);
+      if (coprocessorData) {
+        if (coprocessorData.commandsAccepted.includes(command)) {
+          utils.logTask(taskCopy, "taskSync_async coprocessor", command, " sent to coprocessor " + coprocessorId);
+          wsSendTask(taskCopy, coprocessorId, activeTask);
         } else {
-          //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coProcessorId);
+          //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coprocessorId);
         }
       }
     }
   }
 
-  //  We do not want coProcessingDone passed on to child tasks
-  taskCopy.hub.coProcessingDone = false;
+  //  We do not want coprocessingDone passed on to child tasks
+  taskCopy.hub.coprocessingDone = false;
 
   const initiatingProcessorId = taskCopy.hub.initiatingProcessorId || sourceProcessorId;
   taskCopy.hub.sourceProcessorId = initiatingProcessorId
@@ -141,7 +141,7 @@ const taskSync_async = async (key, value) => {
       await activeTaskProcessorsStore_async.set(key, updatedProcessorIds);
     }
   } else {
-    utils.logTask(taskCopy, "taskSync_async no processorIds", key, value);
+    utils.logTask(taskCopy, "taskSync_async no activeTaskProcessors available", key, value);
   }
   //utils.logTask(taskCopy, "taskSync_async after", key, value.processor);
   return value;

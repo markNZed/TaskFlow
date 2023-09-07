@@ -246,7 +246,8 @@ function flattenTasks(tasks) {
     if (task?.config?.autoStartEnvironment) {
       autoStartTasks[task.id] = {
         startEnvironment: task.config.autoStartEnvironment,
-        startEnvironments: task.environments,
+        // So we can start a task on a subset of the task.environments (used this for TaskSystemConfig)
+        startEnvironments: task.config.autoStartEnvironments || task.environments,
         once: task.config.autoStartOnce,
       }
     }

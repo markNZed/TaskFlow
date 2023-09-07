@@ -20,8 +20,8 @@ import Drawer from "@mui/material/Drawer";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
-import { utils } from "../utils/utils";
-import { appLabel } from "../config";
+import { utils } from "../utils/utils.mjs";
+import { appLabel } from "../config.mjs";
 import IFrame from './Generic/IFrame.js'
 
 // If there is only one agent then do not show side menu

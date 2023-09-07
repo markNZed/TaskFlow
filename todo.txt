@@ -1,17 +1,37 @@
 /* ToDo
 -------
+Investigate hashDiff on Hub due to TaskShared at startup ? (also in TaskSystemTest)
+  "Running CEP function serviceStub with args" being repeated in rxjscopro
+Task that has the ability to inspect the Task Node
+  Access to KeyV
+    Shared can include a list of the available Nodes
+    Selecting Node would populate the list of available KeyV
+    Selecting KeyV will open table
+      Also provide stats
+Check mobile view for menu
+Document the strategy for using null in Objects and arrays
+  Strip the null fields just before it is processed as a task
+    But keep null fields in storage so it is passed through hub and diffs are in sync
+      Do not strip null values when coprocessing
+        Task Function needs to account for this when iterating over keys
+  JSON does not support "undefined" which would be another indicator for deletion
+In the coprocessing of task if we remove null then we lose the delete
+  If we don't remove null then coprocessing task need to deal with null (e.g. when looping over object keys)
+How can we detect errors in the console?
+  window.onerror
+  window.addEventListener('unhandledrejection'
+  Can also override console.log console.error (before they are used)
+    Could create a window.log that meta can access as a feature of the React Processor
+TaskSystemTasksConfig should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
+  SystmTasksConfig could autostart ? (but it also runs on React which may not exist)
+Could configure CEP to run during or after coprocessing
+familyId should be in meta?
 Registering could/should be a task
   use the processorId as an instanceId
-Stop the multiple registering on startup
 Ability to move configurations
-  Requires mods to the meta etc - not so simple
+  Requires mods to the task.meta etc - not so simple
+    Build on top of CRUD
 Copy of configurations should be easier 
-Deleting the taskConfig with diff changes is problematic
-  It is an array so setting to null is not enough
-  Could have similar issues with menu tree
-    A workaround could be deleting the old version so diff is not sent
-  Need a better solution for this but it would be another big change
-    Get config mods working first
 How do we drive the input of another task without UI ?
   New command 
     "input" which drives local task
@@ -24,7 +44,7 @@ Create a TaskSystemContainer on React that will do most of what Taskflows.js doe
   Should not have a familyId ? (allowing children to create their own)
 Check if keyv/redis has iterator
 Clearing of KeyV needs to be configurable
-Does keyV store meta data like updatedAt?
+Does keyV store meta data like updatedAt? An upcoming version will.
 Copying/editing of config
 Janssen Project for login there is a commerial offering Gluu
 Ant Design

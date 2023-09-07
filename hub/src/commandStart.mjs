@@ -29,10 +29,10 @@ export async function commandStart_async(task, res) {
         user: {id: task.user.id},
       };
     }
-    utils.logTask(task, "commandStart_async coProcessingDone:", task.hub.coProcessingDone, "initTask", initTask);
+    utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (haveCoProcessor) {
-      if (task.hub.coProcessingDone) {
+      if (task.hub.coprocessingDone) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
@@ -47,7 +47,7 @@ const TaskConversation = (props) => {
   // This potetniallly allows msgs to be controlled by TaskConversation
   useEffect(() => {
     //console.log("TaskConversation childTask?.output?.msgs", childTask?.output?.msgs);
-    if (childTask?.output?.msgs) {
+    if (!utils.deepEqual(childTask?.output?.msgs, childTask?.input?.msgs)) {
       modifyChildTask({
         "input.msgs": childTask.output.msgs,
       });
@@ -81,7 +81,7 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (childTask) {
       const childMsgs = childTask.output?.msgs || [];
-      if (childTask.output.LLMResponse !== chatResponse) {
+      if (childTask.output && childTask.output.LLMResponse !== chatResponse) {
         setChatResponse(applyRegex(childTask.output.LLMResponse));
       }
       let welcomeMessage = [];

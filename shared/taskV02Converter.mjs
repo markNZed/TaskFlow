@@ -191,6 +191,7 @@ const typeMap = {
         { json: "processors", js: "processors", typ: u(undefined, m("any")) },
         { json: "request", js: "request", typ: u(undefined, m("any")) },
         { json: "response", js: "response", typ: u(undefined, m("any")) },
+        { json: "shared", js: "shared", typ: u(undefined, m("any")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "user", js: "user", typ: u(undefined, m("any")) },

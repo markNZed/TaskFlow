@@ -112,9 +112,10 @@ async function openaigpt_async(params) {
         //console.log("getMessageById", id, messages[(id - 1)])
         return messages[(id - 1)];
       },
+      /* Not used
       upsertMessage: async (id) => {
-        // Not used
       },
+      */
       completionParams: {
         top_p: 1.0,
       },
@@ -246,6 +247,7 @@ async function openaigpt_async(params) {
   return response_text_promise;
 }
 
+// eslint-disable-next-line no-unused-vars
 async function openaistub_async(params) {
   let response_text_promise = Promise.resolve("");
   response_text_promise = Promise.resolve("test text");

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { useState, useEffect, useRef } from "react";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
 const useStartTask = (task, setTask) => {

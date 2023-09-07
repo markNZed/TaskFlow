@@ -19,7 +19,7 @@ import { Typography, TextareaAutosize } from "@mui/material";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 
 const TaskLLMIO = (props) => {
   const {

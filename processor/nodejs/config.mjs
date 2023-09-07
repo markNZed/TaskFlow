@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // .env is intended to allow for config that is not under version control
-import { appLabel, appName, appAbbrev } from "./src/shared/config.mjs"
+import { appLabel, appName, appAbbrev, EMPTYDBS } from "./src/shared/config.mjs"
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import * as dotenv from "dotenv";
@@ -60,4 +60,4 @@ try {
 
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId };
+export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, EMPTYDBS };

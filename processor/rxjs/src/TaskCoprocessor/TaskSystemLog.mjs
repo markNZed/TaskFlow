@@ -10,6 +10,8 @@ import { tasksModel } from "./TaskSystemLog/tasksModel.mjs"
 // eslint-disable-next-line no-unused-vars
 const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   // Store a task in the DB
   // Could reduce storage usage by storing diffs but not worth the effort now
   async function updateTaskWithHistory(newTaskData) {
@@ -50,7 +52,7 @@ const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) 
 
   switch (T("state.current")) {
     case "start":
-      if (!T("processor.coProcessingDone")) {
+      if (!T("processor.coprocessingDone")) {
         CEPFunctions.register("CEPLog", CEPLog);
       }
       break;

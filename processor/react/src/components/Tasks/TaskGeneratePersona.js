@@ -9,7 +9,7 @@ import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import DynamicComponent from "./../Generic/DynamicComponent";
-import { utils } from "../../utils/utils";
+import { utils } from "../../utils/utils.mjs";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 
 /*

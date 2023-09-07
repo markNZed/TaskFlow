@@ -17,6 +17,8 @@ import TreeModel from 'tree-model';
 // eslint-disable-next-line no-unused-vars
 const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   function serviceStub(functionName, wsSendTask, CEPinstanceId, task, args) {
     const key = args.key;
     const value = args.value;
@@ -40,13 +42,16 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
   async function familyTree(functionName, wsSendTask, CEPinstanceId, task, args) {
     utils.logTask(task, "familyTree command", task.processor.command);
     // Only run this when going through the coprocessor the first time
-    if (task.processor.command === "init" && !task.processor.coProcessingDone) {
+    if (task.processor.command === "init" && !task.processor.coprocessingDone) {
       let CEPtask;
       // In this case we are starting the TaskSystemTest
       if (CEPinstanceId === task.instanceId) {
         CEPtask = task;
       } else {
         CEPtask = await activeTasksStore_async.get(CEPinstanceId);
+        if (!CEPtask) {
+          throw new Error("No CEPtask found for " + CEPinstanceId);
+        }
       }
       const tree = new TreeModel();
       let root;
@@ -76,8 +81,8 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
             familyTree: root.model,
           }
         };
-        utils.logTask(task, "New state.familyTree", JSON.stringify(diff, null, 2));
-        // We send a sync which updates much faster because it sets coProcessingDone
+        //utils.logTask(task, "New state.familyTree", JSON.stringify(diff, null, 2));
+        // We send a sync which updates much faster because it sets coprocessingDone
         // Otherwise we can get race conditions with the next task reading an old state of state.familyTree
         // How can we more robustly fix this ?
         await commandUpdate_async(wsSendTask, CEPtask, diff, true);

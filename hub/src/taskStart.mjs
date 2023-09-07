@@ -188,6 +188,18 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
       utils.logTask(task, "Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
     }
   }
+  if (task.meta.systemFamilyId) {
+    let instanceIds = await familyStore_async.get(task.meta.systemFamilyId);
+    if (instanceIds) {
+      if (!instanceIds.includes(task.instanceId)) {
+        instanceIds.push(task.instanceId);
+        await familyStore_async.set(task.meta.systemFamilyId, instanceIds);
+        utils.logTask(task, "Adding to systemFamilyId " + task.meta.systemFamilyId + " instanceId: " + task.instanceId);
+      }
+    } else {
+      throw new Error("systemFamilyId " + task.meta.systemFamilyId + " not found");
+    }
+  }
   return task;
 }
 
@@ -395,6 +407,35 @@ async function taskStart_async(
     await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
     const prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
+
+    // Is this a user task being launched from a system task ?
+    // If so then initialize a new familyId
+    let isPrevSystemTask = false;
+    let prevTaskFamilyId;
+    if (prevTask) {
+      isPrevSystemTask = prevTask.id.startsWith("root.system.");
+      prevTaskFamilyId = prevTask.familyId;
+    }
+    let isFirstUserTask = false;
+    if (isPrevSystemTask && prevTask.id.startsWith("root.user.")) {
+      isFirstUserTask = true;
+    }
+    if (isFirstUserTask) {
+      prevTaskFamilyId = task.instanceId;
+      utils.logTask(task, "Reinitialising familyId isFirstUserTask", prevTaskFamilyId);
+    }
+
+    let isFirstSystemTask = false;
+    if (!prevTask && task.id.startsWith("root.system.")) {
+      isFirstSystemTask = true;
+
+    }
+
+    // We need a shared familyId so task.shared works between system tasks
+    if (isFirstSystemTask) {
+      utils.logTask(task, "Setting familyId to processorId", processorId);
+      task.familyId = processorId;
+    }
        
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
@@ -419,20 +460,24 @@ async function taskStart_async(
     if (!task.config.oneFamily && !task.config.collaborateGroupId) {
       // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
       if (prevTask) {
-        utils.logTask(task, "Using prev familyId", prevTask.familyId);
-        task.familyId = prevTask.familyId;
+        utils.logTask(task, "Using prev familyId", prevTaskFamilyId);
+        task.familyId = prevTaskFamilyId;
         if (!task.familyId) {
-          task.familyId = prevTask.instanceId;
+          task.familyId = prevTaskFamilyId;
           utils.logTask(task, "No familyId in prevTask", prevTask);
           utils.logTask(task, "No familyId prevInstanceId", prevInstanceId);
         }
       } else if (initTask.familyId) { 
         utils.logTask(task, "Using init familyId", initTask.familyId);
         task.familyId = initTask.familyId;
-      } else {
+      } else if (!task.familyId) {
         utils.logTask(task, "Using instanceId familyId", task.instanceId);
         task.familyId = task.instanceId;
       }
+    }
+
+    if (isFirstUserTask) {
+      task.meta["systemFamilyId"] = prevTaskFamilyId;
     }
 
     // Side-effect on task.familyd
@@ -442,7 +487,7 @@ async function taskStart_async(
     task.hub["command"] = "init";
     task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
     task.hub["initiatingProcessorId"] = autoStart ? "autostart" : processorId;
-    task.hub["coProcessingDone"] = false;
+    task.hub["coprocessingDone"] = false;
     
     // Initialize meta object
     // If already set (e.g. joining the task) keep the current values

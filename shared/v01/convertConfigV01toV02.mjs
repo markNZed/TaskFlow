@@ -81,7 +81,6 @@ function updateDataStructure(obj) {
       if (newKey.includes(".")) {
         const [firstPart, secondPart] = newKey.split(".");
         if (!updatedObj[firstPart]) {
-          //console.log("THERE", firstPart, value)
           updatedObj[firstPart] = {};
         }
         updatedObj[firstPart][secondPart] = value;

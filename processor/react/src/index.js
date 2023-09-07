@@ -11,7 +11,7 @@ import App from "./App";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { GlobalStateProvider } from "./contexts/GlobalStateContext";
 import { EventSourceProvider } from './contexts/EventSourceContext';
-import { hubSocketUrl } from "./config";
+import { hubSocketUrl } from "./config.mjs";
 import { BrowserRouter as Router } from "react-router-dom";
 
 // service-worker.js is in the public folder

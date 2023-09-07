@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import {} from "../config.mjs";
+import {EMPTYDBS} from "../config.mjs";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
@@ -53,12 +53,14 @@ const activeTasksStore_async = newKeyV(DB_URI, "activeTasks");
 //   Value: data object
 const taskDataStore_async = newKeyV(DB_URI, "taskData");
 
-await Promise.all([
-  cacheStore_async.clear(),
-  activeTasksStore_async.clear(),
-  taskDataStore_async.clear(),
-]);
-console.log("Cleared all KeyV");
+if (EMPTYDBS) {
+  await Promise.all([
+    cacheStore_async.clear(),
+    activeTasksStore_async.clear(),
+    taskDataStore_async.clear(),
+  ]);
+  console.log("Empty DB: cleared all KeyV");
+}
 
 export {
   cacheStore_async,

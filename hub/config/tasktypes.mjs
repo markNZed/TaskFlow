@@ -10,6 +10,10 @@ const tasktypes = [
     },
     state: {
       current: "start",
+      legal: ["start", "loaded", "ready"],
+    },
+    shared: {
+      configTree: {},
     },
   },
   {
@@ -20,6 +24,9 @@ const tasktypes = [
     },
     state: {
       current: "start",
+    },
+    shared: {
+      configTree: {},
     },
   },
   {

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import withTask from "../../hoc/withTask";
 import JsonEditor from '../Generic/JsonEditor.js'
 import { message, Alert, ConfigProvider, theme, Tree, Spin, Button, Menu, Dropdown } from 'antd';
+import { utils } from "../../shared/utils.mjs";
 
 /*
 Task Process
@@ -26,7 +27,8 @@ const TaskSystemTasksConfig = (props) => {
     onDidMount,
   } = props;
 
-  const [configTree, setConfigTree] = useState([]);
+  const [configTreeHash, setConfigTreeHash] = useState({});
+  const [configTree, setConfigTree] = useState();
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTask, setSelectedTask] = useState(null);
   const [editedTask, setEditedTask] = useState(null);
@@ -49,7 +51,7 @@ const TaskSystemTasksConfig = (props) => {
   // Task state machine
   useEffect(() => {
     // modifyState may have been called by not yet updated test.state.current
-    if (!props.checkIfStateReady()) {return}
+    if (!props.checkIfStateReady()) {log("State Machine !checkIfStateReady");return}
     let nextState; 
     // Log each transition, other events may cause looping over a state
     if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
@@ -57,7 +59,9 @@ const TaskSystemTasksConfig = (props) => {
       case "start":
         break;
       case "loaded":
-        setConfigTree(task.state.configTree);
+        if (!utils.deepEqual(task.shared.configTree, configTreeHash)) {
+          setConfigTreeHash(task.shared.configTree);
+        }
         // Should manage task.input from this processor
         // General rule: if we set a field on a processor then clear it down on the same processor
         if (task.input.selectedTaskId) {
@@ -65,7 +69,6 @@ const TaskSystemTasksConfig = (props) => {
             "input.selectedTaskId": null,
             "request.action" : "read",
             "request.actionId": task.input.selectedTaskId,
-            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           })
         }
@@ -75,7 +78,6 @@ const TaskSystemTasksConfig = (props) => {
             "request.action" : "update",
             "request.actionId": editedTask.id,
             "request.actionTask": editedTask,
-            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           });
           setEditedTask(null);
@@ -86,7 +88,6 @@ const TaskSystemTasksConfig = (props) => {
             "input.actionId": null,
             "request.action": task.input.action,
             "request.actionId": task.input.actionId,
-            "state.configTree" : null, // Hack around array delete is not working
             "command": "update",
           });
         }
@@ -99,22 +100,7 @@ const TaskSystemTasksConfig = (props) => {
           if (task.request.action === "read") {
             setSelectedTask(task.response.task);
             setSelectedTaskDiff(task.response.taskDiff);
-          } else {
-            // Here we should refresh the TaskSystemMenu
-            if (task.processor.shared.menuInstanceId) {
-              const syncTask = {
-                instanceId: task.processor.shared.menuInstanceId,
-                input: { update: true},
-              }
-              modifyTask({
-                "command": "update",
-                "commandArgs": {
-                  sync: true,
-                  syncTask,
-                }
-              })
-            }
-          }
+          } 
           nextState = "loaded";
           break;
       default:
@@ -125,9 +111,32 @@ const TaskSystemTasksConfig = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
+  function childrenHashToArray(configHashIn) {
+    if (configHashIn && configHashIn.children) {
+      let children = [];
+      for (const [key, value] of Object.entries(configHashIn.children)) {
+        //console.log("push key", key);
+        children.push(childrenHashToArray(value));
+      }
+      configHashIn.children = children;
+    }
+    if (Object.keys(configHashIn).length === 0) {
+      return [];
+    }
+    return configHashIn;
+  }
+
+  // task.shared.configTree uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
-    console.log("selectedTask",selectedTask)
-  }, [selectedTask]);
+    if (configTreeHash) {
+      // Deep copy so we do not mess with configTreeHash
+      const converted = childrenHashToArray(JSON.parse(JSON.stringify(configTreeHash)));
+      //console.log("configTree converted", converted);
+      if (Object.entries(converted).length) {
+        setConfigTree([converted]);
+      }
+    }
+  }, [configTreeHash]);
 
   const handleTreeSelect = (selectedKeys, info) => {
     const {selected, selectedNodes, node, event} = info;
@@ -190,23 +199,25 @@ const TaskSystemTasksConfig = (props) => {
           token: { colorPrimary: '#000000' }
       }}>
         <div>
-          <Dropdown 
-            menu={{ 
-              items, 
-              onClick: handleMenuClick,
-            }} 
-            trigger={['contextMenu']} 
-            placement={"bottomLeft"}
-          >
-            <Tree
-              treeData={configTree}
-              onSelect={handleTreeSelect}
-              draggable={true}
-              selectable={true}
-              onDragEnd={handleDragEnd}
-              onRightClick={handleRightClick}
-            />
-          </Dropdown>
+          {configTree ?
+            <Dropdown 
+              menu={{ 
+                items, 
+                onClick: handleMenuClick,
+              }} 
+              trigger={['contextMenu']} 
+              placement={"bottomLeft"}
+            >
+              <Tree
+                treeData={configTree}
+                onSelect={handleTreeSelect}
+                draggable={true}
+                selectable={true}
+                onDragEnd={handleDragEnd}
+                onRightClick={handleRightClick}
+              />
+            </Dropdown>
+          : null}
         </div>
         {/*
         <div>

@@ -1,4 +1,4 @@
-import { appAbbrev } from "../config";
+import { appAbbrev } from "../config.mjs";
 import _ from "lodash";
 import debug from "debug";
 import { utils as sharedUtils } from "../shared/utils.mjs"
@@ -59,48 +59,78 @@ const utils = {
     });
   },
 
-  // Support for dot notation in Task keys
-  setNestedProperties: function(obj, path = null, value = null) {
-    const processKey = (obj, key, value) => {
-      if (key.includes(".")) {
-        const [head, ...tail] = key.split(".");
-        if (!obj[head]) {
-          obj[head] = {};
-        }
-        processKey(obj[head], tail.join("."), value);
-      } else {
-        obj[key] = value;
-      }
-    };
-
-    const processObj = (obj) => {
-      for (const key of Object.keys(obj)) {
-        const value = obj[key];
-        if (
-          typeof value === "object" &&
-          value !== null &&
-          !Array.isArray(value)
-        ) {
-          processObj(value);
-        }
-        if (key.includes(".")) {
-          //console.log("before", obj)
-          processKey(obj, key, value);
-          delete obj[key];
-          //console.log("after", obj)
-        }
-      }
-    };
-
-    if (path && typeof obj === "object" && obj !== null) {
-      processKey(obj, path, value);
-    } else {
-      processObj(obj);
+  setNestedProperties: function(obj, path, value) {
+    // Validate input object
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+      throw new Error('Input must be a non-null object.');
     }
 
-    // Note this function operates in-place but it can be useful to have a return value too
-    return obj;
+    // If called with just an object, apply the rules of splitting top-level keys
+    if (arguments.length === 1) {
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const keys = key.split('.');
+          let currentObj = obj;
+          for (let i = 0; i < keys.length; i++) {
+            const subKey = keys[i];
+            if (i === keys.length - 1) {
+              currentObj[subKey] = obj[key];
+            } else {
+              currentObj[subKey] = currentObj[subKey] || {};
+              currentObj = currentObj[subKey];
+            }
+          }
+        }
+      }
+      // Clear the original keys after creating the nested structure
+      for (const key in obj) {
+        if (key.includes('.')) {
+          delete obj[key];
+        }
+      }
+      return obj; // Return the modified original object
+    }
+
+    // Validate path
+    if (path === '') {
+      throw new Error('Invalid empty key provided.');
+    }
+
+    const processKey = (obj, key, value) => {
+      // Check for empty key or key with only dots
+      if (!key || key.split('.').every(subKey => subKey === '')) {
+        throw new Error('Invalid key provided:' + key);
+      }
+
+      // Split the key into top-level and remaining parts
+      const [head, ...tail] = key.split('.');
+
+      // If the exact key exists at the top level, set it directly
+      if (obj.hasOwnProperty(head)) {
+        // This is OK at a leaf i.e., tail.length === 0
+        if (typeof obj[head] !== 'object' && tail.length > 0) {
+          throw new Error('Cannot set a nested property on a non-object value');
+        }
+        if (tail.length === 0) {
+          obj[head] = value;
+        } else {
+          processKey(obj[head], tail.join('.'), value);
+        }
+      } else {
+        // If the key does not exist at the top level, create it
+        if (tail.length === 0) {
+          obj[head] = value;
+        } else {
+          obj[head] = {};
+          processKey(obj[head], tail.join('.'), value);
+        }
+      }
+    };
+
+    processKey(obj, path, value);
+    return obj; // Return the modified original object
   },
+
 
   replaceNewlinesWithParagraphs: function(text) {
     let html = ""

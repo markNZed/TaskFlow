@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { useState, useEffect } from "react";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
 // We have: Start with startId, familyId

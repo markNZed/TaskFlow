@@ -42,6 +42,10 @@ The Task Function may implement a state machine using `task.state.current` and t
 
 A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM dynamics. For example, TaskSystemTest provides generic functions to drive the input and check the output of Tasks, different configurations of TaskSystmeTest can test different Tasks.
 
+## Task Node
+
+A **Task Node** is either a Task Hub or Task Processor i.e. a process that is processing Tasks.
+
 ## Task Processor
 
 Tasks are processed by Task Processors, currently there are three Task Processors implemented in T@skFlow. 

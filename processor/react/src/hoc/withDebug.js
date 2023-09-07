@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { utils } from "../utils/utils";
+import { utils } from "../utils/utils.mjs";
 import _ from "lodash";
 
 function withDebug(Component) {

@@ -14,6 +14,7 @@ export async function taskProcess_async(wsSendTask, task) {
   if (taskFunctions && taskFunctions[(`${task.type}_async`)]) {
     try {
       task = utils.processorInTaskOut(task);
+      utils.removeNullKeys(task);
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
       const T = utils.createTaskValueGetter(task);
@@ -63,8 +64,6 @@ export async function taskProcess_async(wsSendTask, task) {
         } catch (error) {
           console.error(`Command ${updatedTask.command} failed to fetch ${error}`);
         }
-      } else {
-        console.log("taskProcess_async nothing to do");
       }
     } else {
       console.log("taskProcess_async null " + task.id);

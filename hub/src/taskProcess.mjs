@@ -19,8 +19,15 @@ const maxErrorRate = 20; // per minute
 let lastErrorDate;
 let errorCountThisMinute = 0;
 
+function hubAssertions(taskDiff, mergedTask) {
+  // Here task is the raw task we receive from the processor
+  if (taskDiff?.state?.current && mergedTask?.state?.legal) {
+    utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
+  }
+}
+
 function processorInHubOut(task, activeTask, requestId) {
-  const { command, id, coProcessingPosition, coProcessing, coProcessingDone  } = task.processor;
+  const { command, id, coprocessingPosition, coprocessing, coprocessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
@@ -36,9 +43,9 @@ function processorInHubOut(task, activeTask, requestId) {
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
-  task.processor.coProcessing = null;
-  task.processor.coProcessingDone = null;
-  task.processor.coProcessingPosition = null;
+  task.processor.coprocessing = null;
+  task.processor.coprocessingDone = null;
+  task.processor.coprocessingPosition = null;
   const activeTaskProcessors = activeTask?.processors || {};
   activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
   task.processors = activeTaskProcessors;
@@ -56,9 +63,9 @@ function processorInHubOut(task, activeTask, requestId) {
     sourceProcessorId: id,
     initiatingProcessorId,
     requestId,
-    coProcessingPosition,
-    coProcessingDone,
-    coProcessing,
+    coprocessingPosition,
+    coprocessingDone,
+    coprocessing,
   };
   utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
@@ -233,7 +240,9 @@ async function taskProcess_async(task, req, res) {
         }
         // Need to restore meta for checkLockConflict, checkAPIRate
         // Need to restore config for checkAPIRate
+        const taskDiff = utils.deepClone(task);
         task = utils.deepMerge(activeTask, task);
+        hubAssertions(taskDiff, task);
       } else if (task.processor.command !== "start" && task.processor.command !== "init") {
         console.error("Should have activeTask if we have an instanceId", task);
         throw new Error("Should have activeTask if we have an instanceId");
@@ -251,7 +260,7 @@ async function taskProcess_async(task, req, res) {
     }
     if (task.hub.command !== "partial") {
       task = checkLockConflict(task, activeTask);
-      if (!task.hub.coProcessing) {
+      if (!task.hub.coprocessing) {
         task = checkAPIRate(task);
       }
       task = await processError_async(task, tasksStore_async);
@@ -267,7 +276,7 @@ async function taskProcess_async(task, req, res) {
       task.familyId = task.familyId || activeTask.familyId;
       task = await processOutput_async(task, outputStore_async);
     }
-    if (haveCoProcessor && !task.hub.coProcessing && !task.processor.isCoProcessor) {
+    if (haveCoProcessor && !task.hub.coprocessing && !task.processor.isCoProcessor) {
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket
       await taskSync_async(task.instanceId, task);

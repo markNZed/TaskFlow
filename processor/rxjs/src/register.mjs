@@ -35,7 +35,7 @@ const register_async = async () => {
       commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
       serviceTypes,
       messagesStyle,
-      coProcessor: COPROCESSOR,
+      coprocessor: COPROCESSOR,
       language,
    }),
   };

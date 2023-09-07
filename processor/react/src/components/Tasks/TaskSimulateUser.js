@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
-import { utils} from "../../utils/utils";
+import { utils} from "../../utils/utils.mjs";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import DynamicComponent from "../Generic/DynamicComponent";
 

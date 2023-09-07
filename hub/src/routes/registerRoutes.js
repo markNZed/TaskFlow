@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors, activeCoProcessors, autoStartTasksStore_async } from "../storage.mjs";
+import { activeProcessors, activeCoprocessors, autoStartTasksStore_async } from "../storage.mjs";
 import { hubId, setHaveCoProcessor } from "../../config.mjs";
 import { getConfigHash } from "../configdata.mjs";
 import { commandStart_async } from "../commandStart.mjs";
@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
   let messagesStyle = req.body?.messagesStyle;
   let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
-  let coProcessor = req.body?.coProcessor;
+  let coprocessor = req.body?.coprocessor;
 
   let userId = utils.getUserId(req);
 
@@ -44,18 +44,18 @@ router.post("/", async (req, res) => {
   if (language === undefined) {
     language = "EN";
   }
-  if (coProcessor === undefined) {
-    coProcessor = false;
+  if (coprocessor === undefined) {
+    coprocessor = false;
   }
 
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
   //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
   //console.log("processorId " + processorId + " registered with messagesStyle " + JSON.stringify(messagesStyle));
-  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coProcessor " + coProcessor);
+  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
     
-  if (coProcessor) {
+  if (coprocessor) {
     setHaveCoProcessor(true);
-    activeCoProcessors.set(processorId, {
+    activeCoprocessors.set(processorId, {
       environments,
       commandsAccepted,
       serviceTypes,
@@ -119,16 +119,16 @@ router.post("/", async (req, res) => {
         task.hub["sourceProcessorId"] = "hub";
         task["processor"] = {};
         task["processor"]["id"] = processorId;
-        console.log("Autostarting task ", task, initTask);
+        //console.log("Autostarting task ", task);
         commandStart_async(task);
         if (autoStartTask.once) {
           await autoStartTasksStore_async.delete(taskId);
         }
       } else {
-        console.log("Not autostarting task allEnvironmentsAvailable false");
+        //console.log("Not autostarting task allEnvironmentsAvailable false");
       }
     } else {
-      console.log("Not autostarting task environments",environments, "does not include " + autoStartEnvironment);
+      // console.log("Not autostarting task environments",environments, "does not include " + autoStartEnvironment);
     }
   }
   console.log(countAutoStartTasks + " autostart tasks");

@@ -56,52 +56,62 @@ taskSubject
     */
     mergeMap(async (task) => {
       utils.logTask(task, "Incoming task command:" + task.processor.command + " initiatingProcessorId:" + task.processor.initiatingProcessorId);
+      task = utils.processorInTaskOut(task);
       const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
-      // Complex event processing uses a Map of Map
-      //  The outer Map matches a task identity of the task that is being processed
-      //  The inner Map associates the CEP initiator task.instanceId with a function
-      // A task instance can initiate CEP triggered by instanceId, id, familyId
-      // Maps maintain order and keys do not need to be strings
-      // We always add familyId so CEP can only operate on its own family
-      // utils.createCEP is how we create the entries
-      const CEPFuncsKeys = CEPFuncs.keys();
-      //utils.logTask(task, "CEPFuncs", CEPFuncs.keys());
-      //utils.logTask(task, "CEPFuncs", CEPFuncs);
-      //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
-      let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
-      //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
-      //utils.logTask(task, "CEP looking for " + task.familyId + "-id-" + task.id);
-      let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
-      //utils.logTask(task, "CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
-      //utils.logTask(task, "CEP looking for " + task.familyId + "-familyId");
-      let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
-      //utils.logTask(task, "CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
-      // Retrieve the function arrays from each Map
-      let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
-      //utils.logTask(task, "CEP instanceIdCEPFuncs", instanceIdCEPFuncs);
-      let idCEPFuncs = [...idSourceFuncsMap.values()];
-      let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
-      // Flatten all CEP functions into a single array
-      let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
-      //utils.logTask(task, "allCEPFuncs", allCEPFuncs);
-      // Run each CEP function serially
-      for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
-        utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
-        await func(functionName, wsSendTask, CEPInstanceId, task, args);
+      if (!task.processor.coprocessing) {
+        utils.removeNullKeys(task);
       }
-      // Check for changes to the task
-      const diff = utils.getObjectDifference(taskCopy, task) || {};
-      if (Object.keys(diff).length > 0) {
-        utils.logTask(task, "DIFF", diff);
-      } else {
-        utils.logTask(task, "no DIFF", taskCopy?.state?.current, task?.state?.current);
+      // Don't run CEP on sync updates
+      if (!task.processor.commandArgs?.sync) {
+        // Complex event processing uses a Map of Map
+        //  The outer Map matches a task identity of the task that is being processed
+        //  The inner Map associates the CEP initiator task.instanceId with a function
+        // A task instance can initiate CEP triggered by instanceId, id, familyId
+        // Maps maintain order and keys do not need to be strings
+        // We always add familyId so CEP can only operate on its own family
+        // utils.createCEP is how we create the entries
+        const CEPFuncsKeys = CEPFuncs.keys();
+        //utils.logTask(task, "CEPFuncs", CEPFuncs.keys());
+        //utils.logTask(task, "CEPFuncs", CEPFuncs);
+        //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
+        let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
+        //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
+        //utils.logTask(task, "CEP looking for " + task.familyId + "-id-" + task.id);
+        let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
+        //utils.logTask(task, "CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
+        //utils.logTask(task, "CEP looking for " + task.familyId + "-familyId");
+        let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
+        //utils.logTask(task, "CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
+        // Retrieve the function arrays from each Map
+        let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
+        //utils.logTask(task, "CEP instanceIdCEPFuncs", instanceIdCEPFuncs);
+        let idCEPFuncs = [...idSourceFuncsMap.values()];
+        let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
+        // Flatten all CEP functions into a single array
+        let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
+        //utils.logTask(task, "allCEPFuncs", allCEPFuncs);
+        // Run each CEP function serially
+        task.processor.CEPExecuted = [];
+        for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
+          utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
+          // We have not performed utils.removeNullKeys(task);
+          await func(functionName, wsSendTask, CEPInstanceId, task, args);
+          task.processor.CEPExecuted.push(functionName);
+        }
+        // Check for changes to the task
+        const diff = utils.getObjectDifference(taskCopy, task) || {};
+        if (Object.keys(diff).length > 0) {
+          utils.logTask(task, "DIFF", diff);
+        } else {
+          //utils.logTask(task, "no DIFF", taskCopy?.state?.current, task?.state?.current);
+        }
       }
       if (COPROCESSOR) {
-        utils.logTask(task, "CoProcessing task " + taskCopy.id);
-        //utils.logTask(task, "taskSubject taskCopy.processor.coProcessing", taskCopy.processor.coProcessing, "taskCopy.processor.coProcessingDone", taskCopy.processor.coProcessingDone);
-        if (task.processor.coProcessingDone) {
-          utils.logTask(task, "Skipped taskProcess coProcessingDone:", task.processor.coProcessingDone);
+        //utils.logTask(task, "taskSubject task.processor.coprocessing", task.processor.coprocessing, "task.processor.coprocessingDone", task.processor.coprocessingDone);
+        if (task.processor.coprocessingDone) {
+          utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.processor.coprocessingDone);
         } else {
+          utils.logTask(task, "CoProcessing task");
           await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       } else {
@@ -110,7 +120,11 @@ taskSubject
           await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
-      return taskCopy;
+      if (task.processor.coprocessing) {
+        return task;
+      } else {
+        return taskCopy;
+      }
     }),
   )
   .subscribe({
@@ -118,9 +132,7 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (!COPROCESSOR || task.processor.coProcessingDone) {
-          await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
-          releaseResource(task.instanceId);
+        if (!COPROCESSOR || task.processor.coprocessingDone) {
           utils.logTask(task, 'Task processed successfully');
         }
       }
@@ -151,6 +163,7 @@ const wsSendTask = async function (task) {
   task.meta.messageId = utils.nanoid8();
   message["task"] = task;
   //console.log("wsSendTask state:", task?.state?.current)
+  utils.debugTask(task);
   wsSendObject(message);
 }
 
@@ -196,10 +209,14 @@ const connectWebSocket = () => {
     //utils.logTask(task, "task.processor", task.processor);
     if (command !== "pong") {
       //utils.logTask(task, "processorWs " + command)
-      utils.logTask(task, "processorWs coProcessingDone:" + task.processor.coProcessingDone + " coProcessing:" + task.processor.coProcessing);
+      utils.logTask(task, "processorWs coprocessingDone:" + task.processor.coprocessingDone + " coprocessing:" + task.processor.coprocessing);
     }
     if (command === "update") {
       const lastTask = await activeTasksStore_async.get(task.instanceId);
+      if (!lastTask) {
+        utils.logTask(task,"Missing lastTask for update");
+        throw new Error("Missing lastTask for update");
+      }
       const mergedTask = utils.deepMergeProcessor(lastTask, task, task.processor);
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
@@ -215,37 +232,27 @@ const connectWebSocket = () => {
       //utils.logTask(task, "processorWs updating activeTasksStore_async processor", mergedTask.processor);
       //utils.logTask(task, "processorWs updating activeTasksStore_async meta", mergedTask.meta);
       // Emit the mergedTask into the taskSubject
-      if (COPROCESSOR) {
-        delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference      
-        taskSubject.next(mergedTask);
-      } else {
-        delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-        mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
-        // We need to update the storage for the case where an update will generate another update
-        // that second update "from here" needs to use the correct task for generating its diff
+      delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
+      mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
+      if (!mergedTask.processor.coprocessing) {
         await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-        taskSubject.next(mergedTask);
+        releaseResource(task.instanceId);
       }
+      taskSubject.next(mergedTask);
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
       // Emit the task into the taskSubject
-      if (COPROCESSOR) {
-        taskSubject.next(task);
-      } else {
-        // To stop looping if we start a task from this processor
-        taskSubject.next(task);
+      if (!task.processor.coprocessing) {
+        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
       }
+      taskSubject.next(task);
     } else if (command === "error") {
       utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
-      // Emit the task into the taskSubject
-      if (COPROCESSOR) {
-        taskSubject.next(task);
-      } else {
-        // To stop looping if we start a task from this processor
-        taskSubject.next(task);
+      if (!task.processor.coprocessing) {
+        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
       }
+      taskSubject.next(task);
     } else if (command === "pong") {
       //utils.logTask(task, "ws pong received", message)
     } else if (command === "register") {

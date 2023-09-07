@@ -7,6 +7,8 @@ import { initiateFsm, updateStates } from "../shared/processor/fsm.mjs";
 
 const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder) {
 
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+
   const actions = {
     nodejs_start: () => {
       T("output.instruction", T("config.local.instruction"));

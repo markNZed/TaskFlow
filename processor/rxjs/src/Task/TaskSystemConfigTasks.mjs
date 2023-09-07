@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, taskCreate_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode } from "./TaskSystemConfigTasks/configTasks.mjs";
+import { buildTree_async, taskCreate_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -21,6 +21,9 @@ let configTreeUpdatedAt = Date();
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+
+  if (T("processor.commandArgs.sync")) {utils.logTask(T(), "Ignore sync operations")}
+  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   function removeSameProperties(objA, objB) {
     if ((!_.isObject(objA) && _.isObject(objB)) || 
@@ -50,7 +53,7 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
   switch (T("state.current")) {
     case "start": {
       [nodesById, configTree] = await m_buildTree_async(configTreeUpdatedAt);
-      T("state.configTree", configTree);
+      T("shared.configTree", configTree);
       T("state.current", "loaded");
       T("command", "update");
       break;
@@ -59,9 +62,9 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       const action = T("request.action")
       const actionId = T("request.actionId");
       let done = false;
+      console.log("action:", action, "id:", actionId);
       if (action === "read") {
         // Could us promise.all to fetch in parallel
-        console.log("read", actionId);
         const requestedTask = await taskRead_async(actionId);
         const requestedTaskParent = await taskRead_async(requestedTask?.meta?.parentId);
         const diff = JSON.parse(JSON.stringify(requestedTask));
@@ -72,19 +75,25 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       } else if (action === "update") {
         await taskUpdate_async(T("request.actionTask"));
         configTreeUpdatedAt = Date();
+        [nodesById, configTree] = await m_buildTree_async(configTreeUpdatedAt);
         done = true;
       } else if (action === "delete") {
         // Find all the tasks in the branch
-        //console.log("actionId", actionId);
         const children = getAllChildrenOfNode(actionId, nodesById);
-        //console.log("children", children);
+        console.log("children", children.length);
         await taskDelete_async(actionId);
-        console.log("delete ", actionId);
+        configTree = deleteBranch(actionId, configTree);
+        delete nodesById[actionId];
         for (const child of children) {
-          console.log("delete ", child.key);
+          if (child === null) {
+            continue;
+          }
+          //console.log("delete child ", child.key);
           await taskDelete_async(child.key);
+          delete nodesById[child.key];
         }
-        configTreeUpdatedAt = Date();
+        // We do not rebuild the tree because we hav set the child to null annd this needs to be sent
+        // The rebuilt tree will not have the child so it would not be deleted
         done = true;
       } else if (action === "create") {
         const newTask = await taskRead_async(actionId);
@@ -106,18 +115,20 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
         await taskUpdate_async(parentTask);
         console.log("create ", newTask.id);
         configTreeUpdatedAt = Date();
+        [nodesById, configTree] = await m_buildTree_async(configTreeUpdatedAt);
         done = true;
       }
-      if (done) {
-        [nodesById, configTree] = await m_buildTree_async(configTreeUpdatedAt);
-        //console.log("nodesById", nodesById[actionId]);
-        T("state.configTree", configTree);
-        T("state.current", "actionDone");
-        T("command", "update");
-      } else {
-        // Should deal with errors etc
-        T("state.current", "actionDone");
-        T("command", "update");
+      if (action) {
+        if (done) {
+          //console.log("nodesById", nodesById[actionId]);
+          T("shared.configTree", configTree);
+          T("state.current", "actionDone");
+          T("command", "update");
+        } else {
+          // Should deal with errors etc
+          T("state.current", "actionDone");
+          T("command", "update");
+        }
       }
     }
     break;

@@ -98,6 +98,9 @@
         },
         "response": {
           "$ref": "./genericV02schema.json#/definitions/Response"
+        },
+        "shared": {
+          "$ref": "./genericV02schema.json#/definitions/Shared"
         }
       }
     }
