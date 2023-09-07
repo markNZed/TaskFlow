@@ -11,7 +11,7 @@ import { register_async } from "./register.mjs";
 import { activeTasksStore_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
-import { releaseTask } from './taskLock.mjs';
+import { taskRelease } from './taskLock.mjs';
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -236,7 +236,7 @@ const connectWebSocket = () => {
       mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
       if (!mergedTask.processor.coprocessing) {
         await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-        releaseTask(task.instanceId);
+        taskRelease(task.instanceId);
       }
       taskSubject.next(mergedTask);
     // Only the coprocessor should receive start (it is transformed into an init on the hub)

@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTasksStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { processorId } from "../config.mjs";
-import { lockTask } from './taskLock.mjs';
+import { taskLock } from './taskLock.mjs';
 
 export async function commandUpdate_async(wsSendTask, task, diff, sync = false) { 
   utils.logTask(task, "commandUpdate_async");
@@ -25,7 +25,7 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
       diff["instanceId"] = task.instanceId
     }
     //utils.logTask(task, "commandUpdate_async requesting lock for sync", diff.instanceId);
-    await lockTask(diff.instanceId);
+    await taskLock(diff.instanceId);
     const lastTask = await activeTasksStore_async.get(diff.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + diff.instanceId);
@@ -41,7 +41,7 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
     mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     //utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
-    await lockTask(task.instanceId);
+    await taskLock(task.instanceId);
     const lastTask = await activeTasksStore_async.get(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);

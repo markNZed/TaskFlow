@@ -10,14 +10,14 @@ export function getMutex(key) {
   return mutexes.get(key);
 }
 
-export async function lockTask(key) {
+export async function taskLock(key) {
   const mutex = getMutex(key);
   const release = await mutex.acquire();
   console.log(`Locked by key: ${key}`);
   releases.set(key, release); // Store the release function by key
 }
 
-export function releaseTask(key) {
+export function taskRelease(key) {
   const release = releases.get(key);
   if (release) {
     release();

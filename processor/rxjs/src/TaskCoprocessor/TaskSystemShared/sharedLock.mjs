@@ -10,14 +10,14 @@ export function getMutex(key) {
   return mutexes.get(key);
 }
 
-export async function lockShared(key) {
+export async function sharedLock(key) {
   const mutex = getMutex(key);
   const release = await mutex.acquire();
   console.log(`Locked by key: ${key}`);
   releases.set(key, release); // Store the release function by key
 }
 
-export function releaseShared(key) {
+export function sharedRelease(key) {
   const release = releases.get(key);
   if (release) {
     release();

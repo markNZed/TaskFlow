@@ -17,7 +17,7 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 import { sharedStore_async } from "../storage.mjs";
 import { commandUpdate_async } from "../commandUpdate.mjs";
 import assert from 'assert';
-import { lockShared, releaseShared } from './TaskSystemShared/sharedLock.mjs';
+import { sharedLock, sharedRelease } from './TaskSystemShared/sharedLock.mjs';
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
@@ -68,7 +68,7 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
           sharedEntry[familyId]["instanceIds"].push(task.instanceId);
         }
         locksShared.push(lockKey);
-        lockShared(lockKey);
+        await sharedLock(lockKey);
         familyInstanceIds = sharedEntry[familyId].instanceIds;
         updateStorage = true;
         for (const instanceId of familyInstanceIds) {
@@ -110,7 +110,7 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         }
       }
       locksShared.forEach(key => {
-        releaseShared(key);
+        sharedRelease(key);
       });
     } else {
       console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
