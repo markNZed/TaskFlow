@@ -25,7 +25,7 @@ export const taskUpdate_async = async (task) => {
 }
 
 // Helper function to recursively update child tasks
-const updateChildren_async = async (task, parentTask) => {
+const updateMoveChildren_async = async (task, parentTask) => {
   // Build new id for task
   const oldId = task.id;
   const newId = parentTask.id + "." + task.name;
@@ -53,7 +53,7 @@ const updateChildren_async = async (task, parentTask) => {
   if (task.meta.childrenId && task.meta.childrenId.length > 0) {
     for (const childId of task.meta.childrenId) {
       let childTask = await tasksStore_async.get(childId);
-      await updateChildren_async(childTask, task);
+      await updateMoveChildren_async(childTask, task);
     }
   }
   return task;
@@ -72,7 +72,7 @@ export const taskMove_async = async (task, destinationId) => {
     // Get new parent task
     const newParentTask = await tasksStore_async.get(destinationId);
     if (!newParentTask) return;
-    await updateChildren_async(task, newParentTask);
+    await updateMoveChildren_async(task, newParentTask);
     await tasksStore_async.set(parentTask.id, parentTask);
     return
   } catch (error) {
@@ -82,6 +82,48 @@ export const taskMove_async = async (task, destinationId) => {
   }
 };
 
+const updateCopyChildren_async = async (task, parentTask) => {
+  // Build new id for task
+  const newId = parentTask.id + "." + task.name;
+  const conflictingTask = await tasksStore_async.get(newId);
+  if (conflictingTask) {
+    throw new Error(`Task with id ${newId} already exists`);
+  }
+  task.id = newId;
+  // Initialize meta.childrenId if it doesn't exist
+  parentTask.meta.childrenId = parentTask.meta.childrenId || [];
+  // Add new task id to parent's children
+  parentTask.meta.childrenId.push(task.id);
+  // Update new parent task in the store
+  await tasksStore_async.set(parentTask.id, parentTask);
+  // Update parent information for this task
+  task.meta.parentId = parentTask.id;
+  task.parentName = parentTask.name;
+  // Save updated task back to store
+  await tasksStore_async.set(task.id, task);
+  // Recursively update all child tasks
+  if (task.meta.childrenId && task.meta.childrenId.length > 0) {
+    for (const childId of task.meta.childrenId) {
+      let childTask = await tasksStore_async.get(childId);
+      await updateMoveChildren_async(childTask, task);
+    }
+  }
+  return task;
+};
+
+export const taskCopy_async = async (copyTaskId, newTaskName, destinationId) => {
+  try {
+    const newTask = await taskRead_async(copyTaskId);
+    const parentTask = await taskRead_async(destinationId);
+    // Not working/tested
+    newTask.name = newTaskName;
+    updateCopyChildren_async(newTask, parentTask);
+  } catch (error) {
+    // Handle errors (logging, throw, etc.)
+    console.error("An error occurred while moving the task:", error);
+    throw error;
+  }
+}
 
 export const getAllChildrenOfNode = (nodeId, nodesById) => {
   const result = [];

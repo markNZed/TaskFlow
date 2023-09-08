@@ -29,9 +29,11 @@ const TaskSystemTasksConfig = (props) => {
 
   const [configTreeAsObject, setconfigTreeAsObject] = useState({});
   const [configTree, setConfigTree] = useState();
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskDiff, setSelectedTaskDiff] = useState(null);
-  const [rightClickedNode, setRightClickedNode] = useState(null);
+  const [selectedTask, setSelectedTask] = useState();
+  const [selectedTaskDiff, setSelectedTaskDiff] = useState();
+  const [rightClickedNode, setRightClickedNode] = useState();
+  const [copyTaskId, setCopyTaskId] = useState();
+  const [newTaskName, setNewTaskName] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
@@ -74,6 +76,8 @@ const TaskSystemTasksConfig = (props) => {
             "request.actionId": task.input.actionId,
             "request.actionTask": task.input.actionTask,
             "request.destinationId": task.input.destinationId,
+            "request.copyTaskId": task.input.copyTaskId,
+            "request.newTaskName": task.input.newTaskName,
             "command": "update",
           });
         }
@@ -200,15 +204,38 @@ const TaskSystemTasksConfig = (props) => {
       label: 'Create',
       key: 'create',
     },
+    {
+      label: 'Copy',
+      key: 'copy',
+    },
+    {
+      label: 'Paste',
+      key: 'paste',
+    },
   ];
 
   const handleMenuClick = ({ item, key, keyPath, domEvent }) => {
     //console.log("rightClickedNode", rightClickedNode);
     //console.log("item, key, keyPath, domEvent", item, key, keyPath, domEvent);
-    modifyTask({
-      "input.action": key,
-      "input.actionId": rightClickedNode.key,
-    });
+    if (key === "copy") {
+      setCopyTaskId(rightClickedNode.key);
+    } else if (key === "paste") {
+      // Get newTaskName
+      setNewTaskName("FIXTHIS");
+      if (copyTaskId) {
+        modifyTask({
+          "input.action": "create",
+          "input.actionId": rightClickedNode.key,
+          "input.copyTaskId": copyTaskId,
+          "input.newTaskName": newTaskName,
+        });
+      }
+    } else {
+      modifyTask({
+        "input.action": key,
+        "input.actionId": rightClickedNode.key,
+      });
+    }
   }
 
   return (

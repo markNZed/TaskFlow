@@ -122,14 +122,16 @@ const TaskChat = (props) => {
     const msgs = task.input?.msgs || [];
     //console.log("msgs before SM", msgs);
     switch (task.state.current) {
-      case "start":
+      case "start": {
         modifyTask({
           "output.sending": false,
           "input.promptText": "",
           "input.submitPrompt": false,
         });
         nextState = "input";
-      case "input":
+        break;
+      }
+      case "input": {
         if (transitionFrom("received")) {
           responseTextRef.current = "";
           setResponseText(responseTextRef.current);
@@ -141,6 +143,7 @@ const TaskChat = (props) => {
           nextState = "mentionAddress";
         }
         break;
+      }
       case "mentionAddress":
         if (transitionTo("mentionAddress") && !checkLocked()) {
           // Add the input too for the user
@@ -206,6 +209,8 @@ const TaskChat = (props) => {
             //nextState = "input";
           }
         }
+        break;
+      default:
         break;
     }
     // Manage state.current

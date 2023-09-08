@@ -209,7 +209,10 @@ const utils = {
     }
 
     if (typeof update === "object") {
-      let output = JSON.parse(JSON.stringify(prevState)) || {};
+      let output = {};
+      if (typeof prevState === "object" && prevState !== null) {
+        output = JSON.parse(JSON.stringify(prevState));
+      }
       if (debug) {console.log("output before", JSON.parse(JSON.stringify(output)))}
       if (debug) {console.log("update before", JSON.parse(JSON.stringify(update)))}
       for (const key in update) {
