@@ -201,8 +201,8 @@ const TaskSystemTasksConfig = (props) => {
       key: 'delete',
     },
     {
-      label: 'Create',
-      key: 'create',
+      label: 'Insert',
+      key: 'insert',
     },
     {
       label: 'Copy',

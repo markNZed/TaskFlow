@@ -3,10 +3,10 @@
 Don't merge meta modified just replace it on processors
 TaskSystemConfigTasks_async copy feature in tree
   Right click store the id and popup to get new name
-  Right click paste (greyed out if not availble?) 
-  Wtite taskCreate_async 
+  Right click paste (greyed out if not available?) 
   Dealing with duplicate names and errors
     Can then build a "new" name by adding (1) (2) to find unique
+  Insert seems broken
 Look after deleting values in objects send by processor e.g. task.meta.delete that is processed on hub input
   Then we don't need to clear the request/repsonse?
 Menu tree should be sorted?

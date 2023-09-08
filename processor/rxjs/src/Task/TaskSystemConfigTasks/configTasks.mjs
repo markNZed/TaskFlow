@@ -9,7 +9,7 @@ import { tasksStore_async } from "../../storage.mjs";
 // We want CRUD operations for the config
 
 export const taskCreate_async = async (task) => {
-  return tasksStore_async.set(task.id, task);
+  return taskUpdate_async(task);
 }
 
 export const taskRead_async = async (id) => {
@@ -41,14 +41,14 @@ const updateMoveChildren_async = async (task, parentTask) => {
   // Add new task id to parent's children
   parentTask.meta.childrenId.push(task.id);
   // Update new parent task in the store
-  await tasksStore_async.set(parentTask.id, parentTask);
+  await taskUpdate_async(parentTask);
   // Update parent information for this task
   task.meta.parentId = parentTask.id;
   task.parentName = parentTask.name;
   // Delete the old entry
   await tasksStore_async.delete(oldId);
   // Save updated task back to store
-  await tasksStore_async.set(task.id, task);
+  await taskUpdate_async(task);
   // Recursively update all child tasks
   if (task.meta.childrenId && task.meta.childrenId.length > 0) {
     for (const childId of task.meta.childrenId) {
@@ -73,7 +73,7 @@ export const taskMove_async = async (task, destinationId) => {
     const newParentTask = await tasksStore_async.get(destinationId);
     if (!newParentTask) return;
     await updateMoveChildren_async(task, newParentTask);
-    await tasksStore_async.set(parentTask.id, parentTask);
+    await taskUpdate_async(parentTask);
     return
   } catch (error) {
     // Handle errors (logging, throw, etc.)
@@ -95,12 +95,12 @@ const updateCopyChildren_async = async (task, parentTask) => {
   // Add new task id to parent's children
   parentTask.meta.childrenId.push(task.id);
   // Update new parent task in the store
-  await tasksStore_async.set(parentTask.id, parentTask);
+  await taskUpdate_async(parentTask);
   // Update parent information for this task
   task.meta.parentId = parentTask.id;
   task.parentName = parentTask.name;
   // Save updated task back to store
-  await tasksStore_async.set(task.id, task);
+  await taskUpdate_async(task);
   // Recursively update all child tasks
   if (task.meta.childrenId && task.meta.childrenId.length > 0) {
     for (const childId of task.meta.childrenId) {
@@ -118,6 +118,32 @@ export const taskPaste_async = async (copyTaskId, newTaskName, destinationId) =>
     // Not working/tested
     newTask.name = newTaskName;
     updateCopyChildren_async(newTask, parentTask);
+  } catch (error) {
+    // Handle errors (logging, throw, etc.)
+    console.error("An error occurred while moving the task:", error);
+    throw error;
+  }
+}
+
+export const taskInsert_async = async (actionId) => {
+  try {
+    const newTask = await taskRead_async(actionId);
+    const childrenCount = newTask.meta.childrenId ? newTask.meta.childrenId.length : 0;
+    const postfix = "new" + childrenCount;
+    newTask.meta = newTask.meta || {};
+    newTask.meta.childrenId = [];
+    newTask.meta.parentId = newTask.id;
+    newTask.id += "." + postfix;
+    newTask.parentName = newTask.name;
+    newTask.name += postfix;
+    newTask.config = newTask.config || {};
+    newTask.config.label = newTask.config.label || "";
+    newTask.config.label += " " + postfix;
+    await taskCreate_async(newTask);
+    const parentTask = await taskRead_async(actionId);
+    parentTask.meta.childrenId = parentTask.meta.childrenId || [];
+    parentTask.meta.childrenId.push(newTask.id);
+    await taskUpdate_async(parentTask);
   } catch (error) {
     // Handle errors (logging, throw, etc.)
     console.error("An error occurred while moving the task:", error);

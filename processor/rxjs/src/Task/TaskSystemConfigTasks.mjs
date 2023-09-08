@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, taskCreate_async, taskMove_async, taskPaste_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
+import { buildTree_async, taskInsert_async, taskMove_async, taskPaste_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -164,25 +164,9 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
           rebuildTree = true;
           done = true;
         }
-      } else if (action === "create") {
-        const newTask = await taskRead_async(actionId);
-        const childrenCount = newTask.meta.childrenId ? newTask.meta.childrenId.length : 0;
-        const postfix = "new" + childrenCount;
-        newTask.meta = newTask.meta || {};
-        newTask.meta.childrenId = [];
-        newTask.meta.parentId = newTask.id;
-        newTask.id += "." + postfix;
-        newTask.parentName = newTask.name;
-        newTask.name += postfix;
-        newTask.config = newTask.config || {};
-        newTask.config.label = newTask.config.label || "";
-        newTask.config.label += " " + postfix;
-        await taskCreate_async(newTask);
-        const parentTask = await taskRead_async(actionId);
-        parentTask.meta.childrenId = parentTask.meta.childrenId || [];
-        parentTask.meta.childrenId.push(newTask.id);
-        await taskUpdate_async(parentTask);
-        console.log("create ", newTask.id);
+      } else if (action === "insert") {
+        // Create taskCreate_async
+        await taskInsert_async(actionId);
         rebuildTree = true;
         done = true;
       }
