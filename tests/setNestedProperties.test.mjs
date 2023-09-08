@@ -5,6 +5,14 @@ const setNestedProperties = utils.setNestedProperties;
 
 const tests = [
   {
+    name: "setNull",
+    testFn: () => {
+      const input = { "a": null };
+      const output = setNestedProperties(input, "a.b", 1);
+      expect(output).toEqual({ a: { b: 1 }});
+    },
+  },
+  {
     name: "singleArgument",
     testFn: () => {
       const input = { "a.b": 1, "a.c": 2 };

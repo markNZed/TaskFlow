@@ -27,11 +27,9 @@ const TaskSystemTasksConfig = (props) => {
     onDidMount,
   } = props;
 
-  const [configTreeHash, setConfigTreeHash] = useState({});
+  const [configTreeAsObject, setconfigTreeAsObject] = useState({});
   const [configTree, setConfigTree] = useState();
-  const [messageApi, contextHolder] = message.useMessage();
   const [selectedTask, setSelectedTask] = useState(null);
-  const [editedTask, setEditedTask] = useState(null);
   const [selectedTaskDiff, setSelectedTaskDiff] = useState(null);
   const [rightClickedNode, setRightClickedNode] = useState(null);
 
@@ -59,46 +57,32 @@ const TaskSystemTasksConfig = (props) => {
       case "start":
         break;
       case "loaded":
-        if (!utils.deepEqual(task.shared.configTree, configTreeHash)) {
-          setConfigTreeHash(task.shared.configTree);
+        // Could use task.meta.updatedAt to detect a new task then generate events for task.meta.modified
+        // A state variable e.g. lastModifiedX could make sure the event is processed once
+        if (props.transition() && task.meta?.modified?.shared?.configTree) {
+          setconfigTreeAsObject(task.shared.configTree);
         }
-        // Should manage task.input from this processor
         // General rule: if we set a field on a processor then clear it down on the same processor
-        if (task.input.selectedTaskId) {
-          modifyTask({
-            "input.selectedTaskId": null,
-            "request.action" : "read",
-            "request.actionId": task.input.selectedTaskId,
-            "command": "update",
-          })
-        }
-        if (task.input.submit && editedTask) {
-          modifyTask({
-            "input.submit": null,
-            "request.action" : "update",
-            "request.actionId": editedTask.id,
-            "request.actionTask": editedTask,
-            "command": "update",
-          });
-          setEditedTask(null);
-        }
+        //   Not for response/request
         if (task.input.action) {
           modifyTask({
             "input.action": null,
             "input.actionId": null,
+            "input.actionTask": null,
+            "input.destinationId": null,
             "request.action": task.input.action,
             "request.actionId": task.input.actionId,
+            "request.actionTask": task.input.actionTask,
+            "request.destinationId": task.input.destinationId,
             "command": "update",
           });
         }
         break;
       case "actionDone":
-          modifyTask({
-            "request.action": null,
-            "request.actionId": null,
-          })
-          if (task.request.action === "read") {
+          if (task.response.task) {
             setSelectedTask(task.response.task);
+          }
+          if (task.response.taskDiff) {
             setSelectedTaskDiff(task.response.taskDiff);
           } 
           nextState = "loaded";
@@ -111,50 +95,83 @@ const TaskSystemTasksConfig = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
-  function childrenHashToArray(configHashIn) {
-    if (configHashIn && configHashIn.children) {
-      let children = [];
-      for (const [key, value] of Object.entries(configHashIn.children)) {
-        //console.log("push key", key);
-        children.push(childrenHashToArray(value));
+  /**
+   * Transforms a specific property in an object from a hash to an array.
+   * Useful for standardizing object structures for easier manipulation.
+   *
+   * @param {Object} obj - Object containing the property to transform.
+   * @param {String} propName - Name of the property to transform.
+   * @returns {Object} - Object with transformed property.
+   */
+  function hashToArrayOnProperty(obj, propName) {
+    // Only transform if the target property exists.
+    if (obj && obj[propName]) {
+      let newArray = [];
+      for (const [_, value] of Object.entries(obj[propName])) {
+        newArray.push(hashToArrayOnProperty(value, propName));
       }
-      configHashIn.children = children;
+      obj[propName] = newArray;
     }
-    if (Object.keys(configHashIn).length === 0) {
+
+    // Standardize empty objects to empty arrays for the sake of uniformity.
+    if (Object.keys(obj).length === 0) {
       return [];
     }
-    return configHashIn;
+
+    return obj;
   }
 
   // task.shared.configTree uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
-    if (configTreeHash) {
-      // Deep copy so we do not mess with configTreeHash
-      const converted = childrenHashToArray(JSON.parse(JSON.stringify(configTreeHash)));
+    if (configTreeAsObject) {
+      // Deep copy so we do not mess with configTreeAsObject
+      const sortedConfigTreeAsObject = utils.sortKeys(configTreeAsObject);
+      const converted = hashToArrayOnProperty(JSON.parse(JSON.stringify(sortedConfigTreeAsObject)), "children");
       //console.log("configTree converted", converted);
       if (Object.entries(converted).length) {
         setConfigTree([converted]);
       }
     }
-  }, [configTreeHash]);
+  }, [configTreeAsObject]);
 
   const handleTreeSelect = (selectedKeys, info) => {
     const {selected, selectedNodes, node, event} = info;
+    // In tree components, selecting and then deselecting a node may trigger the event handler
+    // with an empty array for selectedKeys. In such cases, skip further processing.
     if (selectedKeys.length === 0) {
       return;
     }
     modifyTask({
-      "input.selectedTaskId": node.key,
-    })
+      "input.action": "read",
+      "input.actionId": node.key,
+    });
   };
 
   const handleDragEnd = ({event, node}) => {
     console.log('onDragEnd', event, node);
   }
 
+  const handleDrop = (info) => {
+    console.log('onDrop', info);
+    const draggedNode = info.dragNode;
+    const draggedToNode = info.node;
+    const draggedNodesKeys = info.dragNodesKeys;
+    // The nodes are sortd so we do not care about the dropPosition
+    const dropPosition = info.dropPosition;
+    console.log("configTree:", configTree, "draggedNode", draggedNode,"draggedToNode", draggedToNode, "draggedNodesKeys", draggedNodesKeys, "dropPosition", dropPosition);
+    modifyTask({
+      "input.action": "move",
+      "input.actionId": draggedNode.key,
+      "input.destinationId": draggedToNode.key,
+    });
+  }
+
   const handleDataChanged = (newData) => {
-    console.log('Edited JSON data:', newData);
-    setEditedTask(newData);
+    console.log('handleDataChanged');
+    if (newData && newData.json) {
+      console.log('setSelectedTask', newData.json);
+      setSelectedTask(newData.json)
+    }
   };
 
   const handleRightClick = ({ event, node }) => {
@@ -163,9 +180,13 @@ const TaskSystemTasksConfig = (props) => {
   };
 
   const handleTaskSubmit = () => {
+    console.log("handleTaskSubmit");
     if (selectedTask) {
+      console.log("handleTaskSubmit selectedTask", selectedTask);
       modifyTask({
-        "input.submit": true,
+        "input.action": "update",
+        "input.actionTask": selectedTask,
+        "input.actionId": selectedTask.id,
       });
     }
   };
@@ -214,34 +235,38 @@ const TaskSystemTasksConfig = (props) => {
                 draggable={true}
                 selectable={true}
                 onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
                 onRightClick={handleRightClick}
               />
             </Dropdown>
           : null}
         </div>
-        {/*
         <div>
-          <h2>Parent Diff</h2>
           {selectedTaskDiff ? (
-            <JsonEditor 
-              initialData={selectedTaskDiff} 
-              onDataChanged={handleDataChanged}
-              sortObjectKeys={true}
-            />
+            <>
+              <h2>Inherited</h2>
+              <JsonEditor 
+                content={selectedTaskDiff} 
+                sortObjectKeys={true}
+                readOnly={true}
+              />
+            </>
           ) : (
-            <p>No task selected.</p>
+            null
           )}
         </div>
-        */}
         <div>
           <div>
             {selectedTask ? (
-              <JsonEditor 
-                initialData={selectedTask} 
-                onDataChanged={handleDataChanged}
-                history={true}
-                sortObjectKeys={true}
-              />
+              <>
+                <h2>{selectedTask.id}</h2>
+                <JsonEditor 
+                  content={selectedTask} 
+                  onDataChanged={handleDataChanged}
+                  history={true}
+                  sortObjectKeys={true}
+                />
+              </>
             ) : (
               task.request.selectedTaskId ? (
                 <Spin />
@@ -254,34 +279,9 @@ const TaskSystemTasksConfig = (props) => {
             { (selectedTask) ? (
               <Button type="primary" onClick={handleTaskSubmit}>Submit</Button>
             ) : (
-              task.request.selectedTaskId ? (
-                null
-              ) : (
-                <p>No task selected.</p>
-              )
+              null
             )}
           </div>
-          {/*
-          {contextMenuVisible && (
-            <Dropdown
-              menu={<RightClickMenu onDelete={handleDelete} />}
-              trigger={['click']}
-              open={true}
-              onOpenChange={(visible) => setContextMenuVisible(visible)}
-              getPopupContainer={() => document.body}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: `${menuPosition.y}px`,
-                  left: `${menuPosition.x}px`,
-                }}
-              >
-                <span style={{ opacity: 0 }}>.</span>
-              </div>
-            </Dropdown>
-          )}
-          */}
         </div>
       </ConfigProvider>
     </>

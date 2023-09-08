@@ -7,6 +7,10 @@ import { nanoid } from 'nanoid';
 const utils = {
 
   getNestedValue: function (obj, path) {
+    if (typeof path !== 'string') {
+      console.error('Path must be a string', path);
+      throw new Error('Path must be a string');
+    }    
     return path.split(".").reduce((prev, curr) => {
       return prev && prev[curr] !== undefined ? prev[curr] : undefined;
     }, obj);
@@ -23,18 +27,118 @@ const utils = {
   },
 
   createTaskValueGetter: function(task) {
-    return function (path, value) {
-      if (arguments.length === 2) {
-        utils.setNestedValue(task, path, value);
-        //console.log("createTaskValueGetter set ", path, value)
-      } else if (!path && !value) {
+    return function (arg1, value) {
+      if (arguments.length === 1) {
+        if (typeof arg1 === 'string') {
+          return utils.getNestedValue(task, arg1);
+        } if (typeof arg1 === 'object') {
+          utils.setNestedProperties(arg1);
+          task = utils.deepMerge(task, arg1);
+          return task;
+        } else {
+          console.error('Invalid argument type', arg1);
+          throw new Error('Invalid argument type');
+        }
+      } else if (arguments.length === 2) {
+        let mod = {[arg1]: value}
+        utils.setNestedProperties(mod);
+        task = utils.deepMerge(task, mod);
+        return task;
+        //console.log("createTaskValueGetter set ", arg1, value)
+      } else if (!arg1 && !value) {
         return task;
       } else {
-        const res = utils.getNestedValue(task, path);
-        //console.log("createTaskValueGetter get ", path, res)
+        const res = utils.getNestedValue(task, arg1);
+        //console.log("createTaskValueGetter get ", arg1, res)
         return res;
       }
     };
+  },
+
+  setNestedProperties: function(obj, path, value) {
+    // Validate input object
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+      throw new Error('Input must be a non-null object.');
+    }
+
+    // If called with just an object, apply the rules of splitting top-level keys
+    if (arguments.length === 1) {
+      for (const key in obj) {
+        // eslint-disable-next-line no-prototype-builtins
+        if (obj.hasOwnProperty(key)) {
+          const keys = key.split('.');
+          let currentObj = obj;
+          for (let i = 0; i < keys.length; i++) {
+            const subKey = keys[i];
+            if (i === keys.length - 1) {
+              currentObj[subKey] = obj[key];
+            } else {
+              currentObj[subKey] = currentObj[subKey] || {};
+              currentObj = currentObj[subKey];
+            }
+          }
+        }
+      }
+      // Clear the original keys after creating the nested structure
+      for (const key in obj) {
+        if (key.includes('.')) {
+          delete obj[key];
+        }
+      }
+      return obj; // Return the modified original object
+    }
+
+    // Validate path
+    if (path === '') {
+      throw new Error('Invalid empty key provided.');
+    }
+
+    const processKey = (obj, key, value) => {
+      // Ensure key is a string
+      if (typeof key !== 'string') {
+        console.error('Key must be a string', key);
+        throw new Error('Key must be a string');
+      }
+      // Check for empty key or key with only dots
+      if (!key || key.split('.').every(subKey => subKey === '')) {
+        throw new Error('Invalid key provided:' + key);
+      }
+
+      if (obj === null) {
+        obj = {};
+      }
+
+      // Split the key into top-level and remaining parts
+      const [head, ...tail] = key.split('.');
+
+      // If the exact key exists at the top level, set it directly
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(head)) {
+        // This is OK at a leaf i.e., tail.length === 0
+        if (typeof obj[head] !== 'object' && tail.length > 0) {
+          throw new Error('Cannot set a nested property on a non-object value');
+        }
+        if (tail.length === 0) {
+          obj[head] = value;
+        } else {
+          if (obj[head] === null) {
+            obj[head] = {};  // Replace null with empty object
+          }
+          processKey(obj[head], tail.join('.'), value);
+        }
+      } else {
+        // If the key does not exist at the top level, create it
+        if (tail.length === 0) {
+          obj[head] = value;
+        } else {
+          obj[head] = {};
+          processKey(obj[head], tail.join('.'), value);
+        }
+      }
+    };
+
+    processKey(obj, path, value);
+    return obj; // Return the modified original object
   },
 
   deepMergeProcessor: function(prevState, update, processorIn) {
@@ -889,6 +993,25 @@ const utils = {
     if (!condition) {
       console.warn(`Assertion Warning: ${message}`);
     }
+  },
+
+  sortKeys: function(obj) {
+    // If obj is null or not an object, return as is
+    if (obj === null || typeof obj !== 'object') return obj;
+  
+    // If obj is an array, return as is
+    if (Array.isArray(obj)) return obj;
+  
+    // Sort the keys of the object
+    const sortedKeys = Object.keys(obj).sort();
+  
+    // Create a new object and copy over the values,
+    // recursively sorting any nested objects
+    const sortedObj = {};
+    for (const key of sortedKeys) {
+      sortedObj[key] = utils.sortKeys(obj[key]);
+    }
+    return sortedObj;
   },
 
   debugTask: async function(task, context = "") {

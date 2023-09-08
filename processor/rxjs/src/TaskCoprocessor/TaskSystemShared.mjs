@@ -40,6 +40,7 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
     return false;
   }
 
+  // Because of lock this should be in a try/catch block so we can release the lock in case of error
   // eslint-disable-next-line no-unused-vars
   async function CEPShared(functionName, wsSendTask, CEPinstanceId, task, args) {
     // We only want to run this during the coprocessing of the task
@@ -97,17 +98,24 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         utils.logTask(task, "CEPShared task.processor.command === init", task.shared);
       } else {
         const instanceIds = Object.keys(toSync);
+        const promises = [];
         for (const instanceId of instanceIds) {
           if (task.instanceId === instanceId) {
             utils.logTask(task, "CEPShared task.instanceId === instanceId so skipping");
             continue;
           }
-          let syncDiff = {}
+          let syncDiff = {};
           syncDiff["shared"] = toSync[instanceId];
           syncDiff["instanceId"] = instanceId;
-          await commandUpdate_async(wsSendTask, task, syncDiff, true);
-          utils.logTask(task, "CEPShared updating with sync instanceId:", instanceId); 
+          // Create a new Promise for each instance and push it to the promises array
+          promises.push(
+            commandUpdate_async(wsSendTask, task, syncDiff, true).then(() => {
+              utils.logTask(task, "CEPShared updating with sync instanceId:", instanceId);
+            })
+          );
         }
+        // Wait for all promises to resolve
+        await Promise.all(promises);
       }
       locksShared.forEach(key => {
         sharedRelease(key);

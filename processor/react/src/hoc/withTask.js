@@ -368,7 +368,7 @@ function withTask(Component) {
       (errorTask) => {
         console.log("useErrorWSFilter", errorTask.id, errorTask.error, errorTask);
         // We do not have a plan for dealing with errors here yet
-        alert("Task error: " + errorTask.response.text);
+        alert("Task error: " + errorTask?.response?.text);
         // Probably better to "remount" the component
         // This can be done by changing the Key where the component is instantiated
         // Going back to the start state can create an error loop

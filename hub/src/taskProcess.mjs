@@ -13,6 +13,9 @@ import { commandError_async } from "./commandError.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
 import { haveCoProcessor } from "../config.mjs";
+// eslint-disable-next-line no-unused-vars
+import assert from 'assert';
+import _ from "lodash";
 
 // Could try to detect error cycles
 const maxErrorRate = 20; // per minute
@@ -20,10 +23,13 @@ let lastErrorDate;
 let errorCountThisMinute = 0;
 
 function hubAssertions(taskDiff, mergedTask) {
-  // Here task is the raw task we receive from the processor
+  // Here taskDiff is the task we receive from the processor but with tak.meta.modified added
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
+  const reqNotEmpty = !_.isEmpty(mergedTask.meta.modified.request);
+  const resNotEmpty = !_.isEmpty(mergedTask.meta.modified.response);
+  utils.assertWarning(!(reqNotEmpty && resNotEmpty), "Should have either response or request not both");
 }
 
 function processorInHubOut(task, activeTask, requestId) {
@@ -57,6 +63,14 @@ function processorInHubOut(task, activeTask, requestId) {
   }
   */
   task.users = activeTask?.users || {};
+  // Clear out previous response when receiving a new request
+  if (!_.isEmpty(task.meta.modified.request)) {
+    task.response = {}
+  } 
+  // Clear out previous request when receiving a new response
+  if (!_.isEmpty(task.meta.modified.response)) {
+    task.request = {}
+  }
   task.hub = {
     command,
     commandArgs,

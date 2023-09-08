@@ -47,6 +47,8 @@ The Hub provides the following features:
 * `task.meta.updatesThisMinute` rate of API accesses per minute
 * The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Task Processors.
 * A mutex imposes serial updates per task instanceId
+* If `task.request` is not empty then `task.response` is set to `{}` to avoid new responses being merged with old responses
+* If `task.response` is not empty then `task.request` is set to `{}` to avoid new requests being merged with old requests
 
 When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Task Processor is synchronized with all other Task Processors.
 
