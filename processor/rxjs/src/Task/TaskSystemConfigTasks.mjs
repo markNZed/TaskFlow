@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, taskCreate_async, taskMove_async, taskCopy_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
+import { buildTree_async, taskCreate_async, taskMove_async, taskPaste_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -128,15 +128,7 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       } else if (action === "move") {
         const requestedTask = await taskRead_async(actionId);
         await taskMove_async(requestedTask, T("request.destinationId"));
-        // How to clean up the old branch in configTree when we rebuild it
-        // If we set values to null in config they will be lost in rebuild
-        // task.reset.shared.configTree = true
-        // This would not merge but just use the new value
-        // Another option is to set it to {} at some point
-        // could return the new configTree in response but that will not update shared
-        // could take updated values for shared from task.response.shared...
-        // The processor can in theory see what is deleted and send this ?
-        // task.processor.delete
+        // This is a hack to get around data needing to be deleted - the processor should manage this for us
         configTree = deleteBranch(actionId, configTree);
         const oldConfigTree = utils.deepClone(configTree);
         configTreeUpdateAt = Date();
@@ -166,33 +158,33 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
         // We do not rebuild the tree because we hav set the child to null annd this needs to be sent
         // The rebuilt tree will not have the child so it would not be deleted
         done = true;
-      } else if (action === "create") {
+      } else if (action === "paste") {
         if (T("request.copyTaskId")) {
-          await taskCopy_async(T("request.copyTaskId"), T("request.newTaskName"), actionId);
-          rebuildTree = true;
-          done = true;
-        } else {
-          const newTask = await taskRead_async(actionId);
-          const childrenCount = newTask.meta.childrenId ? newTask.meta.childrenId.length : 0;
-          const postfix = "new" + childrenCount;
-          newTask.meta = newTask.meta || {};
-          newTask.meta.childrenId = [];
-          newTask.meta.parentId = newTask.id;
-          newTask.id += "." + postfix;
-          newTask.parentName = newTask.name;
-          newTask.name += postfix;
-          newTask.config = newTask.config || {};
-          newTask.config.label = newTask.config.label || "";
-          newTask.config.label += " " + postfix;
-          await taskCreate_async(newTask);
-          const parentTask = await taskRead_async(actionId);
-          parentTask.meta.childrenId = parentTask.meta.childrenId || [];
-          parentTask.meta.childrenId.push(newTask.id);
-          await taskUpdate_async(parentTask);
-          console.log("create ", newTask.id);
+          await taskPaste_async(T("request.copyTaskId"), T("request.newTaskName"), actionId);
           rebuildTree = true;
           done = true;
         }
+      } else if (action === "create") {
+        const newTask = await taskRead_async(actionId);
+        const childrenCount = newTask.meta.childrenId ? newTask.meta.childrenId.length : 0;
+        const postfix = "new" + childrenCount;
+        newTask.meta = newTask.meta || {};
+        newTask.meta.childrenId = [];
+        newTask.meta.parentId = newTask.id;
+        newTask.id += "." + postfix;
+        newTask.parentName = newTask.name;
+        newTask.name += postfix;
+        newTask.config = newTask.config || {};
+        newTask.config.label = newTask.config.label || "";
+        newTask.config.label += " " + postfix;
+        await taskCreate_async(newTask);
+        const parentTask = await taskRead_async(actionId);
+        parentTask.meta.childrenId = parentTask.meta.childrenId || [];
+        parentTask.meta.childrenId.push(newTask.id);
+        await taskUpdate_async(parentTask);
+        console.log("create ", newTask.id);
+        rebuildTree = true;
+        done = true;
       }
       if (action) {
         if (done) {

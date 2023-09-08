@@ -219,12 +219,14 @@ const TaskSystemTasksConfig = (props) => {
     //console.log("item, key, keyPath, domEvent", item, key, keyPath, domEvent);
     if (key === "copy") {
       setCopyTaskId(rightClickedNode.key);
+      console.log("setCopyTaskId", rightClickedNode.key);
     } else if (key === "paste") {
       // Get newTaskName
       setNewTaskName("FIXTHIS");
+      console.log("paste", newTaskName, "from", copyTaskId, "to", rightClickedNode.key);
       if (copyTaskId) {
         modifyTask({
-          "input.action": "create",
+          "input.action": "paste",
           "input.actionId": rightClickedNode.key,
           "input.copyTaskId": copyTaskId,
           "input.newTaskName": newTaskName,

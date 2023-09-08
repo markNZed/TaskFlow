@@ -111,7 +111,7 @@ const updateCopyChildren_async = async (task, parentTask) => {
   return task;
 };
 
-export const taskCopy_async = async (copyTaskId, newTaskName, destinationId) => {
+export const taskPaste_async = async (copyTaskId, newTaskName, destinationId) => {
   try {
     const newTask = await taskRead_async(copyTaskId);
     const parentTask = await taskRead_async(destinationId);

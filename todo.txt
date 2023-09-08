@@ -1,12 +1,12 @@
 /* ToDo
 -------
 Don't merge meta modified just replace it on processors
-Don;t store modified on processor either?
-request/response breaks test 
-  Also breaks 0-Shot
 TaskSystemConfigTasks_async copy feature in tree
   Right click store the id and popup to get new name
-  Right click paste (greyed out if not availble?) to insert - create action
+  Right click paste (greyed out if not availble?) 
+  Wtite taskCreate_async 
+  Dealing with duplicate names and errors
+    Can then build a "new" name by adding (1) (2) to find unique
 Look after deleting values in objects send by processor e.g. task.meta.delete that is processed on hub input
   Then we don't need to clear the request/repsonse?
 Menu tree should be sorted?
