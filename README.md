@@ -8,7 +8,7 @@ T@skFlow combines software, AI models, and human interaction in a unique way. A 
 
 ![T@skFlow Diagram](Task.drawio.svg)  *<small>[editable](https://app.diagrams.net/)</small>
 
-T@skFlow provides a flexible infrastructure for human-computer interaction. The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
+The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
 # Motivation
 
@@ -38,9 +38,9 @@ A Task Function may be distributed across multiple Task Environments, intra-task
 
 The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide features for managing the state machine.
 
-### Task Function Machine
+### Task State Machine
 
-A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM dynamics. For example, TaskSystemTest provides generic functions to drive the input and check the output of Tasks, different configurations of TaskSystmeTest can test different Tasks.
+A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskSystemTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskSystemTest can test different Tasks.
 
 ## Task Node
 

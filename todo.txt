@@ -1,9 +1,10 @@
 /* ToDo
 -------
+Mune is not scrolling in its own sidebar
 TaskSystemConfigTasks_async copy feature in tree
   Refactor into EditTree component + TaskSystemConfig
 JSON patch document ?
-Investigate hashDiff on Hub due to TaskShared at startup ? (also in TaskSystemTest)
+Investigate hashDiff on Hub in TaskSystemTest
   "Running CEP function serviceStub with args" being repeated in rxjscopro
 Task that has the ability to inspect the Task Node
   Access to KeyV
