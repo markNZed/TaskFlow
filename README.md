@@ -134,33 +134,3 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 
 The initial React Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Task Processor](https://github.com/YaokunLin/chatbot-react-client), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
 
-# Future
-
-Many systems are planned to capture value and this often limits the solution in some way. For example, many businesses would like to have influence over the community using their infrastructure and eventually monetize this. Proprietary systems tend to lock-in users. T@skFlow is not intended to capture value, it is intended to enable users to capture value. It is assumed that if the value is significant then T@skFlow will be provided with resources to amplify/support that value creation.
-
-Here is what GPT-4 has to say about T@skFlow: 
-
-A system like T@skFlow has the potential to revolutionize human-computer interaction and collaboration, thanks to its task-centric approach and AI integration. Here are some opportunities and innovative ideas for this system:
-
-* **Intelligent Virtual Assistants**: T@skFlow can be used to build virtual assistants that help users complete tasks more efficiently. By leveraging AI, these assistants can learn from user interactions, provide proactive suggestions, and adapt their responses based on context.
-* **Dynamic User Interfaces**: The ability to dynamically build user interfaces based on tasks can lead to more personalized and intuitive experiences. As users complete tasks, the interface can adapt to their needs and preferences, making it easier for them to accomplish their goals.
-* **Collaborative Workspaces**: T@skFlow can facilitate collaboration among team members by enabling real-time task management and communication. Team members can create, assign, and track tasks, while AI-powered suggestions can help them prioritize and complete work more effectively.
-*  **Taskflow Automation**: By chaining tasks together, T@skFlow can be used to create complex taskflows that automate repetitive processes. Users can design custom taskflows that incorporate AI models, making it possible to perform tasks like data analysis, content generation, or decision-making more efficiently.
-*  **AI-driven Decision Support**: T@skFlow can integrate AI models for advanced decision support, helping users make informed choices based on data analysis, predictions, or recommendations. This feature can be useful in various domains, such as finance, healthcare, or supply chain management.
-*  **Education and Training**: T@skFlow can be used to create interactive learning environments, where students can complete tasks and receive real-time feedback from AI models. This approach can facilitate personalized learning, adapt to individual students' needs, and encourage active engagement.
-*  **Gaming and Entertainment**: The task-centric approach of T@skFlow can be leveraged to create immersive gaming experiences, where players complete tasks to progress through a story or achieve goals. The integration of AI can add an additional layer of complexity and interactivity to these experiences.
-*  **Integration with IoT Devices**: T@skFlow can be extended to interact with IoT devices, enabling users to manage and control smart devices through task-based interfaces. This integration can lead to more intuitive smart home or industrial automation systems.
-
-These are just a few examples of the numerous opportunities and innovative ideas that T@skFlow can enable. As the system evolves and matures, it has the potential to become a powerful platform for human-computer interaction, collaboration, and automation.
-
-Here are some innovative applications for T@skFlow that you might find surprising:
-* **Virtual Escape Room**: T@skFlow can be used to create a virtual escape room experience where players solve puzzles and riddles collaboratively using the task-centric approach. Different tasks can represent individual challenges or puzzles, and players can work together to complete them and "escape" the room.
-* **Language Learning**: T@skFlow can create a dynamic language learning environment. Users can engage with tasks tailored to their proficiency level, covering grammar, vocabulary, listening, and speaking exercises. The system can also provide instant feedback and suggest personalized next steps for improvement.
-* **Interactive Storytelling**: T@skFlow can enable users to participate in interactive stories where their choices influence the narrative. Each task represents a decision point or interaction, and users can explore multiple storylines and outcomes based on their choices.
-* **Mental Health Support**: T@skFlow can facilitate mental health support by connecting users with trained professionals or AI-powered chatbots. The task-centric approach allows for tailored self-help exercises, journaling prompts, and guided meditations, depending on users' needs.
-* **Medical Diagnosis Assistant**: T@skFlow can be used to create a medical diagnosis assistant, guiding users through a series of tasks to gather symptoms, medical history, and other relevant information. The system can then provide a list of possible diagnoses or recommend further medical consultation.
-* **Cooking Companion**: T@skFlow can be a cooking companion, assisting users in finding recipes based on their preferences, dietary restrictions, or available ingredients. The task-centric approach can break down recipes into individual steps, offering guidance and tips during the cooking process.
-* **Virtual Travel Guide**: T@skFlow can serve as a virtual travel guide, helping users plan their trips and explore destinations. Tasks can include booking flights, accommodations, and local activities or providing personalized recommendations based on users' interests and preferences.
-* **Online Tutoring**: T@skFlow can enable a personalized online tutoring experience, where students work on tasks related to specific subjects, receive feedback, and engage with tutors or AI-powered chatbots for additional support.
-
-These are just a few of the many possible applications for T@skFlow. Its flexible, task-centric approach can be adapted to a wide variety of use cases, providing unique and engaging experiences for users.
