@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import _ from "lodash";
 import assert from 'assert';
 import { nanoid } from 'nanoid';
@@ -26,14 +27,51 @@ const utils = {
     target[lastKey] = value;
   },
 
+  nullNestedValue: function (obj, path) {
+    const pathArray = path.split(".");
+    const lastKey = pathArray.pop();
+    const target = pathArray.reduce((prev, curr) => {
+      return (prev[curr] = prev[curr] || {});
+    }, obj);
+    target[lastKey] = null;
+  },
+
+  updateLeafKeys: function(target, source) {
+    for (const key in source) {
+      if (source.hasOwnProperty(key)) {
+        if (typeof source[key] === 'object' && !Array.isArray(source[key]) && source[key] !== null) {
+          // If the key points to an object and the object is not an array or null,
+          // we should recursively go deeper.
+          if (!target[key]) {
+            target[key] = {}; // Initialize if the key doesn't exist in the target
+          }
+          utils.updateLeafKeys(target[key], source[key]);
+        } else {
+          // Leaf node: either a primitive type or an array or null
+          target[key] = source[key];
+        }
+      }
+    }
+  },
+
   createTaskValueGetter: function(task) {
     return function (arg1, value) {
       if (arguments.length === 1) {
         if (typeof arg1 === 'string') {
           return utils.getNestedValue(task, arg1);
         } if (typeof arg1 === 'object') {
+          // Clear the values that we are going to set
+          Object.keys(arg1).forEach((key) => {
+            utils.nullNestedValue(task, key);
+          });
           utils.setNestedProperties(arg1);
+          // Merge values or write over them
+          // For example
+          //   {"a.b" = {c: "d"}} will set a.b to null then set a.b.c = d
+          //   {"a.b.e" = "f"} will set a.b.e to null then set a.b.e = f
+          //   The object would then have a.b.c = d and a.b.e = f
           task = utils.deepMerge(task, arg1);
+          //utils.updateLeafKeys(task, arg1);
           return task;
         } else {
           console.error('Invalid argument type', arg1);
@@ -41,8 +79,14 @@ const utils = {
         }
       } else if (arguments.length === 2) {
         let mod = {[arg1]: value}
+        // Clear the values that we are going to set
+        Object.keys(mod).forEach((key) => {
+          utils.nullNestedValue(task, key);
+        });
         utils.setNestedProperties(mod);
+        // Merge values or write over them
         task = utils.deepMerge(task, mod);
+        //utils.updateLeafKeys(task, mod);
         return task;
         //console.log("createTaskValueGetter set ", arg1, value)
       } else if (!arg1 && !value) {
@@ -423,15 +467,12 @@ const utils = {
     if (_.isEqual(obj1, obj2)) {
       return Array.isArray(obj1) ? [] : {};
     }
-  
     if (!_.isObject(obj1) || !_.isObject(obj2)) {
       return undefined;
     }
-  
     let diffObj = Array.isArray(obj1) && Array.isArray(obj2) ? [] : {};
-  
     _.each(obj1, (value, key) => {
-      if (obj2[key]) {
+      if (key in obj2) {
         if (_.isObject(value) && _.isObject(obj2[key])) {
           let diff = utils.getIntersectionWithDifferentValues(value, obj2[key]);
           if (!_.isEmpty(diff)) {
@@ -440,14 +481,35 @@ const utils = {
         } else if (!_.isEqual(value, obj2[key])) {
           if (Array.isArray(obj1) && obj2[key] === null) {
             // Null treated as a placeholder in the case of arrays
+            // So we can deal with JS sparse arrays
           } else {
             diffObj[key] = value;
           }
         }
       }
     });
-  
     return diffObj;
+  },
+
+  identifyAbsentKeysWithNull: function(obj1, obj2) {
+    // Check if the inputs are both plain objects
+    if (!_.isPlainObject(obj1) || !_.isPlainObject(obj2)) {
+      return undefined;
+    }
+    let diffObj = {};
+    _.each(obj1, (value, key) => {
+      if (!_.has(obj2, key)) {
+        // Key is not present in obj2
+        diffObj[key] = null;
+      } else if (_.isPlainObject(value) && _.isPlainObject(obj2[key])) {
+        // If the value is an object, recurse into it
+        let diff = utils.identifyAbsentKeysWithNull(value, obj2[key]);
+        if (diff !== undefined && !_.isEmpty(diff)) {
+          diffObj[key] = diff;
+        }
+      }
+    });
+    return _.isEmpty(diffObj) ? undefined : diffObj;
   },
 
   // Flatten hierarchical object and merge keys into children
@@ -798,6 +860,8 @@ const utils = {
   },
 
   taskInProcessorOut_async: async function(task, processorId, activeTasksStore_async) {
+    task = utils.deepClone(task); // We do not want any side efects on task
+    utils.debugTask(task, "input");
     //console.log("taskInProcessorOut input task.output", task.output);
     if (!task.command) {
       console.error("ERROR: Missing task.command", task);
@@ -827,11 +891,28 @@ const utils = {
     if (command === "start" || command === "partial") {
       return task;
     }
+    // This assumes task is not a partial object e.g. in sync
+    if (task.processor.origTask && task.processor.command === "update" && !task.processor?.commandArgs?.sync) {
+      const taskCleaned = utils.cleanForHash(task);
+      //console.log("taskInProcessorOut taskCleaned", taskCleaned);
+      const origTaskCleaned = utils.cleanForHash(task.processor.origTask);
+      //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
+      // Not sure about removing outputs better to leave them
+      delete taskCleaned.output;
+      delete origTaskCleaned.output;
+      const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
+       if (keysNulled) {
+        //console.log("taskInProcessorOut keysNulled", keysNulled);
+        task = utils.deepMerge(task, keysNulled);
+      }
+    }
+    // This will use task.processor.origTask to identify the diff
     let diffTask = utils.processorDiff(task);
     //console.log("taskInProcessorOut diffTask task.output", task.output);
     // Send the diff considering the latest task storage state
     if (diffTask.instanceId) {
       const lastTask = await activeTasksStore_async.get(diffTask.instanceId);
+      // The task storage may have been changed after task.processor.origTask was set
       if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
         delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask
         diffTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask));
@@ -843,7 +924,7 @@ const utils = {
     } else {
       //console.log("taskInProcessorOut_async no diffTask.instanceId");
     }
-    utils.debugTask(diffTask);
+    utils.debugTask(diffTask, "output");
     return diffTask;
   },
 
@@ -957,23 +1038,6 @@ const utils = {
     return authenticated;
   },
 
-  getCallerFunctionDetails: function() {
-    const stack = new Error().stack;
-    const stackLines = stack.split('\n');
-    if (stackLines[3]) {
-      const match = stackLines[3].match(/at (.*) \(?(.*):(\d+):(\d+)\)?/);
-      if (match) {
-        return {
-          functionName: match[1],
-          filePath: match[2],
-          lineNumber: match[3],
-          columnNumber: match[4]
-        };
-      }
-    }
-    return null;
-  },
-
   deepClone: function(obj) {
     if (obj === null || typeof obj !== 'object') {
       return obj;
@@ -1017,13 +1081,49 @@ const utils = {
     return sortedObj;
   },
 
+  getCallerFunctionDetails: function() {
+    const stack = new Error().stack;
+    const stackLines = stack.split('\n');
+    const isBrowser = typeof window === 'object';
+    if (isBrowser) {
+      if (stackLines[2]) {
+        // For Firefox
+        let match = stackLines[2].match(/(.*)@(.+):(\d+):(\d+)/);
+        if (match) {
+          return {
+            functionName: match[1].trim(),
+          };
+        }
+      }
+    } else if (stackLines[3]) {
+      // For Node
+      let match = stackLines[3].match(/at (.*) \(?(.*):(\d+):(\d+)\)?/);
+      if (match) {
+        return {
+          functionName: match[1].trim(),
+          filePath: match[2],
+          lineNumber: match[3],
+          columnNumber: match[4]
+        };
+      }
+    }
+    return null;
+  },
+
   debugTask: async function(task, context = "") {
     /* eslint-disable no-unreachable */
     return;
+    const isBrowser = typeof window === 'object';
+    if (task.command === "ping" || task?.processor?.command === "ping" || task?.hub?.command === "ping") {
+      return;
+    }
+    if (task.command === "pong" || task?.processor?.command === "pong" || task?.hub?.command === "pong") {
+      return;
+    }
     const callerDetails = this.getCallerFunctionDetails();
-    const callerDetailsText = callerDetails ? callerDetails.filePath + ":" + callerDetails.lineNumber : "";
-    const contextText = context + " " + callerDetailsText;
-    let logParts = ["debugTask"];
+    const callerDetailsText = callerDetails ? callerDetails.functionName + " " + callerDetails.filePath + ":" + callerDetails.lineNumber : null;
+    const contextText = callerDetailsText ? context + " " + callerDetailsText : context;
+    let logParts = ["DEBUGTASK"];
     if (contextText) {
       logParts.push(contextText);
     }
@@ -1033,6 +1133,16 @@ const utils = {
       logParts.push(`messageId: ${task.meta.messageId}`);
     }
     console.log(logParts.join(' '));
+
+    if (task?.shared?.configTree) {
+      //console.log("DEBUGTASK configTree", task.shared.configTree);
+    }
+    if (isBrowser) {
+      console.log("DEBUGTASK task", task);
+    }
+    if (task?.state?.tasksTree) {
+      //console.log("DEBUGTASK tasksTree", task.state.tasksTree);
+    }
   }
 
 };

@@ -27,9 +27,9 @@ function hubAssertions(taskDiff, mergedTask) {
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
-  const reqNotEmpty = !_.isEmpty(mergedTask.meta.modified.request);
-  const resNotEmpty = !_.isEmpty(mergedTask.meta.modified.response);
-  utils.assertWarning(!(reqNotEmpty && resNotEmpty), "Should have either response or request not both");
+  const request = mergedTask.meta.modified.request;
+  const response = mergedTask.meta.modified.response;
+  utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
 function processorInHubOut(task, activeTask, requestId) {
@@ -63,14 +63,6 @@ function processorInHubOut(task, activeTask, requestId) {
   }
   */
   task.users = activeTask?.users || {};
-  // Clear out previous response when receiving a new request
-  if (!_.isEmpty(task.meta.modified.request)) {
-    task.response = {}
-  } 
-  // Clear out previous request when receiving a new response
-  if (!_.isEmpty(task.meta.modified.response)) {
-    task.request = {}
-  }
   task.hub = {
     command,
     commandArgs,

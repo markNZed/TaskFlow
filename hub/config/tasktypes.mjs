@@ -7,6 +7,7 @@ const tasktypes = [
     environments: ["react", "rxjs"],
     config: {
       redisUrl: REDIS_URL,
+      sort: true,
     },
     state: {
       current: "start",

@@ -21,7 +21,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
     }
   }
 
-  async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async) {
+  async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async, sort = false) {
     //console.log("getAuthorisedTasks_async", userId);
     let authorised_tasks = {};
     let tasksTree = {};
@@ -49,7 +49,13 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
       }    
     }
     //console.log("authorised_tasks ", authorised_tasks)
-    for (const key in authorised_tasks) {
+    let keys = []
+    if (sort) {
+      keys = Object.keys(authorised_tasks).sort();
+    } else {
+      keys = Object.keys(authorised_tasks);
+    }
+    for (const key of keys) {
       let wf = authorised_tasks[key];
       // This should probably be a separate menu config
       // This is a hack to put the label back after change to v02 schema
@@ -69,6 +75,9 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
         wf['initiator'] = initiator;
       }
       wf['childrenId'] = wf.meta.childrenId;
+      if (sort && wf['childrenId']) {
+        wf['childrenId'] = wf['childrenId'].sort();
+      }
       tasksTree[key] = utils.filter_in_list(wf, [
         "id",
         "childrenId",
@@ -82,27 +91,21 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
 
   switch (T("state.current")) {
     case "start": {
-      const tasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async);
+      console.log("TaskSystemMenu_async start in", T());
+      const tasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async, T("config.sort"));
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
+      console.log("TaskSystemMenu_async start out", T());
       break;
     }
     case "loaded":
       break;
     case "ready":
       if (configTreeEvent) {
-        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async);
+        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async, T("config.sort"));
         const oldTasksTree = T("state.tasksTree");
         if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
-          if (oldTasksTree) {
-            for (const key of Object.keys(oldTasksTree)) {
-              if (!newTasksTree[key]) {
-                newTasksTree[key] = null;
-                //console.log("TaskSystemMenu_async set key to null", key)
-              }
-            }
-          }
           T("state.tasksTree", newTasksTree);
           T("command", "update");
         }

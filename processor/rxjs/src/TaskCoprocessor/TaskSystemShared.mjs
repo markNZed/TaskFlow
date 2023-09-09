@@ -121,8 +121,7 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         sharedRelease(key);
       });
     } else {
-      console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
-      //console.log("Task:", JSON.stringify(task, null, 2));
+      //console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
     }
   }
 

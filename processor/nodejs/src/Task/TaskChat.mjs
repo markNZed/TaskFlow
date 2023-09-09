@@ -89,7 +89,6 @@ const TaskChat_async = async function (wsSendTask, T) {
     //case "receiving":
       const subTask = await SubTaskLLM_async(wsSendTask, T());
       T("response.LLMResponse", subTask.response.LLM);
-      //T("request.prompt", null); // Looked after by hub
       T("state.current", "received");
       T("commandArgs.lockBypass", true);
       T("command", "update");

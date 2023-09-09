@@ -1,27 +1,13 @@
 /* ToDo
 -------
-Don't merge meta modified just replace it on processors
 TaskSystemConfigTasks_async copy feature in tree
   Right click store the id and popup to get new name
   Right click paste (greyed out if not available?) 
   Dealing with duplicate names and errors
     Can then build a "new" name by adding (1) (2) to find unique
   Insert seems broken
-Look after deleting values in objects send by processor e.g. task.meta.delete that is processed on hub input
-  Then we don't need to clear the request/repsonse?
-Menu tree should be sorted?
-Possibly the processor should detect when a top level key is being set and then set fields that are not used to null
-  e.g. if task.request === {in: "one"} and w set task.request = {out: "two} then the processor could set task.request.in = null
-  This could avoid getting caught out with merges, a the moment task.request would === {in: "one", out: "two"}
-  Is this a bug or a feature? We deal with this explicitly for task.request/response
-The response is merged but never cleared e.g. response.diff
-  How to clear ? Need to set all values to {} first
-
-JSON patch document ?
-Add copy/paste to TaskSystemConfigTasks
   Refactor into EditTree component + TaskSystemConfig
-
-     
+JSON patch document ?
 Investigate hashDiff on Hub due to TaskShared at startup ? (also in TaskSystemTest)
   "Running CEP function serviceStub with args" being repeated in rxjscopro
 Task that has the ability to inspect the Task Node

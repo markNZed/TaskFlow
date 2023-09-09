@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, taskInsert_async, taskMove_async, taskPaste_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode, deleteBranch } from "./TaskSystemConfigTasks/configTasks.mjs";
+import { buildTree_async, taskInsert_async, taskMove_async, taskPaste_async, taskRead_async, taskUpdate_async, taskDelete_async, getAllChildrenOfNode } from "./TaskSystemConfigTasks/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -80,24 +80,6 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
     // If one is an object and the other is an array, or vice versa
     return Array.isArray(objA) || Array.isArray(objB) ? [] : {};
   }
-
-  function createEntryForNullValues(oldConfigTree, configTree) {
-    // Loop over each key in oldConfigTree
-    for (const key in oldConfigTree) {
-      const value = oldConfigTree[key];
-      
-      // If the value is an object, recursively call the function to handle nested objects
-      if (value !== null && typeof value === 'object') {
-        // Ensure the key exists in configTree
-        configTree[key] = configTree[key] || {};
-        createEntryForNullValues(value, configTree[key]);
-      }
-      // If the value is null, create that entry in configTree
-      else if (value === null) {
-        configTree[key] = null;
-      }
-    }
-  }  
   
   switch (T("state.current")) {
     case "start": {
@@ -128,13 +110,7 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       } else if (action === "move") {
         const requestedTask = await taskRead_async(actionId);
         await taskMove_async(requestedTask, T("request.destinationId"));
-        // This is a hack to get around data needing to be deleted - the processor should manage this for us
-        configTree = deleteBranch(actionId, configTree);
-        const oldConfigTree = utils.deepClone(configTree);
-        configTreeUpdateAt = Date();
-        [nodesById, configTree] = await m_buildTree_async(configTreeUpdateAt);
-        // This will delete the old entries in configTree
-        createEntryForNullValues(oldConfigTree, configTree)
+        rebuildTree = true;
         done = true;
       } else if (action === "update") {
         await taskUpdate_async(T("request.actionTask"));
@@ -143,20 +119,15 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       } else if (action === "delete") {
         // Find all the tasks in the branch
         const children = getAllChildrenOfNode(actionId, nodesById);
-        console.log("children", children.length);
+        //console.log("children", children.length);
         await taskDelete_async(actionId);
-        configTree = deleteBranch(actionId, configTree);
-        delete nodesById[actionId];
         for (const child of children) {
-          if (child === null) {
-            continue;
-          }
           //console.log("delete child ", child.key);
           await taskDelete_async(child.key);
-          delete nodesById[child.key];
         }
         // We do not rebuild the tree because we hav set the child to null annd this needs to be sent
         // The rebuilt tree will not have the child so it would not be deleted
+        rebuildTree = true;
         done = true;
       } else if (action === "paste") {
         if (T("request.copyTaskId")) {
@@ -176,7 +147,9 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
             configTreeUpdateAt = Date();
             [nodesById, configTree] = await m_buildTree_async(configTreeUpdateAt);
           }
+          //console.log("configTree", configTree);
           //console.log("nodesById", nodesById[actionId]);
+          //This is merging but should replace?
           T({
             "shared.configTree": configTree,
             "state.current": "actionDone",

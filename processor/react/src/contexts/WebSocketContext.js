@@ -52,13 +52,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    if (task.command !== "ping") {
-      console.log("Task before taskInProcessorOut_async", JSON.parse(JSON.stringify(task)));
-    }
     task = await utils.taskInProcessorOut_async(task, globalState.processorId, globalState?.storageRef?.current);
-    if (task.processor.command !== "ping") {
-      console.log("Task after taskInProcessorOut_async", JSON.parse(JSON.stringify(task)));
-    }
     if (globalState.user) {
       task.user = {"id": globalState.user.userId};
     }
