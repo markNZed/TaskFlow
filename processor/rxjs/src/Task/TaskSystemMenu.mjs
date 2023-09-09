@@ -91,12 +91,10 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
 
   switch (T("state.current")) {
     case "start": {
-      console.log("TaskSystemMenu_async start in", T());
       const tasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async, T("config.sort"));
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
-      console.log("TaskSystemMenu_async start out", T());
       break;
     }
     case "loaded":

@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useEffect, useState } from "react";
 import withTask from "../../hoc/withTask";
 import JsonEditor from '../Generic/JsonEditor.js'
-import { message, Alert, ConfigProvider, theme, Tree, Spin, Button, Menu, Dropdown } from 'antd';
+import { ConfigProvider, theme, Tree, Spin, Button, Dropdown, Modal, Input } from 'antd';
 import { utils } from "../../shared/utils.mjs";
 
 /*
@@ -34,6 +34,8 @@ const TaskSystemTasksConfig = (props) => {
   const [rightClickedNode, setRightClickedNode] = useState();
   const [copyTaskId, setCopyTaskId] = useState();
   const [newTaskName, setNewTaskName] = useState();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
@@ -221,17 +223,7 @@ const TaskSystemTasksConfig = (props) => {
       setCopyTaskId(rightClickedNode.key);
       console.log("setCopyTaskId", rightClickedNode.key);
     } else if (key === "paste") {
-      // Get newTaskName
-      setNewTaskName("FIXTHIS");
-      console.log("paste", newTaskName, "from", copyTaskId, "to", rightClickedNode.key);
-      if (copyTaskId) {
-        modifyTask({
-          "input.action": "paste",
-          "input.actionId": rightClickedNode.key,
-          "input.copyTaskId": copyTaskId,
-          "input.newTaskName": newTaskName,
-        });
-      }
+      showModal();    
     } else {
       modifyTask({
         "input.action": key,
@@ -239,6 +231,27 @@ const TaskSystemTasksConfig = (props) => {
       });
     }
   }
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+    if (copyTaskId && newTaskName) {
+      modifyTask({
+        "input.action": "paste",
+        "input.actionId": copyTaskId,
+        "input.destinationId": rightClickedNode.key,
+        "input.newTaskName": newTaskName,
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+  
 
   return (
     <>
@@ -313,6 +326,9 @@ const TaskSystemTasksConfig = (props) => {
           </div>
         </div>
       </ConfigProvider>
+      <Modal title="Enter the new name for the task" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <Input placeholder="Task name" onChange={e => setNewTaskName(e.target.value)} />
+      </Modal>
     </>
   );
 };

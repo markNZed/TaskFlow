@@ -57,15 +57,15 @@ const TaskDummy = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
-  const handleDataChanged = (newData) => {
-    console.log('Edited JSON data:', newData);
-    modifyTask(newData);
+  const handleDataChanged = (dataContainer) => {
+    console.log('Edited JSON data:', dataContainer);
+    modifyTask(dataContainer.json);
   };
 
   return (
     <div>
       <h1>JSON Editor</h1>
-      <JsonEditor initialData={task} onDataChanged={handleDataChanged} />
+      <JsonEditor content={task} onDataChanged={handleDataChanged} />
     </div>
   );
 };

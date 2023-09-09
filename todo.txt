@@ -1,11 +1,6 @@
 /* ToDo
 -------
 TaskSystemConfigTasks_async copy feature in tree
-  Right click store the id and popup to get new name
-  Right click paste (greyed out if not available?) 
-  Dealing with duplicate names and errors
-    Can then build a "new" name by adding (1) (2) to find unique
-  Insert seems broken
   Refactor into EditTree component + TaskSystemConfig
 JSON patch document ?
 Investigate hashDiff on Hub due to TaskShared at startup ? (also in TaskSystemTest)

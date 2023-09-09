@@ -94,12 +94,12 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
       const actionId = T("request.actionId");
       let done = false;
       let rebuildTree = false;
-      console.log("action:", action, "id:", actionId);
+      utils.logTask(T(), "action:", action, "id:", actionId);
       if (action === "read") {
         // Could us promise.all to fetch in parallel
         const requestedTask = await taskRead_async(actionId);
         const requestedTaskParent = await taskRead_async(requestedTask?.meta?.parentId);
-        console.log("requestedTaskParent: ", requestedTaskParent);
+        utils.logTask(T(), "requestedTaskParent: ", requestedTaskParent);
         let diff = JSON.parse(JSON.stringify(requestedTask));
         if (requestedTaskParent) {
           diff = keepSameProperties(requestedTaskParent, diff);
@@ -130,11 +130,9 @@ const TaskSystemConfigTasks_async = async function (wsSendTask, T, fsmHolder, CE
         rebuildTree = true;
         done = true;
       } else if (action === "paste") {
-        if (T("request.copyTaskId")) {
-          await taskPaste_async(T("request.copyTaskId"), T("request.newTaskName"), actionId);
-          rebuildTree = true;
-          done = true;
-        }
+        await taskPaste_async(T("request.actionId"), T("request.newTaskName"), T("request.destinationId"));
+        rebuildTree = true;
+        done = true;
       } else if (action === "insert") {
         // Create taskCreate_async
         await taskInsert_async(actionId);
