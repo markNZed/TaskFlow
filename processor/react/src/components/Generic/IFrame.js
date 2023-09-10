@@ -17,7 +17,7 @@ function IFrame() {
 
   const iframeElement = useMemo(() => {
     const iframeStyle = {
-        width: '1600px',
+        width: '100%',
         height: '500px',
         border: '0',
         display: 'block'

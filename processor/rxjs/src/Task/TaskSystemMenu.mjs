@@ -25,8 +25,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
     //console.log("getAuthorisedTasks_async", userId);
     let authorised_tasks = {};
     let tasksTree = {};
-    // Must use key, value as this is the entries in tasksStore_async 
-    for await (const { key, value } of tasksStore_async.iterate()) {
+    for await (const [key, value] of tasksStore_async.iterator()) {
       if (await utils.authenticatedTask_async(value, userId, groupsStore_async)) {
         authorised_tasks[key] = value;
         //console.log("task key authorised", key);

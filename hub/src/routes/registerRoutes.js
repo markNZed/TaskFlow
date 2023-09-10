@@ -86,7 +86,7 @@ router.post("/", async (req, res) => {
     activeEnvironments.push(...item.environments);
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
-  for await (const { key: taskId, value: autoStartTask } of autoStartTasksStore_async.iterate()) {
+  for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
     countAutoStartTasks++;
     //console.log("Autostart task", taskId, autoStartTask);
     const autoStartEnvironment = autoStartTask.startEnvironment;

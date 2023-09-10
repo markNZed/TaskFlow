@@ -227,7 +227,7 @@ export const buildTree_async = async () => {
   };
   
   // First pass: Create all the nodes
-  for await (const { key: id, value: task } of tasksStore_async.iterate()) {
+  for await (const [id, task] of tasksStore_async.iterator()) {
     
     // Check for duplicate IDs
     if (nodesById[id]) {

@@ -194,6 +194,7 @@ function Taskflows(props) {
             width: { sm: drawWidth },
             flexShrink: { sm: 0 },
             ...(hideSide && { display: "none" }),
+            overflowY: "auto",
           }}
         >
           {taskMenu && (

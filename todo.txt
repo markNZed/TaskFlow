@@ -1,10 +1,15 @@
 /* ToDo
 -------
-Mune is not scrolling in its own sidebar
 TaskSystemConfigTasks_async copy feature in tree
   Refactor into EditTree component + TaskSystemConfig
-JSON patch document ?
-Investigate hashDiff on Hub in TaskSystemTest
+  TaskSystemTasksConfig should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
+  SystmTasksConfig could autostart ? (but it also runs on React which may not exist)
+    Could run a SystmTasksConfig using input/output running on rxjs
+      Or we use request/response with queue ?
+        Request/response could be for a service while input/output is for a taskFunctions
+          Maybe input/output is sequential while request/response can be queued
+            Seems like a good use case to create the request/response queue
+hashDiff on Hub in TaskSystemTest
   "Running CEP function serviceStub with args" being repeated in rxjscopro
 Task that has the ability to inspect the Task Node
   Access to KeyV
@@ -12,6 +17,14 @@ Task that has the ability to inspect the Task Node
     Selecting Node would populate the list of available KeyV
     Selecting KeyV will open table
       Also provide stats
+    Base it on TaskSystemLogViewer
+      Add dropdown to choose the KeyV store
+        Does KeyV provide any features?
+    use Keyv.options API to get the namespace and type of store
+  Redis search
+    To use these features, you must install two modules: RedisJSON and RediSearch. Redis Stack automatically includes both modules.
+  Serious problem is that keyv will not know how to make use of RedisJSON ?
+    Could extend https://github.com/jaredwray/keyv/tree/main/packages/redis with https://github.com/schulzf/ioredis-rejson
 Check mobile view for menu
 Document the strategy for using null in Objects and arrays
   Strip the null fields just before it is processed as a task
@@ -26,8 +39,6 @@ How can we detect errors in the console?
   window.addEventListener('unhandledrejection'
   Can also override console.log console.error (before they are used)
     Could create a window.log that meta can access as a feature of the React Processor
-TaskSystemTasksConfig should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
-  SystmTasksConfig could autostart ? (but it also runs on React which may not exist)
 Could configure CEP to run during or after coprocessing
 familyId should be in meta?
 Registering could/should be a task
@@ -391,6 +402,7 @@ Notes/Idea
       REMOVE_TRANSITION(machineId, sourceState, eventName): Removes a transition from a state.
       UPDATE_STATE(machineId, stateName, newStateBehavior): Updates the behavior of a state. This could involve adding or removing transitions, or updating effects.
       GET_STATE(machineId, stateName): Retrieves the configuration of a state.
+  https://github.com/Starcounter-Jack/JSON-Patch could replace the diff method for sending Tasks JSON Patch is defined by RFC 6902
 
 Architecture
 ------------
