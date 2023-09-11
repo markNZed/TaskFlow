@@ -1,5 +1,6 @@
 /* ToDo
 -------
+How should we deal with a change to tasktype fro activeTasks ?
 Verbosity level for debug
 Add a description to each state that can be usd for logging
   task.state.description = [state: 'text']

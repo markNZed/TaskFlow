@@ -505,7 +505,7 @@ async function taskStart_async(
 
     const user = await usersStore_async.get(task.user.id);
     if (task.users[task.user.id]) {
-      task.users[task.user.id] = utils.deepMerge(user, task.users[task.user.id]);
+      task.users[task.user.id] = utils.deepMerge(task.users[task.user.id], user);
     } else {
       task.users[task.user.id] = user;
     }

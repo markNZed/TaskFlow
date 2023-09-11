@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import RequestError from './routes/RequestError.mjs';
-import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async } from "./storage.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
@@ -32,7 +32,7 @@ function hubAssertions(taskDiff, mergedTask) {
   utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
-function processorInHubOut(task, activeTask, requestId) {
+async function processorInHubOut_async(task, activeTask, requestId) {
   const { command, id, coprocessingPosition, coprocessing, coprocessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
@@ -63,6 +63,12 @@ function processorInHubOut(task, activeTask, requestId) {
   }
   */
   task.users = activeTask?.users || {};
+  // This allows us to incorporate admin changes to user
+  if (task?.user?.id) {
+    const user = await usersStore_async.get(task.user.id);
+    task.users[task.user.id] = user;
+  }
+
   task.hub = {
     command,
     commandArgs,
@@ -259,7 +265,7 @@ async function taskProcess_async(task, req, res) {
     if (req) {
       requestId = req.id;
     }
-    task = processorInHubOut(task, activeTask, requestId);
+    task = await processorInHubOut_async(task, activeTask, requestId);
     // Update the processor information
     if (activeTask) {
       activeTask.processors = task.processors;
