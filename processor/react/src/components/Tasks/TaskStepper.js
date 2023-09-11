@@ -57,7 +57,7 @@ function TaskStepper(props) {
     // modifyState may have been called by not yet updated test.state.current
     if (!props.checkIfStateReady()) {return}
     let nextState; 
-    // Log each transition, other events may cause looping over a state
+    // Log each transition, other events may cause looping over the same state
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
@@ -139,7 +139,7 @@ function TaskStepper(props) {
       case "error":
         setModalInfo({title: "Error", description: "An error occurred"});
       default:
-        console.log(`${componentName} State Machine ERROR unknown state : `, task.state.current);
+        console.log(`${componentName} State Machine unknown state:`, task.state.current);
     }
     // Manage state.current
     props.modifyState(nextState);

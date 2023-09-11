@@ -1,5 +1,32 @@
 /* ToDo
 -------
+Verbosity level for debug
+Add a description to each state that can be usd for logging
+  task.state.description = [state: 'text']
+  better to do this with a function in the SM
+  description("");
+hashDiff on Hub in TaskSystemTest
+  "Running CEP function serviceStub with args" being repeated in rxjscopro
+  sync of familyTree and only on the Hub
+    Could use taskDebug ?
+      Could have debug package with useful "filters"
+        Use ./tailLogs.sh | grep DEBUGTASK
+          Allow the task to enable the debug e.g. task.debug = {taskDebug: true}
+            How can the task pick up that debug is enabled?
+              A TaskSystemDebug that modifies a task by sending sync
+                Can aslo match on id
+                  Can it use a try catch and eval the debug filter - so no need to reload?
+                    Need a JS editor in the task
+                    The util function can be modiifed in the browser/server by the Task ?
+Move familyTree CEP from TaskSystemTest_async into dedicated TaskSystem
+  Should familyTree be available in shared ?
+      Do we install CEP for each family?
+        If the init task does not have shared ? Update on the familyTree task instance
+          Any task can launh a familyTree task and it should build the tree then maintain it
+            Can we assert that a shared variable is read only? 
+              Owned by an instance
+Avoid using the "start" task name/id as meaningful
+meta.mesageId should be set by initiating processor as it leaves
 TaskSystemConfigTasks_async copy feature in tree
   Refactor into EditTree component + TaskSystemConfig
   TaskSystemTasksConfig should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
@@ -9,8 +36,6 @@ TaskSystemConfigTasks_async copy feature in tree
         Request/response could be for a service while input/output is for a taskFunctions
           Maybe input/output is sequential while request/response can be queued
             Seems like a good use case to create the request/response queue
-hashDiff on Hub in TaskSystemTest
-  "Running CEP function serviceStub with args" being repeated in rxjscopro
 Task that has the ability to inspect the Task Node
   Access to KeyV
     Shared can include a list of the available Nodes
@@ -23,8 +48,15 @@ Task that has the ability to inspect the Task Node
     use Keyv.options API to get the namespace and type of store
   Redis search
     To use these features, you must install two modules: RedisJSON and RediSearch. Redis Stack automatically includes both modules.
+    https://github.com/redis/node-redis/tree/master/packages/search
   Serious problem is that keyv will not know how to make use of RedisJSON ?
     Could extend https://github.com/jaredwray/keyv/tree/main/packages/redis with https://github.com/schulzf/ioredis-rejson
+    https://github.com/redis/ioredis/blob/main/examples/module.js can use any Redis command
+      https://joeywhelan.blogspot.com/2022/10/redisearch-ioredis-client-lib.html demo
+      https://github.com/Redislabs-Solution-Architects/ioredis-search/tree/main code of demo
+  To begin with we could avoid providing search
+    Allow for lookup, provide stats
+
 Check mobile view for menu
 Document the strategy for using null in Objects and arrays
   Strip the null fields just before it is processed as a task

@@ -65,9 +65,48 @@ const tasks = [
     name: "systemtasksconfig",
     config: {
       label: "Tasks",
+      local: {
+        targetStore: "tasks",
+      },
     },
     parentName: "config",
-    type: "TaskSystemConfigTasks"
+    type: "TaskSystemConfig"
+  },
+  {
+    initiator: true,
+    name: "systemusersconfig",
+    config: {
+      label: "Users",
+      local: {
+        targetStore: "users",
+      },
+    },
+    parentName: "config",
+    type: "TaskSystemConfig"
+  },
+  {
+    initiator: true,
+    name: "systemgroupsconfig",
+    config: {
+      label: "Groups",
+      local: {
+        targetStore: "groups",
+      },
+    },
+    parentName: "config",
+    type: "TaskSystemConfig"
+  },
+  {
+    initiator: true,
+    name: "systemtasktypesconfig",
+    config: {
+      label: "Task Types",
+      local: {
+        targetStore: "tasktypes",
+      },
+    },
+    parentName: "config",
+    type: "TaskSystemConfig"
   },
   {
     name: "menu",

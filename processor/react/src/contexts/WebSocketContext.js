@@ -113,8 +113,6 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (command !== "pong") {
         //console.log("App webSocket command:", command, "commandArgs:", commandArgs, "task:", message.task);
         if (command !== "partial") {
-          task.processor.shared = task.processor.shared || {};
-          task.processor.shared["menuInstanceId"] = globalState.menuInstanceId;
           console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, "state:", task?.state?.current, "task:", utils.deepClone(task));
         }
         //Could structure as messageQueue[command][messageQueueIdx]

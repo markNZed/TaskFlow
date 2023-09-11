@@ -28,8 +28,10 @@ Using VS Code
 * From the Javascript console in Web Developer tools the current Task objects can be read in the variable `window.tasks`.
 * The NodeJS processor can use a dummy API (to avoid wasting money on OpenAI API calls), set `DUMMY_OPENAI=true` in `/app/processor/nodejs/.env`.
 * The System > Log Task provides insights into the sequence of task messages that have gone through coprocessing on the Task Hub.
-* The script `./restartServers.sh` provides a simple way to restart all the servers during development (by touching the server.js files).
-* The script `./restartLogs.sh` truncates all log files.
+* The script `./scripts/restartServers.sh` provides a simple way to restart all the servers during development (by touching the server.js files).
+* The script `./scripts/restartLogs.sh` truncates all log files.
+* The script `./scripts/filerLogs.sh` combines all logs into an output stream that can be filtered e.g. `./scripts/tailLogs.sh | grep init`
+* The script `./scripts/filerLogs.sh` also creates `tailLogs.txt` which is the merge of all logs.
 * The `hub/src/configdata.mjs` can generate a file `/tmp/tasks.json` which can be copied using a linux shell to `/app/dead` so it can be loaded into VS Code but ignored by git. This shows the task object after initialisation. The `hub/src/configdata.mjs` module uses that file to perform a diff and print to the screen/log which can be a way to see the impacts of changes to the tasks configuration. The diff can be "reset" by deleting `/tmp/tasks.json`.
 * here is a debugTask function in `shared/utils.mjs` that is called from strategic locations with the Task object. From within that function we can add logic to debug and add tracing of particular "aspects" of functionality.
 * The EMPTYDBS variable in `shared/config.mjs` can be set to true and then upon restarting a Task Node it should empty its DBs. This can help during debug by starting the systme in a known state. Hoever if this is enabled and only one of the Task NOdes restarts (e.g. due to nodemon monitoring) then active Tasks will get out of sync. The script `./restartServers.sh` can restart everything in one step.

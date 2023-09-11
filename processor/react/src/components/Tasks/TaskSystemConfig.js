@@ -27,59 +27,43 @@ const TaskSystemTasksConfig = (props) => {
     onDidMount,
   } = props;
 
-  const [configTreeAsObject, setconfigTreeAsObject] = useState({});
+  const [configTreeAsObject, setconfigTreeAsObject] = useState();
   const [configTree, setConfigTree] = useState();
   const [selectedTask, setSelectedTask] = useState();
   const [selectedTaskDiff, setSelectedTaskDiff] = useState();
   const [rightClickedNode, setRightClickedNode] = useState();
-  const [copyTaskId, setCopyTaskId] = useState();
-  const [newTaskName, setNewTaskName] = useState();
+  const [copiedTaskId, setCopiedTaskId] = useState();
+  const [newTaskLabel, setnewTaskLabel] = useState();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [menuAction, setMenuAction] = useState();
 
 
   // onDidMount so any initial conditions can be established before updates arrive
   onDidMount();
-
-  // Each time this component is mounted then we reset the task state
-  useEffect(() => {
-    if (task.processor.command !== "init") {
-      // This can write over the update
-      // This overrides the setting of the state during init
-      task.state.current = "start";
-      task.state.done = false;
-    }
-  }, []);
 
   // Task state machine
   useEffect(() => {
     // modifyState may have been called by not yet updated test.state.current
     if (!props.checkIfStateReady()) {log("State Machine !checkIfStateReady");return}
     let nextState; 
-    // Log each transition, other events may cause looping over a state
+    // Log each transition, other events may cause looping over the same state
     if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
+        setconfigTreeAsObject(task.shared.configTree);
         break;
       case "loaded":
         // Could use task.meta.updatedAt to detect a new task then generate events for task.meta.modified
         // A state variable e.g. lastModifiedX could make sure the event is processed once
-        if (props.transition() && task.meta?.modified?.shared?.configTree) {
+        if (props.transition() && (task.meta?.modified?.shared?.configTree || !configTreeAsObject)) {
           setconfigTreeAsObject(task.shared.configTree);
         }
         // General rule: if we set a field on a processor then clear it down on the same processor
         //   Not for response/request
         if (task.input.action) {
           modifyTask({
-            "input.action": null,
-            "input.actionId": null,
-            "input.actionTask": null,
-            "input.destinationId": null,
-            "request.action": task.input.action,
-            "request.actionId": task.input.actionId,
-            "request.actionTask": task.input.actionTask,
-            "request.destinationId": task.input.destinationId,
-            "request.copyTaskId": task.input.copyTaskId,
-            "request.newTaskName": task.input.newTaskName,
+            "input": {},
+            "request": task.input,
             "command": "update",
           });
         }
@@ -94,7 +78,7 @@ const TaskSystemTasksConfig = (props) => {
           nextState = "loaded";
           break;
       default:
-        console.log(`${props.componentName} State Machine ERROR unknown state : `, task.state.current);
+        console.log(`${props.componentName} State Machine unknown state:`, task.state.current);
     }
     // Manage state.current
     props.modifyState(nextState);
@@ -110,6 +94,11 @@ const TaskSystemTasksConfig = (props) => {
    * @returns {Object} - Object with transformed property.
    */
   function hashToArrayOnProperty(obj, propName) {
+    // Rename 'id' to 'key' if it exists
+    if (obj && obj['id']) {
+      obj['key'] = obj['id'];
+      delete obj['id'];
+    }
     // Only transform if the target property exists.
     if (obj && obj[propName]) {
       let newArray = [];
@@ -118,12 +107,10 @@ const TaskSystemTasksConfig = (props) => {
       }
       obj[propName] = newArray;
     }
-
     // Standardize empty objects to empty arrays for the sake of uniformity.
     if (Object.keys(obj).length === 0) {
       return [];
     }
-
     return obj;
   }
 
@@ -132,16 +119,16 @@ const TaskSystemTasksConfig = (props) => {
     if (configTreeAsObject) {
       // Deep copy so we do not mess with configTreeAsObject
       const sortedConfigTreeAsObject = utils.sortKeys(configTreeAsObject);
-      const converted = hashToArrayOnProperty(JSON.parse(JSON.stringify(sortedConfigTreeAsObject)), "children");
-      //console.log("configTree converted", converted);
-      if (Object.entries(converted).length) {
-        setConfigTree([converted]);
+      const sortedConfigTreeAsArray = hashToArrayOnProperty(utils.deepClone(sortedConfigTreeAsObject), "children");
+      //console.log("configTree sortedConfigTreeAsArray", sortedConfigTreeAsArray);
+      if (Object.entries(sortedConfigTreeAsArray).length) {
+        setConfigTree([sortedConfigTreeAsArray]);
       }
     }
   }, [configTreeAsObject]);
 
   const handleTreeSelect = (selectedKeys, info) => {
-    const {selected, selectedNodes, node, event} = info;
+    const {node} = info;
     // In tree components, selecting and then deselecting a node may trigger the event handler
     // with an empty array for selectedKeys. In such cases, skip further processing.
     if (selectedKeys.length === 0) {
@@ -153,18 +140,11 @@ const TaskSystemTasksConfig = (props) => {
     });
   };
 
-  const handleDragEnd = ({event, node}) => {
-    console.log('onDragEnd', event, node);
-  }
-
   const handleDrop = (info) => {
-    console.log('onDrop', info);
+    //console.log('onDrop', info);
     const draggedNode = info.dragNode;
     const draggedToNode = info.node;
-    const draggedNodesKeys = info.dragNodesKeys;
-    // The nodes are sortd so we do not care about the dropPosition
-    const dropPosition = info.dropPosition;
-    console.log("configTree:", configTree, "draggedNode", draggedNode,"draggedToNode", draggedToNode, "draggedNodesKeys", draggedNodesKeys, "dropPosition", dropPosition);
+    // The nodes are sorted so we do not care about the dropPosition
     modifyTask({
       "input.action": "move",
       "input.actionId": draggedNode.key,
@@ -172,11 +152,11 @@ const TaskSystemTasksConfig = (props) => {
     });
   }
 
-  const handleDataChanged = (newData) => {
-    console.log('handleDataChanged');
-    if (newData && newData.json) {
-      console.log('setSelectedTask', newData.json);
-      setSelectedTask(newData.json)
+  const handleDataChanged = (newDataContainer) => {
+    //console.log('handleDataChanged');
+    if (newDataContainer && newDataContainer.json) {
+      console.log('setSelectedTask', newDataContainer.json);
+      setSelectedTask(newDataContainer.json)
     }
   };
 
@@ -219,10 +199,11 @@ const TaskSystemTasksConfig = (props) => {
   const handleMenuClick = ({ item, key, keyPath, domEvent }) => {
     //console.log("rightClickedNode", rightClickedNode);
     //console.log("item, key, keyPath, domEvent", item, key, keyPath, domEvent);
+    setMenuAction(key);
     if (key === "copy") {
-      setCopyTaskId(rightClickedNode.key);
-      console.log("setCopyTaskId", rightClickedNode.key);
-    } else if (key === "paste") {
+      setCopiedTaskId(rightClickedNode.key);
+      console.log("setCopiedTaskId", rightClickedNode.key);
+    } else if (key === "paste" || key === "insert") {
       showModal();    
     } else {
       modifyTask({
@@ -236,19 +217,26 @@ const TaskSystemTasksConfig = (props) => {
     setIsModalVisible(true);
   };
 
-  const handleOk = () => {
+  const handleModalOk = () => {
     setIsModalVisible(false);
-    if (copyTaskId && newTaskName) {
+    if (menuAction === "paste" && copiedTaskId && newTaskLabel) {
       modifyTask({
-        "input.action": "paste",
-        "input.actionId": copyTaskId,
+        "input.action": menuAction,
+        "input.actionId": copiedTaskId,
         "input.destinationId": rightClickedNode.key,
-        "input.newTaskName": newTaskName,
+        "input.newTaskLabel": newTaskLabel,
+      });
+    }
+    if (menuAction === "insert" && newTaskLabel) {
+      modifyTask({
+        "input.action": menuAction,
+        "input.actionId": rightClickedNode.key,
+        "input.newTaskLabel": newTaskLabel,
       });
     }
   };
 
-  const handleCancel = () => {
+  const handleModalCancel = () => {
     setIsModalVisible(false);
   };
   
@@ -276,7 +264,6 @@ const TaskSystemTasksConfig = (props) => {
                 onSelect={handleTreeSelect}
                 draggable={true}
                 selectable={true}
-                onDragEnd={handleDragEnd}
                 onDrop={handleDrop}
                 onRightClick={handleRightClick}
               />
@@ -284,7 +271,7 @@ const TaskSystemTasksConfig = (props) => {
           : null}
         </div>
         <div>
-          {selectedTaskDiff ? (
+          {(selectedTaskDiff && Object.keys(selectedTaskDiff).length > 0) ? (
             <>
               <h2>Inherited</h2>
               <JsonEditor 
@@ -326,8 +313,8 @@ const TaskSystemTasksConfig = (props) => {
           </div>
         </div>
       </ConfigProvider>
-      <Modal title="Enter the new name for the task" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-        <Input placeholder="Task name" onChange={e => setNewTaskName(e.target.value)} />
+      <Modal title="Enter the new name for the task" open={isModalVisible} onOk={handleModalOk} onCancel={handleModalCancel}>
+        <Input placeholder="Task name" onChange={e => setnewTaskLabel(e.target.value)} />
       </Modal>
     </>
   );

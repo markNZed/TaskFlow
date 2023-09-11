@@ -297,14 +297,17 @@ const utils = {
   },
 
   deepEqual: function(obj1, obj2, visitedObjects = new WeakSet(), debug = false) {
-    // Check if objects are cyclic
-    if (visitedObjects.has(obj1) || visitedObjects.has(obj2)) {
-      console.log("deepEqual cycled");
-      return true;
-    }
 
     // Check if both inputs are objects
     if (typeof obj1 === 'object' && obj1 !== null && typeof obj2 === 'object' && obj2 !== null) {
+      if (visitedObjects.has(obj1)) {
+        console.log("deepEqual cycled obj1", obj1);
+        return true;
+      } 
+      if (visitedObjects.has(obj2)) {
+        console.log("deepEqual cycled obj2", obj2);
+        return true;
+      }
       visitedObjects.add(obj1);
       visitedObjects.add(obj2);
 
@@ -1111,8 +1114,8 @@ const utils = {
   },
 
   debugTask: async function(task, context = "") {
-    /* eslint-disable no-unreachable */
-    return;
+    // Could set task.debug via configuration
+    if (!task.debug) {return}
     const isBrowser = typeof window === 'object';
     if (task.command === "ping" || task?.processor?.command === "ping" || task?.hub?.command === "ping") {
       return;

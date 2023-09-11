@@ -18,7 +18,7 @@ const tasktypes = [
     },
   },
   {
-    name: "TaskSystemConfigTasks",
+    name: "TaskSystemConfig",
     environments: ["react", "rxjs"],
     config: {
       redisUrl: REDIS_URL,

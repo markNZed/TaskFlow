@@ -124,13 +124,12 @@ function Taskflows(props) {
     if (startTask) {
       if (startTask.id === taskMenuId) {
         setTaskMenu(startTask);
-        replaceGlobalState("menuInstanceId", startTask.instanceId);
       } else {
-        setTasksIdx(tasks.length);
-        setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
-        setTasksIds((p) => [...p, startTask.id]);
-        setTaskKeys((p) => [...p, startTask.instanceId]);
-      }
+      setTasksIdx(tasks.length);
+      setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
+      setTasksIds((p) => [...p, startTask.id]);
+      setTaskKeys((p) => [...p, startTask.instanceId]);
+    }
     }
   }, [startTask]);
 
