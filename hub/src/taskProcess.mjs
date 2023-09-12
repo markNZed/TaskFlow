@@ -16,6 +16,7 @@ import { haveCoProcessor } from "../config.mjs";
 // eslint-disable-next-line no-unused-vars
 import assert from 'assert';
 import _ from "lodash";
+import { taskLock } from './shared/taskLock.mjs';
 
 // Could try to detect error cycles
 const maxErrorRate = 20; // per minute
@@ -27,8 +28,8 @@ function hubAssertions(taskDiff, mergedTask) {
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
-  const request = mergedTask.meta.modified.request;
-  const response = mergedTask.meta.modified.response;
+  const request = mergedTask?.meta?.modified?.request;
+  const response = mergedTask?.meta?.modified?.response;
   utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
@@ -242,12 +243,19 @@ async function taskProcess_async(task, req, res) {
     utils.logTask(task, "");
     utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " state:" + task?.state?.current);
     let activeTask = {};
+
+    await utils.debugTask(task);
     checkErrorRate(task);
+    let instanceId = task.instanceId;
+    if (task.processor?.commandArgs?.syncTask?.instanceId) {
+      instanceId = task.processor?.commandArgs?.syncTask?.instanceId;
+      //task = task.processor?.commandArgs?.syncTask;
+    }
     task = utils.hubUpdating(task);
-    if (task.instanceId !== undefined) {
-      activeTask = await getActiveTask_async(task.instanceId);
+    if (instanceId !== undefined) {
+      activeTask = await getActiveTask_async(instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
-        if (task.meta.hashDiff) {
+        if (task.meta?.hashDiff) {
           // This is running on "partial" which seems a waste
           utils.checkHashDiff(activeTask, task);
         }
@@ -267,7 +275,7 @@ async function taskProcess_async(task, req, res) {
     }
     task = await processorInHubOut_async(task, activeTask, requestId);
     // Update the processor information
-    if (activeTask) {
+    if (activeTask && Object.keys(activeTask).length !== 0) {
       activeTask.processors = task.processors;
       await setActiveTask_async(activeTask);
     }
@@ -292,6 +300,10 @@ async function taskProcess_async(task, req, res) {
     if (haveCoProcessor && !task.hub.coprocessing && !task.processor.isCoProcessor) {
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket
+      if (task.instanceId) {
+        // To avoid updates being routed to coprocessor before init completes
+        await taskLock(task.instanceId, "taskProcess");
+      }
       await taskSync_async(task.instanceId, task);
       return null;
     // If HTTP without coprocessing then we return (this is no longer used)

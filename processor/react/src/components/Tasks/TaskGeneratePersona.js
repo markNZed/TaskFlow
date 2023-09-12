@@ -13,7 +13,7 @@ import { utils } from "../../utils/utils.mjs";
 import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 
 /*
-Task Process
+Task Function
   
 ToDo:
 

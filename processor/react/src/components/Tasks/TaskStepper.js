@@ -14,7 +14,7 @@ import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils.mjs";
 
 /*
-Task Process
+Task Function
   Present a sequence of tasks in an Accordian component
   
 ToDo:

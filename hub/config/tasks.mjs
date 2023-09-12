@@ -68,6 +68,9 @@ const tasks = [
       local: {
         targetStore: "tasks",
       },
+      debug: {
+        debugTask: true,
+      },
     },
     parentName: "config",
     type: "TaskSystemConfig"

@@ -12,7 +12,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
     // We are not using this storage yet
     // We will need to clean it up
     if (globalState.storageRef) {
-      await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, task);
+      await utils.processorActiveTasksStoreSet_async(utils.createSetStorage(globalState.storageRef), task);
       //const value = await storageRef.current.get("a1");
       console.log("Storage start ", task.id, task.instanceId);
     } else {

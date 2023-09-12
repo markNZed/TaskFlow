@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocket } from "ws";
 import { hubSocketUrl, processorId } from "../config.mjs";
 import { register_async } from "./register.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
 
@@ -39,7 +39,7 @@ const wsSendTask = async function (task) {
   //console.log("wsSendTask " + message)
   let message = {}; 
   // taskInProcessorOut will return a diff taking into account task.processor.origTask
-  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
+  task = await utils.taskInProcessorOut_async(task, processorId, getActiveTask_async);
   task.meta = task.meta || {};
   task.meta.prevMessageId = task.meta.messageId;
   task.meta.messageId = utils.nanoid8();
@@ -89,7 +89,7 @@ const connectWebSocket = () => {
       console.log("processorWs.onmessage ", command, task.id, commandArgs);
     }
     if (command === "update") {
-      const lastTask = await activeTasksStore_async.get(message.task.instanceId);
+      const lastTask = await getActiveTask_async(message.task.instanceId);
       //console.log("processorWs.onMessage update", message.task);
       // If we receive this task we don't want to send it back to the hub
       // So pass null instead of websocket
@@ -97,14 +97,12 @@ const connectWebSocket = () => {
       //console.log("lastTask", lastTask?.output?.msgs);
       const mergedTask = utils.deepMergeProcessor(lastTask, message.task, message.task.processor);
       //console.log("mergedTask", mergedTask?.output?.msgs);
-      //console.log("processorWs updating activeTasksStore_async from diff ", mergedTask.id, mergedTask.instanceId)
-      console.log("processorWs state:" + mergedTask.state?.current);
       if (!mergedTask.id) {
         throw new Error("Problem with merging")
       }
       // Check hash
-      utils.checkHash(lastTask, mergedTask);
-      await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
+      utils.checkHashDiff(lastTask, mergedTask);
+      await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       if (!commandArgs?.sync) {
         await taskProcess_async(wsSendTask, mergedTask);
       }
@@ -113,7 +111,7 @@ const connectWebSocket = () => {
       //console.log("Task:", message.task);
       throw new Error("Unexpected start command")
     } else if (command === "join" || command === "init") {
-      await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, message.task);
+      await utils.processorActiveTasksStoreSet_async(setActiveTask_async, message.task);
       await taskProcess_async(wsSendTask, message.task)
     } else if (command === "pong") {
       //console.log("ws pong received", message)

@@ -9,6 +9,7 @@ import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
 import { haveCoProcessor } from "../config.mjs";
+import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task, res) {
   const commandArgs = task.hub.commandArgs;
@@ -40,6 +41,7 @@ export async function commandStart_async(task, res) {
             //utils.logTask(task, "commandStart_async startTask.processor", startTask.processor);
             //utils.logTask(task, "commandStart_async startTask.hub", startTask.hub);
             utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
+            taskRelease(task.instanceId, "commandStart_async");
           })
       } else {
         await taskSync_async(task.instanceId, task);
@@ -50,6 +52,7 @@ export async function commandStart_async(task, res) {
         .then(async (startTask) => {
           await taskSync_async(startTask.instanceId, startTask);
           utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
+          taskRelease(task.instanceId, "commandStart_async");
         })
     }
     // We can use this for the websocket so thre is no res provided in that case  

@@ -22,7 +22,7 @@ To use the XState FSM
 */
 
 /*
-Task Process
+Task Function
   This component is complete overkill for what it is doing but it is useful during dev
   Fetches a instruction from the NodeJS Task Processor that is hard coded in the task
   

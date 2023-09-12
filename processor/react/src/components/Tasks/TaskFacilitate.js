@@ -13,7 +13,7 @@ import send from "../../assets/send.svg";
 // PLACEHOLDER - under development and not working
 
 /*
-Task Process
+Task Function
 
 Task States
   

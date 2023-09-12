@@ -9,8 +9,6 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 // eslint-disable-next-line no-unused-vars
 const TaskConversation_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
-
   function helloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
     utils.logTask(T(), "Hello World", args);
   }

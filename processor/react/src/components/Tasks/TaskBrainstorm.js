@@ -10,7 +10,7 @@ import withTask from "../../hoc/withTask";
 // PLACEHOLDER - under development and not working
 
 /*
-Task Process
+Task Function
 
 Task States
   

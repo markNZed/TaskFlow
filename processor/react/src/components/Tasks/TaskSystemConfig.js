@@ -11,7 +11,7 @@ import { ConfigProvider, theme, Tree, Spin, Button, Dropdown, Modal, Input } fro
 import { utils } from "../../shared/utils.mjs";
 
 /*
-Task Process
+Task Function
 
 This is intended to be a placeholder for experimenting with React
   

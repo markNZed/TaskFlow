@@ -9,6 +9,7 @@ import { EMPTYDBS } from "../config.mjs";
 import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mjs";
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
+import { utils } from "./utils.mjs";
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();
@@ -55,6 +56,7 @@ async function getActiveTask_async(instanceId) {
 }
 
 async function setActiveTask_async(task) {
+  utils.assert(task.instanceId !== undefined);
   await Promise.all([
     instancesStore_async.set(task.instanceId, task),
     activeTasksStore_async.set(task.instanceId, true)

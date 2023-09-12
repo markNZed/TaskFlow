@@ -8,10 +8,10 @@ import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, processorId, COPROCESSOR } from "../config.mjs";
 import { register_async } from "./register.mjs";
-import { activeTasksStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
-import { taskRelease } from './taskLock.mjs';
+import { taskRelease, taskLock } from './shared/taskLock.mjs';
 
 // The reconnection logic should be reworked if an error genrates a close event
 
@@ -62,7 +62,10 @@ taskSubject
         utils.removeNullKeys(task);
       }
       // Don't run CEP on sync updates
-      if (!task.processor.commandArgs?.sync) {
+      const notSync = task.processor.command !== "sync";
+      const CEPCoprocessor = COPROCESSOR && task.processor.coprocessing;
+      const CEPprocessor = !COPROCESSOR;
+      if (notSync && (CEPCoprocessor || CEPprocessor)) {
         // Complex event processing uses a Map of Map
         //  The outer Map matches a task identity of the task that is being processed
         //  The inner Map associates the CEP initiator task.instanceId with a function
@@ -95,15 +98,8 @@ taskSubject
         for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
           utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
-          await func(functionName, wsSendTask, CEPInstanceId, task, args);
+          func(functionName, wsSendTask, CEPInstanceId, task, args);
           task.processor.CEPExecuted.push(functionName);
-        }
-        // Check for changes to the task
-        const diff = utils.getObjectDifference(taskCopy, task) || {};
-        if (Object.keys(diff).length > 0) {
-          utils.logTask(task, "DIFF", diff);
-        } else {
-          //utils.logTask(task, "no DIFF", taskCopy?.state?.current, task?.state?.current);
         }
       }
       if (COPROCESSOR) {
@@ -132,8 +128,11 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (!COPROCESSOR || task.processor.coprocessingDone) {
+        if (!COPROCESSOR || task.processor.coprocessingDone || task.processor?.commandArgs?.syncTask) {
           utils.logTask(task, 'Task processed successfully');
+          taskRelease(task.instanceId, "Task processed successfully");
+        } else {
+          utils.logTask(task, 'Task processed COPROCESSOR', COPROCESSOR, "task.processor.coprocessingDone", task.processor.coprocessingDone);
         }
       }
     },
@@ -157,10 +156,12 @@ function wsSendObject(message) {
 const wsSendTask = async function (task) {
   //utils.logTask(task, "wsSendTask ");
   let message = {};
-  task = await utils.taskInProcessorOut_async(task, processorId, activeTasksStore_async);
+  task = await utils.taskInProcessorOut_async(task, processorId, getActiveTask_async);
   task.meta = task.meta || {};
-  task.meta.prevMessageId = task.meta.messageId;
-  task.meta.messageId = utils.nanoid8();
+  if (!COPROCESSOR) {
+    task.meta.prevMessageId = task.meta.messageId;
+    task.meta.messageId = utils.nanoid8();
+  }
   message["task"] = task;
   //console.log("wsSendTask state:", task?.state?.current)
   utils.debugTask(task);
@@ -200,6 +201,14 @@ const connectWebSocket = () => {
     let task;
     if (message?.task) {
       task = utils.hubInProcessorOut(message.task);
+      // We do not lock for start because start only arrives once on the coprocessor with task.processor.coprocessing 
+      // so it does not get released.
+      // We do not lock for a sync for teh same reason - we do not coprocess sync
+      if (task.processor.command !== "start") {
+        if (!COPROCESSOR || (COPROCESSOR && task.processor.coprocessing || task.processor?.commandArgs?.syncTask)) {
+           await taskLock(task.instanceId, "processorWs.onmessage");
+        }
+      }
       command = task.processor.command;
       commandArgs = task.processor.commandArgs;
     } else {
@@ -212,7 +221,9 @@ const connectWebSocket = () => {
       utils.logTask(task, "processorWs coprocessingDone:" + task.processor.coprocessingDone + " coprocessing:" + task.processor.coprocessing);
     }
     if (command === "update") {
-      const lastTask = await activeTasksStore_async.get(task.instanceId);
+      let lastTask = await getActiveTask_async(task.instanceId);
+      // If coprocessor then we are getting lastTask from the Hub.
+      // A hack is to "convert" the hub task into a processor task
       if (!lastTask) {
         utils.logTask(task,"Missing lastTask for update");
         throw new Error("Missing lastTask for update");
@@ -222,35 +233,31 @@ const connectWebSocket = () => {
         throw new Error("Problem with merging, id is missing")
       }
       utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
-      // The sync arrives after activeTasksStore_async has been updated so hash mismatch?
-      // Check hash 
-      if (!utils.checkHash(lastTask, mergedTask)) {
+      if (!utils.checkHashDiff(lastTask, mergedTask)) {
         if (mergedTask.processor.initiatingProcessorId === processorId) {
           console.error("Task hash does not match from this processor");
         }
       }
-      //utils.logTask(task, "processorWs updating activeTasksStore_async processor", mergedTask.processor);
-      //utils.logTask(task, "processorWs updating activeTasksStore_async meta", mergedTask.meta);
-      // Emit the mergedTask into the taskSubject
       delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
       mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
       if (!mergedTask.processor.coprocessing) {
-        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, mergedTask);
-        taskRelease(task.instanceId);
+        await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       }
+      // Emit the mergedTask into the taskSubject
       taskSubject.next(mergedTask);
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
-      // Emit the task into the taskSubject
       if (!task.processor.coprocessing) {
-        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+        if (command !== "start") {
+          task = await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
+        }
       }
       taskSubject.next(task);
     } else if (command === "error") {
       utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       if (!task.processor.coprocessing) {
-        await utils.processorActiveTasksStoreSet_async(activeTasksStore_async, task);
+        await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
       }
       taskSubject.next(task);
     } else if (command === "pong") {

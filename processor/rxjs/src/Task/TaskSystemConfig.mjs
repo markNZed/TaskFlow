@@ -24,9 +24,6 @@ let configTreeTimestamp = Date();
 // eslint-disable-next-line no-unused-vars
 const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
-  if (T("processor.commandArgs.sync")) {utils.logTask(T(), "Ignore sync operations")}
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
-
   /**
    * Removes properties from objB that have the same values as those in objA.
    * This is a recursive function that also removes properties from nested objects.
@@ -119,11 +116,11 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
     return Array.isArray(objA) || Array.isArray(objB) ? [] : {};
   }
 
-  async function parentDiff(targetStore, requestedTask) {
-    const requestedTaskParent = await read_async(targetStore, requestedTask?.meta?.parentId);
-    let diff = utils.deepClone(requestedTask);
+  async function parentDiff_async(targetStore, task) {
+    const requestedTaskParent = await read_async(targetStore, task?.meta?.parentId);
+    let diff = {};
     if (requestedTaskParent) {
-      diff = keepSameProperties(requestedTaskParent, diff);
+      diff = keepSameProperties(requestedTaskParent, task);
     }
     return diff
   }
@@ -148,7 +145,7 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
           case "read":{
             // Could us promise.all to fetch in parallel
             const requestedTask = await read_async(targetStore, actionId);
-            const diff = parentDiff(targetStore, requestedTask);
+            const diff = await parentDiff_async(targetStore, requestedTask);
             T("response.task", requestedTask);
             T("response.taskDiff", diff);
             rebuildTree = false;
@@ -160,7 +157,7 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
           }
           case "update": {
             await update_async(targetStore, T("request.actionTask"));
-            const diff = parentDiff(targetStore, T("request.actionTask"));
+            const diff = await parentDiff_async(targetStore, T("request.actionTask"));
             T("response.taskDiff", diff);
             T("response.task", T("request.actionTask"));
             break;

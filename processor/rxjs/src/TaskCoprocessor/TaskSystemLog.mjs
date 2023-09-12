@@ -43,10 +43,10 @@ const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) 
     if (task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
       // We will log twice when coprocessing but this is necessary to debug coprocessing
       await updateTaskWithHistory(task);
-      utils.logTask(task, "Logged");
+      utils.logTask(task, "CEPLog Logged");
     } else {
       // Should log even when there is no instanceId - not sure what to do for index in that case
-      utils.logTask(task, "Skipped logging because task type", task.type);
+      utils.logTask(task, "CEPLog Skipped logging because task type", task.type);
     }
   }
 

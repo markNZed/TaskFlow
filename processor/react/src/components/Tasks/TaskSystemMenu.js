@@ -14,7 +14,7 @@ import { utils } from "../../utils/utils.mjs";
 // PLACEHOLDER - under development and not working
 
 /*
-Task Process
+Task Function
 
 Task States
   

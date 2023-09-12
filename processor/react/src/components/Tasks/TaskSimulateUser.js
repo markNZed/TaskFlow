@@ -11,7 +11,7 @@ import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 import DynamicComponent from "../Generic/DynamicComponent";
 
 /*
-Task Process
+Task Function
   Intercept TaskChat and simulate the user prompt.
   Don;t use the output variables that TaskChat uses
 ToDo:

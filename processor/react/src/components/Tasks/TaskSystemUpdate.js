@@ -13,13 +13,14 @@ import JsonEditor from '../Generic/JsonEditor.js'
 /*
 Task Function
 
-This is intended to be a placeholder for experimenting with React
+  Fetch any Task and modify it
+
   
 ToDo:
   
 */
 
-const TaskDummy = (props) => {
+const TaskSystemUpdate = (props) => {
   const {
     log,
     task,
@@ -70,4 +71,4 @@ const TaskDummy = (props) => {
   );
 };
 
-export default withTask(TaskDummy);
+export default withTask(TaskSystemUpdate);

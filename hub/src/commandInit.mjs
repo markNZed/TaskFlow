@@ -7,13 +7,15 @@ import { utils } from "./utils.mjs";
 import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
+import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandInit_async(task, res) {
   let processorId = task.hub.sourceProcessorId;
   try {
     utils.logTask(task, "commandInit_async id:" + task.id + " from processorId:" + processorId);
     await taskSync_async(task.instanceId, task);
-    utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+    await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+    taskRelease(task.instanceId, "commandInit_async");
     // We can use this for the websocket so there is no res provided in that case  
     if (res) {
       res.status(200).send("ok");

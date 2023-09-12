@@ -8,9 +8,7 @@ import { getActiveTask_async, setActiveTask_async, deleteActiveTask_async } from
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
-import { Mutex } from 'async-mutex';
-
-const mutexes = new Map();
+import { taskRelease } from './shared/taskLock.mjs';
 
 async function doneTask_async(task) {
   // Should be an assertion
@@ -53,7 +51,7 @@ async function doUpdate(commandArgs, task, res) {
     utils.logTask(task, "Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     await taskSync_async(task.instanceId, task)
     await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
-    // We can use this for the websocket so thre is no res provided in that case  
+    // We can use this for the websocket so there is no res provided in that case  
     if (res) {
       res.status(200).send("ok");
     }
@@ -65,22 +63,20 @@ export async function commandUpdate_async(task, res) {
     throw new Error("Missing task.instanceId");
   }
   let processorId = task.hub.sourceProcessorId;
-  // Get or create the mutex for this instanceId
-  let mutex = mutexes.get(task.instanceId);
-  if (!mutex) {
-    mutex = new Mutex();
-    mutexes.set(task.instanceId, mutex);
+  // In the case of a sync we need to lock the target instanceId
+  let instanceIdToLock = task.instanceId;
+  const commandArgs = task.hub.commandArgs;
+  if (commandArgs?.sync && commandArgs?.syncTask?.instanceId) {
+    instanceIdToLock = commandArgs.syncTask.instanceId;
   }
-  // Lock the mutex
-  const release = await mutex.acquire();
-  utils.logTask(task, "commandUpdate_async lock locked instanceId:", task.instanceId, "in messageId:", task?.meta?.messageId);
+  //const localTaskRelease = await taskLock(task.instanceId, "commandUpdate_async");
+  utils.logTask(task, "commandUpdate_async lock locked instanceId:", instanceIdToLock, "in messageId:", task?.meta?.messageId);
   try {
     utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
     let activeTask = await getActiveTask_async(task.instanceId)
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
-    const commandArgs = task.hub["commandArgs"];
     if (commandArgs?.sync) {
       if (commandArgs?.done) {
         throw new Error("Not expecting sync of done task");
@@ -115,6 +111,7 @@ export async function commandUpdate_async(task, res) {
   } finally {
     // Always release the lock
     utils.logTask(task, "commandUpdate_async lock released instanceId:", task.instanceId);
-    release();
+    //localTaskRelease();
+    taskRelease(task.instanceId, "commandUpdate_async");
   }
 }

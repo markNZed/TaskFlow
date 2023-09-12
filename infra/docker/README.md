@@ -28,7 +28,7 @@ To interact with redis from another container:
 
 # Notes
 
-On th server running the Redis container I ran `sysctl vm.overcommit_memory=1``
+On the server running the Redis Docker container I ran `sysctl vm.overcommit_memory=1``
 
 ## T@skFlow Ntwork Services
 

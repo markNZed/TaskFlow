@@ -74,6 +74,12 @@ const utils = {
     return html;
   },
 
+  createSetStorage: function(storageRef) {
+    return function setStorage(task) {
+      storageRef.current.set(task.instanceId, task);
+    };
+  },
+
 };
 
 export { utils };

@@ -10,6 +10,7 @@ dotenv.config();
 import mongoose from 'mongoose';
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 import { processorId } from "../config.mjs";
+import { utils } from "./utils.mjs";
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
@@ -52,6 +53,10 @@ const cacheStore_async = newKeyV(redisClient, keyvPrefix + "cache");
 // Schema:
 //   Key: instanceId
 //   Value: task object
+const instancesStore_async = newKeyV(redisClient, keyvPrefix + "instances");
+// Schema:
+//   Key: instanceId
+//   Value: task object
 const activeTasksStore_async = newKeyV(redisClient, keyvPrefix + "activeTasks");
 // Schema:
 //   Key: task.id
@@ -68,19 +73,38 @@ const groupsStore_async = newKeyV(redisClient, "groups"); // Shared with Hub
 
 const tasktypesStore_async = newKeyV(redisClient, "tasktypes"); // Shared with Hub
 
-if (EMPTYDBS) {
+async function getActiveTask_async(instanceId) {
+  if (await activeTasksStore_async.has(instanceId)) {
+    let task = await instancesStore_async.get(instanceId);
+    return task;
+  } else {
+    console.log("Returned undefined from getActiveTask_async for instanceId:", instanceId);
+    return undefined;
+  }
+}
+async function setActiveTask_async(task) {
+  utils.assert(task.instanceId !== undefined, JSON.stringify(task));
   await Promise.all([
+    instancesStore_async.set(task.instanceId, task),
+    activeTasksStore_async.set(task.instanceId, true)
+  ]);
+}
+
+if (EMPTYDBS) {
+  let toClear = [
     cacheStore_async.clear(),
-    activeTasksStore_async.clear(),
     taskDataStore_async.clear(),
     //tasksStore_async.clear(), We do not clear this because it is controlled by Hub
-  ]);
+  ];
+  if (!COPROCESSOR) {
+    toClear.push(activeTasksStore_async.clear());
+  }
+  await Promise.all(toClear);
   console.log("Empty DB: cleared all KeyV");
 }
 
 export {
   cacheStore_async,
-  activeTasksStore_async,
   taskDataStore_async,
   connections,
   activeTaskFsm,
@@ -90,4 +114,6 @@ export {
   groupsStore_async,
   tasktypesStore_async,
   sharedStore_async,
+  setActiveTask_async,
+  getActiveTask_async,
 };

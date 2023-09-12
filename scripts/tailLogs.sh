@@ -32,7 +32,7 @@ for file in "${files[@]}"; do
   pipes+=("$pipe")
   rm -f "$pipe"
   mkfifo "$pipe"
-  tail -f "$file" | sed "s/^/$(basename $file): /" > "$pipe" &
+  tail -f "$file" 2>&1 | sed "s/^/$(basename $file): /" > "$pipe" &
   pids+=("$!")
 done
 

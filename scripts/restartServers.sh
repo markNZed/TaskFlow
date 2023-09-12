@@ -7,11 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Include common variables
 source "$DIR/common.sh"
 
-# Loop through the array and touch each file
-for file in "${files[@]}"; do
-  truncate -s 0 "$file"
-  echo "Truncate $file"
-done
+source "$DIR/restartLogs.sh"
 
 # Loop through the array and touch each file
 for file in "${serverFiles[@]}"; do

@@ -8,6 +8,7 @@ import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import { utils } from "./utils.mjs";
+import { taskRelease } from './shared/taskLock.mjs';
 
 async function errorTask_async(task) {
   // Should be an assertion
@@ -62,8 +63,10 @@ export async function commandError_async(task, res) {
       // We are receiving an error after coprocessing
       await taskSync_async(task.instanceId, task);
       utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+      taskRelease(task.instanceId, "commandError_async");
     } else {
       await errorTask_async(task);
+      taskRelease(task.instanceId, "commandError_async");
     }
   } catch (error) {
     const msg = `Error commandError_async task ${task.id}: ${error.message}`;

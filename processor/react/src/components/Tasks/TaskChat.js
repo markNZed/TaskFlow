@@ -13,7 +13,7 @@ import send from "../../assets/send.svg";
 import { v4 as uuidv4 } from "uuid";
 
 /*
-Task Process
+Task Function
   Present textarea and dropdown for user to enter a prompt
   When prompt is submitted state.current -> send
   NodeJS sends incemental text responses by websocket updating task.output.LLMResponse

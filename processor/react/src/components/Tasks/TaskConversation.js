@@ -11,7 +11,7 @@ import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
 
 /*
-Task Process
+Task Function
   Present a conversation
   Launch a chat task that collects messages from human and bot
   Currently this TaskConversation does very little, in theory it could manage the conversation history

@@ -57,13 +57,14 @@ async function uniquifyId_async (targetStore, taskName, parentTaskId) {
       index++;
     }
   }
+  return uniqueId;
 }
 
 // Helper function to recursively update child tasks
 const moveBranch_async = async (targetStore,task, parentTask) => {
   // Build new id for task
   const oldId = task.id;
-  task.id = uniquifyId_async(targetStore, task.name, parentTask.id);
+  task.id = await uniquifyId_async(targetStore, task.name, parentTask.id);
   // Initialize meta.childrenId if it doesn't exist
   parentTask.meta.childrenId = parentTask.meta.childrenId || [];
   // Remove oldId from parent's children
@@ -84,7 +85,6 @@ const moveBranch_async = async (targetStore,task, parentTask) => {
       let childTask = await read_async(targetStore, childId);
       return moveBranch_async(targetStore, childTask, task);
     });
-  
     await Promise.all(promises);
   }  
   return task;
@@ -117,7 +117,7 @@ export const move_async = async (targetStore, actionId, destinationId) => {
 
 const pasteBranch_async = async (targetStore, task, parentTask) => {
   // Build new id for task
-  task.id = uniquifyId_async(targetStore, task.name, parentTask.id);
+  task.id = await uniquifyId_async(targetStore, task.name, parentTask.id);
   // Initialize meta.childrenId if it doesn't exist
   parentTask.meta.childrenId = parentTask.meta.childrenId || [];
   // Add new task id to parent's children

@@ -310,13 +310,13 @@ function withTask(Component) {
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         //console.log("lastTask", JSON.parse(JSON.stringify(lastTask)));
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
-        utils.checkHash(lastTask, updateDiff);
+        utils.checkHashDiff(lastTask, updateDiff);
         let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.processor);
         //console.log("After deepMergeProcessor updatedTask", JSON.parse(JSON.stringify(updatedTask)));
         utils.removeNullKeys(updatedTask);
         //console.log("After removeNullKeys updatedTask", JSON.parse(JSON.stringify(updatedTask)));
         //let updatedTask = utils.deepMerge(lastTask, updateDiff)
-        await utils.processorActiveTasksStoreSet_async(globalState.storageRef.current, updatedTask);
+        await utils.processorActiveTasksStoreSet_async(utils.createSetStorage(globalState.storageRef), updatedTask);
         //console.log("After processorActiveTasksStoreSet_async updatedTask", JSON.parse(JSON.stringify(updatedTask)));
         //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         // Keep the origTask up to date i th eactive task

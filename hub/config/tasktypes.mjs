@@ -42,7 +42,7 @@ const tasktypes = [
     config: {
       ceps: {
         "familyId": {
-          functionName: "familyTree",
+          functionName: "CEPFamilyTree",
         },
       },
     },
