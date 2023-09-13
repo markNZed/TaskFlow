@@ -5,9 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
-    "debug": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=0.0.0.0:9231 server.js",
-    "start-copro": "COPROCESSOR=true nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
-    "debug-copro": "COPROCESSOR=true nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=0.0.0.0:9232 server.js"
+    "debug": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=${DEBUG_PORT:-0.0.0.0:9231} server.js"
   },
   "dependencies": {
     "@kvs/node-localstorage": "^2.1.3",

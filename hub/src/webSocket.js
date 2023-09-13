@@ -45,7 +45,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
     processor = JSON.parse(JSON.stringify(task.processors[processorId]));
   }
   let user;
-  if (task.users && task.user.id && task.users[task.user.id]) {
+  if (task.user && task.users && task.user.id && task.users[task.user.id]) {
     user = JSON.parse(JSON.stringify(task.users[task.user.id]));
   }
   let message = {}

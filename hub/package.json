@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon --watch ../config --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
-    "debug": "nodemon --watch ../config --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=0.0.0.0:9229 server.js"
+    "debug": "nodemon --watch ../config --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=${DEBUG_PORT:-0.0.0.0:9229} server.js"
   },
   "dependencies": {
     "@keyv/redis": "^2.7.0",

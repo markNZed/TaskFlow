@@ -53,6 +53,9 @@ This assumes T@skFlow is running behind a proxy on a docker network:
 <br> `docker-compose -f docker-compose-dev.yml build`
 <br> `docker-compose -f docker-compose-dev.yml up -d`
 
+Because we are running a meta version there are two screen sessions:
+`screen -rd meta` and `screen -rd app`
+
 SetupVSCode debugging in .vscode/launch.json
 
 <br>`docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash`
@@ -61,6 +64,20 @@ SetupVSCode debugging in .vscode/launch.json
 * `use taskflow`
 * `show collections`
 * `db.tasks.find({"current.user.id": {"$regex": "mark"}})`
+
+There is a meta version which shares MongoDB and Redis, all the other ports increase by 1000:
+
+* 4000 React serving the React Processor app and the React dev server for live updates (path /ws)
+* 6000 NodeJS Task Processor
+* 6001 Task Hub
+* 6002 RxJS Task Processor
+* 6003 RxJS Task Hub Coprocessor
+* 10229 Task Hub node debug
+* 10230 NodeJS Task Processor node debug
+* 10231 RxJS Task Processor node debug
+* 10232 RxJS Task Hub Coprocessor node debug
+
+The meta version resides in `/meta`
 
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 
