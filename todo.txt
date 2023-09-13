@@ -1,12 +1,14 @@
 /* ToDo
 ------
-Maybe for sync we use the task and just set commandArgs.sync?
-  Move commandArgs.syncTask into 
-  Similar to partial
-  Hub can treat as normal and we just have a flag 
-Queued update on copro are an issue, first makes the changes and second is hash mismatch on hub
-Do we need the code for sync and hash - it will only have those changes when it works correctly?
-  Checking of the hash for the syn should only focus on the sync elements
+Could have an option on CEP as to whether we need to await or not
+  Would allow for concurrent processing for most CEP
+  Those that can be run concurrently might be better in a particular class of processor
+Move rxjs back to normal  
+  export async function commandUpdate_async(wsSendTask, task, diff, sync = false) { 
+Requesting lock processorWs.onmessage id: undefined (assertion)
+  Modifying field in tasks broken due to locks
+Move commandArgs.syncTask into task ?
+  Similar to partial. Should/could partial be sync/ maybe we can merge sync into partial
 Need to think more about locks for tasks initiated on hub (start/update/error)
 Move to task.node ?
   One the hub we copy task.node into task.processors then setup task.node
@@ -16,28 +18,12 @@ Add a description to each state that can be used for logging
   task.state.description = [state: 'text']
   better to do this with a function in the SM
   description("");
-hashDiff on Hub in TaskSystemTest
-  "Running CEP function serviceStub with args" being repeated in rxjscopro
-  sync of familyTree and only on the Hub
-    Could use taskDebug ?
-      Could have debug package with useful "filters"
-        Use ./tailLogs.sh | grep DEBUGTASK
-          Allow the task to enable the debug e.g. task.debug = {taskDebug: true}
-            How can the task pick up that debug is enabled?
-              A TaskSystemDebug that modifies a task by sending sync
-                Can aslo match on id
-                  Can it use a try catch and eval the debug filter - so no need to reload?
-                    Need a JS editor in the task
-                    The util function can be modiifed in the browser/server by the Task ?
-  start task after converstin to init is saved on hub
-  The init should block the task so updates can't be sent
-  Normal that we are getting hashDiff because of partial updates
-    Should focus on the 
-  State has moved to ready from start in the message sent but it is alreday "ready" on the hub because iof an earlier update?
-  If coprocessor does not have task then it has nothing in storage for the update/diff during sync
-    Should be using what is stored on the hub
-      If it generates an update this can arrive before the lastTask is updated on the hub?
-        Probably need to move the lock during init to the hub
+TaskSystemDebug
+  Modifies a task by sending sync
+    Can also match on id
+    Can it use a try catch and eval the debug filter - so no need to reload?
+    The util.debugTask function can be modifed in the browser/server by the Task ?
+      Need a JS editor in the task
 Move familyTree CEP from TaskSystemTest_async into dedicated TaskSystem
   Should familyTree be available in shared ?
       Do we install CEP for each family?

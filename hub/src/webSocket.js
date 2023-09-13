@@ -79,7 +79,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
     task.processor = {};
   }
   const { coprocessingPosition, coprocessing, coprocessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
-  if (task.processor.isCoProcessor) {
+  if (task.processor.isCoprocessor) {
     task.processor["coprocessingPosition"] = coprocessingPosition;
     task.processor["coprocessing"] = coprocessing;
     task.processor["coprocessingDone"] = coprocessingDone;
@@ -172,12 +172,12 @@ function initWebSocketServer(server) {
         }
 
         if (task.hub.command !== "partial") {
-          //utils.logTask(task, "isCoProcessor " + task.processor.isCoProcessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " processorId " + processorId);
+          //utils.logTask(task, "isCoprocessor " + task.processor.isCoprocessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " processorId " + processorId);
         }
 
         // Have not tested this yet because we only have one coprocessor
         // There is very similar code in taskSync.mjs
-        if (task.processor.isCoProcessor && task.hub.coprocessing && !wasLastCoProcessor) {
+        if (task.processor.isCoprocessor && task.hub.coprocessing && !wasLastCoProcessor) {
           utils.logTask(task, "Looking for NEXT coprocessor");
           // Send through the coprocessors
           // The task.hub.coprocessingPosition decides which coprocessor to run
@@ -194,7 +194,7 @@ function initWebSocketServer(server) {
               utils.logTask(task, "Websocket coprocessor chain", coprocessorId);
               // If the task is only on one co-processor at a time then we could just use task.coprocessor ?
               if (!task.processors[coprocessorId]) {
-                task.processors[coprocessorId] = {id: coprocessorId, isCoProcessor: true};
+                task.processors[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
               }
               task.hub["coprocessing"] = true;
               task.hub["coprocessingDone"] = false;

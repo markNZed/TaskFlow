@@ -81,18 +81,14 @@ export async function commandUpdate_async(task, res) {
       if (commandArgs?.done) {
         throw new Error("Not expecting sync of done task");
       }
-      // We are syncing so switch active task
-      // Should limit this so we can only update in the same family (except for system tasks)
-      if (commandArgs.syncTask.instanceId) {
-        activeTask = await getActiveTask_async(commandArgs.syncTask.instanceId);
-        utils.logTask(task, "sync for instanceId:", commandArgs.syncTask.instanceId);
-        activeTask.meta["messageId"] = task.meta.messageId;
-        activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
-      }
+      activeTask.meta["messageId"] = task.meta.messageId;
+      activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
       if (!activeTask) {
         throw new Error("No active task " + commandArgs.syncTask.instanceId);
       }
+      // This should have only the sync updates in it
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
+      task.hub.commandArgs["syncTask"] = null;
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }

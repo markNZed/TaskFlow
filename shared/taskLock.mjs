@@ -16,6 +16,9 @@ export function getMutex(key) {
 }
 
 export async function taskLock(key, description = "") {
+  if (key === undefined || key === null) {
+    throw new Error("No key provided " + key);
+  }
   const mutex = getMutex(key);
   console.log(`Requesting lock ${description} id: ${key}`);
   const release = await mutex.acquire();

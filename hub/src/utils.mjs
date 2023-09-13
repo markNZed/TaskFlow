@@ -146,8 +146,12 @@ const utils = {
     return newObject;
   },
   
-  hubUpdating: function(task) {
+  setMetaModified: function(task) {
     task.meta = task.meta || {};
+    if (task.processor?.commandArgs?.syncTask) {
+      task.processor.commandArgs.syncTask["meta"] = task.processor.commandArgs.syncTask.meta || {};
+      task.processor.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.processor.commandArgs.syncTask, ["meta", "processor", "hub", "privacy"]);
+    }
     task.meta["modified"] = utils.findKeys(task, ["meta", "processor", "hub", "privacy"]);
     return task;
   },

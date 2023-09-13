@@ -61,7 +61,7 @@ router.post("/", async (req, res) => {
       serviceTypes,
       messagesStyle,
       language,
-      isCoProcessor: true,
+      isCoprocessor: true,
     })
   } else {  
     activeProcessors.set(processorId, {

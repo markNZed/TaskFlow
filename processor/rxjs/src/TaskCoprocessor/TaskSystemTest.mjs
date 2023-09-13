@@ -83,11 +83,12 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
             familyTree: root.model,
           }
         };
-        //utils.logTask(task, "New state.familyTree", JSON.stringify(diff, null, 2));
-        // We send a sync which updates much faster because it sets coprocessingDone
-        // Otherwise we can get race conditions with the next task reading an old state of state.familyTree
-        // How can we more robustly fix this ?
-        await commandUpdate_async(wsSendTask, CEPtask, diff, true);
+        if (CEPinstanceId === task.instanceId) {
+          task = utils.deepMerge(task, diff);
+          return task;
+        } else {
+          await commandUpdate_async(wsSendTask, CEPtask, diff, true);
+        }
       }
     }
   }

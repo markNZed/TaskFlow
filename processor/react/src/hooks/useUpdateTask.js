@@ -30,6 +30,15 @@ const useUpdateTask = (task, setTask) => {
           const updating = { "command": null, "commandArgs": null };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
+          if (commandArgs?.sync) {
+            snapshot = {};
+            snapshot["command"] = command;
+            snapshot["commandArgs"] = commandArgs;
+            let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
+            snapshot["instanceId"] = instanceId;
+            snapshot["meta"] = {};
+            snapshot["processor"] = {};
+          }
           wsSendTask(snapshot);
         } catch (error) {
           //console.log(utils.findCyclicReference(task));

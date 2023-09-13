@@ -139,7 +139,7 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
       const action = T("request.action")
       const actionId = T("request.actionId");
       let rebuildTree = true;
-      utils.logTask(T(), "action:", action, "id:", actionId);
+      utils.logTask("action:", action, "id:", actionId);
       if (action) {
         switch (action) {
           case "read":{
@@ -188,11 +188,13 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
           configTreeTimestamp = Date();
           configTree = await m_buildTree_async(targetStore, configTreeTimestamp);
         }
-        T({
+        const taskUpdate = {
           "shared.configTree": configTree,
           "state.current": "actionDone",
           "command": "update",
-        });
+        };
+        T(taskUpdate);
+        //utils.logTask("T:", T(), "taskUpdate:", taskUpdate);
       }
     }
     break;

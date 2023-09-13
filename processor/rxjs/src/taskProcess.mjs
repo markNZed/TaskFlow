@@ -37,7 +37,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
       const T = utils.createTaskValueGetter(task);
       updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs);
-      utils.logTask(task, `Finished ${task.type} in state ${task?.state?.current}`);
+      utils.logTask(task, `Finished ${task.type} in state ${updatedTask?.state?.current}`);
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);
     }
@@ -69,6 +69,17 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     console.error("Task error: ", updatedTask.error)
   }
   try {
+    if (updatedTask?.commandArgs?.sync) {
+      const command = updatedTask.command;
+      const commandArgs = updatedTask.commandArgs;
+      updatedTask = {};
+      updatedTask["command"] = command;
+      updatedTask["commandArgs"] = commandArgs;
+      let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
+      updatedTask["instanceId"] = instanceId;
+      updatedTask["meta"] = {};
+      updatedTask["processor"] = {};
+    }
     if (COPROCESSOR) {
       if (updatedTask === null) {
         updatedTask = task;

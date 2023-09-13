@@ -17,7 +17,6 @@ import { CEPFunctions } from "../CEPFunctions.mjs";
 import { sharedStore_async } from "../storage.mjs";
 import { commandUpdate_async } from "../commandUpdate.mjs";
 import assert from 'assert';
-import { sharedLockOrError, sharedRelease } from './TaskSystemShared/sharedLock.mjs';
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
@@ -40,7 +39,6 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
     return false;
   }
 
-  // Because of lock this should be in a try/catch block so we can release the lock in case of error
   // eslint-disable-next-line no-unused-vars
   async function CEPShared(functionName, wsSendTask, CEPinstanceId, task, args) {
     // We only want to run this during the coprocessing of the task
@@ -50,7 +48,6 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
       utils.logTask(task, "task.processor.command", task.processor.command, "task.processor.commandArgs", task.processor.commandArgs);
       let toSync = {};
       const varNames = Object.keys(task.meta.modified.shared);
-      let locksShared = []
       for (const varName of varNames) {
         const sharedEntry = await sharedStore_async.get(varName) || {};
         utils.logTask(task, "task.shared varName", varName);
@@ -61,15 +58,12 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         let updateStorage = false;
         // clarify this
         familyId = task.meta.systemFamilyId || task.familyId;
-        const lockKey = familyId + "-" + varName;
         // Add this instance if it is not already tracked
         sharedEntry[familyId] = sharedEntry[familyId] || {};
         sharedEntry[familyId]["instanceIds"] = sharedEntry[familyId]["instanceIds"] || [];
         if (!sharedEntry[familyId]["instanceIds"].includes(task.instanceId)) {
           sharedEntry[familyId]["instanceIds"].push(task.instanceId);
         }
-        locksShared.push(lockKey);
-        sharedLockOrError(lockKey);
         familyInstanceIds = sharedEntry[familyId].instanceIds;
         updateStorage = true;
         for (const instanceId of familyInstanceIds) {
@@ -117,9 +111,6 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         // Wait for all promises to resolve
         await Promise.all(promises);
       }
-      locksShared.forEach(key => {
-        sharedRelease(key);
-      });
     } else {
       //console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
     }

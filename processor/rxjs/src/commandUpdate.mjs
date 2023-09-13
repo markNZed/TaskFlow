@@ -17,16 +17,15 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
   }
   
   //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
-  let mergedTask;
+  let mergedTask = {}
   // Deep copy task.processor to avoif changes to task that was passed in
   if (sync) {
     if (!diff.instanceId) {
-      // Perhaps we should not support this and the CEP should modify the task in coprocessing to cover this case
       console.log("commandUpdate_async assuming that we are syncing self")
       diff["instanceId"] = task.instanceId
     }
-    await taskLock(diff.instanceId);
-    mergedTask = utils.deepClone(task);
+    await taskLock(diff.instanceId, "commandUpdate_async");
+    mergedTask["instanceId"] = diff["instanceId"]
     mergedTask["command"] = "update";
     mergedTask["commandArgs"] = {
       syncTask: JSON.parse(JSON.stringify(diff)),
@@ -35,6 +34,8 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
     };
     //delete mergedTask.commandArgs.syncTask.command;
     //delete mergedTask.commandArgs.syncTask.commandArgs;
+    mergedTask["meta"] = {};
+    mergedTask["processor"] = {};
     mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     //utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);

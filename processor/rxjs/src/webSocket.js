@@ -61,11 +61,10 @@ taskSubject
       if (!task.processor.coprocessing) {
         utils.removeNullKeys(task);
       }
-      // Don't run CEP on sync updates
-      const notSync = task.processor.command !== "sync";
-      const CEPCoprocessor = COPROCESSOR && task.processor.coprocessing;
+      // We make an exception for sync so we can log sync taht are sent with coprocessingDone
+      const CEPCoprocessor = COPROCESSOR && (task.processor.coprocessing || task.processor?.commandArgs?.sync);
       const CEPprocessor = !COPROCESSOR;
-      if (notSync && (CEPCoprocessor || CEPprocessor)) {
+      if (CEPCoprocessor || CEPprocessor ) {
         // Complex event processing uses a Map of Map
         //  The outer Map matches a task identity of the task that is being processed
         //  The inner Map associates the CEP initiator task.instanceId with a function
@@ -98,7 +97,8 @@ taskSubject
         for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
           utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
-          func(functionName, wsSendTask, CEPInstanceId, task, args);
+          // await so that CEP can modify the task during coprocessing
+          await func(functionName, wsSendTask, CEPInstanceId, task, args);
           task.processor.CEPExecuted.push(functionName);
         }
       }
@@ -128,7 +128,7 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (!COPROCESSOR || task.processor.coprocessingDone || task.processor?.commandArgs?.syncTask) {
+        if (!COPROCESSOR || task.processor.coprocessingDone) {
           utils.logTask(task, 'Task processed successfully');
           taskRelease(task.instanceId, "Task processed successfully");
         } else {
@@ -201,17 +201,19 @@ const connectWebSocket = () => {
     let task;
     if (message?.task) {
       task = utils.hubInProcessorOut(message.task);
+      task.processor["isCoprocessor"] = COPROCESSOR;
+      command = task.processor.command;
+      commandArgs = task.processor.commandArgs;
       // We do not lock for start because start only arrives once on the coprocessor with task.processor.coprocessing 
-      // so it does not get released.
-      // We do not lock for a sync for teh same reason - we do not coprocess sync
-      if (task.processor.command !== "start") {
-        if (!COPROCESSOR || (COPROCESSOR && task.processor.coprocessing || task.processor?.commandArgs?.syncTask)) {
+      // so it does not get released. Start can have instanceId
+      // We do not lock for a sync for the same reason - we do not coprocess sync
+      // Check for instanceId to avoid locking for commands like register
+      if (task.instanceId && command !== "start" && task.processor.initiatingProcessorId !== processorId) {
+        if (!COPROCESSOR || (COPROCESSOR && task.processor.coprocessing)) {
            await taskLock(task.instanceId, "processorWs.onmessage");
         }
       }
-      command = task.processor.command;
-      commandArgs = task.processor.commandArgs;
-    } else {
+     } else {
       console.error("Missing task in message");
       return;
     }

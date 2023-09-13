@@ -733,11 +733,11 @@ const utils = {
     if (diffOrigTask === undefined) {
       diffOrigTask = {};
     }
-    diffOrigTask = utils.cleanForHash(diffOrigTask);
-    //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
     if (!diffTask.meta) {
       diffTask.meta = {};
     }
+    diffOrigTask = utils.cleanForHash(diffOrigTask);
+    //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
     diffTask.meta["hash"] = taskCopy?.meta?.hash;
     // Allows us to check only the relevant part of the origTask
     // More specific than testing for the hash of the entire origTask
@@ -792,10 +792,10 @@ const utils = {
       } else {
         diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
       }
-      diffOrigTask = utils.cleanForHash(diffOrigTask);
       if (diffOrigTask === undefined) {
         diffOrigTask = {};
       }
+      diffOrigTask = utils.cleanForHash(diffOrigTask);
       // Allows us to check only the relevant part of the origTask
       // More specific than testing for the hash of the entire origTask
       diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
@@ -815,23 +815,8 @@ const utils = {
 
   checkHashDiff: function(taskInStorage, task) {
     let taskCopy = JSON.parse(JSON.stringify(task));
-    let command;
-    let commandArgs;
-    if (taskCopy.command) {
-      command = taskCopy.command
-      commandArgs = taskCopy.commandArgs
-    }
-    if (taskCopy?.processor?.command) {
-      command = taskCopy.processor.command
-      commandArgs = taskCopy.processor.commandArgs
-    }
-    if (taskCopy?.hub?.command) {
-      command = taskCopy.hub.command
-      commandArgs = taskCopy.hub.commandArgs
-    }
-    if (command === "update" && commandArgs?.sync) {
-      //console.log("Skipping hash because of sync");
-      taskCopy = commandArgs.syncTask;
+    if (taskCopy?.commandArgs?.sync || taskCopy?.processor?.commandArgs?.sync || taskCopy?.hub?.commandArgs?.sync) {
+      // Sync is not relative to a current value so we cannot use hash
       return;
     }
     const expectedHash = task.meta.hashDiff;
@@ -882,6 +867,7 @@ const utils = {
       throw new Error(`Missing task.command`);
     }
     const command = task.command;
+    const commandArgs = task.commandArgs;
     // Initialize processor when it does not exist e.g. when starting initial task
     if (!task.processor) {
       task.processor = {};
@@ -902,11 +888,11 @@ const utils = {
       delete task.state.last;
     }
     task.processor["id"] = processorId;
-    if (command === "start" || command === "partial") {
+    if (command === "start" || command === "partial" || commandArgs?.sync) {
       return task;
     }
     // This assumes task is not a partial object e.g. in sync
-    if (task.processor.origTask && task.processor.command === "update" && !task.processor?.commandArgs?.sync) {
+    if (task.processor.origTask && task.processor.command === "update") {
       const taskCleaned = utils.cleanForHash(task);
       //console.log("taskInProcessorOut taskCleaned", taskCleaned);
       const origTaskCleaned = utils.cleanForHash(task.processor.origTask);
@@ -1127,10 +1113,10 @@ const utils = {
 
   debugTask: async function(task, context = "") {
     task = utils.deepClone(task); // Avoidin issues with logging references
-    // This is like an assertion
+    // This is like a continuous assertion (it runs before debug info is collected)
     if (task?.processor?.origTask?.id && task?.processor?.origTask?.id !== task?.id) {
       console.error("Task:", task);
-      throw new Error("ERROR debugTask: task.processor.origTask.id !== tak.id");
+      throw new Error("ERROR debugTask: task.processor.origTask.id !== task.id");
     }
     // Could set task.debug via configuration
     if (!task?.config?.debug?.debugTask) {return}
@@ -1154,6 +1140,13 @@ const utils = {
     if (task?.state?.current) {
       logParts.push(`state.current: ${task.state.current}`);
     }
+
+    // This is an assertion that provides debug info
+    if (task.processor && task.processor.id === "rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.processor.isCoprocessor === false) {
+      console.log("Details:", task.processors, task.processor);
+      throw new Error("task.processor.id === 'rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
+    }
+
     if (task?.shared?.configTree) {
       //logParts.push("DEBUGTASK configTree", task.shared.configTree);
     }

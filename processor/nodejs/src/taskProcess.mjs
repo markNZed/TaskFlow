@@ -58,6 +58,17 @@ export async function taskProcess_async(wsSendTask, task) {
         wsSendTask(task);
         */
       } else if (updatedTask?.command === "update") {
+        if (updatedTask?.commandArgs?.sync) {
+          const command = updatedTask.command;
+          const commandArgs = updatedTask.commandArgs;
+          updatedTask = {};
+          updatedTask["command"] = command;
+          updatedTask["commandArgs"] = commandArgs;
+          let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
+          updatedTask["instanceId"] = instanceId;
+          updatedTask["meta"] = {};
+          updatedTask["processor"] = {};
+        }
         console.log("taskProcess_async sending");
         try {
           wsSendTask(updatedTask);

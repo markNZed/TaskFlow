@@ -215,12 +215,25 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instanc
     // we need to be able to associate more recent tasks with an older
     // task that is waiting on the next task.
     task.processors = prevTask.processors;
+    // Iterate over each processor in task.processors
+    if (task.processors) {
+      Object.keys(task.processors).forEach(key => {
+        if (task.processors[key].origTask) {
+          delete task.processors[key].origTask;
+        }
+      });
+    } else {
+      console
+    }
     // With a coprocessor and an initial start command there is no instnaceId
     // The processors cannot be restored because there is no start task stored
     if (!prevTask.processor) {
       task.processor = {id: processorId};
     } else {
       task.processor = prevTask.processor;
+      if (task.processor.origTask) {
+        delete task.processor.origTask;
+      }
     }
     task.processor["command"] = null;
     task.processor["commandArgs"] = null;
@@ -322,7 +335,10 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
         if (environments && environments.includes(environment)) {
             found = true;
             taskProcessors.push(activeProcessorId);
-            task.processors[activeProcessorId] = {id: activeProcessorId};
+            task.processors[activeProcessorId] = {
+              id: activeProcessorId,
+              isCoprocessor: value.isCoprocessor,
+            };
             break;
         }
       }       
@@ -528,7 +544,7 @@ async function taskStart_async(
 
     task.hub.origTask = JSON.parse(JSON.stringify(task));
 
-    task = utils.hubUpdating(task);
+    task = utils.setMetaModified(task);
 
     utils.logTask(task, "Init task.id:", task.id, task.familyId);
 

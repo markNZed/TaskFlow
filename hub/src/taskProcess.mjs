@@ -34,19 +34,20 @@ function hubAssertions(taskDiff, mergedTask) {
 }
 
 async function processorInHubOut_async(task, activeTask, requestId) {
+  utils.debugTask(task);
   const { command, id, coprocessingPosition, coprocessing, coprocessingDone  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
   let initiatingProcessorId = task.processor.initiatingProcessorId || id;
   //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
-  if (!task.processor.isCoProcessor) {
+  if (!task.processor.isCoprocessor) {
     initiatingProcessorId = id;
   }
   //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
   let commandArgs = {};
   if (task.processor.commandArgs) {
-    commandArgs = JSON.parse(JSON.stringify(task.processor.commandArgs))
+    commandArgs = utils.deepClone(task.processor.commandArgs);
   }
   task.processor.command = null;
   task.processor.commandArgs = null;
@@ -54,7 +55,12 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   task.processor.coprocessingDone = null;
   task.processor.coprocessingPosition = null;
   const activeTaskProcessors = activeTask?.processors || {};
-  activeTaskProcessors[id] = JSON.parse(JSON.stringify(task.processor));
+  const processor = utils.deepClone(task.processor);
+  if (!activeTaskProcessors[id]) {
+    activeTaskProcessors[id] = processor;
+  } else {
+    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], processor);
+  }
   task.processors = activeTaskProcessors;
   /*
   // For each processor in task.processors log the stateLast
@@ -85,6 +91,7 @@ async function processorInHubOut_async(task, activeTask, requestId) {
 }
 
 function checkLockConflict(task, activeTask) {
+  utils.debugTask(task);
   if (task.meta) {
     const lock = task.hub.commandArgs.lock || false;
     const unlock = task.hub.commandArgs.unlock || false;
@@ -124,6 +131,7 @@ function checkLockConflict(task, activeTask) {
 }
 
 function checkAPIRate(task) {
+  utils.debugTask(task);
   const maxRequestRate = task?.config?.maxRequestRate ?? 0; 
   if (maxRequestRate && task?.meta?.lastUpdatedAt) {
     const lastUpdatedAt = new Date(task.meta.lastUpdatedAt.date);
@@ -153,6 +161,7 @@ function checkAPIRate(task) {
 }
 
 function checkErrorRate(task) {
+  utils.debugTask(task);
   if (task.error || task?.hub?.command === "error" || (task.id && task.id.endsWith(".error"))) {
     //console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
     const currentDate = new Date();
@@ -192,6 +201,7 @@ async function findClosestErrorTask_async(taskId, tasksStore_async) {
 }
 
 async function processError_async(task, tasksStore_async) {
+  utils.debugTask(task);
   if (task.error) {
     let errorTask;
     if (task.config && task.config.errorTask) {
@@ -206,6 +216,7 @@ async function processError_async(task, tasksStore_async) {
 }
 
 async function processOutput_async(task, outputStore) {
+  utils.debugTask(task);
   // Check task.output is not empty as empty will override via deepMerge
   if (task.output && Object.keys(task.output).length > 0) {
     let output = await outputStore.get(task.familyId);
@@ -220,6 +231,7 @@ async function processOutput_async(task, outputStore) {
 }
 
 async function processCommand_async(task, res) {
+  utils.debugTask(task);
   const command = task.hub.command;
   switch (command) {
     case "init":
@@ -240,20 +252,14 @@ async function taskProcess_async(task, req, res) {
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task");
     }
-    utils.logTask(task, "");
     utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " state:" + task?.state?.current);
     let activeTask = {};
 
-    await utils.debugTask(task);
+    utils.debugTask(task);
     checkErrorRate(task);
-    let instanceId = task.instanceId;
-    if (task.processor?.commandArgs?.syncTask?.instanceId) {
-      instanceId = task.processor?.commandArgs?.syncTask?.instanceId;
-      //task = task.processor?.commandArgs?.syncTask;
-    }
-    task = utils.hubUpdating(task);
-    if (instanceId !== undefined) {
-      activeTask = await getActiveTask_async(instanceId);
+    task = utils.setMetaModified(task);
+    if (task.instanceId !== undefined) {
+      activeTask = await getActiveTask_async(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
         if (task.meta?.hashDiff) {
           // This is running on "partial" which seems a waste
@@ -262,6 +268,9 @@ async function taskProcess_async(task, req, res) {
         // Need to restore meta for checkLockConflict, checkAPIRate
         // Need to restore config for checkAPIRate
         const taskDiff = utils.deepClone(task);
+        // We want to use the processor as sent in
+        // For example sync may not set all the processor info and the activeTask may have info form another processor
+        activeTask["processor"] = null; 
         task = utils.deepMerge(activeTask, task);
         hubAssertions(taskDiff, task);
       } else if (task.processor.command !== "start" && task.processor.command !== "init") {
@@ -297,10 +306,11 @@ async function taskProcess_async(task, req, res) {
       task.familyId = task.familyId || activeTask.familyId;
       task = await processOutput_async(task, outputStore_async);
     }
-    if (haveCoProcessor && !task.hub.coprocessing && !task.processor.isCoProcessor) {
+    if (haveCoProcessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
+      utils.logTask(task, "sending to coprocessor");
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket
-      if (task.instanceId) {
+      if (task.instanceId && task.hub.command !== "partial") {
         // To avoid updates being routed to coprocessor before init completes
         await taskLock(task.instanceId, "taskProcess");
       }
@@ -308,6 +318,7 @@ async function taskProcess_async(task, req, res) {
       return null;
     // If HTTP without coprocessing then we return (this is no longer used)
     } else if (res) {
+      utils.logTask(task, "processCommand_async");
       const result = await processCommand_async(task, res);
       if (error !== undefined) {
         // Maybe throw from here ?
