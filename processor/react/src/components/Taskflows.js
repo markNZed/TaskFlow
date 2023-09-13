@@ -7,7 +7,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "../styles/App.css";
 import "../styles/normal.css";
-import SideMenu from "./SideMenu/SideMenu";
 import ObjectDisplay from "./Generic/ObjectDisplay";
 import Stack from "@mui/material/Stack";
 import AppBar from "@mui/material/AppBar";
@@ -16,7 +15,6 @@ import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import Drawer from "@mui/material/Drawer";
 import useGlobalStateContext from "../contexts/GlobalStateContext";
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
@@ -48,7 +46,6 @@ function Taskflows(props) {
   const [init, setInit] = useState(false);
   const [taskMenu, setTaskMenu] = useState();
 
-  const [mobileViewOpen, setMobileViewOpen] = React.useState(false);
   const taskMenuId = "root.system.menu"; // This should be a config of a Task
 
   useEffect(() => {
@@ -134,7 +131,7 @@ function Taskflows(props) {
   }, [startTask]);
 
   const handleToggle = () => {
-    setMobileViewOpen(!mobileViewOpen);
+    setTaskMenu((p) => ({...p, input: {"mobileViewOpenToggle": true}}));
   };
 
   /*

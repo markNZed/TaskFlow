@@ -78,6 +78,7 @@ There is a meta version which shares MongoDB and Redis, all the other ports incr
 * 10232 RxJS Task Hub Coprocessor node debug
 
 The meta version resides in `/meta`
+The code for the meta version needs to be modified at `shared/config.mjs` to give a unique DB prefix
 
 ## Prod
 Eventually this will capture how to deploy T@skFlow in a "production" environment. 

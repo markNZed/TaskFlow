@@ -63,7 +63,6 @@ Task that has the ability to inspect the Task Node
   To begin with we could avoid providing search
     Allow for lookup, provide stats
 
-Check mobile view for menu
 Document the strategy for using null in Objects and arrays
   Strip the null fields just before it is processed as a task
     But keep null fields in storage so it is passed through hub and diffs are in sync

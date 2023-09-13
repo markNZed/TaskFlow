@@ -74,8 +74,18 @@ function TaskSystemMenu(props) {
   }, [task, tasksTree]);
 
   const handleToggle = () => {
-      setMobileViewOpen(!mobileViewOpen);
+    console.log("TaskSystemMenu handleToggle");
+    setMobileViewOpen(!mobileViewOpen);
   };
+
+  useEffect(() => {
+    if (task?.input?.mobileViewOpenToggle) {
+      setMobileViewOpen(!mobileViewOpen);
+      modifyTask({
+        "input.mobileViewOpenToggle": null
+      })
+    }
+  }, [task]);
 
   return (
     <>

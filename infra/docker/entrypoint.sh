@@ -51,7 +51,7 @@ if [[ "$TASKFLOW_DEV" == "true" ]]; then
 
     # Create a new detached screen session named "app"
     screen -S meta -d -m bash
-    screen -S meta -p 0 -X stuff "cd /app/hub\n"
+    screen -S meta -p 0 -X stuff "cd /meta/hub\n"
     screen -S meta -p 0 -X stuff "npm install\n"
     screen -S meta -p 0 -X stuff "touch hub.log && chmod 444 hub.log\n"
     screen -S meta -p 0 -X stuff "truncate -s 0 hub.log; WS_PORT=6001 npm run debug 2>&1 | tee -a hub.log\n"

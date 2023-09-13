@@ -30,6 +30,8 @@ RUN npm update -g
 RUN npm install -g typescript
 RUN npm install -g quicktype
 RUN npm install pm2 -g
+# Install node-gyp for better-sqlite3 (which will be replaced by Redis/MongoDB)
+RUN npm install -g node-gyp
 
 
 # Instead of the hacks below I deleted node_modules/@tensorflow and rann npm install again
