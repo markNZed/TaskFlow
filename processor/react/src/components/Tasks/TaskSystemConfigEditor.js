@@ -19,7 +19,7 @@ ToDo:
   
 */
 
-const TaskSystemTasksConfig = (props) => {
+const TaskSystemTasksConfigEditor = (props) => {
   const {
     log,
     task,
@@ -320,4 +320,4 @@ const TaskSystemTasksConfig = (props) => {
   );
 };
 
-export default withTask(TaskSystemTasksConfig);
+export default withTask(TaskSystemTasksConfigEditor);

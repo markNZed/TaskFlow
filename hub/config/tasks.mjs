@@ -73,7 +73,7 @@ const tasks = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfig"
+    type: "TaskSystemConfigEditor"
   },
   {
     initiator: true,

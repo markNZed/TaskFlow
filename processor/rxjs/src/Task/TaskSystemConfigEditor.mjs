@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, insert_async, move_async, paste_async, read_async, update_async, delete_async, getAllChildrenOfNode } from "./TaskSystemConfig/configTasks.mjs";
+import { buildTree_async, insert_async, move_async, paste_async, read_async, update_async, delete_async, getAllChildrenOfNode } from "./TaskSystemConfigEditor/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -22,7 +22,7 @@ let configTree;
 let configTreeTimestamp = Date();
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
 
   /**
    * Removes properties from objB that have the same values as those in objA.
@@ -206,4 +206,4 @@ const TaskSystemConfig_async = async function (wsSendTask, T, fsmHolder, CEPFunc
   return T();
 };
 
-export { TaskSystemConfig_async };
+export { TaskSystemConfigEditor_async };

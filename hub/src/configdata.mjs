@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import { CONFIG_DIR } from "../config.mjs";
+import { CONFIG_DIR, SAVE_TASKS } from "../config.mjs";
 import assert from "assert";
 import { validateTasks } from "./validateTasks.mjs";
 import { fromTask } from "./taskConverterWrapper.mjs";
@@ -351,7 +351,9 @@ async function saveTasks(tasks) {
     console.log('No differences found');
   }
 }
-await saveTasks(tasks);
+if (SAVE_TASKS) {
+  await saveTasks(tasks);
+}
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 

@@ -1,5 +1,6 @@
 /* ToDo
 ------
+Wrap https://github.com/mckaywrigley/chatbot-ui in a Task
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
   Those that can be run concurrently might be better in a particular class of processor
@@ -35,7 +36,7 @@ Avoid using the "start" task name/id as meaningful
 meta.mesageId should be set by initiating processor as it leaves
 TaskSystemConfigTasks_async copy feature in tree
   Refactor into EditTree component + TaskSystemConfig
-  TaskSystemTasksConfig should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
+  TaskSystemTasksConfigEditor should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
   SystmTasksConfig could autostart ? (but it also runs on React which may not exist)
     Could run a SystmTasksConfig using input/output running on rxjs
       Or we use request/response with queue ?
@@ -87,7 +88,7 @@ Copy of configurations should be easier
 How do we drive the input of another task without UI ?
   New command 
     "input" which drives local task
-      Use this instead of sync in TaskSystemTasksConfig
+      Use this instead of sync in TaskSystemTasksConfigEditor
       How to implement ? 
         Through globalContext ? 
           A taskContext with a selector based on instanceId
@@ -541,7 +542,8 @@ Comparison with similar systems
     Elicit
     ResearchAIde 
     wizdom.ai
-    Iris.ai 
+    Iris.ai
+  https://www.socialagi.dev/
 
 
 Test Plan

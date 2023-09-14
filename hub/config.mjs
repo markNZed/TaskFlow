@@ -48,4 +48,6 @@ function setHaveCoProcessor(value) {
     haveCoProcessor = value;
 }
 
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoProcessor, setHaveCoProcessor, REDIS_URL, MONGO_URL, EMPTYDBS };
+const SAVE_TASKS = process.env.SAVE_TASKS || false;
+
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoProcessor, setHaveCoProcessor, REDIS_URL, MONGO_URL, EMPTYDBS, SAVE_TASKS };
