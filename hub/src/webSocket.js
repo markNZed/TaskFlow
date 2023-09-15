@@ -53,9 +53,16 @@ const wsSendTask = async function (task, processorId, activeTask) {
   if (task.hub.command === "update") {
     //utils.logTask(task, "wsSendTask " + command + " activeTask state", activeTask.state);
     //utils.logTask(task, "wsSendTask " + command + " task state", task.state);
+    const statesSupported = processor.statesSupported
     let diff = {}
     if (activeTask) {
-      diff = utils.hubDiff(activeTask, task);
+      // If only some states are supported then the task storage may be out of sync so send the entire object
+      // We could potentially have storage on the hub for the task on the processor in this case 
+      if (statesSupported) {
+        diff = task;
+      } else {
+        diff = utils.hubDiff(activeTask, task);
+      }
       if (Object.keys(diff).length === 0) {
         utils.logTask(task, "wsSendTask no diff", diff);
         return null;

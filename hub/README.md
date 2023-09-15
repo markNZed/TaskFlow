@@ -49,6 +49,7 @@ The Hub provides the following features:
 * A mutex imposes serial updates per task instanceId
 * Assertion if `task.request` and `task.response` both contain values
 * Assertion if `task.state.current` is not listed in `task.state.legal`
+* Only route task to processor if `task.processor.statesSupported` is not set or includes `task.state.current`. If `task.processor.statesSupported` is set then the Task Hub sends the entire Task object not a diff (or it needs to track the current storage of the target processor).
 
 When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Task Processor is synchronized with all other Task Processors.
 

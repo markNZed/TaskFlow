@@ -14,7 +14,7 @@ import { taskServices, taskServicesInitialized } from './taskServices.mjs';
 
 let serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
-console.log(JSON.stringify(serviceTypes, null, 2))
+//console.log(JSON.stringify(serviceTypes, null, 2))
 
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {

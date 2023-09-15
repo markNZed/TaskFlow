@@ -1,9 +1,14 @@
 /* ToDo
 ------
+Separate servicetypes for each processor
+There could be task.processors[environment] which would allow inititialisation of task.processor for a given environment e.g. configuraing task.processor.statesSupported
 Could add a check in schema to config.services that type must exist
 Maybe services should use approach like getFsmHolder_async
 OpenAI "chat" with the configurations
   function_call for access to service systemConfig
+  shared is updated by sync but that will not be routed to processor so state will be out of date
+    then we need a storage of task per processor
+    send entire object in this case not just diff
 Wrap https://github.com/mckaywrigley/chatbot-ui in a Task
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP

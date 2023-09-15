@@ -32,6 +32,8 @@ The object `task.processor.shared` provides a "global" space for data to be shar
 
 The startup seequence involves the Task Processor requesting a websocket connection, then the Task Hub will send a "register" command and there is an HTTP request/response that registers the Task Processor details. This will eventually be replaced with a System Task.
 
+If the `task.processor.statesSupported` array is set then the Task Hub will only route updates to the processor if `task.processor.statesSupported` includes `task.state.current`.
+
 ## Sharing Task Functionality
 
 In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 

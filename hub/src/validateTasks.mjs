@@ -33,7 +33,6 @@ export const configSchema = yup.object()
       if (value == null) {
         return true; // Allows null or undefined
       }
-      
       const serviceSchema = yup.object({
         API: yup.string(),
         modelVersion: yup.string(),
@@ -47,9 +46,9 @@ export const configSchema = yup.object()
         systemMessageTemplate: stringOrArrayOfStrings,
         promptTemplate: stringOrArrayOfStrings,
       });
-      
       if (typeof value === 'object') {
         for (const key in value) {
+          // eslint-disable-next-line no-prototype-builtins
           if (value.hasOwnProperty(key)) {
             try {
               serviceSchema.validateSync(value[key]);
@@ -89,6 +88,7 @@ const tasksSchema = yup.array().of(yup.object()
       current: yup.string(),
     }),
     meta: yup.object(),
+    shared: yup.object(),
   })
   .noUnknown(true)
 );

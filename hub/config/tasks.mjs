@@ -258,6 +258,33 @@ const tasks = [
   },
 
   {
+    config: {
+      label: "Config Chat",
+      services: {
+        chat: {
+          type: "openaigpt.chatgpt",
+        },
+        config: {
+          type: "systemConfig",
+        },
+      },
+    },
+    initiator: true,
+    name: "configchat",
+    parentName: "conversation",
+    type: "TaskConversation"
+  },
+  {
+    name: "start",
+    parentName: "configchat",
+    type: "TaskChat",
+    APPEND_environments: ["rxjs"],
+    shared: {
+      configTree: {},
+    },
+  },
+
+  {
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {

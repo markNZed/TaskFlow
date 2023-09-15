@@ -126,8 +126,12 @@ const taskSync_async = async (key, value) => {
           utils.logTask(taskCopy, "taskCopy missing processor", command, processorId );
         }
         if (processorData.commandsAccepted.includes(command)) {
-          utils.logTask(taskCopy, "taskSync_async", command, key, processorId);
-          wsSendTask(taskCopy, processorId, activeTask);
+          const statesSupported = taskCopy.processors[processorId].statesSupported;
+          const state = taskCopy.state.current;
+          if (!statesSupported || (statesSupported && statesSupported.includes(state))) {
+            utils.logTask(taskCopy, "taskSync_async", command, key, processorId);
+            wsSendTask(taskCopy, processorId, activeTask);
+          }
         } else {
           //utils.logTask(taskCopy, "taskSync_async processor does not support commmand", command, processorId);
         }
