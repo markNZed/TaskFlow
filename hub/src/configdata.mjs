@@ -38,6 +38,7 @@ try {
 
 function mergeTasks(task, parentTask) {
   // Merge the taskType first so we can take APPEND_ PREPREND_ into account from tasktype
+  console.log("mergeTasks ", task.id, parentTask.id);
   if (task.type) {
     // Need to deal with a list of components
     const tasktemplatename = task.type;
@@ -84,10 +85,17 @@ function mergeObj(task, key, parentTask) {
     task[key] = appendOperation(task, key, parentTask);
   // Don't copy LOCAL info (specific to the task)
   } else if (!key.startsWith("LOCAL_") && !parentTask["LOCAL_" + key]) {
+    if (key === "services") {
+      console.log("services task:", task[key]);
+      console.log("services parentTask:", parentTask[key]);
+    }
     if (task[key]) {
       task[key] = utils.deepMerge(parentTask[key], task[key]);
      } else {
       task[key] = parentTask[key];
+    }
+    if (key === "services") {
+      console.log("result:", task[key]);
     }
   }
 }

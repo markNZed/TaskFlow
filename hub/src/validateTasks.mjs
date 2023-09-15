@@ -26,19 +26,43 @@ export const configSchema = yup.object()
   spawnTask: yup.boolean(),
   nextStates: yup.object(),
   nextTaskTemplate: yup.object(),
-  services: yup.array().of(yup.object({
-    API: yup.string(),
-    modelVersion: yup.string(),
-    type: yup.string(),
-    forget: yup.boolean(),
-    prompt: yup.string(),
-    maxTokens: yup.number(),
-    maxResponseTokens: yup.number(),
-    messagesTemplate: yup.array().of(templateSchema),
-    useCache: yup.boolean(),
-    systemMessageTemplate: stringOrArrayOfStrings,
-    promptTemplate: stringOrArrayOfStrings,
-  })),
+  services: yup.object().shape({}).defined().test(
+    'is-valid-services',
+    '${path} must be an object where each key has a certain structure or be absent',
+    (value) => {
+      if (value == null) {
+        return true; // Allows null or undefined
+      }
+      
+      const serviceSchema = yup.object({
+        API: yup.string(),
+        modelVersion: yup.string(),
+        type: yup.string(),
+        forget: yup.boolean(),
+        prompt: yup.string(),
+        maxTokens: yup.number(),
+        maxResponseTokens: yup.number(),
+        messagesTemplate: yup.array().of(templateSchema),
+        useCache: yup.boolean(),
+        systemMessageTemplate: stringOrArrayOfStrings,
+        promptTemplate: stringOrArrayOfStrings,
+      });
+      
+      if (typeof value === 'object') {
+        for (const key in value) {
+          if (value.hasOwnProperty(key)) {
+            try {
+              serviceSchema.validateSync(value[key]);
+            } catch (err) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+  ).notRequired(),
   cacheKeySeed: yup.string(),
   caching: yup.array().of(yup.object()),
   local: yup.object(),

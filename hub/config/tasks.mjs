@@ -124,11 +124,11 @@ const tasks = [
   {
     config: {
       label: "chatGPT",
-      services: [
-        {
+      services: {
+        chat: {
           type: "openaigpt.chatgpt"
-        }
-      ],
+        },
+      }
     },
     initiator: true,
     name: "chatgpt",
@@ -150,11 +150,12 @@ const tasks = [
     config: {
       label: "Example1",
       spawnTask: false,
-      services: [
-        {
+      services: {
+        chat: {
+          type: "openaigpt.chatgpt",
           temperature: 0.9,
         },
-      ],
+      },
       APPEND_caching: [
         {
           subTask: "SubTaskLLM",
@@ -186,13 +187,13 @@ const tasks = [
         inputLabel: "Respond here.",
         instruction: "Tell the user what to do",  
       },
-      services: [
-        {
+      services: {
+        chat: {
           forget: true,
           prompt: "Tell me a story about something random.",
           type: "openaigpt.chatgpt"
         },
-      ],
+      },
       nextTask: "structure"
     },
     name: "summarize",
@@ -205,8 +206,8 @@ const tasks = [
         instruction: "This is what I think of your response",
       },
       nextTask: "stop",
-      services: [
-        {
+      services: {
+        chat: {
           forget: true,
           type: "openaigpt.chatgpt",
           promptTemplate: [
@@ -229,7 +230,7 @@ const tasks = [
             }
           ],
         },
-      ],
+      },
     },
     name: "structure",
     parentName: "stepper1",
@@ -239,11 +240,11 @@ const tasks = [
   {
     config: {
       label: "0-Shot",
-      services: [
-        {
+      services: {
+        chat: {
           type: "openaigpt.chatgptzeroshot",
         }
-      ],
+      },
     },
     initiator: true,
     name: "zeroshot",

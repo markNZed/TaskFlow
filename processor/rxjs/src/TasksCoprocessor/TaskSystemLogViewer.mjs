@@ -9,7 +9,7 @@ import { tasksModel } from "./TaskSystemLog/tasksModel.mjs"
 import { formatQuery } from 'react-querybuilder';
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

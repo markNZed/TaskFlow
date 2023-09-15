@@ -4,8 +4,8 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { utils } from "../../utils.mjs";
-import { tasksStore_async, tasktypesStore_async, usersStore_async, groupsStore_async } from "../../storage.mjs";
+import { utils } from "../utils.mjs";
+import { tasksStore_async, tasktypesStore_async, usersStore_async, groupsStore_async } from "../storage.mjs";
 
 // We want CRUD operations for the config
 
@@ -301,3 +301,14 @@ export const buildTree_async = async (targetStore) => {
   return result;
 };
 
+export const ServiceSystemConfig = {
+  buildTree_async,
+  create_async, 
+  insert_async, 
+  move_async, 
+  paste_async, 
+  read_async, 
+  update_async, 
+  delete_async, 
+  getAllChildrenOfNode,
+} 

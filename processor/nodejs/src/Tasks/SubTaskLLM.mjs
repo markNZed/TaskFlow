@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { DUMMY_OPENAI, CONFIG_DIR } from "../../config.mjs";
-import { openaigpt_async, openaistub_async} from "../Service/openaigpt.mjs";
+import { openaigpt_async, openaistub_async} from "../Services/openaigpt.mjs";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 
@@ -77,27 +77,20 @@ async function chatPrepare_async(T) {
   let noStreaming = false;
 
   //console.log("prompt " + prompt);
-  const services = T("config.services");
-  const openaigptServices = services.filter(service => service.type.startsWith("openaigpt"));
-  if (openaigptServices.length === 0) {
-    throw new Error("No openaigpt service");
-  }
-  if (openaigptServices.length > 1) {
-    throw new Error("Too many openaigpt services " + openaigptServices.length);
-  }
-  let type = openaigptServices[0].type;
-  let serviceConfig = serviceTypes["root."+type];
-  if (!serviceConfig) {
+  let serviceConfig = T("config.services.chat");
+  let type = serviceConfig.type;
+  let serviceTypeConfig = serviceTypes[type];
+  if (!serviceTypeConfig) {
     console.log("No serviceType for ", T("id"), type);
   } else {
-    console.log("ServiceType for ", T("id"), serviceConfig.name, serviceConfig.modelVersion);
+    console.log("ServiceType for ", T("id"), serviceTypeConfig.name, serviceTypeConfig.modelVersion);
   }
 
-  if (openaigptServices[0]) {
-    serviceConfig = utils.deepMerge(serviceConfig, openaigptServices[0]);
+  if (serviceConfig) {
+    serviceConfig = utils.deepMerge(serviceTypeConfig, serviceConfig);
   }
   if (T("request.service")) {
-    serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));
+    serviceConfig = utils.deepMerge(serviceTypeConfig, T("request.service"));
   }
   const modelVersion = serviceConfig.modelVersion;
   const temperature = serviceConfig.temperature;

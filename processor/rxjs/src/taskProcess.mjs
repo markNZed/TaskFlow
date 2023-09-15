@@ -7,9 +7,15 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, COPROCESSOR } from "../config.mjs";
+import { processorId, COPROCESSOR, CONFIG_DIR } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
+import { taskServices, taskServicesInitialized } from './taskServices.mjs';
+
+let serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
+serviceTypes = utils.flattenObjects(serviceTypes);
+console.log(JSON.stringify(serviceTypes, null, 2))
+
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
@@ -34,9 +40,24 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       updatedTask = task;
     } else if (taskFunctions && taskFunctions[`${task.type}_async`]) {
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
+      let services = {};
+      const servicesConfig = task.config.services;
+      if (servicesConfig) {
+        // Dynamically import taskServices
+        await taskServicesInitialized;
+        Object.keys(servicesConfig).forEach((key) => {
+          const type = servicesConfig[key].type;
+          if (serviceTypes[type]) {
+            services[key] = serviceTypes[type];
+            services[key]["module"] = taskServices[serviceTypes[type]["moduleName"]];
+          } else {
+            throw new Error(`Servicetype ${type} not found in ${key} service of ${task.id} config: ${JSON.stringify(servicesConfig)}`);
+          }
+        });
+      }  
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
       const T = utils.createTaskValueGetter(task);
-      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
       utils.logTask(task, `Finished ${task.type} in state ${updatedTask?.state?.current}`);
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);

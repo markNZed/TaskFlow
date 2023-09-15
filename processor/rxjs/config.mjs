@@ -71,9 +71,9 @@ let TASK_DIR;
 if (process.env.TASK_DIR) {
   TASK_DIR = process.env.TASK_DIR;
 } else if (COPROCESSOR) {
-  TASK_DIR = "TaskCoprocessor";
+  TASK_DIR = "TasksCoprocessor";
 } else {
-  TASK_DIR = 'Task';
+  TASK_DIR = 'Tasks';
 }
 
 console.log(`Processor ID: ${processorId}`);

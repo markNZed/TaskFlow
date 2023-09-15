@@ -2,21 +2,18 @@ const currentDate = new Date().toISOString().split("T")[0];
 
 const servicetypes = [
   {
-    name: "root",
-  },
-  {
     name: "openaistub",
     API: "openaistub",
-    parentType: "root",
+    moduleName: "openaigpt",
   },
   {
     name: "openaigpt",
     API: "openaigpt",
+    moduleName: "openaigpt",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     temperature: 0,
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context
-    parentType: "root",
     prePrompt: "",
     postPrompt: "",
     systemMessage:"",
@@ -31,7 +28,7 @@ const servicetypes = [
   },
   {
     name: "chatgpt",
-    parentType: "openaigpt",
+    parentName: "openaigpt",
     label: "chatGPT",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     /* 
@@ -49,7 +46,7 @@ const servicetypes = [
   },
   {
     name: "chatgptzeroshot",
-    parentType: "openaigpt",
+    parentName: "openaigpt",
     label: "ChatGPT Zero Shot",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     forget: true,

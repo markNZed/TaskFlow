@@ -15,7 +15,7 @@ import TreeModel from 'tree-model';
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -25,7 +25,8 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs)
     const type = args.type;
     //task.config.services
     if (task.processor.command === "init" && task?.config?.services) {
-      for (const service of task.config.services) {
+      for (const key of Object.keys(task.config.services)) {
+        const service = task.config.services[key];
         if (service.type === type) {
           service[key] = value;
           task.config.subtasks.SubTaskLLM.useCache = false;

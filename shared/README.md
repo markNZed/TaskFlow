@@ -253,7 +253,7 @@ Then the infrastructure could look after queuing etc. This might be simpler. A T
 
 Incoming request/response should be in task.processor and outgoing request/response should be in task.
 
-The v02 list of top level properties: baseType, children, completedAt, createdAt, error, permissions, groupId, id, initiator, name, nextTasks, nextTask, parentId, parentInstanceId, parentType, send, stack, stackPtr, threadId, type, updateCount, updatedAt, userId, versionExternal, versionInternal, privacy, input, output, config, state, request, response
+The v02 list of top level properties: baseType, children, completedAt, createdAt, error, permissions, groupId, id, initiator, name, nextTasks, nextTask, parentId, parentInstanceId, parentName, send, stack, stackPtr, threadId, type, updateCount, updatedAt, userId, versionExternal, versionInternal, privacy, input, output, config, state, request, response
 
 We can categorize this from different perspectives:
 * static vs dynamic

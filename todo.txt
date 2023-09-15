@@ -1,5 +1,9 @@
 /* ToDo
 ------
+Could add a check in schema to config.services that type must exist
+Maybe services should use approach like getFsmHolder_async
+OpenAI "chat" with the configurations
+  function_call for access to service systemConfig
 Wrap https://github.com/mckaywrigley/chatbot-ui in a Task
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
@@ -329,7 +333,7 @@ Option to IGNORE config options from parents
   Can just set to null to achieve this?
 messagesStyle not being used yet 
 Config for SubTaskLLM and oher SubTask?
-  At the moment we only have SubTaskLLM and it doe not have any config (all in config.service)
+  At the moment we only have SubTaskLLM and it does not have any config (all in config.service)
   I guess it would be possible to have a SubTask config under a Task config
     Just specify as a task but use subtask name e.g. task.name = "SubTaskLLM"
     SubTask would need to be extended to make use of this 

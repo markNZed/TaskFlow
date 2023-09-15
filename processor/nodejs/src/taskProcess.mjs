@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { taskFunctions } from "./Task/taskFunctions.mjs";
+import { taskFunctions } from "./Tasks/taskFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";

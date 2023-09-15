@@ -434,6 +434,7 @@ const utils = {
       let diff = utils.getObjectDifference(obj1[key], value, debug);
       if (diff === undefined) {
         // Null treated as a placeholder in the case of arrays
+        // eslint-disable-next-line no-unused-expressions
         Array.isArray(diffObj) ? diffObj.push(null) : undefined;
       } else if (!_.isObject(diff)) {
         Array.isArray(diffObj) ? diffObj.push(diff) : diffObj[key] = diff;
@@ -525,12 +526,12 @@ const utils = {
       if (obj.name === "root") {
         id = "root";
       } else {
-        if (!obj.parentType) {
+        if (!obj.parentName) {
           id = obj.name;
           obj["id"] = id;
           //console.log("flattenObjects object is at root of tree", obj.name);
         } else {
-          const parentId = parent2id[obj.parentType];
+          const parentId = parent2id[obj.parentName];
           id = `${parentId}.${obj.name}`;
           assert(!res[id], "Object id already in use");
           obj["id"] = id;

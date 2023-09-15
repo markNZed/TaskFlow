@@ -6,13 +6,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { initiateFsm, updateStates } from "../shared/processor/fsm.mjs";
 
 // eslint-disable-next-line no-unused-vars
-const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
-
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   const actions = {
-    "rxjscopro_start": () => {
-      console.log("TaskShowInstruction_async rxjscopro_start");
+    rxjs_start: () => {
+      console.log("TaskShowInstruction_async rxjs_start");
     },
   };
 

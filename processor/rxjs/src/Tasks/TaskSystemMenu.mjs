@@ -8,7 +8,7 @@ import { tasksStore_async, groupsStore_async } from "../storage.mjs";
 import { utils } from "../utils.mjs";
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   let configTreeEvent; 
   if (T("processor.commandArgs.sync")) {

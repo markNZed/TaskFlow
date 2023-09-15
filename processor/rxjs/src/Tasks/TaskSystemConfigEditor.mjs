@@ -3,7 +3,6 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { buildTree_async, insert_async, move_async, paste_async, read_async, update_async, delete_async, getAllChildrenOfNode } from "./TaskSystemConfigEditor/configTasks.mjs";
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 import memoize from 'memoizee';
@@ -11,7 +10,7 @@ import memoize from 'memoizee';
 // We have cacheStore_async provided by storage.mjs but experimenting with memoize
 // Can invalidate the memoize cache by changing configTreeTimestamp
 // eslint-disable-next-line no-unused-vars
-const m_buildTree_async = memoize(async (targetStore, configTreeTimestamp) => {
+const m_buildTree_async = memoize(async (buildTree_async, targetStore, configTreeTimestamp) => {
   const result = await buildTree_async(targetStore);
   // To ensure changes to config that do not modify tree structure still set task.meta.modified.shared.configTree
   result["timestamp"] = configTreeTimestamp; 
@@ -22,7 +21,11 @@ let configTree;
 let configTreeTimestamp = Date();
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs) {
+const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+
+  //console.log("TaskSystemConfigEditor_async services", services);
+  const systemConfig = services["config"].module;
+  //console.log("TaskSystemConfigEditor_async systemConfig", systemConfig);
 
   /**
    * Removes properties from objB that have the same values as those in objA.
@@ -117,7 +120,7 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
   }
 
   async function parentDiff_async(targetStore, task) {
-    const requestedTaskParent = await read_async(targetStore, task?.meta?.parentId);
+    const requestedTaskParent = await systemConfig.read_async(targetStore, task?.meta?.parentId);
     let diff = {};
     if (requestedTaskParent) {
       diff = keepSameProperties(requestedTaskParent, task);
@@ -129,7 +132,7 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
   
   switch (T("state.current")) {
     case "start": {
-      configTree = await m_buildTree_async(targetStore, configTreeTimestamp);
+      configTree = await m_buildTree_async(systemConfig.buildTree_async, targetStore, configTreeTimestamp);
       T("shared.configTree", configTree);
       T("state.current", "loaded");
       T("command", "update");
@@ -142,43 +145,48 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
       utils.logTask("action:", action, "id:", actionId);
       if (action) {
         switch (action) {
+          case "create": {
+            await systemConfig.create_async(targetStore, T("request.actionTask"));
+            break;
+          }
           case "read":{
-            // Could us promise.all to fetch in parallel
-            const requestedTask = await read_async(targetStore, actionId);
-            const diff = await parentDiff_async(targetStore, requestedTask);
+            const [requestedTask, diff] = await Promise.all([
+              systemConfig.read_async(targetStore, actionId),
+              parentDiff_async(targetStore, await systemConfig.read_async(targetStore, actionId))
+            ]);            
             T("response.task", requestedTask);
             T("response.taskDiff", diff);
             rebuildTree = false;
             break;
           }
-          case "move": {
-            await move_async(targetStore, actionId, T("request.destinationId"));
-            break;
-          }
           case "update": {
-            await update_async(targetStore, T("request.actionTask"));
-            const diff = await parentDiff_async(targetStore, T("request.actionTask"));
+            const updatedTask = await systemConfig.update_async(targetStore, T("request.actionTask"));
+            T("response.task", updatedTask);
+            const diff = await parentDiff_async(targetStore, updatedTask);
             T("response.taskDiff", diff);
-            T("response.task", T("request.actionTask"));
             break;
           }
           case "delete": {
-            await delete_async(targetStore, actionId);
-            // Find all the tasks in the branch
-            const children = getAllChildrenOfNode(actionId, configTree);
+            await systemConfig.delete_async(targetStore, actionId);
+            // Find all the children in the branch
+            const children = systemConfig.getAllChildrenOfNode(actionId, configTree);
             for (const child of children) {
               //console.log("delete child ", child.id);
-              await delete_async(targetStore, child.id);
+              await systemConfig.delete_async(targetStore, child.id);
             }
             break;
           }
-          case "paste": {
-            await paste_async(targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
+          case "insert": {
+            // Create systemConfig.create_async
+            await systemConfig.insert_async(targetStore, actionId, T("request.newTaskLabel"));
             break;
           }
-          case "insert": {
-            // Create create_async
-            await insert_async(targetStore, actionId, T("request.newTaskLabel"));
+          case "move": {
+            await systemConfig.move_async(targetStore, actionId, T("request.destinationId"));
+            break;
+          }
+          case "paste": {
+            await systemConfig.paste_async(targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
             break;
           }
           default:
