@@ -56,7 +56,8 @@ function checkTaskCache (T) {
   return [enabled, seed];
 }
 
-const TaskChat_async = async function (wsSendTask, T) {
+// eslint-disable-next-line no-unused-vars
+const TaskChat_async = async function (wsSendTask, T, fsmHolder, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -76,6 +77,8 @@ const TaskChat_async = async function (wsSendTask, T) {
     origTask = JSON.parse(JSON.stringify(T()));
   }
 
+  const service = services["chat"].module;
+
   switch (T("state.current")) {
     case "mentionAddress":
     case "send": { // create code block to avoid linting issue with declaring const in the block
@@ -87,7 +90,7 @@ const TaskChat_async = async function (wsSendTask, T) {
       wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
-      const subTask = await SubTaskLLM_async(wsSendTask, T());
+      const subTask = await SubTaskLLM_async(wsSendTask, T(), service);
       T("response.LLMResponse", subTask.response.LLM);
       T("state.current", "received");
       T("commandArgs.lockBypass", true);

@@ -5,7 +5,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 
-const TaskLLMIO_async = async function (wsSendTask, T) {
+// eslint-disable-next-line no-unused-vars
+const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -19,7 +20,7 @@ const TaskLLMIO_async = async function (wsSendTask, T) {
       // Here we update the task which has the effect of setting the state to receiving
       wsSendTask(T());
       // The response needs to be available for other tasks to point at
-      const subTask = await SubTaskLLM_async(wsSendTask, T()); 
+      const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]); 
       T("output.LLMtext", subTask.response.LLM);
       T("state.current", "received");
       T("command", "update");

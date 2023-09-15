@@ -8,6 +8,16 @@ import { taskFunctions } from "./Tasks/taskFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
+import { taskServices, taskServicesInitialized } from './taskServices.mjs';
+import { CONFIG_DIR, ENVIRONMENTS } from "../config.mjs";
+
+let serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
+serviceTypes = utils.flattenObjects(serviceTypes);
+//console.log(JSON.stringify(serviceTypes, null, 2))
+
+function hasOverlap(arr1, arr2) {
+  return arr1.some(item => arr2.includes(item));
+}
 
 export async function taskProcess_async(wsSendTask, task) {
   let updatedTask = {};
@@ -17,8 +27,31 @@ export async function taskProcess_async(wsSendTask, task) {
       utils.removeNullKeys(task);
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
+      let services = {};
+      const servicesConfig = task.config.services;
+      if (servicesConfig) {
+        // Dynamically import taskServices
+        await taskServicesInitialized;
+        Object.keys(servicesConfig).forEach((key) => {
+          const environments = servicesConfig[key].environments;
+          if (environments) {
+            // Only try to load a service if it is expected to be on this processor
+            if (hasOverlap(environments, ENVIRONMENTS)) {
+              const type = servicesConfig[key].type;
+              if (serviceTypes[type]) {
+                services[key] = serviceTypes[type];
+                services[key]["module"] = taskServices[serviceTypes[type]["moduleName"]];
+              } else {
+                throw new Error(`Servicetype ${type} not found in ${key} service of ${task.id} config: ${JSON.stringify(servicesConfig)}`);
+              }
+            }
+          } else {
+            throw new Error(`Servicetype ${key} service of ${task.id} has no environments`);
+          }
+        });
+      }  
       const T = utils.createTaskValueGetter(task);
-      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder);
+      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, services);
       if (fsmHolder.fsm) {
         console.log("Updating activeTaskFsm");
         activeTaskFsm.set(task.instanceId, fsmHolder.fsm);

@@ -11,7 +11,7 @@ import { getActiveTask_async, setActiveTask_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
 
-// The reconnection logic should be reworked if an error genrates a close event
+// The reconnection logic should be reworked if an error generates a close event
 
 let connectionAttempts = 0;
 let maxAttempts = 100;

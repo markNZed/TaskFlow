@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { utils } from "../utils.mjs";
 import { DUMMY_OPENAI, CONFIG_DIR } from "../../config.mjs";
-import { openaigpt_async, openaistub_async} from "../Services/openaigpt.mjs";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 
@@ -16,21 +15,21 @@ var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 
-async function SubTaskLLM_async(wsSendTask, task) {
+async function SubTaskLLM_async(wsSendTask, task, service) {
   const taskCopy = JSON.parse(JSON.stringify(task));
   const T = utils.createTaskValueGetter(taskCopy);
   let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;
   const functionName = params.serviceConfig.API + "_async";
   //console.log("params.serviceConfig", params.serviceConfig);
-  taskCopy.response.LLM = await callFunctionByName(functionName, params);
+  taskCopy.response.LLM = await callFunctionByName(service, functionName, params);
   return taskCopy;
 }
 
-function callFunctionByName(functionName, params) {
+function callFunctionByName(service, functionName, params) {
   const functions = {
-    openaigpt_async,
-    openaistub_async,
+    openaigpt_async: service.openaigpt_async,
+    openaistub_async: service.openaistub_async,
   };
   const func = functions[functionName];
   if (typeof func === "function") {
@@ -83,7 +82,7 @@ async function chatPrepare_async(T) {
   if (!serviceTypeConfig) {
     console.log("No serviceType for ", T("id"), type);
   } else {
-    console.log("ServiceType for ", T("id"), serviceTypeConfig.name, serviceTypeConfig.modelVersion);
+    console.log("ServiceType for ", type, serviceTypeConfig.name, serviceTypeConfig.modelVersion);
   }
 
   if (serviceConfig) {

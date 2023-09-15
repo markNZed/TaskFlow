@@ -60,4 +60,6 @@ try {
 
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, EMPTYDBS };
+const ENVIRONMENTS = ["nodejs"];
+
+export { DEFAULT_USER, DUMMY_OPENAI, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, EMPTYDBS, ENVIRONMENTS };

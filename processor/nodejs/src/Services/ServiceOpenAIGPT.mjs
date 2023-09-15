@@ -256,3 +256,7 @@ async function openaistub_async(params) {
 
 export { openaigpt_async, openaistub_async };
   
+export const ServiceOpenAIGPT = {
+  openaigpt_async, 
+  openaistub_async,
+}

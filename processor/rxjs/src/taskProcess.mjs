@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, COPROCESSOR, CONFIG_DIR } from "../config.mjs";
+import { processorId, COPROCESSOR, CONFIG_DIR, ENVIRONMENTS } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 import { taskServices, taskServicesInitialized } from './taskServices.mjs';
@@ -16,6 +16,9 @@ let serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 
+function hasOverlap(arr1, arr2) {
+  return arr1.some(item => arr2.includes(item));
+}
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
@@ -46,12 +49,20 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         // Dynamically import taskServices
         await taskServicesInitialized;
         Object.keys(servicesConfig).forEach((key) => {
-          const type = servicesConfig[key].type;
-          if (serviceTypes[type]) {
-            services[key] = serviceTypes[type];
-            services[key]["module"] = taskServices[serviceTypes[type]["moduleName"]];
+          const environments = servicesConfig[key].environments;
+          if (environments) {
+            // Only try to load a service if it is expected to be on this processor
+            if (hasOverlap(environments, ENVIRONMENTS)) {
+              const type = servicesConfig[key].type;
+              if (serviceTypes[type]) {
+                services[key] = serviceTypes[type];
+                services[key]["module"] = taskServices[serviceTypes[type]["moduleName"]];
+              } else {
+                throw new Error(`Servicetype ${type} not found in ${key} service of ${task.id} config: ${JSON.stringify(servicesConfig)}`);
+              }
+            }
           } else {
-            throw new Error(`Servicetype ${type} not found in ${key} service of ${task.id} config: ${JSON.stringify(servicesConfig)}`);
+            throw new Error(`Servicetype ${key} service of ${task.id} has no environments`);
           }
         });
       }  

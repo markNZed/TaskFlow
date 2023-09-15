@@ -56,7 +56,8 @@ function checkTaskCache (T) {
   return [enabled, seed];
 }
 
-const TaskSimulateUser_async = async function (wsSendTask, T) {
+// eslint-disable-next-line no-unused-vars
+const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -117,7 +118,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T) {
         const simulationPrompt = msgs.pop().text;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
-        subTask = await SubTaskLLM_async(wsSendTask, subTask);
+        subTask = await SubTaskLLM_async(wsSendTask, subTask, services["chat"]);
         const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }

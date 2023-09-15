@@ -78,4 +78,6 @@ if (process.env.TASK_DIR) {
 
 console.log(`Processor ID: ${processorId}`);
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, COPROCESSOR, TASK_DIR, WS_PORT, REDIS_URL, MONGO_URL, EMPTYDBS };
+const ENVIRONMENTS = COPROCESSOR ? ["rxjscopro"] : ["rxjs"];
+
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, COPROCESSOR, TASK_DIR, WS_PORT, REDIS_URL, MONGO_URL, EMPTYDBS, ENVIRONMENTS };

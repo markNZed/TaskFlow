@@ -23,6 +23,7 @@ const tasktypes = [
       services: {
         config: {
           type: "systemConfig",
+          environments: ["rxjs"],
         },
       },
     },

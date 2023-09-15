@@ -5,11 +5,14 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { encode } from "gpt-3-encoder";
-import { ChatGPTAPI } from "chatgpt";
+import OpenAI from 'openai';
+// eslint-disable-next-line no-unused-vars
+import { OpenAIStream, StreamingTextResponse, streamToResponse } from 'ai';
 import { utils } from "../utils.mjs";
 import { cacheStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
+
 
 const wsDelta = {}
 
@@ -69,8 +72,6 @@ async function openaigpt_async(params) {
   } = params;
 
   const debug = true;
-
-  const lastMessageId = messages.length;
   
   // Need to account for the system message and some margin because the token count may not be exact.
   //console.log("prompt " + prompt + " systemMessage " + systemMessage)
@@ -104,39 +105,11 @@ async function openaigpt_async(params) {
   // This is a hack to get parameters into the API
   // We should be able to change this on the fly, I requested a feature
   // https://github.com/transitive-bullshit/chatgpt-api/issues/434
-  let api;
+  let openai;
   if (!dummyAPI) {
-    api = new ChatGPTAPI({
+    openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      getMessageById: async (id) => {
-        //console.log("getMessageById", id, messages[(id - 1)])
-        return messages[(id - 1)];
-      },
-      /* Not used
-      upsertMessage: async (id) => {
-      },
-      */
-      completionParams: {
-        top_p: 1.0,
-      },
-      maxResponseTokens: maxResponseTokens,
-      maxModelTokens: maxTokens,
-      debug: debug,
     });
-  }
-
-  const messageParams = {
-    completionParams: {
-      model: modelVersion,
-      temperature: temperature,
-    },
-    parentMessageId: lastMessageId,
-    systemMessage: systemMessage,
-  };
-
-  if (!noStreaming) {
-    messageParams["onProgress"] = (partialResponse) =>
-      SendIncrementalWs(wsSendTask, partialResponse, instanceId);
   }
 
   let cachedValue = null;
@@ -146,10 +119,11 @@ async function openaigpt_async(params) {
     let contents = messages.map(message => message.content);
     let messagesText = contents.join(' ');
     cacheKeyText = [
-      messageParams.systemMessage,
+      systemMessage,
       maxResponseTokens,
       maxTokens,
-      JSON.stringify(messageParams.completionParams),
+      modelVersion,
+      temperature,
       prompt,
       messagesText,
       cacheKeySeed,
@@ -226,24 +200,82 @@ async function openaigpt_async(params) {
       message_from("Dummy API", text, noStreaming, instanceId);
       response_text_promise = Promise.resolve(text);
     } else {
-      response_text_promise = api
-        .sendMessage(prompt, messageParams)
-        .then((response) => {
-          let text = response.text;
-          message_from("API", text, noStreaming, instanceId);
-          if (useCache) {
-            cacheStore_async.set(computedCacheKey, response);
-            console.log("cache stored key ", computedCacheKey);
-          }
-          return text;
-        })
-        .catch((error) => {
-          let text = "ERROR " + error.message;
-          message_from("API", text, noStreaming, instanceId);
-          return text;
+      const systemMessageElement = {
+        role: "system",
+        text: systemMessage,
+      } 
+      const promptElement = {
+        role: "user",
+        text: prompt,
+      }
+      messages.unshift(systemMessageElement);
+      messages.push(promptElement);
+      // Need to build messages from systemMessage, messages, prompt
+      console.log("messages", messages);
+      try {
+        const response = await openai.chat.completions.create({
+          model: modelVersion,
+          stream: true,
+          // messages, maybe need to do this explicitly if using sendExtraMessageFields
+          // https://github.com/vercel/ai/issues/551
+          messages: messages.map((message) => ({
+            role: message.role,
+            content: message.text, // mapping text -> content
+            function_call: message.function_call,
+            name: message.name,
+          })),
         });
+        console.log("response", response);
+        // eslint-disable-next-line no-unused-vars
+        response_text_promise = new Promise((resolve, reject) => {
+          // eslint-disable-next-line no-unused-vars
+          let partialText = "";
+          const stream = OpenAIStream(response, {
+            onStart: async () => {},
+            onToken: async (token) => {
+              // This callback is called for each token in the stream
+              // You can use this to debug the stream or save the tokens to your database
+              //console.log("onToken:", token);
+              partialText += token;
+              const partialResponse = { delta: token, text: partialText };
+              SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+            },
+            //onFinal: async (completion) => {},
+            onCompletion: async (completion) => {
+              // This callback is called when the stream completes
+              //console.log("onCompletion", completion);
+              message_from("API", completion, noStreaming, instanceId);
+              if (useCache) {
+                cacheStore_async.set(computedCacheKey, completion);
+                console.log("cache stored key ", computedCacheKey);
+              }
+              resolve(completion);
+            }
+          })
+          // This is a way to pull from the stream so the callbacks to OpenAIStream get called
+          // It is a hack to "drop in" thei API
+          const reader = stream.getReader();
+          function read() {
+            // eslint-disable-next-line no-unused-vars
+            reader.read().then(({ done, value }) => {
+              if (done) { return }
+              read();
+            });
+          }
+          read();
+        });
+      } catch (error) {
+        let text = "ERROR " + error.message;
+        if (error instanceof OpenAI.APIError) {
+          const { name, status, headers, message } = error;
+          text = `OpenAI.APIError ${name} ${status} ${headers} ${message}`;
+        }
+        message_from("API", text, noStreaming, instanceId);
+        response_text_promise = Promise.resolve(text);
+      }
     }
   }
+  console.log("response_text_promise", response_text_promise);
   return response_text_promise;
 }
 
@@ -255,4 +287,8 @@ async function openaistub_async(params) {
 }
 
 export { openaigpt_async, openaistub_async };
-  
+
+export const ServiceVercelAI = {
+  openaigpt_async, 
+  openaistub_async,
+} 

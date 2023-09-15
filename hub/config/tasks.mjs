@@ -32,7 +32,7 @@ const tasks = [
       },
     },
     parentName: "system",
-    type: "TaskSystemShared"
+    type: "TaskSystemShared",
   },
   {
     name: "systemlog",
@@ -45,7 +45,7 @@ const tasks = [
       },
     },
     parentName: "system",
-    type: "TaskSystemLog"
+    type: "TaskSystemLog",
   }, 
   {
     initiator: true,
@@ -54,7 +54,7 @@ const tasks = [
       label: "Log",
     },
     parentName: "system",
-    type: "TaskSystemLogViewer"
+    type: "TaskSystemLogViewer",
   }, 
   {
     name: "config",
@@ -73,7 +73,7 @@ const tasks = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfigEditor"
+    type: "TaskSystemConfigEditor",
   },
   {
     initiator: true,
@@ -85,7 +85,7 @@ const tasks = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfig"
+    type: "TaskSystemConfig",
   },
   {
     initiator: true,
@@ -97,7 +97,7 @@ const tasks = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfig"
+    type: "TaskSystemConfig",
   },
   {
     initiator: true,
@@ -109,12 +109,12 @@ const tasks = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfig"
+    type: "TaskSystemConfig",
   },
   {
     name: "menu",
     parentName: "system",
-    type: "TaskSystemMenu"
+    type: "TaskSystemMenu",
   },
 
   {
@@ -126,7 +126,8 @@ const tasks = [
       label: "chatGPT",
       services: {
         chat: {
-          type: "openaigpt.chatgpt"
+          type: "openaigpt.chatgpt",
+          environments: ["nodejs"],
         },
       }
     },
@@ -138,7 +139,7 @@ const tasks = [
   {
     name: "start",
     parentName: "chatgpt",
-    type: "TaskChat"
+    type: "TaskChat",
   },
 
   {
@@ -153,6 +154,7 @@ const tasks = [
       services: {
         chat: {
           type: "openaigpt.chatgpt",
+          environments: ["nodejs"],
           temperature: 0.9,
         },
       },
@@ -191,14 +193,14 @@ const tasks = [
         chat: {
           forget: true,
           prompt: "Tell me a story about something random.",
-          type: "openaigpt.chatgpt"
+          type: "openaigpt.chatgpt",
         },
       },
       nextTask: "structure"
     },
     name: "summarize",
     parentName: "stepper1",
-    type: "TaskLLMIO"
+    type: "TaskLLMIO",
   },
   {
     config: {
@@ -234,7 +236,7 @@ const tasks = [
     },
     name: "structure",
     parentName: "stepper1",
-    type: "TaskLLMIO"
+    type: "TaskLLMIO",
   },
 
   {
@@ -243,36 +245,39 @@ const tasks = [
       services: {
         chat: {
           type: "openaigpt.chatgptzeroshot",
+          environments: ["nodejs"],
         }
       },
     },
     initiator: true,
     name: "zeroshot",
     parentName: "conversation",
-    type: "TaskConversation"
+    type: "TaskConversation",
   },
   {
     name: "start",
     parentName: "zeroshot",
-    type: "TaskChat"
+    type: "TaskChat",
   },
 
   {
     config: {
-      label: "Config Chat",
+      label: "Config",
       services: {
         chat: {
-          type: "openaigpt.chatgpt",
+          type: "vercel.chatgpt",
+          environments: ["nodejs"],
         },
         config: {
           type: "systemConfig",
+          environments: ["rxjs"],
         },
       },
     },
     initiator: true,
     name: "configchat",
     parentName: "conversation",
-    type: "TaskConversation"
+    type: "TaskConversation",
   },
   {
     name: "start",
@@ -336,7 +341,7 @@ const tasks = [
     initiator: true,
     name: "dummy",
     parentName: "user",
-    type: "TaskDummy"
+    type: "TaskDummy",
   },
   
 ];

@@ -14,7 +14,7 @@ import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
 import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
-import { hubUrl } from "./config.mjs";
+import { hubUrl, appAbbrev } from "./config.mjs";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
@@ -39,7 +39,7 @@ function App({ activeWorkerCount, workerId }) {
       if (globalState.processorId === undefined) {
         let id = localStorage.getItem('processorId' + workerId);
         if (!id) {
-          id = "react-" + uuidv4();
+          id = appAbbrev + "-react-" + uuidv4();
           localStorage.setItem('processorId' + workerId, id);
         }
         replaceGlobalState("processorId", id);

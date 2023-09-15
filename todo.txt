@@ -1,7 +1,9 @@
 /* ToDo
 ------
-Separate servicetypes for each processor
-There could be task.processors[environment] which would allow inititialisation of task.processor for a given environment e.g. configuraing task.processor.statesSupported
+https://sdk.vercel.ai/
+  https://github.com/vercel/ai/blob/main/examples/next-openai/app/api/chat-with-functions/route.ts
+There could be task.processors[environment]
+  Would allow inititialisation of task.processor for a given environment e.g. configuraing task.processor.statesSupported
 Could add a check in schema to config.services that type must exist
 Maybe services should use approach like getFsmHolder_async
 OpenAI "chat" with the configurations

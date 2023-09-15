@@ -15,12 +15,13 @@ const cosineSimilarity = (tensor1, tensor2) => {
   return negativeCosineSimilarity.mul(-1).dataSync()[0];
 };
 
-const TaskChoose_async = async function (wsSendTask, T) {
+// eslint-disable-next-line no-unused-vars
+const TaskChoose_async = async function (wsSendTask, T, fsmHolder, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   T("response.LLM", null); // Avoid using previously stored response
-  const subTask = await SubTaskLLM_async(wsSendTask, T());
+  const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]);
   T("response.LLM", subTask.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
