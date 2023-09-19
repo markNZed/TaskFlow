@@ -58,7 +58,6 @@ Move familyTree CEP from TaskTest_async into dedicated TaskSystem
             Can we assert that a shared variable is read only? 
               Owned by an instance
 Avoid using the "start" task name/id as meaningful
-meta.mesageId should be set by initiating processor as it leaves
 TaskSystemConfigTasks_async copy feature in tree
   Refactor into EditTree component + TaskSystemConfig
   TaskSystemTasksConfigEditor should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
@@ -68,6 +67,7 @@ TaskSystemConfigTasks_async copy feature in tree
         Request/response could be for a service while input/output is for a taskFunctions
           Maybe input/output is sequential while request/response can be queued
             Seems like a good use case to create the request/response queue
+    Refactor SystemTasksConfigEditor so it uses SystemTasksConfig
 Task that has the ability to inspect the Task Node
   Access to KeyV
     Shared can include a list of the available Nodes
@@ -568,6 +568,7 @@ Comparison with similar systems
     wizdom.ai
     Iris.ai
   https://www.socialagi.dev/
+  Apache Flink
 
 
 Test Plan

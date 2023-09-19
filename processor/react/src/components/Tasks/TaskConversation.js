@@ -9,6 +9,10 @@ import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils.mjs";
 import DynamicComponent from "./../Generic/DynamicComponent";
 import Icon from "./TaskConversation/Icon";
+import ReactMarkdown from 'react-markdown';
+import gfm from 'remark-gfm';
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/atom-one-light.css";
 
 /*
 Task Function
@@ -142,6 +146,7 @@ const TaskConversation = (props) => {
     if (!role || !user || !id) {
       console.error("Mesasge missing ", role, user, text, sending, id);
     }
+    //plugins={[gfm]}
     return (
       <div className={`wrapper ${role === "assistant" && "ai"}`}>
         <div className="chat">
@@ -149,10 +154,13 @@ const TaskConversation = (props) => {
           {sending ? (
             <div className="dot-typing"></div>
           ) : (
-            <div 
-              className="message text2html"
-              dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(text) }}
-            />
+            <div className="message">
+              <ReactMarkdown 
+                rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}  
+              >
+                {text}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
       </div>

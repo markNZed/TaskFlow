@@ -160,7 +160,7 @@ async function openaigpt_async(params) {
   let response_text_promise = Promise.resolve("");
 
   if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
-    let text = cachedValue.text;
+    let text = cachedValue;
     let words = [];
     if (typeof text === "string") {
       words = text.split(" ");
@@ -317,9 +317,10 @@ async function openaigpt_async(params) {
               }
               resolve(completion);
             },
+            // eslint-disable-next-line no-unused-vars
             onCompletion: async (completion) => {
               // This callback is called when the stream completes
-              console.log("onCompletion", completion);
+              //console.log("onCompletion", completion);
             }
           })
           // This is a way to pull from the stream so the callbacks to OpenAIStream get called
