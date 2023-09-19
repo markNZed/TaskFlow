@@ -10,6 +10,8 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
+  const service = services["chat"].module;
+
   switch (T("state.current")) {
     case "input":
       T("state.current", "stop");
@@ -20,7 +22,7 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, services) {
       // Here we update the task which has the effect of setting the state to receiving
       wsSendTask(T());
       // The response needs to be available for other tasks to point at
-      const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]); 
+      const subTask = await SubTaskLLM_async(wsSendTask, T(), service); 
       T("output.LLMtext", subTask.response.LLM);
       T("state.current", "received");
       T("command", "update");

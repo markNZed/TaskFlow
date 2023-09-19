@@ -17,13 +17,13 @@ const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, serv
     case "start": {
       T("request.prompt", "Generate a random client profile");
       T("request.service.noStreaming", true);
-      let subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]);
+      let subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
       T("output.profile", subTask.response.LLM);
       T("request.service.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
       T("request.prompt", T("output.profile"));
       const forget = T("request.service.forget");
       T("request.service.noStreaming", false);
-      subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]);
+      subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
       T("output.summary", subTask.response.LLM);
       T("request.service.forget", forget);
       T("state.request", {}); // clear - do we need to do this here?

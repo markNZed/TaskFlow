@@ -22,15 +22,16 @@ async function SubTaskLLM_async(wsSendTask, task, service) {
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
-  console.log("params.serviceConfig", params.serviceConfig);
+  //console.log("params.serviceConfig", params.serviceConfig);
   taskCopy.response.LLM = await callFunctionByName(service, functionName, params);
   return taskCopy;
 }
 
 function callFunctionByName(service, functionName, params) {
+  //console.log("callFunctionByName service", service);
   const functions = {
-    openaigpt_async: service.module.openaigpt_async,
-    openaistub_async: service.module.openaistub_async,
+    openaigpt_async: service.openaigpt_async,
+    openaistub_async: service.openaistub_async,
   };
   const func = functions[functionName];
   if (typeof func === "function") {

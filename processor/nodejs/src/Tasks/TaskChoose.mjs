@@ -21,7 +21,7 @@ const TaskChoose_async = async function (wsSendTask, T, fsmHolder, services) {
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   T("response.LLM", null); // Avoid using previously stored response
-  const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"]);
+  const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
   T("response.LLM", subTask.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));

@@ -94,7 +94,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, service
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
         T("request.prompt", T("output.simulationPrompt.text"));
-        const subTask = await SubTaskLLM_async(wsSendTask, T());
+        const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
         T("output.simulationResponse.text", subTask.response.LLM);
       } else {
         let subTask = JSON.parse(JSON.stringify(T()));
@@ -118,7 +118,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, service
         const simulationPrompt = msgs.pop().text;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
-        subTask = await SubTaskLLM_async(wsSendTask, subTask, services["chat"]);
+        subTask = await SubTaskLLM_async(wsSendTask, subTask, services["chat"].module);
         const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }
