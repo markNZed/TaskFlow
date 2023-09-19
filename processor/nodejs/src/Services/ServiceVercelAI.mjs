@@ -177,7 +177,7 @@ async function openaigpt_async(params) {
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
       SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-      //await sleep(80);
+      await sleep(80);
     }
     message_from("cache", text, noStreaming, instanceId);
     if (debug) {

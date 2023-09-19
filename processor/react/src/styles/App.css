@@ -98,6 +98,7 @@ body {
   text-align: left;
 
   height: 100%;
+  margin-bottom: 24px;
 }
 
 /* hides scrollbar */
@@ -106,6 +107,11 @@ body {
 }
 
 #chat-input {
+  max-height: 33vh;
+  overflow-y: auto;
+}
+
+#message-end {
   
 }
 
@@ -115,9 +121,11 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: auto;
+  /* height: auto; */
   margin-top: inherit;
+  /*max-height: 100vh;*/
   /* max-width: 80%; */
+
 }
 
 .wrapper {

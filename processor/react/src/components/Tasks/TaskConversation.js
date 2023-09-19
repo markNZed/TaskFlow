@@ -29,15 +29,17 @@ const TaskConversation = (props) => {
     modifyChildTask,
   } = props;
 
-  const chatContainerRef = useRef(null);
-  const messagesEndRef = useRef(null);
-  const hasScrolledRef = useRef(false);
-  const chatInputRef = useRef(null);
+  const chatContainerRef = useRef();
+  const messagesEndRef = useRef();
+  const chatInputRef = useRef();
   const [chatContainermaxHeight, setChatContainermaxHeight] = useState();
+  const [chatInputHeight, setChatInputHeight] = useState();
+  const [chatContainerTop, setChatContainerTop] = useState();
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState([]);
   const [chatResponse, setChatResponse] = useState();
+  const chatSectionRef = useRef();
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
@@ -100,35 +102,38 @@ const TaskConversation = (props) => {
   }, [childTask?.output]);
  
   useEffect(() => {
-    if (isMountedRef.current) {
-      if (messagesEndRef.current && !hasScrolledRef.current && !hasScrolled) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        hasScrolledRef.current = true;
-      } else {
-        hasScrolledRef.current = false;
-      }
-    }
-  }, [msgs, hasScrolled]);
+    if (messagesEndRef.current && !hasScrolled) {
+      //console.log("Scroll into view");
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    } 
+  // For some reason I need to add childTask for this to work, unsure why
+  }, [msgs, hasScrolled, childTask]);
 
   const handleScroll = () => {
     const chatContainer = chatContainerRef.current;
-    if (
-      chatContainer.clientHeight + chatContainer.scrollTop >=
-    chatContainer.scrollHeight - 50
-    ) {
+    if (chatContainer.clientHeight + chatContainer.scrollTop >= chatContainer.scrollHeight - 200) {
       setHasScrolled(false);
+      //console.log("setHasScrolled false");
     } else {
       setHasScrolled(true);
+      //console.log("setHasScrolled true");
     }
   };
 
   useEffect(() => {
     const chatContainerRect = chatContainerRef.current.getBoundingClientRect();
     const chatInputRect = chatInputRef.current.getBoundingClientRect();
-    const maxHeight = Math.max(chatInputRect.top - chatContainerRect.top, 100)
-    setChatContainermaxHeight(maxHeight)
-    //console.log("Updating chatContainermaxHeight" + maxHeight);
-  }, [chatContainerRef, chatInputRef]); // chatInputRef detects mobile screen rotation changes
+    const maxHeight = Math.max(chatSectionRef.height - chatInputRect.height, 100)
+    setChatInputHeight(chatInputRect.height);
+    setChatContainermaxHeight(maxHeight);
+    setChatContainerTop(chatContainerRect.top);
+    //console.log("Updating chatContainermaxHeight:" + maxHeight);
+    //console.log("Updating chatContainerRect", chatContainerRect);
+    //console.log("Updating chatInputRect", chatInputRect);
+  // Added childTask so we update these values after chatInputRef has been rendered
+  // This is a bit of a hack to avoid explicitly detecting the rendering of the chat component.
+  // For exmaple it could use a callback.
+  }, [childTask]);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
@@ -139,12 +144,15 @@ const TaskConversation = (props) => {
   }, []);
 
   return (
-    <section className="chat-section">
+    <section 
+      className="chat-section"
+      ref={chatSectionRef}
+    >
       <div 
         id="chat-container" 
         ref={chatContainerRef}
         style={{
-          maxHeight: `${chatContainermaxHeight}px`,
+          maxHeight: `calc(100vh - ${chatInputHeight}px - ${chatContainerTop}px - 24px)`,
         }}
       >
         { msgs && msgs.length > 0 &&
@@ -173,7 +181,7 @@ const TaskConversation = (props) => {
             id={chatResponse.id}
           />
         )}
-        <div ref={messagesEndRef} style={{ height: "5px" }} />
+        <div id="message-end" ref={messagesEndRef} style={{ height: "5px" }} />
       </div>
       <div id="chat-input" ref={chatInputRef}>
         {childTask && (

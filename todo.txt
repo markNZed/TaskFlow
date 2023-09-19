@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Chat prompt expands the height beyond the full height
 Menu scrolling is messed up when chat extends beyond window
 gpt-3.5-turbo-instruct is a completion model (single-turn tasks)
 How can we modify the service configurations? 
