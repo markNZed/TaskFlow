@@ -65,7 +65,7 @@ const tasktypes = [
     },
   },
   {
-    name: "TaskSystemTest",
+    name: "TaskTest",
     config: {
       ceps: {
         "familyId": {

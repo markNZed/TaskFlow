@@ -22,7 +22,7 @@ async function SubTaskLLM_async(wsSendTask, task, service) {
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
-  //console.log("params.serviceConfig", params.serviceConfig);
+  console.log("params.serviceConfig", params.serviceConfig);
   taskCopy.response.LLM = await callFunctionByName(service, functionName, params);
   return taskCopy;
 }

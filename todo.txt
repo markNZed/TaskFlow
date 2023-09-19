@@ -1,5 +1,6 @@
 /* ToDo
-------
+-------
+Testing service swap
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
     Should be possible to base it on TaskSystemConfig
@@ -66,7 +67,7 @@ TaskSystemDebug
     Can it use a try catch and eval the debug filter - so no need to reload?
     The util.debugTask function can be modifed in the browser/server by the Task ?
       Need a JS editor in the task
-Move familyTree CEP from TaskSystemTest_async into dedicated TaskSystem
+Move familyTree CEP from TaskTest_async into dedicated TaskSystem
   Should familyTree be available in shared ?
       Do we install CEP for each family?
         If the init task does not have shared ? Update on the familyTree task instance
@@ -215,7 +216,7 @@ How to report pass/fail ?
   Dev header with info 
 Deleting of tasks for CEP
 How to batch tests?
-  TaskSystemBatch that would modify TaskSystemTest config fsm on the fly
+  TaskSystemBatch that would modify TaskTest config fsm on the fly
   Could build an array of FSM then run through that.
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything

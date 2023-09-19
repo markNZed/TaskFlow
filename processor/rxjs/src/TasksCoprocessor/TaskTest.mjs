@@ -15,12 +15,12 @@ import TreeModel from 'tree-model';
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   function CEPServiceStub(functionName, wsSendTask, CEPinstanceId, task, args) {
-    const key = args.key;
+    const modifyKey = args.key;
     const value = args.value;
     const type = args.type;
     //task.config.services
@@ -28,12 +28,14 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs,
       for (const key of Object.keys(task.config.services)) {
         const service = task.config.services[key];
         if (service.type === type) {
-          service[key] = value;
+          service[modifyKey] = value;
+          // TODO: Disabling the cache should be done from the test
           task.config.subtasks.SubTaskLLM.useCache = false;
         }
         // Your code logic for each service entry
       }
-      utils.logTask(task, "task.config.services", type, key, value);
+      utils.logTask(task, "task.config.services setting ", type, modifyKey, value);
+      utils.logTask(task, "task.config.services", JSON.stringify(task.config.services, null, 2));
       return;
     }
   }
@@ -46,7 +48,7 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs,
     if (task.processor.command === "init" && !task.processor.coprocessingDone) {
       utils.logTask(task, "CEPFamilyTree adding");
       let CEPtask;
-      // In this case we are starting the TaskSystemTest
+      // In this case we are starting the TaskTest
       if (CEPinstanceId === task.instanceId) {
         CEPtask = task;
       } else {
@@ -103,7 +105,7 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs,
   const config = {
     functionName: "CEPServiceStub",
     args: {
-      type: "openaigpt.chatgptzeroshot",
+      type: "vercel.chatgptzeroshot",
       key: "API", 
       value: "openaistub"
     },
@@ -113,4 +115,4 @@ const TaskSystemTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs,
   return T();
 };
 
-export { TaskSystemTest_async };
+export { TaskTest_async };

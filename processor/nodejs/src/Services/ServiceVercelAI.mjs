@@ -227,15 +227,18 @@ async function openaigpt_async(params) {
       // Need to build messages from systemMessage, messages, prompt
       console.log("mappedMessages", mappedMessages);
       try {
-        const response = await openai.chat.completions.create({
+        let options = {
           model: modelVersion,
           stream: true,
           // messages, maybe need to do this explicitly if using sendExtraMessageFields
           // https://github.com/vercel/ai/issues/551
-          messages: mappedMessages,
-          functions,
-          function_call: "auto",
-        });
+          messages: mappedMessages
+        };
+        if (functions) {
+          options.functions = functions;
+          options.function_call = "auto";
+        }   
+        const response = await openai.chat.completions.create(options);
         //console.log("response", response);
         // eslint-disable-next-line no-unused-vars
         response_text_promise = new Promise((resolve, reject) => {

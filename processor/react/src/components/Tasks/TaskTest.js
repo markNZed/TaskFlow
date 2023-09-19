@@ -10,7 +10,7 @@ import DynamicComponent from "../Generic/DynamicComponent";
 import { useMachine } from '@xstate/react';
 import TreeModel from 'tree-model';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
-import { library } from "../../shared/fsm/TaskSystemTest/library.mjs"
+import { library } from "../../shared/fsm/TaskTest/library.mjs"
 import { xutils } from "../../shared/fsm/xutils.mjs"
 
 /*
@@ -22,7 +22,7 @@ ToDo:
   
 */
 
-function TaskSystemTest(props) {
+function TaskTest(props) {
 
   const {
     log,
@@ -165,7 +165,7 @@ function TaskSystemTest(props) {
     let { query, element, field, event, expect, eventTrue, eventFalse, debug, oldValue, delay } = data;
     let newValue;
     const msg = "queryUI id:" + id;
-    query = "#SystemTest " + query; // Scope the queries within the SystemTest div
+    query = "#TaskTest " + query; // Scope the queries within the TaskTest div
     if (debug) {console.log(msg, "queryUI", query);}
     if (!document.contains(element)) {
       if (debug) {console.log(msg, "Failed to find document.querySelector(" + query + ")");}
@@ -300,12 +300,12 @@ function TaskSystemTest(props) {
     };
   }, [result]);
   
-  // The div SystemTest has display set to "contents" so it does not disrupt flex layout
+  // The div TaskTest has display set to "contents" so it does not disrupt flex layout
   // That is not supported in the Edge browser
   return (
     <>
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <div id="SystemTest"  style={{display: "contents"}}>
+      <div id="TaskTest"  style={{display: "contents"}}>
       {/*<div>sent:{sent ? 'true' : 'false'}</div>*/}
       {props.childTask && (
         <DynamicComponent
@@ -324,6 +324,6 @@ function TaskSystemTest(props) {
 
 };
 
-export default withTask(TaskSystemTest);
+export default withTask(TaskTest);
 
 

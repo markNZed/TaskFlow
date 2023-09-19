@@ -1,4 +1,5 @@
 import { validateTasks } from "../src/validateTasks.mjs";
+import { actionThenQuery } from '../src/shared/fsm/xutils.mjs';
 
 const taskSetNames = ['system'];
 let taskSet = {};
@@ -54,7 +55,7 @@ const tasks = [
       label: "chatGPT",
       services: {
         chat: {
-          type: "openaigpt.chatgpt",
+          type: "vercel.chatgpt",
           environments: ["nodejs"],
         },
       }
@@ -81,7 +82,7 @@ const tasks = [
       spawnTask: false,
       services: {
         chat: {
-          type: "openaigpt.chatgpt",
+          type: "vercel.chatgpt",
           environments: ["nodejs"],
           temperature: 0.9,
         },
@@ -121,7 +122,7 @@ const tasks = [
         chat: {
           forget: true,
           prompt: "Tell me a story about something random.",
-          type: "openaigpt.chatgpt",
+          type: "vercel.chatgpt",
           environments: ["nodejs"],
         },
       },
@@ -141,7 +142,7 @@ const tasks = [
         chat: {
           environments: ["nodejs"],
           forget: true,
-          type: "openaigpt.chatgpt",
+          type: "vercel.chatgpt",
           promptTemplate: [
             "Provide feedback on this prompt, is it a good prompt? ",
             "\"",
@@ -174,7 +175,7 @@ const tasks = [
       label: "0-Shot",
       services: {
         chat: {
-          type: "openaigpt.chatgptzeroshot",
+          type: "vercel.chatgptzeroshot",
           environments: ["nodejs"],
         }
       },
@@ -195,7 +196,7 @@ const tasks = [
       label: "Config",
       services: {
         chat: {
-          type: "vercel.chatgpt",
+          type: "vercel.configchat",
           useCache: false,
           environments: ["nodejs"],
         },
@@ -246,6 +247,51 @@ const tasks = [
     type: "TaskDummy",
   },
   
+  {
+    name: "testing",
+    initiator: true, // Needed to see this, maybe because it had no children?
+    config: {
+      local: {
+        targetTaskId: "root.user.conversation.zeroshot.start",
+        timeout: 10000, // 10 seconds
+      },
+      fsm: {
+        name: "chat",
+        useMachine: true,
+        devTools: true, 
+        merge: {
+          // The start state is defined here to demonstrate merging of states from task configs
+          states: {
+            ...actionThenQuery('start', [], ['findTextarea']),
+          },
+        },
+        queries: { // Note that more queries are defined in the library
+          findTextarea: {
+            query: 'textarea[name="prompt"]',
+            field: "value",
+            debug: true,
+          },
+        },
+        actions: { // Note that more actions are defined in the library
+          enterPrompt: {
+            type: "TaskChat",
+            input: "promptText",
+            value: "Hello World!",
+            debug: true,
+          },
+        },
+      },
+      // This task is using CEP
+      //   serviceStub is created via this tasks's coprocessor Task Function
+      //   familyId is created via the TaskType configuration
+    },
+    parentName: "user",
+    meta: {
+      childrenId: ["root.user.conversation.zeroshot"],
+    },
+    type: "TaskTest",
+  },
+
 ];
 
 //console.log(JSON.stringify(tasks, null, 2));

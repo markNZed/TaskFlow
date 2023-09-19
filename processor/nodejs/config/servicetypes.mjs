@@ -23,9 +23,8 @@ const servicetypes = [
     cacheKeySeed: "",
   },
   {
-    name: "chatgpt",
+    name: "configchat",
     parentName: "vercel",
-    label: "chatGPT",
     systemMessage: `You are AI42, a large language model with knowledge cutoff at 2021-09-01\nCurrent date is ${currentDate}\nYou help the user to manage the configuration of T@skFlow (TF), a task processing system. A Task in this context is an object that describes a particular unit of work or activity in a system. Each task object adheres to a JSON schema, and contains various properties to describe its nature, configuration, state, and more. Be as efficient and concise as possible in your responses.
 
     Here are the essential properties of a Task:
@@ -263,7 +262,7 @@ const servicetypes = [
   },
   {
     name: "chatgpt",
-    parentName: "openaigpt",
+    parentName: "vercel",
     label: "chatGPT",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     /* 
@@ -281,7 +280,7 @@ const servicetypes = [
   },
   {
     name: "chatgptzeroshot",
-    parentName: "openaigpt",
+    parentName: "vercel",
     label: "ChatGPT Zero Shot",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     forget: true,

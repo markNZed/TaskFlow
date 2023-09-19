@@ -542,7 +542,7 @@ const utils = {
         } else {
           const parentId = parent2id[obj.parentName];
           id = `${parentId}.${obj.name}`;
-          assert(!res[id], "Object id already in use");
+          assert(!res[id], "Object id already in use " + id);
           obj["id"] = id;
           obj["parentId"] = parentId;
           // Merge all the objects of obj[id] into obj[obj["parentId"]]

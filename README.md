@@ -40,7 +40,7 @@ The Task Function may implement a state machine using `task.state.current` and t
 
 ### Task State Machine
 
-A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskSystemTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskSystemTest can test different Tasks.
+A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskTest can test different Tasks.
 
 ## Task Node
 
