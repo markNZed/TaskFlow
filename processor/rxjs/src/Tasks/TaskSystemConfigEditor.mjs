@@ -6,6 +6,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
 
+/*
+ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskSystemShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
+*/
+
 // eslint-disable-next-line no-unused-vars
 const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 

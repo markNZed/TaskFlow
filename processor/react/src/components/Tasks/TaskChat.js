@@ -11,6 +11,7 @@ import { utils } from "../../utils/utils.mjs";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 import { v4 as uuidv4 } from "uuid";
+import { Description } from "@mui/icons-material";
 
 /*
 Task Function
@@ -113,17 +114,26 @@ const TaskChat = (props) => {
     }
   )
 
+  function describe(text) {
+    // Because this is updating a React state it may not be immediately available upon return.
+    // An advantage of htis is that the description is not in the task object so visible on other processors
+    modifyTask({
+      "state.description": {[task.state.current]: text}
+    });
+  }
+
   // Task state machine
   // Need to be careful setting task in the state machine so it does not loop
   // Could add a check for this
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
-    if (transition()) { log("TaskChat State Machine State " + task.state.current,task) }
+    if (transition()) { log("TaskChat State Machine State " + task.state.current) }
     const msgs = task.input?.msgs || [];
     //console.log("msgs before SM", msgs);
     switch (task.state.current) {
       case "start": {
+        describe("Demo of describing a state");
         modifyTask({
           "output.sending": false,
           "input.promptText": "",

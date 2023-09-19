@@ -131,28 +131,32 @@ const utils = {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
 
-  findKeys: function(task, ignore) {
+  findKeys: function(task, ignore, path = '') {
     const newObject = {};
     Object.keys(task).forEach(key => {
-      if (ignore.includes(key)) {
+      if (ignore.includes(path ? path + '.' + key : key)) {
         return;
       }
       if (typeof task[key] === 'object' && task[key] !== null) {
-        newObject[key] = utils.findKeys(task[key], ignore);
+        newObject[key] = utils.findKeys(task[key], ignore, path ? path + '.' + key : key);
       } else {
         newObject[key] = true;
       }
     });
+    if (Object.keys(newObject).length === 0) {
+      return;
+    }
     return newObject;
   },
   
   setMetaModified: function(task) {
+    const ignore = ["meta", "processor", "hub", "privacy", "id", "instanceId", "user.id"];
     task.meta = task.meta || {};
     if (task.processor?.commandArgs?.syncTask) {
       task.processor.commandArgs.syncTask["meta"] = task.processor.commandArgs.syncTask.meta || {};
-      task.processor.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.processor.commandArgs.syncTask, ["meta", "processor", "hub", "privacy"]);
+      task.processor.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.processor.commandArgs.syncTask, ignore);
     }
-    task.meta["modified"] = utils.findKeys(task, ["meta", "processor", "hub", "privacy"]);
+    task.meta["modified"] = utils.findKeys(task, ignore);
     return task;
   },
 

@@ -12,8 +12,6 @@ import { utils } from "../../shared/utils.mjs";
 
 /*
 Task Function
-
-This is intended to be a placeholder for experimenting with React
   
 ToDo:
   

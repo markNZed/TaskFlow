@@ -764,9 +764,11 @@ const utils = {
       diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
     }
     diffTask["instanceId"] = taskCopy.instanceId;
-    diffTask["id"] = taskCopy.id;
+    diffTask["id"] = taskCopy.id; // Could just send the instanceId
     diffTask["processor"] = taskCopy.processor;
-    diffTask["user"] = taskCopy.user || {};
+    if (!diffTask.user) {
+      diffTask["user"] = {id: taskCopy.user.id};
+    }
     delete diffTask.processor.origTask; // Only used internally
     //console.log("processorDiff out task.output", diffTask.output);
     return diffTask;

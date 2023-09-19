@@ -154,7 +154,7 @@ function wsSendObject(message) {
 }
 
 const wsSendTask = async function (task) {
-  //utils.logTask(task, "wsSendTask ");
+  //utils.logTask(task, "wsSendTask ", JSON.stringify(task, null, 2));
   let message = {};
   task = await utils.taskInProcessorOut_async(task, processorId, getActiveTask_async);
   task.meta = task.meta || {};

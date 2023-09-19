@@ -24,7 +24,7 @@ let lastErrorDate;
 let errorCountThisMinute = 0;
 
 function hubAssertions(taskDiff, mergedTask) {
-  // Here taskDiff is the task we receive from the processor but with tak.meta.modified added
+  // Here taskDiff is the task we receive from the processor but with task.meta.modified added
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
@@ -259,7 +259,10 @@ async function taskProcess_async(task, req, res) {
 
     utils.debugTask(task);
     checkErrorRate(task);
-    task = utils.setMetaModified(task);
+    if (task.processor.command === "update") {
+      task = utils.setMetaModified(task);
+      //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
+    }
     if (task.instanceId !== undefined) {
       activeTask = await getActiveTask_async(task.instanceId);
       if (activeTask && Object.keys(activeTask).length !== 0) {
