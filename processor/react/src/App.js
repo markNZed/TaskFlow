@@ -51,7 +51,8 @@ function App({ activeWorkerCount, workerId }) {
   // We can enable per component
   //debug.enable(`${appAbbrev}:TaskChat*`);
   //debug.enable(`${appAbbrev}:TaskConversation*`);
-  debug.enable(`*`);
+  //debug.enable(`*`); // Is too general e.g. is can enable messages from libraries
+  debug.enable(`${appAbbrev}*`);
 
   useRegisterWSFilter(
     (registerTask) => {

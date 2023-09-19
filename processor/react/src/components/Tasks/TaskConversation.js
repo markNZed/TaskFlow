@@ -8,11 +8,7 @@ import React, { useRef, useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils.mjs";
 import DynamicComponent from "./../Generic/DynamicComponent";
-import Icon from "./TaskConversation/Icon";
-import ReactMarkdown from 'react-markdown';
-import gfm from 'remark-gfm';
-import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/atom-one-light.css";
+import Message from "./TaskConversation/Message";
 
 /*
 Task Function
@@ -22,6 +18,7 @@ Task Function
   The Task is passed on to the TaskChat component
   
 ToDo:
+  Another markdown rendering option https://github.com/HPouyanmehr/mui-markdown
   
 */
 
@@ -140,32 +137,6 @@ const TaskConversation = (props) => {
       chatContainer.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  // React.memo does not make any difference as TaskConversation is rerendering
-  const Message = ({ role, user, text, sending, id }) => {
-    if (!role || !user || !id) {
-      console.error("Mesasge missing ", role, user, text, sending, id);
-    }
-    //plugins={[gfm]}
-    return (
-      <div className={`wrapper ${role === "assistant" && "ai"}`}>
-        <div className="chat">
-          <Icon role={role} user={user} />
-          {sending ? (
-            <div className="dot-typing"></div>
-          ) : (
-            <div className="message">
-              <ReactMarkdown 
-                rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}  
-              >
-                {text}
-              </ReactMarkdown>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <section className="chat-section">
