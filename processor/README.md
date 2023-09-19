@@ -34,6 +34,8 @@ The startup seequence involves the Task Processor requesting a websocket connect
 
 If the `task.processor.statesSupported` array is set then the Task Hub will only route updates to the processor if `task.processor.statesSupported` includes `task.state.current`.
 
+If the `task.processor.statesNotSupported` array is set then the Task Hub will not route updates to the processor if `task.processor.statesNotSupported` includes `task.state.current`.
+
 ## Sharing Task Functionality
 
 In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 

@@ -35,7 +35,7 @@ function hubAssertions(taskDiff, mergedTask) {
 
 async function processorInHubOut_async(task, activeTask, requestId) {
   utils.debugTask(task);
-  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported  } = task.processor;
+  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
@@ -86,6 +86,7 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     coprocessingDone,
     coprocessing,
     statesSupported,
+    statesNotSupported,
   };
   utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;

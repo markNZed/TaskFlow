@@ -2,7 +2,7 @@ const currentDate = new Date().toISOString().split("T")[0];
 
 const servicetypes = [
   {
-    name: "vercel",
+    name: "openaigpt",
     API: "openaigpt",
     moduleName: "ServiceVercelAI",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
@@ -24,7 +24,7 @@ const servicetypes = [
   },
   {
     name: "configchat",
-    parentName: "vercel",
+    parentName: "openaigpt",
     systemMessage: `You are AI42, a large language model with knowledge cutoff at 2021-09-01\nCurrent date is ${currentDate}\nYou help the user to manage the configuration of T@skFlow (TF), a task processing system. A Task in this context is an object that describes a particular unit of work or activity in a system. Each task object adheres to a JSON schema, and contains various properties to describe its nature, configuration, state, and more. Be as efficient and concise as possible in your responses.
 
     Here are the essential properties of a Task:
@@ -241,7 +241,7 @@ const servicetypes = [
     moduleName: "ServiceOpenAIGPT",
   },
   {
-    name: "openaigpt",
+    name: "openaigpt_old",
     API: "openaigpt",
     moduleName: "ServiceOpenAIGPT",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
@@ -262,7 +262,7 @@ const servicetypes = [
   },
   {
     name: "chatgpt",
-    parentName: "vercel",
+    parentName: "openaigpt",
     label: "chatGPT",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     /* 
@@ -280,7 +280,7 @@ const servicetypes = [
   },
   {
     name: "chatgptzeroshot",
-    parentName: "vercel",
+    parentName: "openaigpt",
     label: "ChatGPT Zero Shot",
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     forget: true,

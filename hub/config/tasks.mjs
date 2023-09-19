@@ -55,7 +55,7 @@ const tasks = [
       label: "chatGPT",
       services: {
         chat: {
-          type: "vercel.chatgpt",
+          type: "openaigpt.chatgpt",
           environments: ["nodejs"],
         },
       }
@@ -82,7 +82,7 @@ const tasks = [
       spawnTask: false,
       services: {
         chat: {
-          type: "vercel.chatgpt",
+          type: "openaigpt.chatgpt",
           environments: ["nodejs"],
           temperature: 0.9,
         },
@@ -122,7 +122,7 @@ const tasks = [
         chat: {
           forget: true,
           prompt: "Tell me a story about something random.",
-          type: "vercel.chatgpt",
+          type: "openaigpt.chatgpt",
           environments: ["nodejs"],
         },
       },
@@ -142,7 +142,7 @@ const tasks = [
         chat: {
           environments: ["nodejs"],
           forget: true,
-          type: "vercel.chatgpt",
+          type: "openaigpt.chatgpt",
           promptTemplate: [
             "Provide feedback on this prompt, is it a good prompt? ",
             "\"",
@@ -175,7 +175,7 @@ const tasks = [
       label: "0-Shot",
       services: {
         chat: {
-          type: "vercel.chatgptzeroshot",
+          type: "openaigpt.chatgptzeroshot",
           environments: ["nodejs"],
         }
       },
@@ -196,7 +196,7 @@ const tasks = [
       label: "Config",
       services: {
         chat: {
-          type: "vercel.configchat",
+          type: "openaigpt.configchat",
           useCache: false,
           environments: ["nodejs"],
         },

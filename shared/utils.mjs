@@ -837,9 +837,10 @@ const utils = {
       return;
     }
     const statesSupported = taskCopy?.processor?.statesSupported || taskCopy?.hub?.statesSupported;
-    if (statesSupported) {
+    const statesNotSupported = taskCopy?.processor?.statesNotSupported || taskCopy?.hub?.statesNotSupported;
+    if (statesSupported || statesNotSupported) {
       // We are sending full updates not diffs in this case
-      // We could also set the task.meta.hashDiff ot undefined on the hub?
+      // We could also set the task.meta.hashDiff to undefined on the hub?
       return;
     }
     const expectedHash = task.meta.hashDiff;
@@ -962,6 +963,7 @@ const utils = {
     task.processor = task.processor || {};
     if (!task.processor.isCoprocessor) {
       delete hub.statesSupported; // Copied from processor
+      delete hub.statesNotSupported; // Copied from processor
     }
     task.processor["command"] = hub.command;
     task.processor["commandArgs"] = hub.commandArgs || {};

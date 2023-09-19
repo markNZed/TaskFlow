@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Testing service swap
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
     Should be possible to base it on TaskSystemConfig
@@ -8,7 +7,6 @@ How can we modify the service configurations?
       Would need to put the service config into Redis
         Move serviceTypes into configdata.mjs
 Tasks dedicated to processor is another reason to have a single "node"
-statesSupported
 ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskSystemShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
 task.meta.modified does not look right
 Menu should not have shared.tasksConfigTree on React
@@ -27,11 +25,10 @@ stateSupported is being copied across onto other processors - probably through t
   But the coprocessor needs to keep it
   maybe the nodejs received is not yet in the processor state so its hash is out of Date
     that would make sense but if we wait on the response that might not be apparent
-HashDiff is not working when using statesSupported?
 https://sdk.vercel.ai/
   https://github.com/vercel/ai/blob/main/examples/next-openai/app/api/chat-with-functions/route.ts
 There could be task.processors[environment]
-  Would allow inititialisation of task.processor for a given environment e.g. configuraing task.processor.statesSupported
+  Would allow inititialisation of task.processor for a given environment e.g. configuring task.processor.statesSupported
 Could add a check in schema to config.services that type must exist
 Maybe services should use approach like getFsmHolder_async
 OpenAI "chat" with the configurations

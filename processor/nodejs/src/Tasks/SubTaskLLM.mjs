@@ -29,14 +29,14 @@ async function SubTaskLLM_async(wsSendTask, task, service) {
 
 function callFunctionByName(service, functionName, params) {
   const functions = {
-    openaigpt_async: service.openaigpt_async,
-    openaistub_async: service.openaistub_async,
+    openaigpt_async: service.module.openaigpt_async,
+    openaistub_async: service.module.openaistub_async,
   };
   const func = functions[functionName];
   if (typeof func === "function") {
     return func(params);
   } else {
-    console.error(`No function named ${functionName} found.`);
+    console.error(`No function named ${functionName} found in service`, service);
   }
 }
 

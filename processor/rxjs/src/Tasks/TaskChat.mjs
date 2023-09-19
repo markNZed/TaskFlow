@@ -30,11 +30,13 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
   switch (T("state.current")) {
     case "start": {
       // Define which states this processor supports
+      // Could create a config option for this too but having it in the state machine seems nicer
       const statesSupported = ["configFunctionRequest"];
       if (!arraysEqualIgnoreOrder(T("processor.statesSupported"), statesSupported)) {
         // Experiment with this after we have the functions working
-        //T("processor.statesSupported", statesSupported);
-        //T("command", "update");
+        T("processor.statesSupported", statesSupported);
+        T("command", "update");
+        utils.logTask(T(), "statesSupported:", statesSupported);
       }
       break;
     }

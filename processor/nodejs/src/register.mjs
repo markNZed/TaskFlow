@@ -4,11 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { processorId, TASKHUB_URL, CONFIG_DIR } from "../config.mjs";
-import { utils } from "./utils.mjs";
-
-var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
-serviceTypes = utils.flattenObjects(serviceTypes);
+import { processorId, TASKHUB_URL } from "../config.mjs";
 
 const locale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || process.env.LC_MESSAGES || 'en';
 const language = locale.split('_')[0];

@@ -105,7 +105,7 @@ const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
   const config = {
     functionName: "CEPServiceStub",
     args: {
-      type: "vercel.chatgptzeroshot",
+      type: "openaigpt.chatgptzeroshot",
       key: "API", 
       value: "openaistub"
     },

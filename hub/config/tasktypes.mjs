@@ -7,7 +7,7 @@ const tasktypes = [
     environments: ["react"],
   },
   {
-    name: "TaskSystemConfigs", 
+    name: "TaskSystemConfigs",
     environments: ["rxjs"],
     config: {
       autoStartEnvironment: "rxjs",
