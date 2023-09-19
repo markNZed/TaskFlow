@@ -7,11 +7,62 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { tasksStore_async, tasktypesStore_async, usersStore_async, groupsStore_async } from "../storage.mjs";
 
-// We want CRUD operations for the config
+let promiseResolvers = new Map();
 
-function getStore(targetStore) {
-  //console.log("getStore", targetStore);
-  switch (targetStore) {
+// Not dealng with race conditions
+
+// This is a hack, we would be better to use events or rxjs observables etc
+
+export const registerForChange_async = async (targetConfig, id) => {
+  return new Promise((resolve, reject) => {
+    const existing = promiseResolvers.get(targetConfig) || [];
+    if (id === undefined) {
+      id = targetConfig;
+    } else {
+      id = targetConfig + "-" + id;
+    }
+    //console.log("createPromise", targetConfig, id);
+    existing.push({ resolve, reject, id });
+    promiseResolvers.set(targetConfig, existing);
+    /*
+    // Set timeout to reject the promise if it's not resolved within 60 seconds
+    setTimeout(() => {
+      reject(new Error("Timed out waiting for state change"));
+    }, 60000);
+    */
+  });
+};
+
+const change_async = async (targetConfig, id) => {
+  //console.log("change_async", targetConfig, id);
+  if (promiseResolvers.has(targetConfig)) {
+    const resolvers = promiseResolvers.get(targetConfig);
+    //console.log("change_async has " + resolvers.length + " promises.");
+    id = targetConfig + "-" + id;
+    for (let i = resolvers.length - 1; i >= 0; i--) {
+      if (resolvers[i].id === id) {
+        //console.log("change_async resolve promise", targetConfig, id);
+        resolvers[i].resolve(id);
+        resolvers.splice(i, 1);  // Remove this element from the array
+      }
+    }
+    id = targetConfig;
+    for (let i = resolvers.length - 1; i >= 0; i--) {
+      if (resolvers[i].id === id) {
+        //console.log("change_async resolve promise", targetConfig, id);
+        resolvers[i].resolve(id);
+        resolvers.splice(i, 1);  // Remove this element from the array
+      }
+    }
+
+  } else {
+    //console.log("change_async has no promises");
+  }
+}
+
+function getStore(targetConfig) {
+  //console.log("getStore", targetConfig);
+  switch (targetConfig) {
     case "tasks":
       return tasksStore_async;
     case "tasktypes":
@@ -25,157 +76,190 @@ function getStore(targetStore) {
   }
 }
 
-export const create_async = async (targetStore, task) => {
-  return update_async(targetStore, task);
+export const create_async = async (targetConfig, object, indicateChange = true) => {
+  return update_async(targetConfig, object, indicateChange);
 }
 
-export const read_async = async (targetStore, id) => {
-  const store = getStore(targetStore);
+export const read_async = async (targetConfig, id) => {
+  const store = getStore(targetConfig);
   return store.get(id);
 }
 
-export const update_async = async (targetStore, task) => {
-  const store = getStore(targetStore);
-  return store.set(task.id, task);
+export const update_async = async (targetConfig, object, indicateChange = true) => {
+  const store = getStore(targetConfig);
+  if (indicateChange) {change_async(targetConfig, object.id);}
+  return store.set(object.id, object);
 }
 
-export const delete_async = async (targetStore, id) => {
-  const store = getStore(targetStore);
+// Helper function to recursively update child objects
+const deleteBranch_async = async (targetConfig, store, object) => {
+  // Recursively update all child objects
+  if (object.meta.childrenId && object.meta.childrenId.length > 0) {
+    const promises = object.meta.childrenId.map(async (childId) => {
+      let childObject = await read_async(targetConfig, childId);
+      return deleteBranch_async(targetConfig, store, childObject);
+    });
+    await Promise.all(promises);
+  }
+  store.delete(object.id);
+}
+
+export const delete_async = async (targetConfig, id, indicateChange = true) => {
+  const store = getStore(targetConfig);
+  // We should delete the branch
+  const object = await read_async(targetConfig, id)
+  await deleteBranch_async(targetConfig, store, object);
+  if (indicateChange) {change_async(targetConfig, id);}
   return store.delete(id);
 }
 
-async function uniquifyId_async (targetStore, taskName, parentTaskId) {
-  let uniqueId = parentTaskId + "." + taskName;
+export const update_value_async = async (targetConfig, id, key, value, indicateChange = true) => {
+  const object = await read_async(targetConfig, id);
+  if (!object) {
+    console.log("update_value_async read_async did not find id", id);
+  }
+  const T = utils.createTaskValueGetter(object);
+  console.log("update_value_async id, key, value", id, key, value);
+  T(key, value);
+  await update_async(targetConfig, T(), indicateChange);
+  return T(key)
+}
+
+async function uniquifyId_async (targetConfig, objectName, parentObjectId) {
+  let uniqueId = parentObjectId + "." + objectName;
   let uniqueIdFound = false;
   let index = 1;
   while (!uniqueIdFound) {
-    const conflictingTask = await read_async(targetStore, uniqueId);
-    if (!conflictingTask) {
+    const conflictingObject = await read_async(targetConfig, uniqueId);
+    if (!conflictingObject) {
       uniqueIdFound = true;
     } else {
-      uniqueId = `${parentTaskId}.${taskName}(${index})`;
+      uniqueId = `${parentObjectId}.${objectName}(${index})`;
       index++;
     }
   }
   return uniqueId;
 }
 
-// Helper function to recursively update child tasks
-const moveBranch_async = async (targetStore,task, parentTask) => {
-  // Build new id for task
-  const oldId = task.id;
-  task.id = await uniquifyId_async(targetStore, task.name, parentTask.id);
+// Helper function to recursively update child objects
+const moveBranch_async = async (targetConfig, object, parentObject) => {
+  // Build new id for object
+  const oldId = object.id;
+  object.id = await uniquifyId_async(targetConfig, object.name, parentObject.id);
   // Initialize meta.childrenId if it doesn't exist
-  parentTask.meta.childrenId = parentTask.meta.childrenId || [];
+  parentObject.meta.childrenId = parentObject.meta.childrenId || [];
   // Remove oldId from parent's children
-  parentTask.meta.childrenId = parentTask.meta.childrenId.filter(id => id !== oldId);
-  // Add new task id to parent's children
-  parentTask.meta.childrenId.push(task.id);
-  // Update parent information for this task
-  task.meta.parentId = parentTask.id;
-  task.parentName = parentTask.name;
+  parentObject.meta.childrenId = parentObject.meta.childrenId.filter(id => id !== oldId);
+  // Add new object id to parent's children
+  parentObject.meta.childrenId.push(object.id);
+  // Update parent information for this object
+  object.meta.parentId = parentObject.id;
+  object.parentName = parentObject.name;
   await Promise.all([
-    update_async(targetStore, parentTask),
-    delete_async(targetStore, oldId),
-    update_async(targetStore, task)
+    update_async(targetConfig, parentObject, false),
+    delete_async(targetConfig, oldId, false),
+    update_async(targetConfig, object, false)
   ]);
-  // Recursively update all child tasks
-  if (task.meta.childrenId && task.meta.childrenId.length > 0) {
-    const promises = task.meta.childrenId.map(async (childId) => {
-      let childTask = await read_async(targetStore, childId);
-      return moveBranch_async(targetStore, childTask, task);
+  // Recursively update all child objects
+  if (object.meta.childrenId && object.meta.childrenId.length > 0) {
+    const promises = object.meta.childrenId.map(async (childId) => {
+      let childObject = await read_async(targetConfig, childId);
+      return moveBranch_async(targetConfig, childObject, object);
     });
     await Promise.all(promises);
   }  
-  return task;
+  return object;
 };
 
-// Function to move a task to a different parent
-export const move_async = async (targetStore, actionId, destinationId) => {
+// Function to move a object to a different parent
+export const move_async = async (targetConfig, actionId, destinationId) => {
   try {
-    const task = await read_async(targetStore, actionId);
-    // Get current parent task
-    const parentTask = await read_async(targetStore, task.meta.parentId);
-    if (!parentTask) throw new Error("Parent task not found " + task.meta.parentId);
-    console.log("parentTask", parentTask);
-    // Remove task from current parent's children
-    parentTask.meta.childrenId = parentTask.meta.childrenId.filter(id => id !== task.id);
-    // Update old parent task in the store
-    // Get new parent task
-    const newParentTask = await read_async(targetStore, destinationId);
-    if (!newParentTask) throw new Error("New parent task not found " + destinationId);
-    return Promise.all([
-      moveBranch_async(targetStore, task, newParentTask),
-      update_async(targetStore, parentTask)
+    const object = await read_async(targetConfig, actionId);
+    // Get current parent object
+    const parentObject = await read_async(targetConfig, object.meta.parentId);
+    if (!parentObject) throw new Error("Parent object not found " + object.meta.parentId);
+    console.log("parentObject", parentObject);
+    // Remove object from current parent's children
+    parentObject.meta.childrenId = parentObject.meta.childrenId.filter(id => id !== object.id);
+    // Update old parent object in the store
+    // Get new parent object
+    const newParentObject = await read_async(targetConfig, destinationId);
+    if (!newParentObject) throw new Error("New parent object not found " + destinationId);
+    await Promise.all([
+      moveBranch_async(targetConfig, object, newParentObject),
+      update_async(targetConfig, parentObject, false)
     ]);
+    change_async(targetConfig, actionId);
   } catch (error) {
     // Handle errors (logging, throw, etc.)
-    console.error("An error occurred while moving the task:", error);
+    console.error("An error occurred while moving the object:", error);
     throw error;
   }
 };
 
-const pasteBranch_async = async (targetStore, task, parentTask) => {
-  // Build new id for task
-  task.id = await uniquifyId_async(targetStore, task.name, parentTask.id);
+const pasteBranch_async = async (targetConfig, object, parentObject) => {
+  // Build new id for object
+  object.id = await uniquifyId_async(targetConfig, object.name, parentObject.id);
   // Initialize meta.childrenId if it doesn't exist
-  parentTask.meta.childrenId = parentTask.meta.childrenId || [];
-  // Add new task id to parent's children
-  parentTask.meta.childrenId.push(task.id);
-  // Update new parent task in the store
-  await update_async(targetStore, parentTask);
-  // Update parent information for this task
-  task.meta.parentId = parentTask.id;
-  task.parentName = parentTask.name;
-  // Save updated task back to store
-  await update_async(targetStore, task);
-  //console.log("Pasting task", task.id, "under parent", parentTask.id);
-  // Recursively update all child tasks
-  if (task.meta.childrenId && task.meta.childrenId.length > 0) {
-    const promises = task.meta.childrenId.map(async (childId) => {
-      let childTask = await read_async(targetStore, childId);
-      await pasteBranch_async(targetStore, childTask, task);
+  parentObject.meta.childrenId = parentObject.meta.childrenId || [];
+  // Add new object id to parent's children
+  parentObject.meta.childrenId.push(object.id);
+  // Update new parent object in the store
+  await update_async(targetConfig, parentObject, false);
+  // Update parent information for this object
+  object.meta.parentId = parentObject.id;
+  object.parentName = parentObject.name;
+  // Save updated object back to store
+  await update_async(targetConfig, object, false);
+  //console.log("Pasting object", object.id, "under parent", parentObject.id);
+  // Recursively update all child objects
+  if (object.meta.childrenId && object.meta.childrenId.length > 0) {
+    const promises = object.meta.childrenId.map(async (childId) => {
+      let childObject = await read_async(targetConfig, childId);
+      await pasteBranch_async(targetConfig, childObject, object);
     });
     await Promise.all(promises);
   }  
 };
 
-export const paste_async = async (targetStore, copiedTaskId, newTaskLabel, destinationId) => {
+export const paste_async = async (targetConfig, copiedObjectId, newObjectLabel, destinationId) => {
   try {
-    //console.log("paste_async pasting", copiedTaskId, "as", newTaskLabel, "to", destinationId);
-    const newTask = await read_async(targetStore, copiedTaskId);
-    const parentTask = await read_async(targetStore, destinationId);
-    newTask.name = newTaskLabel.toLowerCase();
-    newTask.config = newTask.config || {};
-    newTask.config.label = newTaskLabel;
-    await pasteBranch_async(targetStore, newTask, parentTask);
+    //console.log("paste_async pasting", copiedObjectId, "as", newObjectLabel, "to", destinationId);
+    const newObject = await read_async(targetConfig, copiedObjectId);
+    const parentObject = await read_async(targetConfig, destinationId);
+    newObject.name = newObjectLabel.toLowerCase();
+    newObject.config = newObject.config || {};
+    newObject.config.label = newObjectLabel;
+    await pasteBranch_async(targetConfig, newObject, parentObject);
+    change_async(targetConfig, newObject.id);
   } catch (error) {
     // Handle errors (logging, throw, etc.)
-    console.error("An error occurred while moving the task:", error);
+    console.error("An error occurred while moving the object:", error);
     throw error;
   }
 }
 
-export const insert_async = async (targetStore, actionId, newTaskLabel) => {
+export const insert_async = async (targetConfig, actionId, newObjectLabel) => {
   try {
-    const parentTask = await read_async(targetStore, actionId);
-    const newTask = utils.deepClone(parentTask);
-    const newTaskName = newTaskLabel.toLowerCase();
-    newTask.meta = newTask.meta || {};
-    newTask.meta.childrenId = [];
-    newTask.meta.parentId = parentTask.id;
-    newTask.id = parentTask.id + "." + newTaskName;
-    newTask.parentName = parentTask.name;
-    newTask.name = newTaskName;
-    newTask.config = newTask.config || {};
-    newTask.config.label = newTaskLabel;
-    parentTask.meta.childrenId = parentTask.meta.childrenId || [];
-    parentTask.meta.childrenId.push(newTask.id);
-    await update_async(targetStore, parentTask);
-    await create_async(targetStore, newTask);
+    const parentObject = await read_async(targetConfig, actionId);
+    const newObject = utils.deepClone(parentObject);
+    const newObjectName = newObjectLabel.toLowerCase();
+    newObject.meta = newObject.meta || {};
+    newObject.meta.childrenId = [];
+    newObject.meta.parentId = parentObject.id;
+    newObject.id = parentObject.id + "." + newObjectName;
+    newObject.parentName = parentObject.name;
+    newObject.name = newObjectName;
+    newObject.config = newObject.config || {};
+    newObject.config.label = newObjectLabel;
+    parentObject.meta.childrenId = parentObject.meta.childrenId || [];
+    parentObject.meta.childrenId.push(newObject.id);
+    await update_async(targetConfig, parentObject, false);
+    await create_async(targetConfig, newObject, false);
+    change_async(targetConfig, actionId);
   } catch (error) {
     // Handle errors (logging, throw, etc.)
-    console.error("An error occurred while moving the task:", error);
+    console.error("An error occurred while moving the object:", error);
     throw error;
   }
 }
@@ -239,7 +323,7 @@ const sortChildren = (node) => {
   }
 };
 
-export const buildTree_async = async (targetStore) => {
+export const buildTree_async = async (targetConfig) => {
 
   // Object to hold nodes by their id for quick access
   const nodesById = {
@@ -250,10 +334,10 @@ export const buildTree_async = async (targetStore) => {
     }
   };
 
-  const store = getStore(targetStore);
+  const store = getStore(targetConfig);
   
   // First pass: Create all the nodes
-  for await (const [id, task] of store.iterator()) {
+  for await (const [id, object] of store.iterator()) {
     
     // Check for duplicate IDs
     if (nodesById[id]) {
@@ -263,12 +347,12 @@ export const buildTree_async = async (targetStore) => {
       continue;
     }
     
-    // Create a new node for the current task
+    // Create a new node for the current object
     const newNode = {
-      title: task?.config?.label || id,
+      title: object?.config?.label || id,
       id: id,
       children: {},
-      parentId: task?.meta?.parentId,
+      parentId: object?.meta?.parentId,
     };
 
     // Add the node to the nodesById object
@@ -283,7 +367,7 @@ export const buildTree_async = async (targetStore) => {
     const { parentId } = node; // Assume this information is available in the node
 
     if (!parentId || !nodesById[parentId]) {
-      console.warn(`Missing or invalid parent ID for node with id:${id} parentId:${parentId} Attaching to root.`);
+      //console.warn(`Missing or invalid parent ID for node with id:${id} parentId:${parentId} Attaching to root.`);
       nodesById.root.children[node.id] = node;
       continue;
     } else {
@@ -308,7 +392,9 @@ export const ServiceSystemConfig = {
   move_async, 
   paste_async, 
   read_async, 
-  update_async, 
+  update_async,
+  update_value_async,
   delete_async, 
   getAllChildrenOfNode,
+  registerForChange_async,
 } 

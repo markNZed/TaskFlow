@@ -28,11 +28,10 @@ function TaskSystemMenu(props) {
     log,
     task,
     modifyTask,
-    onDidMount,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   const { globalState, replaceGlobalState } = useGlobalStateContext();
   const [mobileViewOpen, setMobileViewOpen] = useState(false);

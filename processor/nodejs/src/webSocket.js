@@ -16,6 +16,7 @@ import { utils } from "./utils.mjs";
 let connectionAttempts = 0;
 let maxAttempts = 100;
 let processorWs;
+let promiseResolvers = new Map();
 
 function wsSendObject(message) {
   if (!processorWs) {
@@ -30,7 +31,7 @@ function wsSendObject(message) {
   }
 }
 
-const wsSendTask = async function (task) {
+const wsSendTask = async function (task, waitOnState) {
   /*
   if (task.processor.command === "partial") {
     return;
@@ -45,6 +46,17 @@ const wsSendTask = async function (task) {
   task.meta.messageId = utils.nanoid8();
   message["task"] = task;
   wsSendObject(message);
+  if (waitOnState) {
+    return new Promise((resolve, reject) => {
+      const existing = promiseResolvers.get(task.instanceId) || [];
+      existing.push({resolve, reject, waitOnState});
+      promiseResolvers.set(task.instanceId, existing);
+      console.log("promiseResolvers set", task.instanceId, waitOnState);
+      setTimeout(() => {
+        reject(new Error("Timed out waiting for state change"));
+      }, 60000); // 60 seconds
+    });
+  }
 }
 
 const connectWebSocket = () => {
@@ -103,6 +115,16 @@ const connectWebSocket = () => {
       // Check hash
       utils.checkHashDiff(lastTask, mergedTask);
       await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
+      // Iterating backward so you can safely remove elements
+      if (promiseResolvers.has(mergedTask.instanceId)) {
+        const resolvers = promiseResolvers.get(mergedTask.instanceId);
+        for (let i = resolvers.length - 1; i >= 0; i--) {
+          if (resolvers[i].waitOnState === mergedTask?.state?.current) {
+            resolvers[i].resolve(mergedTask);
+            resolvers.splice(i, 1);  // Remove this element from the array
+          }
+        }
+      }
       if (!commandArgs?.sync) {
         await taskProcess_async(wsSendTask, mergedTask);
       }

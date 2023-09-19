@@ -3,6 +3,32 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskSystemRestart", 
+    environments: ["react"],
+  },
+  {
+    name: "TaskSystemConfigs", 
+    environments: ["rxjs"],
+    config: {
+      autoStartEnvironment: "rxjs",
+      services: {
+        config: {
+          type: "systemConfig",
+          environments: ["rxjs"],
+        },
+      },
+    },
+    state: {
+      current: "start",
+    },
+    shared: {
+      tasksConfigTree: {},
+      usersConfigTree: {},
+      groupsConfigTree: {},
+      tasktypesConfigTree: {},
+    },
+  },
+  {
     name: "TaskSystemMenu",
     environments: ["react", "rxjs"],
     config: {
@@ -13,7 +39,7 @@ const tasktypes = [
       legal: ["start", "loaded", "ready"],
     },
     shared: {
-      configTree: {},
+      tasksConfigTree: {},
     },
   },
   {
@@ -29,9 +55,6 @@ const tasktypes = [
     },
     state: {
       current: "start",
-    },
-    shared: {
-      configTree: {},
     },
   },
   {

@@ -24,7 +24,6 @@ const TaskSystemTasksConfigEditor = (props) => {
     log,
     task,
     modifyTask,
-    onDidMount,
   } = props;
 
   const [configTreeAsObject, setconfigTreeAsObject] = useState();
@@ -36,10 +35,26 @@ const TaskSystemTasksConfigEditor = (props) => {
   const [newTaskLabel, setnewTaskLabel] = useState();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [menuAction, setMenuAction] = useState();
+  const [configTreeLastUpdatedAt, setConfigTreeLastUpdatedAt] = useState();
 
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
+
+  function loadTree() {
+    if (configTreeLastUpdatedAt !== task.meta.updatedAt.date) {
+      setConfigTreeLastUpdatedAt(task.meta.updatedAt.date);
+      const targetStore = task.config.local.targetStore;
+      console.log("loadTree", targetStore);
+      setconfigTreeAsObject(task.shared[targetStore + "ConfigTree"]);
+    }
+  }
+
+  useEffect(() => {
+    if (task?.meta?.modified?.shared?.tasksConfigTree) {
+      loadTree();
+    }
+  }, [task]);
 
   // Task state machine
   useEffect(() => {
@@ -50,14 +65,10 @@ const TaskSystemTasksConfigEditor = (props) => {
     if (props.transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        setconfigTreeAsObject(task.shared.configTree);
+        loadTree();
+        nextState = "loaded";
         break;
       case "loaded":
-        // Could use task.meta.updatedAt to detect a new task then generate events for task.meta.modified
-        // A state variable e.g. lastModifiedX could make sure the event is processed once
-        if (props.transition() && (task.meta?.modified?.shared?.configTree || !configTreeAsObject)) {
-          setconfigTreeAsObject(task.shared.configTree);
-        }
         // General rule: if we set a field on a processor then clear it down on the same processor
         //   Not for response/request
         if (task.input.action) {
@@ -114,13 +125,13 @@ const TaskSystemTasksConfigEditor = (props) => {
     return obj;
   }
 
-  // task.shared.configTree uses a hash because we cannot merge arrays and delete elements
+  // task.shared.tasksConfigTree uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
     if (configTreeAsObject) {
       // Deep copy so we do not mess with configTreeAsObject
       const sortedConfigTreeAsObject = utils.sortKeys(configTreeAsObject);
       const sortedConfigTreeAsArray = hashToArrayOnProperty(utils.deepClone(sortedConfigTreeAsObject), "children");
-      //console.log("configTree sortedConfigTreeAsArray", sortedConfigTreeAsArray);
+      console.log("configTree sortedConfigTreeAsArray", sortedConfigTreeAsArray);
       if (Object.entries(sortedConfigTreeAsArray).length) {
         setConfigTree([sortedConfigTreeAsArray]);
       }

@@ -10,12 +10,11 @@ const TaskSelect = (props) => {
     task,
     modifyTask,
     transition,
-    onDidMount,
   } = props;
 
   const [selectedOptions, setSelectedOptions] = useState();
 
-  onDidMount();
+  props.onDidMount();
 
   useEffect(() => {
     task.state.current = "start";

@@ -25,13 +25,12 @@ const TaskDummy = (props) => {
     task,
     modifyTask,
     transition,
-    onDidMount,
   } = props;
 
   const [dummy, setDummy] = useState("");
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {

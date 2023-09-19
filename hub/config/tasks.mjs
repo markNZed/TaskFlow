@@ -1,121 +1,49 @@
-import { actionThenQuery } from '../src/shared/fsm/xutils.mjs';
+import { validateTasks } from "../src/validateTasks.mjs";
+
+const taskSetNames = ['system'];
+let taskSet = {};
+
+const importModule = async (moduleName) => {
+  try {
+    const module = await import(`./tasks/${moduleName}.mjs`);
+    validateTasks(module[moduleName]);
+    return { [moduleName]: module[moduleName] };
+  } catch (error) {
+    console.error(`Failed to import ${moduleName}:`, error);
+    return null;
+  }
+};
+
+const importAllModules = async (taskSetNames) => {
+  const promises = taskSetNames.map(moduleName => importModule(moduleName));
+  const modules = await Promise.all(promises);
+  return Object.assign({}, ...modules);
+};
+
+taskSet = await importAllModules(taskSetNames);
 
 const tasks = [
+
   {
     config: {
-      maxRequestCount: 100,
-      maxRequestRate: 30,
+      maxRequestCount: 200,
+      maxRequestRate: 60,
       caching: [],
     },
     menu: false,
     name: "root",
   },
   {
-    name: "system",
-    parentName: "root",
-    menu: true,
-  },
-  {
     CHILDREN_menu: true,
     name: "user",
     parentName: "root",
   },
-
   {
-    name: "systemshared",
-    config: {
-      ceps: {
-        ".*instance.*": {
-          isRegex: true,
-          functionName: "CEPShared",
-        },
-      },
-    },
-    parentName: "system",
-    type: "TaskSystemShared",
+    name: "system",
+    parentName: "root",
+    menu: true,
   },
-  {
-    name: "systemlog",
-    config: {
-      ceps: {
-        ".*instance.*": {
-          isRegex: true,
-          functionName: "CEPLog",
-        },
-      },
-    },
-    parentName: "system",
-    type: "TaskSystemLog",
-  }, 
-  {
-    initiator: true,
-    name: "systemlogviewer",
-    config: {
-      label: "Log",
-    },
-    parentName: "system",
-    type: "TaskSystemLogViewer",
-  }, 
-  {
-    name: "config",
-    parentName: "system",
-  },
-  {
-    initiator: true,
-    name: "systemtasksconfig",
-    config: {
-      label: "Tasks",
-      local: {
-        targetStore: "tasks",
-      },
-      debug: {
-        debugTask: true,
-      },
-    },
-    parentName: "config",
-    type: "TaskSystemConfigEditor",
-  },
-  {
-    initiator: true,
-    name: "systemusersconfig",
-    config: {
-      label: "Users",
-      local: {
-        targetStore: "users",
-      },
-    },
-    parentName: "config",
-    type: "TaskSystemConfig",
-  },
-  {
-    initiator: true,
-    name: "systemgroupsconfig",
-    config: {
-      label: "Groups",
-      local: {
-        targetStore: "groups",
-      },
-    },
-    parentName: "config",
-    type: "TaskSystemConfig",
-  },
-  {
-    initiator: true,
-    name: "systemtasktypesconfig",
-    config: {
-      label: "Task Types",
-      local: {
-        targetStore: "tasktypes",
-      },
-    },
-    parentName: "config",
-    type: "TaskSystemConfig",
-  },
-  {
-    name: "menu",
-    parentName: "system",
-    type: "TaskSystemMenu",
-  },
+  ...taskSet.system,
 
   {
     name: "conversation",
@@ -194,6 +122,7 @@ const tasks = [
           forget: true,
           prompt: "Tell me a story about something random.",
           type: "openaigpt.chatgpt",
+          environments: ["nodejs"],
         },
       },
       nextTask: "structure"
@@ -210,6 +139,7 @@ const tasks = [
       nextTask: "stop",
       services: {
         chat: {
+          environments: ["nodejs"],
           forget: true,
           type: "openaigpt.chatgpt",
           promptTemplate: [
@@ -266,6 +196,7 @@ const tasks = [
       services: {
         chat: {
           type: "vercel.chatgpt",
+          useCache: false,
           environments: ["nodejs"],
         },
         config: {
@@ -285,53 +216,24 @@ const tasks = [
     type: "TaskChat",
     APPEND_environments: ["rxjs"],
     shared: {
-      configTree: {},
+      tasksConfigTree: {},
     },
-  },
-
-  {
-    name: "testing",
-    initiator: true, // Needed to see this, maybe because it had no children?
     config: {
       local: {
-        targetTaskId: "root.user.conversation.zeroshot.start",
-        timeout: 10000, // 10 seconds
+        suggestedPrompts: [
+          "What is the id of the parent of this task?",
+          "What is the label of the parent of this task?",
+          "Please update the label of the parent of the current task to ConfigXXX.",
+        ]
       },
-      fsm: {
-        name: "chat",
-        useMachine: true,
-        devTools: true, 
-        merge: {
-          // The start state is defined here to demonstrate merging of states from task configs
-          states: {
-            ...actionThenQuery('start', [], ['findTextarea']),
-          },
-        },
-        queries: { // Note that more queries are defined in the library
-          findTextarea: {
-            query: 'textarea[name="prompt"]',
-            field: "value",
-            debug: false,
-          },
-        },
-        actions: { // Note that more actions are defined in the library
-          enterPrompt: {
-            type: "TaskChat",
-            input: "promptText",
-            value: "Hello World!",
-            debug: true,
-          },
-        },
-      },
-      // This task is using CEP
-      //   serviceStub is created via this tasks's coprocessor Task Function
-      //   familyId is created via the TaskType configuration
+      /* // Not working?
+       APPEND_caching: [
+        {
+          enable: false,
+        }
+      ],
+      */
     },
-    parentName: "system",
-    meta: {
-      childrenId: ["root.user.conversation.zeroshot"],
-    },
-    type: "TaskSystemTest",
   },  
 
   {
@@ -345,5 +247,7 @@ const tasks = [
   },
   
 ];
+
+//console.log(JSON.stringify(tasks, null, 2));
 
 export { tasks };

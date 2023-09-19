@@ -168,7 +168,7 @@ function TaskSystemTest(props) {
     query = "#SystemTest " + query; // Scope the queries within the SystemTest div
     if (debug) {console.log(msg, "queryUI", query);}
     if (!document.contains(element)) {
-      if (debug) {console.log(msg, "!document.contains(element)", query);}
+      if (debug) {console.log(msg, "Failed to find document.querySelector(" + query + ")");}
       queriesRef.current[id].element = document.querySelector(query);
     }
     element = queriesRef.current[id].element;
@@ -225,7 +225,7 @@ function TaskSystemTest(props) {
     let { event, debug, delay, input, value, taskRef, type } = data;
     const msg = "actionUI " + type + " input " + input;
     const task = taskRef.current;
-    if (debug) {console.log(msg, "pollForTask", task.state)};
+    if (debug) {console.log(msg, "pollForTask state:", task.state.current)};
     if (task.state.familyTree) {
       if (debug) {console.log(msg, "task.state.familyTree", task.state.familyTree)};
       const root = new TreeModel().parse(task.state.familyTree);

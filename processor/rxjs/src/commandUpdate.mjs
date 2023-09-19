@@ -6,16 +6,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getActiveTask_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
-import { processorId,COPROCESSOR } from "../config.mjs";
+import { processorId, COPROCESSOR } from "../config.mjs";
 import { taskLock } from './shared/taskLock.mjs';
 
 export async function commandUpdate_async(wsSendTask, task, diff, sync = false) { 
-  utils.logTask(task, "commandUpdate_async task.instanceId:",task.instanceId, "diff.instanceId:", diff.instanceId, "sync:", sync);
-  if (!diff || Object.keys(diff).length === 0) {
-    utils.logTask(task, "No diff so update cancelled.", diff);
-    return;
-  }
-  
+  utils.logTask(task, "commandUpdate_async task.instanceId:", task.instanceId, "diff.instanceId:", diff?.instanceId, "sync:", sync);
   //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
   let mergedTask = {}
   // Deep copy task.processor to avoif changes to task that was passed in
@@ -38,13 +33,13 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
     mergedTask["processor"] = {};
     mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
-    //utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
-    await taskLock(task.instanceId);
+    utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
+    await taskLock(task.instanceId, "commandUpdate_async");
     const lastTask = await getActiveTask_async(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);
     }
-    mergedTask = utils.deepMerge(lastTask, diff);
+    mergedTask = utils.deepMerge(lastTask, task);
     mergedTask.processor = JSON.parse(JSON.stringify(task.processor));
     mergedTask.processor["coprocessingDone"] = false;
   } 
@@ -58,8 +53,9 @@ export async function commandUpdate_async(wsSendTask, task, diff, sync = false) 
     if (COPROCESSOR) {
       mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
       mergedTask.meta["messageId"] = utils.nanoid8();
-      console.log("Creating new messageId from coprocessor", mergedTask.meta.messageId);
+      utils.logTask(task, "Creating new messageId from coprocessor", mergedTask.meta.messageId);
     }
+    //utils.logTask(task, "wsSendTask");
     wsSendTask(mergedTask);
   } catch (error) {
     console.error(`Command ${mergedTask.command} failed to fetch ${error}`);

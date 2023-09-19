@@ -6,8 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { activeProcessors, activeCoprocessors, autoStartTasksStore_async } from "../storage.mjs";
-import { hubId, setHaveCoProcessor } from "../../config.mjs";
-import { getConfigHash } from "../configdata.mjs";
+import { hubId, haveCoprocessor } from "../../config.mjs";
 import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
 import * as dotenv from "dotenv";
@@ -54,7 +53,6 @@ router.post("/", async (req, res) => {
   console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
     
   if (coprocessor) {
-    setHaveCoProcessor(true);
     activeCoprocessors.set(processorId, {
       environments,
       commandsAccepted,
@@ -75,7 +73,6 @@ router.post("/", async (req, res) => {
 
   res.send({
     hubId: hubId,
-    configHash: getConfigHash(),
   });
 
   // After each processor registers then we can check if there are tasks to autostart
@@ -86,9 +83,18 @@ router.post("/", async (req, res) => {
     activeEnvironments.push(...item.environments);
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
+
+  // Do not autostart task until after the coprocessor has started
+  // probably need to wait for all coprocessors first but we don't have the list
+  // Probably need to convert haveCoprocessor into Coprocessors (maybe capitals and set from ENV)
+  if (haveCoprocessor && activeCoprocessors.size === 0) {
+    console.log("haveCoprocessor && activeCoprocessors.size === 0");
+    return
+  }
+
   for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
     countAutoStartTasks++;
-    //console.log("Autostart task", taskId, autoStartTask);
+    console.log("Checking autostart for task", taskId);
     const autoStartEnvironment = autoStartTask.startEnvironment;
     let startEnvironments = autoStartTask.startEnvironments;
     if (environments.includes(autoStartEnvironment)) {

@@ -59,6 +59,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
       // If only some states are supported then the task storage may be out of sync so send the entire object
       // We could potentially have storage on the hub for the task on the processor in this case 
       if (statesSupported) {
+        //console.log("wsSendTask statesSupported", task.state.current, processor);
         diff = task;
       } else {
         diff = utils.hubDiff(activeTask, task);

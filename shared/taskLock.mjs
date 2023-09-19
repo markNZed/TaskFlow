@@ -31,8 +31,8 @@ export function taskRelease(key, description = "") {
   const release = releases.get(key);
   if (release) {
     release();
-    console.log(`Released lock ${description} id: ${key}`);
     releases.delete(key); // Remove the release function after releasing the lock
+    console.log(`Released lock ${description} id: ${key}`);
   } else {
     // We expect most tasks will not be locked so no need to warn
     //console.warn(`No lock found for key: ${key}`);

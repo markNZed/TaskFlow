@@ -25,7 +25,6 @@ const TaskSimulateUser = (props) => {
     modifyTask,
     childTask,
     modifyChildTask,
-    onDidMount,
     transition,
     transitionTo,
     log,
@@ -37,7 +36,7 @@ const TaskSimulateUser = (props) => {
   const [socketResponses, setSocketResponses] = useState([]);
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // Note that socketResponses may not (will not) be updated on every websocket event
   // React groups setState operations and I have not understood the exact criteria for this

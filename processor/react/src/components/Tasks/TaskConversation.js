@@ -24,10 +24,8 @@ ToDo:
 const TaskConversation = (props) => {
   const {
     task,
-    modifyTask,
     childTask,
     modifyChildTask,
-    onDidMount,
   } = props;
 
   const chatContainerRef = useRef(null);
@@ -41,7 +39,7 @@ const TaskConversation = (props) => {
   const [chatResponse, setChatResponse] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // There is a loop from the childTask.output.msgs to childTask.input.msgs
   // This potetniallly allows msgs to be controlled by TaskConversation

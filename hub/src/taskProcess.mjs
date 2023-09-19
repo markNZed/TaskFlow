@@ -12,7 +12,7 @@ import { commandInit_async } from "./commandInit.mjs";
 import { commandError_async } from "./commandError.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
-import { haveCoProcessor } from "../config.mjs";
+import { haveCoprocessor } from "../config.mjs";
 // eslint-disable-next-line no-unused-vars
 import assert from 'assert';
 import _ from "lodash";
@@ -35,7 +35,7 @@ function hubAssertions(taskDiff, mergedTask) {
 
 async function processorInHubOut_async(task, activeTask, requestId) {
   utils.debugTask(task);
-  const { command, id, coprocessingPosition, coprocessing, coprocessingDone  } = task.processor;
+  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported  } = task.processor;
   // Could initiate from a processor before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
@@ -85,6 +85,7 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     coprocessingPosition,
     coprocessingDone,
     coprocessing,
+    statesSupported,
   };
   utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
   return task;
@@ -306,7 +307,7 @@ async function taskProcess_async(task, req, res) {
       task.familyId = task.familyId || activeTask.familyId;
       task = await processOutput_async(task, outputStore_async);
     }
-    if (haveCoProcessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
+    if (haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
       utils.logTask(task, "sending to coprocessor");
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket

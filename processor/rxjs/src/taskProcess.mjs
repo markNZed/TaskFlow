@@ -66,9 +66,15 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
           }
         });
       }  
-      utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
       const T = utils.createTaskValueGetter(task);
-      updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
+      // Option to run in background
+      if (T("config.background")) {
+        utils.logTask(task, `Processing ${task.type} in background`);
+        taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
+      } else {
+        utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
+        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
+      }
       utils.logTask(task, `Finished ${task.type} in state ${updatedTask?.state?.current}`);
     } else {
       utils.logTask(task, "RxJS Task Processor no Task Function for " + task.type);

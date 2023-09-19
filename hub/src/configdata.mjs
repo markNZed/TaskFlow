@@ -181,7 +181,7 @@ function flattenTasks(tasks) {
       throw new Error(
         "Error: Taskflow parentName " +
           task.parentName +
-          " does not exist in parent2id");
+          " does not exist in parent2id while reading task " + task?.name);
     }
     
     // Add id
@@ -365,8 +365,4 @@ Object.keys(tasks).forEach(key => {
   fromTask(task);
 });
 
-function getConfigHash() {
-  return utils.djb2Hash(JSON.stringify([users, groups, tasktypes, tasks]));
-}
-
-export { getConfigHash, users, groups, tasktypes, tasks, autoStartTasks };
+export { users, groups, tasktypes, tasks, autoStartTasks };

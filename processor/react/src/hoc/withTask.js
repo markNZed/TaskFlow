@@ -422,7 +422,7 @@ function withTask(Component) {
       if (!currentState) return false;
 
       // The currentState may be initialized and the stateRef.current and lastStateRef.current have not been initialized
-      // Don;t initialize lastStateRef.current so we see the initial transition to the "start" state
+      // Don't initialize lastStateRef.current so we see the initial transition to the "start" state
       if (stateRef.current === undefined) {
         stateRef.current = currentState
       }

@@ -28,7 +28,6 @@ const TaskLLMIO = (props) => {
     leaving,
     task,
     modifyTask,
-    onDidMount,
     transition,
     transitionTo, 
     transitionFrom,
@@ -48,7 +47,7 @@ const TaskLLMIO = (props) => {
   const [socketResponses, setSocketResponses] = useState([]);
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {

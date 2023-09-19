@@ -32,71 +32,86 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
       // Define which states this processor supports
       const statesSupported = ["configFunctionRequest"];
       if (!arraysEqualIgnoreOrder(T("processor.statesSupported"), statesSupported)) {
-        T("processor.statesSupported", statesSupported);
-        T("command", "update");
+        // Experiment with this after we have the functions working
+        //T("processor.statesSupported", statesSupported);
+        //T("command", "update");
       }
       break;
     }
     case "configFunctionRequest": {
       const action = T("request.action")
       const actionId = T("request.actionId");
-      const targetStore = T("request.actionTargetStore");
-      let rebuildTree = true;
-      let configTree;
-      utils.logTask("action:", action, "id:", actionId);
+      const targetConfig = T("request.actionTargetConfig") || "tasks";
+      const actionObject = T("request.actionObject");
+      const actionPath = T("request.actionPath");
+      const actionValue = T("request.actionValue");
+      utils.logTask(T(), "action:", action, "id:", actionId, T("request"));
       if (action) {
-        switch (action) {
-          case "create": {
-            await systemConfig.create_async(targetStore, T("request.actionTask"));
-            break;
-          }
-          case "read":{
-            const requestedTask = systemConfig.read_async(targetStore, actionId)
-            T("response.task", requestedTask);
-            rebuildTree = false;
-            break;
-          }
-          case "update": {
-            const updatedTask = await systemConfig.update_async(targetStore, T("request.actionTask"));
-            T("response.task", updatedTask);
-            break;
-          }
-          case "delete": {
-            await systemConfig.delete_async(targetStore, actionId);
-            // Find all the children in the branch
-            const children = systemConfig.getAllChildrenOfNode(actionId, configTree);
-            for (const child of children) {
-              //console.log("delete child ", child.id);
-              await systemConfig.delete_async(targetStore, child.id);
+        try {
+          switch (action) {
+            case "create": {
+              await systemConfig.create_async(targetConfig, actionObject);
+              break;
             }
-            break;
+            case "read":{
+              const requestedTask = systemConfig.read_async(targetConfig, actionId)
+              T("response.functionResult", requestedTask);
+              break;
+            }
+            case "update": {
+              const updatedTask = await systemConfig.update_async(targetConfig, actionObject);
+              T("response.functionResult", updatedTask);
+              break;
+            }
+            case "update_value": {
+              const updatedKey = await systemConfig.update_value_async(targetConfig, actionId, actionPath, actionValue);
+              T("response.functionResult", updatedKey);
+              break;
+            }
+            case "delete": {
+              await systemConfig.delete_async(targetConfig, actionId);
+              break;
+            }
+            case "insert": {
+              // Create systemConfig.create_async
+              await systemConfig.insert_async(targetConfig, actionId, T("request.newObjectLabel"));
+              break;
+            }
+            case "move": {
+              await systemConfig.move_async(targetConfig, actionId, T("request.destinationId"));
+              break;
+            }
+            case "paste": {
+              await systemConfig.paste_async(targetConfig, T("request.actionId"), T("request.newObjectLabel"), T("request.destinationId"));
+              break;
+            }
+            case "get_task_value": {
+              const requestedTask = await systemConfig.read_async(targetConfig, actionId);
+              const RT = utils.createTaskValueGetter(requestedTask);
+              const value = RT(actionPath);
+              T("response.functionResult", {[actionPath]: value});
+              break;
+            }
+            default:
+              throw new Error("unknown action:" + action);
           }
-          case "insert": {
-            // Create systemConfig.create_async
-            await systemConfig.insert_async(targetStore, actionId, T("request.newTaskLabel"));
-            break;
-          }
-          case "move": {
-            await systemConfig.move_async(targetStore, actionId, T("request.destinationId"));
-            break;
-          }
-          case "paste": {
-            await systemConfig.paste_async(targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
-            break;
-          }
-          default:
-            throw new Error("unknown action:" + action);
+          const taskUpdate = {
+            "state.current": "configFunctionResponse",
+            "commandArgs": {lockBypass: true},
+            "command": "update",
+          };
+          T(taskUpdate);
+        } catch (error) {
+          utils.logTask(T(), "ERROR:", error);
+          const taskUpdate = {
+            "response.functionResult": error.message,
+            "state.current": "configFunctionResponse",
+            "commandArgs": {lockBypass: true},
+            "command": "update",
+          };
+          T(taskUpdate);
         }
-        if (rebuildTree) {
-          configTree = await systemConfig.buildTree_async(targetStore);
-        }
-        const taskUpdate = {
-          "shared.configTree": configTree,
-          "state.current": "actionDone",
-          "command": "update",
-        };
-        T(taskUpdate);
-        //utils.logTask("T:", T(), "taskUpdate:", taskUpdate);
+        utils.logTask(T(), "response.functionResult", T("response.functionResult"));
       }
       break
     }

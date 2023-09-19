@@ -393,7 +393,7 @@ const utils = {
   // Returns undefined if no difference, null can be used to delete 
   getObjectDifference: function(obj1, obj2, debug = false) {
 
-    if (obj1 === obj2) {
+    if (!_.isObject(obj1) && obj1 === obj2) {
       return undefined;
     }
 
@@ -469,9 +469,15 @@ const utils = {
 
   getIntersectionWithDifferentValues: function(obj1, obj2) {
     if (_.isEqual(obj1, obj2)) {
-      return Array.isArray(obj1) ? [] : {};
+      return undefined
     }
     if (!_.isObject(obj1) || !_.isObject(obj2)) {
+      return undefined;
+    }
+    if (Array.isArray(obj1) && _.isEmpty(obj1) && Array.isArray(obj2) && _.isEmpty(obj2)) {
+      return undefined;
+    }
+    if (_.isEmpty(obj1) && _.isEmpty(obj2)) {
       return undefined;
     }
     let diffObj = Array.isArray(obj1) && Array.isArray(obj2) ? [] : {};
@@ -479,7 +485,7 @@ const utils = {
       if (key in obj2) {
         if (_.isObject(value) && _.isObject(obj2[key])) {
           let diff = utils.getIntersectionWithDifferentValues(value, obj2[key]);
-          if (!_.isEmpty(diff)) {
+          if (!_.isEmpty(diff) && diff !== undefined) {
             diffObj[key] = diff;
           }
         } else if (!_.isEqual(value, obj2[key])) {
@@ -492,6 +498,9 @@ const utils = {
         }
       }
     });
+    if (_.isEmpty(diffObj)) {
+      return undefined;
+    }
     return diffObj;
   },
 
@@ -703,6 +712,10 @@ const utils = {
     // Because this is unique to each processor (we could have a hash for each processor)
     if (taskCopy?.state?.last) {
       delete taskCopy.state.last;
+      // Otherwise we can end up with an empty state object that causes hash mismatch
+      if (_.isEmpty(taskCopy.state)) {
+        delete taskCopy.state;
+      }
     }
     // Sending null is used to delete so we can get mismatches when the entry is deleted
     utils.removeNullKeys(taskCopy);
@@ -723,11 +736,13 @@ const utils = {
     }
     //console.log("processorDiff in origTask.output, task.output", origTask?.output, task.output);
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
-    //console.log("utils.getObjectDifference(origTask, taskCopy)", origTask, taskCopy);
+    //console.log("utils.getObjectDifference origTask?.shared:", JSON.stringify(origTask?.shared, null, 2));
+    //console.log("utils.getObjectDifference taskCopy?.shared:", JSON.stringify(taskCopy?.shared, null, 2));
+    //console.log("utils.getObjectDifference diffTask?.shared:", JSON.stringify(diffTask?.shared, null, 2));
     // Which properties of the origTask differ from the task
     let diffOrigTask;
     if (taskCopy.processor?.commandArgs?.sync) {
-      diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy.processor.commandArgs.syncTask);
+      diffOrigTask = undefined;
     } else {
       diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
     }
@@ -788,8 +803,9 @@ const utils = {
       diffTask.meta["hash"] = origTask.meta.hash;
       // Which properties of the origTask differ from the task
       let diffOrigTask;
+      // We do not check the hash for sync (the processor sending may not even have the instance for calculating the diff)
       if (taskCopy.hub?.commandArgs?.sync) {
-        diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy.hub.commandArgs.syncTask);
+        diffOrigTask = undefined;
       } else {
         diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
       }
@@ -820,6 +836,12 @@ const utils = {
       // Sync is not relative to a current value so we cannot use hash
       return;
     }
+    const statesSupported = taskCopy?.processor?.statesSupported || taskCopy?.hub?.statesSupported;
+    if (statesSupported) {
+      // We are sending full updates not diffs in this case
+      // We could also set the task.meta.hashDiff ot undefined on the hub?
+      return;
+    }
     const expectedHash = task.meta.hashDiff;
     let diffOrigTask = utils.getIntersectionWithDifferentValues(taskInStorage, taskCopy);
     if (diffOrigTask === undefined) {
@@ -835,9 +857,10 @@ const utils = {
         console.error("checkHashDiff hashDiff from remote", hashDiff);
       }
       diffOrigTask = utils.cleanForHash(diffOrigTask);
-      console.error("Local diffOrigTask", diffOrigTask);
+      console.error("Local diffOrigTask", JSON.stringify(diffOrigTask, null, 2));
       console.error("task.meta.hashDiffOrigTask", task.meta?.hashDiffOrigTask);
       console.error("taskInStorage:", taskInStorage);
+      console.error("taskCopy:", taskCopy);
       throw new Error("ERROR: Task hashDiff does not match messageId:" + task.meta.messageId + " local:" + localHash + " remote:" + expectedHash);
     } else {
       //console.log("checkHashDiff OK");
@@ -902,16 +925,15 @@ const utils = {
       delete taskCleaned.output;
       delete origTaskCleaned.output;
       const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
-       if (keysNulled) {
+      if (keysNulled) {
         //console.log("taskInProcessorOut keysNulled", keysNulled);
         task = utils.deepMerge(task, keysNulled);
       }
     }
     // This will use task.processor.origTask to identify the diff
     let diffTask = utils.processorDiff(task);
-    //console.log("taskInProcessorOut diffTask task.output", task.output);
     // Send the diff considering the latest task storage state
-    if (diffTask.instanceId) {
+    if (task.instanceId) {
       const lastTask = await getActiveTask_async(diffTask.instanceId);
       // The task storage may have been changed after task.processor.origTask was set
       //if (lastTask && lastTask.meta && lastTask.meta.hash !== diffTask.meta.hash) {
@@ -926,6 +948,7 @@ const utils = {
     } else {
       //console.log("taskInProcessorOut_async no diffTask.instanceId");
     }
+    //console.log("taskInProcessorOut diffTask", JSON.stringify(diffTask, null, 2));
     utils.debugTask(diffTask, "output");
     return diffTask;
   },
@@ -937,6 +960,9 @@ const utils = {
     delete task.hub;
     delete hub.id;
     task.processor = task.processor || {};
+    if (!task.processor.isCoprocessor) {
+      delete hub.statesSupported; // Copied from processor
+    }
     task.processor["command"] = hub.command;
     task.processor["commandArgs"] = hub.commandArgs || {};
     task.processor = utils.deepMerge(task.processor, hub);
@@ -1148,8 +1174,9 @@ const utils = {
       throw new Error("task.processor.id === 'rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
     }
 
-    if (task?.shared?.configTree) {
-      //logParts.push("DEBUGTASK configTree", task.shared.configTree);
+    if (task?.shared?.tasksConfigTree?.children) {
+      const title = task.shared.tasksConfigTree.children["root.user"].title;
+      logParts.push("DEBUGTASK tasksConfigTree children root.user title", title);
     }
     if (isBrowser) {
       logParts.push("task:", task);
@@ -1158,10 +1185,10 @@ const utils = {
       //logParts.push("DEBUGTASK tasksTree", task.state.tasksTree);
     }
     if (task?.meta?.hashDiffOrigTask) {
-      logParts.push("task.meta.hashDiffOrigTask:", JSON.stringify(task.meta.hashDiffOrigTask));
+      //logParts.push("task.meta.hashDiffOrigTask:", JSON.stringify(task.meta.hashDiffOrigTask));
     }
     if (task?.meta?.hashTask?.state?.current) {
-      logParts.push("task?.meta?.hashTask?.state?.current:", task?.meta?.hashTask?.state?.current);
+      //logParts.push("task?.meta?.hashTask?.state?.current:", task?.meta?.hashTask?.state?.current);
     }
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));

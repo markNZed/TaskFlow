@@ -8,7 +8,7 @@ import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import RequestError from './routes/RequestError.mjs';
 import taskStart_async from "./taskStart.mjs";
-import { haveCoProcessor } from "../config.mjs";
+import { haveCoprocessor } from "../config.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task, res) {
@@ -32,7 +32,7 @@ export async function commandStart_async(task, res) {
     }
     utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    if (haveCoProcessor) {
+    if (haveCoprocessor) {
       if (task.hub.coprocessingDone) {
         taskStart_async(initTask, authenticate, processorId, prevInstanceId)
           .then(async (startTask) => {

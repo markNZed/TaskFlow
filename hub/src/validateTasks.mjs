@@ -69,6 +69,7 @@ export const configSchema = yup.object()
   ceps: yup.object(),
   fsm: yup.object(),
   debug: yup.object(),
+  background: yup.boolean(),
 }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

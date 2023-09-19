@@ -13,9 +13,9 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs,
   let configTreeEvent; 
   if (T("processor.commandArgs.sync")) {
     //console.log("TaskSystemMenu_async", T("processor.commandArgs"));
-    if (T("meta.modified.shared.configTree")) {
+    if (T("meta.modified.shared.tasksConfigTree")) {
       configTreeEvent = true;
-      console.log("configTreeEvent found update to shared.configTree");
+      console.log("configTreeEvent found update to shared.tasksConfigTree");
     } else {
       return null; // Ignore sync operations
     }

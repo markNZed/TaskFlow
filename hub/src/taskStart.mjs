@@ -433,7 +433,7 @@ async function taskStart_async(
       prevTaskFamilyId = prevTask.familyId;
     }
     let isFirstUserTask = false;
-    if (isPrevSystemTask && prevTask.id.startsWith("root.user.")) {
+    if (isPrevSystemTask && task.id.startsWith("root.user.")) {
       isFirstUserTask = true;
     }
     if (isFirstUserTask) {
@@ -444,13 +444,12 @@ async function taskStart_async(
     let isFirstSystemTask = false;
     if (!prevTask && task.id.startsWith("root.system.")) {
       isFirstSystemTask = true;
-
     }
 
     // We need a shared familyId so task.shared works between system tasks
     if (isFirstSystemTask) {
-      utils.logTask(task, "Setting familyId to processorId", processorId);
-      task.familyId = processorId;
+      task.familyId = "system";
+      utils.logTask(task, "isFirstSystemTask setting familyId to", task.familyId);
     }
        
     if (task.config.oneFamily) {

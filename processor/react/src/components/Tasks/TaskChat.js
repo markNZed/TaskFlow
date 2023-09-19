@@ -59,7 +59,6 @@ const TaskChat = (props) => {
     transitionTo, 
     transitionFrom, 
     user,
-    onDidMount,
     componentName,
     checkLocked,
   } = props;
@@ -72,7 +71,7 @@ const TaskChat = (props) => {
   const [socketResponses, setSocketResponses] = useState([]);
 
   // onDidMount so any initial conditions can be established before updates arrive
-  onDidMount();
+  props.onDidMount();
 
   // Note that socketResponses may not (will not) be updated on every websocket event
   // React groups setState operations and I have not understood the exact criteria for this
@@ -91,6 +90,8 @@ const TaskChat = (props) => {
             case 'final':
               responseTextRef.current = text;
               break;
+            default:
+              console.error("Unknown mode " + mode);
           }
         }
         //console.log("TaskChat processResponses responseTextRef.current:", responseTextRef.current);
@@ -175,6 +176,8 @@ const TaskChat = (props) => {
           });
         }
         break;
+      case "configFunctionRequest":
+      case "configFunctionResponse":
       case "receiving":
         // Avoid looping due to modifyTask by checking if the text has changed
         if (responseText && responseText !== task.output.LLMResponse?.text) {

@@ -79,6 +79,7 @@ function Taskflows(props) {
           command: "start",
           commandArgs: {
             id: selectedTaskId,
+            prevInstanceId: taskMenu.instanceId, // This is a hack until Taskflows.js becomes a real task
           }
         });
         console.log("Taskflows start", selectedTaskId)

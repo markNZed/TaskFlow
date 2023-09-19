@@ -1,5 +1,32 @@
 /* ToDo
 ------
+How can we modify the service configurations? 
+  Would need to run a Task that can do that on the processor
+    Should be possible to base it on TaskSystemConfig
+      TaskServiceConfig
+      Would need to put the service config into Redis
+        Move serviceTypes into configdata.mjs
+Tasks dedicated to processor is another reason to have a single "node"
+statesSupported
+ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskSystemShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
+task.meta.modified does not look right
+Menu should not have shared.tasksConfigTree on React
+Why did it not like the value field of function being an object but could use string  -I guess because we returned a string for id?
+availableTokens accounting for messages?
+Limiting the size of prompts sent with functions is an issue
+https://pierce-lamb.medium.com/improving-gpt-4-function-calling-with-an-explanation-parameter-4fba06a4c6bb
+Add support for multiple hubs
+  Maybe switch to nodes first?
+Should error on lock conflict?
+->8N94mwl6 root.user.hubTasks.conversation.configchat.start 22329fc0-446f-4a61-a2d1-95367cbec029 CONFLICT Task lock conflict with rxjs-04e29730-b5c7-427b-8489-d829e6b27a44 command update locked by TF-react-7ae2e4e8-648c-4aad-95a1-8daa44c73515 0.0008666666666666666 minutes ago.
+->8N94mwl6 root.user.hubTasks.conversation.configchat.start 22329fc0-446f-4a61-a2d1-95367cbec029 Error in /hub/api/task 423 Task locked null
+hashdiff with functions not related to statesNotSupported
+statesNotSupported e.g. configFunctionRequest, configFunctionResponse
+stateSupported is being copied across onto other processors - probably through the hub ?
+  But the coprocessor needs to keep it
+  maybe the nodejs received is not yet in the processor state so its hash is out of Date
+    that would make sense but if we wait on the response that might not be apparent
+HashDiff is not working when using statesSupported?
 https://sdk.vercel.ai/
   https://github.com/vercel/ai/blob/main/examples/next-openai/app/api/chat-with-functions/route.ts
 There could be task.processors[environment]
@@ -8,9 +35,12 @@ Could add a check in schema to config.services that type must exist
 Maybe services should use approach like getFsmHolder_async
 OpenAI "chat" with the configurations
   function_call for access to service systemConfig
-  shared is updated by sync but that will not be routed to processor so state will be out of date
-    then we need a storage of task per processor
-    send entire object in this case not just diff
+    The function is called on nodejs but the service is implemented on rxjs
+      Need to be able to send a request
+        We have wsSendTask but how do we get the response?
+          Could also transition the state of the task
+            Need anohter call that waits on the response 
+              Could listen for an event - using rxjs
 Wrap https://github.com/mckaywrigley/chatbot-ui in a Task
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
@@ -115,7 +145,6 @@ Ant Design
   https://developer.okta.com/blog/2020/09/16/ant-design-react-app
   https://ant.design/theme-editor
 Made a request to https://pro.reactflow.dev
-Do we want getConfigHash ?
 Redis  
   A secondary index maps each attribute to a set of primary keys that have that attribute. 
   In Redis, you need to create a Redis Search index on your data before you can query it.

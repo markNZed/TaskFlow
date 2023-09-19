@@ -20,6 +20,7 @@ async function SubTaskLLM_async(wsSendTask, task, service) {
   const T = utils.createTaskValueGetter(taskCopy);
   let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;
+  params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
   //console.log("params.serviceConfig", params.serviceConfig);
   taskCopy.response.LLM = await callFunctionByName(service, functionName, params);
@@ -113,6 +114,13 @@ async function chatPrepare_async(T) {
     console.log("Found prompt in request.prompt");
     prompt = T("request.prompt");
     //console.log("Request.prompt " + prompt)
+  } 
+
+  let functions;
+  
+  if (serviceConfig.functions) {
+    console.log("Found functions in serviceConfig.functions");
+    functions = serviceConfig.functions;
   } 
 
   if (T("config.subtasks.SubTaskLLM.promptWithTime")) {
@@ -241,6 +249,7 @@ async function chatPrepare_async(T) {
     cacheKeySeed,
     dummyAPI,
     serviceConfig,
+    functions,
   };
 }
 

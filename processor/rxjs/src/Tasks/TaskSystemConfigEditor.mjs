@@ -5,20 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import _ from 'lodash';
 import { utils } from "../utils.mjs";
-import memoize from 'memoizee';
-
-// We have cacheStore_async provided by storage.mjs but experimenting with memoize
-// Can invalidate the memoize cache by changing configTreeTimestamp
-// eslint-disable-next-line no-unused-vars
-const m_buildTree_async = memoize(async (buildTree_async, targetStore, configTreeTimestamp) => {
-  const result = await buildTree_async(targetStore);
-  // To ensure changes to config that do not modify tree structure still set task.meta.modified.shared.configTree
-  result["timestamp"] = configTreeTimestamp; 
-  return result;
-}, { promise: true });
-
-let configTree;
-let configTreeTimestamp = Date();
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
@@ -132,21 +118,17 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
   
   switch (T("state.current")) {
     case "start": {
-      configTree = await m_buildTree_async(systemConfig.buildTree_async, targetStore, configTreeTimestamp);
-      T("shared.configTree", configTree);
-      T("state.current", "loaded");
-      T("command", "update");
       break;
     }
     case "loaded": {
       const action = T("request.action")
       const actionId = T("request.actionId");
-      let rebuildTree = true;
+      const actionTask = T("request.actionTask");
       utils.logTask("action:", action, "id:", actionId);
       if (action) {
         switch (action) {
           case "create": {
-            await systemConfig.create_async(targetStore, T("request.actionTask"));
+            await systemConfig.create_async(targetStore, actionTask);
             break;
           }
           case "read":{
@@ -156,11 +138,11 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
             ]);            
             T("response.task", requestedTask);
             T("response.taskDiff", diff);
-            rebuildTree = false;
             break;
           }
           case "update": {
-            const updatedTask = await systemConfig.update_async(targetStore, T("request.actionTask"));
+            await systemConfig.update_async(targetStore, actionTask);
+            const updatedTask = await systemConfig.read_async(targetStore, actionId);
             T("response.task", updatedTask);
             const diff = await parentDiff_async(targetStore, updatedTask);
             T("response.taskDiff", diff);
@@ -168,12 +150,6 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
           }
           case "delete": {
             await systemConfig.delete_async(targetStore, actionId);
-            // Find all the children in the branch
-            const children = systemConfig.getAllChildrenOfNode(actionId, configTree);
-            for (const child of children) {
-              //console.log("delete child ", child.id);
-              await systemConfig.delete_async(targetStore, child.id);
-            }
             break;
           }
           case "insert": {
@@ -192,12 +168,7 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
           default:
             throw new Error("unknown action:" + action);
         }
-        if (rebuildTree) {
-          configTreeTimestamp = Date();
-          configTree = await m_buildTree_async(targetStore, configTreeTimestamp);
-        }
         const taskUpdate = {
-          "shared.configTree": configTree,
           "state.current": "actionDone",
           "command": "update",
         };

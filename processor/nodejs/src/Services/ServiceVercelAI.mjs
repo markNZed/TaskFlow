@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { encode } from "gpt-3-encoder";
 import OpenAI from 'openai';
 // eslint-disable-next-line no-unused-vars
-import { OpenAIStream, StreamingTextResponse, streamToResponse } from 'ai';
+import { OpenAIStream } from 'ai';
 import { utils } from "../utils.mjs";
 import { cacheStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
@@ -65,6 +65,8 @@ async function openaigpt_async(params) {
     wsSendTask,
     cacheKeySeed,
     dummyAPI,
+    functions,
+    T,
   } = params;
 
   let {
@@ -140,7 +142,8 @@ async function openaigpt_async(params) {
   // Message can be sent from one of multiple sources
   function message_from(source, text, noStreaming, instanceId) {
     // Don't add ... when response is fully displayed
-    console.log("Response from " + source + " : " + text.slice(0, 80) + " ...");
+    const shortText = text ? text.slice(0, 80) : "";
+    console.log("Response from " + source + " : " + shortText + " ...");
     const response = {partial: {text: text, mode: "final" }};
     const partialTask = {
       instanceId: instanceId, 
@@ -158,7 +161,12 @@ async function openaigpt_async(params) {
 
   if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
     let text = cachedValue.text;
-    const words = text.split(" ");
+    let words = [];
+    if (typeof text === "string") {
+      words = text.split(" ");
+    } else {
+      console.warn("cachedValue.text is not a string. Cannot split into words.");
+    }
     // call SendIncrementalWs for pairs of word
     let partialText = "";
     for (let i = 0; i < words.length; i += 2) {
@@ -210,28 +218,85 @@ async function openaigpt_async(params) {
       }
       messages.unshift(systemMessageElement);
       messages.push(promptElement);
+      const mappedMessages = messages.map((message) => ({
+        role: message.role,
+        content: message.content || message.text, // mapping text -> content
+        function_call: message.function_call,
+        name: message.name,
+      }));
       // Need to build messages from systemMessage, messages, prompt
-      console.log("messages", messages);
+      console.log("mappedMessages", mappedMessages);
       try {
         const response = await openai.chat.completions.create({
           model: modelVersion,
           stream: true,
           // messages, maybe need to do this explicitly if using sendExtraMessageFields
           // https://github.com/vercel/ai/issues/551
-          messages: messages.map((message) => ({
-            role: message.role,
-            content: message.text, // mapping text -> content
-            function_call: message.function_call,
-            name: message.name,
-          })),
+          messages: mappedMessages,
+          functions,
+          function_call: "auto",
         });
-        console.log("response", response);
+        //console.log("response", response);
         // eslint-disable-next-line no-unused-vars
         response_text_promise = new Promise((resolve, reject) => {
           // eslint-disable-next-line no-unused-vars
           let partialText = "";
           const stream = OpenAIStream(response, {
             onStart: async () => {},
+            experimental_onFunctionCall: async (
+              { name, arguments: args },
+              createFunctionCallMessages,
+            ) => {
+              console.log("experimental_onFunctionCall", name, args);
+              // if you skip the function call and return nothing, the `function_call`
+              // message will be sent to the client for it to handle
+              let newMessages = createFunctionCallMessages({result: `Unknown function ${name}`});
+              switch (name) {
+                case 'get_task': {
+                  newMessages = createFunctionCallMessages({task:T()});
+                  break;
+                }
+                case 'get_task_paths': {
+                  const paths = getObjectPaths(T());
+                  newMessages = createFunctionCallMessages({paths});
+                  break;
+                }
+                case 'get_current_task_value': {
+                  newMessages = createFunctionCallMessages({[args.path]: T(args.path)});
+                  break;
+                }
+                default: {
+                  try {
+                    T("request.action", name);
+                    T("request.actionId", args.id);
+                    T("request.actionPath", args.path);
+                    T("request.actionValue", args.value);
+                    T("request.actionTargetConfig", args.targetConfig);
+                    T("request.actionTask", args.task);
+                    T("request.functionArgs", args);
+                    T("state.current", "configFunctionRequest");
+                    T("command", "update");
+                    T("commandArgs", {lockBypass: true});
+                    const updatedTask = await wsSendTask(T(), "configFunctionResponse");
+                    //console.log(`${name} updatedTask`, updatedTask);
+                    newMessages = createFunctionCallMessages({label: updatedTask?.response?.functionResult});
+                  } catch (error) {
+                    console.error("An error occurred while processing get_parent_task_label:", error);
+                    newMessages = createFunctionCallMessages({label: "Undefined because function failed"});
+                  }
+                  break;
+                }
+              }
+              console.log("newMessages", newMessages);
+              // Should check the token limits here
+              return openai.chat.completions.create({
+                messages: [...mappedMessages, ...newMessages],
+                stream: true,
+                model: modelVersion,
+                functions,
+                function_call: "auto",
+              });
+            },
             onToken: async (token) => {
               // This callback is called for each token in the stream
               // You can use this to debug the stream or save the tokens to your database
@@ -240,16 +305,18 @@ async function openaigpt_async(params) {
               const partialResponse = { delta: token, text: partialText };
               SendIncrementalWs(wsSendTask, partialResponse, instanceId);
             },
-            //onFinal: async (completion) => {},
-            onCompletion: async (completion) => {
-              // This callback is called when the stream completes
-              //console.log("onCompletion", completion);
+            onFinal: async (completion) => {
+              console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {
                 cacheStore_async.set(computedCacheKey, completion);
                 console.log("cache stored key ", computedCacheKey);
               }
               resolve(completion);
+            },
+            onCompletion: async (completion) => {
+              // This callback is called when the stream completes
+              console.log("onCompletion", completion);
             }
           })
           // This is a way to pull from the stream so the callbacks to OpenAIStream get called
@@ -277,6 +344,22 @@ async function openaigpt_async(params) {
   }
   console.log("response_text_promise", response_text_promise);
   return response_text_promise;
+}
+
+function getObjectPaths(obj, currentPath = '', result = []) {
+  for (const key in obj) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (obj.hasOwnProperty(key)) {
+      const newPath = currentPath ? `${currentPath}.${key}` : key;
+      
+      if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+        getObjectPaths(obj[key], newPath, result);
+      } else {
+        result.push(newPath);
+      }
+    }
+  }
+  return result;
 }
 
 // eslint-disable-next-line no-unused-vars
