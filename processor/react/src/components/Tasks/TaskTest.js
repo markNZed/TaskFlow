@@ -166,11 +166,9 @@ function TaskTest(props) {
     let newValue;
     const msg = "queryUI id:" + id;
     query = "#TaskTest " + query; // Scope the queries within the TaskTest div
-    if (debug) {console.log(msg, "queryUI", query);}
-    if (!document.contains(element)) {
-      if (debug) {console.log(msg, "Failed to find document.querySelector(" + query + ")");}
-      queriesRef.current[id].element = document.querySelector(query);
-    }
+    if (debug) {console.log(msg, "queryUI", query, "field:", field)}
+    // Ran into an issue with caching queriesRef so we run document.querySelector each time
+    queriesRef.current[id].element = document.querySelector(query);
     element = queriesRef.current[id].element;
     if (element) {
       newValue = element[field];
