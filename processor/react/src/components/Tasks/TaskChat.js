@@ -11,7 +11,6 @@ import { utils } from "../../utils/utils.mjs";
 import PromptDropdown from "./TaskChat/PromptDropdown";
 import send from "../../assets/send.svg";
 import { v4 as uuidv4 } from "uuid";
-import { Description } from "@mui/icons-material";
 
 /*
 Task Function
@@ -70,9 +69,50 @@ const TaskChat = (props) => {
   const textareaRef = useRef();
   const formRef = useRef();
   const [socketResponses, setSocketResponses] = useState([]);
+  const maxHistorySize = 100; 
+  const [chatHistory, setChatHistory] = useState(() => {
+    const loadedHistory = JSON.parse(localStorage.getItem('chatHistory' + task.id) || '[]');
+    return loadedHistory.slice(-maxHistorySize);
+  });
+  const historyIndexRef = useRef(0);
+  const partialInputRef = useRef("");
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
+
+  useEffect(() => {
+    const trimmedHistory = chatHistory.slice(-maxHistorySize);
+    localStorage.setItem('chatHistory' + task.id, JSON.stringify(trimmedHistory));
+  }, [chatHistory]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIndexRef.current < chatHistory.length) {
+          // Save the current partial input before going to the history
+          historyIndexRef.current++;
+          modifyTask({"input.promptText": chatHistory[chatHistory.length - historyIndexRef.current]});
+        }
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndexRef.current > 0) {
+          historyIndexRef.current--;
+          modifyTask({"input.promptText": chatHistory[chatHistory.length - historyIndexRef.current]});
+        } else {
+          // Restore the partial input if we're back at the latest message
+          modifyTask({"input.promptText": partialInputRef.current});
+        }
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+  
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [chatHistory]);
 
   // Note that socketResponses may not (will not) be updated on every websocket event
   // React groups setState operations and I have not understood the exact criteria for this
@@ -183,6 +223,11 @@ const TaskChat = (props) => {
             "request.prompt": task.input.promptText,
             "commandArgs": { "lock": true },
             "command": "update",
+          });
+          setChatHistory(prevChatHistory => {
+            const newChatHistory = [...prevChatHistory, task.input.promptText];
+            // trim the history array if it exceeds the limit
+            return newChatHistory.slice(-maxHistorySize);
           });
         }
         break;
@@ -304,6 +349,7 @@ const TaskChat = (props) => {
           rows="1"
           cols="1"
           onChange={(e) => {
+            partialInputRef.current = e.target.value;
             modifyTask({"input.promptText": e.target.value});
           }}
           onKeyDown={(e) => {

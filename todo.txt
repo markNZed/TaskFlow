@@ -1,6 +1,6 @@
 /* ToDo
 -------
-Menu scrolling is messed up when chat extendds beyond window
+Menu scrolling is messed up when chat extends beyond window
 gpt-3.5-turbo-instruct is a completion model (single-turn tasks)
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
