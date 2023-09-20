@@ -1,7 +1,13 @@
 /* ToDo
 -------
-Chat prompt expands the height beyond the full height
-Menu scrolling is messed up when chat extends beyond window
+OnCompletion of ServiceVercelAI could update the messages
+  Needs a callback ? onNewMessage
+    TaskChat can then send an update with new message appended
+Functions return messages which changes the API
+Add the user object only if it has changed
+  If the task is collaborative then the user should be associated with task.processor?
+    Then do not need to send all the time
+https://en.wikipedia.org/wiki/Barbara_J._Grosz
 gpt-3.5-turbo-instruct is a completion model (single-turn tasks)
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor

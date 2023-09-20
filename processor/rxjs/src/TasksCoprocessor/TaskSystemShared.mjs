@@ -51,7 +51,13 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
     if (task.processor.coprocessing && task?.meta?.modified?.shared !== undefined) {
       utils.logTask(task, "command:", task.processor.command, "commandArgs:", task.processor.commandArgs);
       let toSync = {};
-      const varNames = Object.keys(task.meta.modified.shared);
+      let varNames;
+      if (task.processor.command === "init") {
+        varNames = Object.keys(task.shared);
+      } else {
+        varNames = Object.keys(task.meta.modified.shared);
+      }
+      console.log("CEPShared varNames", varNames);
       for (const varName of varNames) {
         const sharedEntry = await sharedStore_async.get(varName) || {};
         utils.logTask(task, "task.shared varName", varName);

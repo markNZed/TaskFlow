@@ -157,7 +157,7 @@ async function openaigpt_async(params) {
     }
   }
 
-  let response_text_promise = Promise.resolve("");
+  let response_text_promise = Promise.resolve(["", []]);
 
   if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
     let text = cachedValue;
@@ -183,7 +183,7 @@ async function openaigpt_async(params) {
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
-    response_text_promise = Promise.resolve(text);
+    response_text_promise = Promise.resolve([text, []]);
   } else {
     // Need to return a promise
     if (dummyAPI) {
@@ -206,8 +206,9 @@ async function openaigpt_async(params) {
         await sleep(80);
       }
       message_from("Dummy API", text, noStreaming, instanceId);
-      response_text_promise = Promise.resolve(text);
+      response_text_promise = Promise.resolve([text, []]);
     } else {
+      // Need to build messages from systemMessage, messages, prompt
       const systemMessageElement = {
         role: "system",
         text: systemMessage,
@@ -224,8 +225,8 @@ async function openaigpt_async(params) {
         function_call: message.function_call,
         name: message.name,
       }));
-      // Need to build messages from systemMessage, messages, prompt
-      console.log("mappedMessages", mappedMessages);
+      let newMessages = [];
+      //console.log("mappedMessages", mappedMessages);
       try {
         let options = {
           model: modelVersion,
@@ -253,7 +254,7 @@ async function openaigpt_async(params) {
               console.log("experimental_onFunctionCall", name, args);
               // if you skip the function call and return nothing, the `function_call`
               // message will be sent to the client for it to handle
-              let newMessages = createFunctionCallMessages({result: `Unknown function ${name}`});
+              newMessages = createFunctionCallMessages({result: `Unknown function ${name}`});
               switch (name) {
                 case 'get_task': {
                   newMessages = createFunctionCallMessages({task:T()});
@@ -290,8 +291,9 @@ async function openaigpt_async(params) {
                   break;
                 }
               }
-              console.log("newMessages", newMessages);
+              //console.log("newMessages", newMessages);
               // Should check the token limits here
+              console.log("Extending newMessages", newMessages);
               return openai.chat.completions.create({
                 messages: [...mappedMessages, ...newMessages],
                 stream: true,
@@ -309,18 +311,19 @@ async function openaigpt_async(params) {
               SendIncrementalWs(wsSendTask, partialResponse, instanceId);
             },
             onFinal: async (completion) => {
+              console.log("final mappedMessages", mappedMessages);
               console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {
                 cacheStore_async.set(computedCacheKey, completion);
                 console.log("cache stored key ", computedCacheKey);
               }
-              resolve(completion);
+              resolve([completion, newMessages]);
             },
             // eslint-disable-next-line no-unused-vars
             onCompletion: async (completion) => {
-              // This callback is called when the stream completes
-              //console.log("onCompletion", completion);
+              // This callback is called after each response from the model (e.g. function call)
+              console.log("onCompletion", completion);
             }
           })
           // This is a way to pull from the stream so the callbacks to OpenAIStream get called
@@ -342,7 +345,7 @@ async function openaigpt_async(params) {
           text = `OpenAI.APIError ${name} ${status} ${headers} ${message}`;
         }
         message_from("API", text, noStreaming, instanceId);
-        response_text_promise = Promise.resolve(text);
+        response_text_promise = Promise.resolve([text, []]);
       }
     }
   }
@@ -368,8 +371,8 @@ function getObjectPaths(obj, currentPath = '', result = []) {
 
 // eslint-disable-next-line no-unused-vars
 async function openaistub_async(params) {
-  let response_text_promise = Promise.resolve("");
-  response_text_promise = Promise.resolve("test text");
+  const newMessages = [];
+  let response_text_promise = Promise.resolve(["test text", newMessages]);
   return response_text_promise;
 }
 

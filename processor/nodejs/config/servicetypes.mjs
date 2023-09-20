@@ -209,7 +209,7 @@ const servicetypes = [
       },
       {
         name: 'get_current_task_value',
-        description: 'Get a value from the the current task object',
+        description: 'Get a value of the the current task object',
         parameters: {
           type: 'object',
           properties: {
@@ -221,11 +221,11 @@ const servicetypes = [
       },
       {
         name: 'get_task_value',
-        description: 'Get a value from the the current task object',
+        description: 'Get a value from a task object',
         parameters: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'The id of the object to paste' },
+            id: { type: 'string', description: 'The id of the task object' },
             path: { type: 'string', description: 'The path of the property. A dot separated path e.g. "config.useCache"' },
             explanation: { type: "string", description: "A short explanation of why this function was called"},
           },

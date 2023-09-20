@@ -92,6 +92,9 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, services) {
     //case "receiving":
       const subTask = await SubTaskLLM_async(wsSendTask, T(), service);
       T("response.LLMResponse", subTask.response.LLM);
+      if (subTask.response.newMessages && subTask.response.newMessages.length) {
+        T("response.newMessages", subTask.response.newMessages);
+      }
       T("state.current", "received");
       T("commandArgs.lockBypass", true);
       T("command", "update");

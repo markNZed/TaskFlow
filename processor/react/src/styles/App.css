@@ -84,7 +84,7 @@ body {
   /* padding: 24px; */
 
   overflow-y: scroll;
-  padding-bottom: 24px;
+  /*padding-bottom: 24px;*/
 
   display: flex;
   flex-direction: column;
@@ -98,7 +98,7 @@ body {
   text-align: left;
 
   height: 100%;
-  margin-bottom: 24px;
+  /*margin-bottom: 24px;*/
 }
 
 /* hides scrollbar */
@@ -108,6 +108,7 @@ body {
 
 #chat-input {
   max-height: 33vh;
+  padding-top: 24px;
   overflow-y: auto;
 }
 

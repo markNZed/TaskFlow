@@ -223,8 +223,9 @@ const tasks = [
       local: {
         suggestedPrompts: [
           "What is the id of the parent of this task?",
-          "What is the label of the parent of this task?",
-          "Please update the label of the parent of the current task to ConfigXXX.",
+          "What is the path of the label of a task and how did you decide?",
+          "What is the 'label' of the parent of this task?",
+          "Please update the label of the parent of the current task to ConfigXXX and describe how you did this",
         ]
       },
       /* // Not working?

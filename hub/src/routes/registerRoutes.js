@@ -82,6 +82,9 @@ router.post("/", async (req, res) => {
   activeProcessors.forEach(item => {
     activeEnvironments.push(...item.environments);
   });
+  activeCoprocessors.forEach(item => {
+    activeEnvironments.push(...item.environments);
+  });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
 
   // Do not autostart task until after the coprocessor has started
@@ -97,17 +100,30 @@ router.post("/", async (req, res) => {
     console.log("Checking autostart for task", taskId);
     const autoStartEnvironment = autoStartTask.startEnvironment;
     let startEnvironments = autoStartTask.startEnvironments;
-    if (environments.includes(autoStartEnvironment)) {
+    if (activeEnvironments.includes(autoStartEnvironment)) {
       //console.log("environments.includes(autoStartEnvironment)");
       let allEnvironmentsAvailable = true;
       // get the environments for this task
       // Is each startEnvironment avialable in environments ?
       startEnvironments.forEach(startEnvironment => {
-        if (!environments.includes(startEnvironment)) {
+        if (!activeEnvironments.includes(startEnvironment)) {
           //console.log("startEnvironment " + startEnvironment + " not available", environments);
           allEnvironmentsAvailable = false;
         }
       })
+      // If we have already started the task then we should only restart it if the particular
+      // processor ergisteirng now includes all startEnvironments
+      // This was added because if the coprocessor has not started then we will not autostart
+      // Then when the coprocessor starts allEnvironmentsAvailable will be true
+      // We want to start the task once in that case not every time any processor is registered.
+      if (autoStartTask.started) {
+        startEnvironments.forEach(startEnvironment => {
+          if (!environments.includes(startEnvironment)) {
+            //console.log("startEnvironment " + startEnvironment + " not available", environments);
+            allEnvironmentsAvailable = false;
+          }
+        })
+      }
       if (allEnvironmentsAvailable) {
         //console.log("allEnvironmentsAvailable");
         const initTask = {
@@ -125,16 +141,19 @@ router.post("/", async (req, res) => {
         task.hub["sourceProcessorId"] = "hub";
         task["processor"] = {};
         task["processor"]["id"] = processorId;
-        //console.log("Autostarting task ", task);
+        console.log("Autostarting task ", taskId);
         commandStart_async(task);
         if (autoStartTask.once) {
           await autoStartTasksStore_async.delete(taskId);
+        } else {
+          autoStartTask["started"] = true;
+          await autoStartTasksStore_async.set(taskId, autoStartTask);
         }
       } else {
         //console.log("Not autostarting task allEnvironmentsAvailable false");
       }
     } else {
-      // console.log("Not autostarting task environments",environments, "does not include " + autoStartEnvironment);
+      //console.log("Not autostarting task autoStartEnvironment", autoStartEnvironment, "not in", activeEnvironments);
     }
   }
   console.log(countAutoStartTasks + " autostart tasks");

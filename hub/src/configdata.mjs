@@ -365,4 +365,6 @@ Object.keys(tasks).forEach(key => {
   fromTask(task);
 });
 
+//console.log("autoStartTasks", JSON.stringify(autoStartTasks, null,2));
+
 export { users, groups, tasktypes, tasks, autoStartTasks };

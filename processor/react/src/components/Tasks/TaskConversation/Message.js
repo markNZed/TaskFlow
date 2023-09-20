@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import gfm from 'remark-gfm';
+import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight';
 import Icon from "./Icon";
 import "highlight.js/styles/xcode.css";
@@ -55,10 +55,142 @@ const CodeBlockWithCopy = ({ node }) => {
   );
 };
 
+function findJSONIndexes(str, startIdx) {
+  let openBrackets = 0;
+  let closeBrackets = 0;
+  let openQuote = false;
+  let openSingleQuote = false;
+  let escapedOpenQuote = false;
+  let escapedOpenSingleQuote = false;
+  let startJSON = -1;
+  let endJSON = -1;
+  let lastChar;
+  let opened = [];
+
+  for (let i = startIdx; i < str.length; i++) {
+      if (str[i] === '{') {
+        if (!openQuote && !openSingleQuote) {
+          if (startJSON === -1 ) {
+            startJSON = i;
+          }
+          openBrackets++;
+        } else if (startJSON !== -1 ) {
+          opened.push('}')
+        }
+      }
+
+      if (str[i] === '}') {
+        if (!openQuote && !openSingleQuote) {
+          closeBrackets++;
+        } else if (startJSON !== -1 ) {
+          opened.pop()
+        }
+      }
+
+      if (startJSON > -1 && str[i] === '"') {
+        if (lastChar === '\\') {
+          if (escapedOpenQuote) {
+            opened.pop();
+          } else {
+            opened.push('\\"');
+          }
+          escapedOpenQuote = !escapedOpenQuote;
+        } else {
+          if (openQuote) {
+            opened.pop();
+          } else {
+            opened.push('"');
+          }
+          openQuote = !openQuote;
+        }
+      }
+
+      if (startJSON > -1 && str[i] === "'") {
+        if (lastChar === '\\') {
+          if (escapedOpenSingleQuote) {
+            opened.pop();
+          } else {
+            opened.push("\\'");
+          }
+          escapedOpenSingleQuote = !escapedOpenSingleQuote;
+        } else {
+          if (openSingleQuote) {
+            opened.pop();
+          } else {
+            opened.push("'");
+          }
+          openSingleQuote = !openSingleQuote;
+        }
+      }
+
+      lastChar = str[i];
+      if (startJSON !== -1 && openBrackets === closeBrackets) {
+          endJSON = i;
+          break;
+      }
+  }
+
+  if (startJSON !== -1 && endJSON === -1) {
+    opened.reverse().forEach( el => {
+      str += el;
+    }) 
+    for (let i = 0; i < (openBrackets - closeBrackets); i++) {
+      str += '}';
+    }
+    endJSON = str.length - 1;
+  }
+
+
+  if (startJSON !== -1 && endJSON !== -1) {
+      //console.log("findJSONIndexes str", str);
+      return [str, startJSON, endJSON];
+  }
+
+  return null;
+}
+
 const Message = ({ role, user, text, sending, id }) => {
   if (!role || !user || !id) {
     console.error("Message missing ", role, user, text, sending, id);
   }
+  //console.log("Message text", text);
+  // match function_call result
+
+  if (!text) {
+    text = "";
+  }
+
+  console.log("Message to display", text);
+
+  const [newText, startIdx, endIdx] = findJSONIndexes(text, 0) || [];
+
+  if (typeof startIdx === 'number' && typeof endIdx === 'number') {
+    text = newText;
+    const before = text.substring(0, startIdx);
+    const functionCallStr = text.substring(startIdx, endIdx + 1);
+    const after = text.substring(endIdx + 1);
+    //console.log("before", before, "functionCallStr", functionCallStr, "after", after);
+  
+    try {
+      // Parse the JSON and unescape the arguments
+      const functionCallObj = JSON.parse(functionCallStr);
+      try {
+        functionCallObj.function_call.arguments = JSON.parse(functionCallObj.function_call.arguments);
+      } catch (error) {}
+    
+      // Re-serialize to JSON
+      const replacedFunctionCall = JSON.stringify(functionCallObj, null, 2);
+    
+      // Combine it all together
+      text = `${before}\n\`\`\`json\n${replacedFunctionCall}\n\`\`\`\n${after}`;
+      console.log("Message after expanding JSN object", text);
+    } catch (error) {
+      console.log('Failed to parse JSON:', error);
+    }
+  } else {
+    console.log('Could not find JSON object.');
+  }
+
 
   return (
     <div className={`wrapper ${role === "assistant" && "ai"}`}>
@@ -68,8 +200,8 @@ const Message = ({ role, user, text, sending, id }) => {
           <div className="dot-typing"></div>
         ) : (
           <div className="message">
-            <ReactMarkdown 
-              remarkPlugins={[gfm]}
+            <ReactMarkdown
+              remarkGfm={[remarkGfm]}
               rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
               components={{
                 code({ node, inline, className, children, ...props }) {
