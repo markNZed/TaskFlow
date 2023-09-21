@@ -113,12 +113,19 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
             utils.logTask(task, "CEPShared task.instanceId === instanceId so skipping");
             continue;
           }
-          let syncDiff = {};
-          syncDiff["shared"] = toSync[instanceId];
-          syncDiff["instanceId"] = instanceId;
+          let syncUpdateTask = {
+            command: "update",
+            commandArgs: {
+              sync: true,
+              instanceId: instanceId,
+              syncTask: {
+                shared: toSync[instanceId],
+              }
+            }
+          };
           // Create a new Promise for each instance and push it to the promises array
           promises.push(
-            commandUpdate_async(wsSendTask, task, syncDiff, true).then(() => {
+            commandUpdate_async(wsSendTask, syncUpdateTask).then(() => {
               utils.logTask(task, "CEPShared updating with sync instanceId:", instanceId);
             })
           );

@@ -6,10 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import RequestError from './routes/RequestError.mjs';
 import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async } from "./storage.mjs";
-import { commandUpdate_async } from "./commandUpdate.mjs";
-import { commandStart_async } from "./commandStart.mjs";
-import { commandInit_async } from "./commandInit.mjs";
-import { commandError_async } from "./commandError.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
 import { haveCoprocessor } from "../config.mjs";
@@ -232,24 +228,7 @@ async function processOutput_async(task, outputStore) {
   return task;
 }
 
-async function processCommand_async(task, res) {
-  utils.debugTask(task);
-  const command = task.hub.command;
-  switch (command) {
-    case "init":
-      return await commandInit_async(task, res);
-    case "start":
-      return await commandStart_async(task, res);
-    case "update":
-      return await commandUpdate_async(task, res);
-    case "error":
-      return await commandError_async(task, res);
-    default:
-      throw new Error("Unknown command " + command);
-  }
-}
-
-async function taskProcess_async(task, req, res) {
+async function taskProcess_async(task, req) {
   try {
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task");
@@ -300,11 +279,6 @@ async function taskProcess_async(task, req, res) {
       }
       task = await processError_async(task, tasksStore_async);
     }
-    // Deep copy
-    let error;
-    if (task.error) {
-      error = JSON.parse(JSON.stringify(task.error));
-    }
     if (task.hub.command === "update" || task.hub.command === "init") {
       // We may receive a diff where familyId is not sent but
       // we need familyId to set the outputStore_async
@@ -321,36 +295,13 @@ async function taskProcess_async(task, req, res) {
       }
       await taskSync_async(task.instanceId, task);
       return null;
-    // If HTTP without coprocessing then we return (this is no longer used)
-    } else if (res) {
-      utils.logTask(task, "processCommand_async");
-      const result = await processCommand_async(task, res);
-      if (error !== undefined) {
-        // Maybe throw from here ?
-        utils.logTask(task, "Error in /hub/api/task " + error);
-        if (res) {
-          res.status(500).json({ error: error });
-        }
-      } else {
-        if (res) {
-          res.status(200).json(result);
-        }
-      }
     }
   } catch (err) {
     if (err instanceof RequestError) {
       utils.logTask(task, "Error in /hub/api/task " + err.code + " " + err.message, err.origError);
-      if (res) {
-        res.status(err.code).send(err.message);
-      }
     } else {
       utils.logTask(task, "Error in /hub/api/task " + err.message, task);
       throw err;
-      /*
-      if (res) {
-        res.status(500).json({ error: "Error in /hub/api/task " + err.message });
-      }
-      */
     }
   }
   return task;

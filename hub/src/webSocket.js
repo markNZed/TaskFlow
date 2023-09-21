@@ -226,38 +226,37 @@ function initWebSocketServer(server) {
             }
             task.hub["coprocessingDone"] = true;
           }
-          // Updates through WS can only come from RxJS for now
-          if (task.hub.command === "update") {
-            utils.logTask(task, "WS update from:" + task.hub.sourceProcessorId);
-            commandUpdate_async(task);
-          }
-          if (task.hub.command === "start") {
-            utils.logTask(task, "WS start from:" + task.hub.sourceProcessorId);
-            commandStart_async(task);
-          }
-          if (task.hub.command === "init") {
-            utils.logTask(task, "WS init from:" + task.hub.sourceProcessorId);
-            commandInit_async(task);
-          }
-          if (task.hub.command === "error") {
-            utils.logTask(task, "WS error from:" + task.hub.sourceProcessorId);
-            commandError_async(task);
-          }
-          if (task.hub.command === "partial") {   
-            for (const id of activeTaskProcessors) {
-              if (id !== processorId) {
-                const processorData = activeProcessors.get(id);
-                if (processorData && processorData.commandsAccepted.includes(task.hub.command)) {
-                  const ws = connections.get(id);
-                  if (!ws) {
-                    utils.logTask(task, "Lost websocket for ", id, connections.keys());
-                  } else {
-                    //utils.logTask(task, "Forwarding " + task.hub.command + " to " + id + " from " + processorId)
-                    wsSendTask(task, id);
+          switch (task.hub.command) {
+            case "init":
+              commandInit_async(task);
+              break;
+            case "start":
+              commandStart_async(task);
+              break;
+            case "update":
+              commandUpdate_async(task);
+              break;
+            case "error":
+              commandError_async(task);
+              break;
+            case "partial":
+              for (const id of activeTaskProcessors) {
+                if (id !== processorId) {
+                  const processorData = activeProcessors.get(id);
+                  if (processorData && processorData.commandsAccepted.includes(task.hub.command)) {
+                    const ws = connections.get(id);
+                    if (!ws) {
+                      utils.logTask(task, "Lost websocket for ", id, connections.keys());
+                    } else {
+                      //utils.logTask(task, "Forwarding " + task.hub.command + " to " + id + " from " + processorId)
+                      wsSendTask(task, id);
+                    }
                   }
                 }
               }
-            }
+              break;
+            default:
+              throw new Error("Unknown command " + task.hub.command);
           }
         }
       }

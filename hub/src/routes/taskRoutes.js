@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
   let userId = utils.getUserId(req);
   if (userId) {
     let task = req.body.task;
-    task = await taskProcess_async(task, req, res);
+    await taskProcess_async(task, req, res);
   } else {
     console.log("No user");
     res.status(500).json({ error: "No user" });

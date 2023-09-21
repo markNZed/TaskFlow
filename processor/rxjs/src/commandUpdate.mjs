@@ -9,26 +9,28 @@ import { utils } from "./utils.mjs";
 import { processorId, COPROCESSOR } from "../config.mjs";
 import { taskLock } from './shared/taskLock.mjs';
 
-export async function commandUpdate_async(wsSendTask, task, diff, sync = false) { 
-  utils.logTask(task, "commandUpdate_async task.instanceId:", task.instanceId, "diff.instanceId:", diff?.instanceId, "sync:", sync);
+export async function commandUpdate_async(wsSendTask, task) { 
+  utils.logTask(task, "commandUpdate_async task.instanceId:", task.instanceId, "task.commandArgs:", task.commandArgs);
   //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
   let mergedTask = {}
   // Deep copy task.processor to avoif changes to task that was passed in
+  const commandArgs = task.commandArgs || {};
+  const sync = commandArgs.sync;
+  const syncTask = commandArgs.syncTask;
+  const syncInstanceId = commandArgs.instanceId
   if (sync) {
-    if (!diff.instanceId) {
-      console.log("commandUpdate_async assuming that we are syncing self")
-      diff["instanceId"] = task.instanceId
+    if (!syncInstanceId) {
+      console.error("Missing syncInstanceId", task);
+      throw new Error("Missing syncInstanceId");
     }
-    await taskLock(diff.instanceId, "commandUpdate_async");
-    mergedTask["instanceId"] = diff["instanceId"]
+    await taskLock(syncInstanceId, "commandUpdate_async");
+    mergedTask["instanceId"] = syncInstanceId;
     mergedTask["command"] = "update";
     mergedTask["commandArgs"] = {
-      syncTask: JSON.parse(JSON.stringify(diff)),
+      syncTask: syncTask,
       sync: true,
       lockBypass: true, // Could enforce this on the hub when sync is true
     };
-    //delete mergedTask.commandArgs.syncTask.command;
-    //delete mergedTask.commandArgs.syncTask.commandArgs;
     mergedTask["meta"] = {};
     mergedTask["processor"] = {};
     mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged

@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { setActiveTask_async, getActiveTask_async, activeProcessors } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
-import RequestError from './routes/RequestError.mjs';
 import { utils } from "./utils.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
@@ -51,7 +50,7 @@ async function errorTask_async(task) {
   }
 }
 
-export async function commandError_async(task, res) {
+export async function commandError_async(task) {
   try {
     utils.logTask(task, "errorCommnad_async " + task.id);
     const activeTask = await getActiveTask_async(task.instanceId);
@@ -71,10 +70,6 @@ export async function commandError_async(task, res) {
   } catch (error) {
     const msg = `Error commandError_async task ${task.id}: ${error.message}`;
     console.error(msg);
-    if (res) {
-      throw new RequestError(msg, 500, error);
-    } else {
-      throw new Error(error);
-    }
+    throw new Error(error);
   }
 }

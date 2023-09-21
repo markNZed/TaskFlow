@@ -57,7 +57,6 @@ The `task.meta.lock` is not considered for `sync` commands.
 
 Tasks are configured as a Javascript object in in hub/config/tasks.mjs A task can refer to a parent with `parentName` which will search for a task that was previously defined with this name. Note that the same name could be used in different positions of the task hierarchy, in which case the task most recently configured will match. A `meta.childrenIds` array can be used to specify the id of one or more `task.id` and this allows for a task to reuse part of an existing task sequence, for example, TaskTest can be placed above a task to test the behavior of the task without that task configuration mentioning TaskTest.
 
-
 task.commands:
 * start
 * init
@@ -166,6 +165,8 @@ v03:
 * permissions -> groupAccess
 * error -> an object with type and message and stack (or just a free-form object)
 * Task processor timezone
+* task.processors[environment] would allow inititialisation of task.processor for a given environment e.g. configuring task.processor.statesSupported
+* Could add a check in schema to config.services that type + environments must exist
 
 ### Task Processor
 

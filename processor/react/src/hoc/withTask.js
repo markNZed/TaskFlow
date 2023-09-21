@@ -497,9 +497,9 @@ function withTask(Component) {
       utils.setNestedProperties(modification);
       //console.log("modifyTask after modification", JSON.stringify(modification));
       props.setTask((prevState) => {
-        const res = utils.deepMerge(prevState, modification, debug);
-        //console.log("utils.deepMerge", res);
-        return res;
+        const result = utils.deepMerge(prevState, modification, debug);
+        //console.log("utils.deepMerge", result);
+        return result;
       });
     }
 

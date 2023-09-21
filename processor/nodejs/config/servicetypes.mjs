@@ -7,6 +7,7 @@ const servicetypes = [
     moduleName: "ServiceVercelAI",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     //modelVersion: 'gpt-4-0613', // Should understand functions
+    //modelVersion: 'gpt-3.5-turbo-instruct', //a completion model (single-turn tasks)
     temperature: 0,
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context

@@ -6,28 +6,19 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "./utils.mjs";
 import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
-import RequestError from './routes/RequestError.mjs';
 import { taskRelease } from './shared/taskLock.mjs';
 
-export async function commandInit_async(task, res) {
+export async function commandInit_async(task) {
   let processorId = task.hub.sourceProcessorId;
   try {
     utils.logTask(task, "commandInit_async id:" + task.id + " from processorId:" + processorId);
     await taskSync_async(task.instanceId, task);
     await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
     taskRelease(task.instanceId, "commandInit_async");
-    // We can use this for the websocket so there is no res provided in that case  
-    if (res) {
-      res.status(200).send("ok");
-    }
   } catch (error) {
     const msg = `Error commandInit_async task ${task.id}: ${error.message}`;
     console.error(msg);
-    if (res) {
-      throw new RequestError(msg, 500, error);
-    } else {
-      throw new Error(msg);
-    }
+    throw new Error(msg);
   }
   
 }

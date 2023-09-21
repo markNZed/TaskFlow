@@ -92,9 +92,9 @@ const utils = {
       } else if (!arg1 && !value) {
         return task;
       } else {
-        const res = utils.getNestedValue(task, arg1);
-        //console.log("createTaskValueGetter get ", arg1, res)
-        return res;
+        const result = utils.getNestedValue(task, arg1);
+        //console.log("createTaskValueGetter get ", arg1, result)
+        return result;
       }
     };
   },
@@ -527,7 +527,7 @@ const utils = {
 
   // Flatten hierarchical object and merge keys into children
   flattenObjects: function(objs) {
-    const res = {};
+    const result = {};
     let parent2id = { root: "" };
     objs.forEach((obj) => {
       assert(obj.name, "Object missing name");
@@ -542,18 +542,18 @@ const utils = {
         } else {
           const parentId = parent2id[obj.parentName];
           id = `${parentId}.${obj.name}`;
-          assert(!res[id], "Object id already in use " + id);
+          assert(!result[id], "Object id already in use " + id);
           obj["id"] = id;
           obj["parentId"] = parentId;
           // Merge all the objects of obj[id] into obj[obj["parentId"]]
-          const parent = res[parentId];
+          const parent = result[parentId];
           obj = utils.deepMerge(parent, obj);
         }
       }
       parent2id[obj.name] = id
-      res[id] = obj;
+      result[id] = obj;
     });
-    return res;
+    return result;
   },
 
   updatedAt: function() {

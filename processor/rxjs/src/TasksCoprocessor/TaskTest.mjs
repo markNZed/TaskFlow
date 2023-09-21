@@ -81,16 +81,24 @@ const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
             utils.logTask(task, "No parentNode for parentInstanceId", task.meta.parentInstanceId);
           }
         }
-        let diff = {
+        const updateDiff = {
           state: {
             familyTree: root.model,
-          }
+          },
         };
         if (CEPinstanceId === task.instanceId) {
-          task = utils.deepMerge(task, diff);
+          task = utils.deepMerge(task, updateDiff);
           return task;
         } else {
-          await commandUpdate_async(wsSendTask, CEPtask, diff, true);
+          let syncUpdateTask = {
+            command: "update",
+            commandArgs: {
+              sync: true,
+              instanceId: CEPtask.instanceId,
+              syncTask: updateDiff,
+            }
+          };
+          await commandUpdate_async(wsSendTask, syncUpdateTask);
         }
       }
     }

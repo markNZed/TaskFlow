@@ -1,24 +1,16 @@
 /* ToDo
 -------
-Need to manage conversation size 
-  TaskChat could do that.
-  Need a second messages array - one for the history and one for the current input
-https://react.minchat.io/
-OnCompletion of ServiceVercelAI could update the messages
-  Needs a callback ? onNewMessage
-    TaskChat can then send an update with new message appended
-Functions return messages which changes the API
 Add the user object only if it has changed
   If the task is collaborative then the user should be associated with task.processor?
     Then do not need to send all the time
 https://en.wikipedia.org/wiki/Barbara_J._Grosz
-gpt-3.5-turbo-instruct is a completion model (single-turn tasks)
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
     Should be possible to base it on TaskSystemConfig
       TaskServiceConfig
       Would need to put the service config into Redis
         Move serviceTypes into configdata.mjs
+          Do this after consolidating hub+processor into a node
 Switch from hub/processor to node
   Add support for multiple hubs
     Will allow fro bridge between TF & MTF
@@ -30,21 +22,12 @@ Menu should not have shared.tasksConfigTree on React
     But it is using task.shared
     Masking could fix this
 Why did chatGPT not like the value field of function being an object but could use string  -I guess because we returned a string for id?
-availableTokens accounting for messages?
-  Limiting the size of prompts sent with functions is an issue
-https://pierce-lamb.medium.com/improving-gpt-4-function-calling-with-an-explanation-parameter-4fba06a4c6bb
-https://sdk.vercel.ai/
-  https://github.com/vercel/ai/blob/main/examples/next-openai/app/api/chat-with-functions/route.ts
-There could be task.processors[environment]
-  Would allow inititialisation of task.processor for a given environment e.g. configuring task.processor.statesSupported
-Could add a check in schema to config.services that type + environments must exist
-Maybe services should use approach like getFsmHolder_async
-Wrap https://github.com/mckaywrigley/chatbot-ui in a Task
+
+
+
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
   Those that can be run concurrently might be better in a particular class of processor
-Move rxjs back to normal  
-  export async function commandUpdate_async(wsSendTask, task, diff, sync = false)
 Requesting lock processorWs.onmessage id: undefined (assertion)
   Modifying field in tasks broken due to locks
 Move commandArgs.syncTask into task ?
@@ -516,7 +499,8 @@ Architecture
         It seems OK to let the HTTP requests go through, eventaully the session could be managed by the Processor
           Then just use the thread to allow different tabs to have the same task
   Ideally we want the same code for Task storage on Hub/React/NodeJs
-    Could use @kvs/node-localstorage
+    https://github.com/jaredwray/keyv/issues/868 V5 is intended to add browser support
+  https://react.minchat.io/ is one option for chat components
 
 Issues
 ------

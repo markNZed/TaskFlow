@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "./utils.mjs";
 import { getActiveTask_async, setActiveTask_async, deleteActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
-import RequestError from './routes/RequestError.mjs';
 import { commandStart_async } from "./commandStart.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
@@ -42,7 +41,7 @@ async function doneTask_async(task) {
   }
 }
 
-async function doUpdate(commandArgs, task, res) {
+async function doUpdate(commandArgs, task) {
   if (commandArgs?.done) {
     utils.logTask(task, "Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     await doneTask_async(task);
@@ -51,14 +50,10 @@ async function doUpdate(commandArgs, task, res) {
     utils.logTask(task, "Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     await taskSync_async(task.instanceId, task)
     await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
-    // We can use this for the websocket so there is no res provided in that case  
-    if (res) {
-      res.status(200).send("ok");
-    }
   }
 }
 
-export async function commandUpdate_async(task, res) {
+export async function commandUpdate_async(task) {
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
@@ -94,16 +89,12 @@ export async function commandUpdate_async(task, res) {
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     utils.logTask(task, task.meta.broadcastCount + " commandUpdate_async " + task.id);
-    await doUpdate(commandArgs, task, res);       
+    await doUpdate(commandArgs, task);       
   } catch (error) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
     console.error(msg);
-    if (res) {
-      throw new RequestError(msg, 500, error);
-    } else {
-      utils.logTask(task, "commandUpdate_async task", task);
-      throw new Error(msg);
-    }
+    utils.logTask(task, "commandUpdate_async task", task);
+    throw new Error(msg);
   } finally {
     // Always release the lock
     utils.logTask(task, "commandUpdate_async lock released instanceId:", task.instanceId);

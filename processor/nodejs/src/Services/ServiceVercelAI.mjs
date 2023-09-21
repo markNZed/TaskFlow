@@ -14,6 +14,7 @@ import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 import { promptTokensEstimate } from "openai-chat-tokens";
 
+// https://pierce-lamb.medium.com/improving-gpt-4-function-calling-with-an-explanation-parameter-4fba06a4c6bb
 
 const wsDelta = {}
 
@@ -349,6 +350,7 @@ async function openaigpt_async(params) {
             // eslint-disable-next-line no-unused-vars
             onCompletion: async (completion) => {
               // This callback is called after each response from the model (e.g. function call)
+              // If we pass a callback into this service form the task then it could return messages as they complete
               console.log("onCompletion", completion);
             }
           })
