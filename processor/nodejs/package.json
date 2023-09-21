@@ -32,6 +32,7 @@
     "node-fetch": "^3.3.1",
     "nodemon": "^2.0.21",
     "openai": "^4.7.0",
+    "openai-chat-tokens": "^0.2.7",
     "seedrandom": "^3.0.5",
     "tree-model": "^1.0.7",
     "ws": "^8.12.1",

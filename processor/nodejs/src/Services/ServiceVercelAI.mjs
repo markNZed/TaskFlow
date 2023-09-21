@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { encode } from "gpt-3-encoder";
+//import { encode as tokenCount} from "gpt-3-encoder";
 import OpenAI from 'openai';
 // eslint-disable-next-line no-unused-vars
 import { OpenAIStream } from 'ai';
@@ -12,6 +12,7 @@ import { utils } from "../utils.mjs";
 import { cacheStore_async } from "../storage.mjs";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
+import { promptTokensEstimate } from "openai-chat-tokens";
 
 
 const wsDelta = {}
@@ -54,7 +55,7 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
 async function openaigpt_async(params) {
   const {
     systemMessage,
-    messages,
+    prevMessages,
     noStreaming,
     prompt,
     useCache,
@@ -74,34 +75,71 @@ async function openaigpt_async(params) {
   } = params;
 
   const debug = true;
-  
-  // Need to account for the system message and some margin because the token count may not be exact.
-  //console.log("prompt " + prompt + " systemMessage " + systemMessage)
-  let promptTokenLength = 0;
-  if (prompt) {
-    promptTokenLength = encode(prompt).length
-  } else {
-    console.log("WARNING: no prompt");
-  }
-  if (!systemMessage) {
-    console.log(
-      "Warning: expect systemMessage to calculate tokens unless vierge"
-    );
-  }
-  const availableTokens =
-    maxTokens -
-    Math.floor(maxTokens * 0.1) -
-    promptTokenLength -
-    encode(systemMessage).length;
-  maxResponseTokens =
-    availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens;
-  console.log(
-    "Tokens maxTokens " + maxTokens + " maxResponseTokens " + maxResponseTokens
-  );
 
-  // Could have a parameter for this
-  if (maxResponseTokens < 100) {
-    throw new Error("maxResponseTokens too low " + maxResponseTokens);
+  // Need to build messages from systemMessage, messages, prompt
+
+  function buildMessages(systemMessage, prevMessages, prompt) {
+    let messages = [];
+    if (systemMessage) {
+      const systemMessageElement = {
+        role: "system",
+        text: systemMessage,
+      }
+      messages.push(systemMessageElement);
+    }
+    messages = [...messages, ...prevMessages];
+    if (prompt) {
+      const promptElement = {
+        role: "user",
+        text: prompt,
+      }
+      messages.push(promptElement);
+    }
+    const mappedMessages = messages.map((message) => ({
+      role: message.role,
+      content: message.content || message.text, // mapping text -> content
+      function_call: message.function_call,
+      name: message.name,
+    }));
+    return mappedMessages;
+  }
+
+  let messages = buildMessages(systemMessage, prevMessages, prompt);
+
+  let currentMaxResponse = maxResponseTokens;
+  
+  function computeMaxResponseTokens(maxTokens, maxResponseTokens, currentMaxResponse, messages, functions) {
+    // messages, functions, functions_call
+    const tokenCountEstimate = promptTokensEstimate({messages, functions});
+    let availableTokens = maxTokens - tokenCountEstimate;
+    console.log("Tokens maxTokens " + maxTokens + " availableTokens " + availableTokens + " maxResponseTokens " + maxResponseTokens);
+    availableTokens = availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens;
+    return availableTokens;
+  }
+  
+  currentMaxResponse = computeMaxResponseTokens(maxTokens, maxResponseTokens, currentMaxResponse, messages, functions);
+
+  const minimalTokens = 100;
+
+  function shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse) {
+    // Could have a parameter for this
+    while (currentMaxResponse < minimalTokens) {
+      if (prevMessages.length) {
+        console.warn("currentMaxResponse too low " + currentMaxResponse);
+        const forgetMessage = prevMessages.shift();
+        console.warn("Forgetting message", forgetMessage);
+        messages = buildMessages(systemMessage, prevMessages, prompt);
+        currentMaxResponse = computeMaxResponseTokens(maxTokens, maxResponseTokens, currentMaxResponse, messages, functions);
+        console.warn("Latest currentMaxResponse", currentMaxResponse);
+      } else {
+        throw new Error("currentMaxResponse too low and no messages to remove");
+      }
+    }
+    return messages;
+  }
+
+  if (currentMaxResponse < minimalTokens) {
+    messages = shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse);
   }
 
   // This is a hack to get parameters into the API
@@ -208,32 +246,15 @@ async function openaigpt_async(params) {
       message_from("Dummy API", text, noStreaming, instanceId);
       response_text_promise = Promise.resolve([text, []]);
     } else {
-      // Need to build messages from systemMessage, messages, prompt
-      const systemMessageElement = {
-        role: "system",
-        text: systemMessage,
-      } 
-      const promptElement = {
-        role: "user",
-        text: prompt,
-      }
-      messages.unshift(systemMessageElement);
-      messages.push(promptElement);
-      const mappedMessages = messages.map((message) => ({
-        role: message.role,
-        content: message.content || message.text, // mapping text -> content
-        function_call: message.function_call,
-        name: message.name,
-      }));
       let newMessages = [];
-      //console.log("mappedMessages", mappedMessages);
+      //console.log("messages", messages);
       try {
         let options = {
           model: modelVersion,
           stream: true,
           // messages, maybe need to do this explicitly if using sendExtraMessageFields
           // https://github.com/vercel/ai/issues/551
-          messages: mappedMessages
+          messages: messages
         };
         if (functions) {
           options.functions = functions;
@@ -294,8 +315,13 @@ async function openaigpt_async(params) {
               //console.log("newMessages", newMessages);
               // Should check the token limits here
               console.log("Extending newMessages", newMessages);
+              let functionMessages = [...messages, ...newMessages];
+              currentMaxResponse = computeMaxResponseTokens(maxTokens, maxResponseTokens, currentMaxResponse, messages, functions)
+              if (currentMaxResponse < minimalTokens) {
+                functionMessages = shrinkMessages(systemMessage, functionMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse)
+              }
               return openai.chat.completions.create({
-                messages: [...mappedMessages, ...newMessages],
+                messages: functionMessages,
                 stream: true,
                 model: modelVersion,
                 functions,
@@ -311,7 +337,7 @@ async function openaigpt_async(params) {
               SendIncrementalWs(wsSendTask, partialResponse, instanceId);
             },
             onFinal: async (completion) => {
-              console.log("final mappedMessages", mappedMessages);
+              console.log("final messages", messages);
               console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {

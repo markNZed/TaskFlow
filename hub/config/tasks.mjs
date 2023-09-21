@@ -57,6 +57,8 @@ const tasks = [
         chat: {
           type: "openaigpt.chatgpt",
           environments: ["nodejs"],
+          maxResponseTokens: 150,
+          maxTokens: 500,
         },
       }
     },
@@ -223,9 +225,9 @@ const tasks = [
       local: {
         suggestedPrompts: [
           "What is the id of the parent of this task?",
-          "What is the path of the label of a task and how did you decide?",
+          "Given your knowledge about the paths of tasks. What is the path for the label of a task?",
           "What is the 'label' of the parent of this task?",
-          "Please update the label of the parent of the current task to ConfigXXX and describe how you did this",
+          "Please update the label of the parent task to 'ConfigXXX'",
         ]
       },
       /* // Not working?

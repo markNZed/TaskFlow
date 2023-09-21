@@ -1,5 +1,9 @@
 /* ToDo
 -------
+Need to manage conversation size 
+  TaskChat could do that.
+  Need a second messages array - one for the history and one for the current input
+https://react.minchat.io/
 OnCompletion of ServiceVercelAI could update the messages
   Needs a callback ? onNewMessage
     TaskChat can then send an update with new message appended

@@ -218,7 +218,7 @@ async function chatPrepare_async(T) {
 
   //console.log("messages before map of id", messages);
   // The index starts at 1 so we do not have an id === 0 as this seemed to cause issues in ChatGPTAPI
-  messages = messages.map((message, index) => ({
+  const prevMessages = messages.map((message, index) => ({
     ...message,
     parentMessageId: index === 0 ? null : (index),
     id: (index + 1)
@@ -240,7 +240,7 @@ async function chatPrepare_async(T) {
 
   return {
     systemMessage,
-    messages,
+    prevMessages,
     noStreaming,
     prompt,
     useCache,
