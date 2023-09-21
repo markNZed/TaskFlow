@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "../utils.mjs";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
 import { cacheStore_async } from "../storage.mjs";
+import { v4 as uuidv4 } from 'uuid';
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
@@ -93,7 +94,29 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, services) {
       const subTask = await SubTaskLLM_async(wsSendTask, T(), service);
       T("response.LLMResponse", subTask.response.LLM);
       if (subTask.response.newMessages && subTask.response.newMessages.length) {
-        T("response.newMessages", subTask.response.newMessages);
+        const newMessages = subTask.response.newMessages;
+        newMessages.forEach(msg => {
+          if (!msg.id) {
+            msg["id"] = uuidv4();
+          }
+          if (msg.function_call) {
+            msg["user"] = "assistant";
+            try {
+              const functionCallObj = msg.function_call;
+              msg["content"] = functionCallObj.name + ": " + JSON.stringify(JSON.parse(functionCallObj.arguments));
+            } catch (error) {
+              console.error("Could not parse function", error);
+              msg["content"] = `Could not parse function ${msg.function_call.name}: ${msg.function_call.argumnts}`;
+            }
+          }
+          if (msg.role === "function" && !msg.user) {
+            msg["user"] = "function";
+          }
+        })
+        T("response.newMessages", newMessages);
+        let msgs = T("output.msgs");
+        msgs = [...msgs, ...newMessages];
+        T("output.msgs", msgs);
       }
       T("state.current", "received");
       T("commandArgs.lockBypass", true);

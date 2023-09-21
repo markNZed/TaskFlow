@@ -25,6 +25,7 @@ ToDo:
 const TaskConversation = (props) => {
   const {
     task,
+    modifyTask,
     childTask,
     modifyChildTask,
   } = props;
@@ -32,11 +33,9 @@ const TaskConversation = (props) => {
   const chatContainerRef = useRef();
   const messagesEndRef = useRef();
   const chatInputRef = useRef();
-  const [chatContainermaxHeight, setChatContainermaxHeight] = useState();
   const [chatInputHeight, setChatInputHeight] = useState();
   const [chatContainerTop, setChatContainerTop] = useState();
   const [hasScrolled, setHasScrolled] = useState(false);
-  const isMountedRef = useRef(false);
   const [msgs, setMsgs] = useState([]);
   const [chatResponse, setChatResponse] = useState();
   const chatSectionRef = useRef();
@@ -45,7 +44,7 @@ const TaskConversation = (props) => {
   props.onDidMount();
 
   // There is a loop from the childTask.output.msgs to childTask.input.msgs
-  // This potetniallly allows msgs to be controlled by TaskConversation
+  // This potentiallly allows msgs to be controlled by TaskConversation e.g. user could edit previous messages
   useEffect(() => {
     //console.log("TaskConversation childTask?.output?.msgs", childTask?.output?.msgs);
     if (!utils.deepEqual(childTask?.output?.msgs, childTask?.input?.msgs)) {
@@ -64,13 +63,13 @@ const TaskConversation = (props) => {
           const regex = new RegExp(pattern, flags);
           if (msgsToProcess.length) {
             for (const msg of msgsToProcess) {
-              if (msg.text) {
-                msg.text = msg.text.replace(regex, replacement);
+              if (msg.content) {
+                msg.content = msg.content.replace(regex, replacement);
               }
             }
           } else {
-            if (msgsToProcess.text) {
-              msgsToProcess.text = msgsToProcess.text.replace(regex, replacement);
+            if (msgsToProcess.content) {
+              msgsToProcess.content = msgsToProcess.content.replace(regex, replacement);
             }
           }
         }
@@ -89,10 +88,26 @@ const TaskConversation = (props) => {
       //console.log("newMsgArray", newMsgArray);
       // The welcome message is not included as part of the Task msgs sent to the LLM
       if (task.config?.local?.welcomeMessage && task.config.local.welcomeMessage !== "") {
-        welcomeMessage.push({ role: "assistant", text: task.config.local.welcomeMessage, user: "assistant", id: "welcome" });
+        welcomeMessage.push({ role: "assistant", content: task.config.local.welcomeMessage, user: "assistant", id: "welcome" });
       }
       // deep copy because we may modify with regexProcessMessages
       let combinedMsgs = JSON.parse(JSON.stringify([...welcomeMessage, ...childMsgs]));
+      // msgsHistory is what we will display
+      if ((combinedMsgs.length && !task.output.msgsHistory) || (task.output.msgsHistory && combinedMsgs.length > task.output.msgsHistory.length)) {
+        let msgsHistory;
+        if (task.output.msgsHistory) {
+          const numberOfExtraMsgs = combinedMsgs.length - task.output.msgsHistory.length;
+          const extraMsgs = combinedMsgs.slice(-numberOfExtraMsgs); // Get the extra messages from the end
+          msgsHistory = task.output.msgsHistory;
+          msgsHistory = [...msgsHistory, ...extraMsgs];
+          console.log("msgsHistory", msgsHistory, "extraMsgs", extraMsgs, "combinedMsgs", combinedMsgs, "numberOfExtraMsgs", numberOfExtraMsgs);
+        } else {
+          msgsHistory = combinedMsgs;
+          console.log("msgsHistory", msgsHistory);
+        }
+        applyRegex(msgsHistory);
+        modifyTask({"output.msgsHistory": msgsHistory});
+      }
       // Convert to string to compare deep data structure
       if (JSON.stringify(combinedMsgs) !== JSON.stringify(msgs)) {
         applyRegex(combinedMsgs);
@@ -107,7 +122,7 @@ const TaskConversation = (props) => {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     } 
   // For some reason I need to add childTask for this to work, unsure why
-  }, [msgs, hasScrolled, childTask]);
+  }, [task.output.msgsHistory, hasScrolled, childTask]);
 
   const handleScroll = () => {
     const chatContainer = chatContainerRef.current;
@@ -123,11 +138,8 @@ const TaskConversation = (props) => {
   useEffect(() => {
     const chatContainerRect = chatContainerRef.current.getBoundingClientRect();
     const chatInputRect = chatInputRef.current.getBoundingClientRect();
-    const maxHeight = Math.max(chatSectionRef.height - chatInputRect.height, 100)
     setChatInputHeight(chatInputRect.height);
-    setChatContainermaxHeight(maxHeight);
     setChatContainerTop(chatContainerRect.top);
-    //console.log("Updating chatContainermaxHeight:" + maxHeight);
     //console.log("Updating chatContainerRect", chatContainerRect);
     //console.log("Updating chatInputRect", chatInputRect);
   // Added childTask so we update these values after chatInputRef has been rendered
@@ -152,11 +164,12 @@ const TaskConversation = (props) => {
         id="chat-container" 
         ref={chatContainerRef}
         style={{
-          maxHeight: `calc(100vh - ${chatInputHeight}px - ${chatContainerTop}px - 24px)`,
+          // 24px related to top-padding, 10px related to bottom-padding 
+          maxHeight: `calc(100vh - ${chatInputHeight}px - ${chatContainerTop}px - 24px - 10px)`,
         }}
       >
-        { msgs && msgs.length > 0 &&
-          msgs.map((msg, index) => {
+        { task.output.msgsHistory && task.output.msgsHistory.length > 0 &&
+          task.output.msgsHistory.map((msg, index) => {
             //console.log("msg", msg);
             // Use components here so we can avoid re-rendering if nothing changes
             return (
@@ -164,7 +177,7 @@ const TaskConversation = (props) => {
                 key={msg.id}
                 role={msg.role}
                 user={msg.user}
-                text={msg.text}
+                content={msg.content}
                 sending={false}
                 id={msg.id}
               />
@@ -176,8 +189,8 @@ const TaskConversation = (props) => {
             key={chatResponse.id}
             role={chatResponse.role}
             user={chatResponse.user}
-            text={chatResponse.text} 
-            sending={childTask.output?.sending} 
+            content={chatResponse.content}
+            sending={childTask.output?.sending}
             id={chatResponse.id}
           />
         )}

@@ -83,7 +83,7 @@ async function openaigpt_async(params) {
     if (systemMessage) {
       const systemMessageElement = {
         role: "system",
-        text: systemMessage,
+        content: systemMessage,
       }
       messages.push(systemMessageElement);
     }
@@ -91,13 +91,13 @@ async function openaigpt_async(params) {
     if (prompt) {
       const promptElement = {
         role: "user",
-        text: prompt,
+        content: prompt,
       }
       messages.push(promptElement);
     }
     const mappedMessages = messages.map((message) => ({
       role: message.role,
-      content: message.content || message.text, // mapping text -> content
+      content: message.content, // mapping text -> content
       function_call: message.function_call,
       name: message.name,
     }));

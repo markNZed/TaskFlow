@@ -149,26 +149,26 @@ function findJSONIndexes(str, startIdx) {
   return null;
 }
 
-const Message = ({ role, user, text, sending, id }) => {
+const Message = ({ role, user, content, sending, id }) => {
   if (!role || !user || !id) {
-    console.error("Message missing ", role, user, text, sending, id);
+    console.error("Message missing ", "role:", role, "user:", user, "content:", content, "sending:",sending, "id:", id);
   }
-  //console.log("Message text", text);
+  //console.log("Message content", content);
   // match function_call result
 
-  if (!text) {
-    text = "";
+  if (!content) {
+    content = "";
   }
 
-  console.log("Message to display", text);
+  //console.log("Message to display", content);
 
-  const [newText, startIdx, endIdx] = findJSONIndexes(text, 0) || [];
+  const [newContent, startIdx, endIdx] = findJSONIndexes(content, 0) || [];
 
   if (typeof startIdx === 'number' && typeof endIdx === 'number') {
-    text = newText;
-    const before = text.substring(0, startIdx);
-    const functionCallStr = text.substring(startIdx, endIdx + 1);
-    const after = text.substring(endIdx + 1);
+    content = newContent;
+    const before = content.substring(0, startIdx);
+    const functionCallStr = content.substring(startIdx, endIdx + 1);
+    const after = content.substring(endIdx + 1);
     //console.log("before", before, "functionCallStr", functionCallStr, "after", after);
   
     try {
@@ -182,13 +182,13 @@ const Message = ({ role, user, text, sending, id }) => {
       const replacedFunctionCall = JSON.stringify(functionCallObj, null, 2);
     
       // Combine it all together
-      text = `${before}\n\`\`\`json\n${replacedFunctionCall}\n\`\`\`\n${after}`;
-      console.log("Message after expanding JSN object", text);
+      content = `${before}\n\`\`\`json\n${replacedFunctionCall}\n\`\`\`\n${after}`;
+      //console.log("Message after expanding JSN object", content);
     } catch (error) {
-      console.log('Failed to parse JSON:', error);
+      //console.log('Failed to parse JSON:', error);
     }
   } else {
-    console.log('Could not find JSON object.');
+    //console.log('Could not find JSON object.');
   }
 
 
@@ -212,7 +212,7 @@ const Message = ({ role, user, text, sending, id }) => {
                 },
               }}
             >
-              {text}
+              {content}
             </ReactMarkdown>
           </div>
         )}

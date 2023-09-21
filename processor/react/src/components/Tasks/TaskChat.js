@@ -201,9 +201,9 @@ const TaskChat = (props) => {
           const promptText = "Location: " + task.state?.address;
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.LLMResponse": { role: "assistant", text: "", user: "assistant", id: uuidv4() },
+            "output.LLMResponse": { role: "assistant", content: "", user: "assistant", id: uuidv4() },
             "output.sending": true,
-            "output.msgs": [...msgs, { role: "user", text: promptText, user: user.label, id: uuidv4() }],
+            "output.msgs": [...msgs, { role: "user", content: promptText, user: user.label, id: uuidv4() }],
             "request.prompt": promptText,
             "state.lastAddress": task.state.address,
             "commandArgs": { "lock": true },
@@ -215,9 +215,9 @@ const TaskChat = (props) => {
         if (transitionTo("send") && !checkLocked()) {
           // Lock task so users cannot send at same time. NodeJS will unlock on final response.
           modifyTask({ 
-            "output.LLMResponse": {role: "assistant", text: "", user: "assistant", id: uuidv4()},
+            "output.LLMResponse": {role: "assistant", content: "", user: "assistant", id: uuidv4()},
             "output.sending": true,
-            "output.msgs": [...msgs, {role: "user", text: task.input.promptText, user: user.label, id: uuidv4()}],
+            "output.msgs": [...msgs, {role: "user", content: task.input.promptText, user: user.label, id: uuidv4()}],
             "input.promptText": "",
             "input.submitPrompt": false,
             "request.prompt": task.input.promptText,
@@ -234,10 +234,10 @@ const TaskChat = (props) => {
       case "configFunctionRequest":
       case "configFunctionResponse":
       case "receiving":
-        // Avoid looping due to modifyTask by checking if the text has changed
-        if (responseText && responseText !== task.output.LLMResponse?.text) {
+        // Avoid looping due to modifyTask by checking if the content has changed
+        if (responseText && responseText !== task.output.LLMResponse?.content) {
           modifyTask({
-            "output.LLMResponse.text": responseText,
+            "output.LLMResponse.content": responseText,
           });
         }
         break;
@@ -252,7 +252,7 @@ const TaskChat = (props) => {
           if (transition()) {
             // Need to update to store output.msgs
             let outputPromptResponse = task.output.LLMResponse;
-            outputPromptResponse.text = task.response.LLMResponse;
+            outputPromptResponse.content = task.response.LLMResponse;
             modifyTask({
               "output.LLMResponse": null,
               // If we use msgs instead of task.output.msgs then we can miss the last user prompt

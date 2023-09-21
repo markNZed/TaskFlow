@@ -88,7 +88,7 @@ body {
 
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
 
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -131,7 +131,7 @@ body {
 
 .wrapper {
   width: 100%;
-  padding: 15px;
+  padding: 5px;
 }
 
 .ai {
@@ -217,14 +217,14 @@ body {
   margin-left: auto;
   margin-right: auto;
   /* border-radius: 5px; */
-  margin-bottom: 0.5em;
+  margin-bottom: 10px;
   /* box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25); */
   margin-top: auto;
 
   display: flex;
   flex-direction: column;
 
-  min-width: 200px; /* space for send button in column*/
+  min-width: 500px; /* space for send button in column*/
 
   /* display: flex;
   flex-direction: row;
