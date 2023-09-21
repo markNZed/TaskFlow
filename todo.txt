@@ -1,8 +1,17 @@
 /* ToDo
 -------
+Check Demo of collaborative chat
+A Processor that is restarted does not rejoin the activeTasks ?
+tasktype cannot configure fsm: { useMachine: true} ?
+The stepper sets the state to exit - it should not act directly on the state, use task.input
+  Review all Tasks and ensure not accessing internals of children
+TaskChat name must be "start" ? 
+Need to clean up when tasks stop e.g nodejs activeTaskFsm
 Add the user object only if it has changed
   If the task is collaborative then the user should be associated with task.processor?
     Then do not need to send all the time
+
+
 https://en.wikipedia.org/wiki/Barbara_J._Grosz
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
@@ -22,23 +31,14 @@ Menu should not have shared.tasksConfigTree on React
     But it is using task.shared
     Masking could fix this
 Why did chatGPT not like the value field of function being an object but could use string  -I guess because we returned a string for id?
-
-
-
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
   Those that can be run concurrently might be better in a particular class of processor
-Requesting lock processorWs.onmessage id: undefined (assertion)
-  Modifying field in tasks broken due to locks
 Move commandArgs.syncTask into task ?
-  Similar to partial. Should/could partial be sync/ maybe we can merge sync into partial
+  Similar to partial.
 Need to think more about locks for tasks initiated on hub (start/update/error)
 How should we deal with a change to tasktype for activeTasks ?
 Verbosity level for debug
-Add a description to each state that can be used for logging
-  task.state.description = [state: 'text']
-  better to do this with a function in the SM
-  description("");
 TaskSystemDebug
   Modifies a task by sending sync
     Can also match on id
@@ -52,18 +52,15 @@ Move familyTree CEP from TaskTest_async into dedicated TaskSystem
           Any task can launh a familyTree task and it should build the tree then maintain it
             Can we assert that a shared variable is read only? 
               Owned by an instance
+  We need another way of managing the familyTree - TaskFamilyTree
+  familyId should be in meta?
 Avoid using the "start" task name/id as meaningful
 TaskSystemConfigTasks_async copy feature in tree
-  Refactor into EditTree component + TaskSystemConfig
-  TaskSystemTasksConfigEditor should be split into a service for managing CRUD on data and an Editor ? Yes, generalise
-  SystmTasksConfig could autostart ? (but it also runs on React which may not exist)
-    Could run a SystmTasksConfig using input/output running on rxjs
-      Or we use request/response with queue ?
-        Request/response could be for a service while input/output is for a taskFunctions
-          Maybe input/output is sequential while request/response can be queued
-            Seems like a good use case to create the request/response queue
+    Request/response could be for a service while input/output is for a taskFunctions
+      Maybe input/output is sequential while request/response can be queued
+        Seems like a good use case to create the request/response queue
     Refactor SystemTasksConfigEditor so it uses SystemTasksConfig
-Task that has the ability to inspect the Task Node
+Task to inspect the Task Node
   Access to KeyV
     Shared can include a list of the available Nodes
     Selecting Node would populate the list of available KeyV
@@ -83,73 +80,50 @@ Task that has the ability to inspect the Task Node
       https://github.com/Redislabs-Solution-Architects/ioredis-search/tree/main code of demo
   To begin with we could avoid providing search
     Allow for lookup, provide stats
-
-Document the strategy for using null in Objects and arrays
-  Strip the null fields just before it is processed as a task
-    But keep null fields in storage so it is passed through hub and diffs are in sync
-      Do not strip null values when coprocessing
-        Task Function needs to account for this when iterating over keys
-  JSON does not support "undefined" which would be another indicator for deletion
 In the coprocessing of task if we remove null then we lose the delete
   If we don't remove null then coprocessing task need to deal with null (e.g. when looping over object keys)
+  Processor could detect null keys and create a "delete" object
 How can we detect errors in the console?
   window.onerror
   window.addEventListener('unhandledrejection'
   Can also override console.log console.error (before they are used)
     Could create a window.log that meta can access as a feature of the React Processor
 Could configure CEP to run during or after coprocessing
-familyId should be in meta?
 Registering could/should be a task
   use the processorId as an instanceId
-Ability to move configurations
-  Requires mods to the task.meta etc - not so simple
-    Build on top of CRUD
-Copy of configurations should be easier 
 How do we drive the input of another task without UI ?
   New command 
     "input" which drives local task
       Use this instead of sync in TaskSystemTasksConfigEditor
-      How to implement ? 
+      How to implement on React? 
         Through globalContext ? 
           A taskContext with a selector based on instanceId
 Create a TaskSystemContainer on React that will do most of what Taskflows.js does
   Then we can configure it
   Should not have a familyId ? (allowing children to create their own)
-Check if keyv/redis has iterator
-Clearing of KeyV needs to be configurable
-Does keyV store meta data like updatedAt? An upcoming version will.
-Copying/editing of config
-Janssen Project for login there is a commerial offering Gluu
+  Taskflows.js should be a task then would have task.user available and could remove globalState.user
+Janssen Project for login
 Ant Design
   https://developer.okta.com/blog/2020/09/16/ant-design-react-app
   https://ant.design/theme-editor
-Made a request to https://pro.reactflow.dev
+  https://github.com/ant-design/ant-design
+Made a request to https://pro.reactflow.dev for flowchart GUI
 Redis  
   A secondary index maps each attribute to a set of primary keys that have that attribute. 
   In Redis, you need to create a Redis Search index on your data before you can query it.
   Write-behind caching
+  @keyv/tiered could offer JSON search via MongoDB ?
 PM2 for process management
   Ecosystem File
   pm2 startup (on boot ?)
   Just use to run two instance of RxJS for now.
-Possibility of sending all messages to a procssor (need to have another processor - maybe rxjs, can we point at a custom Tasks directory?)
 Collaborate will keep info in the caches and db. How can we clear out a specific familyId ?
   Could prefix the family ID for collaboration with a unique hub ID
     Could use hub Id if it were not stored
       A Task ? But Task Function does not have access. 
         Delete command with argument for familyId 
-TaskChat name must be "start" ? 
-Need to clean up when tasks stop e.g nodejs activeTaskFsm
-tasktype cannot configure fsm: { useMachine: true} ?
-We need another way of managing the familyTree - TaskFamilyTree
-instancesStore_async on hub - should have single store with index that can separate active and inactive
-  Could also be the opportunity to move that to MongoDB
-https://github.com/ant-design/ant-design
-The stepper sets the state to exit - it should not act directly on the state, use task.input
-  Review all Tasks and ensure not accessing internals of children
 Point to private extensions of config rather than redirecting the entire config directory
 Major features to be implemented before refactoring
-  Dynamic Task configurations
   Debug support per Task
     How to combine debug logging with task.meta.debug ?
     Conditional breakpoints in VSCode works well
@@ -166,6 +140,10 @@ Extend testing
   Batch testing
     TaskCron to regularly check things
     TaskGit to get local status of repo
+  https://testing-library.com/docs/react-testing-library/intro/
+  How to batch tests?
+    TaskSystemBatch that would modify TaskTest config fsm on the fly
+    Could build an array of FSM then run through that.
 One approach to code review:
   1) Create a new github repo that has an empty master branch
   2) Archive the code to be reviewed: git archive --format=tar --output=../empty-repo/repo.tar HEAD
@@ -174,32 +152,22 @@ One approach to code review:
   5) Add the files and push: git add .;git push --set-upstream origin review-branch
   6) Open a PR on github so any file can be reviewed
   The above should be doable inside a single repo - create branch delete everything, create another branch from that and add everything at once
-Selecting menu item second time could restart the task - decide what to do within the task e.g. processor.command.restart
-Default FSM name e.g. default.js could be loaded if it exists (avoids needing to add config)
-  The task could also define the FSM
-    This probably makes it easier to see what is going on but only works if the task runs on one processor
-      So this could be the default
+Selecting menu item second time could restart the task
+  decide what to do within the task e.g. processor.command.restart
+  At the moment we just start a new task
 Add xstate-viz server path on proxy and choose port
-Should queries be configured per Processor?
-  Not needed as processor will not use them and overhead is not high
 Generic TaskEdit that would allow for presentation/editing of any task in the familyId
   Could configure to limit access to specific fields
-    Ideally could us schema but could also guess at the type (usr could override)
+    Ideally could us schema but could also guess at the type (user could override)
   Need a submit button for JSON Editor to update the task - also run validation first
-  See TaskDummy for a demo of jsoneditor-react18
-https://github.com/statelyai/xstate-viz
-https://testing-library.com/docs/react-testing-library/intro/
+
 https://opencollective.com/
 How to report pass/fail ?
   Dev header with info 
 Deleting of tasks for CEP
-How to batch tests?
-  TaskSystemBatch that would modify TaskTest config fsm on the fly
-  Could build an array of FSM then run through that.
+
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything
-Interview Qs
-  Do you use a coding assistant?
 Task that monitors a collaborative discussion and via another route allows interaction with any one of the persona
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
   Does not require extending the server ?
@@ -224,21 +192,17 @@ Do we want to be able to configure CEP functionality?
           Behavior in the case when an init task is received but there is no parent on the processor
     See Processor README.md for mathjs etc
 Dynamic task configuration
-  Hub would need to be extended
-    Can the configuration be a task
-      Could hardcode the autostart of a task on the coprocessor that returns config
-      How much could be delegated to tasks? e.g. taskStart, authorization, permissions, masking, scheduling
-  This is better than static definitions because we don't need to elaborate all possibilities in the config options
   Maybe this does not require any new functionality on the hub - just copy from one child task to another
-   TaskInherit would be a CEP that catches the start of a task and reconfigures it on the coprocessor before it is launched?
-A Processor that is restarted does not rejoin the activeTasks ?
+    TaskInherit would be a CEP that catches the start of a task and reconfigures it on the coprocessor before it is launched?
+  Raises issues for masking - could just not mask the things we want to be able to modify
+    Then allow for copying rather than creating
 RxJS V7 Processor
   Experiment with CEP that starts a task e.g. TaskPopup (or maybe an option to TaskShowInstruction)
 A scheduler should be able to provide a cron like feature
   TaskCron
     Or can any task do this just by waiting ?
     Seems nice to be able to have  CEP that "wakes" up
-    Mayb a JS library can help e.g. an array of cron times
+    Maybe a JS library can help e.g. an array of cron times
     Maintain an array of jobs and calculate the wait time in a loop for the next wakeup
   TaskCount
     Like a cron but based on the number of interactions
@@ -246,17 +210,13 @@ A scheduler should be able to provide a cron like feature
 After experimenting with RxJS processor we may want to use a similar approach in React Processor
   Run RxJS in on the Shared Worker
     Eventually use this instead of lifting state
-nextTaskTemplate which allows for re-ordering flow - need to replace this
-Tasks could be simple and composed
-  This means there is no need to modify the "internals" of a Task
-  It also creates a lot of repeated code in the Task Functions 
-  It also means a lot of configuration to construct more complicated tasks from many components
-  Supporting both simple and complicated seems possible.
+nextTaskTemplate which allows for re-ordering flow
+  replaced with XState? Could pull out this functionality? (the exercises use it I think)
 Add schemas for task.config.local as per tasktypes.mjs and use this to check tasks in configdata
+  Schema for tasktype to document options
 The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
   Should enforce the use of taskUpdate instead of driving children
     Could remove the idea of a child task from React
-Taskflows.js should be a task then would have task.user available and could remove globalState.user
 Should the servicetype be copied into task.config.services?
   The servicetype is on the Processor while config is on the Hub
 Should the Processor also implement rate limiting?
@@ -266,27 +226,8 @@ If a task is no longer in an environment then shut it down
   Would require something like a delete command sent to processors
 Need to run CEP on local processor to get real-time behavior
   No rush to implement this
-
 The cache is not going to allow a conversation if it matches and the key is not including the messages
 In templating maybe we should support "task." syntax
-
-Allow for Hub to create task configurations on the fly
-  Could modify task configurations too
-  Raises issues for masking - could just not mask the things we want to be able to modify
-    Then allow for copying rather than creating
-  Do we operate on the configuration file or on the data structure that is generated ?
-  
-Children could be started dynamically
-  Could specify children to spawn
-    Could allow parent to specify children also
-      Same task can be reused in different branches (then better to specify children)
-      Spawn could be a list (maybe true for all, false for none, or a list for some)
-  Ths can make it much easier to add features to a Task through components ?
-  By inserting a Task between parent and child e.g. between TaskConversation and TaskChat we effecively "wrap" TaskChat
-    The inserted Task can modify the JSX returned by the child e.g  {modifyJSX(child)}
-  This can insert something before or after the component but we can't easily modify the HTML
-  React.cloneElement
-Schema for tasktype to document options
 Tests will allow for better code generation
 Requests from other tasks via: task.processor.task.request
   See notes
@@ -302,7 +243,7 @@ log not working in Chrome ?
 Make some basic commands available in the console (add function to window)
   Set the userId
 Standard for asynchronous APIs 
-  https://www.asyncapi.com/ (standard )
+  https://www.asyncapi.com/ (standard)
 Demo of collaborative chat would be good.
   In default config assign a random user label so we can demo multiparty chat
 Add function to remove last paragraph
@@ -320,9 +261,6 @@ Harmonise the Task Processor
   A common JS module for managing the Task object. 
     What is generic to Task Processors and what is custom?
       React Processor adds the concept of address/location.
-When should we introduce Typescript?
-  First try to simplify the code
-  Maybe linting with CoPilot reduces the value of this
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
 How can we specify the UI in a more compact/easy way?
@@ -346,13 +284,6 @@ Consider how we would add a radio select box to a component
 Option to IGNORE config options from parents
   Avoids inheriting info that is not used.
   Can just set to null to achieve this?
-messagesStyle not being used yet 
-Config for SubTaskLLM and oher SubTask?
-  At the moment we only have SubTaskLLM and it does not have any config (all in config.service)
-  I guess it would be possible to have a SubTask config under a Task config
-    Just specify as a task but use subtask name e.g. task.name = "SubTaskLLM"
-    SubTask would need to be extended to make use of this 
-
 
 Backlog
 -------
@@ -499,7 +430,7 @@ Architecture
         It seems OK to let the HTTP requests go through, eventaully the session could be managed by the Processor
           Then just use the thread to allow different tabs to have the same task
   Ideally we want the same code for Task storage on Hub/React/NodeJs
-    https://github.com/jaredwray/keyv/issues/868 V5 is intended to add browser support
+    https://github.com/jaredwray/keyv/issues/868 V5 is intended to add browser support, also metadata
   https://react.minchat.io/ is one option for chat components
 
 Issues

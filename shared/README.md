@@ -123,6 +123,12 @@ It would be relatively simple to maintain a copy of the last Task received on th
 
 The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
 
+Tasks could be simple and composed
+  This means there is no need to modify the "internals" of a Task
+  It also creates a lot of repeated code in the Task Functions 
+  It also means a lot of configuration to construct more complicated tasks from many components
+  Supporting both simple and complicated seems possible.
+
 # Task merging
 
 The rules for merging the Task are: there should be no changes to the same entries in the Task object, changes made locally are kept and changes from the updated task are merged (in that order). There should be a check for any conflicts where a value has been set locally and is also set by the updated Task.

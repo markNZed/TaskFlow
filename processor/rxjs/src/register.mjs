@@ -17,13 +17,6 @@ let hubId;
 
 const register_async = async () => {
 
-  const messagesStyle = {
-    wsOutputDiff: false,
-    wsInputDiff: true,
-    httpOutputDiff: false,
-    httpInputDiff: false, // Not used by Hub yet
-  };
-
   const requestOptions = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -34,7 +27,6 @@ const register_async = async () => {
       // Because this processor can serve as a coprocessor it needs to deal with "start"
       commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
       serviceTypes,
-      messagesStyle,
       coprocessor: COPROCESSOR,
       language,
    }),
