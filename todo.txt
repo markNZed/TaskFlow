@@ -1,5 +1,17 @@
 /* ToDo
 -------
+Need access to the service type to be able to modify the system prompts
+  But we want to override for an instance not all instances
+    Use the config in the task ?
+      How to get original config ?
+        Add a TaskServiceTypeQuery that can return the config of a service
+          Base on SystemConfig and ConfigEditor
+We need to be able to edit/resubmit in the chat
+  Could start with an options to delete
+    Could replace content with empty string.
+Total token count for conversation (using what chatGPT returns - usage)
+Limit the number of function calls per conversation?
+  Limit recursion depth
 Check Demo of collaborative chat
 A Processor that is restarted does not rejoin the activeTasks ?
 tasktype cannot configure fsm: { useMachine: true} ?
@@ -9,9 +21,8 @@ TaskChat name must be "start" ?
 Need to clean up when tasks stop e.g nodejs activeTaskFsm
 Add the user object only if it has changed
   If the task is collaborative then the user should be associated with task.processor?
-    Then do not need to send all the time
-
-
+    Then would not need to send all the time
+      Could have multple users on the the same processor collaborating
 https://en.wikipedia.org/wiki/Barbara_J._Grosz
 How can we modify the service configurations? 
   Would need to run a Task that can do that on the processor
@@ -112,7 +123,7 @@ Redis
   A secondary index maps each attribute to a set of primary keys that have that attribute. 
   In Redis, you need to create a Redis Search index on your data before you can query it.
   Write-behind caching
-  @keyv/tiered could offer JSON search via MongoDB ?
+  @keyv/tiered could offer JSON search via MongoDB ? Yes but V5 will have tiered as a feature
 PM2 for process management
   Ecosystem File
   pm2 startup (on boot ?)
@@ -496,6 +507,12 @@ Comparison with similar systems
     Iris.ai
   https://www.socialagi.dev/
   Apache Flink
+  https://github.com/stanfordnlp/dspy
+    DSPy unifies techniques for prompting and fine-tuning LMs — and approaches for reasoning and augmentation with retrieval and tools. All of these are expressed through modules that compose and learn.
+  https://github.com/guidance-ai/guidance
+    Guidance programs allow you to interleave generation, prompting, and logical control into a single continuous flow
+  https://lmql.ai/
+    LMQL is a programming language for language model interaction
 
 
 Test Plan

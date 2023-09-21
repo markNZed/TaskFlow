@@ -227,7 +227,8 @@ const tasks = [
           "What is the id of the parent of this task?",
           "Given your knowledge about the paths of tasks. What is the path for the label of a task?",
           "What is the 'label' of the parent of this task?",
-          "Please update the label of the parent task to 'ConfigXXX'",
+          "Thinking step by step specify the minimal and sufficient sequence of function calls required to update the label of your parent task to 'configXXX'",
+          "Perform the task following the exact steps defined above.",
         ]
       },
       /* // Not working?

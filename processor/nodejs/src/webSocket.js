@@ -27,7 +27,12 @@ function wsSendObject(message) {
       //console.log("wsSendObject commmand " + message.task.processor.command + " " + message.task.id + " commandArgs ",message.task.processor.commandArgs)
       //console.log("wsSendObject ", message )
     }
-    processorWs.send(JSON.stringify(message));
+    try {
+      processorWs.send(JSON.stringify(message));
+    } catch (e) {
+      console.log("wsSendObject message", message);
+      console.log("wsSendObject error", e);
+    }
   }
 }
 

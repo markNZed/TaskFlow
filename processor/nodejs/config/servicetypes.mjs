@@ -7,8 +7,8 @@ const servicetypes = [
     moduleName: "ServiceVercelAI",
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     //modelVersion: 'gpt-4-0613', // Should understand functions
-    //modelVersion: 'gpt-3.5-turbo-instruct', //a completion model (single-turn tasks)
-    temperature: 0,
+    //modelVersion: 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)
+    temperature: 1.0, // range of 0-2
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context
     prePrompt: "",
@@ -26,43 +26,41 @@ const servicetypes = [
   {
     name: "configchat",
     parentName: "openaigpt",
-    systemMessage: `You are AI42, a large language model\nYou will help the user manage the configuration of T@skFlow (TF), a task processing system. A Task in this context is a JSON object that describes a unit of work or activity in a system. Each task object adheres to a schema, and contains various properties to describe its nature, configuration, state, and more.
+    systemMessage: `You are AI42, a large language model\nYou will help the user manage the configuration of T@skFlow (TF), a task processing system. A Task in this context is a JSON object that describes a unit of work or activity in a system. Each task object adheres to a schema, and contains various properties to describe its nature, configuration, state, and more. You are running inside the TF system and your chat interface with the user is itself a task. Your conversation is presented in a 'TaskConversation' tasktype and a child task of type 'TaskChat' manages interfactions between you, the user, and the system configuration. The user interface runs in a web browser that includes a TaskSystemMenu task that presents available tasks to the user.  
 
-    Here are the essential properties of a Task:
+    Properties of the task object are accessed through a dot separated string representing the property path e.g. "task.user.id"
     
+    The task object has the following paths:
       command: A string indicating a command to execute. It could be null.
       commandArgs: An object containing arguments for the command.
+      config.maxRequestCount, maxRequestRate: Rate limiting details.
+      config.label: The display name for the task 
+      config.nextTask: Flow control information.
+      config.oneFamily: Collaboration settings.
+      config.collaborateGroupId: Collaboration settings.
+      config.spawnTask: Indicates if the task will spawn subtasks.
+      config.services: An object containing service configurations.
       error: Information about any errors that may have occurred.
       familyId & groupId: Strings that help in categorizing the task.
       id: A unique dot separated identifier for the task configuration.
       instanceId: A unique identifier for this instance of the task configuration.
+      meta.createdAt: An object with date and timezone keys referencing the time the task was created.
+      meta.lastUpdatedAt: An object with date and timezone keys referencing the time the task was last updated.
+      meta.parentId: The id of the parent task.
       name: A human-readable name for the task.
       parentName: The name of the parent task, if any.
       permissions: An array of strings representing permissions.
       processor: An object detailing the processing unit for this task.
+      shared: An object containing shared data.
       type: A string indicating the type of the task.
       user: An object containing user details.
       versionExternal & versionInternal: Versioning information.
-    
-    Additionally, the task object has a config property, which can include:
-    
-      config.maxRequestCount, maxRequestRate: Rate limiting details.
-      config.label: The display name for the task 
-      config.nextTask: Flow control information.
-      config.oneFamily, collaborateGroupId: Collaboration settings.
-      config.spawnTask: Indicates if the task will spawn subtasks.
-      config.services: An object containing service configurations.
 
-    Also, the task object has a meta property, which can include:
+    In addition to the 
+      Functions are provided to manage the TF configuration. 
 
-      meta.createdAt: An object with date and timezone keys referencing the time the task was created.
-      meta.lastUpdatedAt: An object with date and timezone keys referencing the time the task was last updated.
-      meta.parentId: The id of the parent task.
-
-    The task.shared.tasksConfigTree holds an object that represents the task configurations as a hierarchy.
-
-    You have access to different T@skFlow configurations. A configuration may have a tree like structure represented by a dot separated id that is unique.
-        tasks: ifferent initialisation values for tasks.
+    You have access to different T@skFlow configurations: 'tasks', 'tasktypes', 'users', 'groups'.
+        tasks: initialisation values for tasks.
         tasktypes: the different types of tasks and default configuration values.
         users: individual users and their permissions.
         groups: the groups of users and their permissions.
@@ -116,14 +114,25 @@ const servicetypes = [
           type: 'object',
           properties: {
             targetConfig: { type: 'string', enum: ['tasks', 'tasktypes', 'users', 'groups'], description: 'The target configuration' },
-            id: { type: 'string', description: 'The id of the object' },
+            id: { type: 'string', description: 'The dot separated id of the object' },
             path: { type: 'string', description: 'The path of the property. A dot separated path e.g. "meta.updatedAt"' },
-            value: { type: 'string', description: 'The new value to set at the property path' },
-            explanation: { type: "string", description: "A short explanation of why this function was called"},
+            value: {
+              anyOf: [
+                { type: 'string' },
+                { type: 'number' },
+                { type: 'boolean' },
+                { type: 'null' },
+                { type: 'array', items: {} }, // Arrays can contain items of any type
+                { type: 'object' }
+              ],
+              description: 'The new value to set at the property path'
+            },
+            valueType: { type: 'string', enum: ['string', 'number', 'boolean', 'null', 'array', 'object'], description: 'The type of value argument' },
+            explanation: { type: 'string', description: 'A short explanation of why this function was called' },
           },
-          required: ['targetConfig', 'id', 'path', 'value', 'explanation'],
+          required: ['targetConfig', 'id', 'path', 'value', 'valueType', 'explanation'],
         },
-      },
+      },      
       {
         name: 'delete',
         description: 'Delete a configuration object and its children',
@@ -131,7 +140,7 @@ const servicetypes = [
           type: 'object',
           properties: {
             targetConfig: { type: 'string', enum: ['tasks', 'tasktypes', 'users', 'groups'], description: 'The target configuration' },
-            id: { type: 'string', description: 'The id of the object to delete' },
+            id: { type: 'string', description: 'The dot separated id of the object to delete' },
             explanation: { type: "string", description: "A short explanation of why this function was called"},
           },
           required: ['targetConfig', 'id', 'explanation'],

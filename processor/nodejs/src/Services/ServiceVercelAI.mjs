@@ -292,7 +292,18 @@ async function openaigpt_async(params) {
                   break;
                 }
                 default: {
+                  // Should use the functions schema for validation
                   try {
+                    const targetFunction = functions.find(func => func.name === 'update_value');
+                    if (!targetFunction) {
+                      throw new Error(`Undefined because function ${name} does not exist.`);
+                    }
+                    if (args.path && typeof args.path !== "string") {
+                      throw new Error(`Undefined because function ${name} requires a path.`);
+                    }
+                    if (args.value && typeof args.value !== args.valueType) {
+                      throw new Error(`${args.value} id not of type ${args.valueType}.`);
+                    }
                     T("request.action", name);
                     T("request.actionId", args.id);
                     T("request.actionPath", args.path);
@@ -305,10 +316,10 @@ async function openaigpt_async(params) {
                     T("commandArgs", {lockBypass: true});
                     const updatedTask = await wsSendTask(T(), "configFunctionResponse");
                     //console.log(`${name} updatedTask`, updatedTask);
-                    newMessages = createFunctionCallMessages({label: updatedTask?.response?.functionResult});
+                    newMessages = createFunctionCallMessages(updatedTask?.response?.functionResult);
                   } catch (error) {
-                    console.error("An error occurred while processing get_parent_task_label:", error);
-                    newMessages = createFunctionCallMessages({label: "Undefined because function failed"});
+                    console.error(`An error occurred while processing ${name}:`, error);
+                    newMessages = createFunctionCallMessages({error: `function ${name} failed.`});
                   }
                   break;
                 }
@@ -382,10 +393,15 @@ async function openaigpt_async(params) {
 }
 
 function getObjectPaths(obj, currentPath = '', result = []) {
+  const skipPaths = ["processor.origTask", "meta.hashTask"]
   for (const key in obj) {
     // eslint-disable-next-line no-prototype-builtins
     if (obj.hasOwnProperty(key)) {
       const newPath = currentPath ? `${currentPath}.${key}` : key;
+
+      if (skipPaths.includes(newPath)) {
+        continue;
+      }
       
       if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
         getObjectPaths(obj[key], newPath, result);
