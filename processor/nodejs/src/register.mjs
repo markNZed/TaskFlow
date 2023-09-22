@@ -13,13 +13,6 @@ let hubId;
 
 const register_async = async () => {
 
-  const messagesStyle = {
-    wsOutputDiff: false,
-    wsInputDiff: true,
-    httpOutputDiff: false,
-    httpInputDiff: false, // Not used by Hub yet
-  };
-
   const requestOptions = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -28,7 +21,6 @@ const register_async = async () => {
       processorId: processorId,
       environments: ["nodejs"],
       commandsAccepted: ["update", "join", "init", "pong", "register", "error"],
-      messagesStyle,
       language,
    }),
   };

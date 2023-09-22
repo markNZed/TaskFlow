@@ -1,5 +1,11 @@
 /* ToDo
 -------
+Merge nodejs into rxjs
+  nodejs 
+    ServiceVercelAI
+  rxjs
+    TASK_DIR
+  Task Function arguments are different
 Need access to the service type to be able to modify the system prompts
   But we want to override for an instance not all instances
     Use the config in the task ?
@@ -190,7 +196,6 @@ Task that monitors a collaborative discussion and via another route allows inter
   Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
   Does not require extending the server ?
     Security flaw for now - a user can "fake" another task (but need the familyId)
-messagesStyle http input must be diff ?
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]
   task.config.outputPipeline = [...]

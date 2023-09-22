@@ -21,7 +21,6 @@ router.post("/", async (req, res) => {
   let processorId = req.body.processorId;
   let environments = req.body.environments;
   let commandsAccepted = req.body?.commandsAccepted;
-  let messagesStyle = req.body?.messagesStyle;
   let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
   let coprocessor = req.body?.coprocessor;
@@ -30,15 +29,6 @@ router.post("/", async (req, res) => {
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "init", "join", "pong", "register", "error"];
-  }
-  // Not used yet but could e usful for interfacing with a third party service
-  if (messagesStyle === undefined) {
-    messagesStyle = {
-      wsOutputDiff: false,
-      wsInputDiff: true,
-      httpOutputDiff: false,
-      httpInputDiff: false, // Not used by Hub yet
-    };
   }
   if (language === undefined) {
     language = "EN";
@@ -49,7 +39,6 @@ router.post("/", async (req, res) => {
 
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
   //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
-  //console.log("processorId " + processorId + " registered with messagesStyle " + JSON.stringify(messagesStyle));
   console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
     
   if (coprocessor) {
@@ -57,7 +46,6 @@ router.post("/", async (req, res) => {
       environments,
       commandsAccepted,
       serviceTypes,
-      messagesStyle,
       language,
       isCoprocessor: true,
     })
@@ -66,7 +54,6 @@ router.post("/", async (req, res) => {
       environments,
       commandsAccepted,
       serviceTypes,
-      messagesStyle,
       language,
     })
   }
