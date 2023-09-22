@@ -238,6 +238,8 @@ async function chatPrepare_async(T) {
     }
   }
 
+  const maxFunctionDepth = serviceConfig.maxFunctionDepth || 1; 
+
   return {
     systemMessage,
     prevMessages,
@@ -253,6 +255,7 @@ async function chatPrepare_async(T) {
     dummyAPI,
     serviceConfig,
     functions,
+    maxFunctionDepth,
   };
 }
 

@@ -22,6 +22,7 @@ const servicetypes = [
     noStreaming: false,
     systemMessageTemplate: "",
     cacheKeySeed: "",
+    maxFunctionDepth: 1,
   },
   {
     name: "configchat",

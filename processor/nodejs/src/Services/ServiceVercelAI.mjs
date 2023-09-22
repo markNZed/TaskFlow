@@ -68,6 +68,7 @@ async function openaigpt_async(params) {
     cacheKeySeed,
     dummyAPI,
     functions,
+    maxFunctionDepth,
     T,
   } = params;
 
@@ -248,6 +249,7 @@ async function openaigpt_async(params) {
       response_text_promise = Promise.resolve([text, []]);
     } else {
       let newMessages = [];
+      let functionDepth = 0;
       //console.log("messages", messages);
       try {
         let options = {
@@ -273,7 +275,8 @@ async function openaigpt_async(params) {
               { name, arguments: args },
               createFunctionCallMessages,
             ) => {
-              console.log("experimental_onFunctionCall", name, args);
+              console.log("experimental_onFunctionCall", functionDepth, name, args);
+              functionDepth++;
               // if you skip the function call and return nothing, the `function_call`
               // message will be sent to the client for it to handle
               newMessages = createFunctionCallMessages({result: `Unknown function ${name}`});
@@ -332,13 +335,16 @@ async function openaigpt_async(params) {
               if (currentMaxResponse < minimalTokens) {
                 functionMessages = shrinkMessages(systemMessage, functionMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse)
               }
-              return openai.chat.completions.create({
+              let completionOptions = {
                 messages: functionMessages,
                 stream: true,
                 model: modelVersion,
-                functions,
-                function_call: "auto",
-              });
+              }
+              if (functionDepth < maxFunctionDepth) {
+                completionOptions["functions"] = functions;
+                completionOptions["function_call"] = "auto";
+              }
+              return openai.chat.completions.create(completionOptions);
             },
             onToken: async (token) => {
               // This callback is called for each token in the stream

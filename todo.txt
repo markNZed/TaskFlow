@@ -6,12 +6,25 @@ Need access to the service type to be able to modify the system prompts
       How to get original config ?
         Add a TaskServiceTypeQuery that can return the config of a service
           Base on SystemConfig and ConfigEditor
-We need to be able to edit/resubmit in the chat
+  Would need to run a Task that can do that on the processor
+    Should be possible to base it on TaskSystemConfig
+      TaskServiceConfig
+      Would need to put the service config into Redis
+        Move serviceTypes into configdata.mjs
+          Do this after consolidating hub+processor into a node
+Automatic Response Repair
+  https://community.openai.com/t/functions-half-a-solution-to-getting-structured-responses-from-gpt/282096
+  The key points are
+    the api you call with the json provided by ai must be written in a way that does a full validation of the input and return as json a payload that state exactly what is wrong and what action the ai should take to fix it .
+    Pass this json to ai as a function message and it will setup for the user a message stating what is missing / wrong , so that the user can act accordingly. (Of course you must send the whole ongoing conversation to ai ) .
+
+    These models have been tuned to follow instructions, so you need to tell the model the exact change you want it to make. If the function is missing a “foo” parameter don’t tell it “you forgot a parameter named ‘foo’” instead instruct it to “add a ‘foo’ parameter”.
+    https://github.com/Stevenic/alphawave
+      https://medium.com/@ickman/making-openai-functions-reliable-dc206181afc9
+We need to be able to edit/resubmit in the chat to explore prompts
   Could start with an options to delete
     Could replace content with empty string.
 Total token count for conversation (using what chatGPT returns - usage)
-Limit the number of function calls per conversation?
-  Limit recursion depth
 Check Demo of collaborative chat
 A Processor that is restarted does not rejoin the activeTasks ?
 tasktype cannot configure fsm: { useMachine: true} ?
@@ -19,18 +32,12 @@ The stepper sets the state to exit - it should not act directly on the state, us
   Review all Tasks and ensure not accessing internals of children
 TaskChat name must be "start" ? 
 Need to clean up when tasks stop e.g nodejs activeTaskFsm
+https://en.wikipedia.org/wiki/Barbara_J._Grosz
+
 Add the user object only if it has changed
   If the task is collaborative then the user should be associated with task.processor?
     Then would not need to send all the time
       Could have multple users on the the same processor collaborating
-https://en.wikipedia.org/wiki/Barbara_J._Grosz
-How can we modify the service configurations? 
-  Would need to run a Task that can do that on the processor
-    Should be possible to base it on TaskSystemConfig
-      TaskServiceConfig
-      Would need to put the service config into Redis
-        Move serviceTypes into configdata.mjs
-          Do this after consolidating hub+processor into a node
 Switch from hub/processor to node
   Add support for multiple hubs
     Will allow fro bridge between TF & MTF
@@ -513,6 +520,8 @@ Comparison with similar systems
     Guidance programs allow you to interleave generation, prompting, and logical control into a single continuous flow
   https://lmql.ai/
     LMQL is a programming language for language model interaction
+  https://github.com/Stevenic/alphawave
+    State-of-the-art response repair logic.
 
 
 Test Plan
