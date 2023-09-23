@@ -4,8 +4,8 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async } from "../../storage.mjs";
-import { utils } from "../../utils.mjs";
+import { tasksStore_async, groupsStore_async } from "#src/storage";
+import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
 const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import * as dotenv from "dotenv";
-import { EMPTYDBS } from "../config.mjs";
+import { EMPTY_ALL_DB } from "../config.mjs";
 import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mjs";
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
@@ -80,7 +80,7 @@ const tasksStore_async = newKeyV(redisClient, "tasks");
 
 const autoStartTasksStore_async = newKeyV(redisClient, "autoStartTasks");
 
-if (EMPTYDBS) {
+if (EMPTY_ALL_DB) {
   await Promise.all([
     instancesStore_async.clear(),
     familyStore_async.clear(),

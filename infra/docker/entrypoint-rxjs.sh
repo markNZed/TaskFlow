@@ -2,5 +2,5 @@
 
 cd /app/processor/rxjs
 npm install
-screen -d -m ENVIRONMENT=rxjs npm start 2>&1 | tee rxjs.log
+screen -d -m NODE_NAME=one npm start 2>&1 | tee one.log
 sleep infinity

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import {EMPTYDBS} from "../config.mjs";
+import {EMPTY_ALL_DB} from "../config.mjs";
 import Keyv from "keyv";
 import KeyvBetterSqlite3 from "keyv-better-sqlite3";
 import * as dotenv from "dotenv";
@@ -73,7 +73,7 @@ async function setActiveTask_async(task) {
   ]);
 }
 
-if (EMPTYDBS) {
+if (EMPTY_ALL_DB) {
   await Promise.all([
     cacheStore_async.clear(),
     activeTasksStore_async.clear(),

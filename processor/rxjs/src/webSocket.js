@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
-import { hubSocketUrl, processorId, COPROCESSOR } from "../config.mjs";
+import { hubSocketUrl, NODE } from "../config.mjs";
 import { register_async } from "./register.mjs";
 import { getActiveTask_async, setActiveTask_async } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
@@ -62,8 +62,8 @@ taskSubject
         utils.removeNullKeys(task);
       }
       // We make an exception for sync so we can log sync taht are sent with coprocessingDone
-      const CEPCoprocessor = COPROCESSOR && (task.processor.coprocessing || task.processor?.commandArgs?.sync);
-      const CEPprocessor = !COPROCESSOR;
+      const CEPCoprocessor = NODE.role === "coprocessor" && (task.processor.coprocessing || task.processor?.commandArgs?.sync);
+      const CEPprocessor = NODE.role !== "coprocessor";
       if (CEPCoprocessor || CEPprocessor ) {
         // Complex event processing uses a Map of Map
         //  The outer Map matches a task identity of the task that is being processed
@@ -102,7 +102,7 @@ taskSubject
           task.processor.CEPExecuted.push(functionName);
         }
       }
-      if (COPROCESSOR) {
+      if (NODE.role === "coprocessor") {
         //utils.logTask(task, "taskSubject task.processor.coprocessing", task.processor.coprocessing, "task.processor.coprocessingDone", task.processor.coprocessingDone);
         if (task.processor.coprocessingDone) {
           utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.processor.coprocessingDone);
@@ -112,7 +112,7 @@ taskSubject
         }
       } else {
         // Process the task to install the CEP
-        if (task.processor.initiatingProcessorId !== processorId) {
+        if (task.processor.initiatingProcessorId !== NODE.id) {
           await taskProcess_async(wsSendTask, task, CEPFuncs);
         }
       }
@@ -128,11 +128,11 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (!COPROCESSOR || task.processor.coprocessingDone) {
+        if (NODE.role !== "coprocessor" || task.processor.coprocessingDone) {
           utils.logTask(task, 'Task processed successfully');
           taskRelease(task.instanceId, "Task processed successfully");
         } else {
-          utils.logTask(task, 'Task processed COPROCESSOR', COPROCESSOR, "task.processor.coprocessingDone", task.processor.coprocessingDone);
+          utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.processor.coprocessingDone", task.processor.coprocessingDone);
         }
       }
     },
@@ -156,9 +156,9 @@ function wsSendObject(message) {
 const wsSendTask = async function (task) {
   //utils.logTask(task, "wsSendTask ", JSON.stringify(task, null, 2));
   let message = {};
-  task = await utils.taskInProcessorOut_async(task, processorId, getActiveTask_async);
+  task = await utils.taskInProcessorOut_async(task, NODE.id, getActiveTask_async);
   task.meta = task.meta || {};
-  if (!COPROCESSOR) {
+  if (NODE.role !== "coprocessor") {
     task.meta.prevMessageId = task.meta.messageId;
     task.meta.messageId = utils.nanoid8();
   }
@@ -201,15 +201,15 @@ const connectWebSocket = () => {
     let task;
     if (message?.task) {
       task = utils.hubInProcessorOut(message.task);
-      task.processor["isCoprocessor"] = COPROCESSOR;
+      task.processor["isCoprocessor"] = NODE.role === "coprocessor";
       command = task.processor.command;
       commandArgs = task.processor.commandArgs;
       // We do not lock for start because start only arrives once on the coprocessor with task.processor.coprocessing 
       // so it does not get released. Start can have instanceId
       // We do not lock for a sync for the same reason - we do not coprocess sync
       // Check for instanceId to avoid locking for commands like register
-      if (task.instanceId && command !== "start" && task.processor.initiatingProcessorId !== processorId) {
-        if (!COPROCESSOR || (COPROCESSOR && task.processor.coprocessing)) {
+      if (task.instanceId && command !== "start" && task.processor.initiatingProcessorId !== NODE.id) {
+        if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.processor.coprocessing)) {
            await taskLock(task.instanceId, "processorWs.onmessage");
         }
       }
@@ -236,7 +236,7 @@ const connectWebSocket = () => {
       }
       utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       if (!utils.checkHashDiff(lastTask, mergedTask)) {
-        if (mergedTask.processor.initiatingProcessorId === processorId) {
+        if (mergedTask.processor.initiatingProcessorId === NODE.id) {
           console.error("Task hash does not match from this processor");
         }
       }

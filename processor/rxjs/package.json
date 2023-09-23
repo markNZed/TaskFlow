@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "imports": {
+    "#root/*": "./*.mjs",
     "#src/*": "./src/*.mjs"
   },
   "scripts": {

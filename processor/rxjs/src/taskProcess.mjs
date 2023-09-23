@@ -4,28 +4,25 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { taskFunctions } from "./taskFunctions.mjs";
+import { importTaskFunction_async, taskFunctionExists_async } from "./taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, COPROCESSOR, CONFIG_DIR, ENVIRONMENT } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 import { taskServices, taskServicesInitialized } from './taskServices.mjs';
 
-let serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
+let serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
-
-function hasOverlap(arr1, arr2) {
-  return arr1.some(item => arr2.includes(item));
-}
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
   try {
     utils.logTask(task, "taskProcess_async", task.id);
     utils.logTask(task, "taskProcess_async task.processor.coprocessing", task.processor.coprocessing);
-    const processorMatch = task.processor.initiatingProcessorId === processorId;
+    const processorMatch = task.processor.initiatingProcessorId === NODE.id;
+    const taskFunctionName = `${task.type}_async`
     if (processorMatch) {
       utils.logTask(task, "RxJS Task Processor from this processor so skipping Task Fuction id:" + task.id);
       updatedTask = task;
@@ -35,13 +32,13 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     } else if (task.processor["command"] === "start") {
       utils.logTask(task, "RxJS Task Processor start so skipping Task Fuction id:" + task.id);
       updatedTask = task;
-    } else if (COPROCESSOR && task.processor?.commandArgs?.sync) {
+    } else if (NODE.role === "coprocessor" && task.processor?.commandArgs?.sync) {
       // Seems a risk of CEP operating on sync creating loops
       // Could have a rule that sync do not operate on the same task
       // True that in this case we can just modify the task
       utils.logTask(task, "RxJS Task Coprocessor sync so skipping Task Fuction id:" + task.id);
       updatedTask = task;
-    } else if (taskFunctions && taskFunctions[`${task.type}_async`]) {
+    } else if (await taskFunctionExists_async(taskFunctionName)) {
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(task.instanceId));
       let services = {};
       const servicesConfig = task.config.services;
@@ -52,7 +49,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
           const environments = servicesConfig[key].environments;
           if (environments) {
             // Only try to load a service if it is expected to be on this processor
-            if (hasOverlap(environments, [ENVIRONMENT])) {
+            if (environments.includes(NODE.environment)) {
               const type = servicesConfig[key].type;
               if (serviceTypes[type]) {
                 services[key] = serviceTypes[type];
@@ -67,13 +64,14 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         });
       }  
       const T = utils.createTaskValueGetter(task);
+      const taskFunction = await importTaskFunction_async(taskFunctionName);
       // Option to run in background
       if (T("config.background")) {
         utils.logTask(task, `Processing ${task.type} in background`);
-        taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
+        taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services);
       } else {
         utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-        updatedTask = await taskFunctions[`${task.type}_async`](wsSendTask, T, fsmHolder, CEPFuncs, services);
+        updatedTask = await taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services);
       }
       utils.logTask(task, `Finished ${task.type} in state ${updatedTask?.state?.current}`);
     } else {
@@ -81,14 +79,14 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (task.processor["command"] === "init") {
-      if (!COPROCESSOR || (COPROCESSOR && !task.processor.coprocessingDone)) {
+      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !task.processor.coprocessingDone)) {
         // How about overriding a match. createCEP needs more review/testing
         // Create two functions
         if (task.config?.ceps) {
           for (const key in task.config.ceps) {
             if (task.config.ceps[key]) {
               const CEPenvironments = task.config.ceps[key].environments;
-              if (!CEPenvironments || CEPenvironments.includes(ENVIRONMENT)) {
+              if (!CEPenvironments || CEPenvironments.includes(NODE.environment)) {
                 utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
               }
             }
@@ -121,7 +119,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       updatedTask["meta"] = {};
       updatedTask["processor"] = {};
     }
-    if (COPROCESSOR) {
+    if (NODE.role === "coprocessor") {
       if (updatedTask === null) {
         updatedTask = task;
         utils.logTask(updatedTask, "taskProcess_async null so task replaces updatedTask", updatedTask.id);
@@ -131,7 +129,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         // This processor wants to make a change
         // The original processor will no longer see the change as coming from it
         utils.logTask(updatedTask, "taskProcess_async initiatingProcessorId updated");
-        updatedTask.processor["initiatingProcessorId"] = processorId;
+        updatedTask.processor["initiatingProcessorId"] = NODE.id;
       }
       if (!updatedTask.command) {
         // Because wsSendTask is expecting task.command

@@ -1,30 +1,30 @@
 /* ToDo
 -------
+
 Merge nodejs into rxjs
-  Classes of node:
-    type: hub, processor, bridge
-    role: core, coprocessor, consumer (core can just be ampped to hub/processor/bridge)
-    processing: streaming, batch (this is interesting geven if we assume N=1 or now) 
-  Could still give environments names e.g. nodejs
-  Need a concept of node name so we can hav edifferent processors (e.g. differen resources)
-  Create utils for each class of node?
-      utils directory
+  Task specifies if it is stream or batch e.g. Task... or TaskCEP...
+    Identify Task which are combining both in Tasks/Hub
   Services might be shared e.g. proc provides services to both streaming and batch
+    Services should import on demand like Tasks
     Could be like a tree - start services in each dir
     Could be similar for tasks
       This would allow the task to check which environment it is on and then change behavior
         Could help make things easier to understand
           Deep directories suck for using modules - we have aliases
-  Task could specify if it is streaming or batch e.g. Task... or TaskCEP...
-  task.node could include type/role/processing the one server can do all ?
-    These can be different subjects in rxjs
-      TaskSync sends to event queue or websocket
-        node registers as event based or websocket
-  sing dedicated task for CEP so we can choose to run CEP or Task or both vis tasks config
+  Using dedicated task for CEP so we can choose to run CEP or Task or both via tasks config
   CEPFunctions -> ServiceCEP
   processor/rxjs -> node
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
+  delete nodejs
+    delete shared/processor
+  Test Docker setup
 
+Globally replace processorId with nodeId
+Move rxjs to congifdata.mjs
+Support web socket or RxjS queue
+  These can be different subjects in rxjs
+    TaskSync sends to event queue or websocket
+      node registers as event based or websocket
 Need access to the service type to be able to modify the system prompts
   But we want to override for an instance not all instances
     Use the config in the task ?

@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getActiveTask_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, COPROCESSOR } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import { taskLock } from './shared/taskLock.mjs';
 
 export async function commandUpdate_async(wsSendTask, task) { 
@@ -49,10 +49,10 @@ export async function commandUpdate_async(wsSendTask, task) {
   // Because this is a fresh command sent from the coprocessor not part of the coprocessing pipeline
   mergedTask.processor["coprocessing"] = false;
   // Because it is this processor that is the initiator
-  mergedTask.processor["initiatingProcessorId"] = processorId; //"coprocessor";
+  mergedTask.processor["initiatingProcessorId"] = NODE.id; //"coprocessor";
   try {
     //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
-    if (COPROCESSOR) {
+    if (NODE.role === "coprocessor") {
       mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
       mergedTask.meta["messageId"] = utils.nanoid8();
       utils.logTask(task, "Creating new messageId from coprocessor", mergedTask.meta.messageId);

@@ -3,15 +3,14 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-
-import { utils } from "../../utils.mjs";
-import { DUMMY_OPENAI, CONFIG_DIR } from "../../../config.mjs";
+import { utils } from "#src/utils";
+import { DUMMY_OPENAI, NODE } from "#root/config";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 
 // Should we return a promise? Better to be task iin/out ?
 
-var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
+var serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 

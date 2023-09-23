@@ -18,8 +18,8 @@ Using VS Code
     * The output of the servers are also logged into files and these can be opened in VS Code (which will update the contents in real-time and allows for searching).
     * Open the logs as tabs in VS Code:
         * /app/hub/hub.log
-        * /app/processor/rxjs/rxjs.log
-        * /app/processor/rxjs/rxjscopro.log
+        * /app/processor/rxjs/one.log
+        * /app/processor/rxjs/two.log
         * /app/processor/nodejs/nodejs.log
 * The node servers (e.g. Hub, RxJS, NodeJS) run in debug mode so breakpoints can be set in VS Code.
 
@@ -34,7 +34,7 @@ Using VS Code
 * The script `./scripts/filerLogs.sh` also creates `tailLogs.txt` which is the merge of all logs.
 * The `hub/src/configdata.mjs` can generate a file `/tmp/tasks.json` which can be copied using a linux shell to `/app/dead` so it can be loaded into VS Code but ignored by git. This shows the task object after initialisation. The `hub/src/configdata.mjs` module uses that file to perform a diff and print to the screen/log which can be a way to see the impacts of changes to the tasks configuration. The diff can be "reset" by deleting `/tmp/tasks.json`.
 * here is a debugTask function in `shared/utils.mjs` that is called from strategic locations with the Task object. From within that function we can add logic to debug and add tracing of particular "aspects" of functionality.
-* The EMPTYDBS variable in `shared/config.mjs` can be set to true and then upon restarting a Task Node it should empty its DBs. This can help during debug by starting the systme in a known state. Hoever if this is enabled and only one of the Task NOdes restarts (e.g. due to nodemon monitoring) then active Tasks will get out of sync. The script `./restartServers.sh` can restart everything in one step.
+* The EMPTY_ALL_DB variable in `shared/config.mjs` can be set to true and then upon restarting a Task Node it should empty its DBs. This can help during debug by starting the systme in a known state. Hoever if this is enabled and only one of the Task NOdes restarts (e.g. due to nodemon monitoring) then active Tasks will get out of sync. The script `./restartServers.sh` can restart everything in one step.
 
 ## Tips
 

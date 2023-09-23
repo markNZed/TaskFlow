@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import _ from 'lodash';
-import { utils } from "../../utils.mjs";
+import { utils } from "#src/utils";
 
 /*
 ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskSystemShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).

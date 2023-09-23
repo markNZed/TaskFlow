@@ -1,37 +1,44 @@
-/*
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { TASK_DIR } from "../config.mjs";
+import { NODE } from "../config.mjs";
 
-const taskFunctions = {};
+// Store the mapping of task function names to their file paths
+const taskFilePaths = {};
 
-// Here we are importing all the Task Functions
-// It may be better to import the Tsak when it is needed
-
-const importFunctions = async () => {
+const initializeTaskFilePaths = () => {
   let taskDir = path.dirname(fileURLToPath(import.meta.url));
-  taskDir += "/" + TASK_DIR;
+  taskDir += "/" + `Tasks/${NODE.type}/${NODE.role}`;
   const taskFiles = fs
     .readdirSync(taskDir)
     .filter((file) => file.startsWith("Task") && file.endsWith(".mjs"));
 
-  const importPromises = taskFiles.map(async (file) => {
+  taskFiles.forEach((file) => {
     const moduleName = path.basename(file, ".mjs");
-    const modulePath = `./${TASK_DIR}/${file}`;
-    //console.log("Importing " + moduleName)
-    const module = await import(modulePath);
-    taskFunctions[moduleName + "_async"] = module[moduleName + "_async"];
-    //console.log("Imported " + moduleName)
+    const modulePath = `./Tasks/${NODE.type}/${NODE.role}/${file}`;
+    taskFilePaths[moduleName + "_async"] = modulePath;
   });
-
-  await Promise.all(importPromises);
 };
 
-await importFunctions();
+// Initialize the task file paths
+initializeTaskFilePaths();
 
-export { taskFunctions };
+const importTaskFunction_async = async (functionName) => {
+  if (!taskFilePaths[functionName]) {
+    console.log("taskFilePaths:", taskFilePaths);
+    throw new Error(`Task function ${functionName} does not exist.`);
+  }
+  
+  const modulePath = taskFilePaths[functionName];
+  const module = await import(modulePath);
+  return module[functionName];
+};
+
+const taskFunctionExists_async = async (functionName) => {
+  if (!taskFilePaths[functionName]) {
+    return false;
+  }
+  return true;
+}
+
+export { importTaskFunction_async, taskFunctionExists_async };

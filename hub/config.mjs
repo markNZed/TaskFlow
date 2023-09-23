@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // .env is intended to allow for config that is not under version control
-import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTYDBS } from "./src/shared/config.mjs"
+import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTY_ALL_DB } from "./src/shared/config.mjs"
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -46,4 +46,4 @@ let haveCoprocessor = true;
 
 const SAVE_TASKS = process.env.SAVE_TASKS || false;
 
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoprocessor, REDIS_URL, MONGO_URL, EMPTYDBS, SAVE_TASKS };
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoprocessor, REDIS_URL, MONGO_URL, EMPTY_ALL_DB, SAVE_TASKS };

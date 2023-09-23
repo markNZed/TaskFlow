@@ -8,7 +8,7 @@ The `config.mjs` file is shared by Task hub and Task Processors (loaded into the
 * appAbbrev
 * REDIS_URL
 * MONGO_URL
-* EMPTYDBS - when true then all DBs are emptied on restart
+* EMPTY_ALL_DB - when true then all DBs are emptied on restart
 
 # Task Definition Schema
 

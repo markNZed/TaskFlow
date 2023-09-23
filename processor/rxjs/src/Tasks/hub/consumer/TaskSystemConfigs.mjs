@@ -3,8 +3,8 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { utils } from "../../utils.mjs";
-import { commandUpdate_async } from "../../commandUpdate.mjs";
+import { utils } from "#src/utils";
+import { commandUpdate_async } from "#src/commandUpdate";
 
 /*
   Register with systemConfig service and receive a promise that resolves when there is a change

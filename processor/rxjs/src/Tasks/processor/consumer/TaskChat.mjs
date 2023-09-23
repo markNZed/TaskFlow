@@ -4,9 +4,9 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { utils } from "../../utils.mjs";
+import { utils } from "#src/utils";
 import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
-import { cacheStore_async } from "../../storage.mjs";
+import { cacheStore_async } from "#src/storage";
 import { v4 as uuidv4 } from 'uuid';
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something

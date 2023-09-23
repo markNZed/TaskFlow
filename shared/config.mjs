@@ -9,5 +9,5 @@ export const appName = "T@skFlow";
 export const appAbbrev = "TF";
 export const REDIS_URL = process.env.REDIS_URL || "redis://redis-stack-svc:6379";
 export const MONGO_URL = process.env.MONGO_URL || "mongodb://user:pass@mongodb:27017/taskflow?authSource=admin";
-export const EMPTYDBS = true;
+export const EMPTY_ALL_DB = true;
 
