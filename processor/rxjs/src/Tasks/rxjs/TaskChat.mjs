@@ -3,11 +3,12 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { utils } from "../utils.mjs";
+import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
 const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
+  //console.log("TaskChat_async services", services);
   const systemConfig = services["config"].module;
 
   function arraysEqualIgnoreOrder(a, b) {

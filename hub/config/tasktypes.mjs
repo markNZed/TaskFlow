@@ -3,6 +3,9 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskCEP",
+  },
+  {
     name: "TaskSystemRestart", 
     environments: ["react"],
   },
@@ -70,6 +73,7 @@ const tasktypes = [
       ceps: {
         "familyId": {
           functionName: "CEPFamilyTree",
+          environments: ["rxjscopro"],
         },
       },
     },

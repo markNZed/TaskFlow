@@ -5,6 +5,6 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Declare the files array with paths relative to this script's location
-files=("$DIR/../hub/hub.log" "$DIR/../processor/nodejs/nodejs.log" "$DIR/../processor/rxjs/rxjs.log" "$DIR/../processor/rxjs/rxjscopro.log")
+files=("$DIR/../hub/hub.log" "$DIR/../processor/rxjs/rxjs.log" "$DIR/../processor/rxjs/rxjscopro.log" "$DIR/../processor/rxjs/rxjsnodejs.log")
 
-serverFiles=("hub/server.js" "processor/nodejs/server.js" "processor/rxjs/server.js")
+serverFiles=("hub/server.js" "processor/rxjs/server.js")

@@ -17,12 +17,10 @@ services:
     ports:
       - "127.0.0.1:3000:3000" # app
       - "127.0.0.1:9229:9229" # debug of hub
-      - "127.0.0.1:9230:9230" # debug of nodejs
       - "127.0.0.1:9231:9231" # debug of rxjs
+      - "127.0.0.1:9231:9231" # debug of rxjscopro
+      - "127.0.0.1:9230:9230" # debug of rxjsnodejs
       - "127.0.0.1:4000:4000" # meta
-      - "127.0.0.1:10229:10229" # debug of hub meta
-      - "127.0.0.1:10230:10230" # debug of nodejs meta
-      - "127.0.0.1:10231:10231" # debug of rxjs meta
     networks:
       - web-proxy
 

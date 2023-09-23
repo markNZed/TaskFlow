@@ -6,4 +6,4 @@ node_modules
 *.log
 tailLogs.txt
 core
-
+dist

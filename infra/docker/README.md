@@ -1,4 +1,4 @@
-The following is for development where the NodeJS Task Processor and React Task Processor directories are mounted in the Docker container.
+The following is for development where the RxJS Task Processor and React Task Processor directories are mounted in the Docker container.
 
 * `git clone https://github.com/markNZed/taskflow.git`
 * `cd taskflow/infra/docker`
@@ -35,12 +35,12 @@ On the server running the Redis Docker container I ran `sysctl vm.overcommit_mem
 Overview of the services/ports:
 
 * 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
-* 5000 NodeJS Task Processor
+* 5000 RxJS NodeJS Task Processor
 * 5001 Task Hub
 * 5002 RxJS Task Processor
 * 5003 RxJS Task Hub Coprocessor
 * 9229 Task Hub node debug
-* 9230 NodeJS Task Processor node debug
+* 9230 RxJS NodeJS Task Processor node debug
 * 9231 RxJS Task Processor node debug
 * 9232 RxJS Task Hub Coprocessor node debug
 * 27017 MongoDB (on mongodb container)
@@ -68,14 +68,10 @@ SetupVSCode debugging in .vscode/launch.json
 There is a meta version which shares MongoDB and Redis, all the other ports increase by 1000:
 
 * 4000 React serving the React Processor app and the React dev server for live updates (path /ws)
-* 6000 NodeJS Task Processor
+* 6000 RxJS NodeJS Task Processor
 * 6001 Task Hub
 * 6002 RxJS Task Processor
 * 6003 RxJS Task Hub Coprocessor
-* 10229 Task Hub node debug
-* 10230 NodeJS Task Processor node debug
-* 10231 RxJS Task Processor node debug
-* 10232 RxJS Task Hub Coprocessor node debug
 
 The meta version resides in `/meta`
 The code for the meta version needs to be modified at `shared/config.mjs` to give a unique DB prefix
@@ -90,7 +86,8 @@ Assumes there is a reverse proxy server, to listen on a single port and forward 
 
 If using Cloudflare remember to purge the cache after updating!
 
-docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-nodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjscopro") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjsnodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-react") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-hub") /bin/bash

@@ -12,10 +12,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
     Organise by familyId 
     If there is no familyId then match all familyIds
 */
-import { utils } from "../utils.mjs";
-import { CEPFunctions } from "../CEPFunctions.mjs";
-import { sharedStore_async } from "../storage.mjs";
-import { commandUpdate_async } from "../commandUpdate.mjs";
+import { utils } from "../../utils.mjs";
+import { CEPFunctions } from "../../CEPFunctions.mjs";
+import { sharedStore_async } from "../../storage.mjs";
+import { commandUpdate_async } from "../../commandUpdate.mjs";
 import assert from 'assert';
 
 // eslint-disable-next-line no-unused-vars

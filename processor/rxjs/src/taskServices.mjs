@@ -7,7 +7,7 @@ let taskServicesInitialized;  // Promise that will resolve when taskServices is 
 
 const importFunctions = async () => {
   let servicesDir = path.dirname(fileURLToPath(import.meta.url));
-  servicesDir += "/Services";
+  servicesDir += `/Services`;
   
   try {
     const serviceFiles = fs

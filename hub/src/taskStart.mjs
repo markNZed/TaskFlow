@@ -26,8 +26,8 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
         const processorData = activeProcessors.get(taskProcessorId);
         if (processorData) {
           doesContain = true;
-          environments.push(...processorData.environments);
-          //console.log("Adding environments to task " + activeTask.id, processorData.environments)
+          environments.push(processorData.environment);
+          //console.log("Adding environment to task " + activeTask.id, processorData.environment)
         }
       }
     }
@@ -302,7 +302,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
     throw new Error("No environments in task " + task.id);
   }
 
-  //utils.logTask(task, "task.environments", task.environments);
+  utils.logTask(task, "task.environments", task.environments);
 
   // If the task only runs on coprocessor
   if (task.config.autoStartCoProcessor) {
@@ -313,7 +313,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
   for (const environment of task.environments) {
     // Favor the source Task Processor if we need that environment
     let found = false;
-    if (sourceProcessor && sourceProcessor.environments && sourceProcessor.environments.includes(environment)) {
+    if (sourceProcessor && sourceProcessor.environment === environment) {
       found = true;
       taskProcessors.push(processorId);
     }
@@ -321,7 +321,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
     if (!found && task.processors) {
       for (let id in task.processors) {
         const processor = activeProcessors.get(id);
-        if (processor && processor.environments && processor.environments.includes(environment)) {
+        if (processor && processor.environment === environment) {
           found = true;
           taskProcessors.push(id);
           task.processors[id] = {id: id};
@@ -331,8 +331,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
     // Find an active processor that supports this environment
     if (!found) {
       for (const [activeProcessorId, value] of activeProcessors.entries()) {
-        const environments = value.environments;
-        if (environments && environments.includes(environment)) {
+        if (value.environment === environment) {
             found = true;
             taskProcessors.push(activeProcessorId);
             task.processors[activeProcessorId] = {

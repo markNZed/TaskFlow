@@ -11,9 +11,11 @@ import useWebSocketContext from "../contexts/WebSocketContext";
 const useStartTask = (task, setTask) => {
   const { wsSendTask } = useWebSocketContext();
   const [startTaskError, setStartTaskError] = useState();
+  const startTaskSentIdRef = useRef();
 
   useEffect(() => {
     const command = task?.command;
+    const commandArgs = task?.commandArgs;
     if (command !== "start" || startTaskError) {
       return;
     }
@@ -25,17 +27,20 @@ const useStartTask = (task, setTask) => {
         setTask((p) => utils.deepMerge(p, updating));
         utils.log("useStartTask from ", snapshot.id, "launching", snapshot.commandArgs.id);
         wsSendTask(snapshot);
+        startTaskSentIdRef.current = snapshot.commandArgs.id;
       } catch (error) {
         console.log(error)
         setStartTaskError(error.message);
+        startTaskSentIdRef.current = commandArgs.id;
       }
+      console.log("startTaskSentIdRef.current", startTaskSentIdRef.current);
     };
 
     fetchTaskFromAPI();
   // eslint-disable-next-line
   }, [task]);
 
-  return { startTaskError };
+  return { startTaskError, startTaskSentIdRef };
 };
 
 export default useStartTask;

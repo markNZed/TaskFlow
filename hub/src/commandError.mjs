@@ -18,7 +18,7 @@ async function errorTask_async(task) {
   const processorId = task.hub.sourceProcessorId;
   task.error.sourceProcessorId = processorId;
   const sourceProcessor = activeProcessors.get(processorId);
-  task.error.environments = sourceProcessor.environments;
+  task.error.environments = [sourceProcessor.environment];
   let nextTaskId = task.hub.commandArgs.errorTask;
   utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
   await setActiveTask_async(task);

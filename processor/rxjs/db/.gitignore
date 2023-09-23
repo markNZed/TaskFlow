@@ -1,4 +1,3 @@
-processorId.txt
-coprocessorId.txt
-main.sqlite
-maincopro.sqlite
+*Id.txt
+*.sqlite
+

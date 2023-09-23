@@ -10,11 +10,6 @@ dotenv.config();
 
 const router = express.Router();
 
-router.get("/rxjs", async (req, res) => {
-  console.log("/rxjs")
-  res.send(`Hello!`);
-});
-
 router.get("*", function (req, res) {
   console.log("*")
   res.status(404).send("Unknown end-point");

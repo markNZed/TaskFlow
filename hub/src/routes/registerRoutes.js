@@ -19,7 +19,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   console.log("/hub/api/register");
   let processorId = req.body.processorId;
-  let environments = req.body.environments;
+  let environment = req.body.environment;
   let commandsAccepted = req.body?.commandsAccepted;
   let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
@@ -37,13 +37,17 @@ router.post("/", async (req, res) => {
     coprocessor = false;
   }
 
+  if (typeof environment !== "string") {
+    throw new Error("environment must be a string");
+  }
+
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
   //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
-  console.log("processorId " + processorId + " registered with environments " + JSON.stringify(environments) + " language " + language + " coprocessor " + coprocessor);
+  console.log("processorId " + processorId + " registered with environment " + JSON.stringify(environment) + " language " + language + " coprocessor " + coprocessor);
     
   if (coprocessor) {
     activeCoprocessors.set(processorId, {
-      environments,
+      environment,
       commandsAccepted,
       serviceTypes,
       language,
@@ -51,7 +55,7 @@ router.post("/", async (req, res) => {
     })
   } else {  
     activeProcessors.set(processorId, {
-      environments,
+      environment,
       commandsAccepted,
       serviceTypes,
       language,
@@ -67,10 +71,10 @@ router.post("/", async (req, res) => {
   let countAutoStartTasks = 0;
   let activeEnvironments = [];
   activeProcessors.forEach(item => {
-    activeEnvironments.push(...item.environments);
+    activeEnvironments.push(item.environment);
   });
   activeCoprocessors.forEach(item => {
-    activeEnvironments.push(...item.environments);
+    activeEnvironments.push(item.environment);
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
 
@@ -84,17 +88,17 @@ router.post("/", async (req, res) => {
 
   for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
     countAutoStartTasks++;
-    console.log("Checking autostart for task", taskId);
+    console.log(`Checking autostart ${environment} for task`, taskId, autoStartTask);
     const autoStartEnvironment = autoStartTask.startEnvironment;
     let startEnvironments = autoStartTask.startEnvironments;
-    if (activeEnvironments.includes(autoStartEnvironment)) {
-      //console.log("environments.includes(autoStartEnvironment)");
+    if (activeEnvironments.includes(autoStartEnvironment) && (startEnvironments.includes(environment) || autoStartEnvironment === environment)) {
+      //console.log("startEnvironments", startEnvironments);
       let allEnvironmentsAvailable = true;
-      // get the environments for this task
-      // Is each startEnvironment avialable in environments ?
+      // get the environment for this task
       startEnvironments.forEach(startEnvironment => {
+        // Is each startEnvironment available in environment ?
         if (!activeEnvironments.includes(startEnvironment)) {
-          //console.log("startEnvironment " + startEnvironment + " not available", environments);
+          //console.log("startEnvironment " + startEnvironment + " not available", environment);
           allEnvironmentsAvailable = false;
         }
       })
@@ -105,8 +109,9 @@ router.post("/", async (req, res) => {
       // We want to start the task once in that case not every time any processor is registered.
       if (autoStartTask.started) {
         startEnvironments.forEach(startEnvironment => {
-          if (!environments.includes(startEnvironment)) {
-            //console.log("startEnvironment " + startEnvironment + " not available", environments);
+          console.log("autoStartTask.started startEnvironment", startEnvironment, "environment", environment);
+          if (environment === startEnvironment) {
+            //console.log("startEnvironment " + startEnvironment + " autoStartTask.started");
             allEnvironmentsAvailable = false;
           }
         })
@@ -128,7 +133,7 @@ router.post("/", async (req, res) => {
         task.hub["sourceProcessorId"] = "hub";
         task["processor"] = {};
         task["processor"]["id"] = processorId;
-        console.log("Autostarting task ", taskId);
+        console.log("Autostarting task ", taskId, environment);
         commandStart_async(task);
         if (autoStartTask.once) {
           await autoStartTasksStore_async.delete(taskId);

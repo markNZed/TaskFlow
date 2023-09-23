@@ -37,7 +37,7 @@ function withTask(Component) {
       props.setTask,
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError } = useStartTask(
+    const { startTaskError, startTaskSentIdRef } = useStartTask(
       props.task, 
       props.setTask,
     );
@@ -276,21 +276,34 @@ function withTask(Component) {
 
     // React does not seem to gaurantee this is called in the parent before the child
     useEffect(() => {
-      if (!props.task) {return}
-      const spawnTask = props.task.config?.spawnTask === false ? false : true;
-      //console.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
-      if (spawnTask && props.task?.meta?.childrenId) {
-        props.task.meta.childrenId.forEach(childId => {
-          console.log(childId);
-          modifyTask({
-            "command": "start",
-            "commandArgs": {
-              id: childId,
-            }
-          });
-          console.log("Start from withTask", childId)
-        });
-      }
+      const spawnTasks = async () => {
+        if (!props.task) {return}
+        const spawnTask = props.task.config?.spawnTask === false ? false : true;
+        //console.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
+        if (spawnTask && props.task?.meta?.childrenId) {
+          for (const childId of props.task.meta.childrenId) {
+            console.log(childId);
+            modifyTask({
+              "command": "start",
+              "commandArgs": {
+                id: childId,
+              }
+            });
+            // Wait for startTaskSentIdRef before continuing the loop
+            await new Promise(resolve => {
+              const intervalId = setInterval(() => {
+                console.log("startTaskSentIdRef.current", startTaskSentIdRef.current);
+                if (startTaskSentIdRef.current === childId) {
+                  clearInterval(intervalId);
+                  resolve();
+                }
+              }, 100); // Check every 100ms (adjust as needed)
+            });
+            console.log("Start from withTask", childId)
+          }
+        }
+      };
+      spawnTasks();
     }, []);
 
     useEffect(() => {

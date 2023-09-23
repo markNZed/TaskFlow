@@ -1,11 +1,30 @@
 /* ToDo
 -------
 Merge nodejs into rxjs
-  nodejs 
-    ServiceVercelAI
-  rxjs
-    TASK_DIR
-  Task Function arguments are different
+  Classes of node:
+    type: hub, processor, bridge
+    role: core, coprocessor, consumer (core can just be ampped to hub/processor/bridge)
+    processing: streaming, batch (this is interesting geven if we assume N=1 or now) 
+  Could still give environments names e.g. nodejs
+  Need a concept of node name so we can hav edifferent processors (e.g. differen resources)
+  Create utils for each class of node?
+      utils directory
+  Services might be shared e.g. proc provides services to both streaming and batch
+    Could be like a tree - start services in each dir
+    Could be similar for tasks
+      This would allow the task to check which environment it is on and then change behavior
+        Could help make things easier to understand
+          Deep directories suck for using modules - we have aliases
+  Task could specify if it is streaming or batch e.g. Task... or TaskCEP...
+  task.node could include type/role/processing the one server can do all ?
+    These can be different subjects in rxjs
+      TaskSync sends to event queue or websocket
+        node registers as event based or websocket
+  sing dedicated task for CEP so we can choose to run CEP or Task or both vis tasks config
+  CEPFunctions -> ServiceCEP
+  processor/rxjs -> node
+    ServiceSystemConfig -> ServiceNodeConfig (not high priority)
+
 Need access to the service type to be able to modify the system prompts
   But we want to override for an instance not all instances
     Use the config in the task ?
@@ -18,15 +37,6 @@ Need access to the service type to be able to modify the system prompts
       Would need to put the service config into Redis
         Move serviceTypes into configdata.mjs
           Do this after consolidating hub+processor into a node
-Automatic Response Repair
-  https://community.openai.com/t/functions-half-a-solution-to-getting-structured-responses-from-gpt/282096
-  The key points are
-    the api you call with the json provided by ai must be written in a way that does a full validation of the input and return as json a payload that state exactly what is wrong and what action the ai should take to fix it .
-    Pass this json to ai as a function message and it will setup for the user a message stating what is missing / wrong , so that the user can act accordingly. (Of course you must send the whole ongoing conversation to ai ) .
-
-    These models have been tuned to follow instructions, so you need to tell the model the exact change you want it to make. If the function is missing a “foo” parameter don’t tell it “you forgot a parameter named ‘foo’” instead instruct it to “add a ‘foo’ parameter”.
-    https://github.com/Stevenic/alphawave
-      https://medium.com/@ickman/making-openai-functions-reliable-dc206181afc9
 We need to be able to edit/resubmit in the chat to explore prompts
   Could start with an options to delete
     Could replace content with empty string.
@@ -38,6 +48,15 @@ The stepper sets the state to exit - it should not act directly on the state, us
   Review all Tasks and ensure not accessing internals of children
 TaskChat name must be "start" ? 
 Need to clean up when tasks stop e.g nodejs activeTaskFsm
+Automatic Response Repair
+  https://community.openai.com/t/functions-half-a-solution-to-getting-structured-responses-from-gpt/282096
+  The key points are
+    the api you call with the json provided by ai must be written in a way that does a full validation of the input and return as json a payload that state exactly what is wrong and what action the ai should take to fix it .
+    Pass this json to ai as a function message and it will setup for the user a message stating what is missing / wrong , so that the user can act accordingly. (Of course you must send the whole ongoing conversation to ai ) .
+
+    These models have been tuned to follow instructions, so you need to tell the model the exact change you want it to make. If the function is missing a “foo” parameter don’t tell it “you forgot a parameter named ‘foo’” instead instruct it to “add a ‘foo’ parameter”.
+    https://github.com/Stevenic/alphawave
+      https://medium.com/@ickman/making-openai-functions-reliable-dc206181afc9
 https://en.wikipedia.org/wiki/Barbara_J._Grosz
 
 Add the user object only if it has changed

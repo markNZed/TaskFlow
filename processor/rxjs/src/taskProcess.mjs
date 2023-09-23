@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { taskFunctions } from "./taskFunctions.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
-import { processorId, COPROCESSOR, CONFIG_DIR, ENVIRONMENTS } from "../config.mjs";
+import { processorId, COPROCESSOR, CONFIG_DIR, ENVIRONMENT } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 import { taskServices, taskServicesInitialized } from './taskServices.mjs';
@@ -52,7 +52,7 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
           const environments = servicesConfig[key].environments;
           if (environments) {
             // Only try to load a service if it is expected to be on this processor
-            if (hasOverlap(environments, ENVIRONMENTS)) {
+            if (hasOverlap(environments, [ENVIRONMENT])) {
               const type = servicesConfig[key].type;
               if (serviceTypes[type]) {
                 services[key] = serviceTypes[type];
@@ -87,7 +87,10 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
         if (task.config?.ceps) {
           for (const key in task.config.ceps) {
             if (task.config.ceps[key]) {
-              utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
+              const CEPenvironments = task.config.ceps[key].environments;
+              if (!CEPenvironments || CEPenvironments.includes(ENVIRONMENT)) {
+                utils.createCEP(CEPFuncs, CEPFunctions, task, key, task.config.ceps[key]);
+              }
             }
           }
         }

@@ -19,7 +19,7 @@ const register_async = async () => {
     credentials: "include",
     body: JSON.stringify({
       processorId: processorId,
-      environments: ["nodejs"],
+      environment: "nodejs",
       commandsAccepted: ["update", "join", "init", "pong", "register", "error"],
       language,
    }),

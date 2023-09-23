@@ -48,15 +48,12 @@ A **Task Node** is either a Task Hub or Task Processor i.e. a process that is pr
 
 ## Task Processor
 
-Tasks are processed by Task Processors, currently there are three Task Processors implemented in T@skFlow. 
+Tasks are processed by Task Processors, currently the Task Processors implemented in T@skFlow:
 
-* NodeJS Task Processor runs Node on a server
 * React Task Processor runs React in a web browser
 * RxJS Task Processor runs RxJS on a server
 
 The Processors communicate with the Hub using websocket.
-
-The NodeJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the NodeJS Task Processor without user interaction. Tasks may use software/AI to decide on the next Task to start. The NodeJS Task Processor uses Node and the Express framework.
 
 The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Task Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
 
@@ -66,13 +63,17 @@ For more information see the Task Processor [README.md](processor/README.md).
 
 ### Task Environment
 
-Each Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment. A Task Processor could provide multiple Task Environments.
+Each Task Processor provides a Task Environment for the Task Function to run in. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment.
 
 ### SubTask
 
 A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
 
 There may be side-effects from a SubTask, for example, it may return partial results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
+
+### Service
+
+A service provides a native (e.g. Javascript) API to functionality shared across Tasks in the Task Environment
 
 ## Task Hub
 
@@ -94,7 +95,7 @@ If a Task Function sets `task.error` and the Task is updated then the Task Hub w
 
 To run T@skFlow with docker, see the [README.md](infra/docker/README.md) in the infra/docker directory.
 
-To learn more about the NodeJS Task Processor, see the [README.md](processor/nodejs/README.md) in the NodeJS Task Processor directory.
+To learn more about the RxJS Task Processor, see the [README.md](processor/rxjs/README.md) in the RxJS Task Processor directory.
 
 To learn more about the React Task Processor, see the [README.md](processor/react/README.md) in the React Task Processor directory.
 
@@ -103,14 +104,14 @@ To learn more about the Task object, see the [README.md](shared/README.md) in th
 For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
 
 T@skFlow will play nicely with other libraries such as:
-* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the NodeJS Task Processor)
-* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the NodeJS Task Processor)
+* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the RxJS Task Processor)
+* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the RxJS Task Processor)
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
 * Create React Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
-* Create NodeJS Task Processor/taskFunctions/TaskNew.mjs (copy and existing TaskFunction)
+* Create RxJS Task Processor/src/Tasks/TaskNew.mjs (copy and existing TaskFunction)
 * Add information about the new Task to hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
@@ -133,4 +134,3 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 ## Contributors
 
 The initial React Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Task Processor](https://github.com/YaokunLin/chatbot-react-client), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
-

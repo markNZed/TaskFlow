@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { processorId, TASKHUB_URL, CONFIG_DIR, COPROCESSOR, ENVIRONMENTS } from "../config.mjs";
+import { processorId, TASKHUB_URL, CONFIG_DIR, COPROCESSOR, ENVIRONMENT } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
 var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
@@ -23,7 +23,7 @@ const register_async = async () => {
     credentials: "include",
     body: JSON.stringify({
       processorId,
-      environments: ENVIRONMENTS,
+      environment: ENVIRONMENT,
       // Because this processor can serve as a coprocessor it needs to deal with "start"
       commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
       serviceTypes,

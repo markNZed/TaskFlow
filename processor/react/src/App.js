@@ -116,7 +116,7 @@ function App({ activeWorkerCount, workerId }) {
           body: JSON.stringify({
              processorId: globalState.processorId,
              commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
-             environments: ["react"],
+             environment: "react",
              language: language,
           }),
         });

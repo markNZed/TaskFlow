@@ -26,6 +26,21 @@ if (process.env.CACHE_ENABLE !== undefined) {
 }
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
+let DUMMY_OPENAI = false;
+if (process.env.DUMMY_OPENAI !== undefined) {
+  DUMMY_OPENAI = process.env.DUMMY_OPENAI === "true"
+}
+if (process.env.OPENAI_API_KEY === "") {
+  DUMMY_OPENAI = true;
+}
+console.log("DUMMY_OPENAI " + DUMMY_OPENAI);
+
+let ENVIRONMENT = "rxjs";
+if (process.env.ENVIRONMENT !== undefined) {
+  ENVIRONMENT = process.env.ENVIRONMENT;
+}
+console.log("ENVIRONMENT " + ENVIRONMENT);
+
 const DEFAULT_USER = "test@testing.com";
 // For teting we can map one user to any ohter user e.g.
 // MAP_USER_JSON={ "dev@email.com" : "user@email.org" }
@@ -35,49 +50,53 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const CONFIG_DIR = process.env.CONFIG_DIR || path.join(__dirname, './config');
+let COPROCESSOR = false;
+let WS_PORT;
 
-let COPROCESSOR;
-if (process.env.COPROCESSOR) {
-  COPROCESSOR = process.env.COPROCESSOR === "true";
-} else {
-  COPROCESSOR = false;
+switch (ENVIRONMENT) {
+  case "rxjs":
+    WS_PORT = 5002;
+    break;
+  case "rxjscopro":
+    COPROCESSOR = true;
+    WS_PORT = 5003;
+    break;
+  case "nodejs":
+    WS_PORT = 5000;
+    break;
+  default:
+    throw new Error("Unknown environment " + ENVIRONMENT);
 }
+
 console.log("COPROCESSOR", COPROCESSOR);
 
+const CONFIG_DIR = process.env.CONFIG_DIR + ENVIRONMENT || path.join(__dirname, './config/' + ENVIRONMENT);
+console.log("CONFIG_DIR", CONFIG_DIR);
+
+
 let processorId;
-const processorIdFile = COPROCESSOR ? './db/coprocessorId.txt' : './db/processorId.txt';
+let processorIdFile = './db/processor' + ENVIRONMENT + 'Id.txt';
 try {
     // Try to read the id from a file
     processorId = fs.readFileSync(processorIdFile, 'utf-8');
 } catch (e) {
     // If the file does not exist, generate a new id
-    processorId = COPROCESSOR ? "rxjscopro-" : "rxjs-";
-    processorId += uuidv4();
+    processorId = ENVIRONMENT + '-' + uuidv4();
     // Save the id to a file for future use
     fs.writeFileSync(processorIdFile, processorId);
 }
 
-let WS_PORT;
 if (process.env.WS_PORT) {
   WS_PORT = process.env.WS_PORT;
-} else if (COPROCESSOR) {
-  WS_PORT = 5003;
-} else {
-  WS_PORT = 5002;
 }
 
 let TASK_DIR;
 if (process.env.TASK_DIR) {
   TASK_DIR = process.env.TASK_DIR;
-} else if (COPROCESSOR) {
-  TASK_DIR = "TasksCoprocessor";
 } else {
-  TASK_DIR = 'Tasks';
+  TASK_DIR = "Tasks/" + ENVIRONMENT;
 }
 
 console.log(`Processor ID: ${processorId}`);
 
-const ENVIRONMENTS = COPROCESSOR ? ["rxjscopro"] : ["rxjs"];
-
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, COPROCESSOR, TASK_DIR, WS_PORT, REDIS_URL, MONGO_URL, EMPTYDBS, ENVIRONMENTS };
+export { DEFAULT_USER, CACHE_ENABLE, DUMMY_OPENAI, MAP_USER, appLabel, appName, appAbbrev, TASKHUB_URL, CONFIG_DIR, hubSocketUrl, processorId, COPROCESSOR, TASK_DIR, WS_PORT, REDIS_URL, MONGO_URL, EMPTYDBS, ENVIRONMENT };

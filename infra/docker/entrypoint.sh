@@ -11,24 +11,24 @@ screen -S app -p 0 -X stuff "truncate -s 0 hub.log; npm run debug 2>&1 | tee -a 
 
 # create a new window within the "app" screen
 screen -S app -X screen bash
-screen -S app -p 1 -X stuff "cd /app/processor/nodejs\n"
-screen -S app -p 1 -X stuff "npm install\n"
-screen -S app -p 0 -X stuff "touch nodejs.log && chmod 444 nodejs.log\n"
-screen -S app -p 1 -X stuff "truncate -s 0 nodejs.log; npm run debug 2>&1 | tee -a nodejs.log\n"
+screen -S app -p 1 -X stuff "cd /app/processor/rxjs\n"
+screen -S app -p 1 -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
+screen -S app -p 1 -X stuff "touch rxjslog.log && chmod 444 rxjslog.log\n"
+screen -S app -p 1 -X stuff "truncate -s 0 rxjslog.; ENVIRONMENT=rxjs npm run debug 2>&1 | tee -a rxjs.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen bash
 screen -S app -p 2 -X stuff "cd /app/processor/rxjs\n"
-screen -S app -p 2 -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
-screen -S app -p 0 -X stuff "touch rxjslog.log && chmod 444 rxjslog.log\n"
-screen -S app -p 2 -X stuff "truncate -s 0 rxjslog.; npm run debug 2>&1 | tee -a rxjs.log\n"
+# We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
+screen -S app -p 2 -X stuff "touch rxjscopro.log && chmod 444 rxjscopro.log\n"
+screen -S app -p 2 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjscopro.log; ENVIRONMENT=rxjscopro DEBUG_PORT=0.0.0.0:9232 npm run debug 2>&1 | tee -a rxjscopro.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen bash
 screen -S app -p 3 -X stuff "cd /app/processor/rxjs\n"
 # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-screen -S app -p 0 -X stuff "touch rxjscopro.log && chmod 444 rxjscopro.log\n"
-screen -S app -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjscopro.log; DEBUG_PORT=0.0.0.0:9232 COPROCESSOR=true npm run debug 2>&1 | tee -a rxjscopro.log\n"
+screen -S app -p 3 -X stuff "touch rxjsnodejs.log && chmod 444 rxjsnodejs.log\n"
+screen -S app -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjsnodejs.log; ENVIRONMENT=nodejs DEBUG_PORT=0.0.0.0:9230 npm run debug 2>&1 | tee -a rxjsnodejs.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen bash
@@ -54,28 +54,28 @@ if [[ "$TASKFLOW_DEV" == "true" ]]; then
     screen -S meta -p 0 -X stuff "cd /meta/hub\n"
     screen -S meta -p 0 -X stuff "npm install\n"
     screen -S meta -p 0 -X stuff "touch hub.log && chmod 444 hub.log\n"
-    screen -S meta -p 0 -X stuff "truncate -s 0 hub.log; WS_PORT=6001 npm run debug 2>&1 | tee -a hub.log\n"
-
-    # create a new window within the "app" screen
-    screen -S meta -X screen bash
-    screen -S meta -p 1 -X stuff "cd /meta/processor/nodejs\n"
-    screen -S meta -p 1 -X stuff "npm install\n"
-    screen -S meta -p 0 -X stuff "touch nodejs.log && chmod 444 nodejs.log\n"
-    screen -S meta -p 1 -X stuff "truncate -s 0 nodejs.log; WS_PORT=6000 npm run debug 2>&1 | tee -a nodejs.log\n"
+    screen -S meta -p 0 -X stuff "truncate -s 0 hub.log; WS_PORT=6001 npm run 2>&1 | tee -a hub.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
     screen -S meta -p 2 -X stuff "cd /meta/processor/rxjs\n"
     screen -S meta -p 2 -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
     screen -S meta -p 0 -X stuff "touch rxjslog.log && chmod 444 rxjslog.log\n"
-    screen -S meta -p 2 -X stuff "truncate -s 0 rxjslog.; WS_PORT=6002 npm run debug 2>&1 | tee -a rxjs.log\n"
+    screen -S meta -p 2 -X stuff "truncate -s 0 rxjslog.; ENVIRONMENT=rxjs WS_PORT=6002 npm run 2>&1 | tee -a rxjs.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
     screen -S meta -p 3 -X stuff "cd /meta/processor/rxjs\n"
     # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
     screen -S meta -p 0 -X stuff "touch rxjscopro.log && chmod 444 rxjscopro.log\n"
-    screen -S meta -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjscopro.log; COPROCESSOR=true WS_PORT=6003 npm run debug 2>&1 | tee -a rxjscopro.log\n"
+    screen -S meta -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjscopro.log; ENVIRONMENT=rxjscopro npm run 2>&1 | tee -a rxjscopro.log\n"
+
+    # create a new window within the "app" screen
+    screen -S app -X screen bash
+    screen -S app -p 3 -X stuff "cd /app/processor/rxjs\n"
+    # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
+    screen -S app -p 3 -X stuff "touch rxjscopro.log && chmod 444 rxjscopro.log\n"
+    screen -S app -p 3 -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjsnodejs.log; ENVIRONMENT=nodejs npm run 2>&1 | tee -a rxjsnodejs.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
