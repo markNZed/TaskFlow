@@ -9,13 +9,13 @@ import { CEPFunctions } from "#src/CEPFunctions";
 // eslint-disable-next-line no-unused-vars
 const TaskConversation_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
-  function helloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
+  function CEPHelloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
     utils.logTask(T(), "Hello World", args);
   }
 
   // This shows dynamically registering a CEP 
   // We can also register a CEP by declaring it in ./CEPFunctions.mjs
-  CEPFunctions.register("helloWorld", helloWorld);
+  CEPFunctions.register("CEPHelloWorld", CEPHelloWorld);
 
   return null;
 };
