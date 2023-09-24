@@ -3,6 +3,20 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskCEPServiceStub",
+    environments: ["rxjscopro"],
+    config: {
+      autoStartEnvironment: "rxjscopro",
+    },
+  },
+   {
+    name: "TaskCEPFamilyTree",
+    environments: ["rxjscopro"],
+    config: {
+      autoStartEnvironment: "rxjscopro",
+    },
+  },
+  {
     name: "TaskCEP",
   },
   {
@@ -83,7 +97,7 @@ const tasktypes = [
     },
   },
   {
-    name: "TaskSystemShared",
+    name: "TaskCEPShared",
     environments: ["rxjscopro"],
     config: {
       autoStartEnvironment: "rxjscopro",
@@ -94,7 +108,7 @@ const tasktypes = [
     },
   },
   {
-    name: "TaskSystemLog",
+    name: "TaskCEPSystemLog",
     environments: ["rxjscopro"],
     config: {
       autoStartEnvironment: "rxjscopro",

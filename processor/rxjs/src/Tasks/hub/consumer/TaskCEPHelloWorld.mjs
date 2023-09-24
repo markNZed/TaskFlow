@@ -7,7 +7,7 @@ import { utils } from "#src/utils";
 import { CEPFunctions } from "#src/CEPFunctions";
 
 // eslint-disable-next-line no-unused-vars
-const TaskConversation_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskCEPHelloWorld_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   function CEPHelloWorld(functionName, wsSendTask, CEPinstanceId, CEPtask, args) {
     utils.logTask(T(), "Hello World", args);
@@ -20,4 +20,4 @@ const TaskConversation_async = async function (wsSendTask, T, fsmHolder, CEPFunc
   return null;
 };
 
-export { TaskConversation_async };
+export { TaskCEPHelloWorld_async };

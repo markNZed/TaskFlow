@@ -19,7 +19,7 @@ import { commandUpdate_async } from "#src/commandUpdate";
 import assert from 'assert';
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskCEPShared_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   if (T("processor.commandArgs.sync")) {utils.logTask(T(), "Ignore sync operations")}
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
@@ -153,4 +153,4 @@ const TaskSystemShared_async = async function (wsSendTask, T, fsmHolder, CEPFunc
   return T();
 };
 
-export { TaskSystemShared_async };
+export { TaskCEPShared_async };

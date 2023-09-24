@@ -5,10 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
 import { CEPFunctions } from "#src/CEPFunctions";
-import { tasksModel } from "./TaskSystemLog/tasksModel.mjs"
+import { tasksModel } from "./TaskCEPSystemLog/tasksModel.mjs"
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskCEPSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -39,8 +39,8 @@ const TaskSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, 
 
   // eslint-disable-next-line no-unused-vars
   async function CEPLog(functionName, wsSendTask, CEPinstanceId, task, args) {
-    // We do not want to log the TaskSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
-    if (task.type !== "TaskSystemLog" && task.type !== "TaskSystemLogViewer") {
+    // We do not want to log the TaskCEPSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
+    if (task.type !== "TaskCEPSystemLog" && task.type !== "TaskSystemLogViewer") {
       // We will log twice when coprocessing but this is necessary to debug coprocessing
       await updateTaskWithHistory(task);
       utils.logTask(task, "CEPLog Logged");
@@ -75,5 +75,5 @@ function stripTask(task) {
   return taskCopy;
 }
 
-export { TaskSystemLog_async };
+export { TaskCEPSystemLog_async };
 

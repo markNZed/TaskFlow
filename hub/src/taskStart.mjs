@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoprocessors, outputStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 
@@ -293,7 +293,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
   return task;
 }
 
-function allocateTaskToProcessors(task, processorId, activeProcessors) {
+function allocateTaskToProcessors(task, processorId, activeProcessors, activeCoprocessors) {
   // Build list of processors/environments that need to receive this task
   let taskProcessors = []
 
@@ -335,8 +335,21 @@ function allocateTaskToProcessors(task, processorId, activeProcessors) {
             found = true;
             taskProcessors.push(activeProcessorId);
             task.processors[activeProcessorId] = {
-              id: activeProcessorId,
-              isCoprocessor: value.isCoprocessor,
+              id: activeProcessorId
+            };
+            break;
+        }
+      }       
+    }
+    // Find an active coprocessor that supports this environment
+    if (!found) {
+      for (const [activeCoprocessorId, value] of activeCoprocessors.entries()) {
+        if (value.environment === environment) {
+            found = true;
+            taskProcessors.push(activeCoprocessorId);
+            task.processors[activeCoprocessorId] = {
+              id: activeCoprocessorId,
+              isCoprocessor: true,
             };
             break;
         }
@@ -435,6 +448,9 @@ async function taskStart_async(
     if (isPrevSystemTask && task.id.startsWith("root.user.")) {
       isFirstUserTask = true;
     }
+    if (isFirstUserTask && prevTaskFamilyId) {
+      task.meta["systemFamilyId"] = prevTaskFamilyId; // Assumes it was launched from a system task
+    }
     if (isFirstUserTask) {
       prevTaskFamilyId = task.instanceId;
       utils.logTask(task, "Reinitialising familyId isFirstUserTask", prevTaskFamilyId);
@@ -490,10 +506,6 @@ async function taskStart_async(
       }
     }
 
-    if (isFirstUserTask) {
-      task.meta["systemFamilyId"] = prevTaskFamilyId;
-    }
-
     // Side-effect on task.familyd
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
@@ -533,7 +545,7 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
     task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
-    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors, autoStart)
+    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors, activeCoprocessors);
 
     await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 

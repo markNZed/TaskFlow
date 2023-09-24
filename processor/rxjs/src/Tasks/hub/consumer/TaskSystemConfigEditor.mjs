@@ -7,7 +7,7 @@ import _ from 'lodash';
 import { utils } from "#src/utils";
 
 /*
-ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskSystemShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
+ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskCEPShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
 */
 
 // eslint-disable-next-line no-unused-vars

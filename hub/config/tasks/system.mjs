@@ -7,6 +7,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 const system = [
 
   {
+    // Just registering CEP function
+    // Should probably move into a service
+    name: "systemfamilytree",
+    parentName: "system",
+    type: "TaskCEPFamilyTree",
+  },
+  {
     name: "systemshared",
     config: {
       ceps: {
@@ -17,7 +24,7 @@ const system = [
       },
     },
     parentName: "system",
-    type: "TaskSystemShared",
+    type: "TaskCEPShared",
   },
   {
     name: "systemlog",
@@ -30,7 +37,7 @@ const system = [
       },
     },
     parentName: "system",
-    type: "TaskSystemLog",
+    type: "TaskCEPSystemLog",
   }, 
   {
     initiator: true,

@@ -90,8 +90,8 @@ router.post("/", async (req, res) => {
     countAutoStartTasks++;
     console.log(`Checking autostart ${environment} for task`, taskId, autoStartTask);
     const autoStartEnvironment = autoStartTask.startEnvironment;
-    let startEnvironments = autoStartTask.startEnvironments;
-    if (activeEnvironments.includes(autoStartEnvironment) && (startEnvironments.includes(environment) || autoStartEnvironment === environment)) {
+    let startEnvironments = autoStartTask.startEnvironments || [];
+    if (activeEnvironments.includes(autoStartEnvironment)) {
       //console.log("startEnvironments", startEnvironments);
       let allEnvironmentsAvailable = true;
       // get the environment for this task
@@ -103,18 +103,14 @@ router.post("/", async (req, res) => {
         }
       })
       // If we have already started the task then we should only restart it if the particular
-      // processor ergisteirng now includes all startEnvironments
+      // processor rgisteirng now is the autoStartEnvironment
       // This was added because if the coprocessor has not started then we will not autostart
       // Then when the coprocessor starts allEnvironmentsAvailable will be true
       // We want to start the task once in that case not every time any processor is registered.
       if (autoStartTask.started) {
-        startEnvironments.forEach(startEnvironment => {
-          console.log("autoStartTask.started startEnvironment", startEnvironment, "environment", environment);
-          if (environment === startEnvironment) {
-            //console.log("startEnvironment " + startEnvironment + " autoStartTask.started");
-            allEnvironmentsAvailable = false;
-          }
-        })
+        if (autoStartEnvironment !== environment) {
+          allEnvironmentsAvailable = false;
+        }
       }
       if (allEnvironmentsAvailable) {
         //console.log("allEnvironmentsAvailable");

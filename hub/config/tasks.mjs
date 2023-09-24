@@ -255,8 +255,22 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
+      ceps: {
+        "familyId": {
+          functionName: "CEPFamilyTree",
+          environments: ["rxjscopro"],
+        },
+        "id-root.user.conversation.zeroshot.start": {
+          functionName: "CEPServiceStub",
+          environments: ["rxjscopro"],
+          args: {
+            type: "openaigpt.chatgptzeroshot",
+            key: "API", 
+            value: "openaistub"
+          },
+        },
+      },
       local: {
-        targetTaskId: "root.user.conversation.zeroshot.start",
         timeout: 10000, // 10 seconds
       },
       fsm: {

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
 import { parseFilter } from 'mongodb-query-parser';
-import { tasksModel } from "./TaskSystemLog/tasksModel.mjs"
+import { tasksModel } from "./TaskCEPSystemLog/tasksModel.mjs"
 import { formatQuery } from 'react-querybuilder';
 
 // eslint-disable-next-line no-unused-vars

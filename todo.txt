@@ -2,20 +2,11 @@
 -------
 
 Merge nodejs into rxjs
-  Task specifies if it is stream or batch e.g. Task... or TaskCEP...
-    Identify Task which are combining both in Tasks/Hub
-      consumer
-        TaskConversation_async CEPHelloWorld (not used by a task)
-      coprocessor
-        TaskSystemLog_async CEPLog root.system.systemlog of tasktype TaskSystemLog. 
-          TaskSystemLog function only defines and registers CEPLog
-        TaskSystemShared_async CEPShared root.system.systemshared of tasktype TaskSystemShared
-          TaskSystemShared function only defines and registers CEPShared
-        TaskTest_async CEPServiceStub CEPFamilyTree
-          TaskTest function installs CEPServiceStub
-          TaskTest tasktype installs CEPFamilyTree
-      CEPFunctions
-        CEPIncrement (user.testing.chatgptzeroshot.cep) of tasktype TaskCEP (so CEP only)
+  CEPFunctions
+    CEPIncrement (user.testing.chatgptzeroshot.cep) of tasktype TaskCEP (so CEP only)
+      Create Service CEP and move CEPIncrement into that
+    We can convert autostarting TaskCEP on rxjscopro to services
+      Do we want Task to be able to add services? Just more confusing?
   Services might be shared e.g. proc provides services to both streaming and batch
     Services should import on demand like Tasks
     Could be like a tree - start services in each dir
@@ -24,7 +15,6 @@ Merge nodejs into rxjs
       This would allow the task to check which environment it is on and then change behavior
         Could help make things easier to understand
           Deep directories suck for using modules - we have aliases
-  Using dedicated task for CEP so we can choose to run CEP or Task or both via tasks config
   CEPFunctions -> ServiceCEP
   processor/rxjs -> node/rxjs
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
@@ -34,13 +24,11 @@ Merge nodejs into rxjs
     delete shared/processor
   Test Docker setup
 
-
+tasksSchema should be part of a service?
+  Could have a loggig service regarding intetrnal behavior of hub/proc
 Merge hub with rxjs
   Globally replace processorId with nodeId
   Move rxjs to configdata.mjs
-  
-
-
 Need access to the service type to be able to modify the system prompts
   But we want to override for an instance not all instances
     Use the config in the task ?
