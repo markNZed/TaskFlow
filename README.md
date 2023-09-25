@@ -69,7 +69,15 @@ For more information see the Task Processor [README.md](processor/README.md).
 
 Each Task Processor provides a Task Environment for the Task Function to run in. The NodeJS Task Processor currently provides a Node Javascript environment. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment. A Task Processor could provide multiple Task Environments.
 
-### SubTask
+#### Service
+
+A Task Processor provides services that provide a functionality in the native style of the environment i.e. services are not restricted by a Task Definition. 
+
+#### CEP 
+
+Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks. By convention a Task using CEP is prefixed with TaskCEP and a Task with this prefix only peforms CEP. 
+
+#### SubTask
 
 A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
 
@@ -82,10 +90,6 @@ Information shared between Task Processors is maintained in the Task Hub which a
 ### Task Hub Co-Processor
 
 A Task Hub Co-Processor offloads processing from the Task Hub. The Task Hub Co-Processor is a Task Processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor may provide a bridge to other systems e.g., logging, monitoring, testing, debugging, etc.
-
-#### CEP
-
-Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks.
 
 ## Error Handling
 
