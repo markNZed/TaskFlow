@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
+import { OperatorLLM_async } from "#operators/OperatorLLM";
 
 // eslint-disable-next-line no-unused-vars
 const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, services) {
@@ -22,8 +22,8 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, services) {
       // Here we update the task which has the effect of setting the state to receiving
       wsSendTask(T());
       // The response needs to be available for other tasks to point at
-      const subTask = await SubTaskLLM_async(wsSendTask, T(), service); 
-      T("output.LLMtext", subTask.response.LLM);
+      const operator = await OperatorLLM_async(wsSendTask, T(), service); 
+      T("output.LLMtext", operator.response.LLM);
       T("state.current", "received");
       T("command", "update");
       break;

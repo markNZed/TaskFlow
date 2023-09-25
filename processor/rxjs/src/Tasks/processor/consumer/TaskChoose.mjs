@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
-import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
+import { OperatorLLM_async } from "#operators/OperatorLLM";
 
 const model = await use.load();
 
@@ -21,8 +21,8 @@ const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, ser
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   T("response.LLM", null); // Avoid using previously stored response
-  const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
-  T("response.LLM", subTask.response.LLM);
+  const operator = await OperatorLLM_async(wsSendTask, T(), services["chat"].module);
+  T("response.LLM", operator.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
   const nextTaskIds = Object.values(T("config.nextTaskTemplate"));

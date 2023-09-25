@@ -30,7 +30,7 @@ const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
         if (service.type === type) {
           service[modifyKey] = value;
           // TODO: Disabling the cache should be done from the test
-          task.config.subtasks.SubTaskLLM.useCache = false;
+          task.config.operators.LLM.useCache = false;
         }
         // Your code logic for each service entry
       }

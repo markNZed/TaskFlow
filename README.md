@@ -74,11 +74,11 @@ A Task Processor provides services that provide a functionality in the native st
 
 Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks. By convention a Task using CEP is prefixed with TaskCEP and a Task with this prefix only peforms CEP. 
 
-#### SubTask
+#### Operator
 
-A SubTask expects to receives a Task instance and returns the same Task instance. The SubTask assumes it is called from a Task. The SubTask runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
+An Operator expects to receives a Task instance and returns the same Task instance. The Operator assumes it is called from a Task. The Operator runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
 
-There may be side-effects from a SubTask, for example, it may return partial results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
+There may be side-effects from an Operator, for example, it may return partial results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
 
 ### Service
 

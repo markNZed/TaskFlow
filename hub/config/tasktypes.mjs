@@ -167,8 +167,8 @@ const tasktypes = [
           ["<END>", ""],
         ],
       },
-      subtasks: {
-        "SubTaskLLM": {
+      operators: {
+        "LLM": {
           useCache: CACHE_ENABLE,
           seed: [],
           /*
@@ -197,8 +197,8 @@ const tasktypes = [
         ],    
         useAddress: false,
       },
-      subtasks: {
-        "SubTaskLLM": {
+      operators: {
+        "LLM": {
           promptWithTime: false,
         }
       },
@@ -214,8 +214,8 @@ const tasktypes = [
       local: {
         introductionPrompt: "Please introduce yourself.",
       },
-      subtasks: {
-        "SubTaskLLM": {
+      operators: {
+        "LLM": {
           useCache: CACHE_ENABLE,
           seed: [],
         }

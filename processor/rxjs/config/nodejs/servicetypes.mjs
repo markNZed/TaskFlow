@@ -40,7 +40,7 @@ const servicetypes = [
     config.nextTask: Flow control information.
     config.oneFamily: Collaboration settings.
     config.collaborateGroupId: Collaboration settings.
-    config.spawnTask: Indicates if the task will spawn subtasks.
+    config.spawnTask: Indicates if the task will spawn operators.
     config.services: An object containing service configurations.
     error: Information about any errors that may have occurred.
     familyId: String that helpz categorizing the task.

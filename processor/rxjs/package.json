@@ -5,7 +5,9 @@
   "type": "module",
   "imports": {
     "#root/*": "./*.mjs",
-    "#src/*": "./src/*.mjs"
+    "#src/*": "./src/*.mjs",
+    "#operators/*": "./src/Operators/*.mjs",
+    "#services/*": "./src/Services/*.mjs"
   },
   "scripts": {
     "start": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",

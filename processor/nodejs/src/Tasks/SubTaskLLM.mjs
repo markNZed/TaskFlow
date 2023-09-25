@@ -15,7 +15,7 @@ var serviceTypes = await utils.load_data_async(CONFIG_DIR, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 
-async function SubTaskLLM_async(wsSendTask, task, service) {
+async function OperatorLLM_async(wsSendTask, task, service) {
   const taskCopy = JSON.parse(JSON.stringify(task));
   const T = utils.createTaskValueGetter(taskCopy);
   let params = await chatPrepare_async(T);
@@ -43,18 +43,18 @@ function callFunctionByName(service, functionName, params) {
   }
 }
 
-function checkSubTaskCache (T, subTaskName) {
-  // Loop over each object in T("config.subtasks") if it exists
+function checkOperatorCache (T, operatorName) {
+  // Loop over each object in T("config.operators") if it exists
   let enabled = false;
   let seed = T("id");
-  if (T("config.subtasks")) {
-    const subTaskConfig = T("config.subtasks")[subTaskName];
-    if (subTaskConfig) {
-      if (subTaskConfig.useCache !== undefined) {
-        enabled = subTaskConfig.useCache;
+  if (T("config.operators")) {
+    const operatorConfig = T("config.operators")[operatorName];
+    if (operatorConfig) {
+      if (operatorConfig.useCache !== undefined) {
+        enabled = operatorConfig.useCache;
       }
-      if (subTaskConfig.seed !== undefined && subTaskConfig.seed.length) {
-        for (const cacheKeySeed of subTaskConfig.seed) {
+      if (operatorConfig.seed !== undefined && operatorConfig.seed.length) {
+        for (const cacheKeySeed of operatorConfig.seed) {
           if (cacheKeySeed.startsWith("task.")) {
             seed += T(cacheKeySeed.slice(5));
           } else {
@@ -75,7 +75,7 @@ async function chatPrepare_async(T) {
   const instanceId = T("instanceId");
   let systemMessage = "";
   let forget = false;
-  let [useCache, cacheKeySeed] = checkSubTaskCache(T, "SubTaskLLM");
+  let [useCache, cacheKeySeed] = checkOperatorCache(T, "LLM");
   console.log("useCache config " + useCache + " seed " + cacheKeySeed);
   let noStreaming = false;
 
@@ -126,7 +126,7 @@ async function chatPrepare_async(T) {
     functions = serviceConfig.functions;
   } 
 
-  if (T("config.subtasks.SubTaskLLM.promptWithTime")) {
+  if (T("config.operators.LLM.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -229,8 +229,8 @@ async function chatPrepare_async(T) {
   }
 
   // Check if we need to preprocess
-  if (T("config.subtasks.SubTaskLLM.regexProcessPrompt")) {
-    for (const [regexStr, replacement] of T("config.subtasks.SubTaskLLM.regexProcessPrompt")) {
+  if (T("config.operators.LLM.regexProcessPrompt")) {
+    for (const [regexStr, replacement] of T("config.operators.LLM.regexProcessPrompt")) {
       let { pattern, flags } = utils.parseRegexString(regexStr);
       let regex = new RegExp(pattern, flags);
       prompt = prompt.replace(regex, replacement);
@@ -259,4 +259,4 @@ async function chatPrepare_async(T) {
   };
 }
 
-export { SubTaskLLM_async }
+export { OperatorLLM_async }

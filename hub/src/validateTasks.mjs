@@ -65,7 +65,7 @@ export const configSchema = yup.object()
   cacheKeySeed: yup.string(),
   caching: yup.array().of(yup.object()),
   local: yup.object(),
-  subtasks: yup.object(),
+  operators: yup.object(),
   ceps: yup.object(),
   fsm: yup.object(),
   debug: yup.object(),

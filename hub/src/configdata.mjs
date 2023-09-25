@@ -66,7 +66,7 @@ function mergeTasks(task, parentTask) {
       if (key === "config" && task.config) {
         for (const configKey in parentTask.config) {
           // We don't want to copy task.config.local
-          if (configKey !== "local" && configKey !== "ceps" && configKey !== "subtasks") {
+          if (configKey !== "local" && configKey !== "ceps" && configKey !== "operators") {
             mergeObj(task.config, configKey, parentTask.config);
           }
         }

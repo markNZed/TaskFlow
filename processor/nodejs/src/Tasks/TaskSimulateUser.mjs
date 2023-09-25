@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "../utils.mjs";
-import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
+import { OperatorLLM_async } from "#operators/OperatorLLM";
 import { cacheStore_async } from "../storage.mjs";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
@@ -18,7 +18,7 @@ function checkTaskCache (T) {
   let seed = T("id");
   if (T("config.caching")) {
     for (const cacheObj of T("config.caching")) {
-      if (cacheObj.subTask) {
+      if (cacheObj.operator) {
         continue;
       }
       if (cacheObj.environments && !cacheObj.environments.includes("nodejs")) {
@@ -94,11 +94,11 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, service
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
         T("request.prompt", T("output.simulationPrompt.text"));
-        const subTask = await SubTaskLLM_async(wsSendTask, T(), services["chat"].module);
-        T("output.simulationResponse.text", subTask.response.LLM);
+        const operator = await OperatorLLM_async(wsSendTask, T(), services["chat"].module);
+        T("output.simulationResponse.text", operator.response.LLM);
       } else {
-        let subTask = JSON.parse(JSON.stringify(T()));
-        const ST = utils.createTaskValueGetter(subTask);
+        let operator = JSON.parse(JSON.stringify(T()));
+        const ST = utils.createTaskValueGetter(operator);
         let msgs = ST("output.msgs");
         msgs.shift(); // Remove the first entry
         if (msgs && msgs.length > 0) {
@@ -118,8 +118,8 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, service
         const simulationPrompt = msgs.pop().text;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
-        subTask = await SubTaskLLM_async(wsSendTask, subTask, services["chat"].module);
-        const simulationResponse = { role: "assistant", text: subTask.response.LLM, user: "assistant" };
+        operator = await OperatorLLM_async(wsSendTask, operator, services["chat"].module);
+        const simulationResponse = { role: "assistant", text: operator.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }
       // Send to sync latest outputs via Hub, should also unlock

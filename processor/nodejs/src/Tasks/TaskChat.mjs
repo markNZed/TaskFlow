@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "../utils.mjs";
-import { SubTaskLLM_async } from "./SubTaskLLM.mjs";
+import { OperatorLLM_async } from "#operators/OperatorLLM";
 import { cacheStore_async } from "../storage.mjs";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,7 +19,7 @@ function checkTaskCache (T) {
   let seed = T("id");
   if (T("config.caching")) {
     for (const cacheObj of T("config.caching")) {
-      if (cacheObj.subTask) {
+      if (cacheObj.operator) {
         continue;
       }
       if (cacheObj.environments && !cacheObj.environments.includes("nodejs")) {
@@ -91,10 +91,10 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, services) {
       wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
-      const subTask = await SubTaskLLM_async(wsSendTask, T(), service);
-      T("response.LLMResponse", subTask.response.LLM);
-      if (subTask.response.newMessages && subTask.response.newMessages.length) {
-        const newMessages = subTask.response.newMessages;
+      const operator = await OperatorLLM_async(wsSendTask, T(), service);
+      T("response.LLMResponse", operator.response.LLM);
+      if (operator.response.newMessages && operator.response.newMessages.length) {
+        const newMessages = operator.response.newMessages;
         newMessages.forEach(msg => {
           if (!msg.id) {
             msg["id"] = uuidv4();
