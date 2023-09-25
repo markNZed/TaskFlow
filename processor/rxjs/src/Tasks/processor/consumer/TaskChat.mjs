@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "#src/utils";
-import { OperatorLLM_async } from "#operators/OperatorLLM";
 import { cacheStore_async } from "#src/storage";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -58,7 +57,7 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -78,7 +77,10 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
     origTask = JSON.parse(JSON.stringify(T()));
   }
 
-  const service = services["chat"].module;
+  const serviceChat = services["chat"].module;
+  const operatorLLM = operators["LLM"].module;
+  console.log("operatorLLM", operatorLLM);
+
 
   switch (T("state.current")) {
     case "mentionAddress":
@@ -91,10 +93,10 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
       wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
-      const operator = await OperatorLLM_async(wsSendTask, T(), service);
-      T("response.LLMResponse", operator.response.LLM);
-      if (operator.response.newMessages && operator.response.newMessages.length) {
-        const newMessages = operator.response.newMessages;
+      const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), serviceChat);
+      T("response.LLMResponse", operatorOut.response.LLM);
+      if (operatorOut.response.newMessages && operatorOut.response.newMessages.length) {
+        const newMessages = operatorOut.response.newMessages;
         newMessages.forEach(msg => {
           if (!msg.id) {
             msg["id"] = uuidv4();

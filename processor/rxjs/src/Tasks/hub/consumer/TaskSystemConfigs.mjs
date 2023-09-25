@@ -14,7 +14,7 @@ import { commandUpdate_async } from "#src/commandUpdate";
 
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   //console.log("TaskSystemConfigs services", services);
   const systemConfig = services["config"].module;

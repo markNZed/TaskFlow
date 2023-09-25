@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   //console.log("TaskChat_async services", services);
   const systemConfig = services["config"].module;

@@ -8,7 +8,7 @@ import { CEPFunctions } from "#src/CEPFunctions";
 import { tasksModel } from "./TaskCEPSystemLog/tasksModel.mjs"
 
 // eslint-disable-next-line no-unused-vars
-const TaskCEPSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskCEPSystemLog_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

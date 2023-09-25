@@ -12,7 +12,7 @@ import { CEPFunctions } from "#src/CEPFunctions";
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskCEPServiceStub_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskCEPServiceStub_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

@@ -3,14 +3,14 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { OperatorLLM_async } from "#operators/OperatorLLM";
 
 // eslint-disable-next-line no-unused-vars
-const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
-  const service = services["chat"].module;
+  const serviceChat = services["chat"].module;
+  const operatorLLM = operators["LLM"].module;
 
   switch (T("state.current")) {
     case "input":
@@ -22,8 +22,8 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, serv
       // Here we update the task which has the effect of setting the state to receiving
       wsSendTask(T());
       // The response needs to be available for other tasks to point at
-      const operator = await OperatorLLM_async(wsSendTask, T(), service); 
-      T("output.LLMtext", operator.response.LLM);
+      const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), serviceChat); 
+      T("output.LLMtext", operatorOut.response.LLM);
       T("state.current", "received");
       T("command", "update");
       break;

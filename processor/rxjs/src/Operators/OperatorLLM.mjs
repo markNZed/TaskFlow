@@ -14,7 +14,7 @@ var serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 
-async function OperatorLLM_async(wsSendTask, task, service) {
+async function operate_async(wsSendTask, task, service) {
   const taskCopy = JSON.parse(JSON.stringify(task));
   const T = utils.createTaskValueGetter(taskCopy);
   let params = await chatPrepare_async(T);
@@ -257,5 +257,6 @@ async function chatPrepare_async(T) {
     maxFunctionDepth,
   };
 }
-
-export { OperatorLLM_async }
+export const OperatorLLM = {
+  operate_async,
+} 

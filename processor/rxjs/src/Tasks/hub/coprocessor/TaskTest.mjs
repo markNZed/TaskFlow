@@ -15,7 +15,7 @@ import TreeModel from 'tree-model';
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

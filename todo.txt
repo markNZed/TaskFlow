@@ -2,20 +2,18 @@
 -------
 
 Merge nodejs into rxjs
+  CEPFunctions -> ServiceCEP
+    CE{ is not a service because it is not serving a task but is part of the processor functionality
+      In some ways it is close to an operator - takes task as input
+      CEP function is intended to have state - defined by a taskCEPFunctions are different
+        Create new CEP dir as per Services Operators
+          Then move CEP function out of tasks to CEP dir
+            Start with CEPIncrement
   CEPFunctions
     CEPIncrement (user.testing.chatgptzeroshot.cep) of tasktype TaskCEP (so CEP only)
       Create Service CEP and move CEPIncrement into that
     We can convert autostarting TaskCEP on rxjscopro to services
       Do we want Task to be able to add services? Just more confusing?
-  Services might be shared e.g. proc provides services to both streaming and batch
-    Services should import on demand like Tasks
-    Could be like a tree - start services in each dir
-      Same for tasks search in the parent directories for the module
-    Could be similar for tasks
-      This would allow the task to check which environment it is on and then change behavior
-        Could help make things easier to understand
-          Deep directories suck for using modules - we have aliases
-  CEPFunctions -> ServiceCEP
   processor/rxjs -> node/rxjs
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
     processor/react -> node/react
@@ -24,6 +22,10 @@ Merge nodejs into rxjs
     delete shared/processor
   Test Docker setup
 
+Much of "config.services.chat" should be in "config.operators.LLM" ?
+  At least that which is used in OperatorLLM.mjs
+Tasks could be like a tree
+  Search in the parent directories for the module
 tasksSchema should be part of a service?
   Could have a loggig service regarding intetrnal behavior of hub/proc
 Merge hub with rxjs

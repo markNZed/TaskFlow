@@ -168,7 +168,9 @@ const tasktypes = [
         ],
       },
       operators: {
-        "LLM": {
+        LLM: {
+          type: "LLM",
+          environments: ["nodejs"],
           useCache: CACHE_ENABLE,
           seed: [],
           /*
@@ -177,7 +179,7 @@ const tasktypes = [
             ["$", "<END>"],
           ],
           */
-        }
+        },
       },
     },
     state: {
@@ -199,6 +201,8 @@ const tasktypes = [
       },
       operators: {
         "LLM": {
+          type: "LLM",
+          environments: ["nodejs"],
           promptWithTime: false,
         }
       },
@@ -216,6 +220,8 @@ const tasktypes = [
       },
       operators: {
         "LLM": {
+          type: "LLM",
+          environments: ["nodejs"],
           useCache: CACHE_ENABLE,
           seed: [],
         }

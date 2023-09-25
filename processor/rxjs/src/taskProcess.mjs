@@ -5,16 +5,21 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { importTaskFunction_async, taskFunctionExists_async } from "./taskFunctions.mjs";
+import { importService_async, serviceExists_async } from "./services.mjs";
+import { importOperator_async, operatorExists_async } from "./operators.mjs";
 import { CEPFunctions } from "./CEPFunctions.mjs";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
 import { activeTaskFsm } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
-import { taskServices, taskServicesInitialized } from './taskServices.mjs';
 
 let serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
+
+let operatorTypes = await utils.load_data_async(NODE.configDir, "operatortypes");
+operatorTypes = utils.flattenObjects(operatorTypes);
+//console.log(JSON.stringify(operatorTypes, null, 2))
 
 export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
   let updatedTask = null;
@@ -43,9 +48,8 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
       let services = {};
       const servicesConfig = task.config.services;
       if (servicesConfig) {
-        // Dynamically import taskServices
-        await taskServicesInitialized;
-        Object.keys(servicesConfig).forEach((key) => {
+        Object.keys(servicesConfig).forEach(async (key) => {
+          // Dynamically import taskServices
           const environments = servicesConfig[key].environments;
           if (environments) {
             // Only try to load a service if it is expected to be on this processor
@@ -53,7 +57,12 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
               const type = servicesConfig[key].type;
               if (serviceTypes[type]) {
                 services[key] = serviceTypes[type];
-                services[key]["module"] = taskServices[serviceTypes[type]["moduleName"]];
+                const serviceName = serviceTypes[type]["moduleName"];
+                if (await serviceExists_async(serviceName)) {
+                  services[key]["module"] = await importService_async(serviceName);
+                } else {
+                  throw new Error(`Service ${serviceName} not found for ${task.id} config: ${JSON.stringify(servicesConfig)}`);
+                }
               } else {
                 throw new Error(`Servicetype ${type} not found in ${key} service of ${task.id} config: ${JSON.stringify(servicesConfig)}`);
               }
@@ -63,15 +72,45 @@ export async function taskProcess_async(wsSendTask, task, CEPFuncs) {
           }
         });
       }  
+      let operators = {};
+      const operatorsConfig = task.config.operators;
+      if (operatorsConfig) {
+        //console.log("operatorsConfig", JSON.stringify(operatorsConfig))
+        Object.keys(operatorsConfig).forEach(async (key) => {
+          // Dynamically import taskOperators
+          const environments = operatorsConfig[key].environments;
+          if (environments) {
+            // Only try to load a operator if it is expected to be on this processor
+            if (environments.includes(NODE.environment)) {
+              const type = operatorsConfig[key].type;
+              //console.log("operatorTypes", operatorTypes);
+              if (operatorTypes[type]) {
+                operators[key] = operatorTypes[type];
+                const operatorName = operatorTypes[type]["moduleName"];
+                if (await operatorExists_async(operatorName)) {
+                  operators[key]["module"] = await importOperator_async(operatorName);
+                  //console.log("operators", JSON.stringify(operators));
+                } else {
+                  throw new Error(`Operator ${operatorName} not found for ${task.id} config: ${JSON.stringify(operatorsConfig)}`);
+                }
+              } else {
+                throw new Error(`Operatortype ${type} not found in ${key} operator of ${task.id} config: ${JSON.stringify(operatorsConfig)}`);
+              }
+            }
+          } else {
+            throw new Error(`Operatortype ${key} operator of ${task.id} has no environments`);
+          }
+        });
+      }  
       const T = utils.createTaskValueGetter(task);
       const taskFunction = await importTaskFunction_async(taskFunctionName);
       // Option to run in background
       if (T("config.background")) {
         utils.logTask(task, `Processing ${task.type} in background`);
-        taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services);
+        taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services, operators);
       } else {
         utils.logTask(task, `Processing ${task.type} in state ${task?.state?.current}`);
-        updatedTask = await taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services);
+        updatedTask = await taskFunction(wsSendTask, T, fsmHolder, CEPFuncs, services, operators);
       }
       utils.logTask(task, `Finished ${task.type} in state ${updatedTask?.state?.current}`);
     } else {

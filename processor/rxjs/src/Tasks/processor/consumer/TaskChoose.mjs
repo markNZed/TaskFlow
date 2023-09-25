@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
-import { OperatorLLM_async } from "#operators/OperatorLLM";
 
 const model = await use.load();
 
@@ -16,13 +15,14 @@ const cosineSimilarity = (tensor1, tensor2) => {
 };
 
 // eslint-disable-next-line no-unused-vars
-const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  const operatorLLM = operators["LLM"].module;
 
   T("response.LLM", null); // Avoid using previously stored response
-  const operator = await OperatorLLM_async(wsSendTask, T(), services["chat"].module);
-  T("response.LLM", operator.response.LLM);
+  const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+  T("response.LLM", operatorOut.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));
   const nextTaskIds = Object.values(T("config.nextTaskTemplate"));

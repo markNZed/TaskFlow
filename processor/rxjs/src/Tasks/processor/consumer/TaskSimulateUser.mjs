@@ -5,7 +5,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "#src/utils";
-import { OperatorLLM_async } from "#operators/OperatorLLM";
 import { cacheStore_async } from "#src/storage";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
@@ -57,9 +56,10 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  const operatorLLM = operators["LLM"].module;
 
   // Cache
   const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);
@@ -94,11 +94,11 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
         T("request.prompt", T("output.simulationPrompt.text"));
-        const operator = await OperatorLLM_async(wsSendTask, T(), services["chat"].module);
-        T("output.simulationResponse.text", operator.response.LLM);
+        const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+        T("output.simulationResponse.text", operatorOut.response.LLM);
       } else {
-        let operator = JSON.parse(JSON.stringify(T()));
-        const ST = utils.createTaskValueGetter(operator);
+        const operatorIn = JSON.parse(JSON.stringify(T()));
+        const ST = utils.createTaskValueGetter(operatorIn);
         let msgs = ST("output.msgs");
         msgs.shift(); // Remove the first entry
         if (msgs && msgs.length > 0) {
@@ -118,8 +118,8 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         const simulationPrompt = msgs.pop().text;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
-        operator = await OperatorLLM_async(wsSendTask, operator, services["chat"].module);
-        const simulationResponse = { role: "assistant", text: operator.response.LLM, user: "assistant" };
+        const operatorOut = await operatorLLM.operate_async(wsSendTask, operatorIn, services["chat"].module);
+        const simulationResponse = { role: "assistant", text: operatorOut.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }
       // Send to sync latest outputs via Hub, should also unlock

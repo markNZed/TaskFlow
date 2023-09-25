@@ -11,7 +11,7 @@ ServiceSystemConfig provides read/write access to configuration data, TaskSystem
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services) {
+const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
 
   //console.log("TaskSystemConfigEditor_async services", services);
   const systemConfig = services["config"].module;
