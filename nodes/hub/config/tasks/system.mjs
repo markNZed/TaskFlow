@@ -177,7 +177,7 @@ const system = [
       background: true,
     },
     parentName: "config",
-    type: "TaskSystemConfigs",
+    type: "TaskNodeConfigs",
     menu: false,
   },
 

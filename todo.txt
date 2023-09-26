@@ -2,21 +2,19 @@
 -------
 
 Merge nodejs into rxjs
-  CEPFunctions -> ServiceCEP
-      Move task.config.services to task.services ? Also for cep and operators
-        Then merge task.services into services type and replace task.services with that
-          Then other tasks can modify this 
-            Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
-  Test Docker setup
-
+  Move task.config.services to task.services ? Also for cep and operators
+    Then other tasks can modify this 
+  Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep       
+            
+If CEP then fsm -> FSM
+Test Docker setup
 Random Client is broken
-configdata should be in storage?
 Much of "config.services.chat" should be in "config.operators.LLM" ?
   At least that which is used in OperatorLLM.mjs
 Tasks could be like a tree
   Search in the parent directories for the module
 tasksSchema should be part of a service?
-  Could have a loggig service regarding intetrnal behavior of hub/proc
+  Could have a logging service regarding internal behavior of nodes
 Merge hub with rxjs
   Globally replace processorId with nodeId
   Move rxjs to configdata.mjs
