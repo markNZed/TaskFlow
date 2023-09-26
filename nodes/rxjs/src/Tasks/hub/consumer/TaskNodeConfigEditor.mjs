@@ -7,16 +7,16 @@ import _ from 'lodash';
 import { utils } from "#src/utils";
 
 /*
-ServiceSystemConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceSystemConfig and maintains shared.XXXConfigTree which is synchronised by TaskCEPShared and used by TaskSystemMenu, TaskSystemConfigEditor and TaskChat (when configured with this).
+ServiceNodeConfig provides read/write access to configuration data, TaskSystemConfigs registers callbacks with ServiceNodeConfig and maintains shared.XXXConfigTree which is synchronised by TaskCEPShared and used by TaskSystemMenu, TaskNodeConfigEditor and TaskChat (when configured with this).
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskNodeConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
-  //console.log("TaskSystemConfigEditor_async services", services);
+  //console.log("TaskNodeConfigEditor_async services", services);
   const services = T("services");
   const configFunctions = services["config"].module;
-  //console.log("TaskSystemConfigEditor_async configFunctions", configFunctions);
+  //console.log("TaskNodeConfigEditor_async configFunctions", configFunctions);
 
   /**
    * Removes properties from objB that have the same values as those in objA.
@@ -190,4 +190,4 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
   return T();
 };
 
-export { TaskSystemConfigEditor_async };
+export { TaskNodeConfigEditor_async };

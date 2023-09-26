@@ -3,7 +3,7 @@
 const servicetypes = [
   {
     name: "systemConfig",
-    moduleName: "ServiceSystemConfig",
+    moduleName: "ServiceNodeConfig",
     stores: ["tasks", "tasktypes", "users", "groups", "ceptypes", "servicetypes", "operatortypes"],
   },
 ];

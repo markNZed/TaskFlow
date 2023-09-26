@@ -7,8 +7,6 @@ Merge nodejs into rxjs
         Then merge task.services into services type and replace task.services with that
           Then other tasks can modify this 
             Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
-  processor/rxjs -> nodes/rxjs
-    ServiceSystemConfig -> ServiceNodeConfig (not high priority)
   Test Docker setup
 
 Random Client is broken

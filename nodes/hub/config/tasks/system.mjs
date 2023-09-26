@@ -61,7 +61,7 @@ const system = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       tasksConfigTree: {},
     },
@@ -76,7 +76,7 @@ const system = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       usersConfigTree: {},
     },
@@ -91,7 +91,7 @@ const system = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       groupsConfigTree: {},
     },
@@ -106,7 +106,7 @@ const system = [
       },
     },
     parentName: "config",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       tasktypesConfigTree: {},
     },
@@ -129,7 +129,7 @@ const system = [
       },
     },
     parentName: "processorrxjs",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       rxjsCEPTypesConfigTree: {},
     },
@@ -152,7 +152,7 @@ const system = [
       },
     },
     parentName: "processorrxjscopro",
-    type: "TaskSystemConfigEditor",
+    type: "TaskNodeConfigEditor",
     shared: {
       rxjscoproCEPTypesConfigTree: {},
     },

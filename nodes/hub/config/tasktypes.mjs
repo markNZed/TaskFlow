@@ -67,7 +67,7 @@ const tasktypes = [
     },
   },
   {
-    name: "TaskSystemConfigEditor",
+    name: "TaskNodeConfigEditor",
     environments: ["react", "rxjs"],
     config: {
       services: {

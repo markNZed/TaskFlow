@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { tasksStore_async, tasktypesStore_async, usersStore_async, groupsStore_async, cepTypes_async, serviceTypes_async, operatorTypes_async } from "../../src/storage.mjs";
+import { tasksStore_async, tasktypesStore_async, usersStore_async, groupsStore_async, cepTypes_async, serviceTypes_async, operatorTypes_async } from "../storage.mjs";
 
 import { utils } from "#src/utils";
 
@@ -396,7 +396,7 @@ export const buildTree_async = async (config, storeName) => {
   return result;
 };
 
-export const ServiceSystemConfig = {
+export const ServiceNodeConfig = {
   buildTree_async,
   create_async, 
   insert_async, 
