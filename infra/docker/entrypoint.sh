@@ -38,7 +38,7 @@ screen -S app -p 4 -X stuff "npm run generate-converter-v02\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen bash
-screen -S app -p 5 -X stuff "cd /app/processor/react\n"
+screen -S app -p 5 -X stuff "cd /app/nodes/react\n"
 screen -S app -p 5 -X stuff "npm install\n"
 screen -S app -p 5 -X stuff "PORT=3000 npm start 2>&1 | tee react.log\n"
 
@@ -89,7 +89,7 @@ if [[ "$TASKFLOW_DEV" == "true" ]]; then
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
-    screen -S meta -p 5 -X stuff "cd /meta/processor/react\n"
+    screen -S meta -p 5 -X stuff "cd /meta/nodes/react\n"
     screen -S meta -p 5 -X stuff "npm install\n"
     screen -S meta -p 5 -X stuff "PORT=4000 npm start 2>&1 | tee react.log\n"
 

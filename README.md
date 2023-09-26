@@ -140,7 +140,7 @@ To run T@skFlow with docker, see the [README.md](infra/docker/README.md) in the 
 
 To learn more about the RxJS Processor, see the [README.md](nodes/rxjs/README.md) in the RxJS Processor directory.
 
-To learn more about the React Processor, see the [README.md](processor/react/README.md) in the React Processor directory.
+To learn more about the React Processor, see the [README.md](nodes/react/README.md) in the React Processor directory.
 
 To learn more about the Task object, see the [README.md](shared/README.md) in the shared directory.
 

@@ -23,7 +23,7 @@ Using VS Code
         * /app/processor/nodejs/nodejs.log
 * The node servers (e.g. Hub, RxJS, NodeJS) run in debug mode so breakpoints can be set in VS Code.
 
-* The `/app/shared` directory is soft linked from `/app/nodes/hub/src/shared`, `/app/processor/nodejs/src/shared`, `/app/processor/react/src/shared`, `/app/nodes/rxjs/src/shared`. In that directory we have the JSON schema for the Task object, `utils.mjs`, and XState finite state machine definitions in `/app/shared/fsm`.
+* The `/app/shared` directory is soft linked from `/app/nodes/hub/src/shared`, `/app/processor/nodejs/src/shared`, `/app/nodes/react/src/shared`, `/app/nodes/rxjs/src/shared`. In that directory we have the JSON schema for the Task object, `utils.mjs`, and XState finite state machine definitions in `/app/shared/fsm`.
 * The React procssor runs in a web browser (preference for Firefox).
 * From the Javascript console in Web Developer tools the current Task objects can be read in the variable `window.tasks`.
 * The NodeJS processor can use a dummy API (to avoid wasting money on OpenAI API calls), set `DUMMY_OPENAI=true` in `/app/processor/nodejs/.env`.

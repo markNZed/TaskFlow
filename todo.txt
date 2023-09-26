@@ -9,7 +9,7 @@ Merge nodejs into rxjs
             Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
   processor/rxjs -> nodes/rxjs
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
-    processor/react -> node/react
+    nodes/react -> node/react
     hub -> node/hub
   delete nodejs
     delete shared/processor

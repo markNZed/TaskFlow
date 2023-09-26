@@ -1,5 +1,5 @@
 import {describe, expect, it} from '@jest/globals'
-import { utils } from '../processor/react/src/utils/utils.mjs';
+import { utils } from '../nodes/react/src/utils/utils.mjs';
 
 const setNestedProperties = utils.setNestedProperties;
 

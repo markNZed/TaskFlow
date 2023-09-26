@@ -4,7 +4,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/react:/app/processor/react
+      - ../../nodes/react:/app/nodes/react
       - ../../shared:/app/shared
     entrypoint: ["/entrypoint-react.sh"]
     environment:

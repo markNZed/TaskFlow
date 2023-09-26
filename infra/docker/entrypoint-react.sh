@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /app/processor/react
+cd /app/nodes/react
 npm install
 screen -d -m npm start 2>&1 | tee react.log
 sleep infinity
