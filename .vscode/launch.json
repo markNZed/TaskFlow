@@ -14,11 +14,11 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "NodeJS Processsor",
+            "name": "RxJS Consumer",
             "address": "localhost",
             "port": 9230,
-            "localRoot": "/app/processor/nodejs",
-            "remoteRoot": "/app/processor/nodejs"
+            "localRoot": "/app/nodes/rxjs",
+            "remoteRoot": "/app/nodes/rxjs"
         },
         {
             "type": "node",

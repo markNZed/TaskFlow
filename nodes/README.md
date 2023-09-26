@@ -1,4 +1,6 @@
-# Processor
+# Nodes
+
+## Processor
 
 Information for the Processor is held in the `task.processor` object.
 
@@ -36,15 +38,15 @@ If the `task.processor.statesSupported` array is set then the Hub will only rout
 
 If the `task.processor.statesNotSupported` array is set then the Hub will not route updates to the processor if `task.processor.statesNotSupported` includes `task.state.current`.
 
-## Sharing Task Functionality
+### Sharing Task Functionality
 
 In the directory `shared/processor` there can be files shared between procesors, for example `fsm.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/fsm/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 
 
-## Hub Coprocessor
+### Hub Coprocessor
 
 A Processor may register as a Hub Coprocessor in which case it follows a different protocol. A Hub Coprocessor reveives each task sent to the hub and can operate on that task before returning it to the hub. When a Processor sends a task update to the Hub, like all other Processors assocaited with the task, it also receives the update from the hub. The Hub Coprocessor can intercept a task update modify the task. The Hub Coprocessor sees all tasks that go through the hub while a Processor will only see tasks that are associated with the environment it provides.
 
-## Future
+### Future
 
 Hub functionality that can be pushed to the Processor should be pushed to the processor e.g.,
 * Filter execution

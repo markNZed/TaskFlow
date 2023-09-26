@@ -34,8 +34,8 @@ RUN npm install pm2 -g
 RUN npm install -g node-gyp
 
 
-# Instead of the hacks below I deleted node_modules/@tensorflow and rann npm install again
-# RUN cd /app/processor/nodejs/node_modules/@tensorflow/tfjs-node/deps/lib && \
+# Instead of the hacks below I deleted node_modules/@tensorflow and ran npm install again
+# RUN cd /app/nodes/rxjs/node_modules/@tensorflow/tfjs-node/deps/lib && \
 #     ln -s libtensorflow.so.2.9.1 libtensorflow.so.2 && \
 #     ln -s libtensorflow_framework.so.2.9.1 libtensorflow_framework.so.2
 # RUN npm rebuild @tensorflow/tfjs-node --build-addon-from-source

@@ -9,10 +9,6 @@ Merge nodejs into rxjs
             Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
   processor/rxjs -> nodes/rxjs
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
-    nodes/react -> node/react
-    hub -> node/hub
-  delete nodejs
-    delete shared/processor
   Test Docker setup
 
 Random Client is broken
@@ -183,7 +179,7 @@ Major features to be implemented before refactoring
           Testing
     Dynamic Task as per dynamic config
       Needs to modify tasktypes (another Task)
-  Also need to create new servicetypes but that is on the nodejs processor
+  Also need to create new servicetypes but that is on the rxjs processor
 Extend testing
   Batch testing
     TaskCron to regularly check things
@@ -628,4 +624,4 @@ Features that are manually tested
             maxTokens X
             maxResponseTokens X
           error X
-          errorTask X To test this uncomment line before return in processor/nodejs/Task/TaskLLMIO.mjs
+          errorTask X To test this uncomment line before return in Task/TaskLLMIO.mjs

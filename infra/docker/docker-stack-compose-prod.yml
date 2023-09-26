@@ -18,7 +18,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/nodejs:/app/processor/nodejs
+      - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
     entrypoint: ["/entrypoint-nodejs.sh"]
     environment:
