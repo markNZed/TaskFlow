@@ -1,11 +1,7 @@
 /* ToDo
--------
-
-Merge nodejs into rxjs
-  Move task.config.services to task.services ? Also for cep and operators
-    Then other tasks can modify this 
-  Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep       
-            
+-------      
+Demo of modifying systemMessage from another task
+Demo of copying a Task      
 If CEP then fsm -> FSM
 Test Docker setup
 Random Client is broken
