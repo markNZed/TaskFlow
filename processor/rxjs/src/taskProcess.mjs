@@ -55,6 +55,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 //console.log("type", type);
                 if (await serviceTypes_async.has(type)) {
                   services[key] = await serviceTypes_async.get(type);
+                  services[key] = utils.deepMerge(services[key], T(`config.services.${key}`));
                   //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                   const serviceName = services[key]["moduleName"];
                   if (await serviceExists_async(serviceName)) {
@@ -89,6 +90,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 const type = operatorsConfig[key].type;
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
+                  operators[key] = utils.deepMerge(operators[key], T(`config.operators.${key}`));
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"];
                   if (await operatorExists_async(operatorName)) {
@@ -150,6 +152,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                   //console.log("type", type);
                   if (await cepTypes_async.has(type)) {
                     ceps[key] = await cepTypes_async.get(type);
+                    ceps[key] = utils.deepMerge(ceps[key], T(`config.ceps.${key}`));
                     //console.log("ceps[key]", key, JSON.stringify(ceps[key], null, 2));
                     const cepName = ceps[key]["moduleName"];
                     if (await CEPExists_async(cepName)) {

@@ -3,16 +3,10 @@
 
 Merge nodejs into rxjs
   CEPFunctions -> ServiceCEP
-      OperatorLLM is loading service type but it should be using the service that is provided
       Move task.config.services to task.services ? Also for cep and operators
         Then merge task.services into services type and replace task.services with that
           Then other tasks can modify this 
             Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
-  CEPFunctions
-    CEPIncrement (user.testing.chatgptzeroshot.cep) of tasktype TaskCEP (so CEP only)
-      Create Service CEP and move CEPIncrement into that
-    We can convert autostarting TaskCEP on rxjscopro to services
-      Do we want Task to be able to add services? Just more confusing?
   processor/rxjs -> node/rxjs
     ServiceSystemConfig -> ServiceNodeConfig (not high priority)
     processor/react -> node/react
@@ -21,6 +15,7 @@ Merge nodejs into rxjs
     delete shared/processor
   Test Docker setup
 
+Random Client is broken
 configdata should be in storage?
 Much of "config.services.chat" should be in "config.operators.LLM" ?
   At least that which is used in OperatorLLM.mjs

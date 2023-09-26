@@ -7,7 +7,6 @@ import { utils } from "#src/utils";
 import { DUMMY_OPENAI } from "#root/config";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
-import { serviceTypes_async } from "#src/storage";
 
 // Should we return a promise? Better to be task iin/out ?
 
@@ -78,20 +77,8 @@ async function chatPrepare_async(T) {
 
   //console.log("prompt " + prompt);
   let serviceConfig = T("services.chat");
-  serviceConfig = utils.deepMerge(serviceConfig, T("config.services.chat"));
-  let type = serviceConfig.type;
-  let serviceTypeConfig = await serviceTypes_async.get(type);
-  if (!serviceTypeConfig) {
-    console.log("No serviceType for ", T("id"), T("services"));
-  } else {
-    console.log("ServiceType for ", type, serviceTypeConfig.name, serviceTypeConfig.modelVersion);
-  }
-
-  if (serviceConfig) {
-    serviceConfig = utils.deepMerge(serviceTypeConfig, serviceConfig);
-  }
   if (T("request.service")) {
-    serviceConfig = utils.deepMerge(serviceTypeConfig, T("request.service"));
+    serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));
   }
   const modelVersion = serviceConfig.modelVersion;
   const temperature = serviceConfig.temperature;
