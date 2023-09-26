@@ -52,10 +52,12 @@ export async function commandUpdate_async(wsSendTask, task) {
   mergedTask.processor["initiatingProcessorId"] = NODE.id; //"coprocessor";
   try {
     //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
+    mergedTask.meta["messageId"] = utils.nanoid8();
     if (NODE.role === "coprocessor") {
       mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
-      mergedTask.meta["messageId"] = utils.nanoid8();
       utils.logTask(task, "Creating new messageId from coprocessor", mergedTask.meta.messageId);
+    } else {
+      utils.logTask(task, "Creating new messageId from processor", mergedTask.meta.messageId);
     }
     //utils.logTask(task, "wsSendTask");
     wsSendTask(mergedTask);

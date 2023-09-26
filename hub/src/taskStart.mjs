@@ -155,7 +155,7 @@ async function processTemplates_async(task, obj, outputs, familyId) {
     // If the key ends with "Template", process it
     if (key.endsWith('Template')) {
         const strippedKey = key.replace('Template', '');
-        const templateCopy = JSON.parse(JSON.stringify(value));
+        const templateCopy = utils.deepClone(value);
         obj[strippedKey] = await processTemplateArrays_async(templateCopy, task, outputs, familyId);
     }
   }
@@ -414,7 +414,7 @@ async function taskStart_async(
     }
 
     // Instantiate new task
-    let task = JSON.parse(JSON.stringify(initTaskConfig)); // deep copy
+    let task = utils.deepClone(initTaskConfig); // deep copy
 
     //utils.logTask(task, "Task template", task)
 
@@ -552,7 +552,7 @@ async function taskStart_async(
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);
 
-    task.hub.origTask = JSON.parse(JSON.stringify(task));
+    task.hub.origTask = utils.deepClone(task);
 
     task = utils.setMetaModified(task);
 

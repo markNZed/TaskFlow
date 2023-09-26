@@ -171,6 +171,7 @@ function r(name) {
 
 const typeMap = {
     "TaskConverter": o([
+        { json: "ceps", js: "ceps", typ: u(undefined, m("any")) },
         { json: "command", js: "command", typ: u(undefined, u(null, "")) },
         { json: "commandArgs", js: "commandArgs", typ: u(undefined, u(m("any"), null)) },
         { json: "config", js: "config", typ: u(undefined, m("any")) },
@@ -183,6 +184,7 @@ const typeMap = {
         { json: "input", js: "input", typ: u(undefined, m("any")) },
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
+        { json: "operators", js: "operators", typ: u(undefined, m("any")) },
         { json: "output", js: "output", typ: u(undefined, m("any")) },
         { json: "parentName", js: "parentName", typ: u(undefined, "") },
         { json: "permissions", js: "permissions", typ: u(undefined, a("")) },
@@ -191,6 +193,7 @@ const typeMap = {
         { json: "processors", js: "processors", typ: u(undefined, m("any")) },
         { json: "request", js: "request", typ: u(undefined, m("any")) },
         { json: "response", js: "response", typ: u(undefined, m("any")) },
+        { json: "services", js: "services", typ: u(undefined, m("any")) },
         { json: "shared", js: "shared", typ: u(undefined, m("any")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },
         { json: "type", js: "type", typ: u(undefined, "") },

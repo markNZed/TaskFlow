@@ -223,6 +223,7 @@ const tasks = [
     },
     config: {
       local: {
+        statesSupported: ["configFunctionRequest"],
         suggestedPrompts: [
           "What is the id of the parent of this task?",
           "Given your knowledge about the paths of tasks. What is the path for the label of a task?",
@@ -256,19 +257,16 @@ const tasks = [
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
       ceps: {
-        "familyId": {
-          functionName: "CEPFamilyTree",
-          environments: ["rxjscopro"],
-        },
-        "id-root.user.conversation.zeroshot.start": {
-          functionName: "CEPServiceStub",
+        servicestub: {
+          type: "servicestub",
+          match: "id-root.user.conversation.zeroshot.start",
           environments: ["rxjscopro"],
           args: {
             type: "openaigpt.chatgptzeroshot",
             key: "API", 
             value: "openaistub"
           },
-        },
+        }
       },
       local: {
         timeout: 10000, // 10 seconds
@@ -308,6 +306,12 @@ const tasks = [
       childrenId: ["root.user.conversation.zeroshot"],
     },
     type: "TaskTest",
+  },
+
+  {
+    name: "helloworld",
+    type: "TaskCEPHelloWorld",
+    parentName: "root",
   },
 
 ];

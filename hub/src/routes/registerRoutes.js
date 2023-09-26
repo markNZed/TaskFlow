@@ -21,7 +21,6 @@ router.post("/", async (req, res) => {
   let processorId = req.body.processorId;
   let environment = req.body.environment;
   let commandsAccepted = req.body?.commandsAccepted;
-  let serviceTypes = req.body?.serviceTypes;
   let language = req.body?.language;
   let coprocessor = req.body?.coprocessor;
 
@@ -42,14 +41,12 @@ router.post("/", async (req, res) => {
   }
 
   console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
-  //console.log("processorId " + processorId + " registered with serviceTypes " + JSON.stringify(serviceTypes));
   console.log("processorId " + processorId + " registered with environment " + JSON.stringify(environment) + " language " + language + " coprocessor " + coprocessor);
     
   if (coprocessor) {
     activeCoprocessors.set(processorId, {
       environment,
       commandsAccepted,
-      serviceTypes,
       language,
       isCoprocessor: true,
     })
@@ -57,7 +54,6 @@ router.post("/", async (req, res) => {
     activeProcessors.set(processorId, {
       environment,
       commandsAccepted,
-      serviceTypes,
       language,
     })
   }

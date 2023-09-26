@@ -8,8 +8,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import OpenAI from 'openai';
 // eslint-disable-next-line no-unused-vars
 import { OpenAIStream } from 'ai';
-import { utils } from "../utils.mjs";
-import { cacheStore_async } from "../storage.mjs";
+import { utils } from "#src/utils";
+import { cacheStore_async } from "#src/storage";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
 import { promptTokensEstimate } from "openai-chat-tokens";

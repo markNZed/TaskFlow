@@ -32,7 +32,7 @@ const taskSync_async = async (key, value) => {
   const activeTask = await getActiveTask_async(value.instanceId);
 
   // We store excatly what was sent to us
-  const taskCopy = JSON.parse(JSON.stringify(value)); //deep copy
+  const taskCopy = utils.deepClone(value); //deep copy
   let sourceProcessorId = taskCopy.hub.sourceProcessorId;
   // Config can be missing from a start task
   if (!sourceProcessorId && !taskCopy?.autoStart) {

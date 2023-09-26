@@ -149,6 +149,7 @@ const TaskSystemLogViewer = (props) => {
         break;
       case "response":
         setData(transformedData);
+        console.log("transformedData", transformedData);
         setTotalCount(task.response.total)
         nextState = "query";
         break;

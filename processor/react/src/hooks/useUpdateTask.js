@@ -26,7 +26,7 @@ const useUpdateTask = (task, setTask) => {
       utils.log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
-          let snapshot = JSON.parse(JSON.stringify(task)); // deep copy
+          let snapshot = utils.deepClone(task); // deep copy
           const updating = { "command": null, "commandArgs": null };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));

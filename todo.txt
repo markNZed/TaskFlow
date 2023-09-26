@@ -3,12 +3,35 @@
 
 Merge nodejs into rxjs
   CEPFunctions -> ServiceCEP
-    CE{ is not a service because it is not serving a task but is part of the processor functionality
-      In some ways it is close to an operator - takes task as input
-      CEP function is intended to have state - defined by a taskCEPFunctions are different
-        Create new CEP dir as per Services Operators
-          Then move CEP function out of tasks to CEP dir
-            Start with CEPIncrement
+    CEPFunctions is like ceptypes allowing creation
+      Could have a generic service for modifying types
+        This is better than CEPFunctions
+          Pass Types to Task
+          CEP Functions is doing something different also
+            register - operating on CEPFunctions
+            get - operating on CEPFunctions
+            utils/createCEP - updates CEPMatchMap which is very specific to CEP and webSocket.js
+      Replace CEPFunctions with CEPsMap
+      Raises issue for using dynamic import
+        Also need to check an "in-memory" set of types which will include the function (so not loaded)
+          const CEPMatchMap = new Map();
+            These are different from config because they contain functions 
+            Is the CEP always going through CEPMatchMap ?
+               Nice to have the option to load on demand
+                 utils/createCEP could allow for registering without loading function
+                   CEPFunctions could be the loading that then replaces itself 
+                   Instead of function register a string e.g. load
+                     Then it is loaded and replaces string with function
+                 Where does the registering run?
+                   Autostart task TaskSystemRegisterCEP
+                     Example of a task that runs on all processors
+                       Needs to be loaded from Tasks/TaskSystemRegisterCEP.mjs
+            ServiceSystemConfig could be configured to define getStore mapping
+      OperatorLLM is loading service type but it should be using the service that is provided
+      Move task.config.services to task.services ? Also for cep and operators
+        Then merge task.services into services type and replace task.services with that
+          Then other tasks can modify this 
+            Need to modify taskInProcessorOut_async so it only strips out modules from services, operators, cep
   CEPFunctions
     CEPIncrement (user.testing.chatgptzeroshot.cep) of tasktype TaskCEP (so CEP only)
       Create Service CEP and move CEPIncrement into that
@@ -22,6 +45,7 @@ Merge nodejs into rxjs
     delete shared/processor
   Test Docker setup
 
+configdata should be in storage?
 Much of "config.services.chat" should be in "config.operators.LLM" ?
   At least that which is used in OperatorLLM.mjs
 Tasks could be like a tree

@@ -6,10 +6,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   //console.log("TaskChat_async services", services);
-  const systemConfig = services["config"].module;
 
   function arraysEqualIgnoreOrder(a, b) {
     if (!Array.isArray(a) || !Array.isArray(b)) {
@@ -32,12 +31,15 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
     case "start": {
       // Define which states this processor supports
       // Could create a config option for this too but having it in the state machine seems nicer
-      const statesSupported = ["configFunctionRequest"];
-      if (!arraysEqualIgnoreOrder(T("processor.statesSupported"), statesSupported)) {
-        // Experiment with this after we have the functions working
-        T("processor.statesSupported", statesSupported);
-        T("command", "update");
-        utils.logTask(T(), "statesSupported:", statesSupported);
+      // Still want to be able to disable this e.g. to run CEP on any state
+      if (T("config.local.statesSupported")) {
+        const statesSupported = T("config.local.statesSupported"); ["configFunctionRequest"];
+        if (!arraysEqualIgnoreOrder(T("processor.statesSupported"), statesSupported)) {
+          // Experiment with this after we have the functions working
+          T("processor.statesSupported", statesSupported);
+          T("command", "update");
+          utils.logTask(T(), "statesSupported:", statesSupported);
+        }
       }
       break;
     }
@@ -49,6 +51,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
       const actionPath = T("request.actionPath");
       const actionValue = T("request.actionValue");
       utils.logTask(T(), "action:", action, "id:", actionId, T("request"));
+      const systemConfig = T(`services.config.module`);
       if (action) {
         try {
           switch (action) {

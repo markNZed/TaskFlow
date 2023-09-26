@@ -32,7 +32,7 @@ const importOperator_async = async (name) => {
   const modulePath = operatorFilePaths[name];
   //console.log("importOperator_async " + name)
   const module = await import(modulePath);
-  //console.log("importOperator_async module", module);
+  //console.log("importOperator_async module", module[name]);
   return module[name];
 };
 

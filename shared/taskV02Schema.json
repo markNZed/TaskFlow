@@ -11,6 +11,9 @@
         "pattern": "^((?!\\.).)*$"
       },
       "properties": {
+        "ceps": {
+          "type": "object"
+        },
         "command": {
           "type": ["null", "string"]
         },
@@ -39,6 +42,9 @@
         "name": {
           "type": "string"
         },
+        "operators": {
+          "type": "object"
+        },
         "parentName": {
           "type": "string"
         },              
@@ -51,6 +57,9 @@
         "processor": {
           "type": "object"
         },
+        "services": {
+          "type": "object"
+        },        
         "type": {
           "type": "string"
         },

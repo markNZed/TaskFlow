@@ -7,22 +7,22 @@ import { utils } from "#src/utils";
 import { commandUpdate_async } from "#src/commandUpdate";
 
 /*
-  Register with systemConfig service and receive a promise that resolves when there is a change
+  Register with configFunctions service and receive a promise that resolves when there is a change
   The resolve returns a new promise so we can await the next change
   Then update this task's shared.[type + "ConfigTree"] entry 
 */
 
-
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   //console.log("TaskSystemConfigs services", services);
-  const systemConfig = services["config"].module;
-  //console.log("TaskSystemConfigs systemConfig", systemConfig);
+  const services = T("services");
+  const configFunctions = services["config"].module;
+  //console.log("TaskSystemConfigs configFunctions", configFunctions);
 
-  async function updateTree_async(systemConfig, type, wsSendTask, T) {
+  async function updateTree_async(configFunctions, type, wsSendTask, T) {
     utils.logTask(T(), "updateTree_async type:", type);
-    const result = await systemConfig.buildTree_async(type); // Get updated tree
+    const result = await configFunctions.buildTree_async(services["config"], type); // Get updated tree
     // Calculate diff and update
     //const diff = { shared: { [type + "ConfigTree"]: result } };
     T("shared." + type + "ConfigTree", result);
@@ -31,10 +31,10 @@ const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFun
     });
   }
 
-  async function handleChangesForType(type, systemConfig, wsSendTask) {
+  async function handleChangesForType(type, configFunctions, wsSendTask) {
     try {
-      utils.logTask(T(), "systemConfig initialize type:", type);
-      await updateTree_async(systemConfig, type, wsSendTask, T);
+      utils.logTask(T(), "configFunctions initialize type:", type);
+      await updateTree_async(configFunctions, type, wsSendTask, T);
   
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -42,10 +42,10 @@ const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFun
   
         // Wait for change and immediately request for another change promise
         // eslint-disable-next-line no-unused-vars
-        const id = await systemConfig.registerForChange_async(type);
+        const id = await configFunctions.registerForChange_async(type);
   
-        //utils.logTask(T(), "systemConfig change type:", type, id);
-        updateTree_async(systemConfig, type, wsSendTask, T);
+        //utils.logTask(T(), "configFunctions change type:", type, id);
+        updateTree_async(configFunctions, type, wsSendTask, T);
       }
     } catch (error) {
       console.error(`An error occurred while handling changes for ${type}:`, error);
@@ -57,10 +57,13 @@ const TaskSystemConfigs_async = async function (wsSendTask, T, fsmHolder, CEPFun
   // This should not complete as the handleChangesForType is expected to run for the lifetime of the server
   // We set the task.config.background=true to avoid awaiting for this task 
   await Promise.all([
-    handleChangesForType("tasks", systemConfig, wsSendTask),
-    handleChangesForType("users", systemConfig, wsSendTask),
-    handleChangesForType("groups", systemConfig, wsSendTask),
-    handleChangesForType("tasktypes", systemConfig, wsSendTask)
+    handleChangesForType("tasks", configFunctions, wsSendTask),
+    handleChangesForType("users", configFunctions, wsSendTask),
+    handleChangesForType("groups", configFunctions, wsSendTask),
+    handleChangesForType("tasktypes", configFunctions, wsSendTask),
+    handleChangesForType("ceptypes", configFunctions, wsSendTask),
+    handleChangesForType("servicetypes", configFunctions, wsSendTask),
+    handleChangesForType("operatortypes", configFunctions, wsSendTask),
   ]);
 
   return T();

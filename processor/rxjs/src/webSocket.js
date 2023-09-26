@@ -8,7 +8,7 @@ import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, NODE } from "../config.mjs";
 import { register_async } from "./register.mjs";
-import { getActiveTask_async, setActiveTask_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { utils } from "./utils.mjs";
 import { taskRelease, taskLock } from './shared/taskLock.mjs';
@@ -20,11 +20,11 @@ let maxAttempts = 100;
 let processorWs;
 
 const taskSubject = new Subject();
-const CEPFuncs = new Map();
 
 // Support regex in the CEP config to match tasks
 function findCEP (CEPFuncsKeys, matchExpr) {
-  let result = CEPFuncs.get(matchExpr);
+  //console.log("findCEP matchExpr:", matchExpr);
+  let result = CEPMatchMap.get(matchExpr);
   if (!result) {
     // filter CEPFuncsKeys for those starting with regex:
     const regexKeys = [...CEPFuncsKeys].filter(key => key.startsWith("regex:"));
@@ -37,10 +37,12 @@ function findCEP (CEPFuncsKeys, matchExpr) {
       //console.log("regex", regex);
       let match = regex.test(matchExpr);
       if (match) {
-        result = CEPFuncs.get(regexKey);
+        result = CEPMatchMap.get(regexKey);
         break;
       }
     }
+  } else {
+    //console.log("findCEP found direct match:", result);
   }
   return result;
 }
@@ -57,7 +59,7 @@ taskSubject
     mergeMap(async (task) => {
       utils.logTask(task, "Incoming task command:" + task.processor.command + " initiatingProcessorId:" + task.processor.initiatingProcessorId);
       task = utils.processorInTaskOut(task);
-      const taskCopy = JSON.parse(JSON.stringify(task)); //deep copy
+      const taskCopy = utils.deepClone(task); //deep copy
       if (!task.processor.coprocessing) {
         utils.removeNullKeys(task);
       }
@@ -72,9 +74,9 @@ taskSubject
         // Maps maintain order and keys do not need to be strings
         // We always add familyId so CEP can only operate on its own family
         // utils.createCEP is how we create the entries
-        const CEPFuncsKeys = CEPFuncs.keys();
-        //utils.logTask(task, "CEPFuncs", CEPFuncs.keys());
-        //utils.logTask(task, "CEPFuncs", CEPFuncs);
+        const CEPFuncsKeys = CEPMatchMap.keys();
+        //utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
+        //utils.logTask(task, "CEPFuncsKeys", CEPFuncsKeys);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
         let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
         //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
@@ -97,9 +99,17 @@ taskSubject
         for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
           utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
-          // await so that CEP can modify the task during coprocessing
-          await func(functionName, wsSendTask, CEPInstanceId, task, args);
-          task.processor.CEPExecuted.push(functionName);
+          if (CEPCoprocessor) {
+            // await so that CEP can modify the task during coprocessing
+            // If a Task wants to update itsefl then it should not use a sync command but return the udpated value
+            
+            await func(wsSendTask, CEPInstanceId, functionName, task, args);
+            task.processor.CEPExecuted.push(functionName);
+          } else {
+            // We do not await so we do not hang waiting for the lock when a Task sends a sync to itself
+            func(wsSendTask, CEPInstanceId, functionName, task, args);
+            task.processor.CEPExecuted.push(functionName);
+          }
         }
       }
       if (NODE.role === "coprocessor") {
@@ -108,12 +118,12 @@ taskSubject
           utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.processor.coprocessingDone);
         } else {
           utils.logTask(task, "CoProcessing task");
-          await taskProcess_async(wsSendTask, task, CEPFuncs);
+          await taskProcess_async(wsSendTask, task, CEPMatchMap);
         }
       } else {
         // Process the task to install the CEP
         if (task.processor.initiatingProcessorId !== NODE.id) {
-          await taskProcess_async(wsSendTask, task, CEPFuncs);
+          await taskProcess_async(wsSendTask, task, CEPMatchMap);
         }
       }
       if (task.processor.coprocessing) {
@@ -241,7 +251,7 @@ const connectWebSocket = () => {
         }
       }
       delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-      mergedTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask)); // deep copy to avoid self-reference
+      mergedTask.processor["origTask"] = utils.deepClone(lastTask); // deep copy to avoid self-reference
       if (!mergedTask.processor.coprocessing) {
         await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       }

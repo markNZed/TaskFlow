@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { initiateFsm, updateStates } from "#src/fsm";
 
 // eslint-disable-next-line no-unused-vars
-const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskShowInstruction_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

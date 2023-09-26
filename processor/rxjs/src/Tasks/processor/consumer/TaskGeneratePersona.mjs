@@ -5,9 +5,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
 
   switch (T("state.current")) {
@@ -17,13 +18,13 @@ const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, CEPF
     case "start": {
       T("request.prompt", "Generate a random client profile");
       T("request.service.noStreaming", true);
-      let operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+      let operatorOut = await operatorLLM.operate_async(wsSendTask, T());
       T("output.profile", operatorOut.response.LLM);
       T("request.service.systemMessage", "Generate a 100 word, single paragraph, summary of a client profile: ");
       T("request.prompt", T("output.profile"));
       const forget = T("request.service.forget");
       T("request.service.noStreaming", false);
-      operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+      operatorOut = await operatorLLM.operate_async(wsSendTask, T());
       T("output.summary", operatorOut.response.LLM);
       T("request.service.forget", forget);
       T("state.request", {}); // clear - do we need to do this here?

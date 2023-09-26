@@ -5,11 +5,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
 import { parseFilter } from 'mongodb-query-parser';
-import { tasksModel } from "./TaskCEPSystemLog/tasksModel.mjs"
+import { tasksModel } from "#src/CEPs/CEPSystemLog/tasksModel"
 import { formatQuery } from 'react-querybuilder';
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -38,7 +38,8 @@ const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPF
       }
       utils.logTask(T(), "fetchTasksAsync", parsedQuery, sortCriteria, skip, pageSize);
       // Concurrent requests
-      const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(pageSize);
+      // .lean() returns a plain Javascript object without metadata
+      const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(pageSize).lean();
       const totalPromise = tasksModel.countDocuments(parsedQuery);
       const [tasks, total] = await Promise.all([tasksPromise, totalPromise]);
       return { tasks, total };

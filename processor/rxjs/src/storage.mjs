@@ -14,6 +14,12 @@ import { utils } from "./utils.mjs";
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
 
+var CEPsMap = new Map();
+var ServicesMap = new Map();
+var OperatorsMap = new Map();
+
+var CEPMatchMap = new Map();
+
 mongoose.connect(NODE.storage.mongoUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -62,6 +68,12 @@ const activeTasksStore_async = newKeyV(redisClient, keyvPrefix + "activeTasks");
 //   Value: data object
 const taskDataStore_async = newKeyV(redisClient, keyvPrefix + "taskData");
 
+const cepTypes_async = newKeyV(redisClient, keyvPrefix + "cepTypes");
+
+const serviceTypes_async = newKeyV(redisClient, keyvPrefix + "serviceTypes");
+
+const operatorTypes_async = newKeyV(redisClient, keyvPrefix + "operatorTypes");
+
 const sharedStore_async = newKeyV(redisClient, "shared"); // Shared with Hub
 
 const tasksStore_async = newKeyV(redisClient, "tasks"); // Shared with Hub
@@ -93,13 +105,43 @@ if (NODE.storage.emptyAllDb) {
   let toClear = [
     cacheStore_async.clear(),
     taskDataStore_async.clear(),
-    //tasksStore_async.clear(), We do not clear this because it is controlled by Hub
+    cepTypes_async.clear(),
+    serviceTypes_async.clear(),
+    operatorTypes_async.clear(),
   ];
   if (NODE.role !== "coprocessor") {
     toClear.push(activeTasksStore_async.clear());
+    toClear.push(instancesStore_async.clear());
   }
   await Promise.all(toClear);
   console.log("Empty DB: cleared all KeyV");
+}
+
+// For now we use JS data structures instead of a DB
+// Removes need for an admin interface during dev
+console.log("Loading config data from " + NODE.configDir);
+let cepTypes = await utils.load_data_async(NODE.configDir, "ceptypes");
+cepTypes = utils.flattenObjects(cepTypes);
+//console.log("cepTypes", JSON.stringify(cepTypes, null, 2))
+let serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
+serviceTypes = utils.flattenObjects(serviceTypes);
+//console.log("serviceTypes", JSON.stringify(serviceTypes, null, 2))
+let operatorTypes = await utils.load_data_async(NODE.configDir, "operatortypes");
+operatorTypes = utils.flattenObjects(operatorTypes);
+//console.log("operatorTypes from dir", NODE.configDir, JSON.stringify(operatorTypes, null, 2))
+
+// This can be done in parallel
+
+for (const [key, value] of Object.entries(cepTypes)) {
+  await cepTypes_async.set(key, value);
+}
+
+for (const [key, value] of Object.entries(serviceTypes)) {
+  await serviceTypes_async.set(key, value);
+}
+
+for (const [key, value] of Object.entries(operatorTypes)) {
+  await operatorTypes_async.set(key, value);
 }
 
 export {
@@ -115,4 +157,11 @@ export {
   sharedStore_async,
   setActiveTask_async,
   getActiveTask_async,
+  CEPsMap, 
+  ServicesMap, 
+  OperatorsMap,
+  cepTypes_async,
+  serviceTypes_async,
+  operatorTypes_async,
+  CEPMatchMap,
 };

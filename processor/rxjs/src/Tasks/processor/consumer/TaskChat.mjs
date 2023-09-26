@@ -57,7 +57,7 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -77,10 +77,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
     origTask = JSON.parse(JSON.stringify(T()));
   }
 
-  const serviceChat = services["chat"].module;
-  const operatorLLM = operators["LLM"].module;
-  console.log("operatorLLM", operatorLLM);
-
+  const operatorLLM = T("operators")["LLM"].module;
 
   switch (T("state.current")) {
     case "mentionAddress":
@@ -93,7 +90,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, servi
       wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
-      const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), serviceChat);
+      const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
       T("response.LLMResponse", operatorOut.response.LLM);
       if (operatorOut.response.newMessages && operatorOut.response.newMessages.length) {
         const newMessages = operatorOut.response.newMessages;

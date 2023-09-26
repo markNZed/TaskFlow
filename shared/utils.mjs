@@ -186,7 +186,7 @@ const utils = {
   },
 
   deepMergeProcessor: function(prevState, update, processorIn) {
-    const processor = JSON.parse(JSON.stringify(processorIn));
+    const processor = utils.deepClone(processorIn);
     let result = utils.deepMerge(prevState, update);
     result.processor = processor;
     //utils.removeNullKeys(result);
@@ -194,7 +194,7 @@ const utils = {
   },
 
   deepMergeHub: function(prevState, update, hubIn) {
-    const hub = JSON.parse(JSON.stringify(hubIn));
+    const hub = utils.deepClone(hubIn);
     let result = utils.deepMerge(prevState, update);
     result.hub = hub;
     //utils.removeNullKeys(result);
@@ -255,10 +255,10 @@ const utils = {
     if (typeof update === "object") {
       let output = {};
       if (typeof prevState === "object" && prevState !== null) {
-        output = JSON.parse(JSON.stringify(prevState));
+        output = utils.deepClone(prevState);
       }
-      if (debug) {console.log("output before", JSON.parse(JSON.stringify(output)))}
-      if (debug) {console.log("update before", JSON.parse(JSON.stringify(update)))}
+      if (debug) {console.log("output before", utils.deepClone(output))}
+      if (debug) {console.log("update before", utils.deepClone(update))}
       for (const key in update) {
         // Null is treated as a deletion in the case of objects
         if (update[key] === null) {
@@ -285,7 +285,7 @@ const utils = {
           output[key] = update[key];
         }
       }
-      if (debug) {console.log("output after", JSON.parse(JSON.stringify(output)))}
+      if (debug) {console.log("output after", utils.deepClone(output))}
       return output;
     }
 
@@ -664,7 +664,7 @@ const utils = {
   processorActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
     delete task.processor.origTask; // delete so we do not have an old copy in origTask
-    task.processor["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
+    task.processor["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
@@ -682,7 +682,7 @@ const utils = {
   hubActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
     delete task.hub.origTask; // delete so we do not have an old copy in origTask
-    task.hub["origTask"] = JSON.parse(JSON.stringify(task)); // deep copy to avoid self-reference
+    task.hub["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
@@ -698,7 +698,7 @@ const utils = {
   },
 
   cleanForHash: function (task) {
-    let taskCopy = JSON.parse(JSON.stringify(task));
+    let taskCopy = utils.deepClone(task);
     delete taskCopy.hub;
     delete taskCopy.processor;
     delete taskCopy.processors;
@@ -726,7 +726,7 @@ const utils = {
     if (task.processor.command === "ping") {
       return task;
     }
-    const taskCopy = JSON.parse(JSON.stringify(task)); // Avoid modifyng object that was passed in
+    const taskCopy = utils.deepClone(task); // Avoid modifyng object that was passed in
     const origTask = taskCopy.processor.origTask;
     if (!origTask) {
       return task;
@@ -760,7 +760,7 @@ const utils = {
     diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
     const hashDebug = true;
     if (hashDebug || taskCopy.config?.debug?.hash) {
-      diffTask.meta["hashDiffOrigTask"] = JSON.parse(JSON.stringify(diffOrigTask));
+      diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
       diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
     }
     diffTask["instanceId"] = taskCopy.instanceId;
@@ -786,7 +786,7 @@ const utils = {
       throw new Error("ERROR hubDiff: origTask.id !== taskCopy.id");
     }
     //console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
-    const taskCopy = JSON.parse(JSON.stringify(task)) // Avoid modifyng object that was passed in
+    const taskCopy = utils.deepClone(task) // Avoid modifyng object that was passed in
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
     if (Object.keys(diffTask).length > 0) {
       diffTask["instanceId"] = taskCopy.instanceId;
@@ -821,9 +821,9 @@ const utils = {
       // In theory we could enable the hash debug in the task
       const hashDebug = true;
       if (hashDebug || taskCopy.config?.debug?.hash) {
-        diffTask.meta["hashTask"] = JSON.parse(JSON.stringify(origTask));
+        diffTask.meta["hashTask"] = utils.deepClone(origTask);
         diffTask.meta.hashTask = utils.cleanForHash(diffTask.meta.hashTask);
-        diffTask.meta["hashDiffOrigTask"] = JSON.parse(JSON.stringify(diffOrigTask));
+        diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
         diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
       }
       delete diffTask.hub.origTask; // Only used internally
@@ -833,7 +833,7 @@ const utils = {
   },
 
   checkHashDiff: function(taskInStorage, task) {
-    let taskCopy = JSON.parse(JSON.stringify(task));
+    let taskCopy = utils.deepClone(task);
     if (taskCopy?.commandArgs?.sync || taskCopy?.processor?.commandArgs?.sync || taskCopy?.hub?.commandArgs?.sync) {
       // Sync is not relative to a current value so we cannot use hash
       return;
@@ -886,43 +886,54 @@ const utils = {
   },
 
   taskInProcessorOut_async: async function(task, processorId, getActiveTask_async) {
-    task = utils.deepClone(task); // We do not want any side efects on task
-    utils.debugTask(task, "input");
-    //console.log("taskInProcessorOut input task.output", task.output);
-    if (!task.command) {
-      console.error("ERROR: Missing task.command", task);
-      throw new Error(`Missing task.command`);
+    let taskCopy = utils.deepClone(task); // We do not want any side efects on task
+    utils.debugTask(taskCopy, "input");
+    //console.log("taskInProcessorOut input taskCopy.output", taskCopy.output);
+    if (!taskCopy.command) {
+      console.error("ERROR: Missing taskCopy.command", taskCopy);
+      throw new Error(`Missing taskCopy.command`);
     }
-    const command = task.command;
-    const commandArgs = task.commandArgs;
-    // Initialize processor when it does not exist e.g. when starting initial task
-    if (!task.processor) {
-      task.processor = {};
+    const command = taskCopy.command;
+    const commandArgs = taskCopy.commandArgs;
+    // Initialize processor when it does not exist e.g. when starting initial taskCopy
+    if (!taskCopy.processor) {
+      taskCopy.processor = {};
     }
-    // Clear down task commands as we do not want these coming back from the hub
-    task.processor["command"] = command;
-    delete task.command;
-    if (task.commandArgs) {
+    // Clear down taskCopy commands as we do not want these coming back from the hub
+    taskCopy.processor["command"] = command;
+    delete taskCopy.command;
+    if (taskCopy.commandArgs) {
       // Deep copy because we are going to clear
-      task.processor["commandArgs"] = JSON.parse(JSON.stringify(task.commandArgs));
+      taskCopy.processor["commandArgs"] = JSON.parse(JSON.stringify(taskCopy.commandArgs));
     } else {
-      task.processor["commandArgs"] = null;
+      taskCopy.processor["commandArgs"] = null;
     }
-    delete task.commandArgs
-    // Record the state of the task as it leaves the processor
-    if (task?.state?.current) {
-      task.processor["stateLast"] = task.state.current;
-      delete task.state.last;
+    delete taskCopy.commandArgs
+    // Record the state of the taskCopy as it leaves the processor
+    if (taskCopy?.state?.current) {
+      taskCopy.processor["stateLast"] = taskCopy.state.current;
+      delete taskCopy.state.last;
     }
-    task.processor["id"] = processorId;
+    // Strip Services and Operators as these are local to the Processor
+    // The deepClone probably stripts them anyway?
+    if (taskCopy.services) {
+      //delete taskCopy.services;
+    }
+    if (taskCopy.operators) {
+      //delete taskCopy.operators;
+    }
+    if (taskCopy.ceps) {
+      //delete taskCopy.ceps;
+    }
+    taskCopy.processor["id"] = processorId;
     if (command === "start" || command === "partial" || commandArgs?.sync) {
-      return task;
+      return taskCopy;
     }
-    // This assumes task is not a partial object e.g. in sync
-    if (task.processor.origTask && task.processor.command === "update") {
-      const taskCleaned = utils.cleanForHash(task);
+    // This assumes taskCopy is not a partial object e.g. in sync
+    if (taskCopy.processor.origTask && taskCopy.processor.command === "update") {
+      const taskCleaned = utils.cleanForHash(taskCopy);
       //console.log("taskInProcessorOut taskCleaned", taskCleaned);
-      const origTaskCleaned = utils.cleanForHash(task.processor.origTask);
+      const origTaskCleaned = utils.cleanForHash(taskCopy.processor.origTask);
       //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
       // Not sure about removing outputs better to leave them
       delete taskCleaned.output;
@@ -930,21 +941,21 @@ const utils = {
       const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
       if (keysNulled) {
         //console.log("taskInProcessorOut keysNulled", keysNulled);
-        task = utils.deepMerge(task, keysNulled);
+        taskCopy = utils.deepMerge(taskCopy, keysNulled);
       }
     }
-    // This will use task.processor.origTask to identify the diff
-    let diffTask = utils.processorDiff(task);
-    // Send the diff considering the latest task storage state
-    if (task.instanceId) {
+    // This will use taskCopy.processor.origTask to identify the diff
+    let diffTask = utils.processorDiff(taskCopy);
+    // Send the diff considering the latest taskCopy storage state
+    if (taskCopy.instanceId) {
       const lastTask = await getActiveTask_async(diffTask.instanceId);
-      // The task storage may have been changed after task.processor.origTask was set
+      // The taskCopy storage may have been changed after taskCopy.processor.origTask was set
       //if (lastTask && lastTask.meta && lastTask.meta.hash !== diffTask.meta.hash) {
       if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
         delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask
-        diffTask.processor["origTask"] = JSON.parse(JSON.stringify(lastTask));
+        diffTask.processor["origTask"] = utils.deepClone(lastTask);
         diffTask = utils.processorDiff(diffTask);
-        //console.log("taskInProcessorOut_async latest task storage task.output", diffTask.output);
+        //console.log("taskInProcessorOut_async latest taskCopy storage taskCopy.output", diffTask.output);
       } else {
         //console.log("taskInProcessorOut lastTask.id, lastTask.meta.hash, diffTask.meta.hash", lastTask.id, lastTask.meta.hash, diffTask.meta.hash);
       }
@@ -1072,15 +1083,28 @@ const utils = {
 
   deepClone: function(obj) {
     if (obj === null || typeof obj !== 'object') {
+      // Return primitive types, functions, and null
       return obj;
     }
     if (Array.isArray(obj)) {
+      // Handle arrays
       return obj.map(utils.deepClone);
     }
+    if (obj instanceof Date) {
+      // Handle Date
+      return new Date(obj);
+    }
+    if (obj instanceof RegExp) {
+      // Handle RegExp
+      return new RegExp(obj);
+    }
+    // Handle Function
+    if (typeof obj === 'function') {
+      return obj;
+    }
+    // Handle objects
     const clonedObj = {};
-    // This will also clone properties
     for (const key in obj) {
-      // eslint-disable-next-line no-prototype-builtins
       if (obj.hasOwnProperty(key)) {
         clonedObj[key] = utils.deepClone(obj[key]);
       }
@@ -1193,6 +1217,9 @@ const utils = {
     }
     if (task?.meta?.hashTask?.state?.current) {
       //logParts.push("task?.meta?.hashTask?.state?.current:", task?.meta?.hashTask?.state?.current);
+    }
+    if (task?.output?.CEPCount) {
+      //logParts.push("DEBUGTASK task.output.CEPCount", task.output.CEPCount);
     }
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));

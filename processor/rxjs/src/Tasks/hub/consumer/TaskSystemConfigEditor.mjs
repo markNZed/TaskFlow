@@ -11,11 +11,12 @@ ServiceSystemConfig provides read/write access to configuration data, TaskSystem
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   //console.log("TaskSystemConfigEditor_async services", services);
-  const systemConfig = services["config"].module;
-  //console.log("TaskSystemConfigEditor_async systemConfig", systemConfig);
+  const services = T("services");
+  const configFunctions = services["config"].module;
+  //console.log("TaskSystemConfigEditor_async configFunctions", configFunctions);
 
   /**
    * Removes properties from objB that have the same values as those in objA.
@@ -110,7 +111,7 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
   }
 
   async function parentDiff_async(targetStore, task) {
-    const requestedTaskParent = await systemConfig.read_async(targetStore, task?.meta?.parentId);
+    const requestedTaskParent = await configFunctions.read_async(services["config"], targetStore, task?.meta?.parentId);
     let diff = {};
     if (requestedTaskParent) {
       diff = keepSameProperties(requestedTaskParent, task);
@@ -132,41 +133,41 @@ const TaskSystemConfigEditor_async = async function (wsSendTask, T, fsmHolder, C
       if (action) {
         switch (action) {
           case "create": {
-            await systemConfig.create_async(targetStore, actionTask);
+            await configFunctions.create_async(services["config"], targetStore, actionTask);
             break;
           }
           case "read":{
             const [requestedTask, diff] = await Promise.all([
-              systemConfig.read_async(targetStore, actionId),
-              parentDiff_async(targetStore, await systemConfig.read_async(targetStore, actionId))
+              configFunctions.read_async(services["config"], targetStore, actionId),
+              parentDiff_async(targetStore, await configFunctions.read_async(services["config"], targetStore, actionId))
             ]);            
             T("response.task", requestedTask);
             T("response.taskDiff", diff);
             break;
           }
           case "update": {
-            await systemConfig.update_async(targetStore, actionTask);
-            const updatedTask = await systemConfig.read_async(targetStore, actionId);
+            await configFunctions.update_async(services["config"], targetStore, actionTask);
+            const updatedTask = await configFunctions.read_async(services["config"], targetStore, actionId);
             T("response.task", updatedTask);
             const diff = await parentDiff_async(targetStore, updatedTask);
             T("response.taskDiff", diff);
             break;
           }
           case "delete": {
-            await systemConfig.delete_async(targetStore, actionId);
+            await configFunctions.delete_async(services["config"], targetStore, actionId);
             break;
           }
           case "insert": {
-            // Create systemConfig.create_async
-            await systemConfig.insert_async(targetStore, actionId, T("request.newTaskLabel"));
+            // Create configFunctions.create_async
+            await configFunctions.insert_async(services["config"], targetStore, actionId, T("request.newTaskLabel"));
             break;
           }
           case "move": {
-            await systemConfig.move_async(targetStore, actionId, T("request.destinationId"));
+            await configFunctions.move_async(services["config"], targetStore, actionId, T("request.destinationId"));
             break;
           }
           case "paste": {
-            await systemConfig.paste_async(targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
+            await configFunctions.paste_async(services["config"], targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
             break;
           }
           default:

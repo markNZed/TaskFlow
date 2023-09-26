@@ -16,7 +16,7 @@ serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log(JSON.stringify(serviceTypes, null, 2))
 
 async function OperatorLLM_async(wsSendTask, task, service) {
-  const taskCopy = JSON.parse(JSON.stringify(task));
+  const taskCopy = utils.deepClone(task);
   const T = utils.createTaskValueGetter(taskCopy);
   let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;

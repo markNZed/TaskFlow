@@ -15,13 +15,14 @@ const cosineSimilarity = (tensor1, tensor2) => {
 };
 
 // eslint-disable-next-line no-unused-vars
-const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
 
   T("response.LLM", null); // Avoid using previously stored response
-  const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+  const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
   T("response.LLM", operatorOut.response.LLM);
 
   const nextTaskKeys = Object.keys(T("config.nextTaskTemplate"));

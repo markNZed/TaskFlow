@@ -38,7 +38,7 @@ const wsSendTask = async function (task, processorId, activeTask) {
     throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
   //console.log("wsSendTask task.request", task.request)
-  task = JSON.parse(JSON.stringify(task)); //deep copy because we make changes e.g. task.processor
+  task = utils.deepClone(task); //deep copy because we make changes e.g. task.processor
   // hubDiff will remove processors and users
   let processor;
   if (task.processors && task.processors[processorId]) {

@@ -5,22 +5,16 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 const system = [
-
-  {
-    // Just registering CEP function
-    // Should probably move into a service
-    name: "systemfamilytree",
-    parentName: "system",
-    type: "TaskCEPFamilyTree",
-  },
   {
     name: "systemshared",
     config: {
       ceps: {
-        ".*instance.*": {
+        shared: {
+          type: "shared",
           isRegex: true,
-          functionName: "CEPShared",
-        },
+          match: ".*instance.*",
+          environments: ["rxjscopro"],
+        }
       },
     },
     parentName: "system",
@@ -30,14 +24,16 @@ const system = [
     name: "systemlog",
     config: {
       ceps: {
-        ".*instance.*": {
+        systemlog: {
+          type: "systemlog",
           isRegex: true,
-          functionName: "CEPLog",
-        },
+          match: ".*instance.*",
+          environments: ["rxjscopro"],
+        }
       },
     },
     parentName: "system",
-    type: "TaskCEPSystemLog",
+    type: "TaskCEP",
   }, 
   {
     initiator: true,
@@ -113,6 +109,52 @@ const system = [
     type: "TaskSystemConfigEditor",
     shared: {
       tasktypesConfigTree: {},
+    },
+  },
+  {
+    name: "processorrxjs",
+    parentName: "config",
+    config: {
+      label: "Processor RxJS",
+    }
+  },
+  {
+    initiator: true,
+    name: "processor-rxjs-cep-types-config-editor",
+    environments: ["rxjs"],
+    config: {
+      label: "CEP Types",
+      local: {
+        targetStore: "cep",
+      },
+    },
+    parentName: "processorrxjs",
+    type: "TaskSystemConfigEditor",
+    shared: {
+      rxjsCEPTypesConfigTree: {},
+    },
+  },
+  {
+    name: "processorrxjscopro",
+    parentName: "config",
+    config: {
+      label: "Coprocessor RxJS",
+    }
+  },
+  {
+    initiator: true,
+    name: "processor-rxjscopro-cep-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "CEP Types",
+      local: {
+        targetStore: "cep",
+      },
+    },
+    parentName: "processorrxjscopro",
+    type: "TaskSystemConfigEditor",
+    shared: {
+      rxjscoproCEPTypesConfigTree: {},
     },
   },
   {

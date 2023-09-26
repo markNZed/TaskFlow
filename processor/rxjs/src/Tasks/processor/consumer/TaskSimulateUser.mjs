@@ -56,11 +56,12 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFuncs, services, operators) {
+const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
-
+  
   // Cache
   const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);
   let cachedDiff;
@@ -94,7 +95,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
         T("request.prompt", T("output.simulationPrompt.text"));
-        const operatorOut = await operatorLLM.operate_async(wsSendTask, T(), services["chat"].module);
+        const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
         T("output.simulationResponse.text", operatorOut.response.LLM);
       } else {
         const operatorIn = JSON.parse(JSON.stringify(T()));
@@ -118,7 +119,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPFunc
         const simulationPrompt = msgs.pop().text;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
-        const operatorOut = await operatorLLM.operate_async(wsSendTask, operatorIn, services["chat"].module);
+        const operatorOut = await operatorLLM.operate_async(wsSendTask, operatorIn);
         const simulationResponse = { role: "assistant", text: operatorOut.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }

@@ -42,7 +42,7 @@ Using VS Code
 
 * Regular expressions in "Filter Output" of Javascript console: wrap your regex pattern in forward slashes (/).
 * React Dev Tools
-* console.log() can display variables in a pretty format but be careful when logging references. The references can be updated after the console.log function is called and the updated value is logged depedning on when in the event loop the console.log is run. To avoid issues with this make a deep copy of references e.g. `console.log("x", JSON.parse(JSON.stringify(X)))`.
+* console.log() can display variables in a pretty format but be careful when logging references. The references can be updated after the console.log function is called and the updated value is logged depedning on when in the event loop the console.log is run. To avoid issues with this make a deep copy of references e.g. `console.log("x", utils.deepClone(X))`.
 
 ### VS Code
 

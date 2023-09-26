@@ -4,19 +4,17 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
-import { DUMMY_OPENAI, NODE } from "#root/config";
+import { DUMMY_OPENAI } from "#root/config";
 import * as dotenv from "dotenv";
 dotenv.config(); // For process.env.OPENAI_API_KEY
+import { serviceTypes_async } from "#src/storage";
 
 // Should we return a promise? Better to be task iin/out ?
 
-var serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
-serviceTypes = utils.flattenObjects(serviceTypes);
-//console.log(JSON.stringify(serviceTypes, null, 2))
-
-async function operate_async(wsSendTask, task, service) {
-  const taskCopy = JSON.parse(JSON.stringify(task));
+async function operate_async(wsSendTask, task) {
+  const taskCopy = utils.deepClone(task);
   const T = utils.createTaskValueGetter(taskCopy);
+  const service = T("services.chat.module");
   let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
@@ -79,11 +77,12 @@ async function chatPrepare_async(T) {
   let noStreaming = false;
 
   //console.log("prompt " + prompt);
-  let serviceConfig = T("config.services.chat");
+  let serviceConfig = T("services.chat");
+  serviceConfig = utils.deepMerge(serviceConfig, T("config.services.chat"));
   let type = serviceConfig.type;
-  let serviceTypeConfig = serviceTypes[type];
+  let serviceTypeConfig = await serviceTypes_async.get(type);
   if (!serviceTypeConfig) {
-    console.log("No serviceType for ", T("id"), type);
+    console.log("No serviceType for ", T("id"), T("services"));
   } else {
     console.log("ServiceType for ", type, serviceTypeConfig.name, serviceTypeConfig.modelVersion);
   }
@@ -257,6 +256,7 @@ async function chatPrepare_async(T) {
     maxFunctionDepth,
   };
 }
+
 export const OperatorLLM = {
   operate_async,
 } 

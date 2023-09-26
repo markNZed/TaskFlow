@@ -3,13 +3,20 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskCEPHelloWorld",
+    environments: ["rxjs"],
+    config: {
+      autoStartEnvironment: "rxjs",
+    },
+  },
+  {
     name: "TaskCEPServiceStub",
     environments: ["rxjscopro"],
     config: {
       autoStartEnvironment: "rxjscopro",
     },
   },
-   {
+  {
     name: "TaskCEPFamilyTree",
     environments: ["rxjscopro"],
     config: {
@@ -85,9 +92,10 @@ const tasktypes = [
     name: "TaskTest",
     config: {
       ceps: {
-        "familyId": {
-          functionName: "CEPFamilyTree",
+        familytree: {
+          type: "familytree",
           environments: ["rxjscopro"],
+          match: "familyId",
         },
       },
     },
