@@ -26,8 +26,8 @@
             "name": "RxJS Processsor",
             "address": "localhost",
             "port": 9231,
-            "localRoot": "/app/processor/rxjs",
-            "remoteRoot": "/app/processor/rxjs"
+            "localRoot": "/app/nodes/rxjs",
+            "remoteRoot": "/app/nodes/rxjs"
         },
         {
             "type": "node",
@@ -35,8 +35,8 @@
             "name": "RxJS Hub Coprocesssor",
             "address": "localhost",
             "port": 9232,
-            "localRoot": "/app/processor/rxjs",
-            "remoteRoot": "/app/processor/rxjs"
+            "localRoot": "/app/nodes/rxjs",
+            "remoteRoot": "/app/nodes/rxjs"
         }
     ],
     "compounds": [

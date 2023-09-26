@@ -138,7 +138,7 @@ If a Task Function sets `task.error` and the Task is updated then the Hub will d
 
 To run T@skFlow with docker, see the [README.md](infra/docker/README.md) in the infra/docker directory.
 
-To learn more about the RxJS Processor, see the [README.md](processor/rxjs/README.md) in the RxJS Processor directory.
+To learn more about the RxJS Processor, see the [README.md](nodes/rxjs/README.md) in the RxJS Processor directory.
 
 To learn more about the React Processor, see the [README.md](processor/react/README.md) in the React Processor directory.
 

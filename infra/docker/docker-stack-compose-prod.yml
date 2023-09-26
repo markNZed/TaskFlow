@@ -30,7 +30,7 @@ services:
   taskflow-rxjs:
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/rxjs:/app/processor/rxjs
+      - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
     entrypoint: ["/entrypoint-rxjs.sh"]
     environment:
@@ -42,7 +42,7 @@ services:
   taskflow-rxjscopro:
     image: taskflow-prod:latest
     volumes:
-      - ../../processor/rxjs:/app/processor/rxjs
+      - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
     entrypoint: ["/entrypoint-rxjscopro.sh"]
     environment:
