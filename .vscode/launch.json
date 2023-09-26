@@ -8,8 +8,8 @@
             "name": "Hub",
             "address": "localhost",
             "port": 9229,
-            "localRoot": "/app/hub",
-            "remoteRoot": "/app/hub"
+            "localRoot": "/app/nodes/hub",
+            "remoteRoot": "/app/nodes/hub"
         },
         {
             "type": "node",

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# We use `tee -a` so that tee will append after we run e.g. `truncate -s 0 hub/hub.log``
+# We use `tee -a` so that tee will append after we run e.g. `truncate -s 0 nodes/hub/hub.log``
 
 # Create a new detached screen session named "app"
 screen -S app -d -m bash
-screen -S app -p 0 -X stuff "cd /app/hub\n"
+screen -S app -p 0 -X stuff "cd /app/nodes/hub\n"
 screen -S app -p 0 -X stuff "npm install\n"
 screen -S app -p 0 -X stuff "touch hub.log && chmod 444 hub.log\n"
 screen -S app -p 0 -X stuff "truncate -s 0 hub.log; NODE_NAME=zero npm run debug 2>&1 | tee -a hub.log\n"

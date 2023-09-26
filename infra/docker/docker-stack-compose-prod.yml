@@ -55,7 +55,7 @@ services:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
-      - ../../hub:/app/hub
+      - ../../nodes/hub:/app/nodes/hub
       - ../../shared:/app/shared
     entrypoint: ["/entrypoint-hub.sh"]
     networks:

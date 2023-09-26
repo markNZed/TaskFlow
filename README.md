@@ -122,7 +122,7 @@ For more information see the Processor [README.md](processor/README.md).
 
 ## Hub
 
-Information shared between Processors is maintained in the Hub which also acts as a router, see the Hub [README.md](hub/README.md).
+Information shared between Processors is maintained in the Hub which also acts as a router, see the Hub [README.md](nodes/hub/README.md).
 
 A Hub be composed of multiple Nodes.
 
@@ -155,10 +155,10 @@ T@skFlow will play nicely with other libraries such as:
 Imagine a new task that will be called TaskNew:
 * Create React Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Create RxJS Processor/src/Tasks/TaskNew.mjs (copy and existing TaskFunction)
-* Add information about the new Task to hub/config/tasktypes.mjs
+* Add information about the new Task to nodes/hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
-* Add it to hub/config/tasks.mjs
+* Add it to nodes/hub/config/tasks.mjs
 
 ### Task Patterns
 
