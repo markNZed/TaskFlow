@@ -3,30 +3,6 @@
 
 Merge nodejs into rxjs
   CEPFunctions -> ServiceCEP
-    CEPFunctions is like ceptypes allowing creation
-      Could have a generic service for modifying types
-        This is better than CEPFunctions
-          Pass Types to Task
-          CEP Functions is doing something different also
-            register - operating on CEPFunctions
-            get - operating on CEPFunctions
-            utils/createCEP - updates CEPMatchMap which is very specific to CEP and webSocket.js
-      Replace CEPFunctions with CEPsMap
-      Raises issue for using dynamic import
-        Also need to check an "in-memory" set of types which will include the function (so not loaded)
-          const CEPMatchMap = new Map();
-            These are different from config because they contain functions 
-            Is the CEP always going through CEPMatchMap ?
-               Nice to have the option to load on demand
-                 utils/createCEP could allow for registering without loading function
-                   CEPFunctions could be the loading that then replaces itself 
-                   Instead of function register a string e.g. load
-                     Then it is loaded and replaces string with function
-                 Where does the registering run?
-                   Autostart task TaskSystemRegisterCEP
-                     Example of a task that runs on all processors
-                       Needs to be loaded from Tasks/TaskSystemRegisterCEP.mjs
-            ServiceSystemConfig could be configured to define getStore mapping
       OperatorLLM is loading service type but it should be using the service that is provided
       Move task.config.services to task.services ? Also for cep and operators
         Then merge task.services into services type and replace task.services with that
@@ -331,11 +307,11 @@ Embedding functions in the template?
     Lookup only the required tasks not the whole thread.
   What about use across languages?
     Logic-less might be better: Handlebars
-Harmonise the Task Processor
-  The infrastructure provided by the Task Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
+Harmonise the Processor
+  The infrastructure provided by the Processor should perform the updates to the Task object as this allows for services to be provided upon value changes.
   In React withTask HOC and useTask state.
   A common JS module for managing the Task object. 
-    What is generic to Task Processors and what is custom?
+    What is generic to Processors and what is custom?
       React Processor adds the concept of address/location.
 If we prefix a T on Task parameters it would be easier to update with search & replace
   Better to use full path even in JXS e.g. task.name not name e.g in taskflows and stepper
@@ -379,10 +355,10 @@ Backlog
     High Priority
     -------------
     Possible next feature: remembering the system messages for Vierge
-    Simplify multiple configuration files for the NodeJS Task Processor
+    Simplify multiple configuration files for the NodeJS Processor
     Use a route for configuring: user, session, taskflow, task
     Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
-    Msgs could be loaded from the NodeJS Task Processor. Similar to stepper - both have history.
+    Msgs could be loaded from the NodeJS Processor. Similar to stepper - both have history.
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
     When user interacts reset the counter to try to establish websocket on client
 
@@ -397,14 +373,14 @@ Backlog
     Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
     Logout option (could just be a route)
     Sending diff to Hub from Processor during update
-    JWT connection between Task Hub and Processors (currently rely on Cloudflare)
+    JWT connection between Hub and Processors (currently rely on Cloudflare)
     Move to TypeScript
     Way for tasks to register websocket event handlers
-    Multiple language support 'i18next-http-middleware for NodeJS Task Processor and react-i18next for React Task Processor
+    Multiple language support 'i18next-http-middleware for NodeJS Processor and react-i18next for React Processor
     Defensive programming + logging
-    Websocket for tasks (so NodeJS Task Processor can drive) just send incremental info for the task
+    Websocket for tasks (so NodeJS Processor can drive) just send incremental info for the task
     Replace globalState with Redux
-    When sending task instance only send diff (React Task Processor keeps NodeJS Task Processor copy, NodeJS Task Processor keeps React Task Processor copy)
+    When sending task instance only send diff (React Processor keeps NodeJS Processor copy, NodeJS Processor keeps React Processor copy)
     Add task type validation to websocket
     Only display menu option if leaf is a real task
     Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
@@ -418,7 +394,7 @@ Backlog
       Gamification to make learning more engaging
       An assistant to help explaining what the problem is
     Research assistant
-    Refactoring assistant (provide a duplicate code environment as the Task Environment)
+    Refactoring assistant (provide a duplicate code environment as the Environment)
       Example of the refactoring provided.
       LLM to explain the refactoring
       LLM to identify which files should be refactored
@@ -451,7 +427,7 @@ Notes/Idea
   Swagger for the API ?
   Refactoring with jscodeshift, see example in config repository
   Should a task that requests to start a Task also be updated by the Hub?
-  A GraphQL based API into the Task family may be a useful abstraction that can be offloaded to a Co-Processor
+  A GraphQL based API into the Task family may be a useful abstraction that can be offloaded to a Coprocessor
   Stately Studio
     We will be building visual tooling for not just managing actor logic (state machines & statecharts) but also visualization of entire actor systems (architecture diagrams) and the communication between actors (sequence diagrams). This will be a huge step forward for visually understanding and debugging complex systems, and we’re excited to share more about this in the future.
   Work directly with the XState JSON configuration and provide CRUD operation in Javascript
@@ -476,12 +452,12 @@ Architecture
       Implies catalog, installation, activation, configuration, updates, permissions, resource limits
       Requires a documented API, the basic principles at the moment:
           Use the Task object to pass information
-          Manage task specific storage (e.g. files, user specific data) independently of the NodeJS Task Processor Stores
+          Manage task specific storage (e.g. files, user specific data) independently of the NodeJS Processor Stores
   User defaults, taskflow defaults etc can be tasks
   Could add middleware that tasks can use to modify input/output (similar to LangChain)
     Currently in the TaskFunction but should be easy to factor out when that makes sense
       Could allow for a chain of Operators/Services/CEP
-  How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Task Processor provide the environment?)
+  How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Processor provide the environment?)
     "child process execution" with child_process library
     RabbitMQ for message passing good for a local service but do we need high speed, probably not.
     REST API would allow for remote etc, maybe better
@@ -511,7 +487,7 @@ Architecture
 
 Issues
 ------
-  Tasks run with full NodeJS Task Processor rights. They should be sandboxed on the NodeJS Task Processor.
+  Tasks run with full NodeJS Processor rights. They should be sandboxed on the NodeJS Processor.
     TaskFunction could run in a docker container
     Each TaskFunction could be a user on Linux
         User could run in a restricted environment e.g. firejail, bubblewrap

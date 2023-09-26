@@ -26,8 +26,8 @@ Task States
   start:
   input: detect submission of input or skip to state mentionAddress
   mentionAddress: send location as prompt
-  sending: sending user prmopt to NodeJS Task Processor
-  receiving: receiving websocket response from NodeJS Task Processor
+  sending: sending user prmopt to NodeJS Processor
+  receiving: receiving websocket response from NodeJS Processor
   received: 
 
 Task IO

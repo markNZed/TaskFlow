@@ -1,12 +1,12 @@
-# React Task Processor
+# React Processor
 
-This is the React Task Processor of T@skFlow written in Javascript using React and Material Design (MUI)
+This is the React Processor of T@skFlow written in Javascript using React and Material Design (MUI)
 
 To install the node packages: `npm install` 
 
 To run locally: `npm start`
 
-Running on localhost set the port for the React React Task Processor server in package.json where the default is PORT=3000. Specify the port of the websocket NodeJS Task Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
+Running on localhost set the port for the React React Processor server in package.json where the default is PORT=3000. Specify the port of the websocket NodeJS Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
 
 ## Features
 * Queue for updates to maintain order
@@ -28,7 +28,7 @@ Running on localhost set the port for the React React Task Processor server in p
     * `modifyState('input')` is equivalent to `setTask(p => { return {...p, state : 'input'} })`
   * Logging of changes for Task variable e.g. `const [X, setX] = useTaskState(null,'X')`
   * A parent Task can modify the state of a child through modifyChildState, this is the preferred method for commanding the child Task.
-  * The `task.command` field is intended to send commands to the Task Processor.
+  * The `task.command` field is intended to send commands to the Processor.
   * The `task.request` field is intended for intra-task communication of a Task distributed across multiple environments.
 
 ### Debug
@@ -41,7 +41,7 @@ Running on localhost set the port for the React React Task Processor server in p
 
 The Taskflows component holds an array of Tasks so the user can switch between Tasks that have started without losing the state.
 
-Currently a shared worker sets a unique processorId per browser tab. This is not the intended architecture with a unique processor for each browser. Ultimately there should be a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Task Hub.
+Currently a shared worker sets a unique processorId per browser tab. This is not the intended architecture with a unique processor for each browser. Ultimately there should be a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Hub.
 
 ## Coding preferences:
 * ES6 Javascript

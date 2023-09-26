@@ -54,7 +54,7 @@ const taskSync_async = async (key, value) => {
   if (haveCoprocessor && !isCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
-    // Send to the first Co-Processor that supports the command 
+    // Send to the first Coprocessor that supports the command 
     let position = 0;
     for (const coprocessorId of coprocessorIds) { 
       const coprocessorData = activeCoprocessors.get(coprocessorId);

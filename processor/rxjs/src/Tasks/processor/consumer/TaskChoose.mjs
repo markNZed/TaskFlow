@@ -62,7 +62,7 @@ const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) 
     // Remember to clean up tensors to prevent memory leaks
     embeddingsData.dispose();
 
-    // Need to go to next state, can stay on NodeJS Task Processor side
+    // Need to go to next state, can stay on NodeJS Processor side
     T("commandArgs", {"nextTaskId": nextTaskIds[maxIndex], "done": true});
     T("command", "update");
   } catch (error) {

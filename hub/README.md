@@ -1,8 +1,8 @@
-# Task Hub
+# Hub
 
-The Task Hub is implemented in Node using the Express framework and SQLite database. 
+The Hub is implemented in Node using the Express framework and SQLite database. 
 
-Information for the Task Hub is held in the `task.hub` object. Only the Task Hub writes to the `task.hub` object. The Task Processor communicates with the Task Hub using the object `task.procesor` which includes fields: command, commandArgs, and config. 
+Information for the Hub is held in the `task.hub` object. Only the Hub writes to the `task.hub` object. The Processor communicates with the Hub using the object `task.procesor` which includes fields: command, commandArgs, and config. 
 
 `task.hub.command` maybe be one of:
   * partial
@@ -45,14 +45,14 @@ The Hub provides the following features:
 * `task.meta.parentId` the `task.id` of the Task that started this Task
 * `task.meta.updateCount` the number of Task updates completed
 * `task.meta.updatesThisMinute` rate of API accesses per minute
-* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Task Processors.
+* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Processors.
 * A mutex imposes serial updates per task instanceId
 * Assertion if `task.request` and `task.response` both contain values
 * Assertion if `task.state.current` is not listed in `task.state.legal`
-* Only route task to processor if `task.processor.statesSupported` is not set or includes `task.state.current`. If `task.processor.statesSupported` is set then the Task Hub sends the entire Task object not a diff (or it needs to track the current storage of the target processor).
-* Only route task to processor if `task.processor.statesNotSupported` is not set or does not include `task.state.current`. If `task.processor.statesNotSupported` is set then the Task Hub sends the entire Task object not a diff (or it needs to track the current storage of the target processor).
+* Only route task to processor if `task.processor.statesSupported` is not set or includes `task.state.current`. If `task.processor.statesSupported` is set then the Hub sends the entire Task object not a diff (or it needs to track the current storage of the target processor).
+* Only route task to processor if `task.processor.statesNotSupported` is not set or does not include `task.state.current`. If `task.processor.statesNotSupported` is set then the Hub sends the entire Task object not a diff (or it needs to track the current storage of the target processor).
 
-When the Task Hub receives an `update` command it will send the update back to the source Task Processor. This provides the source Task Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Task Processor is synchronized with all other Task Processors.
+When the Hub receives an `update` command it will send the update back to the source Processor. This provides the source Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Processor is synchronized with all other Processors.
 
 # Launch
 
@@ -62,9 +62,9 @@ Then to run: `npm start`
 
 # Future
 * Hierarchy
-  * Many Task Hubs that can be coordinated by a Task Hub.
+  * Many Hubs that can be coordinated by a Hub.
     * Add task.hubs[hubId] (Processor should only see task.hub)
-  * Task Environments not supported by Processors registered with the Hub are passed up to a hub-of-hubs
+  * Environments not supported by Processors registered with the Hub are passed up to a hub-of-hubs
 * Security/Privacy
   * Filtering of Task content
 * Separation of concerns into a pipeline

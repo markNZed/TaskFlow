@@ -73,7 +73,7 @@ taskSubject
         // A task instance can initiate CEP triggered by instanceId, id, familyId
         // Maps maintain order and keys do not need to be strings
         // We always add familyId so CEP can only operate on its own family
-        // utils.createCEP is how we create the entries
+        // CEPCreate is how we create the entries
         const CEPFuncsKeys = CEPMatchMap.keys();
         //utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
         //utils.logTask(task, "CEPFuncsKeys", CEPFuncsKeys);

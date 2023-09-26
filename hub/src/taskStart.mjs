@@ -311,7 +311,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, activeCop
   // Allocate the task to processors that supports the environment(s) requested
   const sourceProcessor = activeProcessors.get(processorId);
   for (const environment of task.environments) {
-    // Favor the source Task Processor if we need that environment
+    // Favor the source Processor if we need that environment
     let found = false;
     if (sourceProcessor && sourceProcessor.environment === environment) {
       found = true;

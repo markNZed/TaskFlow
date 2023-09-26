@@ -7,11 +7,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { importTaskFunction_async, taskFunctionExists_async } from "./taskFunctions.mjs";
 import { importService_async, serviceExists_async } from "./services.mjs";
 import { importOperator_async, operatorExists_async } from "./operators.mjs";
-import { importCEP_async, CEPExists_async } from "./ceps.mjs";
-import { CEPFunctions } from "./CEPFunctions.mjs";
+import { importCEP_async, CEPExists_async } from "./CEPs.mjs";
+import { CEPregister, CEPCreate } from "./nodeCEPs.mjs";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
-import { activeTaskFsm, serviceTypes_async, operatorTypes_async, cepTypes_async, ServicesMap, OperatorsMap, CEPsMap } from "./storage.mjs";
+import { activeTaskFsm, serviceTypes_async, operatorTypes_async, cepTypes_async, ServicesMap, OperatorsMap, CEPsMap, CEPFunctionMap } from "./storage.mjs";
 import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
 
 export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
@@ -23,13 +23,13 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     const processorMatch = T("processor.initiatingProcessorId") === NODE.id;
     const taskFunctionName = `${T("type")}_async`
     if (processorMatch) {
-      utils.logTask(T(), "RxJS Task Processor from this processor so skipping Task Fuction id:" + T("id"));
+      utils.logTask(T(), "RxJS Processor from this processor so skipping Task Fuction id:" + T("id"));
       updatedTask = task;
     } else if (T("processor.command") === "error") {
-      utils.logTask(T(), "RxJS Task Processor error so skipping Task Fuction id:" + T("id"));
+      utils.logTask(T(), "RxJS Processor error so skipping Task Fuction id:" + T("id"));
       updatedTask = task;
     } else if (T("processor.command") === "start") {
-      utils.logTask(T(), "RxJS Task Processor start so skipping Task Fuction id:" + T("id"));
+      utils.logTask(T(), "RxJS Processor start so skipping Task Fuction id:" + T("id"));
       updatedTask = task;
     } else if (NODE.role === "coprocessor" && T("processor.commandArgs.sync")) {
       // Seems a risk of CEP operating on sync creating loops
@@ -128,12 +128,12 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       }
       utils.logTask(T(), `Finished ${T("type")} in state ${updatedTask?.state?.current}`);
     } else {
-      utils.logTask(T(), "RxJS Task Processor no Task Function for " + T("type"));
+      utils.logTask(T(), "RxJS Processor no Task Function for " + T("type"));
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (T("processor.command") === "init") {
       if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("processor.coprocessingDone"))) {
-        // How about overriding a match. createCEP needs more review/testing
+        // How about overriding a match. CEPCreate needs more review/testing
         // Create two functions
         let ceps = {};
         if (T("config.ceps")) {
@@ -156,7 +156,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                       ceps[key]["module"] = await importCEP_async(cepName);
                       // Register the function using old method
                       // Eventaully we should pull the function from CEPsMap I guess
-                      CEPFunctions.register(cepName, ceps[key].module.cep_async);
+                      CEPregister(cepName, ceps[key].module.cep_async);
                       // This is another hack to work with the current implementation
                       task = T(`config.ceps.${key}.functionName`, cepName);
                       //console.log("T ceps:", T("config.ceps"));
@@ -184,7 +184,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
               if (!CEPenvironments || CEPenvironments.includes(NODE.environment)) {
                 //console.log("config.ceps", key, T(`config.ceps.${key}`));
                 const match = T(`config.ceps.${key}.match`);
-                utils.createCEP(CEPMatchMap, CEPFunctions, task, match, T(`config.ceps.${key}`));
+                CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, T(`config.ceps.${key}`));
               }
             }
           }

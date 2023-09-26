@@ -133,7 +133,7 @@ const connectWebSocket = () => {
       if (!commandArgs?.sync) {
         await taskProcess_async(wsSendTask, mergedTask);
       }
-    // We should not receive start commands on a Task Processor (unless it is a coprocessor)
+    // We should not receive start commands on a Processor (unless it is a coprocessor)
     } else if (command === "start") {
       //console.log("Task:", message.task);
       throw new Error("Unexpected start command")

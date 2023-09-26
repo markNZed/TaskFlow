@@ -15,8 +15,11 @@ const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPMatchMapMap)
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
   /*
-  CEPFunctions.register("CEPServiceStub", CEPServiceStub);
-  CEPFunctions.register("CEPFamilyTree", CEPFamilyTree);
+
+  // An example of registering and launching a CEP from a Task
+
+  CEPregister("CEPServiceStub", CEPServiceStub);
+  CEPregister("CEPFamilyTree", CEPFamilyTree);
 
   // Here we install the CEP from the task but this could also be done through the Task config
   const match = "id-" + T("config.local.targetTaskId");
@@ -28,7 +31,7 @@ const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPMatchMapMap)
       value: "openaistub"
     },
   }
-  utils.createCEP(CEPMatchMap, CEPFunctions, T(), match, config);
+  CEPCreate(CEPMatchMap, CEPFunctionMap, T(), match, config);
   */
 
   return T();

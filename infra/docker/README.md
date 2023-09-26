@@ -1,4 +1,4 @@
-The following is for development where the RxJS Task Processor and React Task Processor directories are mounted in the Docker container.
+The following is for development where the RxJS Processor and React Processor directories are mounted in the Docker container.
 
 * `git clone https://github.com/markNZed/taskflow.git`
 * `cd taskflow/infra/docker`
@@ -6,7 +6,7 @@ The following is for development where the RxJS Task Processor and React Task Pr
 * `docker-compose build`
 * `docker network create taskflow`
 * `docker-compose up -d`
-* Access the React Task Processor at http://localhost:3000
+* Access the React Processor at http://localhost:3000
 * NOTE: It can take many minutes for the npm install to complete
 * WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome
 
@@ -35,14 +35,14 @@ On the server running the Redis Docker container I ran `sysctl vm.overcommit_mem
 Overview of the services/ports:
 
 * 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
-* 5000 RxJS NodeJS Task Processor
-* 5001 Task Hub
-* 5002 RxJS Task Processor
-* 5003 RxJS Task Hub Coprocessor
-* 9229 Task Hub node debug
-* 9230 RxJS NodeJS Task Processor node debug
-* 9231 RxJS Task Processor node debug
-* 9232 RxJS Task Hub Coprocessor node debug
+* 5000 RxJS NodeJS Processor
+* 5001 Hub
+* 5002 RxJS Processor
+* 5003 RxJS Hub Coprocessor
+* 9229 Hub node debug
+* 9230 RxJS NodeJS Processor node debug
+* 9231 RxJS Processor node debug
+* 9232 RxJS Hub Coprocessor node debug
 * 27017 MongoDB (on mongodb container)
 * 6379 Redis (on redis-stack-svc container)
 * 8001 RedisInsight (on redis-stack-svc container)
@@ -68,10 +68,10 @@ SetupVSCode debugging in .vscode/launch.json
 There is a meta version which shares MongoDB and Redis, all the other ports increase by 1000:
 
 * 4000 React serving the React Processor app and the React dev server for live updates (path /ws)
-* 6000 RxJS NodeJS Task Processor
-* 6001 Task Hub
-* 6002 RxJS Task Processor
-* 6003 RxJS Task Hub Coprocessor
+* 6000 RxJS NodeJS Processor
+* 6001 Hub
+* 6002 RxJS Processor
+* 6003 RxJS Hub Coprocessor
 
 The meta version resides in `/meta`
 The code for the meta version needs to be modified at `shared/config.mjs` to give a unique DB prefix

@@ -27,7 +27,7 @@ Using VS Code
 * The React procssor runs in a web browser (preference for Firefox).
 * From the Javascript console in Web Developer tools the current Task objects can be read in the variable `window.tasks`.
 * The NodeJS processor can use a dummy API (to avoid wasting money on OpenAI API calls), set `DUMMY_OPENAI=true` in `/app/processor/nodejs/.env`.
-* The System > Log Task provides insights into the sequence of task messages that have gone through coprocessing on the Task Hub.
+* The System > Log Task provides insights into the sequence of task messages that have gone through coprocessing on the Hub.
 * The script `./scripts/restartServers.sh` provides a simple way to restart all the servers during development (by touching the server.js files).
 * The script `./scripts/restartLogs.sh` truncates all log files.
 * The script `./scripts/filerLogs.sh` combines all logs into an output stream that can be filtered e.g. `./scripts/tailLogs.sh | grep init`

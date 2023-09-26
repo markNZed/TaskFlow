@@ -113,7 +113,7 @@ export async function taskProcess_async(wsSendTask, task) {
       console.log("taskProcess_async null " + task.id);
     }
   } else {
-    console.log("NodeJS Task Processor unknown component " + task.type);
+    console.log("NodeJS Processor unknown component " + task.type);
     //console.log("taskFunctions", taskFunctions);
     updatedTask = task;
   }

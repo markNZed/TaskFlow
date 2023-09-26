@@ -4,7 +4,7 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 # Overview
 
-T@skFlow combines software, AI models, and human interaction in a unique way. A software developer creates a Task's functionality, a Task may be distributed over many Task Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow. T@skFlow adopts a hub-and-spoke architecture.
+T@skFlow combines software, AI models, and human interaction in a unique way. A software developer creates a Task's functionality, a Task may be distributed over many Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow. T@skFlow adopts a hub-and-spoke architecture.
 
 ![T@skFlow Diagram](Task.drawio.svg)  *<small>[editable](https://app.diagrams.net/)</small>
 
@@ -23,10 +23,10 @@ The purpose of T@skFlow is to explore new ways of building and interacting with 
 Tasks consist of:
 * **Task Definition** that conform to a generic Task schema
   * A Task may reference data not provided by T@skFLow
-* **Task Function** available in one or more Task Environment(s)
+* **Task Function** available in one or more Environment(s)
   * A Task Function may use services not provided by T@askFlow
   * A Task Function maintains a state
-* **Task Data** available in one or more Task Environment(s)
+* **Task Data** available in one or more Environment(s)
   * Task Data may use services not provided by T@skFlow
 
 For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat framework, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow framework, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
@@ -35,88 +35,126 @@ The concept of **Task Instance** refers to a particular object conforming to the
 
 The concept of **Task Context** refers to the complete data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
 
-A Task Function may be distributed across multiple Task Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Task Processor using `task.command` and `task.commandArgs` Only Task Functions write to `task.command`
+A Task Function may be distributed across multiple Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Processor using `task.command` and `task.commandArgs` Only Task Functions write to `task.command`
 
-The Task Function may implement a state machine using `task.state.current` and the Task Processor may provide features for managing the state machine.
+The Task Function may implement a state machine using `task.state.current` and the Processor may provide features for managing the state machine.
 
 ### Task State Machine
 
-A Task may be distributed over multiple Task Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskTest can test different Tasks.
+A Task may be distributed over multiple Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskTest can test different Tasks.
 
-## Task Node
+## Node
 
-A **Task Node** is either a Task Hub or Task Processor i.e. a process that is processing Tasks.
+A **Node** is a process that is processing Tasks.
 
-## Task Processor
+### Node Type
 
-Tasks are processed by Task Processors, currently the Task Processors implemented in T@skFlow:
+A Node is of type:
 
-* React Task Processor runs React in a web browser
-* RxJS Task Processor runs RxJS on a server
+* **Hub** coordinates Task synchronization in hub-and-spoke architecture
+* **Processor** processes Tasks as a spoke in the hub-and-spoke architecture
+* **Bridge** a processor that connects to more than one hub
 
-The Processors communicate with the Hub using websocket.
+### Node Role
 
-The React Task Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Task Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
+A Node adopts a role of:
 
-The RxJS Task Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the RxJS Task Processor without user interaction. The RxJS Task Processor uses Node, Express, and RxJS.
+* **Core** the entry point for Tasks
+* **Coprocessor** processing at the Node with shared memory (Redis) 
+* **Consumer** processing Tasks received at the Node 
 
-For more information see the Task Processor [README.md](processor/README.md).
+Roles could be performed by separate processes (or servers) to enable horizontal scaling.
 
-### Task Environment
+### Node Processing
 
-Each Task Processor provides a Task Environment for the Task Function to run in. The React Task Processor currently provides a React Javascript environment. The RxJS Task Processor currently provides a RxJS Javascript environment.
+A Node Roll is performed by processing as:
 
-#### Service
+* **Stream** required for Tasks that monitor the activity of other Tasks
+* **Batch** required to process Task Functions
 
-A Task Processor provides services that provide a functionality in the native style of the environment i.e. services are not restricted by a Task Definition. 
+A Batch defaults to size of 1 but Processors may make more efficient use of resources by batching Task processing.
 
-#### CEP 
+### Environment
 
-Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks. By convention a Task using CEP is prefixed with TaskCEP and a Task with this prefix only peforms CEP. 
+Each Node provides a Environment for the Task Function to run in. The React Processor currently provides a React Javascript environment. The RxJS Processor currently provides a RxJS Javascript environment.
 
-#### Operator
+### Node Functions
 
-An Operator expects to receives a Task instance and returns the same Task instance. The Operator assumes it is called from a Task. The Operator runs within a Task Environment (i.e., it is part of the Task Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
+Nodes are composed of Node Functions:
 
-There may be side-effects from an Operator, for example, it may return partial results to a Task on another Task Processor using the Task Processor's web socket connection to the Hub.
+* **Services** API using the Node's Environment
+* **Operators** transform Tasks
+* **CEPs** complex event processing of Tasks
+* **Tasks** as defined in [Task](#task)
 
-### Service
+The Task Definition uses JSON and does not support the transport of functions i.e. functions are specific to a Node, although the configuration of a function can be part of a Task Definition.
 
-A service provides a native (e.g. Javascript) API to functionality shared across Tasks in the Task Environment
+Services and Operators do not maintain a state (except handles to resources for efficiency). CEPs and Tasks can hold a state. Unlike Tasks, CEP are not distributed i.e. the CEP runs on a specific Node. CEP are installed through the Task configuration or by a Task Function.
 
-## Task Hub
+#### Services
 
-Information shared between Task Processors is maintained in the Task Hub which also acts as a router, see the Task Hub [README.md](hub/README.md).
+A service provides a native (e.g. Javascript) API to functionality shared across Tasks in the Environment. A Processor provides services that provide a functionality in the native style of the environment i.e. services are not restricted by a Task Definition. 
 
-### Task Hub Co-Processor
+#### Operators
 
-A Task Hub Co-Processor offloads processing from the Task Hub. The Task Hub Co-Processor is a Task Processor that can modify Tasks before they are broadcast by the Task Hub. The Task Hub Co-Processor may provide a bridge to other systems e.g., logging, monitoring, testing, debugging, etc.
+An Operator expects to receives a Task instance and returns the same Task instance. The Operator assumes it is called from a Task. The Operator runs within a Environment (i.e., it is part of the Processor) and provides a standard interface for Task functionality that is shared across many Tasks.
+
+There may be side-effects from an Operator, for example, it may return partial results to a Task on another Processor using the Processor's web socket connection to the Hub.
+
+#### CEPs
+
+Complex event processing (CEP) functions monitor the stream of Tasks and respond to patterns by updating Tasks. By convention a Task using CEP is prefixed with TaskCEP and a Task with this prefix only peforms CEP. There are two levels of CEP compared Operators and Services because the CEP is associated with a task that instantiates the CEP and also to the Node where the CEP is executed.
+
+## Processor
+
+Tasks are processed by Processors, currently the Processors implemented in T@skFlow:
+
+* React Processor runs React in a web browser
+* RxJS Processor runs RxJS on a server
+
+The Processors communicate with the Hub using websocket. A Processor be composed of multiple Nodes.
+
+The React Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
+
+The RxJS Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the RxJS Processor without user interaction. The RxJS Processor uses Node, Express, and RxJS.
+
+For more information see the Processor [README.md](processor/README.md).
+
+## Hub
+
+Information shared between Processors is maintained in the Hub which also acts as a router, see the Hub [README.md](hub/README.md).
+
+A Hub be composed of multiple Nodes.
+
+### Hub Coprocessor
+
+A Hub Coprocessor offloads processing from the Hub. The Hub Coprocessor is a Node that can modify Tasks before they are broadcast by the Hub.
 
 ## Error Handling
 
-If a Task Function sets `task.error` and the Task is updated then the Task Hub will detect this and set `task.hub.command` to "error" then set `task.hub.commandArgs.errorTask` to `task.config.errorTask` or the nearest error task (task.id ending in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Task Processors associated with the errored Task).
+If a Task Function sets `task.error` and the Task is updated then the Hub will detect this and set `task.hub.command` to "error" then set `task.hub.commandArgs.errorTask` to `task.config.errorTask` or the nearest error task (task.id ending in ".error"). The task that errored is then considered to be "done" by the Hub and the error Task is started (it will be sent to all the Processors associated with the errored Task).
 
 # Getting Started
 
 To run T@skFlow with docker, see the [README.md](infra/docker/README.md) in the infra/docker directory.
 
-To learn more about the RxJS Task Processor, see the [README.md](processor/rxjs/README.md) in the RxJS Task Processor directory.
+To learn more about the RxJS Processor, see the [README.md](processor/rxjs/README.md) in the RxJS Processor directory.
 
-To learn more about the React Task Processor, see the [README.md](processor/react/README.md) in the React Task Processor directory.
+To learn more about the React Processor, see the [README.md](processor/react/README.md) in the React Processor directory.
 
 To learn more about the Task object, see the [README.md](shared/README.md) in the shared directory.
 
 For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
 
 T@skFlow will play nicely with other libraries such as:
-* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the RxJS Task Processor)
-* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the RxJS Task Processor)
+* [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the RxJS Processor)
+* [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the RxJS Processor)
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
-* Create React Task Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
-* Create RxJS Task Processor/src/Tasks/TaskNew.mjs (copy and existing TaskFunction)
+* Create React Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
+* Create RxJS Processor/src/Tasks/TaskNew.mjs (copy and existing TaskFunction)
 * Add information about the new Task to hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
@@ -138,4 +176,4 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 
 ## Contributors
 
-The initial React Task Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Task Processor](https://github.com/YaokunLin/chatbot-react-client), and the initial NodeJS Task Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-NodeJS Task Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
+The initial React Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Processor](https://github.com/YaokunLin/chatbot-react-client), and the initial NodeJS Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-NodeJS Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."

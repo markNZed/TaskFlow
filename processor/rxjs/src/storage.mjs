@@ -19,6 +19,8 @@ var ServicesMap = new Map();
 var OperatorsMap = new Map();
 
 var CEPMatchMap = new Map();
+var CEPFunctionMap = new Map();
+
 
 mongoose.connect(NODE.storage.mongoUrl, {
     useNewUrlParser: true,
@@ -164,4 +166,5 @@ export {
   serviceTypes_async,
   operatorTypes_async,
   CEPMatchMap,
+  CEPFunctionMap,
 };

@@ -32,7 +32,7 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "RxJS Task Hub Coprocesssor",
+            "name": "RxJS Hub Coprocesssor",
             "address": "localhost",
             "port": 9232,
             "localRoot": "/app/processor/rxjs",
