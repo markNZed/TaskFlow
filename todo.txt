@@ -9,7 +9,7 @@ Merge nodejs into rxjs
 If CEP then fsm -> FSM
 Test Docker setup
 Random Client is broken
-Much of "config.services.chat" should be in "config.operators.LLM" ?
+Much of "services.chat" should be in "operators.LLM" ?
   At least that which is used in OperatorLLM.mjs
 Tasks could be like a tree
   Search in the parent directories for the module

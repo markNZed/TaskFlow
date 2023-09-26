@@ -32,7 +32,7 @@ On the server running the Redis Docker container I ran `sysctl vm.overcommit_mem
 
 ## T@skFlow Ntwork Services
 
-Overview of the services/ports:
+Overview of the ports:
 
 * 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
 * 5000 RxJS NodeJS Processor

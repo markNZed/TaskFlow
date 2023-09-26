@@ -53,14 +53,14 @@ const tasks = [
   {
     config: {
       label: "chatGPT",
-      services: {
-        chat: {
-          type: "openaigpt.chatgpt",
-          environments: ["nodejs"],
-          maxResponseTokens: 150,
-          maxTokens: 500,
-        },
-      }
+    },
+    services: {
+      chat: {
+        type: "openaigpt.chatgpt",
+        environments: ["nodejs"],
+        maxResponseTokens: 150,
+        maxTokens: 500,
+      },
     },
     initiator: true,
     name: "chatgpt",
@@ -82,13 +82,6 @@ const tasks = [
     config: {
       label: "Example1",
       spawnTask: false,
-      services: {
-        chat: {
-          type: "openaigpt.chatgpt",
-          environments: ["nodejs"],
-          temperature: 0.9,
-        },
-      },
       APPEND_caching: [
         {
           operator: "LLM",
@@ -96,6 +89,13 @@ const tasks = [
           enable: true,
         }
       ],
+    },
+    services: {
+      chat: {
+        type: "openaigpt.chatgpt",
+        environments: ["nodejs"],
+        temperature: 0.9,
+      },
     },
     initiator: true,
     name: "stepper1",
@@ -120,15 +120,15 @@ const tasks = [
         inputLabel: "Respond here.",
         instruction: "Tell the user what to do",  
       },
-      services: {
-        chat: {
-          forget: true,
-          prompt: "Tell me a story about something random.",
-          type: "openaigpt.chatgpt",
-          environments: ["nodejs"],
-        },
-      },
       nextTask: "structure"
+    },
+    services: {
+      chat: {
+        forget: true,
+        prompt: "Tell me a story about something random.",
+        type: "openaigpt.chatgpt",
+        environments: ["nodejs"],
+      },
     },
     name: "summarize",
     parentName: "stepper1",
@@ -140,31 +140,31 @@ const tasks = [
         instruction: "This is what I think of your response",
       },
       nextTask: "stop",
-      services: {
-        chat: {
-          environments: ["nodejs"],
-          forget: true,
-          type: "openaigpt.chatgpt",
-          promptTemplate: [
-            "Provide feedback on this prompt, is it a good prompt? ",
-            "\"",
-            "summarize.output.userInput",
-            "\""
-          ],
-          messagesTemplate: [
-            {
-              role: "user",
-              text: [
-                "This is a response from an earlier message",
-                "summarize.output.LLMtext"
-              ]
-            },
-            {
-              role: "assistant",
-              text: "OK. Thank you. What would you like me to do?"
-            }
-          ],
-        },
+    },
+    services: {
+      chat: {
+        environments: ["nodejs"],
+        forget: true,
+        type: "openaigpt.chatgpt",
+        promptTemplate: [
+          "Provide feedback on this prompt, is it a good prompt? ",
+          "\"",
+          "summarize.output.userInput",
+          "\""
+        ],
+        messagesTemplate: [
+          {
+            role: "user",
+            text: [
+              "This is a response from an earlier message",
+              "summarize.output.LLMtext"
+            ]
+          },
+          {
+            role: "assistant",
+            text: "OK. Thank you. What would you like me to do?"
+          }
+        ],
       },
     },
     name: "structure",
@@ -175,12 +175,12 @@ const tasks = [
   {
     config: {
       label: "0-Shot",
-      services: {
-        chat: {
-          type: "openaigpt.chatgptzeroshot",
-          environments: ["nodejs"],
-        }
-      },
+    },
+    services: {
+      chat: {
+        type: "openaigpt.chatgptzeroshot",
+        environments: ["nodejs"],
+      }
     },
     initiator: true,
     name: "zeroshot",
@@ -196,16 +196,16 @@ const tasks = [
   {
     config: {
       label: "Config",
-      services: {
-        chat: {
-          type: "openaigpt.configchat",
-          useCache: false,
-          environments: ["nodejs"],
-        },
-        config: {
-          type: "systemConfig",
-          environments: ["rxjs"],
-        },
+    },
+    services: {
+      chat: {
+        type: "openaigpt.configchat",
+        useCache: false,
+        environments: ["nodejs"],
+      },
+      config: {
+        type: "systemConfig",
+        environments: ["rxjs"],
       },
     },
     initiator: true,
@@ -256,18 +256,6 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
-      ceps: {
-        servicestub: {
-          type: "servicestub",
-          match: "id-root.user.conversation.zeroshot.start",
-          environments: ["rxjscopro"],
-          args: {
-            type: "openaigpt.chatgptzeroshot",
-            key: "API", 
-            value: "openaistub"
-          },
-        }
-      },
       local: {
         timeout: 10000, // 10 seconds
       },
@@ -300,6 +288,18 @@ const tasks = [
       // This task is using CEP
       //   serviceStub is created via this tasks's coprocessor Task Function
       //   familyId is created via the TaskType configuration
+    },
+    ceps: {
+      servicestub: {
+        type: "servicestub",
+        match: "id-root.user.conversation.zeroshot.start",
+        environments: ["rxjscopro"],
+        args: {
+          type: "openaigpt.chatgptzeroshot",
+          key: "API", 
+          value: "openaistub"
+        },
+      }
     },
     parentName: "user",
     meta: {

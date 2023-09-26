@@ -40,11 +40,11 @@ function callFunctionByName(service, functionName, params) {
 }
 
 function checkOperatorCache (T, operatorName) {
-  // Loop over each object in T("config.operators") if it exists
+  // Loop over each object in T("operators") if it exists
   let enabled = false;
   let seed = T("id");
-  if (T("config.operators")) {
-    const operatorConfig = T("config.operators")[operatorName];
+  if (T("operators")) {
+    const operatorConfig = T("operators")[operatorName];
     if (operatorConfig) {
       if (operatorConfig.useCache !== undefined) {
         enabled = operatorConfig.useCache;
@@ -111,7 +111,7 @@ async function chatPrepare_async(T) {
     functions = serviceConfig.functions;
   } 
 
-  if (T("config.operators.LLM.promptWithTime")) {
+  if (T("operators.LLM.promptWithTime")) {
     // Prefix prompt with date/time we use UTC to keep things simple
     // We need to be able to track user's timezone
     // Could be based on address
@@ -214,8 +214,8 @@ async function chatPrepare_async(T) {
   }
 
   // Check if we need to preprocess
-  if (T("config.operators.LLM.regexProcessPrompt")) {
-    for (const [regexStr, replacement] of T("config.operators.LLM.regexProcessPrompt")) {
+  if (T("operators.LLM.regexProcessPrompt")) {
+    for (const [regexStr, replacement] of T("operators.LLM.regexProcessPrompt")) {
       let { pattern, flags } = utils.parseRegexString(regexStr);
       let regex = new RegExp(pattern, flags);
       prompt = prompt.replace(regex, replacement);

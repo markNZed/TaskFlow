@@ -33,6 +33,7 @@ const servicetypes = [
     Properties of the task object are accessed through a dot separated string representing the property path e.g. "task.user.id"
     
     The task object has the following paths:
+    ceps: An object containing CEP configurations.
     command: A string indicating a command to execute. It could be null.
     commandArgs: An object containing arguments for the command.
     config.maxRequestCount, maxRequestRate: Rate limiting details.
@@ -41,7 +42,7 @@ const servicetypes = [
     config.oneFamily: Collaboration settings.
     config.collaborateGroupId: Collaboration settings.
     config.spawnTask: Indicates if the task will spawn operators.
-    config.services: An object containing service configurations.
+    services: An object containing service configurations.
     error: Information about any errors that may have occurred.
     familyId: String that helpz categorizing the task.
     groupId: String that associates permissions with the task.
@@ -51,6 +52,7 @@ const servicetypes = [
     meta.lastUpdatedAt: An object with date and timezone keys referencing the time the task was last updated.
     meta.parentId: The id of the parent task.
     name: A human-readable name for the task.
+    operators: An object containing operator configurations.
     parentName: The name of the parent task, if any.
     permissions: An array of strings representing permissions.
     processor: An object detailing the processing unit for this task.

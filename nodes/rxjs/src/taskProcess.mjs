@@ -40,9 +40,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(T("instanceId")));
       let services = {};
-      let operators = {};
       if (T("processor.command") === "init") {
-        const servicesConfig = T("config.services");
+        const servicesConfig = T("services");
         //console.log("servicesConfig", JSON.stringify(servicesConfig))
         if (servicesConfig) {
           const promises = Object.keys(servicesConfig).map(async (key) => {
@@ -55,7 +54,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 //console.log("type", type);
                 if (await serviceTypes_async.has(type)) {
                   services[key] = await serviceTypes_async.get(type);
-                  services[key] = utils.deepMerge(services[key], T(`config.services.${key}`));
+                  services[key] = utils.deepMerge(services[key], T(`services.${key}`));
                   //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                   const serviceName = services[key]["moduleName"];
                   if (await serviceExists_async(serviceName)) {
@@ -73,12 +72,12 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           });
           // Wait for all the promises to resolve
           await Promise.all(promises);
-          task["services"] = services;
           T("services", services);
           //console.log("init services", T("services"));
           ServicesMap.set(T("instanceId"), T("services"));
         }
-        const operatorsConfig = T("config.operators");
+        let operators = {};
+        const operatorsConfig = T("operators");
         if (operatorsConfig) {
           //console.log("operatorsConfig", JSON.stringify(operatorsConfig))
           const promises = Object.keys(operatorsConfig).map(async (key) => {
@@ -90,7 +89,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 const type = operatorsConfig[key].type;
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
-                  operators[key] = utils.deepMerge(operators[key], T(`config.operators.${key}`));
+                  operators[key] = utils.deepMerge(operators[key], T(`operators.${key}`));
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"];
                   if (await operatorExists_async(operatorName)) {
@@ -138,8 +137,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         // How about overriding a match. CEPCreate needs more review/testing
         // Create two functions
         let ceps = {};
-        if (T("config.ceps")) {
-          const cepsConfig = T("config.ceps");
+        if (T("ceps")) {
+          const cepsConfig = T("ceps");
           //console.log("cepsConfig", JSON.stringify(cepsConfig))
           if (cepsConfig) {
             const promises = Object.keys(cepsConfig).map(async (key) => {
@@ -152,17 +151,20 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                   //console.log("type", type);
                   if (await cepTypes_async.has(type)) {
                     ceps[key] = await cepTypes_async.get(type);
-                    ceps[key] = utils.deepMerge(ceps[key], T(`config.ceps.${key}`));
+                    ceps[key] = utils.deepMerge(ceps[key], T(`ceps.${key}`));
                     //console.log("ceps[key]", key, JSON.stringify(ceps[key], null, 2));
                     const cepName = ceps[key]["moduleName"];
                     if (await CEPExists_async(cepName)) {
                       ceps[key]["module"] = await importCEP_async(cepName);
                       // Register the function using old method
                       // Eventaully we should pull the function from CEPsMap I guess
+                      if (!ceps[key].functionName) {
+                        ceps[key]["functionName"] = cepName;
+                      }
                       CEPregister(cepName, ceps[key].module.cep_async);
                       // This is another hack to work with the current implementation
-                      task = T(`config.ceps.${key}.functionName`, cepName);
-                      //console.log("T ceps:", T("config.ceps"));
+                      task = T(`ceps.${key}.functionName`, cepName);
+                      //console.log("T ceps:", T("ceps"));
                     } else {
                       throw new Error(`Cep ${cepName} not found for ${T("id")} config: ${JSON.stringify(cepsConfig)}`);
                     }
@@ -181,13 +183,13 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
             //console.log("init ceps", T("ceps"));
             CEPsMap.set(T("instanceId"), T("ceps"));
           }
-          for (const key in T("config.ceps")) {
-            if (T(`config.ceps.${key}`)) {
-              const CEPenvironments = T(`config.ceps.${key}.environments`);
+          for (const key in T("ceps")) {
+            if (T(`ceps.${key}`)) {
+              const CEPenvironments = T(`ceps.${key}.environments`);
               if (!CEPenvironments || CEPenvironments.includes(NODE.environment)) {
-                //console.log("config.ceps", key, T(`config.ceps.${key}`));
-                const match = T(`config.ceps.${key}.match`);
-                CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, T(`config.ceps.${key}`));
+                //console.log("ceps", key, T(`ceps.${key}`));
+                const match = T(`ceps.${key}.match`);
+                CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, T(`ceps.${key}`));
               }
             }
           }

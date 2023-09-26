@@ -77,6 +77,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
     origTask = JSON.parse(JSON.stringify(T()));
   }
 
+  console.log("Task:", JSON.stringify(T(), null, 2));
   const operatorLLM = T("operators")["LLM"].module;
 
   switch (T("state.current")) {

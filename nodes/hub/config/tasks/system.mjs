@@ -7,30 +7,26 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 const system = [
   {
     name: "systemshared",
-    config: {
-      ceps: {
-        shared: {
-          type: "shared",
-          isRegex: true,
-          match: ".*instance.*",
-          environments: ["rxjscopro"],
-        }
-      },
+    ceps: {
+      shared: {
+        type: "shared",
+        isRegex: true,
+        match: ".*instance.*",
+        environments: ["rxjscopro"],
+      }
     },
     parentName: "system",
     type: "TaskCEPShared",
   },
   {
     name: "systemlog",
-    config: {
-      ceps: {
-        systemlog: {
-          type: "systemlog",
-          isRegex: true,
-          match: ".*instance.*",
-          environments: ["rxjscopro"],
-        }
-      },
+    ceps: {
+      systemlog: {
+        type: "systemlog",
+        isRegex: true,
+        match: ".*instance.*",
+        environments: ["rxjscopro"],
+      }
     },
     parentName: "system",
     type: "TaskCEP",

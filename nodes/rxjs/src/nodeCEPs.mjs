@@ -9,13 +9,16 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { CEPFunctionMap } from "./storage.mjs";
 
 function CEPregister(functionName, func) {
+  if (functionName === undefined) {
+    throw Error("CEPregister functionName is undefined");
+  }
   console.log("nodeCEPs register", functionName);
   if (typeof func === "function") {
     CEPFunctionMap.set(functionName, func);
   }
 }
 
-function CEPget (funcName) {
+function CEPget(funcName) {
   const func = CEPFunctionMap.get(funcName);
   if (typeof func === 'function') {
       return func;
@@ -24,9 +27,13 @@ function CEPget (funcName) {
   } 
 }
 
-function CEPCreate (CEPMatchMap, CEPFunctionMap, task, match, config) {
+function CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, config) {
   console.log("CEPCreate config", config)
   const functionName = config.functionName;
+  if (functionName === undefined) {
+    console.error("CEPCreate functionName is undefined", config);
+    throw Error("CEPCreate functionName is undefined");
+  }
   const args = config.args;
   const CEPFunc = CEPget(functionName);
   if (match === undefined) {

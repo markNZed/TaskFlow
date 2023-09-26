@@ -26,10 +26,10 @@ The processor that locks a Task should ideally also unlock the Task
 
 task.config stores generic configuration information that many tasks may use, it is inherited by tasks further down the hierarchy.
 task.config.local stores tasktype specific configuration information that is not inherited.
-task.config.operators stores operator specific configuration information.
-task.config.ceps stores CEP specific configuration information
+task.operators stores operator specific configuration information.
+task.ceps stores CEP specific configuration information
 
-The task.config.ceps object contains: 
+The task.ceps object contains: 
   {
     "MATCH_STRING": { // id, instanceId, or familyId
       functionName: "FUNCTION_NAME", // name of the CEP function in the Task Function
@@ -42,10 +42,10 @@ The task.config.cache object allows for flexible cache rules, it is an array of 
 * cache.enable - boolean, can be excluded and in that case is assumed to be true
 * cache.seed - array of strings or paths in the task object e.g. ["task.name"] or ["123"]
 
-The task.config.operators.OperatorNAME.cache controls caching in the Operator
-The task.config.operators.OperatorNAME.seed sets the cache seed in the Operator, it is an array of strings or paths in the task object e.g. ["task.name"] or ["123"]
+The task.operators.OperatorNAME.cache controls caching in the Operator
+The task.operators.OperatorNAME.seed sets the cache seed in the Operator, it is an array of strings or paths in the task object e.g. ["task.name"] or ["123"]
 
-`task.config.services` stores an array of service configurations
+`task.services` stores an array of service configurations
 
 `task.id` is referring to the configuration `id`. It is a dot separated path of the parent Tasks (the configuration is inherited). There are two principle categories of tasks: system tasks and user tasks. System Tasks have an id starting with `root.system.` and user tasks have an id starting with `root.user.` 
 
@@ -172,7 +172,7 @@ v03:
 * error -> an object with type and message and stack (or just a free-form object)
 * Task processor timezone
 * task.processors[environment] would allow inititialisation of task.processor for a given environment e.g. configuring task.processor.statesSupported
-* Could add a check in schema to config.services that type + environments must exist
+* Could add a check in schema to services that type + environments must exist
 
 ### Processor
 

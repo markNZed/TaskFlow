@@ -35,11 +35,11 @@ const tasktypes = [
     environments: ["rxjs"],
     config: {
       autoStartEnvironment: "rxjs",
-      services: {
-        config: {
-          type: "systemConfig",
-          environments: ["rxjs"],
-        },
+    },
+    services: {
+      config: {
+        type: "systemConfig",
+        environments: ["rxjs"],
       },
     },
     state: {
@@ -69,12 +69,10 @@ const tasktypes = [
   {
     name: "TaskNodeConfigEditor",
     environments: ["react", "rxjs"],
-    config: {
-      services: {
-        config: {
-          type: "systemConfig",
-          environments: ["rxjs"],
-        },
+    services: {
+      config: {
+        type: "systemConfig",
+        environments: ["rxjs"],
       },
     },
     state: {
@@ -90,13 +88,11 @@ const tasktypes = [
   },
   {
     name: "TaskTest",
-    config: {
-      ceps: {
-        familytree: {
-          type: "familytree",
-          environments: ["rxjscopro"],
-          match: "familyId",
-        },
+    ceps: {
+      familytree: {
+        type: "familytree",
+        environments: ["rxjscopro"],
+        match: "familyId",
       },
     },
     environments: ["nodejs", "react"], // Assumes we have a coprocessor
@@ -175,19 +171,19 @@ const tasktypes = [
           ["<END>", ""],
         ],
       },
-      operators: {
-        LLM: {
-          type: "LLM",
-          environments: ["nodejs"],
-          useCache: CACHE_ENABLE,
-          seed: [],
-          /*
-          regexProcessPrompt: [
-            ["^", "<BEGIN>"],
-            ["$", "<END>"],
-          ],
-          */
-        },
+    },
+    operators: {
+      LLM: {
+        type: "LLM",
+        environments: ["nodejs"],
+        useCache: CACHE_ENABLE,
+        seed: [],
+        /*
+        regexProcessPrompt: [
+          ["^", "<BEGIN>"],
+          ["$", "<END>"],
+        ],
+        */
       },
     },
     state: {
@@ -207,13 +203,13 @@ const tasktypes = [
         ],    
         useAddress: false,
       },
-      operators: {
-        "LLM": {
-          type: "LLM",
-          environments: ["nodejs"],
-          promptWithTime: false,
-        }
-      },
+    },
+    operators: {
+      "LLM": {
+        type: "LLM",
+        environments: ["nodejs"],
+        promptWithTime: false,
+      }
     },
     state: {
       current: "start",
@@ -226,14 +222,14 @@ const tasktypes = [
       local: {
         introductionPrompt: "Please introduce yourself.",
       },
-      operators: {
-        "LLM": {
-          type: "LLM",
-          environments: ["nodejs"],
-          useCache: CACHE_ENABLE,
-          seed: [],
-        }
-      },
+    },
+    operators: {
+      "LLM": {
+        type: "LLM",
+        environments: ["nodejs"],
+        useCache: CACHE_ENABLE,
+        seed: [],
+      }
     },
     state: {
       current: "start",
