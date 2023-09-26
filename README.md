@@ -14,7 +14,7 @@ The functionality of Tasks can be shared without sharing proprietary/private con
 
 The potential of large langauge models (LLM) like chatGPT has become apparent to many people. LLM enable natural language interfaces with computers and allow computers to generate natural language text. The underlying transformer architecture will continue to evolve and expand the capabilities of these systems for the foreseeable future. Furthermore, LLM have a limited (but rapidly improving) ability to follow instructions, this allows LLM to provide the "glue" for combining many different computing paradigms (e.g. databases, AI models, programming languages, search engines, etc.) Many systems are being built to capture value from new services.
 
-The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a **technology of ethics** i.e., using technology to prefer certain moral outcomes over other possible outcomes (technology is not amoral). T@skFlow is intended to support a new way of thinking.
+The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a **technology of ethics** i.e., using technology to prefer certain moral outcomes over other possible outcomes (technology is not amoral!). T@skFlow is intended to support a new way of thinking.
 
 # Core Concepts
 
@@ -29,7 +29,7 @@ Tasks consist of:
 * **Task Data** available in one or more Environment(s)
   * Task Data may use services not provided by T@skFlow
 
-For example, a chat application is a simple Task (receive user input, return language model response) and the management of the conversation history (e.g., displaying or deleting previous messages) is another Task (or sequence of Tasks). Unlike a chat framework, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow framework, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
+For example, a chat application could include a Task to receive user input and return language model responses, along with another Task for the management of the conversation history (e.g., displaying or deleting previous messages). Unlike a chat framework, T@skFlow generates any user interface depending on the implementation of a Task. Unlike a workflow framework, T@skFlow uses Tasks to dynamically build a user interface (UI) rather than providing a UI to configure a workflow (a workflow-like tool could, in theory, be built using T@askFlow).
 
 The concept of **Task Instance** refers to a particular object conforming to the Task Definition.
 
@@ -51,9 +51,9 @@ A **Node** is a process that is processing Tasks.
 
 A Node is of type:
 
-* **Hub** coordinates Task synchronization in hub-and-spoke architecture
+* **Hub** coordinates Task synchronization in the hub-and-spoke architecture
 * **Processor** processes Tasks as a spoke in the hub-and-spoke architecture
-* **Bridge** a processor that connects to more than one hub
+* **Bridge** a Processor that connects to more than one Hub
 
 ### Node Role
 
@@ -69,10 +69,10 @@ Roles could be performed by separate processes (or servers) to enable horizontal
 
 A Node Roll is performed by processing as:
 
-* **Stream** required for Tasks that monitor the activity of other Tasks
+* **Stream** required for complex event processing (CEP) that monitor Task activity
 * **Batch** required to process Task Functions
 
-A Batch defaults to size of 1 but Processors may make more efficient use of resources by batching Task processing.
+A Batch defaults to size of one but Processors may make more efficient use of resources by batching Task processing.
 
 ### Environment
 
@@ -112,7 +112,7 @@ Tasks are processed by Processors, currently the Processors implemented in T@skF
 * React Processor runs React in a web browser
 * RxJS Processor runs RxJS on a server
 
-The Processors communicate with the Hub using websocket. A Processor be composed of multiple Nodes.
+The Processors communicate with the Hub using websocket. A Processor may be composed of multiple Nodes.
 
 The React Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
 
@@ -124,7 +124,7 @@ For more information see the Processor [README.md](processor/README.md).
 
 Information shared between Processors is maintained in the Hub which also acts as a router, see the Hub [README.md](nodes/hub/README.md).
 
-A Hub be composed of multiple Nodes.
+A Hub may be composed of multiple Nodes.
 
 ### Hub Coprocessor
 

@@ -1,7 +1,9 @@
 /* ToDo
 -------      
-Demo of modifying systemMessage from another task
-Demo of copying a Task      
+Demo of modifying systemMessage from another Task
+  It is not until the Service hasd been used that all the model details are visible
+Demo of copying a Task
+Masking at least for React seems important
 If CEP then fsm -> FSM
 Test Docker setup
 Random Client is broken
