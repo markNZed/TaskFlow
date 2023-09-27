@@ -1,5 +1,11 @@
 /* ToDo
--------      
+-------
+Renaming of logs
+  zero -> hub
+  one -> hubconsumer
+  two -> hubcopro
+  three -> rxjs
+  react -> react
 Demo of modifying systemMessage from another Task
   It is not until the Service hasd been used that all the model details are visible
 Demo of copying a Task

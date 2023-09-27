@@ -44,14 +44,14 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-let NODE_NAME = "one";
+let NODE_NAME = "hubconsumer";
 if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
 }
 console.log({NODE_NAME});
 
 let nodeId;
-let nodeIdFile = './db/processor' + NODE_NAME + 'Id.txt';
+let nodeIdFile = './db/node-' + NODE_NAME + '-id.txt';
 try {
     // Try to read the id from a file
     nodeId = fs.readFileSync(nodeIdFile, 'utf-8');
@@ -73,9 +73,8 @@ try {
 let NODE;
 
 switch (NODE_NAME) {
-  case "one":
+  case "hubconsumer":
     NODE = {
-      name: "one",
       type: "hub",
       role: "consumer",
       processing: ["batch", "stream"],
@@ -83,9 +82,8 @@ switch (NODE_NAME) {
       wsPort: 5002,
     }
     break;
-  case "two":
+  case "hubcopro":
     NODE = {
-      name: "two",
       type: "hub",
       role: "coprocessor",
       processing: ["stream"],
@@ -93,9 +91,8 @@ switch (NODE_NAME) {
       wsPort: 5003,
     }
     break;
-  case "three":
+  case "rxjs":
     NODE = {
-      name: "three",
       type: "processor",
       role: "consumer",
       processing: ["batch"],
@@ -106,7 +103,7 @@ switch (NODE_NAME) {
   default:
     throw new Error("Unknown NODE_NAME " + NODE_NAME);
 }
-
+NODE["name"] = NODE_NAME;
 NODE["configDir"] = process.env.CONFIG_DIR + NODE.environment || path.join(__dirname, './config/' + NODE.environment);
 NODE["app"] = {
   label: appLabel,

@@ -16,7 +16,7 @@ The potential of large langauge models (LLM) like chatGPT has become apparent to
 
 The purpose of T@skFlow is to explore new ways of building and interacting with computers while assuming that AI will play a central role. If T@skFlow can amplify humans such that their abilities in a particular domain far exceed what most humans with most other systems are capable of then T@skFlow becomes a lever to propose new social/business practices. This is inline with the view of a **technology of ethics** i.e., using technology to prefer certain moral outcomes over other possible outcomes (technology is not amoral!). T@skFlow is intended to support a new way of thinking.
 
-# Core Concepts
+# Key Concepts
 
 ## Task
 
