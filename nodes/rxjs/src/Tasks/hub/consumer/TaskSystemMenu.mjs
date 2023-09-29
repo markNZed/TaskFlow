@@ -8,14 +8,14 @@ import { tasksStore_async, groupsStore_async } from "#src/storage";
 import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   let configTreeEvent; 
   if (T("processor.commandArgs.sync")) {
     //console.log("TaskSystemMenu_async", T("processor.commandArgs"));
-    if (T("meta.modified.shared.tasksConfigTree")) {
+    if (T("meta.modified.shared.configTreeHubconsumerTasks")) {
       configTreeEvent = true;
-      console.log("configTreeEvent found update to shared.tasksConfigTree");
+      console.log("configTreeEvent found update to shared.configTreeHubconsumerTasks");
     } else {
       return null; // Ignore sync operations
     }
@@ -94,6 +94,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPMatchM
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
+      T("commandDescription", "Initialise state.tasksTree");
       break;
     }
     case "loaded":
@@ -105,6 +106,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, fsmHolder, CEPMatchM
         if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
           T("state.tasksTree", newTasksTree);
           T("command", "update");
+          T("commandDescription", "Update state.tasksTree due to configTreeEvent so React can see it.");
         }
       }
       break;

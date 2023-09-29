@@ -21,6 +21,13 @@ RUN chmod a+x /usr/local/bin/websocat
 #RUN apt-get update && \
 #    apt-get install -y mongodb-mongosh mongodb-org-tools
 
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add
+RUN apt-get install software-properties-common
+RUN apt-get update
+RUN add-apt-repository 'deb https://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main'
+RUN apt-get update
+RUN apt install -y mongodb-mongosh
+
 # Install Nodemon, ESLint, Prettier, and Jest
 RUN yarn global add nodemon eslint prettier jest
 

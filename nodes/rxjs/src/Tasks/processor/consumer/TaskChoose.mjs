@@ -15,7 +15,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
 };
 
 // eslint-disable-next-line no-unused-vars
-const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskChoose_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
   const operators = T("operators");
@@ -65,6 +65,7 @@ const TaskChoose_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) 
     // Need to go to next state, can stay on NodeJS Processor side
     T("commandArgs", {"nextTaskId": nextTaskIds[maxIndex], "done": true});
     T("command", "update");
+    T("commandDescription", "Transition to next task:" + nextTaskIds[maxIndex]);
   } catch (error) {
     // Handle the error here
     console.log("An error occurred:", error);

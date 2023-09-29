@@ -41,7 +41,7 @@ The Task Function may implement a state machine using `task.state.current` and t
 
 ### Task State Machine
 
-A Task may be distributed over multiple Processors and share a single finite state machine (FSM) definition in the `shared/fsm` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskTest can test different Tasks.
+A Task may be distributed over multiple Processors and share a single finite state machine (FSM) definition in the `shared/FSM` directory. The preferred approach is to define a serializable FSM using the [XState](https://xstate.js.org/) format and implement the various actions and guards in the relevant Task Function. A **Task Configuration** may override some, or all, of the FSM configuration. For example, TaskTest provides generic functions to drive Task inputs and check Task outputs, different configurations of TaskTest can test different Tasks.
 
 ## Node
 
@@ -177,3 +177,5 @@ This project is licensed under the Mozilla Public License Version 2.0, see [LICE
 ## Contributors
 
 The initial React Processor code was based on the React chatbot client [https://github.com/YaokunLin/chatbot-react-React Processor](https://github.com/YaokunLin/chatbot-react-client), and the initial NodeJS Processor code was based on the Node Express chatbot server [https://github.com/YaokunLin/chatbot-server](https://github.com/YaokunLin/chatbot-NodeJS Processor). The generous developer of that code, Yaokun, replied by email on 2022-03-10 regarding the license, stating "I am glad you liked my repo, feel free to use my code. And I would appreciate it if you could cite my source repo when you release it to the public."
+
+[![built with Codeium](https://codeium.com/badges/main)](https://codeium.com)

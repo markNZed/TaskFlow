@@ -11,6 +11,7 @@ import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
 import * as dotenv from "dotenv";
 dotenv.config();
+import { taskLock, taskRelease } from '#shared/taskLock';
 
 const router = express.Router();
 
@@ -81,8 +82,28 @@ router.post("/", async (req, res) => {
     console.log("haveCoprocessor && activeCoprocessors.size === 0");
     return
   }
-
+  const autoStartTasksArray = [];
   for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
+    autoStartTasksArray.push([taskId, autoStartTask]);
+  }
+  // Sort the autoStartTasksArray by .autoStartpriority property
+  const sortedAutoStartTasksArray = autoStartTasksArray.sort((a, b) => {
+    const autoStartTaskA = a[1];
+    const autoStartTaskB = b[1];
+    // Place tasks with undefined autoStartpriority at the end
+    if (autoStartTaskA.autoStartpriority === undefined) return -1;
+    if (autoStartTaskB.autoStartpriority === undefined) return 1;
+    // Alphanumeric Compare using localeCompare
+    return autoStartTaskB.autoStartpriority.localeCompare(autoStartTaskA.autoStartpriority, undefined, {numeric: true});
+  });
+  console.log("sortedAutoStartTasksArray", sortedAutoStartTasksArray);
+  // eslint-disable-next-line no-unused-vars
+  const ids = sortedAutoStartTasksArray.map(([taskId, task]) => taskId);
+  for (const taskId of ids) {
+    // Lock the task when autostarting to ensure one task is started
+    taskLock(taskId, "autostart");
+    // Load the task after getting the lock so we can see any updates
+    let autoStartTask = await autoStartTasksStore_async.get(taskId)
     countAutoStartTasks++;
     console.log(`Checking autostart ${environment} for task`, taskId, autoStartTask);
     const autoStartEnvironment = autoStartTask.startEnvironment;
@@ -99,7 +120,7 @@ router.post("/", async (req, res) => {
         }
       })
       // If we have already started the task then we should only restart it if the particular
-      // processor rgisteirng now is the autoStartEnvironment
+      // processor registering now is the autoStartEnvironment
       // This was added because if the coprocessor has not started then we will not autostart
       // Then when the coprocessor starts allEnvironmentsAvailable will be true
       // We want to start the task once in that case not every time any processor is registered.
@@ -130,8 +151,9 @@ router.post("/", async (req, res) => {
         if (autoStartTask.once) {
           await autoStartTasksStore_async.delete(taskId);
         } else {
-          autoStartTask["started"] = true;
-          await autoStartTasksStore_async.set(taskId, autoStartTask);
+          let newAutoStartTask = autoStartTask;
+          newAutoStartTask["started"] = true;
+          await autoStartTasksStore_async.set(taskId, newAutoStartTask);
         }
       } else {
         //console.log("Not autostarting task allEnvironmentsAvailable false");
@@ -139,6 +161,7 @@ router.post("/", async (req, res) => {
     } else {
       //console.log("Not autostarting task autoStartEnvironment", autoStartEnvironment, "not in", activeEnvironments);
     }
+    taskRelease(taskId);
   }
   console.log(countAutoStartTasks + " autostart tasks");
 });

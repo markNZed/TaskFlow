@@ -109,7 +109,10 @@ const TaskLLMIO = (props) => {
       case "error":
         // For error testing
         if (transition()) {
-          modifyTask({ "command": "update" });
+          modifyTask({ 
+            "command": "update",
+            "commandDescription": "Transition to error state for error testing",
+          });
         } 
         break;
       case "display":
@@ -121,8 +124,12 @@ const TaskLLMIO = (props) => {
           setResponseText(task.output.LLMtext);
           nextState = "received";
         } else if (transition()) {
-          modifyTask({ "command": "update" });
+          modifyTask({
+            "command": "update",
+            "commandDescription": "Transition to received state",
+          });
         } 
+        break;
       case "receiving":
         // NodeJS should be streaming the response
         // When it has finished it will set the state to received
@@ -142,7 +149,11 @@ const TaskLLMIO = (props) => {
         break;
       case "exit":
         if (transitionFrom("input")) {
-          modifyTask({ "command": "update", "output.userInput": userInput });
+          modifyTask({ 
+            "command": "update", 
+            "output.userInput": userInput,
+            "commandDescription": "Transition state to exit ans set output.userInput",
+          });
         } else {
           nextState = "stop"
         }

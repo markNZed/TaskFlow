@@ -54,7 +54,8 @@ function TaskSystemMenu(props) {
         //console.log("task.state.tasksTree", task.state.tasksTree);
         modifyTask({
           "command": "update",
-          "state.current" : "ready"
+          "state.current" : "ready",
+          "commandDescription": "Transition state to loaded ater setting global tasksTree",
         });
         break;
       case "ready":

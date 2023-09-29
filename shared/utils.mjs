@@ -895,6 +895,7 @@ const utils = {
     }
     const command = taskCopy.command;
     const commandArgs = taskCopy.commandArgs;
+    const commandDescription = taskCopy.commandDescription;
     // Initialize processor when it does not exist e.g. when starting initial taskCopy
     if (!taskCopy.processor) {
       taskCopy.processor = {};
@@ -908,7 +909,13 @@ const utils = {
     } else {
       taskCopy.processor["commandArgs"] = null;
     }
-    delete taskCopy.commandArgs
+    delete taskCopy.commandArgs;
+    if (taskCopy.commandDescription) {
+      taskCopy.processor["commandDescription"] = commandDescription;
+    } else {
+      taskCopy.processor["commandDescription"] = "";
+    }
+    delete taskCopy.commandDescription;
     // Record the state of the taskCopy as it leaves the processor
     if (taskCopy?.state?.current) {
       taskCopy.processor["stateLast"] = taskCopy.state.current;
@@ -980,6 +987,7 @@ const utils = {
     }
     task.processor["command"] = hub.command;
     task.processor["commandArgs"] = hub.commandArgs || {};
+    task.processor["commandDescription"] = hub.commandDescription || "";
     task.processor = utils.deepMerge(task.processor, hub);
     if (hub.sourceProcessorId) {
       task.processor["sourceProcessorId"] = hub.sourceProcessorId;
@@ -1177,6 +1185,7 @@ const utils = {
     if (!task?.config?.debug?.debugTask) {return}
     const isBrowser = typeof window === 'object';
     const command = task.command || task?.processor?.command || task?.hub?.command;
+    const commandDescription = task.commandDescription || task?.processor?.commandDescription || task?.hub?.commandDescription;
     if (command === "ping" || command === "pong") {
       return;
     }
@@ -1186,6 +1195,9 @@ const utils = {
     let logParts = ["DEBUGTASK"];
     if (contextText) {
       logParts.push(contextText);
+    }
+    if (commandDescription) {
+      logParts.push(commandDescription);
     }
     logParts.push(`id: ${task.id}`);
     logParts.push(`instanceId: ${task.instanceId}`);
@@ -1202,15 +1214,15 @@ const utils = {
       throw new Error("task.processor.id === 'rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
     }
 
-    if (task?.shared?.tasksConfigTree?.children) {
-      const title = task.shared.tasksConfigTree.children["root.user"].title;
-      logParts.push("DEBUGTASK tasksConfigTree children root.user title", title);
+    if (task?.shared?.configTreeHubconsumerTasks?.children) {
+      const title = task.shared.configTreeHubconsumerTasks.children["root.user"].title;
+      logParts.push("configTreeHubconsumerTasks children root.user title", title);
     }
     if (isBrowser) {
       logParts.push("task:", task);
     }
     if (task?.state?.tasksTree) {
-      //logParts.push("DEBUGTASK tasksTree", task.state.tasksTree);
+      //logParts.push("tasksTree", task.state.tasksTree);
     }
     if (task?.meta?.hashDiffOrigTask) {
       //logParts.push("task.meta.hashDiffOrigTask:", JSON.stringify(task.meta.hashDiffOrigTask));
@@ -1219,7 +1231,13 @@ const utils = {
       //logParts.push("task?.meta?.hashTask?.state?.current:", task?.meta?.hashTask?.state?.current);
     }
     if (task?.output?.CEPCount) {
-      //logParts.push("DEBUGTASK task.output.CEPCount", task.output.CEPCount);
+      //logParts.push("task.output.CEPCount", task.output.CEPCount);
+    }
+    if (task?.processor?.coprocessing) {
+      logParts.push("task.processor.coprocessing", task.processor.coprocessing);
+    }
+    if (task?.hub?.coprocessing) {
+      logParts.push("task.hub.coprocessing", task.hub.coprocessing);
     }
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));

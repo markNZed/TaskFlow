@@ -1,13 +1,13 @@
 /* ToDo
 -------
-Renaming of logs
-  zero -> hub
-  one -> hubconsumer
-  two -> hubcopro
-  three -> rxjs
-  react -> react
+Menu CEP Types not working
+  TaskNodeConfigs_async is trying to send commandUpdate_async on hubconsumer to itself so lock is not available
+    The Hub can't get the lock
+    Maybe we need hub coprocessor batch/stream to deal with CEP maybe better to start the nodeconfig for nodejs before trying on coprocessor
+Mongo master to empty the DB
+ Same thing for Redis? 
 Demo of modifying systemMessage from another Task
-  It is not until the Service hasd been used that all the model details are visible
+  It is not until the Service has  been used that all the model details are visible
 Demo of copying a Task
 Masking at least for React seems important
 If CEP then fsm -> FSM
@@ -70,7 +70,7 @@ Switch from hub/processor to node
   Tasks dedicated to processor is another reason to have a single "node"
   Move to task.node ?
   One the hub we copy task.node into task.processors then setup task.node
-Menu should not have shared.tasksConfigTree on React
+Menu should not have shared.configTreeHubconsumerTasks on React
   Could store processor specific info in task.processor
     But it is using task.shared
     Masking could fix this

@@ -10,8 +10,8 @@ import DynamicComponent from "../Generic/DynamicComponent";
 import { useMachine } from '@xstate/react';
 import TreeModel from 'tree-model';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
-import { library } from "../../shared/fsm/TaskTest/library.mjs"
-import { xutils } from "../../shared/fsm/xutils.mjs"
+import { library } from "../../shared/FSM/TaskTest/library.mjs"
+import { xutils } from "../../shared/FSM/xutils.mjs"
 
 /*
 Task Function
@@ -29,7 +29,7 @@ function TaskTest(props) {
     task,
     modifyTask,
     syncTask,
-    fsmMachine,
+    FSMachine,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
@@ -48,7 +48,7 @@ function TaskTest(props) {
   const { replaceGlobalState } =  useGlobalStateContext();
 
   // We pass a ref to the task so we do not lose the task state when React sets it
-  const [state, send, service] = useMachine(fsmMachine, {
+  const [state, send, service] = useMachine(FSMachine, {
     context: { taskRef: props.taskRef },
     actions: {
       taskAction: taskAction,
@@ -242,7 +242,7 @@ function TaskTest(props) {
         };
         diff["input"] = {[input]: value};
         if (debug) {console.log(msg, diff)};
-        syncTask(diff);
+        syncTask(diff, msg);
         if (debug) {console.log(msg, "sending", eventType)};
         if (delay) {
           setTimeout(() => {

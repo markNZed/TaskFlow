@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// To be able to load the JSON without fetching it via a web request fomr the browser we use new import feature
+// To be able to load the JSON without fetching it via a web request from the browser we use new import feature
 // That requires using the assert keyword which is not yet supported by ESLint
 // Also need to modify babble to support assertsion  @babel/plugin-syntax-import-assertions with changes to config-overrides.js
 // Also changed ESlint parser to support asserttions at th eroot of the project:
@@ -20,7 +20,7 @@ import fsmJson from './default.json' assert { type: 'json' };
 // There are default events for each state with the same name (and case) as the state that will cause a transition to the new state
 // choose: for conditional actions 
 // eslint-disable-next-line no-unused-vars
-export function getFsm(initialTask) {
+export function getFSM(initialTask) {
   return fsmJson;
 }
 

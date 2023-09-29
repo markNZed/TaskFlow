@@ -9,7 +9,7 @@ import { tasksModel } from "#src/CEPs/CEPSystemLog/tasksModel"
 import { formatQuery } from 'react-querybuilder';
 
 // eslint-disable-next-line no-unused-vars
-const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskSystemLogViewer_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -90,6 +90,7 @@ const TaskSystemLogViewer_async = async function (wsSendTask, T, fsmHolder, CEPM
           T("state.queryHistoryPtr", queryHistoryPtr);
         }
         T("command", "update");
+        T("commandDescription", `Update the response with query results and the state.queryHistory with ${total} results.`);
       }
       break;
     case "response":

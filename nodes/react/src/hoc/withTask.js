@@ -11,7 +11,7 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import useWebSocketContext from "../contexts/WebSocketContext";
 import { useEventSource } from '../contexts/EventSourceContext';
 import { createMachine } from 'xstate';
-import { xutils } from '../shared/fsm/xutils.mjs';
+import { xutils } from '../shared/FSM/xutils.mjs';
 
 // When a task is shared then changes are detected at each wrapper
 
@@ -51,7 +51,7 @@ function withTask(Component) {
     const handleModifyChildTaskRef = useRef(null);
     const taskRef = useRef();
     const [fsm, setFsm] = useState();
-    const [fsmMachine, setFsmMachine] = useState();
+    const [FSMachine, setFsmMachine] = useState();
     const [fsmState, setFsmState] = useState(); 
     const [fsmService, setFsmService] = useState();
     const [fsmSend, setFsmSend] = useState(); 
@@ -68,13 +68,14 @@ function withTask(Component) {
     }, [props.task]);
 
     // In HOC create a syncTask function
-    function syncTask(syncTask) {
+    function syncTask(syncTask, description) {
       modifyTask({ 
         "command": "update",
         "commandArgs": {
           sync: true,
           syncTask: syncTask,
-        }
+        },
+        "commandDescription": description,
       });
     }
 
@@ -85,12 +86,12 @@ function withTask(Component) {
     }, [props.task?.config?.fsm?.devTools]);  
 
     const loadFsmModule = async (importPath, name) => {
-      console.log("loadFsmModule", '../shared/fsm/' + importPath);
+      console.log("loadFsmModule", '../shared/FSM/' + importPath);
       // To allow for the preprocessing to pick up the initial path we give the path as a string constant to import
-      import('../shared/fsm/' + importPath)
+      import('../shared/FSM/' + importPath)
         .then((module) => {
           console.log("module ", importPath);
-          let fsm = module.getFsm(props.task);
+          let fsm = module.getFSM(props.task);
           const fsmDefaults = {
             predictableActionArguments: true, // opt into some fixed behaviors that will be the default in v5
             preserveActionOrder: true, // will be the default in v5
@@ -113,9 +114,9 @@ function withTask(Component) {
         })
         .catch((error) => {
           if (error.message.includes("Cannot find module")) {
-            //console.log(`Failed to load FSM at ${'../shared/fsm/' + importPath}`);
+            //console.log(`Failed to load FSM at ${'../shared/FSM/' + importPath}`);
           } else {
-            console.error(`Failed to load FSM at ${'../shared/fsm/' + importPath}`, error);
+            console.error(`Failed to load FSM at ${'../shared/FSM/' + importPath}`, error);
           }
         });  
     };
@@ -682,13 +683,13 @@ function withTask(Component) {
       checkLocked,
       syncTask,
       taskRef,
-      fsmMachine,
+      FSMachine,
       useShareFsm,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it
     // If no FSM is configured then fsm will default to a string
-    if (fsmMachine === undefined && props.task?.config?.fsm?.useMachine) {
+    if (FSMachine === undefined && props.task?.config?.fsm?.useMachine) {
       return (<div>Loading FSM...</div>)
     }
 

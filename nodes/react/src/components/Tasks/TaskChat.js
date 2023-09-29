@@ -208,6 +208,7 @@ const TaskChat = (props) => {
             "state.lastAddress": task.state.address,
             "commandArgs": { "lock": true },
             "command": "update",
+            "commandDescription": "Send user location as a prompt",
           });
         }
         break;
@@ -223,6 +224,7 @@ const TaskChat = (props) => {
             "request.prompt": task.input.promptText,
             "commandArgs": { "lock": true },
             "command": "update",
+            "commandDescription": "Send user prompt",
           });
           setChatHistory(prevChatHistory => {
             const newChatHistory = [...prevChatHistory, task.input.promptText];
@@ -245,7 +247,6 @@ const TaskChat = (props) => {
         if (!checkLocked()) {
           // If we set nextState at the same time as command then there is a risk that the 
           // task.state.current updates before the command is sent.
-          // By setting nextState after the transition we minimize this risk.
           // We probably need to be able to await on modifyTask so we know command has been sent
           // Could also chain the nextState assignment. This turns out to be difficult in React.
           // So instead of setting nextState we set the state in modifyTask
@@ -263,8 +264,8 @@ const TaskChat = (props) => {
               "commandArgs": { "unlock": true },
               "command": "update",
               "state.current": "input",
+              "commandDescription": "Update output.msgs with latest output.LLMResponse and clear output.LLMResponse",
             });
-            //nextState = "input";
           }
         }
         break;

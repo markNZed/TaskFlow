@@ -1,5 +1,5 @@
 import { validateTasks } from "../src/validateTasks.mjs";
-import { actionThenQuery } from '../src/shared/fsm/xutils.mjs';
+import { actionThenQuery } from '../src/shared/FSM/xutils.mjs';
 
 const taskSetNames = ['system'];
 let taskSet = {};
@@ -219,7 +219,7 @@ const tasks = [
     type: "TaskChat",
     APPEND_environments: ["rxjs"],
     shared: {
-      tasksConfigTree: {},
+      configTreeHubconsumerTasks: {},
     },
     config: {
       local: {

@@ -10,7 +10,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskTest_async = async function (wsSendTask, T, fsmHolder, CEPMatchMapMap) {
+const TaskTest_async = async function (wsSendTask, T, FSMHolder, CEPMatchMapMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 

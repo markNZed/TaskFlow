@@ -17,22 +17,26 @@ const templateSchema = yup.object({
 
 export const configSchema = yup.object()
   .shape({
-  maxRequestCount: yup.number(),
-  maxRequestRate: yup.number(),
-  label: yup.string(),
-  nextTask: yup.string(),
-  oneFamily: yup.boolean(),
-  collaborateGroupId: yup.string(),
-  spawnTask: yup.boolean(),
-  nextStates: yup.object(),
-  nextTaskTemplate: yup.object(),
-  cacheKeySeed: yup.string(),
-  caching: yup.array().of(yup.object()),
-  local: yup.object(),
-  fsm: yup.object(),
-  debug: yup.object(),
-  background: yup.boolean(),
-}).noUnknown(true);
+    maxRequestCount: yup.number(),
+    maxRequestRate: yup.number(),
+    label: yup.string(),
+    nextTask: yup.string(),
+    oneFamily: yup.boolean(),
+    collaborateGroupId: yup.string(),
+    spawnTask: yup.boolean(),
+    nextStates: yup.object(),
+    nextTaskTemplate: yup.object(),
+    cacheKeySeed: yup.string(),
+    caching: yup.array().of(yup.object()),
+    local: yup.object(),
+    fsm: yup.object(),
+    debug: yup.object(),
+    background: yup.boolean(),
+    autoStartEnvironment: yup.string(),
+    autoStartEnvironments: yup.array().of(yup.string()),
+    autoStartCoProcessor: yup.boolean(),
+    autoStartpriority: yup.string(),
+  }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()
   .shape({

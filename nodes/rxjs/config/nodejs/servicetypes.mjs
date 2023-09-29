@@ -3,6 +3,11 @@ const currentDate = new Date().toISOString().split("T")[0];
 // This is an array because we use the same structure as other configdata
 const servicetypes = [
   {
+    name: "systemConfig",
+    moduleName: "ServiceNodeConfig",
+    stores: ["ceptypes", "servicetypes", "operatortypes"],
+  },
+  {
     name: "openaigpt",
     API: "openaigpt",
     moduleName: "ServiceVercelAI",

@@ -56,7 +56,7 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
   const operators = T("operators");
@@ -87,6 +87,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPMatc
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
+      T("commandDescription", "Set state to receiving on other Processors");
       // Could error here. How to chek?
       wsSendTask(T());
       if (entryState === "introduction") {
@@ -127,6 +128,11 @@ const TaskSimulateUser_async = async function (wsSendTask, T, fsmHolder, CEPMatc
       T("state.current", "received");
       T("commandArgs.unlock", true);
       T("command", "update");
+      if (entryState === "introduction") {
+        T("commandDescription", "Transition state to received using config.local.introductionPrompt");
+      } else {
+        T("commandDescription", "Transition state to received with output.simulationResponse");
+      }
       break;
     }
     default:

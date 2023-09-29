@@ -7,7 +7,8 @@
     "#root/*": "./*.mjs",
     "#src/*": "./src/*.mjs",
     "#operators/*": "./src/Operators/*.mjs",
-    "#services/*": "./src/Services/*.mjs"
+    "#services/*": "./src/Services/*.mjs",
+    "#shared/*": "./src/shared/*.mjs"
   },
   "scripts": {
     "start": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
@@ -40,7 +41,7 @@
     "module-alias": "^2.2.3",
     "mongodb": "^5.1.0",
     "mongodb-query-parser": "^3.1.2",
-    "mongoose": "^7.4.2",
+    "mongoose": "^7.5.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^3.3.1",
     "node-querybuilder": "^2.1.1",

@@ -6,18 +6,35 @@ import { NODE } from "../config.mjs";
 // Store the mapping of task function names to their file paths
 const taskFilePaths = {};
 
-const initializeTaskFilePaths = () => {
-  let taskDir = path.dirname(fileURLToPath(import.meta.url));
-  taskDir += "/" + `Tasks/${NODE.type}/${NODE.role}`;
+const setTaskFilePaths = (taskBaseDir, taskRelDir) => {
+  let taskDir = path.join(taskBaseDir, taskRelDir);
   const taskFiles = fs
-    .readdirSync(taskDir)
-    .filter((file) => file.startsWith("Task") && file.endsWith(".mjs"));
+    .readdirSync(taskDir, { withFileTypes: true })
+    .filter(
+      (dirent) =>
+        dirent.isFile() &&
+        dirent.name.startsWith("Task") &&
+        dirent.name.endsWith(".mjs")
+    )
+    .map((dirent) => dirent.name);
 
   taskFiles.forEach((file) => {
     const moduleName = path.basename(file, ".mjs");
-    const modulePath = `./Tasks/${NODE.type}/${NODE.role}/${file}`;
+    const modulePath = "./" + taskRelDir + "/" + file;
     taskFilePaths[moduleName + "_async"] = modulePath;
   });
+};
+
+
+const initializeTaskFilePaths = () => {
+  const taskBaseDir = path.dirname(fileURLToPath(import.meta.url));
+  let taskRelDir = `Tasks/${NODE.type}/${NODE.role}`;
+  setTaskFilePaths(taskBaseDir,taskRelDir);
+  taskRelDir = `Tasks/${NODE.type}`;
+  setTaskFilePaths(taskBaseDir,taskRelDir);
+  taskRelDir = `Tasks`;
+  setTaskFilePaths(taskBaseDir,taskRelDir);
+  console.log("taskFilePaths:", taskFilePaths);
 };
 
 // Initialize the task file paths

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskLLMIO_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -19,6 +19,7 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
     case "response": {
       T("state.current", "receiving");
       T("command", "update");
+      T("commandDescription", "Set state to receiving on ohter Processors");
       // Here we update the task which has the effect of setting the state to receiving
       wsSendTask(T());
       // The response needs to be available for other tasks to point at
@@ -26,6 +27,7 @@ const TaskLLMIO_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
       T("output.LLMtext", operatorOut.response.LLM);
       T("state.current", "received");
       T("command", "update");
+      T("commandDescription", "Set state to received and provide output.LLMtext");
       break;
     }
     case "error":

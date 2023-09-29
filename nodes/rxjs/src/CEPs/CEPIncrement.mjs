@@ -40,7 +40,8 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
           modifiedBy: CEPInstanceId,
         },
       }
-    }
+    },
+    commandDescription: "Incrementing output.CEPCount by " + increment,
   };
   await commandUpdate_async(wsSendTask, syncUpdateTask);
 

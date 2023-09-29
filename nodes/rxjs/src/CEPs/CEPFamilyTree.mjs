@@ -19,6 +19,7 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
   //utils.logTask(task, "CEPFamilyTree command", task.processor.command, task.id);
   // Only run this when going through the coprocessor the first time
   if (task.processor.command === "init" && !task.processor.coprocessingDone) {
+    let actions = [];
     utils.logTask(task, "CEPFamilyTree adding");
     let CEPtask;
     // In this case we are starting the TaskCEPFamilyTree
@@ -36,6 +37,7 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
     if (CEPtask.state.familyTree) {
       root = tree.parse(CEPtask.state.familyTree);
     } else {
+      actions.push("Creating root" + CEPInstanceId);
       root = tree.parse({id: CEPInstanceId, taskInstanceId: CEPInstanceId, taskId: CEPtask.id, type: CEPtask.type});
     }
     //utils.logTask(task, "familyTree", root);
@@ -50,6 +52,7 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
         if (parentNode) {
           parentNode.addChild(node);
           utils.logTask(task, "Found parentInstanceId so adding node");
+          actions.push("Added child " + task.instanceId + " under " + task.meta.parentInstanceId)
         } else {
           utils.logTask(task, "No parentNode for parentInstanceId", task.meta.parentInstanceId);
         }
@@ -69,7 +72,8 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
             sync: true,
             instanceId: CEPtask.instanceId,
             syncTask: updateDiff,
-          }
+          },
+          commandDescription: "Updating state.familyTree" + actions.join(", "),
         };
         await commandUpdate_async(wsSendTask, syncUpdateTask);
       }

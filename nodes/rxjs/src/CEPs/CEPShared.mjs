@@ -99,7 +99,8 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
             syncTask: {
               shared: toSync[instanceId],
             }
-          }
+          },
+          commandDescription: "Updating shared:" + Object.keys(toSync[instanceId]),
         };
         // Create a new Promise for each instance and push it to the promises array
         promises.push(

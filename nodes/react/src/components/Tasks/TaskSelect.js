@@ -46,7 +46,11 @@ const TaskSelect = (props) => {
         break;
       case "exit":
         if (transition()) {
-          modifyTask({ "command": "update", "output.selected": selectedOptions });
+          modifyTask({ 
+            "command": "update", 
+            "output.selected": selectedOptions,
+            "commandDescription": "Transition state to exit and set output.selected",
+          });
         }
         nextState = "start";
         break;

@@ -80,13 +80,6 @@ export function createColumns(rowDetailHeight) {
         flex: 1,
       },
       {  
-        name: 'familyId',
-        dataPath: "current.familyId",
-        width: 50,
-        key: "familyId",
-        flex: 1,
-      },
-      {  
         name: 'type',
         dataPath: "current.type",
         width: 150,
@@ -108,13 +101,6 @@ export function createColumns(rowDetailHeight) {
         flex: 1,
       },
       {  
-        name: 'user',
-        dataPath: "current.user.id", 
-        width: 150,
-        key: "user",
-        flex: 1,
-      },
-      {  
         name: 'command',
         dataPath: "current.processor.command",
         width: 100,
@@ -127,6 +113,13 @@ export function createColumns(rowDetailHeight) {
         dataPath: "current.processor.coprocessingDone",
         width: 50,
         key: "coprocessing",
+        flex: 1,
+      },
+      {  
+        name: 'messageId',
+        dataPath: "current.meta.messageId",
+        width: 100,
+        key: "messageId",
         flex: 1,
       },
     ];

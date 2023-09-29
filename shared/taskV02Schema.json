@@ -20,6 +20,9 @@
         "commandArgs": {
           "type": ["null", "object"]
         },
+        "commandDescription": {
+          "type": "string"
+        },
         "error": {
           "anyOf": [
             {

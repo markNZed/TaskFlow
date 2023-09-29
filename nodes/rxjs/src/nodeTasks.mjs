@@ -4,15 +4,15 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { importTaskFunction_async, taskFunctionExists_async } from "./taskFunctions.mjs";
-import { importService_async, serviceExists_async } from "./services.mjs";
-import { importOperator_async, operatorExists_async } from "./operators.mjs";
-import { importCEP_async, CEPExists_async } from "./CEPs.mjs";
-import { CEPregister, CEPCreate } from "./nodeCEPs.mjs";
+import { importTaskFunction_async, taskFunctionExists_async } from "./nodeTaskFunctions.mjs";
+import { importService_async, serviceExists_async } from "./nodeServices.mjs";
+import { importOperator_async, operatorExists_async } from "./nodeOperators.mjs";
+import { importCEP_async, CEPExists_async } from "./nodeCEPs.mjs";
+import { CEPregister, CEPCreate } from "./taskCEPs.mjs";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
 import { activeTaskFsm, serviceTypes_async, operatorTypes_async, cepTypes_async, ServicesMap, OperatorsMap, CEPsMap, CEPFunctionMap } from "./storage.mjs";
-import { getFsmHolder_async } from "./shared/processor/fsm.mjs";
+import { getFSMHolder_async } from "#src/taskFSM";
 
 export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
   let updatedTask = null;
@@ -23,26 +23,31 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     const processorMatch = T("processor.initiatingProcessorId") === NODE.id;
     const taskFunctionName = `${T("type")}_async`
     if (processorMatch) {
-      utils.logTask(T(), "RxJS Processor from this processor so skipping Task Fuction id:" + T("id"));
-      updatedTask = task;
+      utils.logTask(T(), "This was the initiatingProcessorId so skipping Task Fuction id:" + T("id"));
+      updatedTask = T();
     } else if (T("processor.command") === "error") {
       utils.logTask(T(), "RxJS Processor error so skipping Task Fuction id:" + T("id"));
-      updatedTask = task;
+      updatedTask = T();
     } else if (T("processor.command") === "start") {
       utils.logTask(T(), "RxJS Processor start so skipping Task Fuction id:" + T("id"));
-      updatedTask = task;
+      updatedTask = T();
     } else if (NODE.role === "coprocessor" && T("processor.commandArgs.sync")) {
       // Seems a risk of CEP operating on sync creating loops
       // Could have a rule that sync do not operate on the same task
       // True that in this case we can just modify the task
       utils.logTask(T(), "RxJS Task Coprocessor sync so skipping Task Fuction id:" + T("id"));
-      updatedTask = task;
+      updatedTask = T();
+    } else if (NODE.role === "coprocessor" && !T("environments").includes(NODE.environment)) {
+      utils.logTask(T(), "Task is not configured to run on coprocessor");
+      updatedTask = T();
+    // If this is not a coprocessor then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
-      let fsmHolder = await getFsmHolder_async(task, activeTaskFsm.get(T("instanceId")));
-      let services = {};
+      let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
+      let services = T("services") || {};
       if (T("processor.command") === "init") {
         const servicesConfig = T("services");
-        //console.log("servicesConfig", JSON.stringify(servicesConfig))
+        console.log("config", JSON.stringify(T("config")))
+        console.log("servicesConfig", JSON.stringify(servicesConfig))
         if (servicesConfig) {
           const promises = Object.keys(servicesConfig).map(async (key) => {
             // Dynamically import taskServices
@@ -65,6 +70,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 } else {
                   throw new Error(`Servicetype ${type} not found in ${key} service of ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
                 }
+              } else {
+                console.log(`Service ${key} not expected to be on this processor environment ${NODE.environment}`);
               }
             } else {
               throw new Error(`Servicetype ${key} service of ${T("id")} has no environments`);
@@ -76,7 +83,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           //console.log("init services", T("services"));
           ServicesMap.set(T("instanceId"), T("services"));
         }
-        let operators = {};
+        let operators = T("operators") || {};
         const operatorsConfig = T("operators");
         if (operatorsConfig) {
           //console.log("operatorsConfig", JSON.stringify(operatorsConfig))
@@ -122,10 +129,12 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       // Option to run in background
       if (T("config.background")) {
         utils.logTask(T(), `Processing ${T("type")} in background`);
-        taskFunction(wsSendTask, T, fsmHolder, CEPMatchMap);
+        taskFunction(wsSendTask, T, FSMHolder, CEPMatchMap).catch(error => {
+          console.error('Error processing in background:', error);
+        });
       } else {
-        utils.logTask(T(), `Processing ${T("type")} in state ${task?.state?.current}`);
-        updatedTask = await taskFunction(wsSendTask, T, fsmHolder, CEPMatchMap);
+        utils.logTask(T(), `Processing ${T("type")} in state ${T("state.current")}`);
+        updatedTask = await taskFunction(wsSendTask, T, FSMHolder, CEPMatchMap);
       }
       utils.logTask(T(), `Finished ${T("type")} in state ${updatedTask?.state?.current}`);
     } else {
@@ -163,7 +172,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                       }
                       CEPregister(cepName, ceps[key].module.cep_async);
                       // This is another hack to work with the current implementation
-                      task = T(`ceps.${key}.functionName`, cepName);
+                      T(`ceps.${key}.functionName`, cepName);
                       //console.log("T ceps:", T("ceps"));
                     } else {
                       throw new Error(`Cep ${cepName} not found for ${T("id")} config: ${JSON.stringify(cepsConfig)}`);
@@ -178,7 +187,6 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
             });
             // Wait for all the promises to resolve
             await Promise.all(promises);
-            task["ceps"] = ceps;
             T("ceps", ceps);
             //console.log("init ceps", T("ceps"));
             CEPsMap.set(T("instanceId"), T("ceps"));
@@ -189,7 +197,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
               if (!CEPenvironments || CEPenvironments.includes(NODE.environment)) {
                 //console.log("ceps", key, T(`ceps.${key}`));
                 const match = T(`ceps.${key}.match`);
-                CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, T(`ceps.${key}`));
+                CEPCreate(CEPMatchMap, CEPFunctionMap, T(), match, T(`ceps.${key}`));
               }
             }
           }
@@ -199,7 +207,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     }
   } catch (e) {
     console.error(e);
-    updatedTask = task;
+    updatedTask = T();
     // Strictly we should not be updating the task object in the processor
     // Could set updatedTask.processor.command = "error" ?
     updatedTask.error = {message: e.message};
@@ -223,7 +231,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     }
     if (NODE.role === "coprocessor") {
       if (updatedTask === null) {
-        updatedTask = task;
+        updatedTask = T();
         utils.logTask(updatedTask, "taskProcess_async null so task replaces updatedTask", updatedTask.id);
         // The updatedTask.processor will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 

@@ -48,19 +48,6 @@ let NODE_NAME = "hubconsumer";
 if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
 }
-console.log({NODE_NAME});
-
-let nodeId;
-let nodeIdFile = './db/node-' + NODE_NAME + '-id.txt';
-try {
-    // Try to read the id from a file
-    nodeId = fs.readFileSync(nodeIdFile, 'utf-8');
-} catch (e) {
-    // If the file does not exist, generate a new id
-    nodeId = NODE.environment + '-' + uuidv4();
-    // Save the id to a file for future use
-    fs.writeFileSync(nodeIdFile, nodeId);
-}
 
 /* 
   NODE
@@ -82,7 +69,7 @@ switch (NODE_NAME) {
       wsPort: 5002,
     }
     break;
-  case "hubcopro":
+  case "hubcoprocessor":
     NODE = {
       type: "hub",
       role: "coprocessor",
@@ -103,6 +90,19 @@ switch (NODE_NAME) {
   default:
     throw new Error("Unknown NODE_NAME " + NODE_NAME);
 }
+
+let nodeId;
+let nodeIdFile = './db/node-' + NODE_NAME + '-id.txt';
+try {
+    // Try to read the id from a file
+    nodeId = fs.readFileSync(nodeIdFile, 'utf-8');
+} catch (e) {
+    // If the file does not exist, generate a new id
+    nodeId = NODE.environment + '-' + uuidv4();
+    // Save the id to a file for future use
+    fs.writeFileSync(nodeIdFile, nodeId);
+}
+
 NODE["name"] = NODE_NAME;
 NODE["configDir"] = process.env.CONFIG_DIR + NODE.environment || path.join(__dirname, './config/' + NODE.environment);
 NODE["app"] = {
@@ -113,11 +113,14 @@ NODE["app"] = {
 NODE["storage"] = {
   redisUrl: REDIS_URL,
   mongoUrl: MONGO_URL,
-  emptyAllDb: EMPTY_ALL_DB
+  emptyAllDB: EMPTY_ALL_DB,
+  mongoMaster: "hubcoprocessor",
 };
 NODE["id"] = nodeId;
 if (process.env.WS_PORT) {
   NODE["wsPort"] = process.env.WS_PORT
 }
+
+console.log({NODE});
 
 export { DEFAULT_USER, CACHE_ENABLE, DUMMY_OPENAI, MAP_USER, TASKHUB_URL, hubSocketUrl, NODE };

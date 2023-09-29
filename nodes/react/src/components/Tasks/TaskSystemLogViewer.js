@@ -53,6 +53,7 @@ const TaskSystemLogViewer = (props) => {
         filters[column.key] = '';
       }
     });
+    console.log("initFilters", filters);
     return filters;
   }
 
@@ -114,9 +115,7 @@ const TaskSystemLogViewer = (props) => {
       initialColumns.forEach(col => {
         if (col.dataPath) {
           const value = col.dataPath.split('.').reduce((acc, prop) => acc && acc[prop], t);
-          if (value !== undefined) {
-            transformedFields[col.key] = value;
-          }
+          transformedFields[col.key] = value;
         }
       });
       let command = transformedFields["command"];
@@ -124,6 +123,7 @@ const TaskSystemLogViewer = (props) => {
         transformedFields["command"] += "(sync)";
       }
       transformedFields["coprocessing"] = transformedFields["coprocessing"] ? "true" : "false";
+      //console.log("transformedFields", transformedFields);
       return transformedFields;
     });
   }, [task.response.tasks]);
@@ -143,7 +143,8 @@ const TaskSystemLogViewer = (props) => {
           modifyTask({ 
             "input.query": null,
             "request": task.input.query,
-            "command": "update" 
+            "command": "update",
+            "commandDescription": "Transition to query state with query request",
           });
         }
         break;
@@ -165,7 +166,10 @@ const TaskSystemLogViewer = (props) => {
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
       return Object.keys(filters).every((key) => {
-        return filters[key] ? r[key].includes(filters[key]) : true;
+        // Some key values may be undefined so ".includes" would fail
+        if (r[key] !== undefined) {
+          return filters[key] ? r[key].includes(filters[key]) : true;
+        }
       });
     });
   }, [rows, filters]);

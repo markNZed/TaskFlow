@@ -9,7 +9,7 @@ import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils.mjs";
-import { xutils } from "../../shared/fsm/xutils";
+import { xutils } from "../../shared/FSM/xutils";
 import Fsm from "../Fsm";
 
 /* 

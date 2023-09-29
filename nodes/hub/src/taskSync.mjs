@@ -44,14 +44,13 @@ const taskSync_async = async (key, value) => {
   let command = taskCopy.hub.command;
 
   const coprocessorIds = Array.from(activeCoprocessors.keys());
-  const isCoprocessor = coprocessorIds.includes(sourceProcessorId);
   const skipCoProcessingCommands = ["partial"];
   const skipCoProcessing = skipCoProcessingCommands.includes(command);
   
   // Pass to the first co-processor if we should coprocess first
   // Maybe isCoprocessor is redundant given that we set hub.coprocessing
   // Update commands with sync option from the coprocessor will be skipped because of isCoprocessor
-  if (haveCoprocessor && !isCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
+  if (haveCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
     // Send to the first Coprocessor that supports the command 

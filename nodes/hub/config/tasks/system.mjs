@@ -29,6 +29,12 @@ const system = [
       }
     },
     parentName: "system",
+    environments: ["rxjscopro"],
+    config: {
+      autoStartEnvironment: "rxjscopro",
+      autoStartCoProcessor: true,
+      autoStartpriority: "0",
+    },
     type: "TaskCEP",
   }, 
   {
@@ -44,6 +50,14 @@ const system = [
     name: "config",
     parentName: "system",
   },
+
+  {
+    name: "hub",
+    parentName: "config",
+    config: {
+      label: "Hub",
+    }
+  },
   {
     initiator: true,
     name: "systemtasksconfigeditor",
@@ -51,15 +65,16 @@ const system = [
       label: "Tasks",
       local: {
         targetStore: "tasks",
+        sharedVariable: "configTreeHubconsumerTasks",
       },
       debug: {
         debugTask: false,
       },
     },
-    parentName: "config",
+    parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      tasksConfigTree: {},
+      configTreeHubconsumerTasks: {},
     },
   },
   {
@@ -69,12 +84,13 @@ const system = [
       label: "Users",
       local: {
         targetStore: "users",
+        sharedVariable: "configTreeHubconsumerUsers",
       },
     },
-    parentName: "config",
+    parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      usersConfigTree: {},
+      configTreeHubconsumerUsers: {},
     },
   },
   {
@@ -84,12 +100,13 @@ const system = [
       label: "Groups",
       local: {
         targetStore: "groups",
+        sharedVariable: "configTreeHubconsumerGroups",
       },
     },
-    parentName: "config",
+    parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      groupsConfigTree: {},
+      configTreeHubconsumerGroups: {},
     },
   },
   {
@@ -99,60 +116,191 @@ const system = [
       label: "Task Types",
       local: {
         targetStore: "tasktypes",
+        sharedVariable: "configTreeHubconsumerTasktypes",
       },
     },
-    parentName: "config",
+    parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      tasktypesConfigTree: {},
+      configTreeHubconsumerTasktypes: {},
     },
   },
   {
-    name: "processorrxjs",
+    name: "hubconsumer",
     parentName: "config",
     config: {
-      label: "Processor RxJS",
+      label: "Hub Consumer",
     }
   },
   {
     initiator: true,
-    name: "processor-rxjs-cep-types-config-editor",
+    name: "rxjs-cep-types-config-editor",
     environments: ["rxjs"],
     config: {
       label: "CEP Types",
       local: {
-        targetStore: "cep",
+        targetStore: "ceptypes",
+        sharedVariable: "configTreeHubconsumerCeptypes",
       },
     },
-    parentName: "processorrxjs",
+    parentName: "hubconsumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      rxjsCEPTypesConfigTree: {},
+      configTreeHubconsumerCeptypes: {},
     },
   },
   {
-    name: "processorrxjscopro",
+    initiator: true,
+    name: "rxjs-service-types-config-editor",
+    environments: ["rxjs"],
+    config: {
+      label: "Service Types",
+      local: {
+        targetStore: "servicetypes",
+        sharedVariable: "configTreeHubconsumerServicetypes",
+      },
+    },
+    parentName: "hubconsumer",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeHubconsumerServicetypes: {},
+    },
+  },
+  {
+    initiator: true,
+    name: "rxjs-operator-types-config-editor",
+    environments: ["rxjs"],
+    config: {
+      label: "Operator Types",
+      local: {
+        targetStore: "operatortypes",
+        sharedVariable: "configTreeHubconsumerOperatortypes",
+      },
+    },
+    parentName: "hubconsumer",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeHubconsumerOperatortypes: {},
+    },
+  },
+  {
+    name: "hubcoprocessor",
     parentName: "config",
     config: {
-      label: "Coprocessor RxJS",
+      label: "Hub Coprocessor",
     }
   },
   {
     initiator: true,
-    name: "processor-rxjscopro-cep-types-config-editor",
+    name: "hubcoprocessor-cep-types-config-editor",
     APPEND_environments: ["rxjscopro"],
     config: {
       label: "CEP Types",
       local: {
-        targetStore: "cep",
+        targetStore: "ceptypes",
+        sharedVariable: "configTreeHubcoprocessorCeptypes",
       },
     },
-    parentName: "processorrxjscopro",
+    parentName: "hubcoprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      rxjscoproCEPTypesConfigTree: {},
+      configTreeHubcoprocessorCeptypes: {},
     },
   },
+  {
+    initiator: true,
+    name: "hubcoprocessor-operator-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "Operator Types",
+      local: {
+        targetStore: "oeratortypes",
+        sharedVariable: "configTreeHubcoprocessorOperatortypes",
+      },
+    },
+    parentName: "hubcoprocessor",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeHubcoprocessorOperatortypes: {},
+    },
+  },
+  {
+    initiator: true,
+    name: "hubcoprocessor-service-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "Service Types",
+      local: {
+        targetStore: "servicetypes",
+        sharedVariable: "configTreeHubcoprocessorServicetypes",
+      },
+    },
+    parentName: "hubcoprocessor",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeHubcoprocessorServicetypes: {},
+    },
+  },
+  {
+    name: "rxjs",
+    parentName: "config",
+    config: {
+      label: "RxJS Consumer",
+    }
+  },
+  {
+    initiator: true,
+    name: "rxjs-cep-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "CEP Types",
+      local: {
+        targetStore: "ceptypes",
+        sharedVariable: "configTreeRxjsCeptypes",
+      },
+    },
+    parentName: "rxjs",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeRxjsCeptypes: {},
+    },
+  },
+  {
+    initiator: true,
+    name: "rxjs-operator-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "Operator Types",
+      local: {
+        targetStore: "oeratortypes",
+        sharedVariable: "configTreeRxjsOperatortypes",
+      },
+    },
+    parentName: "rxjs",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeRxjsOperatortypes: {},
+    },
+  },
+  {
+    initiator: true,
+    name: "rxjs-service-types-config-editor",
+    APPEND_environments: ["rxjscopro"],
+    config: {
+      label: "Service Types",
+      local: {
+        targetStore: "servicetypes",
+        sharedVariable: "configTreeRxjsServicetypes",
+      },
+    },
+    parentName: "rxjs",
+    type: "TaskNodeConfigEditor",
+    shared: {
+      configTreeRxjsServicetypes: {},
+    },
+  },
+
+
   {
     name: "menu",
     parentName: "system",
@@ -168,9 +316,17 @@ const system = [
     parentName: "system",
   },
   {
-    name: "systemconfigs",
+    name: "nodeconfigs",
+    environments: ["rxjs"],
+    //environments: ["rxjs", "rxjscopro"],
+    //environments: ["rxjs", "nodejs"],
     config: {
       background: true,
+      debug: {
+        debugTask: true,
+      },
+      autoStartEnvironment: "rxjs",
+      //autoStartEnvironments: ["rxjs", "nodejs"],
     },
     parentName: "config",
     type: "TaskNodeConfigs",

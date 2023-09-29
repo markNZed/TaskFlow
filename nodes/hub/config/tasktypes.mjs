@@ -32,24 +32,29 @@ const tasktypes = [
   },
   {
     name: "TaskNodeConfigs",
-    environments: ["rxjs"],
-    config: {
-      autoStartEnvironment: "rxjs",
-    },
     services: {
       config: {
         type: "systemConfig",
-        environments: ["rxjs"],
+        environments: ["rxjs", "rxjscopro", "nodejs"],
       },
     },
     state: {
       current: "start",
     },
     shared: {
-      tasksConfigTree: {},
-      usersConfigTree: {},
-      groupsConfigTree: {},
-      tasktypesConfigTree: {},
+      configTreeHubconsumerTasks: {},
+      configTreeHubconsumerUsers: {},
+      configTreeHubconsumerGroups: {},
+      configTreeHubconsumerTasktypes: {},
+      configTreeHubconsumerCeptypes: {},
+      configtreeHubconsumerServicetypes: {},
+      configtreeHubconsumerOperatortypes: {},
+      configTreeHubcoprocessorCeptypes: {},
+      configtreeHubcoprocessorServicetypes: {},
+      configtreeHubcoprocessorOperatortypes: {},
+      configTreeRxjsCeptypes: {},
+      configtreeRxjsServicetypes: {},
+      configtreeRxjsOperatortypes: {},
     },
   },
   {
@@ -63,7 +68,7 @@ const tasktypes = [
       legal: ["start", "loaded", "ready"],
     },
     shared: {
-      tasksConfigTree: {},
+      configTreeHubconsumerTasks: {},
     },
   },
   {
@@ -106,17 +111,7 @@ const tasktypes = [
     config: {
       autoStartEnvironment: "rxjscopro",
       autoStartCoProcessor: true,
-    },
-    state: {
-      current: "start",
-    },
-  },
-  {
-    name: "TaskCEPSystemLog",
-    environments: ["rxjscopro"],
-    config: {
-      autoStartEnvironment: "rxjscopro",
-      autoStartCoProcessor: true,
+      autoStartpriority: "1",
     },
     state: {
       current: "start",

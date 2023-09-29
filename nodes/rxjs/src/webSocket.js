@@ -9,7 +9,7 @@ import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, NODE } from "../config.mjs";
 import { register_async } from "./register.mjs";
 import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
-import { taskProcess_async } from "./taskProcess.mjs";
+import { taskProcess_async } from "./nodeTasks.mjs";
 import { utils } from "./utils.mjs";
 import { taskRelease, taskLock } from './shared/taskLock.mjs';
 
@@ -230,7 +230,11 @@ const connectWebSocket = () => {
     //utils.logTask(task, "task.processor", task.processor);
     if (command !== "pong") {
       //utils.logTask(task, "processorWs " + command)
-      utils.logTask(task, "processorWs coprocessingDone:" + task.processor.coprocessingDone + " coprocessing:" + task.processor.coprocessing);
+      let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.processor.commandDescription, "state:"];
+      if (NODE.role === "coprocessor") {
+        msgs = [...msgs, "coprocessingDone:", task.processor.coprocessingDone, " coprocessing:", task.processor.coprocessing];
+      }
+      utils.logTask(task, ...msgs);
     }
     if (command === "update") {
       let lastTask = await getActiveTask_async(task.instanceId);

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskGeneratePersona_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
   const operators = T("operators");
@@ -30,6 +30,7 @@ const TaskGeneratePersona_async = async function (wsSendTask, T, fsmHolder, CEPM
       T("state.request", {}); // clear - do we need to do this here?
       T("state.current", "generated");
       T("command", "update");
+      T("commandDescription", "Set state to generated and provide output.profile and output.summary");
       break;
     }
     case "wait":

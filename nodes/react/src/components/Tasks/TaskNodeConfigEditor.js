@@ -17,7 +17,7 @@ ToDo:
   
 */
 
-const TaskSystemTasksConfigEditor = (props) => {
+const TaskNodeConfigEditor = (props) => {
   const {
     log,
     task,
@@ -43,13 +43,13 @@ const TaskSystemTasksConfigEditor = (props) => {
     if (configTreeLastUpdatedAt !== task.meta.updatedAt.date) {
       setConfigTreeLastUpdatedAt(task.meta.updatedAt.date);
       const targetStore = task.config.local.targetStore;
-      console.log("loadTree", targetStore);
-      setconfigTreeAsObject(task.shared[targetStore + "ConfigTree"]);
+      console.log("loadTree", targetStore, "from", task.config.local.sharedVariable);
+      setconfigTreeAsObject(task.shared[task.config.local.sharedVariable]);
     }
   }
 
   useEffect(() => {
-    if (task?.meta?.modified?.shared?.tasksConfigTree) {
+    if (task?.config?.local?.sharedVariable && task?.meta?.modified?.shared && task.meta.modified.shared[task.config.local.sharedVariable]) {
       loadTree();
     }
   }, [task]);
@@ -74,6 +74,7 @@ const TaskSystemTasksConfigEditor = (props) => {
             "input": {},
             "request": task.input,
             "command": "update",
+            "commandDescription": "Requesting action " + task.input.action,
           });
         }
         break;
@@ -123,7 +124,7 @@ const TaskSystemTasksConfigEditor = (props) => {
     return obj;
   }
 
-  // task.shared.tasksConfigTree uses a hash because we cannot merge arrays and delete elements
+  // task.shared.configTreeHubconsumerTasks uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
     if (configTreeAsObject) {
       // Deep copy so we do not mess with configTreeAsObject
@@ -329,4 +330,4 @@ const TaskSystemTasksConfigEditor = (props) => {
   );
 };
 
-export default withTask(TaskSystemTasksConfigEditor);
+export default withTask(TaskNodeConfigEditor);

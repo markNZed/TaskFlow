@@ -159,6 +159,7 @@ const TaskSimulateUser = (props) => {
           // Sync state with nodejs processor
           modifyTask({ 
             "command": "update",
+            "commandDescription": "Transition to introduction state",
           });
         }
         break;
@@ -173,6 +174,7 @@ const TaskSimulateUser = (props) => {
         if (transitionTo("send")) {
           modifyTask({ 
             "command": "update",
+            "commandDescription": "Transition to send state",
           });
         }
         break;
@@ -191,6 +193,8 @@ const TaskSimulateUser = (props) => {
         if (childTask?.state?.current === "received") {
           nextState = "input";
         }
+        break;
+      default:
         break;
     }
     props.modifyState(nextState);

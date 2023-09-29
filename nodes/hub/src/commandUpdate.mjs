@@ -59,13 +59,9 @@ export async function commandUpdate_async(task) {
   }
   let processorId = task.hub.sourceProcessorId;
   // In the case of a sync we need to lock the target instanceId
-  let instanceIdToLock = task.instanceId;
   const commandArgs = task.hub.commandArgs;
-  if (commandArgs?.sync && commandArgs?.syncTask?.instanceId) {
-    instanceIdToLock = commandArgs.syncTask.instanceId;
-  }
   //const localTaskRelease = await taskLock(task.instanceId, "commandUpdate_async");
-  utils.logTask(task, "commandUpdate_async lock locked instanceId:", instanceIdToLock, "in messageId:", task?.meta?.messageId);
+  utils.logTask(task, "commandUpdate_async messageId:", task?.meta?.messageId);
   try {
     utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
     let activeTask = await getActiveTask_async(task.instanceId)

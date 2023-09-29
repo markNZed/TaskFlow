@@ -10,11 +10,12 @@ import { NODE } from "../config.mjs";
 import { taskLock } from './shared/taskLock.mjs';
 
 export async function commandUpdate_async(wsSendTask, task) { 
-  utils.logTask(task, "commandUpdate_async task.instanceId:", task.instanceId, "task.commandArgs:", task.commandArgs);
+  utils.logTask(task, "commandUpdate_async instanceId:", task.instanceId, "commandArgs:", task.commandArgs, "commandDescription:", task.commandDescription);
   //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
   let mergedTask = {}
   // Deep copy task.processor to avoif changes to task that was passed in
   const commandArgs = task.commandArgs || {};
+  const commandDescription = task.commandDescription || "";
   const sync = commandArgs.sync;
   const syncTask = commandArgs.syncTask;
   const syncInstanceId = commandArgs.instanceId
@@ -23,7 +24,7 @@ export async function commandUpdate_async(wsSendTask, task) {
       console.error("Missing syncInstanceId", task);
       throw new Error("Missing syncInstanceId");
     }
-    await taskLock(syncInstanceId, "commandUpdate_async");
+    await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
     mergedTask["instanceId"] = syncInstanceId;
     mergedTask["command"] = "update";
     mergedTask["commandArgs"] = {
@@ -36,7 +37,7 @@ export async function commandUpdate_async(wsSendTask, task) {
     mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
-    await taskLock(task.instanceId, "commandUpdate_async");
+    await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
     const lastTask = await getActiveTask_async(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);
@@ -52,13 +53,9 @@ export async function commandUpdate_async(wsSendTask, task) {
   mergedTask.processor["initiatingProcessorId"] = NODE.id; //"coprocessor";
   try {
     //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
+    mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
     mergedTask.meta["messageId"] = utils.nanoid8();
-    if (NODE.role === "coprocessor") {
-      mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
-      utils.logTask(task, "Creating new messageId from coprocessor", mergedTask.meta.messageId);
-    } else {
-      utils.logTask(task, "Creating new messageId from processor", mergedTask.meta.messageId);
-    }
+    utils.logTask(task, "Creating new messageId", mergedTask.meta.messageId, "prevMessageId", mergedTask.meta.prevMessageId);
     //utils.logTask(task, "wsSendTask");
     wsSendTask(mergedTask);
   } catch (error) {

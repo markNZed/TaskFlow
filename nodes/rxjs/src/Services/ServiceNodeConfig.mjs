@@ -9,7 +9,7 @@ import { utils } from "#src/utils";
 
 let promiseResolvers = new Map();
 
-// Not dealng with race conditions
+// Not dealing with race conditions
 
 // This is a hack, we would be better to use events or rxjs observables etc
 
@@ -368,6 +368,7 @@ export const buildTree_async = async (config, storeName) => {
 
     // Add the node to the nodesById object
     nodesById[id] = newNode;
+    //console.log("buildTree_async adding", id, newNode);
   }
   
   // Second pass: Establish parent-child relationships

@@ -113,7 +113,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (command !== "pong") {
         //console.log("App webSocket command:", command, "commandArgs:", commandArgs, "task:", message.task);
         if (command !== "partial") {
-          console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, "state:", task?.state?.current, "task:", utils.deepClone(task));
+          console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, 
+          "commandDescription:", task.processor.commandDescription, "state:", task?.state?.current, "task:", utils.deepClone(task));
         }
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here

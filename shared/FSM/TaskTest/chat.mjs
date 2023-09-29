@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { actionThenQuery } from '../xutils.mjs';
 
 // eslint-disable-next-line no-unused-vars
-export function getFsm(initialTask) {
+export function getFSM(initialTask) {
   return {
     initial: 'init',
     on: {

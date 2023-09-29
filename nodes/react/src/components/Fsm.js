@@ -28,8 +28,8 @@ function Fsm(props) {
   };
 
   const devTools = task.config?.fsm?.devTools ? true : false;
-  // We don't move useMachine into HoC because we want to wait on the creation of fsmMachine
-  const [fsmState, fsmSend, fsmService] = useMachine(props.fsmMachine, { actions, guards, devTools });
+  // We don't move useMachine into HoC because we want to wait on the creation of FSMachine
+  const [fsmState, fsmSend, fsmService] = useMachine(props.FSMachine, { actions, guards, devTools });
 
   // Provide fsmState, fsmSend, fsmService to the HoC through useShareFsm context
   useSynchronizeVariable(setFsmState, fsmState);

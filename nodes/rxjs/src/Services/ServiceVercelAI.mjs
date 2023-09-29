@@ -317,6 +317,7 @@ async function openaigpt_async(params) {
                     T("state.current", "configFunctionRequest");
                     T("command", "update");
                     T("commandArgs", {lockBypass: true});
+                    T("commandDescription", `Request action ${name}`);
                     const updatedTask = await wsSendTask(T(), "configFunctionResponse");
                     //console.log(`${name} updatedTask`, updatedTask);
                     newMessages = createFunctionCallMessages(updatedTask?.response?.functionResult);

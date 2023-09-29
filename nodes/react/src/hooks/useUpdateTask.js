@@ -22,18 +22,20 @@ const useUpdateTask = (task, setTask) => {
   useEffect(() => {
     const command = task?.command;
     const commandArgs = task?.commandArgs;
+    const commandDescription = task?.commandDescription;
     if (task && command === "update" && !updateTaskError) {
       utils.log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = utils.deepClone(task); // deep copy
-          const updating = { "command": null, "commandArgs": null };
+          const updating = { "command": null, "commandArgs": null, "commandDescription": null };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
           if (commandArgs?.sync) {
             snapshot = {};
             snapshot["command"] = command;
             snapshot["commandArgs"] = commandArgs;
+            snapshot["commandDescription"] = commandDescription;
             let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
             snapshot["instanceId"] = instanceId;
             snapshot["meta"] = {};

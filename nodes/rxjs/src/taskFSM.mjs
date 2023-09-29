@@ -5,47 +5,47 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { createMachine, interpret } from 'xstate';
 import { utils } from "./utils.mjs";
-import { xutils } from './shared/fsm/xutils.mjs';
+import { xutils } from './shared/FSM/xutils.mjs';
 
-export const getFsmHolder_async  = async (task, activeFsm) => {
-  const fsmHolder = {
+export const getFSMHolder_async  = async (task, activeFsm) => {
+  const FSMHolder = {
     fsm: {}, 
     machine: null, 
     send: () => {console.error('Send function should be replaced.');}
   };
   if (activeFsm) {
-    fsmHolder["fsm"] = activeFsm;
+    FSMHolder["fsm"] = activeFsm;
   } else {
-    const fsmConfig = await loadFsmModule_async(task);
+    const fsmConfig = await loadFSMModule_async(task);
     if (fsmConfig && task.config?.fsm?.useMachine) {
       //console.log("Before creating machine", fsmConfig);
-      fsmHolder.machine = createMachine(fsmConfig);
+      FSMHolder.machine = createMachine(fsmConfig);
     }
   }
-  return fsmHolder;
+  return FSMHolder;
 }
 
-const loadFsmModule_async = async (task) => {
+const loadFSMModule_async = async (task) => {
   let importPath;
   let name;
   if (task?.fsm) {
-    //console.log("loadFsmModule_async returning task.fsm");
+    //console.log("loadFSMModule_async returning task.fsm");
     return task.fsm;
   } else if (task?.config?.fsm?.name) {
     importPath = `${task.type}/${task.config.fsm.name}.mjs`;
     name = task.config.fsm.name;
-    //console.log("loadFsmModule_async task.config.fsm.name", task.config.fsm.name);
+    //console.log("loadFSMModule_async task.config.fsm.name", task.config.fsm.name);
   } else if (task.type) {
     importPath = `${task.type}/default.mjs`;
     name = 'default';
-    //console.log("loadFsmModule_async default");
+    //console.log("loadFSMModule_async default");
   } else {
     console.log("No FSM");
     return null;
   }
   try {
     const module = await import('../fsm/' + importPath);
-    let fsmConfig = module.getFsm(task);
+    let fsmConfig = module.getFSM(task);
     const fsmDefaults = {
       predictableActionArguments: true,
       preserveActionOrder: true,
@@ -71,8 +71,8 @@ const loadFsmModule_async = async (task) => {
   }
 }
 
-export function updateStates(T, fsmHolder) {
-  const fsmState = fsmHolder.fsm.getSnapshot().value;
+export function updateStates(T, FSMHolder) {
+  const fsmState = FSMHolder.fsm.getSnapshot().value;
   if (fsmState && fsmState !== T("state.current")) {
     console.log("updateStates from", T("state.current"), "to", fsmState);
     T("state.last", T("state.current"));
@@ -81,10 +81,10 @@ export function updateStates(T, fsmHolder) {
   }
 }
 
-export function initiateFsm(T, fsmHolder, actions = {}, guards = {}, singleStep = false) {
+export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep = false) {
 
-  let fsm = fsmHolder.fsm;
-  let machine = fsmHolder.machine;
+  let fsm = FSMHolder.fsm;
+  let machine = FSMHolder.machine;
 
   if (Object.keys(fsm).length === 0) {
     // Automatically create missing guards (otherwise we get errors for guards running on other processors)
@@ -115,16 +115,16 @@ export function initiateFsm(T, fsmHolder, actions = {}, guards = {}, singleStep 
       .onTransition((state) => {
         console.log("FSM transition", state.value, "scheduled actions:", state.actions);
       });
-    fsmHolder.send = fsm.send; // So we can use send from within actions
+    FSMHolder.send = fsm.send; // So we can use send from within actions
     // fsm.start(T("state.current")); // Does not pick up the entry action
     fsm.start();
-    fsmHolder.fsm = fsm;
+    FSMHolder.fsm = fsm;
   } else {
     const fsmState = fsm.getSnapshot().value;
     if (fsmState && fsmState !== T("state.current")) {
       fsm.send("GOTO" + T("state.current"));
     }
-    fsmHolder.send = fsm.send;
+    FSMHolder.send = fsm.send;
   }
 
   if (singleStep) {

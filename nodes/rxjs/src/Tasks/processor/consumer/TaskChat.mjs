@@ -57,7 +57,7 @@ function checkTaskCache (T) {
 }
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -86,8 +86,9 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
       T("state.current", "receiving");
       T("output.sending", false);
       T("commandArgs.lockBypass", true);
-      // Update the task which has the effect of setting the state to receiving on ohter Processors
+      // Update the task which has the effect of setting the state to receiving on other Processors
       T("command", "update");
+      T("commandDescription", "Transition other Processors to receiving for stremaing response.");
       wsSendTask(T());
     // We could wait for the hub to synchronize and implement the receiving state
     //case "receiving":
@@ -121,6 +122,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
       T("state.current", "received");
       T("commandArgs.lockBypass", true);
       T("command", "update");
+      T("commandDescription", "Transition received with final LLM response.newMessages");
       break;
     }
     default:

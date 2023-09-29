@@ -21,37 +21,41 @@ var OperatorsMap = new Map();
 var CEPMatchMap = new Map();
 var CEPFunctionMap = new Map();
 
-
 mongoose.connect(NODE.storage.mongoUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 });
 
-const db = mongoose.connection;
-db.on('error', error => console.error('connection error:', error));
-db.once('open', () => {
-  console.log("Connected to MongoDB!");
-});
-
-if (NODE.storage.emptyAllDb) {
-  db.once('open', async () => {
-    try {
-        const collections = Object.keys(mongoose.connection.collections);
-        for (const collectionName of collections) {
-            const collection = mongoose.connection.collections[collectionName];
-            await collection.drop();
-            console.log(`Dropped ${collectionName} collection successfully!`);
+const mongoConnection = mongoose.connection;
+mongoConnection.on('connecting', () => console.log('Connecting to MongoDB...'));
+mongoConnection.on('connected', () => console.log('Connected to MongoDB'));
+mongoConnection.on('disconnecting', () => console.log('Disconnecting from MongoDB...'));
+mongoConnection.on('disconnected', () => console.log('Disconnected from MongoDB'));
+mongoConnection.on('error', (err) => console.error('mongoConnection Error:', err));
+mongoConnection.once('open', () => {
+  console.log("MongoDB open " + NODE.storage.mongoUrl);
+  if (NODE.storage.emptyAllDB && NODE.storage.mongoMaster === NODE.name) {
+    (async () => {
+      try {
+        console.log('Connected to database:', mongoConnection.db.databaseName);
+        const collections = await mongoConnection.db.listCollections().toArray();
+        console.log(`Dropping ${collections.length} collections...`);
+        for (const { name } of collections) {
+          await mongoConnection.db.collection(name).drop();
+          console.log(`Dropped ${name} collection successfully!`);
         }
-    } catch (err) {
+      } catch (err) {
         if (err.message !== 'ns not found') { // Ignore if the collection is not found
-            console.error('Error dropping collection:', err);
+          console.error('Error dropping collection:', err);
         }
-    }
-  });
-}
+      }
+    })();
+  }
+});
 
+// Do NOT use ':' as a character in the prefix to KeyV because the Redis iterator does not like this
 const coprocessorPrefix = NODE.role === "coprocessor" ? "copro:" : "";
-const keyvPrefix = NODE.id + ":" + coprocessorPrefix;
+const keyvPrefix = NODE.id + "-" + coprocessorPrefix;
 
 // Schema:
 //   Key: hash
@@ -103,7 +107,7 @@ async function setActiveTask_async(task) {
   ]);
 }
 
-if (NODE.storage.emptyAllDb) {
+if (NODE.storage.emptyAllDB) {
   let toClear = [
     cacheStore_async.clear(),
     taskDataStore_async.clear(),
@@ -151,7 +155,7 @@ export {
   taskDataStore_async,
   connections,
   activeTaskFsm,
-  db,
+  mongoConnection,
   tasksStore_async,
   usersStore_async,
   groupsStore_async,

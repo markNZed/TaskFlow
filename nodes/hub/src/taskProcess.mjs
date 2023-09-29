@@ -45,6 +45,10 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   if (task.processor.commandArgs) {
     commandArgs = utils.deepClone(task.processor.commandArgs);
   }
+  let commandDescription = "";
+  if (task.processor.commandDescription) {
+    commandDescription = task.processor.commandDescription;
+  }
   task.processor.command = null;
   task.processor.commandArgs = null;
   task.processor.coprocessing = null;
@@ -75,6 +79,7 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   task.hub = {
     command,
     commandArgs,
+    commandDescription,
     sourceProcessorId: id,
     initiatingProcessorId,
     requestId,
@@ -233,7 +238,7 @@ async function taskProcess_async(task, req) {
     if (!task.processor) {
       throw new Error("Missing task.processor in /hub/api/task");
     }
-    utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " state:" + task?.state?.current);
+    utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " commandDescription:" + task.processor.commandDescription + " state:" + task?.state?.current);
     let activeTask = {};
 
     utils.debugTask(task);

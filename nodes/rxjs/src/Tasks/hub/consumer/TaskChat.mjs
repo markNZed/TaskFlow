@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
-const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   //console.log("TaskChat_async services", services);
 
@@ -38,6 +38,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
           // Experiment with this after we have the functions working
           T("processor.statesSupported", statesSupported);
           T("command", "update");
+          T("commandDescription", `Set processor.statesSupported to ${statesSupported}`);
           utils.logTask(T(), "statesSupported:", statesSupported);
         }
       }
@@ -105,6 +106,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
             "state.current": "configFunctionResponse",
             "commandArgs": {lockBypass: true},
             "command": "update",
+            "commandDescription": `Transition FSM to configFunctionResponse`,
           };
           T(taskUpdate);
         } catch (error) {
@@ -114,6 +116,7 @@ const TaskChat_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
             "state.current": "configFunctionResponse",
             "commandArgs": {lockBypass: true},
             "command": "update",
+            "commandDescription": `Error returned from function call`,
           };
           T(taskUpdate);
         }

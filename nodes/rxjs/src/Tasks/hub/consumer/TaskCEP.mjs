@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskCEP_async = async function (wsSendTask, T, fsmHolder, CEPMatchMap) {
+const TaskCEP_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   // A placeholder to allow for CEP to be installed without a Task Function
   return null;
