@@ -69,10 +69,6 @@ const instancesStore_async = newKeyV(redisClient, keyvPrefix + "instances");
 //   Key: instanceId
 //   Value: task object
 const activeTasksStore_async = newKeyV(redisClient, keyvPrefix + "activeTasks");
-// Schema:
-//   Key: task.id
-//   Value: data object
-const taskDataStore_async = newKeyV(redisClient, keyvPrefix + "taskData");
 
 const cepTypes_async = newKeyV(redisClient, keyvPrefix + "cepTypes");
 
@@ -110,7 +106,6 @@ async function setActiveTask_async(task) {
 if (NODE.storage.emptyAllDB) {
   let toClear = [
     cacheStore_async.clear(),
-    taskDataStore_async.clear(),
     cepTypes_async.clear(),
     serviceTypes_async.clear(),
     operatorTypes_async.clear(),
@@ -152,7 +147,6 @@ for (const [key, value] of Object.entries(operatorTypes)) {
 
 export {
   cacheStore_async,
-  taskDataStore_async,
   connections,
   activeTaskFsm,
   mongoConnection,

@@ -115,6 +115,7 @@ NODE["storage"] = {
   mongoUrl: MONGO_URL,
   emptyAllDB: EMPTY_ALL_DB,
   mongoMaster: "hub-coprocessor",
+  redisMaster: "hub-coprocessor",
 };
 NODE["id"] = nodeId;
 if (process.env.WS_PORT) {
