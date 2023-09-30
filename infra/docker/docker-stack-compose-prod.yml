@@ -14,13 +14,13 @@ services:
       - taskflow-hub
     networks:
       - web-proxy
-  taskflow-rxjs:
+  taskflow-processor-consumer:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-rxjs.sh"]
+    entrypoint: ["/entrypoint-processor-consumer.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:

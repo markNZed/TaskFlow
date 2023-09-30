@@ -78,7 +78,7 @@ switch (NODE_NAME) {
       wsPort: 5003,
     }
     break;
-  case "rxjs":
+  case "processor-consumer":
     NODE = {
       type: "processor",
       role: "consumer",

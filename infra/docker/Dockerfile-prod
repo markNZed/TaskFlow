@@ -22,7 +22,7 @@ COPY entrypoint-hub-consumer.sh /entrypoint-hub-consumer.sh
 RUN chmod 755 /entrypoint-hub-consumer.sh
 COPY entrypoint-hub-coprocessor.sh /entrypoint-hub-coprocessor.sh
 RUN chmod 755 /entrypoint-hub-coprocessor.sh
-COPY entrypoint-rxjs.sh /entrypoint-rxjs.sh
-RUN chmod 755 /entrypoint-rxjs.sh
+COPY entrypoint-processor-consumer.sh /entrypoint-processor-consumer.sh
+RUN chmod 755 /entrypoint-processor-consumer.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

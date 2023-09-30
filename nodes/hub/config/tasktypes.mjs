@@ -252,7 +252,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "rxjs-processor-consumer", "rxjs-hub-consumer", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
+    environments: ["react", "rxjs-processor-consumer", "rxjs-hub-consumer", "rxjs-hub-coprocessor"], // Added processor-consumer & rxjs-hub-coprocessor for testing of XState FSM
     config: {
       local: {
         instruction: "",

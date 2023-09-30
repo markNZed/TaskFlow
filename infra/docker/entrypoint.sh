@@ -24,11 +24,11 @@ screen -S app -p hub-coprocessor -X stuff "touch hub-coprocessor.log && chmod 44
 screen -S app -p hub-coprocessor -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 hub-coprocessor.log; NODE_NAME=hub-coprocessor DEBUG_PORT=0.0.0.0:9232 npm run debug 2>&1 | tee -a hub-coprocessor.log\n"
 
 # create a new window within the "app" screen
-screen -S app -X screen -t rxjs bash
-screen -S app -p rxjs -X stuff "cd /app/nodes/rxjs\n"
-# We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-screen -S app -p rxjs -X stuff "touch rxjs.log && chmod 444 rxjs.log\n"
-screen -S app -p rxjs -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjs.log; NODE_NAME=rxjs DEBUG_PORT=0.0.0.0:9230 npm run debug 2>&1 | tee -a rxjs.log\n"
+screen -S app -X screen -t processor-consumer bash
+screen -S app -p processor-consumer -X stuff "cd /app/nodes/rxjs\n"
+# We do not npm install here because we can assume that processor-consumer is doing that but wait for it to finish
+screen -S app -p processor-consumer -X stuff "touch processor-consumer.log && chmod 444 processor-consumer.log\n"
+screen -S app -p processor-consumer -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 processor-consumer.log; NODE_NAME=processor-consumer DEBUG_PORT=0.0.0.0:9230 npm run debug 2>&1 | tee -a rxjs.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t shared bash
@@ -75,11 +75,11 @@ if [[ "$TASKFLOW_DEV" == "true" ]]; then
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
-    screen -S meta -p rxjs -X stuff "cd /meta/nodes/rxjs\n"
-    screen -S meta -p rxjs -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
-    # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-    screen -S meta -p rxjs -X stuff "touch hub-coprocessor.log && chmod 444 hub-coprocessor.log\n"
-    screen -S meta -p rxjs -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjs.log; NODE_NAME=rxjs npm run 2>&1 | tee -a rxjs.log\n"
+    screen -S meta -p processor-consumer -X stuff "cd /meta/nodes/rxjs\n"
+    screen -S meta -p processor-consumer -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
+    # We do not npm install here because we can assume that processor-consumer is doing that but wait for it to finish
+    screen -S meta -p processor-consumer -X stuff "touch hub-coprocessor.log && chmod 444 hub-coprocessor.log\n"
+    screen -S meta -p processor-consumer -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 processor-consumer.log; NODE_NAME=processor-consumer npm run 2>&1 | tee -a processor-consumer.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen -t shared bash
