@@ -20,8 +20,8 @@ COPY entrypoint-hub.sh /entrypoint-hub.sh
 RUN chmod 755 /entrypoint-hub.sh
 COPY entrypoint-rxjs.sh /entrypoint-rxjs.sh
 RUN chmod 755 /entrypoint-rxjs.sh
-COPY entrypoint-rxjscopro.sh /entrypoint-rxjscopro.sh
-RUN chmod 755 /entrypoint-rxjscopro.sh
+COPY entrypoint-rxjs-hub-coprocessor.sh /entrypoint-rxjs-hub-coprocessor.sh
+RUN chmod 755 /entrypoint-rxjs-hub-coprocessor.sh
 COPY entrypoint-rxjsnodejs.sh /entrypoint-rxjsnodejs.sh
 RUN chmod 755 /entrypoint-rxjsnodejs.sh
 

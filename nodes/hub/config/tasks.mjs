@@ -191,7 +191,12 @@ const tasks = [
     name: "start",
     parentName: "zeroshot",
     type: "TaskChat",
-  },
+    config: {
+      debug: {
+        debugTask: true,
+      },
+    },
+},
 
   {
     config: {
@@ -256,6 +261,9 @@ const tasks = [
     name: "testing",
     initiator: true, // Needed to see this, maybe because it had no children?
     config: {
+      debug: {
+        debugTask: true,
+      },
       local: {
         timeout: 10000, // 10 seconds
       },
@@ -293,7 +301,7 @@ const tasks = [
       servicestub: {
         type: "servicestub",
         match: "id-root.user.conversation.zeroshot.start",
-        environments: ["rxjscopro"],
+        environments: ["rxjs-hub-coprocessor"],
         args: {
           type: "openaigpt.chatgptzeroshot",
           key: "API", 

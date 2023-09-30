@@ -11,16 +11,16 @@ const tasktypes = [
   },
   {
     name: "TaskCEPServiceStub",
-    environments: ["rxjscopro"],
+    environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjscopro",
+      autoStartEnvironment: "rxjs-hub-coprocessor",
     },
   },
   {
     name: "TaskCEPFamilyTree",
-    environments: ["rxjscopro"],
+    environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjscopro",
+      autoStartEnvironment: "rxjs-hub-coprocessor",
     },
   },
   {
@@ -79,7 +79,7 @@ const tasktypes = [
     ceps: {
       familytree: {
         type: "familytree",
-        environments: ["rxjscopro"],
+        environments: ["rxjs-hub-coprocessor"],
         match: "familyId",
       },
     },
@@ -90,9 +90,9 @@ const tasktypes = [
   },
   {
     name: "TaskCEPShared",
-    environments: ["rxjscopro"],
+    environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjscopro",
+      autoStartEnvironment: "rxjs-hub-coprocessor",
       autoStartCoProcessor: true,
       autoStartpriority: "1",
     },
@@ -102,7 +102,7 @@ const tasktypes = [
   },
   {
     name: "TaskSystemLogViewer",
-    environments: ["react", "rxjscopro"],
+    environments: ["react", "rxjs-hub-coprocessor"],
     config: {
       rowDetailHeight: 500,
       pageSize: 100,
@@ -252,7 +252,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "nodejs", "rxjs", "rxjscopro"], // Added rxjs & rxjscopro for testing of XState FSM
+    environments: ["react", "nodejs", "rxjs", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
     config: {
       local: {
         instruction: "",

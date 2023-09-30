@@ -1,1 +1,1 @@
-rxjscopro-7956464f-9571-42af-a19b-de38f7f544dd
+rxjs-hub-coprocessor-7956464f-9571-42af-a19b-de38f7f544dd

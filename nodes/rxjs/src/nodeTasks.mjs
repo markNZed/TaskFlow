@@ -45,7 +45,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
       if (T("processor.command") === "init") {
-        let servicesConfig = T("services");
+        let servicesConfig = utils.deepClone(T("services"));
         if (servicesConfig) {
           if (servicesConfig["*"]) {
             for await (const [key, value] of serviceTypes_async.iterator()) {
@@ -71,7 +71,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
               //console.log("type", type);
               if (await serviceTypes_async.has(type)) {
                 services[key] = await serviceTypes_async.get(type);
-                services[key] = utils.deepMerge(services[key], T(`services.${key}`));
+                services[key] = utils.deepMerge(services[key], servicesConfig[key]);
                 //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                 const serviceName = services[key]["moduleName"];
                 if (await serviceExists_async(serviceName)) {
@@ -93,7 +93,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           ServicesMap.set(T("instanceId"), T("services"));
         }
         let operators = T("operators") || {};
-        const operatorsConfig = T("operators");
+        let operatorsConfig = utils.deepClone(T("operators"));
         if (operatorsConfig) {
           if (operatorsConfig["*"]) {
             for await (const [key, value] of operatorTypes_async.iterator()) {
@@ -116,7 +116,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 const type = operatorsConfig[key].type;
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
-                  operators[key] = utils.deepMerge(operators[key], T(`operators.${key}`));
+                  operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"];
                   if (await operatorExists_async(operatorName)) {
@@ -167,7 +167,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         // Create two functions
         let ceps = {};
         if (T("ceps")) {
-          const cepsConfig = T("ceps");
+          let cepsConfig = utils.deepClone(T("ceps"));
           //console.log("cepsConfig", JSON.stringify(cepsConfig))
           if (cepsConfig) {
             if (cepsConfig["*"]) {
@@ -191,7 +191,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                   //console.log("type", type);
                   if (await cepTypes_async.has(type)) {
                     ceps[key] = await cepTypes_async.get(type);
-                    ceps[key] = utils.deepMerge(ceps[key], T(`ceps.${key}`));
+                    ceps[key] = utils.deepMerge(ceps[key], cepsConfig[key]);
                     //console.log("ceps[key]", key, JSON.stringify(ceps[key], null, 2));
                     const cepName = ceps[key]["moduleName"];
                     if (await CEPExists_async(cepName)) {

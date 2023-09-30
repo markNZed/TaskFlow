@@ -74,7 +74,7 @@ switch (NODE_NAME) {
       type: "hub",
       role: "coprocessor",
       processing: ["stream"],
-      environment: "rxjscopro",
+      environment: "rxjs-hub-coprocessor",
       wsPort: 5003,
     }
     break;
@@ -104,7 +104,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + NODE.environment || path.join(__dirname, './config/' + NODE.environment);
+NODE["configDir"] = process.env.CONFIG_DIR + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["app"] = {
   label: appLabel,
   name: appName,

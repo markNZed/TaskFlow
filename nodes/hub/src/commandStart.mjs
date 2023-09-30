@@ -29,6 +29,14 @@ export async function commandStart_async(task) {
         user: {id: task.user.id},
       };
     }
+    if (task.hub.commandDescription) {
+      initTask["commandDescription"] = task.hub.commandDescription;
+    }
+    initTask["meta"] = initTask.meta || {};
+    if (task?.meta?.messageId) {
+      initTask.meta["prevMessageId"] = task.meta.messageId;
+    } 
+    initTask.meta["messageId"] = utils.nanoid8();
     utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (haveCoprocessor) {

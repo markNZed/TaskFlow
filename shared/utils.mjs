@@ -933,7 +933,8 @@ const utils = {
       //delete taskCopy.ceps;
     }
     taskCopy.processor["id"] = processorId;
-    if (command === "start" || command === "partial" || commandArgs?.sync) {
+    // The coprocessor processes command init but th task has not been stored yet so diff cannot be calculated
+    if (command === "start" || command === "partial" || commandArgs?.sync || command === "init") {
       return taskCopy;
     }
     // This assumes taskCopy is not a partial object e.g. in sync
@@ -1209,9 +1210,9 @@ const utils = {
     }
 
     // This is an assertion that provides debug info
-    if (task.processor && task.processor.id === "rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.processor.isCoprocessor === false) {
+    if (task.processor && task.processor.id === "rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.processor.isCoprocessor === false) {
       console.log("Details:", task.processors, task.processor);
-      throw new Error("task.processor.id === 'rxjscopro-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
+      throw new Error("task.processor.id === 'rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
     }
 
     if (task?.shared?.configTreeHubconsumerTasks?.children) {
@@ -1234,17 +1235,18 @@ const utils = {
       //logParts.push("task.output.CEPCount", task.output.CEPCount);
     }
     if (task?.processor?.coprocessing) {
-      logParts.push("task.processor.coprocessing", task.processor.coprocessing);
+      //logParts.push("task.processor.coprocessing", task.processor.coprocessing);
     }
     if (task?.hub?.coprocessing) {
-      logParts.push("task.hub.coprocessing", task.hub.coprocessing);
+      //logParts.push("task.hub.coprocessing", task.hub.coprocessing);
     }
+    //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));
   },
 
-  assert: function(condition, message = 'Assertion failed') {
-    assert(condition, message);
+  assert: function(condition, msg = 'Assertion failed') {
+    assert(condition, msg);
   },
 
 };

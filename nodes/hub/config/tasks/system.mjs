@@ -12,7 +12,7 @@ const system = [
         type: "shared",
         isRegex: true,
         match: ".*instance.*",
-        environments: ["rxjscopro"],
+        environments: ["rxjs-hub-coprocessor"],
       }
     },
     parentName: "system",
@@ -25,13 +25,13 @@ const system = [
         type: "systemlog",
         isRegex: true,
         match: ".*instance.*",
-        environments: ["rxjscopro"],
+        environments: ["rxjs-hub-coprocessor"],
       }
     },
     parentName: "system",
-    environments: ["rxjscopro"],
+    environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjscopro",
+      autoStartEnvironment: "rxjs-hub-coprocessor",
       autoStartCoProcessor: true,
       autoStartpriority: "0",
     },
@@ -196,7 +196,7 @@ const system = [
   {
     initiator: true,
     name: "hubcoprocessor-cep-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "CEP Types",
       local: {
@@ -213,7 +213,7 @@ const system = [
   {
     initiator: true,
     name: "hubcoprocessor-operator-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "Operator Types",
       local: {
@@ -230,7 +230,7 @@ const system = [
   {
     initiator: true,
     name: "hubcoprocessor-service-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "Service Types",
       local: {
@@ -343,14 +343,14 @@ const system = [
     },
   },
   {
-    name: "rxjscopro-nodeconfigs",
-    environments: ["rxjscopro"],
+    name: "rxjs-hub-coprocessor-nodeconfigs",
+    environments: ["rxjs-hub-coprocessor"],
     config: {
       background: true,
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "rxjscopro",
+      autoStartEnvironment: "rxjs-hub-coprocessor",
     },
     parentName: "config",
     type: "TaskNodeConfigs",
