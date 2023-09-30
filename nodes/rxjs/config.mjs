@@ -65,7 +65,7 @@ switch (NODE_NAME) {
       type: "hub",
       role: "consumer",
       processing: ["batch", "stream"],
-      environment: "rxjs",
+      environment: "rxjs-hub-consumer",
       wsPort: 5002,
     }
     break;

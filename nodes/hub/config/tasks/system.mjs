@@ -61,7 +61,7 @@ const system = [
   {
     initiator: true,
     name: "systemtasksconfigeditor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "Tasks",
       local: {
@@ -81,7 +81,7 @@ const system = [
   {
     initiator: true,
     name: "systemusersconfigeditor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "Users",
       local: {
@@ -114,7 +114,7 @@ const system = [
   {
     initiator: true,
     name: "systemtasktypesconfigeditor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "Task Types",
       local: {
@@ -138,7 +138,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-cep-types-config-editor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "CEP Types",
       local: {
@@ -155,7 +155,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-service-types-config-editor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "Service Types",
       local: {
@@ -172,7 +172,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-operator-types-config-editor",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     config: {
       label: "Operator Types",
       local: {
@@ -245,7 +245,7 @@ const system = [
     },
   },
   {
-    name: "rxjs",
+    name: "rxjs-hub-consumer",
     parentName: "config",
     config: {
       label: "RxJS Consumer",
@@ -262,7 +262,7 @@ const system = [
         sharedVariable: "configTreeRxjsCeptypes",
       },
     },
-    parentName: "rxjs",
+    parentName: "rxjs-hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeRxjsCeptypes: {},
@@ -279,7 +279,7 @@ const system = [
         sharedVariable: "configTreeRxjsOperatortypes",
       },
     },
-    parentName: "rxjs",
+    parentName: "rxjs-hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeRxjsOperatortypes: {},
@@ -296,7 +296,7 @@ const system = [
         sharedVariable: "configTreeRxjsServicetypes",
       },
     },
-    parentName: "rxjs",
+    parentName: "rxjs-hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeRxjsServicetypes: {},
@@ -321,13 +321,13 @@ const system = [
 
   {
     name: "rxjs-nodeconfigs",
-    environments: ["rxjs"],
+    environments: ["rxjs-hub-consumer"],
     config: {
       background: true,
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "rxjs",
+      autoStartEnvironment: "rxjs-hub-consumer",
     },
     parentName: "config",
     type: "TaskNodeConfigs",

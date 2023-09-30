@@ -6,6 +6,12 @@ Menu CEP Types not working
       rxjs -> rxjs-hub-consumer
       rxjscopro -> rxjs-hub-coprocessor
       nodejs -> rxjs-processor-consumer
+    rename general
+      hubconsumer -> hub-consumer
+      hubcoprocessor -> hub-coprocessor
+    rename nodes
+      rxjs -> 
+
 Mongo master to empty the DB
  Same thing for Redis? 
 Demo of modifying systemMessage from another Task

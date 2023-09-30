@@ -18,11 +18,11 @@ COPY entrypoint-react.sh /entrypoint-react.sh
 RUN chmod 755 /entrypoint-react.sh
 COPY entrypoint-hub.sh /entrypoint-hub.sh
 RUN chmod 755 /entrypoint-hub.sh
+COPY entrypoint-hubconsumer.sh /entrypoint-hubconsumer.sh
+RUN chmod 755 /entrypoint-hubconsumer.sh
+COPY entrypoint-hubcoprocessor.sh /entrypoint-hubcoprocessor.sh
+RUN chmod 755 /entrypoint-hubcoprocessor.sh
 COPY entrypoint-rxjs.sh /entrypoint-rxjs.sh
 RUN chmod 755 /entrypoint-rxjs.sh
-COPY entrypoint-rxjs-hub-coprocessor.sh /entrypoint-rxjs-hub-coprocessor.sh
-RUN chmod 755 /entrypoint-rxjs-hub-coprocessor.sh
-COPY entrypoint-rxjsnodejs.sh /entrypoint-rxjsnodejs.sh
-RUN chmod 755 /entrypoint-rxjsnodejs.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

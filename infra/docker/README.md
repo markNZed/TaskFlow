@@ -35,13 +35,13 @@ On the server running the Redis Docker container I ran `sysctl vm.overcommit_mem
 Overview of the ports:
 
 * 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
-* 5000 RxJS NodeJS Processor
+* 5000 RxJS Processor Consumer
 * 5001 Hub
-* 5002 RxJS Processor
+* 5002 RxJS Hub Consumer
 * 5003 RxJS Hub Coprocessor
-* 9229 Hub node debug
-* 9230 RxJS NodeJS Processor node debug
-* 9231 RxJS Processor node debug
+* 9229 Hub debug
+* 9230 RxJS Processor Consumer debug
+* 9231 RxJS Hub Consumer debug
 * 9232 RxJS Hub Coprocessor node debug
 * 27017 MongoDB (on mongodb container)
 * 6379 Redis (on redis-stack-svc container)
@@ -86,8 +86,8 @@ Assumes there is a reverse proxy server, to listen on a single port and forward 
 
 If using Cloudflare remember to purge the cache after updating!
 
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hubconsumer") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hubcoprocessor") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs") /bin/bash
-docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hub-coprocessor") /bin/bash
-docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjsnodejs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-react") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-hub") /bin/bash

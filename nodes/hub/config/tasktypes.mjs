@@ -4,9 +4,9 @@ import { CACHE_ENABLE } from "../config.mjs";
 const tasktypes = [
   {
     name: "TaskCEPHelloWorld",
-    environments: ["rxjs"],
+    environments: ["rxjs-hub-consumer"],
     config: {
-      autoStartEnvironment: "rxjs",
+      autoStartEnvironment: "rxjs-hub-consumer",
     },
   },
   {
@@ -43,7 +43,7 @@ const tasktypes = [
   },
   {
     name: "TaskSystemMenu",
-    environments: ["react", "rxjs"],
+    environments: ["react", "rxjs-hub-consumer"],
     config: {
       sort: true,
     },
@@ -252,7 +252,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "rxjs-processor-consumer", "rxjs", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
+    environments: ["react", "rxjs-processor-consumer", "rxjs-hub-consumer", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
     config: {
       local: {
         instruction: "",

@@ -17,9 +17,9 @@ services:
     ports:
       - "127.0.0.1:3000:3000" # app
       - "127.0.0.1:9229:9229" # debug of hub
-      - "127.0.0.1:9231:9231" # debug of rxjs
+      - "127.0.0.1:9231:9231" # debug of rxjs-hub-consumer
       - "127.0.0.1:9232:9232" # debug of rxjs-hub-coprocessor
-      - "127.0.0.1:9230:9230" # debug of rxjsnodejs
+      - "127.0.0.1:9230:9230" # debug of rxjs
       - "127.0.0.1:4000:4000" # meta
     networks:
       - web-proxy

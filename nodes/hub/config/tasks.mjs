@@ -210,7 +210,7 @@ const tasks = [
       },
       config: {
         type: "systemConfig",
-        environments: ["rxjs"],
+        environments: ["rxjs-hub-consumer"],
       },
     },
     initiator: true,
@@ -222,7 +222,7 @@ const tasks = [
     name: "start",
     parentName: "configchat",
     type: "TaskChat",
-    APPEND_environments: ["rxjs"],
+    APPEND_environments: ["rxjs-hub-consumer"],
     shared: {
       configTreeHubconsumerTasks: {},
     },
