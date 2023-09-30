@@ -61,6 +61,7 @@ const system = [
   {
     initiator: true,
     name: "systemtasksconfigeditor",
+    APPEND_environments: ["rxjs"],
     config: {
       label: "Tasks",
       local: {
@@ -80,6 +81,7 @@ const system = [
   {
     initiator: true,
     name: "systemusersconfigeditor",
+    APPEND_environments: ["rxjs"],
     config: {
       label: "Users",
       local: {
@@ -112,6 +114,7 @@ const system = [
   {
     initiator: true,
     name: "systemtasktypesconfigeditor",
+    APPEND_environments: ["rxjs"],
     config: {
       label: "Task Types",
       local: {
@@ -135,7 +138,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-cep-types-config-editor",
-    environments: ["rxjs"],
+    APPEND_environments: ["rxjs"],
     config: {
       label: "CEP Types",
       local: {
@@ -152,7 +155,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-service-types-config-editor",
-    environments: ["rxjs"],
+    APPEND_environments: ["rxjs"],
     config: {
       label: "Service Types",
       local: {
@@ -169,7 +172,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-operator-types-config-editor",
-    environments: ["rxjs"],
+    APPEND_environments: ["rxjs"],
     config: {
       label: "Operator Types",
       local: {
@@ -214,7 +217,7 @@ const system = [
     config: {
       label: "Operator Types",
       local: {
-        targetStore: "oeratortypes",
+        targetStore: "operatortypes",
         sharedVariable: "configTreeHubcoprocessorOperatortypes",
       },
     },
@@ -251,7 +254,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-cep-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["nodejs"],
     config: {
       label: "CEP Types",
       local: {
@@ -268,11 +271,11 @@ const system = [
   {
     initiator: true,
     name: "rxjs-operator-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["nodejs"],
     config: {
       label: "Operator Types",
       local: {
-        targetStore: "oeratortypes",
+        targetStore: "operatortypes",
         sharedVariable: "configTreeRxjsOperatortypes",
       },
     },
@@ -285,7 +288,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-service-types-config-editor",
-    APPEND_environments: ["rxjscopro"],
+    APPEND_environments: ["nodejs"],
     config: {
       label: "Service Types",
       local: {
@@ -315,23 +318,69 @@ const system = [
     type: "TaskSystemRestart",
     parentName: "system",
   },
+
   {
-    name: "nodeconfigs",
+    name: "rxjs-nodeconfigs",
     environments: ["rxjs"],
-    //environments: ["rxjs", "rxjscopro"],
-    //environments: ["rxjs", "nodejs"],
     config: {
       background: true,
       debug: {
-        debugTask: true,
+        debugTask: false,
       },
       autoStartEnvironment: "rxjs",
-      //autoStartEnvironments: ["rxjs", "nodejs"],
+    },
+    parentName: "config",
+    type: "TaskNodeConfigs",
+    menu: false,    
+    shared: {
+      configTreeHubconsumerTasks: {},
+      configTreeHubconsumerUsers: {},
+      configTreeHubconsumerGroups: {},
+      configTreeHubconsumerTasktypes: {},
+      configTreeHubconsumerCeptypes: {},
+      configtreeHubconsumerServicetypes: {},
+      configtreeHubconsumerOperatortypes: {},
+    },
+  },
+  {
+    name: "rxjscopro-nodeconfigs",
+    environments: ["rxjscopro"],
+    config: {
+      background: true,
+      debug: {
+        debugTask: false,
+      },
+      autoStartEnvironment: "rxjscopro",
     },
     parentName: "config",
     type: "TaskNodeConfigs",
     menu: false,
+    shared: {
+      configTreeHubcoprocessorCeptypes: {},
+      configtreeHubcoprocessorServicetypes: {},
+      configtreeHubcoprocessorOperatortypes: {},
+    },
   },
+  {
+    name: "nodejs-nodeconfigs",
+    environments: ["nodejs"],
+    config: {
+      background: true,
+      debug: {
+        debugTask: false,
+      },
+      autoStartEnvironment: "nodejs",
+    },
+    parentName: "config",
+    type: "TaskNodeConfigs",
+    menu: false,
+    shared: {
+      configTreeRxjsCeptypes: {},
+      configtreeRxjsServicetypes: {},
+      configtreeRxjsOperatortypes: {},
+    },
+  },
+
 
 ];
 

@@ -35,26 +35,10 @@ const tasktypes = [
     services: {
       config: {
         type: "systemConfig",
-        environments: ["rxjs", "rxjscopro", "nodejs"],
       },
     },
     state: {
       current: "start",
-    },
-    shared: {
-      configTreeHubconsumerTasks: {},
-      configTreeHubconsumerUsers: {},
-      configTreeHubconsumerGroups: {},
-      configTreeHubconsumerTasktypes: {},
-      configTreeHubconsumerCeptypes: {},
-      configtreeHubconsumerServicetypes: {},
-      configtreeHubconsumerOperatortypes: {},
-      configTreeHubcoprocessorCeptypes: {},
-      configtreeHubcoprocessorServicetypes: {},
-      configtreeHubcoprocessorOperatortypes: {},
-      configTreeRxjsCeptypes: {},
-      configtreeRxjsServicetypes: {},
-      configtreeRxjsOperatortypes: {},
     },
   },
   {
@@ -73,11 +57,10 @@ const tasktypes = [
   },
   {
     name: "TaskNodeConfigEditor",
-    environments: ["react", "rxjs"],
+    environments: ["react"],
     services: {
       config: {
         type: "systemConfig",
-        environments: ["rxjs"],
       },
     },
     state: {

@@ -45,36 +45,45 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
       if (T("processor.command") === "init") {
-        const servicesConfig = T("services");
-        console.log("config", JSON.stringify(T("config")))
-        console.log("servicesConfig", JSON.stringify(servicesConfig))
+        let servicesConfig = T("services");
         if (servicesConfig) {
+          if (servicesConfig["*"]) {
+            for await (const [key, value] of serviceTypes_async.iterator()) {
+              if (value) {
+                servicesConfig[key] = value;
+                servicesConfig[key]["type"] = key;
+              } else {
+                throw new Error(`seviceType undefined ${key}`);
+              }
+            }
+            delete servicesConfig["*"];
+          }
           const promises = Object.keys(servicesConfig).map(async (key) => {
             // Dynamically import taskServices
-            const environments = servicesConfig[key].environments;
-            if (environments) {
-              // Only try to load a service if it is expected to be on this processor
-              if (environments.includes(NODE.environment)) {
-                const type = servicesConfig[key].type;
-                //console.log("type", type);
-                if (await serviceTypes_async.has(type)) {
-                  services[key] = await serviceTypes_async.get(type);
-                  services[key] = utils.deepMerge(services[key], T(`services.${key}`));
-                  //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
-                  const serviceName = services[key]["moduleName"];
-                  if (await serviceExists_async(serviceName)) {
-                    services[key]["module"] = await importService_async(serviceName);
-                  } else {
-                    throw new Error(`Service ${serviceName} not found for ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
-                  }
+            let environments = servicesConfig[key].environments;
+            if (!environments) {
+              environments = [NODE.environment];
+              console.log(`Service ${key} has no environments so it runs everywhere`);
+            }
+            // Only try to load a service if it is expected to be on this processor
+            if (environments.includes(NODE.environment)) {
+              const type = servicesConfig[key].type;
+              //console.log("type", type);
+              if (await serviceTypes_async.has(type)) {
+                services[key] = await serviceTypes_async.get(type);
+                services[key] = utils.deepMerge(services[key], T(`services.${key}`));
+                //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
+                const serviceName = services[key]["moduleName"];
+                if (await serviceExists_async(serviceName)) {
+                  services[key]["module"] = await importService_async(serviceName);
                 } else {
-                  throw new Error(`Servicetype ${type} not found in ${key} service of ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
+                  throw new Error(`Service ${serviceName} not found for ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
                 }
               } else {
-                console.log(`Service ${key} not expected to be on this processor environment ${NODE.environment}`);
+                throw new Error(`Servicetype ${type} not found in ${key} service of ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
               }
             } else {
-              throw new Error(`Servicetype ${key} service of ${T("id")} has no environments`);
+              console.log(`Service ${key} not expected to be on this processor environment ${NODE.environment}`);
             }
           });
           // Wait for all the promises to resolve
@@ -86,6 +95,17 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         let operators = T("operators") || {};
         const operatorsConfig = T("operators");
         if (operatorsConfig) {
+          if (operatorsConfig["*"]) {
+            for await (const [key, value] of operatorTypes_async.iterator()) {
+              if (value) {
+                operatorsConfig[key] = value;
+                operatorsConfig[key]["type"] = key;
+              } else {
+                throw new Error(`seviceType undefined ${key}`);
+              }
+            }
+            delete operatorsConfig["*"];
+          }
           //console.log("operatorsConfig", JSON.stringify(operatorsConfig))
           const promises = Object.keys(operatorsConfig).map(async (key) => {
             // Dynamically import taskOperators
@@ -150,6 +170,17 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           const cepsConfig = T("ceps");
           //console.log("cepsConfig", JSON.stringify(cepsConfig))
           if (cepsConfig) {
+            if (cepsConfig["*"]) {
+              for await (const [key, value] of cepTypes_async.iterator()) {
+                if (value) {
+                  cepsConfig[key] = value;
+                  cepsConfig[key]["type"] = key;
+                } else {
+                  throw new Error(`seviceType undefined ${key}`);
+                }
+              }
+              delete cepsConfig["*"];
+            }
             const promises = Object.keys(cepsConfig).map(async (key) => {
               // Dynamically import taskCeps
               const environments = cepsConfig[key].environments;

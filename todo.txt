@@ -1,9 +1,17 @@
 /* ToDo
 -------
+Keep both autoStartEnvironments and autoStartEnvironments ?
 Menu CEP Types not working
-  TaskNodeConfigs_async is trying to send commandUpdate_async on hubconsumer to itself so lock is not available
-    The Hub can't get the lock
+    Autostart not launching on nodejs
     Maybe we need hub coprocessor batch/stream to deal with CEP maybe better to start the nodeconfig for nodejs before trying on coprocessor
+    rename environments
+      rxjs -> rxjs-hub-consumer
+      rxjscopro -> rxjs-hub-coprocessor
+      nodejs -> rxjs-processor-consumer
+    nodeconfig needs to load all CEP/services/operators
+      Could support "*" ?
+    If we load the ceps then they will actaully run - so how do we see all the type info for config ?
+      Push this into the config task
 Mongo master to empty the DB
  Same thing for Redis? 
 Demo of modifying systemMessage from another Task

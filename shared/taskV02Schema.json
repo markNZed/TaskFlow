@@ -12,7 +12,15 @@
       },
       "properties": {
         "ceps": {
-          "type": "object"
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["*"]
+            },
+            {
+              "type": "object"
+            }
+          ]
         },
         "command": {
           "type": ["null", "string"]
@@ -46,7 +54,15 @@
           "type": "string"
         },
         "operators": {
-          "type": "object"
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["*"]
+            },
+            {
+              "type": "object"
+            }
+          ]
         },
         "parentName": {
           "type": "string"
@@ -61,7 +77,15 @@
           "type": "object"
         },
         "services": {
-          "type": "object"
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["*"]
+            },
+            {
+              "type": "object"
+            }
+          ]
         },        
         "type": {
           "type": "string"

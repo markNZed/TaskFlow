@@ -228,6 +228,9 @@ function flattenTasks(tasks) {
       mergeTasks(task, parentTaskflow);
     }
 
+    // Process APPEND_, PREPEND_
+    mergeTasks(task, task);
+
     // Convert relative task references to absolute
     const nextTask = task?.config?.nextTask;
     if (nextTask && !nextTask.includes(".")) {
@@ -244,6 +247,10 @@ function flattenTasks(tasks) {
       }
     }
 
+    if (task?.config?.autoStartEnvironments && !task?.config?.autoStartEnvironment) {
+      task.config["autoStartEnvironment"] = task.config.autoStartEnvironments[0];
+    }
+
     if (task?.config?.autoStartEnvironment) {
       autoStartTasks[task.id] = {
         startEnvironment: task.config.autoStartEnvironment,
@@ -251,8 +258,9 @@ function flattenTasks(tasks) {
         startEnvironments: task.config.autoStartEnvironments || task.environments,
         once: task.config.autoStartOnce,
       }
+      console.log("task.id", task.id, "startEnvironments", autoStartTasks[task.id]["startEnvironments"]);
     }
-    
+
     taskLookup[id] = task;
     parent2id[task.name] = id;
     // Build children data

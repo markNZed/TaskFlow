@@ -252,27 +252,7 @@ const servicetypes = [
   {
     name: "openaistub",
     API: "openaistub",
-    moduleName: "ServiceOpenAIGPT",
-  },
-  {
-    name: "openaigpt_old",
-    API: "openaigpt",
-    moduleName: "ServiceOpenAIGPT",
-    modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
-    temperature: 0,
-    maxTokens: 4000,
-    maxResponseTokens: 1000, // Leave space for context
-    prePrompt: "",
-    postPrompt: "",
-    systemMessage:"",
-    messages: [],
-    forget: false,
-    dummyAPI: false,
-    prompt: "",
-    useCache: true,
-    noStreaming: false,
-    systemMessageTemplate: "",
-    cacheKeySeed: "",
+    moduleName: "ServiceVercelAI",
   },
   {
     name: "chatgpt",

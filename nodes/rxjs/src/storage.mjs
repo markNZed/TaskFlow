@@ -54,7 +54,7 @@ mongoConnection.once('open', () => {
 });
 
 // Do NOT use ':' as a character in the prefix to KeyV because the Redis iterator does not like this
-const coprocessorPrefix = NODE.role === "coprocessor" ? "copro:" : "";
+const coprocessorPrefix = NODE.role === "coprocessor" ? "copro-" : "";
 const keyvPrefix = NODE.id + "-" + coprocessorPrefix;
 
 // Schema:
