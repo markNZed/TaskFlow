@@ -18,8 +18,8 @@ Using VS Code
     * The output of the servers are also logged into files and these can be opened in VS Code (which will update the contents in real-time and allows for searching).
     * Open the logs as tabs in VS Code:
         * /app/nodes/hub/hub.log
-        * /app/nodes/rxjs/hubconsumer.log
-        * /app/nodes/rxjs/hubcoprocessor.log
+        * /app/nodes/rxjs/hub-consumer.log
+        * /app/nodes/rxjs/hub-coprocessor.log
         * /app/nodes/rxjs/rxjs.log
 * The node servers (e.g. Hub, RxJS, NodeJS) run in debug mode so breakpoints can be set in VS Code.
 

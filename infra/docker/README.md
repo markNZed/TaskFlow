@@ -86,8 +86,8 @@ Assumes there is a reverse proxy server, to listen on a single port and forward 
 
 If using Cloudflare remember to purge the cache after updating!
 
-docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hubconsumer") /bin/bash
-docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hubcoprocessor") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hub-consumer") /bin/bash
+docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs-hub-coprocessor") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-rxjs") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-react") /bin/bash
 docker exec -it $(docker ps -qf "name=taskflow-prod_taskflow-hub") /bin/bash

@@ -7,8 +7,8 @@ Menu CEP Types not working
       rxjscopro -> rxjs-hub-coprocessor
       nodejs -> rxjs-processor-consumer
     rename general
-      hubconsumer -> hub-consumer
-      hubcoprocessor -> hub-coprocessor
+      hub-consumer -> hub-consumer
+      hub-coprocessor -> hub-coprocessor
     rename nodes
       rxjs -> 
 

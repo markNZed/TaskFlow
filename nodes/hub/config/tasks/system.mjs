@@ -129,7 +129,7 @@ const system = [
     },
   },
   {
-    name: "hubconsumer",
+    name: "hub-consumer",
     parentName: "config",
     config: {
       label: "Hub Consumer",
@@ -146,7 +146,7 @@ const system = [
         sharedVariable: "configTreeHubconsumerCeptypes",
       },
     },
-    parentName: "hubconsumer",
+    parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubconsumerCeptypes: {},
@@ -163,7 +163,7 @@ const system = [
         sharedVariable: "configTreeHubconsumerServicetypes",
       },
     },
-    parentName: "hubconsumer",
+    parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubconsumerServicetypes: {},
@@ -180,14 +180,14 @@ const system = [
         sharedVariable: "configTreeHubconsumerOperatortypes",
       },
     },
-    parentName: "hubconsumer",
+    parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubconsumerOperatortypes: {},
     },
   },
   {
-    name: "hubcoprocessor",
+    name: "hub-coprocessor",
     parentName: "config",
     config: {
       label: "Hub Coprocessor",
@@ -195,7 +195,7 @@ const system = [
   },
   {
     initiator: true,
-    name: "hubcoprocessor-cep-types-config-editor",
+    name: "hub-coprocessor-cep-types-config-editor",
     APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "CEP Types",
@@ -204,7 +204,7 @@ const system = [
         sharedVariable: "configTreeHubcoprocessorCeptypes",
       },
     },
-    parentName: "hubcoprocessor",
+    parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubcoprocessorCeptypes: {},
@@ -212,7 +212,7 @@ const system = [
   },
   {
     initiator: true,
-    name: "hubcoprocessor-operator-types-config-editor",
+    name: "hub-coprocessor-operator-types-config-editor",
     APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "Operator Types",
@@ -221,7 +221,7 @@ const system = [
         sharedVariable: "configTreeHubcoprocessorOperatortypes",
       },
     },
-    parentName: "hubcoprocessor",
+    parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubcoprocessorOperatortypes: {},
@@ -229,7 +229,7 @@ const system = [
   },
   {
     initiator: true,
-    name: "hubcoprocessor-service-types-config-editor",
+    name: "hub-coprocessor-service-types-config-editor",
     APPEND_environments: ["rxjs-hub-coprocessor"],
     config: {
       label: "Service Types",
@@ -238,7 +238,7 @@ const system = [
         sharedVariable: "configTreeHubcoprocessorServicetypes",
       },
     },
-    parentName: "hubcoprocessor",
+    parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
       configTreeHubcoprocessorServicetypes: {},

@@ -10,18 +10,18 @@ screen -S app -p hub -X stuff "touch hub.log && chmod 444 hub.log\n"
 screen -S app -p hub -X stuff "truncate -s 0 hub.log; NODE_NAME=hub npm run debug 2>&1 | tee -a hub.log\n"
 
 # create a new window within the "app" screen
-screen -S app -X screen -t hubconsumer bash
-screen -S app -p hubconsumer -X stuff "cd /app/nodes/rxjs\n"
-screen -S app -p hubconsumer -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
-screen -S app -p hubconsumer -X stuff "touch hubconsumer.log && chmod 444 hubconsumer.log\n"
-screen -S app -p hubconsumer -X stuff "truncate -s 0 hubconsumer.log; NODE_NAME=hubconsumer npm run debug 2>&1 | tee -a hubconsumer.log\n"
+screen -S app -X screen -t hub-consumer bash
+screen -S app -p hub-consumer -X stuff "cd /app/nodes/rxjs\n"
+screen -S app -p hub-consumer -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
+screen -S app -p hub-consumer -X stuff "touch hub-consumer.log && chmod 444 hub-consumer.log\n"
+screen -S app -p hub-consumer -X stuff "truncate -s 0 hub-consumer.log; NODE_NAME=hub-consumer npm run debug 2>&1 | tee -a hub-consumer.log\n"
 
 # create a new window within the "app" screen
-screen -S app -X screen -t hubcoprocessor bash
-screen -S app -p hubcoprocessor -X stuff "cd /app/nodes/rxjs\n"
+screen -S app -X screen -t hub-coprocessor bash
+screen -S app -p hub-coprocessor -X stuff "cd /app/nodes/rxjs\n"
 # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-screen -S app -p hubcoprocessor -X stuff "touch hubcoprocessor.log && chmod 444 hubcoprocessor.log\n"
-screen -S app -p hubcoprocessor -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 hubcoprocessor.log; NODE_NAME=hubcoprocessor DEBUG_PORT=0.0.0.0:9232 npm run debug 2>&1 | tee -a hubcoprocessor.log\n"
+screen -S app -p hub-coprocessor -X stuff "touch hub-coprocessor.log && chmod 444 hub-coprocessor.log\n"
+screen -S app -p hub-coprocessor -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 hub-coprocessor.log; NODE_NAME=hub-coprocessor DEBUG_PORT=0.0.0.0:9232 npm run debug 2>&1 | tee -a hub-coprocessor.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t rxjs bash
@@ -58,27 +58,27 @@ if [[ "$TASKFLOW_DEV" == "true" ]]; then
     screen -S meta -p hub -X stuff "truncate -s 0 hub.log; NODE_NAME=hub WS_PORT=6001 npm run 2>&1 | tee -a hub.log\n"
 
     # create a new window within the "app" screen
-    screen -S meta -X screen -t hubconsumer bash
-    screen -S meta -p hubconsumer -X stuff "cd /meta/nodes/rxjs\n"
-    screen -S meta -p hubconsumer -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
-    screen -S meta -p hubconsumer -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
-    screen -S meta -p hubconsumer -X stuff "touch hubconsumer.log && chmod 444 hubconsumer.log\n"
-    screen -S meta -p hubconsumer -X stuff "truncate -s 0 hubconsumer.log; NODE_NAME=hubconsumer WS_PORT=6002 npm run 2>&1 | tee -a hubconsumer.log\n"
+    screen -S meta -X screen -t hub-consumer bash
+    screen -S meta -p hub-consumer -X stuff "cd /meta/nodes/rxjs\n"
+    screen -S meta -p hub-consumer -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
+    screen -S meta -p hub-consumer -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
+    screen -S meta -p hub-consumer -X stuff "touch hub-consumer.log && chmod 444 hub-consumer.log\n"
+    screen -S meta -p hub-consumer -X stuff "truncate -s 0 hub-consumer.log; NODE_NAME=hub-consumer WS_PORT=6002 npm run 2>&1 | tee -a hub-consumer.log\n"
 
     # create a new window within the "app" screen
-    screen -S meta -X screen -t hubcoprocessor bash
-    screen -S meta -p hubcoprocessor -X stuff "cd /meta/nodes/rxjs\n"
-    screen -S meta -p hubcoprocessor -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
+    screen -S meta -X screen -t hub-coprocessor bash
+    screen -S meta -p hub-coprocessor -X stuff "cd /meta/nodes/rxjs\n"
+    screen -S meta -p hub-coprocessor -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
     # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-    screen -S meta -p hubcoprocessor -X stuff "touch hubcoprocessor.log && chmod 444 hubcoprocessor.log\n"
-    screen -S meta -p hubcoprocessor -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 hubcoprocessor.log; NODE_NAME=hubcoprocessor npm run 2>&1 | tee -a hubcoprocessor.log\n"
+    screen -S meta -p hub-coprocessor -X stuff "touch hub-coprocessor.log && chmod 444 hub-coprocessor.log\n"
+    screen -S meta -p hub-coprocessor -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 hub-coprocessor.log; NODE_NAME=hub-coprocessor npm run 2>&1 | tee -a hub-coprocessor.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen bash
     screen -S meta -p rxjs -X stuff "cd /meta/nodes/rxjs\n"
     screen -S meta -p rxjs -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
     # We do not npm install here because we can assume that rxjs is doing that but wait for it to finish
-    screen -S meta -p rxjs -X stuff "touch hubcoprocessor.log && chmod 444 hubcoprocessor.log\n"
+    screen -S meta -p rxjs -X stuff "touch hub-coprocessor.log && chmod 444 hub-coprocessor.log\n"
     screen -S meta -p rxjs -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 rxjs.log; NODE_NAME=rxjs npm run 2>&1 | tee -a rxjs.log\n"
 
     # create a new window within the "app" screen

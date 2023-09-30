@@ -44,7 +44,7 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-let NODE_NAME = "hubconsumer";
+let NODE_NAME = "hub-consumer";
 if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
 }
@@ -60,7 +60,7 @@ if (process.env.NODE_NAME !== undefined) {
 let NODE;
 
 switch (NODE_NAME) {
-  case "hubconsumer":
+  case "hub-consumer":
     NODE = {
       type: "hub",
       role: "consumer",
@@ -69,7 +69,7 @@ switch (NODE_NAME) {
       wsPort: 5002,
     }
     break;
-  case "hubcoprocessor":
+  case "hub-coprocessor":
     NODE = {
       type: "hub",
       role: "coprocessor",
@@ -114,7 +114,7 @@ NODE["storage"] = {
   redisUrl: REDIS_URL,
   mongoUrl: MONGO_URL,
   emptyAllDB: EMPTY_ALL_DB,
-  mongoMaster: "hubcoprocessor",
+  mongoMaster: "hub-coprocessor",
 };
 NODE["id"] = nodeId;
 if (process.env.WS_PORT) {

@@ -27,24 +27,24 @@ services:
       - web-proxy
     depends_on:
       - taskflow-hub
-  taskflow-hubconsumer:
+  taskflow-hub-consumer:
     image: taskflow-prod:latest
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-hubconsumer.sh"]
+    entrypoint: ["/entrypoint-hub-consumer.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:
       - web-proxy
     depends_on:
       - taskflow-hub
-  taskflow-hubcoprocessor:
+  taskflow-hub-coprocessor:
     image: taskflow-prod:latest
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-rxjs-hubcoprocessor.sh"]
+    entrypoint: ["/entrypoint-rxjs-hub-coprocessor.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:
