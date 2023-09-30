@@ -141,8 +141,8 @@ async function chatPrepare_async(T) {
   }
 
   const environments = T("environments");
-  // If the task is running on the nodejs processor we do not use websocket
-  if (environments.length === 1 && environments[0] === "nodejs") {
+  // If the task is running on the rxjs-processor-consumer processor we do not use websocket
+  if (environments.length === 1 && environments[0] === "rxjs-processor-consumer") {
     noStreaming = true;
     console.log("Environment noStreaming");
   }

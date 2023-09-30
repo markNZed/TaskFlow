@@ -83,7 +83,7 @@ const tasktypes = [
         match: "familyId",
       },
     },
-    environments: ["nodejs", "react"], // Assumes we have a coprocessor
+    environments: ["rxjs-processor-consumer", "react"], // Assumes we have a coprocessor
     state: {
       current: "start",
     },
@@ -139,7 +139,7 @@ const tasktypes = [
     name: "TaskChat",
     streaming: true,
     // If multiple environments then it will be synchronized
-    environments: ["react", "nodejs"],
+    environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
@@ -153,7 +153,7 @@ const tasktypes = [
     operators: {
       LLM: {
         type: "LLM",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         useCache: CACHE_ENABLE,
         seed: [],
         /*
@@ -170,7 +170,7 @@ const tasktypes = [
   },
   {
     name: "TaskConversation",
-    environments: ["react", "nodejs"],
+    environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
         welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
@@ -185,7 +185,7 @@ const tasktypes = [
     operators: {
       "LLM": {
         type: "LLM",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         promptWithTime: false,
       }
     },
@@ -195,7 +195,7 @@ const tasktypes = [
   },
   {
     name: "TaskSimulateUser",
-    environments: ["react", "nodejs"],
+    environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
         introductionPrompt: "Please introduce yourself.",
@@ -204,7 +204,7 @@ const tasktypes = [
     operators: {
       "LLM": {
         type: "LLM",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         useCache: CACHE_ENABLE,
         seed: [],
       }
@@ -227,7 +227,7 @@ const tasktypes = [
   {
     name: "TaskLLMIO",
     streaming: true,
-    environments: ["react", "nodejs"],
+    environments: ["react", "rxjs-processor-consumer"],
     config: {
       nextStates: {
         start:     "response", 
@@ -252,7 +252,7 @@ const tasktypes = [
   },
   {
     name: "TaskShowInstruction",
-    environments: ["react", "nodejs", "rxjs", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
+    environments: ["react", "rxjs-processor-consumer", "rxjs", "rxjs-hub-coprocessor"], // Added rxjs & rxjs-hub-coprocessor for testing of XState FSM
     config: {
       local: {
         instruction: "",
@@ -270,11 +270,11 @@ const tasktypes = [
   },
   {
     name: "TaskChoose",
-    environments: ["nodejs"],
+    environments: ["rxjs-processor-consumer"],
   },
   {
     name: "TaskGeneratePersona",
-    environments: ["react", "nodejs"],
+    environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
         //instruction: "",

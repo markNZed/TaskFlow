@@ -254,7 +254,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-cep-types-config-editor",
-    APPEND_environments: ["nodejs"],
+    APPEND_environments: ["rxjs-processor-consumer"],
     config: {
       label: "CEP Types",
       local: {
@@ -271,7 +271,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-operator-types-config-editor",
-    APPEND_environments: ["nodejs"],
+    APPEND_environments: ["rxjs-processor-consumer"],
     config: {
       label: "Operator Types",
       local: {
@@ -288,7 +288,7 @@ const system = [
   {
     initiator: true,
     name: "rxjs-service-types-config-editor",
-    APPEND_environments: ["nodejs"],
+    APPEND_environments: ["rxjs-processor-consumer"],
     config: {
       label: "Service Types",
       local: {
@@ -362,14 +362,14 @@ const system = [
     },
   },
   {
-    name: "nodejs-nodeconfigs",
-    environments: ["nodejs"],
+    name: "rxjs-processor-consumer-nodeconfigs",
+    environments: ["rxjs-processor-consumer"],
     config: {
       background: true,
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "nodejs",
+      autoStartEnvironment: "rxjs-processor-consumer",
     },
     parentName: "config",
     type: "TaskNodeConfigs",

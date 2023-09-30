@@ -14,20 +14,8 @@ services:
       - taskflow-hub
     networks:
       - web-proxy
-  taskflow-nodejs:
-    #image: localhost:5000/taskflow-prod:latest
-    image: taskflow-prod:latest
-    volumes:
-      - ../../nodes/rxjs:/app/nodes/rxjs
-      - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-nodejs.sh"]
-    environment:
-      - TASKHUB_URL=http://localhost:5001/hub
-    networks:
-      - web-proxy
-    depends_on:
-      - taskflow-hub
   taskflow-rxjs:
+    #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
@@ -39,12 +27,24 @@ services:
       - web-proxy
     depends_on:
       - taskflow-hub
-  taskflow-rxjs-hub-coprocessor:
+  taskflow-hubconsumer:
     image: taskflow-prod:latest
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
-    entrypoint: ["/entrypoint-rxjs-hub-coprocessor.sh"]
+    entrypoint: ["/entrypoint-hubconsumer.sh"]
+    environment:
+      - TASKHUB_URL=http://localhost:5001/hub
+    networks:
+      - web-proxy
+    depends_on:
+      - taskflow-hub
+  taskflow-hubcoprocessor:
+    image: taskflow-prod:latest
+    volumes:
+      - ../../nodes/rxjs:/app/nodes/rxjs
+      - ../../shared:/app/shared
+    entrypoint: ["/entrypoint-rxjs-hubcoprocessor.sh"]
     environment:
       - TASKHUB_URL=http://localhost:5001/hub
     networks:

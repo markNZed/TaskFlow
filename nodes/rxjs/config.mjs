@@ -83,7 +83,7 @@ switch (NODE_NAME) {
       type: "processor",
       role: "consumer",
       processing: ["batch"],
-      environment: "nodejs",
+      environment: "rxjs-processor-consumer",
       wsPort: 5000,
     }
     break;

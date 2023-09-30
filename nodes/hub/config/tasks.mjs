@@ -57,7 +57,7 @@ const tasks = [
     services: {
       chat: {
         type: "openaigpt.chatgpt",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         maxResponseTokens: 150,
         maxTokens: 500,
       },
@@ -93,7 +93,7 @@ const tasks = [
     services: {
       chat: {
         type: "openaigpt.chatgpt",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         temperature: 0.9,
       },
     },
@@ -127,7 +127,7 @@ const tasks = [
         forget: true,
         prompt: "Tell me a story about something random.",
         type: "openaigpt.chatgpt",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
       },
     },
     name: "summarize",
@@ -143,7 +143,7 @@ const tasks = [
     },
     services: {
       chat: {
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
         forget: true,
         type: "openaigpt.chatgpt",
         promptTemplate: [
@@ -179,7 +179,7 @@ const tasks = [
     services: {
       chat: {
         type: "openaigpt.chatgptzeroshot",
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
       }
     },
     initiator: true,
@@ -206,7 +206,7 @@ const tasks = [
       chat: {
         type: "openaigpt.configchat",
         useCache: false,
-        environments: ["nodejs"],
+        environments: ["rxjs-processor-consumer"],
       },
       config: {
         type: "systemConfig",

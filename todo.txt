@@ -50,7 +50,7 @@ tasktype cannot configure fsm: { useMachine: true} ?
 The stepper sets the state to exit - it should not act directly on the state, use task.input
   Review all Tasks and ensure not accessing internals of children
 TaskChat name must be "start" ? 
-Need to clean up when tasks stop e.g nodejs activeTaskFsm
+Need to clean up when tasks stop e.g rxjs-processor-consumer activeTaskFsm
 Automatic Response Repair
   https://community.openai.com/t/functions-half-a-solution-to-getting-structured-responses-from-gpt/282096
   The key points are
@@ -455,7 +455,7 @@ Architecture
     RabbitMQ for message passing good for a local service but do we need high speed, probably not.
     REST API would allow for remote etc, maybe better
     AMQP or MQTT would be more scalable.
-  Keep server on nodejs processor - yes but for debug/admin/metrics etc
+  Keep server on rxjs-processor-consumer processor - yes but for debug/admin/metrics etc
     Performance, utilization etc, a Processor Object for this (instead of Task)
     The debug features can be shared between processors e.g. just connect to keyv with activeTasks
   Re-architect the react Processor to make use of the Service Worker API

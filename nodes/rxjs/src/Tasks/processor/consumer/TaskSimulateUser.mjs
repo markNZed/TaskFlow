@@ -20,10 +20,10 @@ function checkTaskCache (T) {
       if (cacheObj.operator) {
         continue;
       }
-      if (cacheObj.environments && !cacheObj.environments.includes("nodejs")) {
+      if (cacheObj.environments && !cacheObj.environments.includes("rxjs-processor-consumer")) {
         continue;
       } else {
-        console.log("cacheObj.environments", "nodejs");
+        console.log("cacheObj.environments", "rxjs-processor-consumer");
         enabled = true;
       }
       if (cacheObj.states && !cacheObj.states.includes(T("state.current"))) {

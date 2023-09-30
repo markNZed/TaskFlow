@@ -3,7 +3,7 @@ const operatortypes = [
   {
     name: "LLM",
     moduleName: "OperatorLLM",
-    environments: ["nodejs"],
+    environments: ["rxjs-processor-consumer"],
   },
 ];
 
