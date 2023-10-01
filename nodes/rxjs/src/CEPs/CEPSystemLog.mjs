@@ -7,7 +7,7 @@ import { utils } from "#src/utils";
 import { tasksModel } from "./CEPSystemLog/tasksModel.mjs"
 
 // eslint-disable-next-line no-unused-vars
-async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
+async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   // We do not want to log the TaskCEPSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
   if (task.type !== "TaskCEPSystemLog" && task.type !== "TaskSystemLogViewer") {
     // We will log twice when coprocessing but this is necessary to debug coprocessing

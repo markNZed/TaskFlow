@@ -32,11 +32,11 @@ task.ceps stores CEP specific configuration information
 The task.ceps object contains: 
   {
     "MATCH_STRING": { // id, instanceId, or familyId
-      functionName: "FUNCTION_NAME", // name of the CEP function in the Task Function
+      name: "FUNCTION_NAME", // name of the CEP function in the Task Function
       args: {ARG: VALUE} // arguments passed to the CEP function
     }
   }
-The CEP function is assumed to provide: FUNCTION_NAME(task, args)
+The CEP function is assumed to provide: FUNCTION_NAME(wsSendTask, CEPInstanceId, task, args)
 
 The task.config.cache object allows for flexible cache rules, it is an array of objects (so use APPEND_cache to allow for inheritance):
 * cache.enable - boolean, can be excluded and in that case is assumed to be true

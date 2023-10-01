@@ -10,7 +10,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskTest_async = async function (wsSendTask, T, FSMHolder, CEPMatchMapMap) {
+const TaskTest_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
 
@@ -24,14 +24,14 @@ const TaskTest_async = async function (wsSendTask, T, FSMHolder, CEPMatchMapMap)
   // Here we install the CEP from the task but this could also be done through the Task config
   const match = "id-" + T("config.local.targetTaskId");
   const config = {
-    functionName: "CEPServiceStub",
+    CEPName: "CEPServiceStub",
     args: {
       type: "openaigpt.chatgptzeroshot",
       key: "API", 
       value: "openaistub"
     },
   }
-  CEPCreate(CEPMatchMap, CEPFunctionMap, T(), match, config);
+  CEPCreate(CEPMatchMap, T(), match, config);
   */
 
   return T();

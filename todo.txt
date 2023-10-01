@@ -1,11 +1,15 @@
 /* ToDo
 -------
+Replace 
+  if (task.id.startsWith("root.system.")) {
+    entryId = task.id;
+  }
+  with config e.g. single
+CEPHelloWorld is broken ?
 Keep both autoStartEnvironments and autoStartEnvironments ?
-Mongo master to empty the DB
- Same thing for Redis? 
 Demo of modifying systemMessage from another Task
   It is not until the Service has  been used that all the model details are visible
-  Ability to load any task and edit it as a sync
+    Should sync ?
 Demo of copying a Task
 Masking at least for React seems important
 If CEP then fsm -> FSM

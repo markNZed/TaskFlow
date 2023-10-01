@@ -23,26 +23,25 @@ const taskSubject = new Subject();
 
 // Support regex in the CEP config to match tasks
 function findCEP (CEPFuncsKeys, matchExpr) {
-  //console.log("findCEP matchExpr:", matchExpr);
-  let result = CEPMatchMap.get(matchExpr);
-  if (!result) {
-    // filter CEPFuncsKeys for those starting with regex:
-    const regexKeys = [...CEPFuncsKeys].filter(key => key.startsWith("regex:"));
-    // for each regexKey check if it matches the matchExpr
-    //utils.logTask(task, "regexKeys", regexKeys)
-    for (const regexKey of regexKeys) {
-      // strip "regex:" prefix from regexKey
-      const regexStr = regexKey.substring("regex:".length);
-      let regex = new RegExp(regexStr);
-      //console.log("regex", regex);
-      let match = regex.test(matchExpr);
-      if (match) {
-        result = CEPMatchMap.get(regexKey);
-        break;
-      }
+  console.log("findCEP matchExpr:", matchExpr);
+  let result = [];
+  const directMatch = CEPMatchMap.get(matchExpr);
+  if (directMatch) {
+    result.push(directMatch);
+  }
+  // filter CEPFuncsKeys for those starting with regex:
+  const regexKeys = [...CEPFuncsKeys].filter(key => key.startsWith("regex:"));
+  // for each regexKey check if it matches the matchExpr
+  console.log("regexKeys", regexKeys);
+  for (const regexKey of regexKeys) {
+    // strip "regex:" prefix from regexKey
+    const regexStr = regexKey.substring("regex:".length);
+    let regex = new RegExp(regexStr);
+    console.log("regex", regex);
+    let match = regex.test(matchExpr);
+    if (match) {
+      result.push(CEPMatchMap.get(regexKey));
     }
-  } else {
-    //console.log("findCEP found direct match:", result);
   }
   return result;
 }
@@ -75,40 +74,49 @@ taskSubject
         // We always add familyId so CEP can only operate on its own family
         // CEPCreate is how we create the entries
         const CEPFuncsKeys = CEPMatchMap.keys();
-        //utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
+        utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
         //utils.logTask(task, "CEPFuncsKeys", CEPFuncsKeys);
-        //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
-        let instanceIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
-        //utils.logTask(task, "CEP instanceIdSourceFuncsMap " + [...instanceIdSourceFuncsMap.keys()]);
+        utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
+        let instanceIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
+        utils.logTask(task, "CEP instanceIdSourceFuncsMap ", [...instanceIdSourceFuncsMapArray]);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-id-" + task.id);
-        let idSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
-        //utils.logTask(task, "CEP idSourceFuncsMap " + [...idSourceFuncsMap.keys()]);
+        let idSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
+        //utils.logTask(task, "CEP idSourceFuncsMap ", [...idSourceFuncsMapArray]);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-familyId");
-        let familyIdSourceFuncsMap = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
-        //utils.logTask(task, "CEP familyIdSourceFuncsMap " + [...familyIdSourceFuncsMap.keys()]);      
+        let familyIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
+        //utils.logTask(task, "CEP familyIdSourceFuncsMap ", [...familyIdSourceFuncsMapArray]);      
         // Retrieve the function arrays from each Map
-        let instanceIdCEPFuncs = [...instanceIdSourceFuncsMap.values()];
+        let instanceIdCEPFuncs = []
+        for (const instanceIdSourceFuncsMap of instanceIdSourceFuncsMapArray) {
+          instanceIdCEPFuncs.push(...instanceIdSourceFuncsMap.values());
+        }
         //utils.logTask(task, "CEP instanceIdCEPFuncs", instanceIdCEPFuncs);
-        let idCEPFuncs = [...idSourceFuncsMap.values()];
-        let familyIdCEPFuncs = [...familyIdSourceFuncsMap.values()];  
+        let idCEPFuncs = [];
+        for (const idSourceFuncsMap of idSourceFuncsMapArray) {
+          idCEPFuncs.push(...idSourceFuncsMap.values());
+        }
+        let familyIdCEPFuncs = [];
+        for (const familyIdSourceFuncsMap of familyIdSourceFuncsMapArray) {
+          familyIdCEPFuncs.push(...familyIdSourceFuncsMap.values());
+        }  
         // Flatten all CEP functions into a single array
         let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
-        //utils.logTask(task, "allCEPFuncs", allCEPFuncs);
+        utils.logTask(task, "allCEPFuncs", allCEPFuncs);
         // Run each CEP function serially
         task.processor.CEPExecuted = [];
-        for (const [CEPInstanceId, func, functionName, args] of allCEPFuncs) {
-          utils.logTask(task, `Running CEP function ${functionName} with args:`, args);
+        for (const [CEPInstanceId, func, moduleName, args] of allCEPFuncs) {
+          utils.logTask(task, `Running CEP ${moduleName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
           if (CEPCoprocessor) {
             // await so that CEP can modify the task during coprocessing
             // If a Task wants to update itsefl then it should not use a sync command but return the udpated value
             
-            await func(wsSendTask, CEPInstanceId, functionName, task, args);
-            task.processor.CEPExecuted.push(functionName);
+            await func(wsSendTask, CEPInstanceId, task, args);
+            task.processor.CEPExecuted.push(moduleName);
           } else {
             // We do not await so we do not hang waiting for the lock when a Task sends a sync to itself
-            func(wsSendTask, CEPInstanceId, functionName, task, args);
-            task.processor.CEPExecuted.push(functionName);
+            func(wsSendTask, CEPInstanceId, task, args);
+            task.processor.CEPExecuted.push(moduleName);
           }
         }
       }

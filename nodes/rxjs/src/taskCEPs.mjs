@@ -8,34 +8,35 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CEPFunctionMap } from "./storage.mjs";
 
-function CEPregister(functionName, func) {
-  if (functionName === undefined) {
-    throw Error("CEPregister functionName is undefined");
+function CEPregister(name, func) {
+  if (name === undefined) {
+    throw Error("CEPregister name is undefined");
   }
-  console.log("nodeCEPs register", functionName);
+  console.log("nodeCEPs register", name);
   if (typeof func === "function") {
-    CEPFunctionMap.set(functionName, func);
+    CEPFunctionMap.set(name, func);
   }
 }
 
-function CEPget(funcName) {
-  const func = CEPFunctionMap.get(funcName);
+function CEPget(name) {
+  const func = CEPFunctionMap.get(name);
   if (typeof func === 'function') {
-      return func;
+    return func;
   } else {
-      throw new Error('Invalid function name ' + funcName);
+    console.log("Possible names:", CEPFunctionMap.keys());
+    throw new Error('Invalid name ' + name);
   } 
 }
 
-function CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, config) {
+function CEPCreate(CEPMatchMap, task, match, config) {
   console.log(`CEPCreate by ${task.instanceId} with config`, config)
-  const functionName = config.functionName;
-  if (functionName === undefined) {
-    console.error("CEPCreate functionName is undefined", config);
-    throw Error("CEPCreate functionName is undefined");
+  const name = config.CEPName || config.moduleName;
+  if (name === undefined || name === null) {
+    console.error("CEPCreate name is undefined/null", config);
+    throw Error("CEPCreate name is undefined/null");
   }
   const args = config.args;
-  const CEPFunc = CEPget(functionName);
+  const CEPFunc = CEPget(name);
   if (match === undefined) {
     throw Error("CEPCreate match is undefined");
   }
@@ -54,17 +55,17 @@ function CEPCreate(CEPMatchMap, CEPFunctionMap, task, match, config) {
   if (!funcMap) {
     // If not, create a new Map for match
     funcMap = new Map();
-    funcMap.set(entryId, [task.instanceId, CEPFunc, functionName, args]); // Will need to clean this up from memory
+    funcMap.set(entryId, [task.instanceId, CEPFunc, name, args]); // Will need to clean this up from memory
     CEPMatchMap.set(match, funcMap); 
   } else {
     // Only add the function if there isn't already an entry for this entryId
     // Want to avoid adding system CEP every time the processor registers
     if (!funcMap.has(entryId)) {
-      funcMap.set(entryId, [task.instanceId, CEPFunc, functionName, args]);
+      funcMap.set(entryId, [task.instanceId, CEPFunc, name, args]);
       CEPMatchMap.set(match, funcMap);
     }
   }
-  console.log(`CEPMatchMap created entry ${entryId} function:${functionName} matching:${match}`);  
+  console.log(`CEPMatchMap created entry ${entryId} name:${name} matching:${match}`);  
 }
 
 export { CEPregister, CEPget, CEPCreate };

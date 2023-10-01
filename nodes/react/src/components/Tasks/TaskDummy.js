@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useEffect, useState } from "react";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils.mjs";
 import JsonEditor from '../Generic/JsonEditor.js'
 
 

@@ -46,11 +46,11 @@ const system = [
     parentName: "system",
     type: "TaskSystemLogViewer",
   }, 
+
   {
     name: "config",
     parentName: "system",
   },
-
   {
     name: "hub",
     parentName: "config",
@@ -381,7 +381,26 @@ const system = [
     },
   },
 
-
+  {
+    initiator: true,
+    name: "instanceedit",
+    ceps: {
+      monitorInstance: {
+        type: "monitorInstance",
+        environments: ["rxjs-hub-coprocessor"],
+        match: "tbd", // To be defined
+      }
+    },
+    config: {
+      label: "Edit Task",
+      debug: {
+        debugTask: true,
+      },
+    },
+    parentName: "system",
+    type: "TaskEdit",
+  }, 
+  
 ];
 
 export { system };

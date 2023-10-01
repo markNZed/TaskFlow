@@ -3,6 +3,10 @@ import { CACHE_ENABLE } from "../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskEdit",
+    environments: ["rxjs-hub-coprocessor", "react"],
+  },
+  {
     name: "TaskCEPHelloWorld",
     environments: ["rxjs-hub-consumer"],
     config: {

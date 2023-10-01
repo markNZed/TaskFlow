@@ -58,15 +58,18 @@ export async function commandUpdate_async(task) {
     throw new Error("Missing task.instanceId");
   }
   let processorId = task.hub.sourceProcessorId;
-  // In the case of a sync we need to lock the target instanceId
   const commandArgs = task.hub.commandArgs;
+  let instanceId = task.instanceId;
+  if (commandArgs?.syncTask?.instanceId) {
+    instanceId = commandArgs.syncTask.instanceId;
+  }
   //const localTaskRelease = await taskLock(task.instanceId, "commandUpdate_async");
   utils.logTask(task, "commandUpdate_async messageId:", task?.meta?.messageId);
   try {
     utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
-    let activeTask = await getActiveTask_async(task.instanceId)
+    let activeTask = await getActiveTask_async(instanceId)
     if (!activeTask) {
-      throw new Error("No active task " + task.instanceId);
+      throw new Error("No active task " + instanceId);
     }
     if (commandArgs?.sync) {
       if (commandArgs?.done) {
@@ -74,9 +77,6 @@ export async function commandUpdate_async(task) {
       }
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
-      if (!activeTask) {
-        throw new Error("No active task " + commandArgs.syncTask.instanceId);
-      }
       // This should have only the sync updates in it
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
       task.hub.commandArgs["syncTask"] = null;

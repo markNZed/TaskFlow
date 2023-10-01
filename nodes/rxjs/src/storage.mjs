@@ -103,6 +103,17 @@ async function setActiveTask_async(task) {
   ]);
 }
 
+// Need this because we do not have access to grep/regex to find a key
+// If we access Redis directly we could use regex
+async function keysActiveTask_async() {
+  let keys = [];
+  // eslint-disable-next-line no-unused-vars
+  for await (const [taskId, task] of activeTasksStore_async.iterator()) {
+    keys.push(taskId);
+  }
+  return keys;
+}
+
 if (NODE.storage.emptyAllDB) {
   let toClear = [
     cacheStore_async.clear(),
@@ -157,6 +168,7 @@ export {
   sharedStore_async,
   setActiveTask_async,
   getActiveTask_async,
+  keysActiveTask_async,
   CEPsMap, 
   ServicesMap, 
   OperatorsMap,

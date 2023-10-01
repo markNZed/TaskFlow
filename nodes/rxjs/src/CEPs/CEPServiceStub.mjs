@@ -10,7 +10,7 @@ import { utils } from "#src/utils";
   root.user.testing.zeroshot.start
 */
 
-async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
+async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const modifyKey = args.key;
   const value = args.value;
   const type = args.type;

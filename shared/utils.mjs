@@ -921,8 +921,7 @@ const utils = {
       taskCopy.processor["stateLast"] = taskCopy.state.current;
       delete taskCopy.state.last;
     }
-    // Strip Services and Operators as these are local to the Processor
-    // The deepClone probably stripts them anyway?
+    // Strip Service, Operator, and CEP functions as these are local to the Processor
     if (taskCopy.services) {
       //delete taskCopy.services;
     }
@@ -1176,6 +1175,12 @@ const utils = {
   },
 
   debugTask: async function(task, context = "") {
+    if (task === undefined) {
+      throw new Error("Task undefined in debugTask");
+    }
+    if (task === null) {
+      throw new Error("Task null in debugTask");
+    }
     task = utils.deepClone(task); // Avoidin issues with logging references
     // This is like a continuous assertion (it runs before debug info is collected)
     if (task?.processor?.origTask?.id && task?.processor?.origTask?.id !== task?.id) {
@@ -1241,6 +1246,7 @@ const utils = {
       //logParts.push("task.hub.coprocessing", task.hub.coprocessing);
     }
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
+    logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));
   },

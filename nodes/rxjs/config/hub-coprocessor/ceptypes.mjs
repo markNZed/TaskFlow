@@ -16,6 +16,10 @@ const ceptypes = [
         name: "shared",
         moduleName: "CEPShared",
     },
+    {
+        name: "monitorInstance",
+        moduleName: "CEPMonitorInstance",
+    },
 ];
 
 export { ceptypes }

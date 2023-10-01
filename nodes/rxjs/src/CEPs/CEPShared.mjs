@@ -22,7 +22,7 @@ import assert from 'assert';
 // The raw data is the same but not what is attached to the task
 
 // eslint-disable-next-line no-unused-vars
-async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
+async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   // We only want to run this during the coprocessing of the task
   // So we can see the null values and detect the deleteion of keys in shared
   // The null values get striped out in normal task processing

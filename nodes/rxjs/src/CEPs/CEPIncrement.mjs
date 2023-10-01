@@ -9,7 +9,7 @@ import { commandUpdate_async } from "#src/commandUpdate";
 // A demo
 // Because we are modifying the same task instance we do not use the commandUpdate_async
 // We cannot modify the task after coprocessing because those changes will not be dispatched
-async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
+async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const increment = args.increment;
   // We cannot send an update to a command tha has not already been stored as active
   // Otherwise the diff communication will fail.
@@ -50,7 +50,7 @@ async function cep_async(wsSendTask, CEPInstanceId, functionName, task, args) {
   //syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : increment;
   //syncDiff.output["CEPinitiatingProcessorId"] = task.processor.initiatingProcessorId;
   utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
-  utils.logTask(task, functionName + " called on " + task.id + " CEP created by " + CEPInstanceId);
+  utils.logTask(task, "CEPIncrement called on " + task.id + " CEP created by " + CEPInstanceId);
   // We can do this if running on coprocessor
   //task.output["modifiedBy"] = CEPInstanceId;
   //task.output["CEPCount"] = syncDiff.output["CEPCount"];
