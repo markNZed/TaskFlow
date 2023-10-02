@@ -7,11 +7,12 @@ const tasktypes = [
     environments: ["rxjs-hub-coprocessor", "react"],
   },
   {
+    name: "TaskHelloWorld",
+    environments: ["react"],
+  },
+  {
     name: "TaskCEPHelloWorld",
     environments: ["rxjs-hub-consumer"],
-    config: {
-      autoStartEnvironment: "rxjs-hub-consumer",
-    },
   },
   {
     name: "TaskCEPServiceStub",

@@ -24,6 +24,9 @@ router.post("/", async (req, res) => {
   let commandsAccepted = req.body?.commandsAccepted;
   let language = req.body?.language;
   let coprocessor = req.body?.coprocessor;
+  let type = req.body?.type;
+  let role = req.body?.role;
+  let processing = req.body?.processing;
 
   let userId = utils.getUserId(req);
 
@@ -50,12 +53,18 @@ router.post("/", async (req, res) => {
       commandsAccepted,
       language,
       isCoprocessor: true,
+      type,
+      role,
+      processing,
     })
   } else {  
     activeProcessors.set(processorId, {
       environment,
       commandsAccepted,
       language,
+      type,
+      role,
+      processing,
     })
   }
 

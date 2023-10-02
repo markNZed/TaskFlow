@@ -13,6 +13,7 @@ const system = [
         isRegex: true,
         match: ".*instance.*",
         environments: ["rxjs-hub-coprocessor"],
+        isSingleton: true,
       }
     },
     parentName: "system",
@@ -26,6 +27,7 @@ const system = [
         isRegex: true,
         match: ".*instance.*",
         environments: ["rxjs-hub-coprocessor"],
+        isSingleton: true,
       }
     },
     parentName: "system",

@@ -27,6 +27,7 @@ function findCEP (CEPFuncsKeys, matchExpr) {
   let result = [];
   const directMatch = CEPMatchMap.get(matchExpr);
   if (directMatch) {
+    console.log("findCEP direct match");
     result.push(directMatch);
   }
   // filter CEPFuncsKeys for those starting with regex:
@@ -76,15 +77,28 @@ taskSubject
         const CEPFuncsKeys = CEPMatchMap.keys();
         utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
         //utils.logTask(task, "CEPFuncsKeys", CEPFuncsKeys);
-        utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
+        //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
         let instanceIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
-        utils.logTask(task, "CEP instanceIdSourceFuncsMap ", [...instanceIdSourceFuncsMapArray]);
+        //utils.logTask(task, "CEP instanceIdSourceFuncsMap ", [...instanceIdSourceFuncsMapArray]);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-id-" + task.id);
         let idSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-id-" + task.id) || new Map();
         //utils.logTask(task, "CEP idSourceFuncsMap ", [...idSourceFuncsMapArray]);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-familyId");
         let familyIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-familyId") || new Map();
-        //utils.logTask(task, "CEP familyIdSourceFuncsMap ", [...familyIdSourceFuncsMapArray]);      
+        //utils.logTask(task, "CEP familyIdSourceFuncsMap ", [...familyIdSourceFuncsMapArray]);
+        let userIdSourceFuncsMapArray = [];
+        if (task.user) {
+          utils.logTask(task, "CEP looking for " + task.user.id + "-userId-" + task.id);
+          userIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.user.id + "-userId-" + task.id) || new Map();
+          utils.logTask(task, "CEP userIdSourceFuncsMap ", [...userIdSourceFuncsMapArray]);      
+        }
+        let CEPSecretSourceFuncsMapArray = [];
+        if (task.config?.local?.CEPSecret) {
+          const CEPsecret = task.config?.local?.CEPSecret;
+          utils.logTask(task, "CEP looking for CEPSecret-" + CEPsecret);
+          CEPSecretSourceFuncsMapArray = findCEP(CEPFuncsKeys, "CEPSecret-" + CEPsecret) || new Map();
+          utils.logTask(task, "CEP CEPSecretSourceFuncsMap ", [...CEPSecretSourceFuncsMapArray]);      
+        }
         // Retrieve the function arrays from each Map
         let instanceIdCEPFuncs = []
         for (const instanceIdSourceFuncsMap of instanceIdSourceFuncsMapArray) {
@@ -99,8 +113,16 @@ taskSubject
         for (const familyIdSourceFuncsMap of familyIdSourceFuncsMapArray) {
           familyIdCEPFuncs.push(...familyIdSourceFuncsMap.values());
         }  
+        let userIdCEPFuncs = [];
+        for (const userIdSourceFuncsMap of userIdSourceFuncsMapArray) {
+          userIdCEPFuncs.push(...userIdSourceFuncsMap.values());
+        }  
+        let CEPSecretCEPFuncs = [];
+        for (const CEPSecretSourceFuncsMap of CEPSecretSourceFuncsMapArray) {
+          CEPSecretCEPFuncs.push(...CEPSecretSourceFuncsMap.values());
+        }  
         // Flatten all CEP functions into a single array
-        let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs];
+        let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs, ...userIdCEPFuncs, ...CEPSecretCEPFuncs];
         utils.logTask(task, "allCEPFuncs", allCEPFuncs);
         // Run each CEP function serially
         task.processor.CEPExecuted = [];

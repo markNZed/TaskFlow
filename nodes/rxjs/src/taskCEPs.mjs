@@ -42,10 +42,20 @@ function CEPCreate(CEPMatchMap, task, match, config) {
   }
   // Check if the Map has an entry for match
   let entryId = task.instanceId;
-  if (task.id.startsWith("root.system.")) {
+  if (config.isSingleton) {
     entryId = task.id;
   }
-  if (!task.id.startsWith("root.system.") || !config.isRegex) {
+  const usingUserId = match.includes("userId-");
+  const usingCEPSecret = match.includes("CEPSecret-");
+  if (usingUserId) {
+    if (!task.user?.id) {
+      throw Error("User id is undefined");
+    }
+    match = task.user.id + "-" + match;
+  // Singleton will not be distinct per family  
+  } else if (usingCEPSecret) {
+    // Nothing to do as match contains the secret
+  } else if (!config.isSingleton && !config.isRegex) {
     match = task.familyId + "-" + match;
   }
   if (config.isRegex) {

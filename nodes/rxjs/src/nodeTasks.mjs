@@ -34,8 +34,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       // Could have a rule that sync do not operate on the same task
       // True that in this case we can just modify the task
       utils.logTask(T(), "RxJS Task Coprocessor sync so skipping Task Fuction id:" + T("id"));
-    } else if (NODE.role === "coprocessor" && !T("environments").includes(NODE.environment)) {
-      utils.logTask(T(), "Task is not configured to run on coprocessor");
+    } else if (!T("environments").includes(NODE.environment)) {
+      utils.logTask(T(), "Task is not configured to run on this processor");
     // If this is not a coprocessor then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));

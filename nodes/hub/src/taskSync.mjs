@@ -81,7 +81,7 @@ const taskSync_async = async (key, value) => {
 
   taskCopy.hub.coprocessing = false;
 
-  // Every coprocssor needs to be updated/synced
+  // Every coprocessor needs to be updated/synced
   if (coprocessorIds) {
     for (const coprocessorId of coprocessorIds) {
       if (command === "join") {
@@ -94,6 +94,29 @@ const taskSync_async = async (key, value) => {
           wsSendTask(taskCopy, coprocessorId, activeTask);
         } else {
           //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coprocessorId);
+        }
+      }
+    }
+  }
+
+  // Every type: "hub", role: "consumer" needs to be updated/synced
+  const activeProcessorIds = Array.from(activeProcessors.keys());
+  const hubConsumerIds = activeProcessorIds.filter(processorId => {
+    const processorData = activeProcessors.get(processorId);
+    return processorData?.role === "consumer" && processorData?.type === "hub";
+  })
+  if (hubConsumerIds) {
+    for (const hubConsumerId of hubConsumerIds) {
+      if (command === "join") {
+        continue;
+      }
+      const processorData = activeProcessors.get(hubConsumerId);
+      if (processorData) {
+        if (processorData.commandsAccepted.includes(command)) {
+          utils.logTask(taskCopy, "taskSync_async hub consumer", command, " sent to processor " + hubConsumerId);
+          wsSendTask(taskCopy, hubConsumerId, activeTask);
+        } else {
+          //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, hubConsumerId);
         }
       }
     }
@@ -113,6 +136,10 @@ const taskSync_async = async (key, value) => {
     //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingProcessorId);
     let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
     for (const processorId of processorIds) {
+      // Hub consumers have already been updated
+      if (hubConsumerIds.includes(processorId)) {
+        continue;
+      }
       if (command === "join" && processorId !== initiatingProcessorId) {
         continue;
       }

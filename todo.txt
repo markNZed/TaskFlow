@@ -1,16 +1,11 @@
 /* ToDo
 -------
-Replace 
-  if (task.id.startsWith("root.system.")) {
-    entryId = task.id;
-  }
-  with config e.g. single
-CEPHelloWorld is broken ?
 Keep both autoStartEnvironments and autoStartEnvironments ?
 Demo of modifying systemMessage from another Task
   It is not until the Service has  been used that all the model details are visible
     Should sync ?
-Demo of copying a Task
+Demo of copying a Task (more like copying a service?)
+  Needs to go through init to establish services
 Masking at least for React seems important
 If CEP then fsm -> FSM
 Test Docker setup

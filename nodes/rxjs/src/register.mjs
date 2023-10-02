@@ -24,6 +24,9 @@ const register_async = async () => {
       commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
       coprocessor: NODE.role === "coprocessor",
       language,
+      type: NODE.type,
+      role: NODE.role,
+      processing: NODE.processing,
    }),
   };
 

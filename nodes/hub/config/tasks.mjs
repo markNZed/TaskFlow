@@ -317,9 +317,28 @@ const tasks = [
   },
 
   {
-    name: "helloworld",
+    name: "cephelloworld",
     type: "TaskCEPHelloWorld",
-    parentName: "root",
+    parentName: "user",
+    config: {
+      autoStartEnvironment: "rxjs-hub-consumer",
+      local: {
+        targetTaskId: "root.user.helloworld",
+        CEPSecret: "helloworld",
+      }
+    },
+  },
+  {
+    name: "helloworld",
+    type: "TaskHelloWorld",
+    parentName: "user",
+    initiator: true,
+    config: {
+      label: "Hello World",
+      local: {
+        CEPSecret: "helloworld",
+      },
+    }
   },
 
 ];
