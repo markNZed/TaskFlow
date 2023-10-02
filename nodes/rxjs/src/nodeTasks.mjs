@@ -13,11 +13,13 @@ import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
 import { activeTaskFsm, serviceTypes_async, operatorTypes_async, cepTypes_async, ServicesMap, OperatorsMap, CEPsMap } from "./storage.mjs";
 import { getFSMHolder_async } from "#src/taskFSM";
+import { commandUpdate_async } from "#src/commandUpdate";
 
 export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
   const origTask = utils.deepClone(task);
   let T = utils.createTaskValueGetter(task);
   utils.debugTask(T(), "input");
+  let nodeFunctionsInitialized = false;
   try {
     utils.logTask(T(), "taskProcess_async", T("id"));
     utils.logTask(T(), "taskProcess_async processor.coprocessing", T("processor.coprocessing"));
@@ -72,6 +74,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 const serviceName = services[key]["moduleName"];
                 if (await serviceExists_async(serviceName)) {
                   services[key]["module"] = await importService_async(serviceName);
+                  ServicesMap.set(serviceName, services[key]["module"]);
+                  nodeFunctionsInitialized = true;
                 } else {
                   throw new Error(`Service ${serviceName} not found for ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
                 }
@@ -86,7 +90,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           await Promise.all(promises);
           T("services", services);
           console.log("init services", T("services"));
-          ServicesMap.set(T("instanceId"), services);
+          //ServicesMap.set(T("instanceId"), services);
         }
         let operators = T("operators") || {};
         let operatorsConfig = utils.deepClone(T("operators"));
@@ -117,6 +121,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                   const operatorName = operators[key]["moduleName"];
                   if (await operatorExists_async(operatorName)) {
                     operators[key]["module"] = await importOperator_async(operatorName);
+                    OperatorsMap.set(operatorName, operators[key]["module"]);
+                    nodeFunctionsInitialized = true;
                     //console.log("operators", operators);
                   } else {
                     throw new Error(`Operator ${operatorName} not found for ${T("id")} config: ${JSON.stringify(operatorsConfig)}`);
@@ -133,29 +139,26 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           await Promise.all(promises);
           T("operators", operators);
           console.log("init operators", T("operators"));
-          OperatorsMap.set(T("instanceId"), operators);
+          //OperatorsMap.set(T("instanceId"), operators);
         }
       } else {
         // Restore functions which are not synchronized in the Tasks object
         // The services/operators are instablished upon init so values modified will
         // not be visible in the Task outside of this processor until the Task here performs an update.
         // Maybe this should be automated e.g. if services/operators are set then send a sync for the services/operators
-        const services = ServicesMap.get(T("instanceId")) || {};
-        // Merge any changes that happened after init
-        T("services", utils.deepMerge(services, T("services")));
         // Copy the functions into place
-        Object.keys(services).map(async (key) => {
-          T(`services.${key}.module`, services[key].module);
-        });
-        console.log("Restore services", T("services"));
-        const operators = OperatorsMap.get(T("instanceId")) || {};
-        // Merge any changes that happened after init
-        T("operators", utils.deepMerge(operators, T("operators")));
-        // Copy the functions into place
-        Object.keys(operators).map(async (key) => {
-          T(`operators.${key}.module`, operators[key].module);
-        });
-        console.log("Restore operators", T("operators"));
+        if (T("services")) {
+          Object.keys(T("services")).map(async (key) => {
+            T(`services.${key}.module`, ServicesMap.get(T(`services.${key}.moduleName`)));
+          });
+          console.log("Restore services", T("services"));
+        }
+        if (T("operators")) {
+          Object.keys(T("operators")).map(async (key) => {
+            T(`operators.${key}.module`, OperatorsMap.get(T(`operators.${key}.moduleName`)));
+          });
+          console.log("Restore operators", T("operators"));
+        }
       }
       const taskFunction = await importTaskFunction_async(taskFunctionName);
       // Option to run in background
@@ -213,6 +216,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                       ceps[key]["module"] = await importCEP_async(moduleName);
                       // The default function is cep_async
                       CEPregister(moduleName, ceps[key].module.cep_async);
+                      nodeFunctionsInitialized = true;
                       //console.log("T ceps:", T("ceps"));
                     } else {
                       throw new Error(`Cep ${moduleName} not found for ${T("id")} config: ${JSON.stringify(cepsConfig)}`);
@@ -244,6 +248,32 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         }
       }
       //utils.logTask(T(), "taskProcess_async CEPMatchMap", CEPMatchMap);
+    }
+    if (T("processor.command") === "init" && nodeFunctionsInitialized) {
+      // Sync these changes
+      // services/operators/ceps should be in a processor namespace ?
+      // Could have different processors with the same service name but different config?
+      const syncTask = {};
+      if (T("services")) {
+        syncTask["services"] = T("services");
+      }
+      if (T("operators")) {
+        syncTask["operators"] = T("operators");
+      }
+      if (T("ceps")) {
+        syncTask["ceps"] = T("ceps");
+      }
+      const syncUpdateTask = {
+        command: "update",
+        commandArgs: {
+          sync: true,
+          instanceId: T("instanceId"),
+          syncTask,
+        },
+        commandDescription: `Sync node functions on ${NODE.name}`,
+      };
+      // Don;t await as we need to get the lock on this task
+      commandUpdate_async(wsSendTask, syncUpdateTask);
     }
     // We could replace updatedTask with T() ?
   } catch (e) {

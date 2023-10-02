@@ -1,45 +1,51 @@
 /* ToDo
 -------
-Keep both autoStartEnvironments and autoStartEnvironments ?
-Demo of modifying systemMessage from another Task
-  It is not until the Service has  been used that all the model details are visible
-    Should sync ?
-Demo of copying a Task (more like copying a service?)
-  Needs to go through init to establish services
-Masking at least for React seems important
-If CEP then fsm -> FSM
+Demo of copying a task
+  Copy of TaskChat
+    System task that starts a conversation 
+      During start provide commandArgs with copyId
+        Could intercept with CEP so TaskConversation is unchanged
+          TaskCopy
+            Does it need to be specific to TaskConversation ?
+              config would map id to particular instanceId for copying
+                only copy the TaskChat
+                  TaskCopy could be configured for particular child (conversation)
+                    Point to familyId so TaskCopy can find the Tasks to copy?
 Test Docker setup
 Random Client is broken
+Check Demo of collaborative chat
+Keep both autoStartEnvironments and autoStartEnvironments ?
+Major features to implement before further refactoring
+  Debug support per Task
+    Explore more about import debug from "debug"; 
+  TaskCreateTask
+    Identify closest existing task
+      Chat interaction
+        Validation/ESlint
+          Testing
+    Dynamic Task as per dynamic config
+      Needs to modify tasktypes (another Task)
+        TaskDynamic that is on every processor 
+          Allows tasks to be created on the fly
+            Can overwrite the type but this really is just dynamic config
+Masking at least for React seems important
+If CEP then fsm -> FSM
 Much of "services.chat" should be in "operators.LLM" ?
   At least that which is used in OperatorLLM.mjs
-Tasks could be like a tree
-  Search in the parent directories for the module
 tasksSchema should be part of a service?
   Could have a logging service regarding internal behavior of nodes
 Merge hub with rxjs
   Globally replace processorId with nodeId
   Move rxjs to configdata.mjs
-Need access to the service type to be able to modify the system prompts
-  But we want to override for an instance not all instances
-    Use the config in the task ?
-      How to get original config ?
-        Add a TaskServiceTypeQuery that can return the config of a service
-          Base on SystemConfig and ConfigEditor
-  Would need to run a Task that can do that on the processor
-    Should be possible to base it on TaskSystemConfig
-      TaskServiceConfig
-      Would need to put the service config into Redis
-        Move serviceTypes into configdata.mjs
-          Do this after consolidating hub+processor into a node
 We need to be able to edit/resubmit in the chat to explore prompts
-  Could start with an options to delete
+  Could start with an option to delete
     Could replace content with empty string.
-Support web socket or RxjS queue
+Support both web socket and RxjS queue
+  Abstract interface that is configured via node configuration
   These can be different subjects in rxjs
     TaskSync sends to event queue or websocket
       node registers as event based or websocket
 Total token count for conversation (using what chatGPT returns - usage)
-Check Demo of collaborative chat
 A Processor that is restarted does not rejoin the activeTasks ?
 tasktype cannot configure fsm: { useMachine: true} ?
 The stepper sets the state to exit - it should not act directly on the state, use task.input
@@ -62,7 +68,7 @@ Add the user object only if it has changed
     Then would not need to send all the time
       Could have multple users on the the same processor collaborating
 Switch from hub/processor to node
-  Add support for multiple hubs
+  Add support for multiple hubs (i.e. bridge)
     Will allow fro bridge between TF & MTF
   Tasks dedicated to processor is another reason to have a single "node"
   Move to task.node ?
@@ -71,14 +77,10 @@ Menu should not have shared.configTreeHubconsumerTasks on React
   Could store processor specific info in task.processor
     But it is using task.shared
     Masking could fix this
-Why did chatGPT not like the value field of function being an object but could use string  -I guess because we returned a string for id?
 Could have an option on CEP as to whether we need to await or not
   Would allow for concurrent processing for most CEP
   Those that can be run concurrently might be better in a particular class of processor
-Move commandArgs.syncTask into task ?
-  Similar to partial.
 Need to think more about locks for tasks initiated on hub (start/update/error)
-How should we deal with a change to tasktype for activeTasks ?
 Verbosity level for debug
 TaskSystemDebug
   Modifies a task by sending sync
@@ -86,15 +88,7 @@ TaskSystemDebug
     Can it use a try catch and eval the debug filter - so no need to reload?
     The util.debugTask function can be modifed in the browser/server by the Task ?
       Need a JS editor in the task
-Move familyTree CEP from TaskTest_async into dedicated TaskSystem
-  Should familyTree be available in shared ?
-      Do we install CEP for each family?
-        If the init task does not have shared ? Update on the familyTree task instance
-          Any task can launh a familyTree task and it should build the tree then maintain it
-            Can we assert that a shared variable is read only? 
-              Owned by an instance
-  We need another way of managing the familyTree - TaskFamilyTree
-  familyId should be in meta?
+task.familyId should be in meta?
 Avoid using the "start" task name/id as meaningful
 TaskSystemConfigTasks_async copy feature in tree
     Request/response could be for a service while input/output is for a taskFunctions
@@ -164,19 +158,6 @@ Collaborate will keep info in the caches and db. How can we clear out a specific
       A Task ? But Task Function does not have access. 
         Delete command with argument for familyId 
 Point to private extensions of config rather than redirecting the entire config directory
-Major features to be implemented before refactoring
-  Debug support per Task
-    How to combine debug logging with task.meta.debug ?
-    Conditional breakpoints in VSCode works well
-    Explore more about import debug from "debug"; 
-  TaskCreateTask
-    Identify closest existing task
-      Chat interaction
-        Validation/ESlint
-          Testing
-    Dynamic Task as per dynamic config
-      Needs to modify tasktypes (another Task)
-  Also need to create new servicetypes but that is on the rxjs processor
 Extend testing
   Batch testing
     TaskCron to regularly check things
@@ -193,14 +174,7 @@ One approach to code review:
   5) Add the files and push: git add .;git push --set-upstream origin review-branch
   6) Open a PR on github so any file can be reviewed
   The above should be doable inside a single repo - create branch delete everything, create another branch from that and add everything at once
-Selecting menu item second time could restart the task
-  decide what to do within the task e.g. processor.command.restart
-  At the moment we just start a new task
 Add xstate-viz server path on proxy and choose port
-Generic TaskEdit that would allow for presentation/editing of any task in the familyId
-  Could configure to limit access to specific fields
-    Ideally could us schema but could also guess at the type (user could override)
-  Need a submit button for JSON Editor to update the task - also run validation first
 
 https://opencollective.com/
 How to report pass/fail ?
