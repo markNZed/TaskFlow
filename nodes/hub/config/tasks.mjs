@@ -341,6 +341,23 @@ const tasks = [
     }
   },
 
+  /*
+    Use Rx to communicate between RxJS Task and RxPy
+    Maybe experiment with launching a Python Task during init
+    Then just pass on commands via TaskRxPy
+  */
+  {
+    name: "rxpy",
+    type: "TaskRx",
+    parentName: "user",
+    initiator: true,
+    environments: ["rxjs-processor-consumer"],
+    config: {
+      label: "RxPy",
+      autoStartEnvironment: "rxjs-processor-consumer",
+    },
+  },
+
 ];
 
 //console.log(JSON.stringify(tasks, null, 2));

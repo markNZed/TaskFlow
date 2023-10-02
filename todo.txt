@@ -1,5 +1,11 @@
 /* ToDo
 -------
+TaskRx could be an example of a task only on processor-consumer
+  Could create config/processor-consumer/tasktypes.mjs
+  Would need taskStart.mjs
+    wsSendTask would need to use RxJS not WebSocket
+      task.processor.local = true (not sent to Hub)
+  pip3 install rx redis aioredis
 Demo of copying a task
   Copy of TaskChat
     System task that starts a conversation 
@@ -11,6 +17,12 @@ Demo of copying a task
                 only copy the TaskChat
                   TaskCopy could be configured for particular child (conversation)
                     Point to familyId so TaskCopy can find the Tasks to copy?
+    Review taskStart to identify what must be replaced in the copy
+      set commandArgs.copyInstanceId and then copy task to initTask 
+      children/parent (as per pasteBranch_async)
+      familyId
+tasksStore_async -> taskconfigsStore_async
+  tasks.mjs -> taskconfigs.mjs
 Test Docker setup
 Random Client is broken
 Check Demo of collaborative chat
@@ -19,15 +31,19 @@ Major features to implement before further refactoring
   Debug support per Task
     Explore more about import debug from "debug"; 
   TaskCreateTask
-    Identify closest existing task
+    Identify closest existing task (vectorDB for task descriptions)
       Chat interaction
         Validation/ESlint
           Testing
     Dynamic Task as per dynamic config
       Needs to modify tasktypes (another Task)
-        TaskDynamic that is on every processor 
+        TaskDynamic that is on every processor ?
           Allows tasks to be created on the fly
             Can overwrite the type but this really is just dynamic config
+              What about new Task Function ?
+                Write out new modules from Processor ?
+                Eval of code in the config
+                Introspection
 Masking at least for React seems important
 If CEP then fsm -> FSM
 Much of "services.chat" should be in "operators.LLM" ?

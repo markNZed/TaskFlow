@@ -407,18 +407,19 @@ async function taskStart_async(
     processorId,
     prevInstanceId,
   ) {
-    
+
+    // Could have a TaskEmpty if we do not want to base the task on a task config
     const initTaskConfig = await tasksStore_async.get(initTask.id);
     if (!initTaskConfig) {
       throw new Error("Could not find task with id " + initTask.id)
     }
 
     // Instantiate new task
-    let task = utils.deepClone(initTaskConfig); // deep copy
+    let task = utils.deepClone(initTaskConfig); // deep copy (not needed?)
 
     //utils.logTask(task, "Task template", task)
 
-    // Note that instanceId may change due to task.config.oneFamily or task.config.collaborateGroupId
+    // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
 
     const autoStart = initTask?.autoStart;
@@ -511,7 +512,7 @@ async function taskStart_async(
 
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = "init";
-    task.hub["sourceProcessorId"] = autoStart ? undefined : processorId;
+    task.hub["sourceProcessorId"] = autoStart ? undefined : processorId; // not sure about this, replace undefined with hubId ?
     task.hub["initiatingProcessorId"] = autoStart ? "autostart" : processorId;
     task.hub["coprocessingDone"] = false;
     
