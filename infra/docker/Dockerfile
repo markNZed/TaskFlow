@@ -34,12 +34,12 @@ RUN yarn global add nodemon eslint prettier jest
 WORKDIR /app
 
 RUN npm update -g
-RUN npm install -g typescript
 RUN npm install -g quicktype
-RUN npm install pm2 -g
+#RUN npm install pm2 -g
 # Install node-gyp for better-sqlite3 (which will be replaced by Redis/MongoDB)
 RUN npm install -g node-gyp
 
+RUN pip3 install rx redis aioredis
 
 # Instead of the hacks below I deleted node_modules/@tensorflow and ran npm install again
 # RUN cd /app/nodes/rxjs/node_modules/@tensorflow/tfjs-node/deps/lib && \

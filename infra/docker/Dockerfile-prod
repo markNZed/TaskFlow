@@ -8,7 +8,9 @@ ENV SHELL /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget
+    apt-get install -y bash git python3 python3-pip build-essential screen procps vim wget
+
+RUN pip3 install rx redis aioredis
 
 EXPOSE 3000
 EXPOSE 5000
