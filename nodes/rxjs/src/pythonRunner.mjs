@@ -3,15 +3,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 class PythonRunner {
-  constructor(scriptPath) {
+  constructor(scriptPath = '/Services/ServicePython.py') {
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     this.scriptPath = currentDir + "/" + scriptPath;
     this.process = null;
   }
 
-  start(args = []) {
+  start(moduleName, args = []) {
     // This is -u (unbuffered) so we can monitor the script output
-    this.process = spawn('python3', ['-u', ...args, this.scriptPath]);
+    this.process = spawn('python3', ['-u', this.scriptPath, moduleName, ...args, ]);
 
     this.process.on('error', (error) => {
       console.error(`PythonRunner spawn Error: ${error}`);

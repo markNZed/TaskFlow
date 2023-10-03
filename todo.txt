@@ -1,7 +1,6 @@
 /* ToDo
 -------
 TaskRx could be an example of a task only on processor-consumer
-  Abstract Redis out of TaskRx 
   Add command protocol
   use importlib to dynamically import function ?
     Would be like a Python Service

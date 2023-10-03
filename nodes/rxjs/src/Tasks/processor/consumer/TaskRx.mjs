@@ -19,9 +19,10 @@ const TaskRx_async = async function (wsSendTask, T) {
 
     console.log("TaskRx init");
 
-    // Start the Python Publisher unbuffered
-    const pythonRunner = new PythonRunner('/Services/ServicePublish.py');
-    pythonRunner.start();
+    // Prepare the Python script runner
+    const pythonRunner = new PythonRunner();
+    // Start the runner with a specific Python module
+    pythonRunner.start('publish');
 
     const messagingClient = new MessagingClient(NODE.storage.redisUrl);
 
