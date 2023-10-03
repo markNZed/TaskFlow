@@ -1,15 +1,38 @@
 /* ToDo
 -------
 Refactoring 
-  processor -> node
-  processors -> nodes
-  processorId
-  processorIds
-  updatedProcessorIds
-  nodeData
-  processorDiff
-  activeTaskProcessorsStore_async
-  activeProcessors
+  Align hub with rxjs config.mjs
+    NODE["app"]
+      appLabel, appName, appAbbrev, 
+    NODE["storage"]
+      REDIS_URL, MONGO_URL, EMPTY_ALL_DB,
+    hubId => NODE.id
+    CONFIG_DIR => NODE["configDir"]
+    SAVE_TASKS new config NODE.dumpConfigs (apply to all and put in config dir with gitignore)
+    ALLOWED_ORIGINS new config NODE.allowedOrigins
+    haveCoprocessor new config for core type NODE.haveCoprocessor
+  Unique to the hub:
+    config of tasks, tasktypes, users, groups
+    routes - should transition to websocket ?
+    commandError.mjs
+    commandInit.mjs
+    commandStart.mjs
+    commandUpdate.mjs (different)
+    configdata.mjs
+      Close to how we need to treat operators/services/CEPs
+    storage 
+      Identify the differences in export
+    taskConverterWrapper.mjs 
+      fromTask is used
+      Rework as explicit validation
+    taskProcess.mjs
+    taskStart.mjs
+    taskSync.mjs
+    validateTasks.mjs
+      Rename to validateConfigTasks.mjs
+    webSocket.js
+    server.js
+  Replace task.hub with task.node ?
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service

@@ -124,4 +124,4 @@ if (process.env.WS_PORT) {
 
 console.log({NODE});
 
-export { DEFAULT_USER, CACHE_ENABLE, DUMMY_OPENAI, MAP_USER, TASKHUB_URL, hubSocketUrl, NODE };
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, DUMMY_OPENAI, TASKHUB_URL, hubSocketUrl };
