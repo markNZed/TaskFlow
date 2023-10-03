@@ -28,9 +28,9 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     if (processorMatch) {
       utils.logTask(T(), "This was the initiatingProcessorId so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "error") {
-      utils.logTask(T(), "RxJS Processor error so skipping Task Fuction id:" + T("id"));
+      utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "start") {
-      utils.logTask(T(), "RxJS Processor start so skipping Task Fuction id:" + T("id"));
+      utils.logTask(T(), "RxJS start so skipping Task Fuction id:" + T("id"));
     } else if (NODE.role === "coprocessor" && T("node.commandArgs.sync")) {
       // Seems a risk of CEP operating on sync creating loops
       // Could have a rule that sync do not operate on the same task
@@ -176,7 +176,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       }
       utils.logTask(T(), `Finished ${T("type")} in state ${T("state.current")}`);
     } else {
-      utils.logTask(T(), "RxJS Processor no Task Function for " + T("type"));
+      utils.logTask(T(), "RxJS no Task Function for " + T("type"));
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (T("node.command") === "init") {

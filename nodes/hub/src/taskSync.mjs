@@ -170,7 +170,7 @@ const taskSync_async = async (key, value) => {
         }
       } else {
         updatedNodeIds = updatedNodeIds.filter(id => id !== nodeId);
-        utils.logTask(taskCopy, `Processor ${nodeId} not found in active nodes. It will be removed from activeTaskProcessorsStore_async`);
+        utils.logTask(taskCopy, `Node ${nodeId} not found in active nodes. It will be removed from activeTaskProcessorsStore_async`);
       }
     }
     // Update activeTaskProcessorsStore_async with the updatedNodeIds only if the nodes have changed

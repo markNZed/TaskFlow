@@ -109,7 +109,7 @@ const TaskGeneratePersona = (props) => {
         break;
       case "wait":
         if (transition()) {
-          // We want to get all the Processors into the wait state
+          // We want to get all the nodes into the wait state
           modifyTask({
             "command": "update",
             "commandDescription": "Transition state to wait",

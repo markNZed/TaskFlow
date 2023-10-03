@@ -16,8 +16,8 @@ import { v4 as uuidv4 } from "uuid";
 Task Function
   Present textarea and dropdown for user to enter a prompt
   When prompt is submitted state.current -> send
-  NodeJS sends incemental text responses by websocket updating task.output.LLMResponse
-  NodeJS sends final text with state.current=received
+  RxJS Processor sends incemental text responses by websocket updating task.output.LLMResponse
+  RxJS Processor sends final text with state.current=received
   Parent component is expected to:
     Display updates to task.output.msgs
     Provide task.input.msgs
@@ -26,8 +26,8 @@ Task States
   start:
   input: detect submission of input or skip to state mentionAddress
   mentionAddress: send location as prompt
-  sending: sending user prmopt to NodeJS Processor
-  receiving: receiving websocket response from NodeJS Processor
+  sending: sending user prompt to RxJS Processor
+  receiving: receiving websocket response from RxJS Processor
   received: 
 
 Task IO

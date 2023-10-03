@@ -66,7 +66,7 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   // For each node in task.nodes log the stateLast
   for (const key in task.nodes) {
     const node = task.nodes[key];
-    console.log(`Processor: ${key}, StateLast: ${node.stateLast}`);
+    console.log(`node: ${key}, StateLast: ${node.stateLast}`);
   }
   */
   task.users = activeTask?.users || {};

@@ -295,7 +295,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
 
 function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors) {
   // Build list of nodes/environments that need to receive this task
-  let taskProcessors = []
+  let taskNodes = []
 
   if (!task.environments) {
     console.error("No environments in task", task);
@@ -315,7 +315,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
     let found = false;
     if (sourceProcessor && sourceProcessor.environment === environment) {
       found = true;
-      taskProcessors.push(nodeId);
+      taskNodes.push(nodeId);
     }
     // If there are already node entries then favor these
     if (!found && task.nodes) {
@@ -323,7 +323,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
         const node = activeProcessors.get(id);
         if (node && node.environment === environment) {
           found = true;
-          taskProcessors.push(id);
+          taskNodes.push(id);
           task.nodes[id] = {id: id};
         }
       }
@@ -333,7 +333,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
       for (const [activeProcessorId, value] of activeProcessors.entries()) {
         if (value.environment === environment) {
             found = true;
-            taskProcessors.push(activeProcessorId);
+            taskNodes.push(activeProcessorId);
             task.nodes[activeProcessorId] = {
               id: activeProcessorId
             };
@@ -346,7 +346,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
       for (const [activeCoprocessorId, value] of activeCoprocessors.entries()) {
         if (value.environment === environment) {
             found = true;
-            taskProcessors.push(activeCoprocessorId);
+            taskNodes.push(activeCoprocessorId);
             task.nodes[activeCoprocessorId] = {
               id: activeCoprocessorId,
               isCoprocessor: true,
@@ -361,32 +361,32 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
     }
   }
 
-  if (taskProcessors.length == 0) {
+  if (taskNodes.length == 0) {
     throw new Error("No nodes allocated for task " + task.id);
   }
 
-  utils.logTask(task, "Allocated new task " + task.id + " to nodes ", taskProcessors);
+  utils.logTask(task, "Allocated new task " + task.id + " to nodes ", taskNodes);
 
-  return taskProcessors;
+  return taskNodes;
 }
 
-async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
+async function recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
   // Record which nodes have this task
   if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
     let nodeIds = await activeTaskProcessorsStore_async.get(task.instanceId);
-    taskProcessors.forEach(id => {
+    taskNodes.forEach(id => {
       if (nodeIds && !nodeIds.includes(id)) {
         nodeIds.push(id);
       } 
     });
     await activeTaskProcessorsStore_async.set(task.instanceId, nodeIds);
   } else {
-    await activeTaskProcessorsStore_async.set(task.instanceId, taskProcessors);
+    await activeTaskProcessorsStore_async.set(task.instanceId, taskNodes);
   }
-  //utils.logTask(task, "Processors with task instance " + task.instanceId, taskProcessors);
+  //utils.logTask(task, "Nodes with task instance " + task.instanceId, taskNodes);
   // Record which tasks have this node
   await Promise.all(
-    taskProcessors.map(async (nodeId) => {
+    taskNodes.map(async (nodeId) => {
       if (await activeProcessorTasksStore_async.has(nodeId)) {
         let taskInstanceIds = await activeProcessorTasksStore_async.get(nodeId);
         if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
@@ -546,9 +546,9 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
     task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
-    const taskProcessors = allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors);
+    const taskNodes = allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors);
 
-    await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
+    await recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);

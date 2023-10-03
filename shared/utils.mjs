@@ -921,7 +921,7 @@ const utils = {
       taskCopy.node["stateLast"] = taskCopy.state.current;
       delete taskCopy.state.last;
     }
-    // Strip Service, Operator, and CEP functions as these are local to the Processor
+    // Strip Service, Operator, and CEP functions as these are local to the node
     if (taskCopy.services) {
       //delete taskCopy.services;
     }
