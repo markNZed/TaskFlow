@@ -4,6 +4,8 @@ Refactoring
   Unique to the hub:
     config of tasks, tasktypes, users, groups
     routes - should transition to websocket ?
+      registerRoutes
+        Use the register command
     commandError.mjs
     commandInit.mjs
     commandStart.mjs
@@ -24,7 +26,12 @@ Refactoring
     server.js
   Replace task.hub with task.node ?
     How to distinguish between type/role/processing ?
-      Mayb we iterate over them and filter at the place where we need to - should not be too expensive
+      Maybe we iterate over them and filter at the place where we need to - should not be too expensive
+  Only the Hub writes to the `task.hub` object.
+  Taskflows.js should be a Task so we can pass user instead of using api/interface
+  Could have a special instanceId which matches the nodeId indicaitng a task for the node ?
+  NOt registerd with te processors so syncTask will not send
+    Probably better to start the task and copy the relevant info
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service

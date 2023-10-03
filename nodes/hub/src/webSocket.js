@@ -119,7 +119,9 @@ function initWebSocketServer(server) {
 
   const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
-  websocketServer.on("connection", (ws) => {
+  websocketServer.on("connection", (ws, req) => {
+    // Accessing headers from the request (req) object
+    const userId = utils.getUserId(req);
     console.log("websocketServer.on");
 
     ws.data = { nodeId: undefined };
@@ -138,10 +140,10 @@ function initWebSocketServer(server) {
         }
         if (!activeProcessors.has(nodeId) && !activeCoprocessors.has(nodeId)) {
           // Need to register again
-          let currentDateTime = new Date();
-          let currentDateTimeString = currentDateTime.toString();
           const task = {
-            updatedeAt: currentDateTimeString,
+            meta: {
+              updatedAt: utils.updatedAt(),
+            },
             hub: {command: "register"},
             node: {},
           };
@@ -149,6 +151,11 @@ function initWebSocketServer(server) {
           wsSendTask(task, nodeId);
           return;
         }
+      }
+
+      // Add the user id if it is not set
+      if (!j?.task?.user?.id && userId) {
+        j.task["user"] = {id: userId};
       }
 
       if (j?.task && j.task?.node?.command !== "ping") {
@@ -262,10 +269,10 @@ function initWebSocketServer(server) {
       }
 
       if (j?.task?.node?.command === "ping") {
-        let currentDateTime = new Date();
-        let currentDateTimeString = currentDateTime.toString();
         const task = {
-          updatedeAt: currentDateTimeString,
+          meta: {
+            updatedAt: utils.updatedAt(),
+          },
           hub: {command: "pong"},
           node: {},
         };

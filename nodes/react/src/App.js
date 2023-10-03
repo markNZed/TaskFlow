@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
-  const [nodeId, setProcessorId] = useState();
+  const [nodeId, setNodeId] = useState();
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
@@ -41,7 +41,7 @@ function App({ activeWorkerCount, workerId }) {
           id = appAbbrev + "-react-" + uuidv4();
           localStorage.setItem('nodeId' + workerId, id);
         }
-        replaceGlobalState("nodeId", id);
+        setNodeId(id);
       }
     }
   }, [workerId]);
@@ -74,33 +74,6 @@ function App({ activeWorkerCount, workerId }) {
     }
   }, [address, enableGeolocation]);
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch(`${hubUrl}/api/interface`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            nodeId: globalState.nodeId,
-          }),
-        });
-        const data = await response.json();
-        const user = data.user;
-        mergeGlobalState({ user });
-        console.log("Set user: ", user);
-      } catch (err) {
-        console.log(err.message);
-      }
-    };
-    if (globalState?.nodeId) {
-      setProcessorId(globalState.nodeId);
-      fetchSession();
-    }
-  }, [globalState?.nodeId]);
-
   // For reasons I don't understand, React hot update keeps the old globalState upon page reload
   useEffect(() => {
     const registerProcessor = async () => {
@@ -114,7 +87,7 @@ function App({ activeWorkerCount, workerId }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-             nodeId: globalState.nodeId,
+             nodeId: nodeId,
              commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
              environment: "react",
              language: language,
@@ -132,10 +105,10 @@ function App({ activeWorkerCount, workerId }) {
       setRegistering(false);
     };
     // Wait for the nodeId to be set
-    if (!registering && globalState?.nodeId && !globalState?.hubId) {
+    if (!registering && nodeId && !globalState?.hubId) {
       registerProcessor();
     }
-  }, [globalState]);
+  }, [nodeId]);
 
   // This is a workaround for Firefox private browsing mode not supporting IndexedDB
   // There's an about:config workaround by setting dom.indexedDB.privateBrowsing.enabled to true 
@@ -147,12 +120,14 @@ function App({ activeWorkerCount, workerId }) {
       // Ultimatley there should be one node per user on the browser
       const storageInstance = await openStorage(globalState.nodeId);
       storageRef.current = storageInstance;
-      mergeGlobalState({ storageRef });
+      // Set nodeId after storage is seetup because we will use nodeId as an 
+      // indication that we can send Tasks and we need both storage + nodeId for this
+      mergeGlobalState({ storageRef, nodeId });
     };
-    if (globalState?.nodeId) {
+    if (nodeId) {
       initializeStorage();
     }
-  }, [globalState?.nodeId]);
+  }, [nodeId]);
 
   return (
     <Routes>

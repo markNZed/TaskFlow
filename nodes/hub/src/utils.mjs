@@ -16,7 +16,7 @@ const utils = {
   getUserId: function (req) {
     let userId = DEFAULT_USER;
     let sourceIP = req.ip;
-    if (sourceIP.startsWith('::ffff:')) {
+    if (sourceIP && sourceIP.startsWith('::ffff:')) {
       sourceIP = sourceIP.substring('::ffff:'.length);
     }
     // If the request is from localhost then no need to authenticate

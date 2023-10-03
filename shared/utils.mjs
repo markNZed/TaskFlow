@@ -1002,7 +1002,9 @@ const utils = {
     let currentDateTime = new Date();
     let currentDateTimeString = currentDateTime.toString();
     return {
-      updatedeAt: currentDateTimeString,
+      meta: {
+        updatedAt: currentDateTimeString,
+      },
       node: {},
       command: "ping",
     }

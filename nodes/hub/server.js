@@ -18,9 +18,7 @@ dotenv.config();
 
 // App specific modules
 import { NODE } from "./config.mjs";
-import interfaceRoutes from "./src/routes/interfaceRoutes.js";
 import registerRoutes from "./src/routes/registerRoutes.js";
-import taskRoutes from "./src/routes/taskRoutes.js";
 import miscRoutes from "./src/routes/miscRoutes.js";
 import { initWebSocketServer } from "./src/webSocket.js";
 
@@ -79,9 +77,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/hub/api/interface", interfaceRoutes);
 app.use("/hub/api/register", registerRoutes);
-app.use("/hub/api/task", taskRoutes);
 app.use("/", miscRoutes); // After other routes because it has the default route
 
 const serverOptions = {};

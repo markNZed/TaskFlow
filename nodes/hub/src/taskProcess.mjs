@@ -4,7 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import RequestError from './routes/RequestError.mjs';
 import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async } from "./storage.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
@@ -125,7 +124,7 @@ function checkLockConflict(task, activeTask) {
         utils.logTask(task, `UNLOCK task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
       } else {
         utils.logTask(task, `CONFLICT Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
-        throw new RequestError("Task locked", 423);
+        throw new Error("Task locked", 423);
       }
     }
   }
@@ -236,7 +235,7 @@ async function processOutput_async(task, outputStore) {
 async function taskProcess_async(task, req) {
   try {
     if (!task.node) {
-      throw new Error("Missing task.node in /hub/api/task");
+      throw new Error("Missing task.node in taskProcess_async");
     }
     utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
     let activeTask = {};
@@ -302,12 +301,8 @@ async function taskProcess_async(task, req) {
       return null;
     }
   } catch (err) {
-    if (err instanceof RequestError) {
-      utils.logTask(task, "Error in /hub/api/task " + err.code + " " + err.message, err.origError);
-    } else {
-      utils.logTask(task, "Error in /hub/api/task " + err.message, task);
-      throw err;
-    }
+    utils.logTask(task, "Error in taskProcess_async " + err.message, task);
+    throw err;
   }
   return task;
 }

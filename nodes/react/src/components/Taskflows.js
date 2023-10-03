@@ -106,8 +106,8 @@ function Taskflows(props) {
   }, [globalState]);
 
   useEffect(() => {
-    // Load the system menu once we have the user and nodeId
-    if (!init && globalState.user && globalState?.nodeId) {
+    // Load the system menu once we have the nodeId
+    if (!init && globalState.nodeId) {
       setTask({
         command: "start",
         commandArgs: {
@@ -116,12 +116,15 @@ function Taskflows(props) {
       });
       setInit(true);
     }
-  }, [globalState?.user, globalState?.nodeId]);
+  }, [globalState?.nodeId]);
 
   useEffect(() => {
     if (startTask) {
+      // The HUb sets startTask.user so we do not need to fetch the user info
+      // just pick it out of the startTask
       if (startTask.id === taskMenuId) {
         setTaskMenu(startTask);
+        replaceGlobalState("user", startTask.user);
       } else {
       setTasksIdx(tasks.length);
       setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);

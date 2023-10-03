@@ -271,7 +271,7 @@ const connectWebSocket = () => {
       // If coprocessor then we are getting lastTask from the Hub.
       // A hack is to "convert" the hub task into a node task
       if (!lastTask) {
-        utils.logTask(task,"Missing lastTask for update");
+        utils.logTask(task, "Missing lastTask for update", JSON.stringify(task, null, 2));
         throw new Error("Missing lastTask for update");
       }
       const mergedTask = utils.deepMergeProcessor(lastTask, task, task.node);

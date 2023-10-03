@@ -13,7 +13,7 @@ import fs from 'fs/promises'; // Use promises variant of fs for async/await styl
 import jsonDiff from 'json-diff'; // You need to install this package: npm install json-diff
 
 // For now we use JS data structures instead of a DB
-// Removes need for an admin interface during dev
+// Reduces need for an admin interface during dev
 console.log("Loading config data from " + NODE.configDir);
 var users = await utils.load_data_async(NODE.configDir, "users");
 var groups = await utils.load_data_async(NODE.configDir, "groups");

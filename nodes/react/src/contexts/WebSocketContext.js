@@ -54,7 +54,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     let message = {}; 
     task = await utils.taskInProcessorOut_async(task, globalState.nodeId, globalState?.storageRef?.current.get);
     if (globalState.user) {
-      task.user = {"id": globalState.user.userId};
+      task.user = {"id": globalState.user.id};
     }
     task.meta = task.meta || {};
     task.meta.prevMessageId = task.meta.messageId;
