@@ -6,7 +6,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // subscribe.mjs
 import { fromEvent } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
-import { messagingClient } from '#src/messaging';
+import { MessagingClient } from '#src/messaging';
+import { NODE } from "#root/config";
 import { PythonRunner } from '#src/pythonRunner';
 
 // eslint-disable-next-line no-unused-vars
@@ -21,6 +22,8 @@ const TaskRx_async = async function (wsSendTask, T) {
     // Start the Python Publisher unbuffered
     const pythonRunner = new PythonRunner('/Services/ServicePublish.py');
     pythonRunner.start();
+
+    const messagingClient = new MessagingClient(NODE.storage.redisUrl);
 
     // Observable for logging every message
     const logMessage$ = fromEvent(messagingClient, 'message').pipe(

@@ -2,6 +2,9 @@ import asyncio
 import aioredis
 import async_timeout
 import logging
+import rx
+from rx.scheduler.eventloop import AsyncIOScheduler
+from rx import operators as ops
 
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -60,3 +63,45 @@ class MessagingClient:
                 logging.error(f"Redis error while listening: {str(e)}")
             except Exception as e:
                 logging.error(f"Unexpected error: {str(e)}")
+
+    async def enqueue(self, queue, message):
+        """
+        Add a message to the end of a list (queue) in Redis.
+        
+        Parameters:
+            queue (str): The name of the queue.
+            message (str): The message to enqueue.
+        """
+        await self.publisher.rpush(queue, message)
+
+    async def dequeue(self, queue, timeout=0):
+        """
+        Remove and get a message from a list (queue) in Redis using blocking right pop.
+        
+        Parameters:
+            queue (str): The name of the queue.
+            timeout (int, optional): Block for this many seconds. 0 for indefinitely. Defaults to 0.
+        
+        Returns:
+            Observable: Observable stream of messages from the queue.
+        """
+        async_scheduler = AsyncIOScheduler(loop=asyncio.get_event_loop())
+        observable = rx.of("Start Listening")  # Dummy value to kick-start the Observable.
+
+        def dequeue_impl(observer, scheduler):
+            async def listen_to_queue():
+                while True:
+                    message = await self.publisher.brpop(queue, timeout=timeout)
+                    if message:
+                        _, message = message
+                        observer.on_next(message)
+                    else:
+                        observer.on_completed()
+                        break
+
+            asyncio.create_task(listen_to_queue())
+        
+        return observable.pipe(
+            ops.flat_map(lambda _: rx.create(dequeue_impl)),
+            ops.observe_on(async_scheduler)
+        )
