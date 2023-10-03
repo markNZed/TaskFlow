@@ -1,5 +1,5 @@
-import { validateTasks } from "../src/validateTasks.mjs";
-import { actionThenQuery } from '../src/shared/FSM/xutils.mjs';
+import { validateTasks } from "../../src/validateTasks.mjs";
+import { actionThenQuery } from '../../src/shared/FSM/xutils.mjs';
 
 const taskSetNames = ['system'];
 let taskSet = {};

@@ -36,10 +36,10 @@ Overview of the ports:
 
 * 3000 React serving the React Processor app and the React dev server for live updates (path /ws)
 * 5000 RxJS Processor Consumer
-* 5001 Hub
+* 5001 Hub Core
 * 5002 RxJS Hub Consumer
 * 5003 RxJS Hub Coprocessor
-* 9229 Hub debug
+* 9229 Hub Core debug
 * 9230 RxJS Processor Consumer debug
 * 9231 RxJS Hub Consumer debug
 * 9232 RxJS Hub Coprocessor node debug

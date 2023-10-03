@@ -18,8 +18,8 @@ EXPOSE 5001
 
 COPY entrypoint-react.sh /entrypoint-react.sh
 RUN chmod 755 /entrypoint-react.sh
-COPY entrypoint-hub.sh /entrypoint-hub.sh
-RUN chmod 755 /entrypoint-hub.sh
+COPY entrypoint-hub-core.sh /entrypoint-hub-core.sh
+RUN chmod 755 /entrypoint-hub-core.sh
 COPY entrypoint-hub-consumer.sh /entrypoint-hub-consumer.sh
 RUN chmod 755 /entrypoint-hub-consumer.sh
 COPY entrypoint-hub-coprocessor.sh /entrypoint-hub-coprocessor.sh

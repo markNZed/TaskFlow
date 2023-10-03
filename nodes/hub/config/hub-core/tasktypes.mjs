@@ -1,5 +1,5 @@
 
-import { CACHE_ENABLE } from "../config.mjs";
+import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
   {

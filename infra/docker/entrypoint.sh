@@ -3,11 +3,11 @@
 # We use `tee -a` so that tee will append after we run e.g. `truncate -s 0 nodes/hub/hub.log``
 
 # Create a new detached screen session named "app"
-screen -S app -d -m -t hub bash
-screen -S app -p hub -X stuff "cd /app/nodes/hub\n"
-screen -S app -p hub -X stuff "npm install\n"
-screen -S app -p hub -X stuff "touch hub.log && chmod 444 hub.log\n"
-screen -S app -p hub -X stuff "truncate -s 0 hub.log; NODE_NAME=hub npm run debug 2>&1 | tee -a hub.log\n"
+screen -S app -d -m -t hub-core bash
+screen -S app -p hub-core -X stuff "cd /app/nodes/hub\n"
+screen -S app -p hub-core -X stuff "npm install\n"
+screen -S app -p hub-core -X stuff "touch hub-core.log && chmod 444 hub-core.log\n"
+screen -S app -p hub-core -X stuff "truncate -s 0 hub-core.log; NODE_NAME=hub-core npm run debug 2>&1 | tee -a hub-core.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t hub-consumer bash
@@ -50,12 +50,12 @@ screen -S app -p app -X stuff "npm install\n"
 if [[ "$TASKFLOW_DEV" == "true" ]]; then
 
     # Create a new detached screen session named "app"
-    screen -S meta -d -m -t hub bash
-    screen -S meta -p hub -X stuff "cd /meta/hub\n"
-    screen -S meta -p hub -X stuff "npm install\n"
-    screen -S meta -p hub -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
-    screen -S meta -p hub -X stuff "touch hub.log && chmod 444 hub.log\n"
-    screen -S meta -p hub -X stuff "truncate -s 0 hub.log; NODE_NAME=hub WS_PORT=6001 npm run 2>&1 | tee -a hub.log\n"
+    screen -S meta -d -m -t hub-core bash
+    screen -S meta -p hub-core -X stuff "cd /meta/hub\n"
+    screen -S meta -p hub-core -X stuff "npm install\n"
+    screen -S meta -p hub-core -X stuff "export APP_LABEL=MetaT@skFlow; export APP_NAME=MetaTaskFlow; export APP_ABBREV=MTF\n"
+    screen -S meta -p hub-core -X stuff "touch hub-core.log && chmod 444 hub-core.log\n"
+    screen -S meta -p hub-core -X stuff "truncate -s 0 hub-core.log; NODE_NAME=hub-core WS_PORT=6001 npm run 2>&1 | tee -a hub-core.log\n"
 
     # create a new window within the "app" screen
     screen -S meta -X screen -t hub-consumer bash

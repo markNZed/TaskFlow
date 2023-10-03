@@ -104,7 +104,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["app"] = {
   label: appLabel,
   name: appName,

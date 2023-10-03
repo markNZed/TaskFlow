@@ -33,6 +33,8 @@ Refactoring
     webSocket.js
     server.js
   Replace task.hub with task.node ?
+    How to distinguish between type/role/processing ?
+      Mayb we iterate over them and filter at the place where we need to - should not bee too expensive
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service

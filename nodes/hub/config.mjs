@@ -27,23 +27,65 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const CONFIG_DIR = process.env.CONFIG_DIR || path.resolve("./config/");
+let NODE_NAME = "hub-core";
+if (process.env.NODE_NAME !== undefined) {
+  NODE_NAME = process.env.NODE_NAME;
+}
 
-let hubId;
-const hubIdFile = './db/hubId.txt';
+let NODE;
+
+switch (NODE_NAME) {
+  case "hub-core":
+    NODE = {
+      type: "hub",
+      role: "core",
+      processing: ["stream"],
+      environment: "rxjs-hub-core",
+      wsPort: 5001,
+    }
+    break;
+  default:
+    throw new Error("Unknown NODE_NAME " + NODE_NAME);
+}
+
+let nodeId;
+let nodeIdFile = './db/node-' + NODE_NAME + '-id.txt';
 try {
     // Try to read the id from a file
-    hubId = fs.readFileSync(hubIdFile, 'utf-8');
+    nodeId = fs.readFileSync(nodeIdFile, 'utf-8');
 } catch (e) {
     // If the file does not exist, generate a new id
-    hubId = "hub-" + uuidv4();
+    nodeId = NODE.environment + '-' + uuidv4();
     // Save the id to a file for future use
-    fs.writeFileSync(hubIdFile, hubId);
+    fs.writeFileSync(nodeIdFile, nodeId);
 }
+
+NODE["name"] = NODE_NAME;
+NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["app"] = {
+  label: appLabel,
+  name: appName,
+  abbrev: appAbbrev
+};
+NODE["storage"] = {
+  redisUrl: REDIS_URL,
+  mongoUrl: MONGO_URL,
+  emptyAllDB: EMPTY_ALL_DB,
+  mongoMaster: "hub-coprocessor",
+  redisMaster: "hub-coprocessor",
+};
+NODE["id"] = nodeId;
+if (process.env.WS_PORT) {
+  NODE["wsPort"] = process.env.WS_PORT
+}
+
+console.log({NODE});
+
+let hubId = NODE.id
 
 // Need to know this so we can wait for coprocessor before autostarting tasks
 let haveCoprocessor = true;
 
 const SAVE_TASKS = process.env.SAVE_TASKS || false;
 
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, CONFIG_DIR, hubId, haveCoprocessor, REDIS_URL, MONGO_URL, EMPTY_ALL_DB, SAVE_TASKS };
+export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, hubId, haveCoprocessor, REDIS_URL, MONGO_URL, EMPTY_ALL_DB, SAVE_TASKS, NODE };

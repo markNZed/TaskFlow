@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import { CONFIG_DIR, SAVE_TASKS } from "../config.mjs";
+import { SAVE_TASKS, NODE } from "../config.mjs";
 import assert from "assert";
 import { validateTasks } from "./validateTasks.mjs";
 import { fromTask } from "./taskConverterWrapper.mjs";
@@ -14,11 +14,11 @@ import jsonDiff from 'json-diff'; // You need to install this package: npm insta
 
 // For now we use JS data structures instead of a DB
 // Removes need for an admin interface during dev
-console.log("Loading config data from " + CONFIG_DIR);
-var users = await utils.load_data_async(CONFIG_DIR, "users");
-var groups = await utils.load_data_async(CONFIG_DIR, "groups");
-var tasks = await utils.load_data_async(CONFIG_DIR, "tasks");
-var tasktypes = await utils.load_data_async("../config", "tasktypes");
+console.log("Loading config data from " + NODE.configDir);
+var users = await utils.load_data_async(NODE.configDir, "users");
+var groups = await utils.load_data_async(NODE.configDir, "groups");
+var tasks = await utils.load_data_async(NODE.configDir, "tasks");
+var tasktypes = await utils.load_data_async(NODE.configDir, "tasktypes");
 var autoStartTasks = {};
 
 // We adopt a DRY strategy in the code and config files
