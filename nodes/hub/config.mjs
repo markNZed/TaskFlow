@@ -27,6 +27,8 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
+const SAVE_TASKS = process.env.SAVE_TASKS || false;
+
 let NODE_NAME = "hub-core";
 if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
@@ -62,6 +64,10 @@ try {
 
 NODE["name"] = NODE_NAME;
 NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["dumpConfigs"] = SAVE_TASKS;
+NODE["allowedOrigins"] = ALLOWED_ORIGINS;
+// Need to know this so we can wait for coprocessor before autostarting tasks
+NODE["haveCoprocessor"] = true;
 NODE["app"] = {
   label: appLabel,
   name: appName,
@@ -81,11 +87,4 @@ if (process.env.WS_PORT) {
 
 console.log({NODE});
 
-let hubId = NODE.id
-
-// Need to know this so we can wait for coprocessor before autostarting tasks
-let haveCoprocessor = true;
-
-const SAVE_TASKS = process.env.SAVE_TASKS || false;
-
-export { ALLOWED_ORIGINS, DEFAULT_USER, CACHE_ENABLE, MAP_USER, appLabel, appName, appAbbrev, hubId, haveCoprocessor, REDIS_URL, MONGO_URL, EMPTY_ALL_DB, SAVE_TASKS, NODE };
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE };

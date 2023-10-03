@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { utils } from "./utils.mjs";
-import { SAVE_TASKS, NODE } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import assert from "assert";
 import { validateTasks } from "./validateTasks.mjs";
 import { fromTask } from "./taskConverterWrapper.mjs";
@@ -360,7 +360,7 @@ async function saveTasks(tasks) {
     console.log('No differences found');
   }
 }
-if (SAVE_TASKS) {
+if (NODE.dumpConfigs) {
   await saveTasks(tasks);
 }
 

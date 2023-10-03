@@ -63,7 +63,7 @@ Then to run: `npm start`
 # Future
 * Hierarchy
   * Many Hubs that can be coordinated by a Hub.
-    * Add task.hubs[hubId] (Processor should only see task.hub)
+    * Add task.hubs[NODE.id] (Processor should only see task.hub)
   * Environments not supported by Processors registered with the Hub are passed up to a hub-of-hubs
 * Security/Privacy
   * Filtering of Task content

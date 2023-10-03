@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import express from "express";
 import { activeProcessors, activeCoprocessors, autoStartTasksStore_async } from "../storage.mjs";
-import { hubId, haveCoprocessor } from "../../config.mjs";
+import { NODE } from "../../config.mjs";
 import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
 import * as dotenv from "dotenv";
@@ -69,7 +69,7 @@ router.post("/", async (req, res) => {
   }
 
   res.send({
-    hubId: hubId,
+    hubId: NODE.id,
   });
 
   // After each node registers then we can check if there are tasks to autostart
@@ -86,9 +86,9 @@ router.post("/", async (req, res) => {
 
   // Do not autostart task until after the coprocessor has started
   // probably need to wait for all coprocessors first but we don't have the list
-  // Probably need to convert haveCoprocessor into Coprocessors (maybe capitals and set from ENV)
-  if (haveCoprocessor && activeCoprocessors.size === 0) {
-    console.log("haveCoprocessor && activeCoprocessors.size === 0");
+  // Probably need to convert NODE.haveCoprocessor into Coprocessors (maybe capitals and set from ENV)
+  if (NODE.haveCoprocessor && activeCoprocessors.size === 0) {
+    console.log("NODE.haveCoprocessor && activeCoprocessors.size === 0");
     return
   }
   const autoStartTasksArray = [];

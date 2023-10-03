@@ -512,7 +512,7 @@ async function taskStart_async(
 
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = "init";
-    task.hub["sourceProcessorId"] = autoStart ? undefined : nodeId; // not sure about this, replace undefined with hubId ?
+    task.hub["sourceProcessorId"] = autoStart ? undefined : nodeId; // not sure about this, replace undefined with NODE.id ?
     task.hub["initiatingProcessorId"] = autoStart ? "autostart" : nodeId;
     task.hub["coprocessingDone"] = false;
     

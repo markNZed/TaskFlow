@@ -8,7 +8,7 @@ import RequestError from './routes/RequestError.mjs';
 import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async } from "./storage.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
-import { haveCoprocessor } from "../config.mjs";
+import { NODE } from "../config.mjs";
 // eslint-disable-next-line no-unused-vars
 import assert from 'assert';
 import _ from "lodash";
@@ -290,7 +290,7 @@ async function taskProcess_async(task, req) {
       task.familyId = task.familyId || activeTask.familyId;
       task = await processOutput_async(task, outputStore_async);
     }
-    if (haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
+    if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
       utils.logTask(task, "sending to coprocessor");
       // Send to first coprocessor
       // We will receive the task back from the coprocessor through websocket

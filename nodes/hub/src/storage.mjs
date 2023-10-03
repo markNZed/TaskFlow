@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import * as dotenv from "dotenv";
-import { EMPTY_ALL_DB } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mjs";
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
@@ -21,31 +21,31 @@ var activeCoprocessors = new Map();
 // Schema:
 //   Key: instanceId
 //   Value: task object
-const instancesStore_async = newKeyV(redisClient, "instances");
+const instancesStore_async = newKeyV(redisClient, NODE.appAbbrev + "instances");
 // Schema:
 //   Key: familyId || taskId + userId || taskId + groupId
 //   Value: array of instanceId
-const familyStore_async = newKeyV(redisClient, "threads");
+const familyStore_async = newKeyV(redisClient, NODE.appAbbrev + "threads");
 // Schema:
 //   Key: instanceId
 //   Value: boolean indicating the task is active
-const activeTasksStore_async = newKeyV(redisClient, "activeTasks");
+const activeTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeTasks");
 // Schema:
 //   Key: instanceId
 //   Value: array of nodeIds
-const activeTaskProcessorsStore_async = newKeyV(redisClient, "activeTaskProcessors");
+const activeTaskProcessorsStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeTaskProcessors");
 // Schema:
 //   Key: nodeId
 //   Value: array of instanceIds
-const activeProcessorTasksStore_async = newKeyV(redisClient, "activeProcessorTasks");
+const activeProcessorTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeProcessorTasks");
 // Schema:
 //   Key: familyId
 //   Value: {taskId : output}
-const outputStore_async = newKeyV(redisClient, "outputs");
+const outputStore_async = newKeyV(redisClient, NODE.appAbbrev + "outputs");
 // Schema:
 //   Key: familyId (there is also a "system" entry)
 //   Value: {shared: task.shared, instanceIds: array of instanceIds}
-const sharedStore_async = newKeyV(redisClient, "shared");
+const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared");
 
 async function getActiveTask_async(instanceId) {
   if (await activeTasksStore_async.has(instanceId)) {
@@ -70,17 +70,17 @@ async function deleteActiveTask_async(instanceId) {
   ]);
 }
 
-const usersStore_async = newKeyV(redisClient, "users");
+const usersStore_async = newKeyV(redisClient, NODE.appAbbrev + "users");
 
-const groupsStore_async = newKeyV(redisClient, "groups");
+const groupsStore_async = newKeyV(redisClient, NODE.appAbbrev + "groups");
 
-const tasktypesStore_async = newKeyV(redisClient, "tasktypes");
+const tasktypesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasktypes");
 
-const tasksStore_async = newKeyV(redisClient, "tasks");
+const tasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasks");
 
-const autoStartTasksStore_async = newKeyV(redisClient, "autoStartTasks");
+const autoStartTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "autoStartTasks");
 
-if (EMPTY_ALL_DB) {
+if (NODE.storage.emptyAllDB) {
   await Promise.all([
     instancesStore_async.clear(),
     familyStore_async.clear(),

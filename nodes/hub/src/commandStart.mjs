@@ -7,7 +7,7 @@ import { utils } from "./utils.mjs";
 import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import taskStart_async from "./taskStart.mjs";
-import { haveCoprocessor } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task) {
@@ -39,7 +39,7 @@ export async function commandStart_async(task) {
     initTask.meta["messageId"] = utils.nanoid8();
     utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
-    if (haveCoprocessor) {
+    if (NODE.haveCoprocessor) {
       if (task.hub.coprocessingDone) {
         taskStart_async(initTask, authenticate, nodeId, prevInstanceId)
           .then(async (startTask) => {

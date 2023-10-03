@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { activeTaskProcessorsStore_async, activeProcessors, activeCoprocessors, getActiveTask_async } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
-import { haveCoprocessor } from "../config.mjs";
+import { NODE } from "../config.mjs";
 
 let broadcastCount = 0;
 
@@ -25,7 +25,7 @@ const taskSync_async = async (key, value) => {
   // failyId which created other issues with loading the prevInstanceId in taskStart
   if (key && value.hub.command != "start") {
     utils.logTask(value, "taskSync_async familyId", value.familyId, value.hub.command);
-  } else if (!haveCoprocessor) {
+  } else if (!NODE.haveCoprocessor) {
     throw new Error("taskSync_async missing key" + JSON.stringify(value));
   }
 
@@ -50,7 +50,7 @@ const taskSync_async = async (key, value) => {
   // Pass to the first coprocessor if we should coprocess first
   // Maybe isCoprocessor is redundant given that we set hub.coprocessing
   // Update commands with sync option from the coprocessor will be skipped because of isCoprocessor
-  if (haveCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
+  if (NODE.haveCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
     // Send to the first Coprocessor that supports the command 

@@ -17,7 +17,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { ALLOWED_ORIGINS, appName } from "./config.mjs";
+import { NODE } from "./config.mjs";
 import interfaceRoutes from "./src/routes/interfaceRoutes.js";
 import registerRoutes from "./src/routes/registerRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
@@ -44,8 +44,8 @@ app.use(bodyParser.json());
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
 
 let allowedOrigins = [];
-if (ALLOWED_ORIGINS) {
-  allowedOrigins = ALLOWED_ORIGINS.split(',');
+if (NODE.allowedOrigins) {
+  allowedOrigins = NODE.allowedOrigins.split(',');
 }
 allowedOrigins = allowedOrigins.map(o => {
   const url = new URL(o);
@@ -91,4 +91,4 @@ server.setTimeout(300000);
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5001;
-server.listen(port, () => console.log(appName + " Hub started on port " + port));
+server.listen(port, () => console.log(NODE.appName + " Hub started on port " + port));

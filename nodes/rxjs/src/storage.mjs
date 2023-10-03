@@ -76,15 +76,15 @@ const serviceTypes_async = newKeyV(redisClient, keyvPrefix + "serviceTypes");
 
 const operatorTypes_async = newKeyV(redisClient, keyvPrefix + "operatorTypes");
 
-const sharedStore_async = newKeyV(redisClient, "shared"); // Shared with Hub
+const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared"); // Shared with Hub
 
-const tasksStore_async = newKeyV(redisClient, "tasks"); // Shared with Hub
+const tasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasks"); // Shared with Hub
 
-const usersStore_async = newKeyV(redisClient, "users"); // Shared with Hub
+const usersStore_async = newKeyV(redisClient, NODE.appAbbrev + "users"); // Shared with Hub
 
-const groupsStore_async = newKeyV(redisClient, "groups"); // Shared with Hub
+const groupsStore_async = newKeyV(redisClient, NODE.appAbbrev + "groups"); // Shared with Hub
 
-const tasktypesStore_async = newKeyV(redisClient, "tasktypes"); // Shared with Hub
+const tasktypesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasktypes"); // Shared with Hub
 
 async function getActiveTask_async(instanceId) {
   if (await activeTasksStore_async.has(instanceId)) {
