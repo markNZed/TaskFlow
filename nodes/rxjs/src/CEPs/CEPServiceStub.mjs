@@ -15,7 +15,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const value = args.value;
   const type = args.type;
   //task.services
-  if (task.processor.command === "init" && task?.services) {
+  if (task.node.command === "init" && task?.services) {
     for (const key of Object.keys(task.services)) {
       const service = task.services[key];
       if (service.type === type) {

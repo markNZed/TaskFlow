@@ -60,7 +60,7 @@ const servicetypes = [
     operators: An object containing operator configurations.
     parentName: The name of the parent task, if any.
     permissions: An array of strings representing permissions.
-    processor: An object detailing the processing unit for this task.
+    node: An object detailing the processing unit for this task.
     shared: An object containing shared data.
     type: A string indicating the type of the task.
     user: An object containing user details.

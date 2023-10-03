@@ -32,10 +32,10 @@ const familyStore_async = newKeyV(redisClient, "threads");
 const activeTasksStore_async = newKeyV(redisClient, "activeTasks");
 // Schema:
 //   Key: instanceId
-//   Value: array of processorIds
+//   Value: array of nodeIds
 const activeTaskProcessorsStore_async = newKeyV(redisClient, "activeTaskProcessors");
 // Schema:
-//   Key: processorId
+//   Key: nodeId
 //   Value: array of instanceIds
 const activeProcessorTasksStore_async = newKeyV(redisClient, "activeProcessorTasks");
 // Schema:

@@ -57,14 +57,14 @@ taskSubject
     }),
     */
     mergeMap(async (task) => {
-      utils.logTask(task, "Incoming task command:" + task.processor.command + " initiatingProcessorId:" + task.processor.initiatingProcessorId);
+      utils.logTask(task, "Incoming task command:" + task.node.command + " initiatingProcessorId:" + task.node.initiatingProcessorId);
       task = utils.processorInTaskOut(task);
       const taskCopy = utils.deepClone(task); //deep copy
-      if (!task.processor.coprocessing) {
+      if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
       }
       // We make an exception for sync so we can log sync taht are sent with coprocessingDone
-      const CEPCoprocessor = NODE.role === "coprocessor" && (task.processor.coprocessing || task.processor?.commandArgs?.sync);
+      const CEPCoprocessor = NODE.role === "coprocessor" && (task.node.coprocessing || task.node?.commandArgs?.sync);
       const CEPprocessor = NODE.role !== "coprocessor";
       if (CEPCoprocessor || CEPprocessor ) {
         // Complex event processing uses a Map of Map
@@ -125,7 +125,7 @@ taskSubject
         let allCEPFuncs = [...instanceIdCEPFuncs, ...idCEPFuncs, ...familyIdCEPFuncs, ...userIdCEPFuncs, ...CEPSecretCEPFuncs];
         utils.logTask(task, "allCEPFuncs", allCEPFuncs);
         // Run each CEP function serially
-        task.processor.CEPExecuted = [];
+        task.node.CEPExecuted = [];
         for (const [CEPInstanceId, func, moduleName, args] of allCEPFuncs) {
           utils.logTask(task, `Running CEP ${moduleName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
@@ -134,29 +134,29 @@ taskSubject
             // If a Task wants to update itsefl then it should not use a sync command but return the udpated value
             
             await func(wsSendTask, CEPInstanceId, task, args);
-            task.processor.CEPExecuted.push(moduleName);
+            task.node.CEPExecuted.push(moduleName);
           } else {
             // We do not await so we do not hang waiting for the lock when a Task sends a sync to itself
             func(wsSendTask, CEPInstanceId, task, args);
-            task.processor.CEPExecuted.push(moduleName);
+            task.node.CEPExecuted.push(moduleName);
           }
         }
       }
       if (NODE.role === "coprocessor") {
-        //utils.logTask(task, "taskSubject task.processor.coprocessing", task.processor.coprocessing, "task.processor.coprocessingDone", task.processor.coprocessingDone);
-        if (task.processor.coprocessingDone) {
-          utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.processor.coprocessingDone);
+        //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessingDone", task.node.coprocessingDone);
+        if (task.node.coprocessingDone) {
+          utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.node.coprocessingDone);
         } else {
           utils.logTask(task, "CoProcessing task");
           await taskProcess_async(wsSendTask, task, CEPMatchMap);
         }
       } else {
         // Process the task to install the CEP
-        if (task.processor.initiatingProcessorId !== NODE.id) {
+        if (task.node.initiatingProcessorId !== NODE.id) {
           await taskProcess_async(wsSendTask, task, CEPMatchMap);
         }
       }
-      if (task.processor.coprocessing) {
+      if (task.node.coprocessing) {
         return task;
       } else {
         return taskCopy;
@@ -168,11 +168,11 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (NODE.role !== "coprocessor" || task.processor.coprocessingDone) {
+        if (NODE.role !== "coprocessor" || task.node.coprocessingDone) {
           utils.logTask(task, 'Task processed successfully');
           taskRelease(task.instanceId, "Task processed successfully");
         } else {
-          utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.processor.coprocessingDone", task.processor.coprocessingDone);
+          utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.node.coprocessingDone", task.node.coprocessingDone);
         }
       }
     },
@@ -184,9 +184,9 @@ function wsSendObject(message) {
   if (!processorWs) {
     console.log("Lost websocket for wsSendObject", message);
   } else {
-    if (message.task.processor.command !== "ping") {
+    if (message.task.node.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
-      //console.log("wsSendObject commmand " + message.task.processor.command + " " + message.task.id + " commandArgs ",message.task.processor.commandArgs)
+      //console.log("wsSendObject commmand " + message.task.node.command + " " + message.task.id + " commandArgs ",message.task.node.commandArgs)
       //console.log("wsSendObject ", message )
     }
     processorWs.send(JSON.stringify(message));
@@ -234,22 +234,22 @@ const connectWebSocket = () => {
       return
     }
     const message = JSON.parse(e.data);
-    //console.log("processorWs.onMessage", message?.task.processor.command);
+    //console.log("processorWs.onMessage", message?.task.node.command);
     let command;
     let commandArgs;
     //console.log("message.task.hub", message.task.hub);
     let task;
     if (message?.task) {
       task = utils.hubInProcessorOut(message.task);
-      task.processor["isCoprocessor"] = NODE.role === "coprocessor";
-      command = task.processor.command;
-      commandArgs = task.processor.commandArgs;
-      // We do not lock for start because start only arrives once on the coprocessor with task.processor.coprocessing 
+      task.node["isCoprocessor"] = NODE.role === "coprocessor";
+      command = task.node.command;
+      commandArgs = task.node.commandArgs;
+      // We do not lock for start because start only arrives once on the coprocessor with task.node.coprocessing 
       // so it does not get released. Start can have instanceId
       // We do not lock for a sync for the same reason - we do not coprocess sync
       // Check for instanceId to avoid locking for commands like register
-      if (task.instanceId && command !== "start" && task.processor.initiatingProcessorId !== NODE.id) {
-        if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.processor.coprocessing)) {
+      if (task.instanceId && command !== "start" && task.node.initiatingProcessorId !== NODE.id) {
+        if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.node.coprocessing)) {
            await taskLock(task.instanceId, "processorWs.onmessage");
         }
       }
@@ -257,36 +257,36 @@ const connectWebSocket = () => {
       console.error("Missing task in message");
       return;
     }
-    //utils.logTask(task, "task.processor", task.processor);
+    //utils.logTask(task, "task.node", task.node);
     if (command !== "pong") {
       //utils.logTask(task, "processorWs " + command)
-      let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.processor.commandDescription, "state:"];
+      let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.node.commandDescription, "state:"];
       if (NODE.role === "coprocessor") {
-        msgs = [...msgs, "coprocessingDone:", task.processor.coprocessingDone, " coprocessing:", task.processor.coprocessing];
+        msgs = [...msgs, "coprocessingDone:", task.node.coprocessingDone, " coprocessing:", task.node.coprocessing];
       }
       utils.logTask(task, ...msgs);
     }
     if (command === "update") {
       let lastTask = await getActiveTask_async(task.instanceId);
       // If coprocessor then we are getting lastTask from the Hub.
-      // A hack is to "convert" the hub task into a processor task
+      // A hack is to "convert" the hub task into a node task
       if (!lastTask) {
         utils.logTask(task,"Missing lastTask for update");
         throw new Error("Missing lastTask for update");
       }
-      const mergedTask = utils.deepMergeProcessor(lastTask, task, task.processor);
+      const mergedTask = utils.deepMergeProcessor(lastTask, task, task.node);
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }
       utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       if (!utils.checkHashDiff(lastTask, mergedTask)) {
-        if (mergedTask.processor.initiatingProcessorId === NODE.id) {
-          console.error("Task hash does not match from this processor");
+        if (mergedTask.node.initiatingProcessorId === NODE.id) {
+          console.error("Task hash does not match from this node");
         }
       }
-      delete mergedTask.processor.origTask; // delete so we do not have an old copy in origTask
-      mergedTask.processor["origTask"] = utils.deepClone(lastTask); // deep copy to avoid self-reference
-      if (!mergedTask.processor.coprocessing) {
+      delete mergedTask.node.origTask; // delete so we do not have an old copy in origTask
+      mergedTask.node["origTask"] = utils.deepClone(lastTask); // deep copy to avoid self-reference
+      if (!mergedTask.node.coprocessing) {
         await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       }
       // Emit the mergedTask into the taskSubject
@@ -294,7 +294,7 @@ const connectWebSocket = () => {
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
-      if (!task.processor.coprocessing) {
+      if (!task.node.coprocessing) {
         if (command !== "start") {
           task = await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
         }
@@ -302,7 +302,7 @@ const connectWebSocket = () => {
       taskSubject.next(task);
     } else if (command === "error") {
       utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
-      if (!task.processor.coprocessing) {
+      if (!task.node.coprocessing) {
         await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
       }
       taskSubject.next(task);

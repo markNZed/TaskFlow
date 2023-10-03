@@ -39,7 +39,7 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
       instanceId: instanceId, 
       response: response, 
       command: "partial",
-      processor: {},
+      node: {},
     };
     wsSendTask(partialTask);
     wsDelta[instanceId] += 1;
@@ -189,7 +189,7 @@ async function openaigpt_async(params) {
       instanceId: instanceId, 
       response: response,
       command: "partial",
-      processor: {},
+      node: {},
     };
     if (!noStreaming) {
       wsDelta[instanceId] = 0
@@ -400,7 +400,7 @@ async function openaigpt_async(params) {
 }
 
 function getObjectPaths(obj, currentPath = '', result = []) {
-  const skipPaths = ["processor.origTask", "meta.hashTask"]
+  const skipPaths = ["node.origTask", "meta.hashTask"]
   for (const key in obj) {
     // eslint-disable-next-line no-prototype-builtins
     if (obj.hasOwnProperty(key)) {

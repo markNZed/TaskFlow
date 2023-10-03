@@ -87,7 +87,7 @@ export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep 
   let machine = FSMHolder.machine;
 
   if (Object.keys(fsm).length === 0) {
-    // Automatically create missing guards (otherwise we get errors for guards running on other processors)
+    // Automatically create missing guards (otherwise we get errors for guards running on other nodes)
     // Should move into a utility function
     const stateNodes = Object.keys(machine.states);
     const allGuards = stateNodes.reduce((acc, stateName) => {

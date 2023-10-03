@@ -13,15 +13,15 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const increment = args.increment;
   // We cannot send an update to a command tha has not already been stored as active
   // Otherwise the diff communication will fail.
-  if (task.processor.command === "start" || task.processor.command === "init") {
+  if (task.node.command === "start" || task.node.command === "init") {
     utils.logTask(task, "CEPIncrement doing nothing for start and init command")
     return;
   }
-  if (task.processor.coprocessingDone) {
+  if (task.node.coprocessingDone) {
     utils.logTask(task, "CEPIncrement ignoring task after coprocessing");
     return
   }
-  if (task.processor.commandArgs.sync) {
+  if (task.node.commandArgs.sync) {
     utils.logTask(task, "CEPIncrement doing nothing for sync")
     return;
   }
@@ -48,7 +48,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   //let syncDiff = {}
   //syncDiff["output"] = {};
   //syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : increment;
-  //syncDiff.output["CEPinitiatingProcessorId"] = task.processor.initiatingProcessorId;
+  //syncDiff.output["CEPinitiatingProcessorId"] = task.node.initiatingProcessorId;
   utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
   utils.logTask(task, "CEPIncrement called on " + task.id + " CEP created by " + CEPInstanceId);
   // We can do this if running on coprocessor

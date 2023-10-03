@@ -15,15 +15,15 @@ async function errorTask_async(task) {
     utils.logTask(task, "task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
-  const processorId = task.hub.sourceProcessorId;
-  task.error.sourceProcessorId = processorId;
-  const sourceProcessor = activeProcessors.get(processorId);
+  const nodeId = task.hub.sourceProcessorId;
+  task.error.sourceProcessorId = nodeId;
+  const sourceProcessor = activeProcessors.get(nodeId);
   task.error.environments = [sourceProcessor.environment];
   let nextTaskId = task.hub.commandArgs.errorTask;
   utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
   await setActiveTask_async(task);
 
-  const text = `${task.error.message} from task.id ${task.id} on processor ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
+  const text = `${task.error.message} from task.id ${task.id} on node ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
 
   if (nextTaskId) {
     const initTask = {
@@ -42,11 +42,11 @@ async function errorTask_async(task) {
     task.hub.commandArgs = {
       init: initTask,
       prevInstanceId: task.instanceId,
-      authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
+      authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
     };
     await commandStart_async(task);
     //await taskStart_async(initTask, false, task.hub.sourceProcessorId, task.instanceId);
-    // In theory the taskStart_async will update activeTasksStore and that will send the task to the correct processor(s)
+    // In theory the taskStart_async will update activeTasksStore and that will send the task to the correct node(s)
   }
 }
 

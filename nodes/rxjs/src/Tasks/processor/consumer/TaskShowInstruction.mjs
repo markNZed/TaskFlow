@@ -7,7 +7,7 @@ import { initiateFsm, updateStates } from "#src/taskFSM";
 
 const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   const actions = {
     nodejs_start: () => {

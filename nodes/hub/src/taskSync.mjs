@@ -13,7 +13,7 @@ let broadcastCount = 0;
 
 const taskSync_async = async (key, value) => {
 
-  //utils.logTask(value, "taskSync_async", key, value.processor)
+  //utils.logTask(value, "taskSync_async", key, value.node)
 
   if (value.meta) {
     value.meta.lastUpdatedAt = value.meta.updatedAt;
@@ -47,7 +47,7 @@ const taskSync_async = async (key, value) => {
   const skipCoProcessingCommands = ["partial"];
   const skipCoProcessing = skipCoProcessingCommands.includes(command);
   
-  // Pass to the first co-processor if we should coprocess first
+  // Pass to the first coprocessor if we should coprocess first
   // Maybe isCoprocessor is redundant given that we set hub.coprocessing
   // Update commands with sync option from the coprocessor will be skipped because of isCoprocessor
   if (haveCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
@@ -60,11 +60,11 @@ const taskSync_async = async (key, value) => {
       if (coprocessorData.commandsAccepted.includes(command)) {
         taskCopy.hub.coprocessingPosition = position;
         utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingProcessorId);
-        if (!taskCopy.processors) {
-          taskCopy.processors = {};
+        if (!taskCopy.nodes) {
+          taskCopy.nodes = {};
         }
-        if (!taskCopy.processors[coprocessorId]) {
-          taskCopy.processors[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
+        if (!taskCopy.nodes[coprocessorId]) {
+          taskCopy.nodes[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
         }
         taskCopy.hub["coprocessing"] = true;
         taskCopy.hub["coprocessingDone"] = false;
@@ -101,19 +101,19 @@ const taskSync_async = async (key, value) => {
 
   // Every type: "hub", role: "consumer" needs to be updated/synced
   const activeProcessorIds = Array.from(activeProcessors.keys());
-  const hubConsumerIds = activeProcessorIds.filter(processorId => {
-    const processorData = activeProcessors.get(processorId);
-    return processorData?.role === "consumer" && processorData?.type === "hub";
+  const hubConsumerIds = activeProcessorIds.filter(nodeId => {
+    const nodeData = activeProcessors.get(nodeId);
+    return nodeData?.role === "consumer" && nodeData?.type === "hub";
   })
   if (hubConsumerIds) {
     for (const hubConsumerId of hubConsumerIds) {
       if (command === "join") {
         continue;
       }
-      const processorData = activeProcessors.get(hubConsumerId);
-      if (processorData) {
-        if (processorData.commandsAccepted.includes(command)) {
-          utils.logTask(taskCopy, "taskSync_async hub consumer", command, " sent to processor " + hubConsumerId);
+      const nodeData = activeProcessors.get(hubConsumerId);
+      if (nodeData) {
+        if (nodeData.commandsAccepted.includes(command)) {
+          utils.logTask(taskCopy, "taskSync_async hub consumer", command, " sent to node " + hubConsumerId);
           wsSendTask(taskCopy, hubConsumerId, activeTask);
         } else {
           //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, hubConsumerId);
@@ -130,57 +130,57 @@ const taskSync_async = async (key, value) => {
 
   taskCopy.meta.broadcastCount = broadcastCount;
   broadcastCount++;
-  // foreach processorId in processorIds send the task to the processor
-  const processorIds = await activeTaskProcessorsStore_async.get(key);
-  if (processorIds) {
+  // foreach nodeId in nodeIds send the task to the node
+  const nodeIds = await activeTaskProcessorsStore_async.get(key);
+  if (nodeIds) {
     //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingProcessorId);
-    let updatedProcessorIds = [...processorIds]; // Make a copy of processorIds
-    for (const processorId of processorIds) {
+    let updatedNodeIds = [...nodeIds]; // Make a copy of nodeIds
+    for (const nodeId of nodeIds) {
       // Hub consumers have already been updated
-      if (hubConsumerIds.includes(processorId)) {
+      if (hubConsumerIds.includes(nodeId)) {
         continue;
       }
-      if (command === "join" && processorId !== initiatingProcessorId) {
+      if (command === "join" && nodeId !== initiatingProcessorId) {
         continue;
       }
-      const processorData = activeProcessors.get(processorId);
-      if (processorData) {
-        if (!taskCopy.processors) {
-          utils.logTask(taskCopy, "taskCopy missing processors", command );
+      const nodeData = activeProcessors.get(nodeId);
+      if (nodeData) {
+        if (!taskCopy.nodes) {
+          utils.logTask(taskCopy, "taskCopy missing nodes", command );
         }
-        if (!taskCopy.processors[processorId]) {
-          utils.logTask(taskCopy, "taskCopy missing processor", command, processorId );
+        if (!taskCopy.nodes[nodeId]) {
+          utils.logTask(taskCopy, "taskCopy missing node", command, nodeId );
         }
-        if (processorData.commandsAccepted.includes(command)) {
-          const statesSupported = taskCopy.processors[processorId].statesSupported;
-          const statesNotSupported = taskCopy.processors[processorId].statesNotSupported;
+        if (nodeData.commandsAccepted.includes(command)) {
+          const statesSupported = taskCopy.nodes[nodeId].statesSupported;
+          const statesNotSupported = taskCopy.nodes[nodeId].statesNotSupported;
           const state = taskCopy.state.current;
           if (!statesSupported || statesSupported.includes(state)) {
             if (!statesNotSupported || !statesNotSupported.includes(state)) {
-              utils.logTask(taskCopy, "taskSync_async", command, key, processorId);
-              wsSendTask(taskCopy, processorId, activeTask);
+              utils.logTask(taskCopy, "taskSync_async", command, key, nodeId);
+              wsSendTask(taskCopy, nodeId, activeTask);
             } else {
-              utils.logTask(taskCopy, `taskSync_async processor:${processorId} state:${state} in statesNotSupported:${statesNotSupported}`);
+              utils.logTask(taskCopy, `taskSync_async node:${nodeId} state:${state} in statesNotSupported:${statesNotSupported}`);
             }
           } else {
-            utils.logTask(taskCopy, `taskSync_async processor:${processorId} state:${state} not in statesSupported:${statesSupported}`);
+            utils.logTask(taskCopy, `taskSync_async node:${nodeId} state:${state} not in statesSupported:${statesSupported}`);
           }
         } else {
-          //utils.logTask(taskCopy, "taskSync_async processor does not support commmand", command, processorId);
+          //utils.logTask(taskCopy, "taskSync_async node does not support commmand", command, nodeId);
         }
       } else {
-        updatedProcessorIds = updatedProcessorIds.filter(id => id !== processorId);
-        utils.logTask(taskCopy, `Processor ${processorId} not found in active processors. It will be removed from activeTaskProcessorsStore_async`);
+        updatedNodeIds = updatedNodeIds.filter(id => id !== nodeId);
+        utils.logTask(taskCopy, `Processor ${nodeId} not found in active nodes. It will be removed from activeTaskProcessorsStore_async`);
       }
     }
-    // Update activeTaskProcessorsStore_async with the updatedProcessorIds only if the processors have changed
-    if (processorIds.length !== updatedProcessorIds.length) {
-      await activeTaskProcessorsStore_async.set(key, updatedProcessorIds);
+    // Update activeTaskProcessorsStore_async with the updatedNodeIds only if the nodes have changed
+    if (nodeIds.length !== updatedNodeIds.length) {
+      await activeTaskProcessorsStore_async.set(key, updatedNodeIds);
     }
   } else {
     utils.logTask(taskCopy, "taskSync_async no activeTaskProcessors available", key, value);
   }
-  //utils.logTask(taskCopy, "taskSync_async after", key, value.processor);
+  //utils.logTask(taskCopy, "taskSync_async after", key, value.node);
   return value;
 
 };

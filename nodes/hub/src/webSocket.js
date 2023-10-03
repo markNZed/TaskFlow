@@ -14,35 +14,35 @@ import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 
 /**
- * Sends an object through the WebSocket connection identified by the given processor ID.
+ * Sends an object through the WebSocket connection identified by the given node ID.
  *
- * @param {string} processorId - The ID of the WebSocket connection to use.
+ * @param {string} nodeId - The ID of the WebSocket connection to use.
  * @param {Object} [message={}] - The object to send through the connection.
  * @throws {Error} If the message object does not have a task property.
  */
-function wsSendObject(processorId, message = {}) {
-  const ws = connections.get(processorId);
+function wsSendObject(nodeId, message = {}) {
+  const ws = connections.get(nodeId);
   if (!ws) {
-    console.error(`Lost websocket for wsSendObject with processorId ${processorId} and message task ${message.task}`);
+    console.error(`Lost websocket for wsSendObject with nodeId ${nodeId} and message task ${message.task}`);
   } else {
     ws.send(JSON.stringify(message));
     if (message.task.hub.command !== "pong") {
       //console.log("wsSendObject message.task.output.sending", message.task?.output?.sending);
-      //console.log("wsSendObject ", processorId, message.task.processor )
+      //console.log("wsSendObject ", nodeId, message.task.node )
     }
   }
 }
 
-const wsSendTask = async function (task, processorId, activeTask) {
+const wsSendTask = async function (task, nodeId, activeTask) {
   if (!task?.hub?.command) {
     throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
   }
   //console.log("wsSendTask task.request", task.request)
-  task = utils.deepClone(task); //deep copy because we make changes e.g. task.processor
-  // hubDiff will remove processors and users
-  let processor;
-  if (task.processors && task.processors[processorId]) {
-    processor = JSON.parse(JSON.stringify(task.processors[processorId]));
+  task = utils.deepClone(task); //deep copy because we make changes e.g. task.node
+  // hubDiff will remove nodes and users
+  let node;
+  if (task.nodes && task.nodes[nodeId]) {
+    node = JSON.parse(JSON.stringify(task.nodes[nodeId]));
   }
   let user;
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
@@ -53,14 +53,14 @@ const wsSendTask = async function (task, processorId, activeTask) {
   if (task.hub.command === "update") {
     //utils.logTask(task, "wsSendTask " + command + " activeTask state", activeTask.state);
     //utils.logTask(task, "wsSendTask " + command + " task state", task.state);
-    const statesSupported = processor?.statesSupported
-    const statesNotSupported = processor?.statesNotSupported
+    const statesSupported = node?.statesSupported
+    const statesNotSupported = node?.statesNotSupported
     let diff = {}
     if (activeTask) {
       // If only some states are supported then the task storage may be out of sync so send the entire object
-      // We could potentially have storage on the hub for the task on the processor in this case 
+      // We could potentially have storage on the hub for the task on the node in this case 
       if (statesSupported || statesNotSupported) {
-        //console.log("wsSendTask statesSupported", task.state.current, processor);
+        //console.log("wsSendTask statesSupported", task.state.current, node);
         diff = task;
       } else {
         diff = utils.hubDiff(activeTask, task);
@@ -75,26 +75,26 @@ const wsSendTask = async function (task, processorId, activeTask) {
     }
   }
   //utils.logTask(task, "wsSendTask " + command + " message state", message["task"].state);
-  // For example task.command === "partial" does not have task.processors
+  // For example task.command === "partial" does not have task.nodes
   //utils.logTask(task, "wsSendTask task.hub", task.hub);
-  if (processor) {
-    //utils.logTask(task, "wsSendTask task.processors", processorId, task.processors);
+  if (node) {
+    //utils.logTask(task, "wsSendTask task.nodes", nodeId, task.nodes);
     //deep copy because we are going to edit the object
-    task["processor"] = processor;
-    task.processor["command"] = null;
-    task.processor["commandArgs"] = null;
-    delete task.processors;
+    task["node"] = node;
+    task.node["command"] = null;
+    task.node["commandArgs"] = null;
+    delete task.nodes;
   } else {
-    task.processor = {};
+    task.node = {};
   }
   const { coprocessingPosition, coprocessing, coprocessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
-  if (task.processor.isCoprocessor) {
-    task.processor["coprocessingPosition"] = coprocessingPosition;
-    task.processor["coprocessing"] = coprocessing;
-    task.processor["coprocessingDone"] = coprocessingDone;
+  if (task.node.isCoprocessor) {
+    task.node["coprocessingPosition"] = coprocessingPosition;
+    task.node["coprocessing"] = coprocessing;
+    task.node["coprocessingDone"] = coprocessingDone;
   }
-  task.processor["initiatingProcessorId"] = initiatingProcessorId;
-  task.processor["sourceProcessorId"] = sourceProcessorId;
+  task.node["initiatingProcessorId"] = initiatingProcessorId;
+  task.node["sourceProcessorId"] = sourceProcessorId;
   if (user) {
     if (!task?.user?.id) {
       utils.logTask(task, "wsSendTask no user", task);
@@ -105,14 +105,14 @@ const wsSendTask = async function (task, processorId, activeTask) {
   task.meta = task.meta || {};
   if (task.hub.command !== "pong") {
     //utils.logTask(task, "wsSendTask sourceProcessorId " + task.hub.sourceProcessorId)
-    //utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId )+ " to " + processorId)
+    //utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId )+ " to " + nodeId)
     //utils.logTask(task, "wsSendTask task.hub.commandArgs.sync", task?.hub?.commandArgs?.sync);
   }
   delete task.hub.origTask;
   message["task"] = task;
-  //utils.logTask(task, "wsSendTask task.processor.stateLast", task.processor.stateLast, task.processor.id);
+  //utils.logTask(task, "wsSendTask task.node.stateLast", task.node.stateLast, task.node.id);
   utils.debugTask(task);
-  wsSendObject(processorId, message);
+  wsSendObject(nodeId, message);
 }
 
 function initWebSocketServer(server) {
@@ -122,36 +122,36 @@ function initWebSocketServer(server) {
   websocketServer.on("connection", (ws) => {
     console.log("websocketServer.on");
 
-    ws.data = { processorId: undefined };
+    ws.data = { nodeId: undefined };
 
     ws.on("message", async (message) => {
 
       const j = JSON.parse(message);
 
-      if (j?.task?.processor?.id) {
-        const processorId = j.task.processor.id;
-        //console.log("processorId", processorId)
-        if (!connections.get(processorId)) {
-          connections.set(processorId, ws);
-          ws.data["processorId"] = processorId;
-          console.log("Websocket processorId", processorId)
+      if (j?.task?.node?.id) {
+        const nodeId = j.task.node.id;
+        //console.log("nodeId", nodeId)
+        if (!connections.get(nodeId)) {
+          connections.set(nodeId, ws);
+          ws.data["nodeId"] = nodeId;
+          console.log("Websocket nodeId", nodeId)
         }
-        if (!activeProcessors.has(processorId) && !activeCoprocessors.has(processorId)) {
+        if (!activeProcessors.has(nodeId) && !activeCoprocessors.has(nodeId)) {
           // Need to register again
           let currentDateTime = new Date();
           let currentDateTimeString = currentDateTime.toString();
           const task = {
             updatedeAt: currentDateTimeString,
             hub: {command: "register"},
-            processor: {},
+            node: {},
           };
-          console.log("Request for registering " + processorId)
-          wsSendTask(task, processorId);
+          console.log("Request for registering " + nodeId)
+          wsSendTask(task, nodeId);
           return;
         }
       }
 
-      if (j?.task && j.task?.processor?.command !== "ping") {
+      if (j?.task && j.task?.node?.command !== "ping") {
         let task = j.task;
         task = await taskProcess_async(task);
 
@@ -170,23 +170,23 @@ function initWebSocketServer(server) {
         const wasLastCoProcessor = task.hub?.coprocessingPosition === (coprocessors.length - 1);
 
         // Most of the coprocessing code could be moved into taskProcess_async ?
-        let processorId;
+        let nodeId;
         if (task.hub.coprocessing && wasLastCoProcessor) {
           utils.logTask(task, "wasLastCoProcessor so stop coprocessing")
           task.hub.coprocessing = false;
-          processorId = task.hub.initiatingProcessorId
-          task.hub.sourceProcessorId = processorId;
+          nodeId = task.hub.initiatingProcessorId
+          task.hub.sourceProcessorId = nodeId;
         } else {
-          processorId = task.hub.sourceProcessorId;
+          nodeId = task.hub.sourceProcessorId;
         }
 
         if (task.hub.command !== "partial") {
-          //utils.logTask(task, "isCoprocessor " + task.processor.isCoprocessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " processorId " + processorId);
+          //utils.logTask(task, "isCoprocessor " + task.node.isCoprocessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " nodeId " + nodeId);
         }
 
         // Have not tested this yet because we only have one coprocessor
         // There is very similar code in taskSync.mjs
-        if (task.processor.isCoprocessor && task.hub.coprocessing && !wasLastCoProcessor) {
+        if (task.node.isCoprocessor && task.hub.coprocessing && !wasLastCoProcessor) {
           utils.logTask(task, "Looking for NEXT coprocessor");
           // Send through the coprocessors
           // The task.hub.coprocessingPosition decides which coprocessor to run
@@ -201,9 +201,9 @@ function initWebSocketServer(server) {
               utils.logTask(task, "Lost websocket for ", coprocessorId, connections.keys());
             } else {
               utils.logTask(task, "Websocket coprocessor chain", coprocessorId);
-              // If the task is only on one co-processor at a time then we could just use task.coprocessor ?
-              if (!task.processors[coprocessorId]) {
-                task.processors[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
+              // If the task is only on one coprocessor at a time then we could just use task.coprocessor ?
+              if (!task.nodes[coprocessorId]) {
+                task.nodes[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
               }
               task.hub["coprocessing"] = true;
               task.hub["coprocessingDone"] = false;
@@ -215,13 +215,13 @@ function initWebSocketServer(server) {
         if (!task.hub.coprocessing) {
           const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
           // Allows us to track where the request came from while coprocessors are in use
-          processorId = task.hub.initiatingProcessorId || processorId;
-          task.processor = task.processors[processorId];
-          task.hub.sourceProcessorId = processorId;
+          nodeId = task.hub.initiatingProcessorId || nodeId;
+          task.node = task.nodes[nodeId];
+          task.hub.sourceProcessorId = nodeId;
           task.hub["coprocessingPosition"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
-              utils.logTask(task, "Finished with coprocessors id:", task.id, "processorId:", processorId);
+              utils.logTask(task, "Finished with coprocessors id:", task.id, "nodeId:", nodeId);
               utils.logTask(task, "initiatingProcessorId", task.hub["initiatingProcessorId"]);
             }
             task.hub["coprocessingDone"] = true;
@@ -241,14 +241,14 @@ function initWebSocketServer(server) {
               break;
             case "partial":
               for (const id of activeTaskProcessors) {
-                if (id !== processorId) {
-                  const processorData = activeProcessors.get(id);
-                  if (processorData && processorData.commandsAccepted.includes(task.hub.command)) {
+                if (id !== nodeId) {
+                  const nodeData = activeProcessors.get(id);
+                  if (nodeData && nodeData.commandsAccepted.includes(task.hub.command)) {
                     const ws = connections.get(id);
                     if (!ws) {
                       utils.logTask(task, "Lost websocket for ", id, connections.keys());
                     } else {
-                      //utils.logTask(task, "Forwarding " + task.hub.command + " to " + id + " from " + processorId)
+                      //utils.logTask(task, "Forwarding " + task.hub.command + " to " + id + " from " + nodeId)
                       wsSendTask(task, id);
                     }
                   }
@@ -261,44 +261,44 @@ function initWebSocketServer(server) {
         }
       }
 
-      if (j?.task?.processor?.command === "ping") {
+      if (j?.task?.node?.command === "ping") {
         let currentDateTime = new Date();
         let currentDateTimeString = currentDateTime.toString();
         const task = {
           updatedeAt: currentDateTimeString,
           hub: {command: "pong"},
-          processor: {},
+          node: {},
         };
-        //utils.logTask(task, "Pong " + j.task.processor.id)
-        wsSendTask(task, j.task.processor.id);
+        //utils.logTask(task, "Pong " + j.task.node.id)
+        wsSendTask(task, j.task.node.id);
       }
 
     });
 
     ws.on("close", async function (code, reason) {
-      const processorId = ws.data.processorId;
-      console.log("ws processorId " + processorId + " is closed with code: " + code + " reason: ", reason);
-      if (processorId) {
-        connections.delete(processorId);
-        activeProcessors.delete(processorId);
-        activeCoprocessors.delete(processorId);
-        const activeProcessorTasks = await activeProcessorTasksStore_async.get(processorId);
+      const nodeId = ws.data.nodeId;
+      console.log("ws nodeId " + nodeId + " is closed with code: " + code + " reason: ", reason);
+      if (nodeId) {
+        connections.delete(nodeId);
+        activeProcessors.delete(nodeId);
+        activeCoprocessors.delete(nodeId);
+        const activeProcessorTasks = await activeProcessorTasksStore_async.get(nodeId);
         if (activeProcessorTasks) {
           // for each task delete entry from activeTaskProcessorsStore_async
           for (const taskId of activeProcessorTasks) {
             let activeTaskProcessors = await activeTaskProcessorsStore_async.get(taskId);
             if (activeTaskProcessors) {
-              console.log("Removing processor " + processorId + " from task " + taskId);
-              activeTaskProcessors = activeTaskProcessors.filter(id => id !== processorId);
+              console.log("Removing node " + nodeId + " from task " + taskId);
+              activeTaskProcessors = activeTaskProcessors.filter(id => id !== nodeId);
               if (activeTaskProcessors.length > 0) {
                 await activeTaskProcessorsStore_async.set(taskId, activeTaskProcessors);
               } else {
-                console.log("No processor for task " + taskId);
+                console.log("No node for task " + taskId);
                 await activeTaskProcessorsStore_async.delete(taskId);                
               }
             }
           }
-          await activeProcessorTasksStore_async.delete(processorId);
+          await activeProcessorTasksStore_async.delete(nodeId);
         }
       }
     });

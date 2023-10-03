@@ -150,11 +150,11 @@ const utils = {
   },
   
   setMetaModified: function(task) {
-    const ignore = ["meta", "processor", "hub", "privacy", "id", "instanceId", "user.id"];
+    const ignore = ["meta", "node", "hub", "privacy", "id", "instanceId", "user.id"];
     task.meta = task.meta || {};
-    if (task.processor?.commandArgs?.syncTask) {
-      task.processor.commandArgs.syncTask["meta"] = task.processor.commandArgs.syncTask.meta || {};
-      task.processor.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.processor.commandArgs.syncTask, ignore);
+    if (task.node?.commandArgs?.syncTask) {
+      task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};
+      task.node.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.node.commandArgs.syncTask, ignore);
     }
     task.meta["modified"] = utils.findKeys(task, ignore);
     return task;

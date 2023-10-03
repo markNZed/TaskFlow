@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
-  const [processorId, setProcessorId] = useState();
+  const [nodeId, setProcessorId] = useState();
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
@@ -35,13 +35,13 @@ function App({ activeWorkerCount, workerId }) {
       if (globalState.workerId !== workerId) {
         replaceGlobalState("workerId", workerId);
       }
-      if (globalState.processorId === undefined) {
-        let id = localStorage.getItem('processorId' + workerId);
+      if (globalState.nodeId === undefined) {
+        let id = localStorage.getItem('nodeId' + workerId);
         if (!id) {
           id = appAbbrev + "-react-" + uuidv4();
-          localStorage.setItem('processorId' + workerId, id);
+          localStorage.setItem('nodeId' + workerId, id);
         }
-        replaceGlobalState("processorId", id);
+        replaceGlobalState("nodeId", id);
       }
     }
   }, [workerId]);
@@ -84,7 +84,7 @@ function App({ activeWorkerCount, workerId }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            processorId: globalState.processorId,
+            nodeId: globalState.nodeId,
           }),
         });
         const data = await response.json();
@@ -95,11 +95,11 @@ function App({ activeWorkerCount, workerId }) {
         console.log(err.message);
       }
     };
-    if (globalState?.processorId) {
-      setProcessorId(globalState.processorId);
+    if (globalState?.nodeId) {
+      setProcessorId(globalState.nodeId);
       fetchSession();
     }
-  }, [globalState?.processorId]);
+  }, [globalState?.nodeId]);
 
   // For reasons I don't understand, React hot update keeps the old globalState upon page reload
   useEffect(() => {
@@ -114,25 +114,25 @@ function App({ activeWorkerCount, workerId }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-             processorId: globalState.processorId,
+             nodeId: globalState.nodeId,
              commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
              environment: "react",
              language: language,
           }),
         });
         const data = await response.json();
-        console.log("Registered processor: ", data);
+        console.log("Registered node: ", data);
         if (data?.hubId) {
           replaceGlobalState("hubId", data.hubId);
         }
       } catch (err) {
-        console.log("Registered processor error ");
+        console.log("Registered node error ");
         console.log(err.message);
       }
       setRegistering(false);
     };
-    // Wait for the processorId to be set
-    if (!registering && globalState?.processorId && !globalState?.hubId) {
+    // Wait for the nodeId to be set
+    if (!registering && globalState?.nodeId && !globalState?.hubId) {
       registerProcessor();
     }
   }, [globalState]);
@@ -142,22 +142,22 @@ function App({ activeWorkerCount, workerId }) {
   // Of course this will forego the privacy guarantees of private browsing...
   useEffect(() => {
     const initializeStorage = async () => {
-      // For now we have each tab as a separate processor
+      // For now we have each tab as a separate node
       // So we need to have separate storage to avoid conflicts
-      // Ultimatley there should be one processor per user on the browser
-      const storageInstance = await openStorage(globalState.processorId);
+      // Ultimatley there should be one node per user on the browser
+      const storageInstance = await openStorage(globalState.nodeId);
       storageRef.current = storageInstance;
       mergeGlobalState({ storageRef });
     };
-    if (globalState?.processorId) {
+    if (globalState?.nodeId) {
       initializeStorage();
     }
-  }, [globalState?.processorId]);
+  }, [globalState?.nodeId]);
 
   return (
     <Routes>
       <Route exact path="/" element={<Taskflows task={task} setTask={setTask} />} />
-      <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} processorId={processorId}/>} />
+      <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} nodeId={nodeId}/>} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>
   );

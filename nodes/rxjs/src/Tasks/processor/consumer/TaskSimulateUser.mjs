@@ -9,7 +9,7 @@ import { cacheStore_async } from "#src/storage";
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
-// state === send : this processor has control
+// state === send : this node has control
 
 function checkTaskCache (T) {
   // Loop over each object in T("config.caching") if it exists
@@ -58,7 +58,7 @@ function checkTaskCache (T) {
 // eslint-disable-next-line no-unused-vars
 const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
   

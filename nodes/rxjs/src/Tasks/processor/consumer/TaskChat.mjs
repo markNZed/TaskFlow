@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Task may now be called just because th Task updates and this does not mean for sure that this Task Function should do something
 
-// state === sending : this processor has control
+// state === sending : this node has control
 
 function checkTaskCache (T) {
   // Loop over each object in T("config.caching") if it exists
@@ -59,7 +59,7 @@ function checkTaskCache (T) {
 // eslint-disable-next-line no-unused-vars
 const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   // Cache
   const [cacheEnabled, cacheKeySeed] = checkTaskCache(T);

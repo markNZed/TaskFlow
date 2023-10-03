@@ -11,7 +11,7 @@ import { formatQuery } from 'react-querybuilder';
 // eslint-disable-next-line no-unused-vars
 const TaskSystemLogViewer_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   function transformToMongoSortCriteria(sortDescriptors) {
     const mongoSortCriteria = {};
@@ -51,8 +51,8 @@ const TaskSystemLogViewer_async = async function (wsSendTask, T, FSMHolder, CEPM
 
   // State machine actions selected based on current state
   switch (T("state.current")) {
-    // On the React processor queries can be sent from the query state
-    // here we transition to the query state that indicates this processor is ready
+    // On the React node queries can be sent from the query state
+    // here we transition to the query state that indicates this node is ready
     case "start":
       T("state.current", "query");
       break;

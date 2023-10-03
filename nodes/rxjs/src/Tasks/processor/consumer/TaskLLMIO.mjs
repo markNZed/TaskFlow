@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // eslint-disable-next-line no-unused-vars
 const TaskLLMIO_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;

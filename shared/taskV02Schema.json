@@ -73,7 +73,7 @@
             "type": "string"
           }
         },
-        "processor": {
+        "node": {
           "type": "object"
         },
         "services": {
@@ -120,8 +120,8 @@
         "state": {
           "$ref": "./genericV02schema.json#/definitions/State"
         },
-        "processors": {
-          "$ref": "./genericV02schema.json#/definitions/Processors"
+        "nodes": {
+          "$ref": "./genericV02schema.json#/definitions/Nodes"
         },
         "users": {
           "$ref": "./genericV02schema.json#/definitions/Users"

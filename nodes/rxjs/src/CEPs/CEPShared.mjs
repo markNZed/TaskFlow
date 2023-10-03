@@ -26,11 +26,11 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   // We only want to run this during the coprocessing of the task
   // So we can see the null values and detect the deleteion of keys in shared
   // The null values get striped out in normal task processing
-  if (task.processor.coprocessing && task?.meta?.modified?.shared !== undefined) {
-    utils.logTask(task, "command:", task.processor.command, "commandArgs:", task.processor.commandArgs);
+  if (task.node.coprocessing && task?.meta?.modified?.shared !== undefined) {
+    utils.logTask(task, "command:", task.node.command, "commandArgs:", task.node.commandArgs);
     let toSync = {};
     let varNames;
-    if (task.processor.command === "init") {
+    if (task.node.command === "init") {
       varNames = Object.keys(task.shared);
     } else {
       varNames = Object.keys(task.meta.modified.shared);
@@ -55,7 +55,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       familyInstanceIds = sharedEntry[familyId].instanceIds;
       for (const instanceId of familyInstanceIds) {
         toSync[instanceId] = toSync[instanceId] || {};
-        if (task.processor.command === "init") {
+        if (task.node.command === "init") {
           if (sharedEntry[familyId].value) {
             //utils.logTask(task, "CEPShared sharedEntry value set for varName", varName);
             toSync[instanceId][varName] = sharedEntry[familyId].value;
@@ -71,7 +71,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       assert.strictEqual(containsArray(task.shared[varName]), false, `Shared variable ${varName} contains array`);
       assert(!containsArray(task.shared[varName]));
       utils.logTask(task, "CEPShared Shared varName", varName, "familyId", familyId); //, "update with:", task.shared[varName]);
-      if (task.processor.command === "init") {
+      if (task.node.command === "init") {
         if (!sharedEntry[familyId].value) {
           sharedEntry[familyId]["value"] = task.shared[varName];
         }
@@ -80,7 +80,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       }
       await sharedStore_async.set(varName, sharedEntry);
     }
-    if (task.processor.command === "init") {
+    if (task.node.command === "init") {
       task.shared = toSync[task.instanceId];
       utils.logTask(task, "CEPShared init", task.shared);
     } else {
@@ -113,7 +113,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       await Promise.all(promises);
     }
   } else {
-    //console.log("CEPShared skipping task.processor.coprocessing", task.processor.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
+    //console.log("CEPShared skipping task.node.coprocessing", task.node.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);
   }
 }
 

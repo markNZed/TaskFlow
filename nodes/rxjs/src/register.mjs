@@ -18,9 +18,9 @@ const register_async = async () => {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify({
-      processorId: NODE.id,
+      nodeId: NODE.id,
       environment: NODE.environment,
-      // Because this processor can serve as a coprocessor it needs to deal with "start"
+      // Because this node can serve as a coprocessor it needs to deal with "start"
       commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
       coprocessor: NODE.role === "coprocessor",
       language,

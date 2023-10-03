@@ -51,7 +51,7 @@ function stripTask(task) {
   // hashDiffOrigTask is for debug of the hash but it also helps spot what changes in the task
   //delete taskCopy.meta.hashDiffOrigTask; 
   delete taskCopy.meta.hashTask;
-  delete taskCopy.processor.origTask;
+  delete taskCopy.node.origTask;
   return taskCopy;
 }
 

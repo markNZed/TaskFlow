@@ -119,7 +119,7 @@ const TaskSystemLogViewer = (props) => {
         }
       });
       let command = transformedFields["command"];
-      if (command === "update" && t.current.processor?.commandArgs?.sync) {
+      if (command === "update" && t.current.node?.commandArgs?.sync) {
         transformedFields["command"] += "(sync)";
       }
       transformedFields["coprocessing"] = transformedFields["coprocessing"] ? "true" : "false";

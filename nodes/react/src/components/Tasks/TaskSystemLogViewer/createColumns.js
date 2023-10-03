@@ -87,10 +87,10 @@ export function createColumns(rowDetailHeight) {
         flex: 1,
       },
       {  
-        name: 'processorId',
-        dataPath: "current.processor.initiatingProcessorId",
+        name: 'nodeId',
+        dataPath: "current.node.initiatingProcessorId",
         width: 50,
-        key: "processorId",
+        key: "nodeId",
         flex: 1,
       },
       {  
@@ -102,7 +102,7 @@ export function createColumns(rowDetailHeight) {
       },
       {  
         name: 'command',
-        dataPath: "current.processor.command",
+        dataPath: "current.node.command",
         width: 100,
         key: "command",
         flex: 1,
@@ -110,7 +110,7 @@ export function createColumns(rowDetailHeight) {
       {  
         name: 'coprocessing',
         queryDatatype: "boolean",
-        dataPath: "current.processor.coprocessingDone",
+        dataPath: "current.node.coprocessingDone",
         width: 50,
         key: "coprocessing",
         flex: 1,

@@ -13,9 +13,9 @@ import { PythonRunner } from '#src/pythonRunner';
 // eslint-disable-next-line no-unused-vars
 const TaskRx_async = async function (wsSendTask, T) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
-  if (T("processor.command") === "init") {
+  if (T("node.command") === "init") {
 
     console.log("TaskRx init");
 

@@ -39,7 +39,7 @@ const useUpdateTask = (task, setTask) => {
             let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
             snapshot["instanceId"] = instanceId;
             snapshot["meta"] = {};
-            snapshot["processor"] = {};
+            snapshot["node"] = {};
           }
           wsSendTask(snapshot);
         } catch (error) {

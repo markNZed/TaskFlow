@@ -1,10 +1,20 @@
 /* ToDo
 -------
+Refactoring 
+  processor -> node
+  processors -> nodes
+  processorId
+  processorIds
+  updatedProcessorIds
+  nodeData
+  processorDiff
+  activeTaskProcessorsStore_async
+  activeProcessors
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
-  use importlib to dynamically import function ?
-    Would be like a Python Service
-      Service config could specify the Python module to be loaded
+  PythonRunner should be a Service
+Simplest RAG:
+  
 Demo of copying a task
   Copy of TaskChat
     System task that starts a conversation 
@@ -27,6 +37,7 @@ Random Client is broken
 Check Demo of collaborative chat
 Keep both autoStartEnvironments and autoStartEnvironments ?
 Major features to implement before further refactoring
+  Running Python scripts
   Debug support per Task
     Explore more about import debug from "debug"; 
   TaskCreateTask
@@ -79,7 +90,7 @@ Automatic Response Repair
 https://en.wikipedia.org/wiki/Barbara_J._Grosz
 
 Add the user object only if it has changed
-  If the task is collaborative then the user should be associated with task.processor?
+  If the task is collaborative then the user should be associated with task.node?
     Then would not need to send all the time
       Could have multple users on the the same processor collaborating
 Switch from hub/processor to node
@@ -87,9 +98,9 @@ Switch from hub/processor to node
     Will allow fro bridge between TF & MTF
   Tasks dedicated to processor is another reason to have a single "node"
   Move to task.node ?
-  One the hub we copy task.node into task.processors then setup task.node
+  One the hub we copy task.node into task.nodes then setup task.node
 Menu should not have shared.configTreeHubconsumerTasks on React
-  Could store processor specific info in task.processor
+  Could store processor specific info in task.node
     But it is using task.shared
     Masking could fix this
 Could have an option on CEP as to whether we need to await or not
@@ -140,7 +151,7 @@ How can we detect errors in the console?
     Could create a window.log that meta can access as a feature of the React Processor
 Could configure CEP to run during or after coprocessing
 Registering could/should be a task
-  use the processorId as an instanceId
+  use the nodeId as an instanceId
 How do we drive the input of another task without UI ?
   New command 
     "input" which drives local task
@@ -252,13 +263,13 @@ Should the Processor also implement rate limiting?
 Ability to select a service type. This is a very simple task?
   Could allow for various ways of selecting. 
 If a task is no longer in an environment then shut it down
-  Would require something like a delete command sent to processors
+  Would require something like a delete command sent to nodes
 Need to run CEP on local processor to get real-time behavior
   No rush to implement this
 The cache is not going to allow a conversation if it matches and the key is not including the messages
 In templating maybe we should support "task." syntax
 Tests will allow for better code generation
-Requests from other tasks via: task.processor.task.request
+Requests from other tasks via: task.node.task.request
   See notes
 If we have a TaskFilter this raises the question of how to configure/program it.
   Detects an event and passes information.
@@ -441,7 +452,7 @@ Architecture
     AMQP or MQTT would be more scalable.
   Keep server on rxjs-processor-consumer processor - yes but for debug/admin/metrics etc
     Performance, utilization etc, a Processor Object for this (instead of Task)
-    The debug features can be shared between processors e.g. just connect to keyv with activeTasks
+    The debug features can be shared between nodes e.g. just connect to keyv with activeTasks
   Re-architect the react Processor to make use of the Service Worker API
     Should have React Hub
     Progressive Web Apps https://developer.chrome.com/docs/workbox/

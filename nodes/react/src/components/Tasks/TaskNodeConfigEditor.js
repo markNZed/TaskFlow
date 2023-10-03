@@ -67,7 +67,7 @@ const TaskNodeConfigEditor = (props) => {
         nextState = "loaded";
         break;
       case "loaded":
-        // General rule: if we set a field on a processor then clear it down on the same processor
+        // General rule: if we set a field on a node then clear it down on the same node
         //   Not for response/request
         if (task.input.action) {
           modifyTask({

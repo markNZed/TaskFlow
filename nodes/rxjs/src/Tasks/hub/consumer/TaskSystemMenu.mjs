@@ -11,8 +11,8 @@ import { utils } from "#src/utils";
 const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   let configTreeEvent; 
-  if (T("processor.commandArgs.sync")) {
-    //console.log("TaskSystemMenu_async", T("processor.commandArgs"));
+  if (T("node.commandArgs.sync")) {
+    //console.log("TaskSystemMenu_async", T("node.commandArgs"));
     if (T("meta.modified.shared.configTreeHubconsumerTasks")) {
       configTreeEvent = true;
       console.log("configTreeEvent found update to shared.configTreeHubconsumerTasks");

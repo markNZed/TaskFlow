@@ -16,9 +16,9 @@ import TreeModel from 'tree-model';
 // This sync the familyTree but we are not using this if we test via UI 
 // eslint-disable-next-line no-unused-vars
 async function cep_async(wsSendTask, CEPInstanceId, task, args) {
-  //utils.logTask(task, "CEPFamilyTree command", task.processor.command, task.id);
+  //utils.logTask(task, "CEPFamilyTree command", task.node.command, task.id);
   // Only run this when going through the coprocessor the first time
-  if (task.processor.command === "init" && !task.processor.coprocessingDone) {
+  if (task.node.command === "init" && !task.node.coprocessingDone) {
     let actions = [];
     utils.logTask(task, "CEPFamilyTree adding");
     let CEPtask;

@@ -12,14 +12,14 @@ import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task) {
   const commandArgs = task.hub.commandArgs;
-  let processorId = task.hub.sourceProcessorId;
+  let nodeId = task.hub.sourceProcessorId;
   try {
-    utils.logTask(task, "commandStart_async from processorId:" + processorId);
+    utils.logTask(task, "commandStart_async from nodeId:" + nodeId);
     let initTask;
     let authenticate = true;
     if (commandArgs.init) {
       initTask = commandArgs.init;
-      processorId = task.processor.id;
+      nodeId = task.node.id;
       if (commandArgs.authenticate !== undefined) {
         authenticate = commandArgs.authenticate;
       }
@@ -41,11 +41,11 @@ export async function commandStart_async(task) {
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (haveCoprocessor) {
       if (task.hub.coprocessingDone) {
-        taskStart_async(initTask, authenticate, processorId, prevInstanceId)
+        taskStart_async(initTask, authenticate, nodeId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);
-            //utils.logTask(task, "commandStart_async startTask.processors", startTask.processors);
-            //utils.logTask(task, "commandStart_async startTask.processor", startTask.processor);
+            //utils.logTask(task, "commandStart_async startTask.nodes", startTask.nodes);
+            //utils.logTask(task, "commandStart_async startTask.node", startTask.node);
             //utils.logTask(task, "commandStart_async startTask.hub", startTask.hub);
             utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
             taskRelease(task.instanceId, "commandStart_async");
@@ -55,7 +55,7 @@ export async function commandStart_async(task) {
         // Start should not function as an update. Could get out of sync when using task to start another task.
       }
     } else {
-      taskStart_async(initTask, authenticate, processorId, prevInstanceId)
+      taskStart_async(initTask, authenticate, nodeId, prevInstanceId)
         .then(async (startTask) => {
           await taskSync_async(startTask.instanceId, startTask);
           utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);

@@ -28,16 +28,16 @@ async function doneTask_async(task) {
       groupId: task?.groupId,
       familyId: task.familyId,
     }
-    let processorId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
-    task.processor = task.processors[processorId];
+    let nodeId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
+    task.node = task.nodes[nodeId];
     task.hub.commandArgs = {
       init: initTask,
       prevInstanceId: task.instanceId,
-      authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
+      authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
     }
     await commandStart_async(task);
-    //await taskStart_async(initTask, false, processorId, task.instanceId);
-    // In theory commandStart_async will update activeTasksStore and that will send the task to the correct processor(s)
+    //await taskStart_async(initTask, false, nodeId, task.instanceId);
+    // In theory commandStart_async will update activeTasksStore and that will send the task to the correct node(s)
   }
 }
 
@@ -57,7 +57,7 @@ export async function commandUpdate_async(task) {
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
-  let processorId = task.hub.sourceProcessorId;
+  let nodeId = task.hub.sourceProcessorId;
   const commandArgs = task.hub.commandArgs;
   let instanceId = task.instanceId;
   if (commandArgs?.syncTask?.instanceId) {
@@ -66,7 +66,7 @@ export async function commandUpdate_async(task) {
   //const localTaskRelease = await taskLock(task.instanceId, "commandUpdate_async");
   utils.logTask(task, "commandUpdate_async messageId:", task?.meta?.messageId);
   try {
-    utils.logTask(task, "commandUpdate_async from processorId:" + processorId);
+    utils.logTask(task, "commandUpdate_async from nodeId:" + nodeId);
     let activeTask = await getActiveTask_async(instanceId)
     if (!activeTask) {
       throw new Error("No active task " + instanceId);

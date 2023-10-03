@@ -31,7 +31,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
       const message = messageQueue[key];
       //console.log("message", message, key);
       if (message && message?.command && message.command === "error") {
-        //console.log("useErrorWSFilter handleError update key", key, taskError, message.task.processor?.prevInstanceId, errorPrevInstanceId);
+        //console.log("useErrorWSFilter handleError update key", key, taskError, message.task.node?.prevInstanceId, errorPrevInstanceId);
         if (message.task.id === instanceId ||
             message.task.meta?.prevInstanceId === errorPrevInstanceId) {
           //console.log("useErrorWSFilter handleError calling onError", taskError);

@@ -69,7 +69,7 @@ function CEPCreate(CEPMatchMap, task, match, config) {
     CEPMatchMap.set(match, funcMap); 
   } else {
     // Only add the function if there isn't already an entry for this entryId
-    // Want to avoid adding system CEP every time the processor registers
+    // Want to avoid adding system CEP every time the node registers
     if (!funcMap.has(entryId)) {
       funcMap.set(entryId, [task.instanceId, CEPFunc, name, args]);
       CEPMatchMap.set(match, funcMap);

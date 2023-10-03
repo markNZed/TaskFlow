@@ -29,16 +29,16 @@ const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   switch (T("state.current")) {
     case "start": {
-      // Define which states this processor supports
+      // Define which states this node supports
       // Could create a config option for this too but having it in the state machine seems nicer
       // Still want to be able to disable this e.g. to run CEP on any state
       if (T("config.local.statesSupported")) {
         const statesSupported = T("config.local.statesSupported"); ["configFunctionRequest"];
-        if (!arraysEqualIgnoreOrder(T("processor.statesSupported"), statesSupported)) {
+        if (!arraysEqualIgnoreOrder(T("node.statesSupported"), statesSupported)) {
           // Experiment with this after we have the functions working
-          T("processor.statesSupported", statesSupported);
+          T("node.statesSupported", statesSupported);
           T("command", "update");
-          T("commandDescription", `Set processor.statesSupported to ${statesSupported}`);
+          T("commandDescription", `Set node.statesSupported to ${statesSupported}`);
           utils.logTask(T(), "statesSupported:", statesSupported);
         }
       }

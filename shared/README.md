@@ -18,11 +18,11 @@ The Task schema defines a staic object (i.e. no funtions) so it is language inde
 
 The task.input should not be driven by the Task, this ensure that it will not overwrite values.
 The task.meta should not be modified by the Task.
-Each parameter in task.output should be updated by a single processor or managed carefully (e.g., locking) to avoid conflicts.
+Each parameter in task.output should be updated by a single node or managed carefully (e.g., locking) to avoid conflicts.
 task.request should be used for sending information within the distributed task
 task.response should be used for information within the distributed task in response to task.request
 task.state may also be used for internal Task communication and synchronization
-The processor that locks a Task should ideally also unlock the Task
+The node that locks a Task should ideally also unlock the Task
 
 task.config stores generic configuration information that many tasks may use, it is inherited by tasks further down the hierarchy.
 task.config.local stores tasktype specific configuration information that is not inherited.
@@ -163,22 +163,22 @@ v03:
 * request -> outgoingRequest
 * outgoingResponse
 * outgoingCount
-* processor data provided by the Task processor
+* node data provided by the Task node
   * location
   * API a list of API ids consider what langchain does for models
 * logHistory as an array of log messages
 * log as a string
 * permissions -> groupAccess
 * error -> an object with type and message and stack (or just a free-form object)
-* Task processor timezone
-* task.processors[environment] would allow inititialisation of task.processor for a given environment e.g. configuring task.processor.statesSupported
+* Task node timezone
+* task.nodes[environment] would allow inititialisation of task.node for a given environment e.g. configuring task.node.statesSupported
 * Could add a check in schema to services that type + environments must exist
 
 ### Processor
 
 Below needs to be updated now that there is a Hub
 
-The Task processor should:
+The Task node should:
 * validate the Task
 * In the future:
   * move outgoingResponse to incomingResponse upon receiving a Task
@@ -258,7 +258,7 @@ These could be arrays to support multiple requests/responses. Another organizati
 * outgoingCount
 Then the infrastructure could look after queuing etc. This might be simpler. A Task that wants to look after multiple request/response could still do this by asynchronously accepting all incoming messages. This seems better.
 
-Incoming request/response should be in task.processor and outgoing request/response should be in task.
+Incoming request/response should be in task.node and outgoing request/response should be in task.
 
 The v02 list of top level properties: baseType, children, completedAt, createdAt, error, permissions, groupId, id, initiator, name, nextTasks, nextTask, parentId, parentInstanceId, parentName, send, stack, stackPtr, threadId, type, updateCount, updatedAt, userId, versionExternal, versionInternal, privacy, input, output, config, state, request, response
 

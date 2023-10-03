@@ -20,7 +20,7 @@ let lastErrorDate;
 let errorCountThisMinute = 0;
 
 function hubAssertions(taskDiff, mergedTask) {
-  // Here taskDiff is the task we receive from the processor but with task.meta.modified added
+  // Here taskDiff is the task we receive from the node but with task.meta.modified added
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
@@ -31,42 +31,42 @@ function hubAssertions(taskDiff, mergedTask) {
 
 async function processorInHubOut_async(task, activeTask, requestId) {
   utils.debugTask(task);
-  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.processor;
-  // Could initiate from a processor before going through the coprocessor
+  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.node;
+  // Could initiate from a node before going through the coprocessor
   // Could be initiated by the coprocessor
-  //utils.logTask(task, "task.processor.initiatingProcessorId ", task.processor.initiatingProcessorId);
-  let initiatingProcessorId = task.processor.initiatingProcessorId || id;
+  //utils.logTask(task, "task.node.initiatingProcessorId ", task.node.initiatingProcessorId);
+  let initiatingProcessorId = task.node.initiatingProcessorId || id;
   //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
-  if (!task.processor.isCoprocessor) {
+  if (!task.node.isCoprocessor) {
     initiatingProcessorId = id;
   }
   //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
   let commandArgs = {};
-  if (task.processor.commandArgs) {
-    commandArgs = utils.deepClone(task.processor.commandArgs);
+  if (task.node.commandArgs) {
+    commandArgs = utils.deepClone(task.node.commandArgs);
   }
   let commandDescription = "";
-  if (task.processor.commandDescription) {
-    commandDescription = task.processor.commandDescription;
+  if (task.node.commandDescription) {
+    commandDescription = task.node.commandDescription;
   }
-  task.processor.command = null;
-  task.processor.commandArgs = null;
-  task.processor.coprocessing = null;
-  task.processor.coprocessingDone = null;
-  task.processor.coprocessingPosition = null;
-  const activeTaskProcessors = activeTask?.processors || {};
-  const processor = utils.deepClone(task.processor);
+  task.node.command = null;
+  task.node.commandArgs = null;
+  task.node.coprocessing = null;
+  task.node.coprocessingDone = null;
+  task.node.coprocessingPosition = null;
+  const activeTaskProcessors = activeTask?.nodes || {};
+  const node = utils.deepClone(task.node);
   if (!activeTaskProcessors[id]) {
-    activeTaskProcessors[id] = processor;
+    activeTaskProcessors[id] = node;
   } else {
-    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], processor);
+    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], node);
   }
-  task.processors = activeTaskProcessors;
+  task.nodes = activeTaskProcessors;
   /*
-  // For each processor in task.processors log the stateLast
-  for (const key in task.processors) {
-    const processor = task.processors[key];
-    console.log(`Processor: ${key}, StateLast: ${processor.stateLast}`);
+  // For each node in task.nodes log the stateLast
+  for (const key in task.nodes) {
+    const node = task.nodes[key];
+    console.log(`Processor: ${key}, StateLast: ${node.stateLast}`);
   }
   */
   task.users = activeTask?.users || {};
@@ -235,15 +235,15 @@ async function processOutput_async(task, outputStore) {
 
 async function taskProcess_async(task, req) {
   try {
-    if (!task.processor) {
-      throw new Error("Missing task.processor in /hub/api/task");
+    if (!task.node) {
+      throw new Error("Missing task.node in /hub/api/task");
     }
-    utils.logTask(task, "From processor:" + task.processor.id + " command:" + task.processor.command + " commandDescription:" + task.processor.commandDescription + " state:" + task?.state?.current);
+    utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
     let activeTask = {};
 
     utils.debugTask(task);
     checkErrorRate(task);
-    if (task.processor.command === "update") {
+    if (task.node.command === "update") {
       task = utils.setMetaModified(task);
       //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
     }
@@ -257,12 +257,12 @@ async function taskProcess_async(task, req) {
         // Need to restore meta for checkLockConflict, checkAPIRate
         // Need to restore config for checkAPIRate
         const taskDiff = utils.deepClone(task);
-        // We want to use the processor as sent in
-        // For example sync may not set all the processor info and the activeTask may have info form another processor
-        activeTask["processor"] = null; 
+        // We want to use the node as sent in
+        // For example sync may not set all the node info and the activeTask may have info form another node
+        activeTask["node"] = null; 
         task = utils.deepMerge(activeTask, task);
         hubAssertions(taskDiff, task);
-      } else if (task.processor.command !== "start" && task.processor.command !== "init") {
+      } else if (task.node.command !== "start" && task.node.command !== "init") {
         console.error("Should have activeTask if we have an instanceId", task);
         throw new Error("Should have activeTask if we have an instanceId");
       }
@@ -272,9 +272,9 @@ async function taskProcess_async(task, req) {
       requestId = req.id;
     }
     task = await processorInHubOut_async(task, activeTask, requestId);
-    // Update the processor information
+    // Update the node information
     if (activeTask && Object.keys(activeTask).length !== 0) {
-      activeTask.processors = task.processors;
+      activeTask.nodes = task.nodes;
       await setActiveTask_async(activeTask);
     }
     if (task.hub.command !== "partial") {

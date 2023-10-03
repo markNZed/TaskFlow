@@ -174,7 +174,7 @@ function withTask(Component) {
     
     const checkLocked = () => {
       if (props.task?.meta?.locked) {
-        if (props.task.meta.locked === globalState.processorId) {
+        if (props.task.meta.locked === globalState.nodeId) {
           return false;
         } else {
           return true;
@@ -201,10 +201,10 @@ function withTask(Component) {
 
     /*
     // Example of how to use the familyTaskDiff
-    // The child should enable this by modifyTask({"processor.config.familyTaskDiff": true});
+    // The child should enable this by modifyTask({"node.config.familyTaskDiff": true});
     useEffect(() => {
-      if (!props?.task?.processor?.config?.familyTaskDiff && props.task) {
-        modifyTask({"processor.config.familyTaskDiff": true});
+      if (!props?.task?.node?.config?.familyTaskDiff && props.task) {
+        modifyTask({"node.config.familyTaskDiff": true});
       }
       if (familyTaskDiff) {
         console.log('Received a task change in ' + props.task.id, familyTaskDiff);
@@ -248,7 +248,7 @@ function withTask(Component) {
     }, [props.task]);
 
     useEffect(() => {
-      if (!familyId && props.task && props.task.processor?.config?.familyTaskDiff) {
+      if (!familyId && props.task && props.task.node?.config?.familyTaskDiff) {
         setFamilyId(props.task.familyId);
       }
     }, [props.task]);
@@ -325,7 +325,7 @@ function withTask(Component) {
         //console.log("lastTask", utils.deepClone(lastTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         utils.checkHashDiff(lastTask, updateDiff);
-        let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.processor);
+        let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.node);
         //console.log("After deepMergeProcessor updatedTask", utils.deepClone(updatedTask));
         utils.removeNullKeys(updatedTask);
         //console.log("After removeNullKeys updatedTask", utils.deepClone(updatedTask));
@@ -334,27 +334,27 @@ function withTask(Component) {
         //console.log("After processorActiveTasksStoreSet_async updatedTask", utils.deepClone(updatedTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         // Keep the origTask up to date i th eactive task
-        if (!updateDiff.processor) {
-          updateDiff["processor"] = {};
+        if (!updateDiff.node) {
+          updateDiff["node"] = {};
         }
-        updateDiff.processor["origTask"] = updatedTask.processor.origTask; 
-        // If the resource has been locked by another processor then we ignore whatever was done locally
-        // If this is the source processor then we want to keep any change made to the task since the update was sent
-        // There may be meta data like task.meta.lock that we want updated on the source processor
-        // The lock effectively makes a processor the master so even if changes are made by another processor
+        updateDiff.node["origTask"] = updatedTask.node.origTask; 
+        // If the resource has been locked by another node then we ignore whatever was done locally
+        // If this is the source node then we want to keep any change made to the task since the update was sent
+        // There may be meta data like task.meta.lock that we want updated on the source node
+        // The lock effectively makes a node the master so even if changes are made by another node
         // the values of the procesor with the lock will be favored.
-        const thisProcessorIsSource = updateDiff.processor.sourceProcessorId === globalState.processorId;
-        const thisProcessorHasLock = updateDiff.meta.locked === globalState.processorId;
-        if (updateDiff?.processor?.commandArgs && updateDiff.processor.commandArgs.sync) {
+        const thisProcessorIsSource = updateDiff.node.sourceProcessorId === globalState.nodeId;
+        const thisProcessorHasLock = updateDiff.meta.locked === globalState.nodeId;
+        if (updateDiff?.node?.commandArgs && updateDiff.node.commandArgs.sync) {
           modifyTask(updateDiff);
           console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {
-          // Just update task.meta & task.processor (for the processor.origTask)
+          // Just update task.meta & task.node (for the node.origTask)
           // But the CEP could modify this task
           const currentMeta = utils.deepMerge(props.task.meta, updateDiff.meta);
-          const currentProcessor = utils.deepMerge(props.task.processor, updateDiff.processor);
-          modifyTask({"meta": currentMeta, "processor": currentProcessor});
-          console.log("useUpdateWSFilter from this processor");
+          const currentProcessor = utils.deepMerge(props.task.node, updateDiff.node);
+          modifyTask({"meta": currentMeta, "node": currentProcessor});
+          console.log("useUpdateWSFilter from this node");
         } else if (thisProcessorHasLock) {
           // We do not want to use lastTask.input because it may overwrite changes on the inputs coming from outside the Task.
           delete updateDiff.input
@@ -373,7 +373,7 @@ function withTask(Component) {
       (newTask) => {
         console.log("useInitWSFilter withTask " + props.task.id + " started", newTask);
         setInitTask(null);
-        newTask.processor["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference
+        newTask.node["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference
         setStartTaskReturned(newTask);
       }
     )
@@ -663,7 +663,7 @@ function withTask(Component) {
       modifyState,
       useTaskState,
       useTasksState,
-      processorId: globalState.processorId,
+      nodeId: globalState.nodeId,
       transition,
       transitionTo,
       transitionFrom,

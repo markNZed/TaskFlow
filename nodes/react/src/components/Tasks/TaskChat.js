@@ -156,7 +156,7 @@ const TaskChat = (props) => {
 
   function describe(text) {
     // Because this is updating a React state it may not be immediately available upon return.
-    // An advantage of htis is that the description is not in the task object so visible on other processors
+    // An advantage of htis is that the description is not in the task object so visible on other nodes
     modifyTask({
       "state.description": {[task.state.current]: text}
     });

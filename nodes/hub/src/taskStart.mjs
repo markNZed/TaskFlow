@@ -20,14 +20,14 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
     let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
     let environments = [];
     if (activeTaskProcessors) {
-      // For each of the processors associated with this task
+      // For each of the nodes associated with this task
       // build a list of environments that are already active 
       for (let taskProcessorId of activeTaskProcessors) {
-        const processorData = activeProcessors.get(taskProcessorId);
-        if (processorData) {
+        const nodeData = activeProcessors.get(taskProcessorId);
+        if (nodeData) {
           doesContain = true;
-          environments.push(processorData.environment);
-          //console.log("Adding environment to task " + activeTask.id, processorData.environment)
+          environments.push(nodeData.environment);
+          //console.log("Adding environment to task " + activeTask.id, nodeData.environment)
         }
       }
     }
@@ -36,7 +36,7 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
     if (doesContain) {
       if (activeTask.environments && activeTask.environments.length > 0) {
         const allEnvironmentsPresent = activeTask.environments.every(env => environments.includes(env));
-        //console.log("activeTask.environments:", activeTask.environments, "processor environments:", environments, "allEnvironmentsPresent:", allEnvironmentsPresent);
+        //console.log("activeTask.environments:", activeTask.environments, "node environments:", environments, "allEnvironmentsPresent:", allEnvironmentsPresent);
         if (!allEnvironmentsPresent) {
           doesContain = false;
         }
@@ -203,40 +203,40 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   return task;
 }
 
-async function updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instancesStore_async, setActiveTask_async*/) {
+async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/) {
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
     // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
-    // nextTask on another processor, then the originator can associate the task with it's original request
+    // nextTask on another node, then the originator can associate the task with it's original request
     task.meta["prevInstanceId"] = prevTask.meta.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
-    // Copying processor information from previous task instance
-    // In the case where the task sequence advances on another processor 
+    // Copying node information from previous task instance
+    // In the case where the task sequence advances on another node 
     // we need to be able to associate more recent tasks with an older
     // task that is waiting on the next task.
-    task.processors = prevTask.processors;
-    // Iterate over each processor in task.processors
-    if (task.processors) {
-      Object.keys(task.processors).forEach(key => {
-        if (task.processors[key].origTask) {
-          delete task.processors[key].origTask;
+    task.nodes = prevTask.nodes;
+    // Iterate over each node in task.nodes
+    if (task.nodes) {
+      Object.keys(task.nodes).forEach(key => {
+        if (task.nodes[key].origTask) {
+          delete task.nodes[key].origTask;
         }
       });
     } else {
       console
     }
     // With a coprocessor and an initial start command there is no instnaceId
-    // The processors cannot be restored because there is no start task stored
-    if (!prevTask.processor) {
-      task.processor = {id: processorId};
+    // The nodes cannot be restored because there is no start task stored
+    if (!prevTask.node) {
+      task.node = {id: nodeId};
     } else {
-      task.processor = prevTask.processor;
-      if (task.processor.origTask) {
-        delete task.processor.origTask;
+      task.node = prevTask.node;
+      if (task.node.origTask) {
+        delete task.node.origTask;
       }
     }
-    task.processor["command"] = null;
-    task.processor["commandArgs"] = null;
+    task.node["command"] = null;
+    task.node["commandArgs"] = null;
     task.users = prevTask.users || {}; // Could be mepty in the case of error task
     task.state.address = prevTask.state?.address ?? task.state.address;
     task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
@@ -293,8 +293,8 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
   return task;
 }
 
-function allocateTaskToProcessors(task, processorId, activeProcessors, activeCoprocessors) {
-  // Build list of processors/environments that need to receive this task
+function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors) {
+  // Build list of nodes/environments that need to receive this task
   let taskProcessors = []
 
   if (!task.environments) {
@@ -308,33 +308,33 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, activeCop
   if (task.config.autoStartCoProcessor) {
     return [];
   }
-  // Allocate the task to processors that supports the environment(s) requested
-  const sourceProcessor = activeProcessors.get(processorId);
+  // Allocate the task to nodes that supports the environment(s) requested
+  const sourceProcessor = activeProcessors.get(nodeId);
   for (const environment of task.environments) {
     // Favor the source Processor if we need that environment
     let found = false;
     if (sourceProcessor && sourceProcessor.environment === environment) {
       found = true;
-      taskProcessors.push(processorId);
+      taskProcessors.push(nodeId);
     }
-    // If there are already processor entries then favor these
-    if (!found && task.processors) {
-      for (let id in task.processors) {
-        const processor = activeProcessors.get(id);
-        if (processor && processor.environment === environment) {
+    // If there are already node entries then favor these
+    if (!found && task.nodes) {
+      for (let id in task.nodes) {
+        const node = activeProcessors.get(id);
+        if (node && node.environment === environment) {
           found = true;
           taskProcessors.push(id);
-          task.processors[id] = {id: id};
+          task.nodes[id] = {id: id};
         }
       }
     }
-    // Find an active processor that supports this environment
+    // Find an active node that supports this environment
     if (!found) {
       for (const [activeProcessorId, value] of activeProcessors.entries()) {
         if (value.environment === environment) {
             found = true;
             taskProcessors.push(activeProcessorId);
-            task.processors[activeProcessorId] = {
+            task.nodes[activeProcessorId] = {
               id: activeProcessorId
             };
             break;
@@ -347,7 +347,7 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, activeCop
         if (value.environment === environment) {
             found = true;
             taskProcessors.push(activeCoprocessorId);
-            task.processors[activeCoprocessorId] = {
+            task.nodes[activeCoprocessorId] = {
               id: activeCoprocessorId,
               isCoprocessor: true,
             };
@@ -356,47 +356,47 @@ function allocateTaskToProcessors(task, processorId, activeProcessors, activeCop
       }       
     }
     if (!found) {
-      console.error("No processor found for environment " + environment);
-      //throw new Error("No processor found for environment " + environment);
+      console.error("No node found for environment " + environment);
+      //throw new Error("No node found for environment " + environment);
     }
   }
 
   if (taskProcessors.length == 0) {
-    throw new Error("No processors allocated for task " + task.id);
+    throw new Error("No nodes allocated for task " + task.id);
   }
 
-  utils.logTask(task, "Allocated new task " + task.id + " to processors ", taskProcessors);
+  utils.logTask(task, "Allocated new task " + task.id + " to nodes ", taskProcessors);
 
   return taskProcessors;
 }
 
 async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
-  // Record which processors have this task
+  // Record which nodes have this task
   if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
-    let processorIds = await activeTaskProcessorsStore_async.get(task.instanceId);
+    let nodeIds = await activeTaskProcessorsStore_async.get(task.instanceId);
     taskProcessors.forEach(id => {
-      if (processorIds && !processorIds.includes(id)) {
-        processorIds.push(id);
+      if (nodeIds && !nodeIds.includes(id)) {
+        nodeIds.push(id);
       } 
     });
-    await activeTaskProcessorsStore_async.set(task.instanceId, processorIds);
+    await activeTaskProcessorsStore_async.set(task.instanceId, nodeIds);
   } else {
     await activeTaskProcessorsStore_async.set(task.instanceId, taskProcessors);
   }
   //utils.logTask(task, "Processors with task instance " + task.instanceId, taskProcessors);
-  // Record which tasks have this processor
+  // Record which tasks have this node
   await Promise.all(
-    taskProcessors.map(async (processorId) => {
-      if (await activeProcessorTasksStore_async.has(processorId)) {
-        let taskInstanceIds = await activeProcessorTasksStore_async.get(processorId);
+    taskProcessors.map(async (nodeId) => {
+      if (await activeProcessorTasksStore_async.has(nodeId)) {
+        let taskInstanceIds = await activeProcessorTasksStore_async.get(nodeId);
         if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
           taskInstanceIds.push(task.instanceId);
         }
-        await activeProcessorTasksStore_async.set(processorId, taskInstanceIds);
+        await activeProcessorTasksStore_async.set(nodeId, taskInstanceIds);
       } else {
-        await activeProcessorTasksStore_async.set(processorId, [task.instanceId]);
+        await activeProcessorTasksStore_async.set(nodeId, [task.instanceId]);
       }
-      //utils.logTask(task, "Added task instance " + task.instanceId + " to processor " + processorId);
+      //utils.logTask(task, "Added task instance " + task.instanceId + " to node " + nodeId);
     })
   );
 }
@@ -404,7 +404,7 @@ async function recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskPro
 async function taskStart_async(
     initTask,
     authenticate,
-    processorId,
+    nodeId,
     prevInstanceId,
   ) {
 
@@ -429,7 +429,7 @@ async function taskStart_async(
     }
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'processor', 'processors', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
+    ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
     //utils.logTask(task, "Task after merge", task)
 
@@ -512,8 +512,8 @@ async function taskStart_async(
 
     // Initialize task.hub.sourceProcessorId
     task.hub["command"] = "init";
-    task.hub["sourceProcessorId"] = autoStart ? undefined : processorId; // not sure about this, replace undefined with hubId ?
-    task.hub["initiatingProcessorId"] = autoStart ? "autostart" : processorId;
+    task.hub["sourceProcessorId"] = autoStart ? undefined : nodeId; // not sure about this, replace undefined with hubId ?
+    task.hub["initiatingProcessorId"] = autoStart ? "autostart" : nodeId;
     task.hub["coprocessingDone"] = false;
     
     // Initialize meta object
@@ -525,10 +525,10 @@ async function taskStart_async(
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
-    task = await updateTaskAndPrevTaskAsync(task, prevTask, processorId/*, instancesStore_async, setActiveTask_async*/);
-    // Set task.processor.id after copying info from prevTask
-    task.processors[processorId] = task.processors[processorId] ?? {};
-    task.processors[processorId]["id"] = processorId;
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/);
+    // Set task.node.id after copying info from prevTask
+    task.nodes[nodeId] = task.nodes[nodeId] ?? {};
+    task.nodes[nodeId]["id"] = nodeId;
 
     const user = await usersStore_async.get(task.user.id);
     if (task.users[task.user.id]) {
@@ -546,7 +546,7 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
     task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
-    const taskProcessors = allocateTaskToProcessors(task, processorId, activeProcessors, activeCoprocessors);
+    const taskProcessors = allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors);
 
     await recordTasksAndProcessorsAsync(task, taskProcessors, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 

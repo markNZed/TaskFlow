@@ -11,9 +11,9 @@ import { taskLock } from './shared/taskLock.mjs';
 
 export async function commandUpdate_async(wsSendTask, task) { 
   utils.logTask(task, "commandUpdate_async instanceId:", task.instanceId, "commandArgs:", task.commandArgs, "commandDescription:", task.commandDescription);
-  //utils.logTask(task, "commandUpdate_async sync processor", lastTask.processor);
+  //utils.logTask(task, "commandUpdate_async sync node", lastTask.node);
   let mergedTask = {}
-  // Deep copy task.processor to avoif changes to task that was passed in
+  // Deep copy task.node to avoif changes to task that was passed in
   const commandArgs = task.commandArgs || {};
   const commandDescription = task.commandDescription || "";
   const sync = commandArgs.sync;
@@ -33,8 +33,8 @@ export async function commandUpdate_async(wsSendTask, task) {
       lockBypass: true, // Could enforce this on the hub when sync is true
     };
     mergedTask["meta"] = {};
-    mergedTask["processor"] = {};
-    mergedTask.processor["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
+    mergedTask["node"] = {};
+    mergedTask.node["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
     await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
@@ -43,14 +43,14 @@ export async function commandUpdate_async(wsSendTask, task) {
       throw new Error("No lastTask found for " + task.instanceId);
     }
     mergedTask = utils.deepMerge(lastTask, task);
-    mergedTask.processor = JSON.parse(JSON.stringify(task.processor));
-    mergedTask.processor["coprocessingDone"] = false;
+    mergedTask.node = JSON.parse(JSON.stringify(task.node));
+    mergedTask.node["coprocessingDone"] = false;
   } 
   mergedTask["command"] = "update";
   // Because this is a fresh command sent from the coprocessor not part of the coprocessing pipeline
-  mergedTask.processor["coprocessing"] = false;
-  // Because it is this processor that is the initiator
-  mergedTask.processor["initiatingProcessorId"] = NODE.id; //"coprocessor";
+  mergedTask.node["coprocessing"] = false;
+  // Because it is this node that is the initiator
+  mergedTask.node["initiatingProcessorId"] = NODE.id; //"coprocessor";
   try {
     //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
     mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;

@@ -11,7 +11,7 @@ Running on localhost set the port for the React React Processor server in packag
 ## Features
 * Queue for updates to maintain order
 * Rollback of Task store if fetchTask fails
-* Shared worker for allocating processorId
+* Shared worker for allocating nodeId
 
 ## Task Conventions
 * The task is passed to the component i.e. the parent manages the Task state
@@ -41,7 +41,7 @@ Running on localhost set the port for the React React Processor server in packag
 
 The Taskflows component holds an array of Tasks so the user can switch between Tasks that have started without losing the state.
 
-Currently a shared worker sets a unique processorId per browser tab. This is not the intended architecture with a unique processor for each browser. Ultimately there should be a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Hub.
+Currently a shared worker sets a unique nodeId per browser tab. This is not the intended architecture with a unique processor for each browser. Ultimately there should be a single master tab that makes the websocket connection and forwards events to a shared worker that forwards events to open tabs. The shared worker could also intercept HTTP requests from slave tabs and pass them to the master tab for forwarding to the Hub.
 
 ## Coding preferences:
 * ES6 Javascript

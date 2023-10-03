@@ -15,13 +15,13 @@ const columns = [
 
 // This should be refactored as a Task, as per TaskSystemLog
 
-const IndexedDBViewer = ({workerId, processorId}) => {
+const IndexedDBViewer = ({workerId, nodeId}) => {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
-      let id = localStorage.getItem('processorId' + workerId);
+      let id = localStorage.getItem('nodeId' + workerId);
       const storage = await openStorage(id);
       console.log("IndexedDBViewer id", id);
 
@@ -33,10 +33,10 @@ const IndexedDBViewer = ({workerId, processorId}) => {
       setData(indexedDBData);
     };
 
-    if (processorId) {
+    if (nodeId) {
       fetchData();
     }
-  }, [processorId]);
+  }, [nodeId]);
 
   // Filter rows based on search term
   const filteredData = data.filter(row => 

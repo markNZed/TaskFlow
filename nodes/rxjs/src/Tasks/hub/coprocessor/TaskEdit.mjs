@@ -15,7 +15,7 @@ import { getActiveTask_async, keysActiveTask_async } from "#src/storage";
 // eslint-disable-next-line no-unused-vars
 const TaskEdit_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   switch (T("state.current")) {
     case "start": {

@@ -60,10 +60,10 @@
       "additionalProperties": true,
       "title": "Configuration"
     },
-    "Processors": {
+    "Nodes": {
       "type": "object",
       "additionalProperties": true,
-      "title": "Processors"
+      "title": "Nodes"
     },    
     "Users": {
       "type": "object",

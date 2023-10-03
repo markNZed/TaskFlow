@@ -186,9 +186,9 @@ const utils = {
   },
 
   deepMergeProcessor: function(prevState, update, processorIn) {
-    const processor = utils.deepClone(processorIn);
+    const node = utils.deepClone(processorIn);
     let result = utils.deepMerge(prevState, update);
-    result.processor = processor;
+    result.node = node;
     //utils.removeNullKeys(result);
     return result;
   },
@@ -616,7 +616,7 @@ const utils = {
     if (!task) {
       return 0; // should error here?
     }
-    // Only hash information that is shared between all processors and hub
+    // Only hash information that is shared between all nodes and hub
     const taskCopy = utils.cleanForHash(task);
     const sortedObj = utils.taskHashSortKeys(taskCopy);
     const hash = utils.djb2Hash(JSON.stringify(sortedObj));
@@ -663,12 +663,12 @@ const utils = {
   // This is having side-effects on task
   processorActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
-    delete task.processor.origTask; // delete so we do not have an old copy in origTask
-    task.processor["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
+    delete task.node.origTask; // delete so we do not have an old copy in origTask
+    task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
-    if (task.processor.command != "start") {
+    if (task.node.command != "start") {
       //console.log("processorActiveTasksStoreSet_async", task);
       const taskCopy = utils.deepClone(task);
       delete taskCopy.meta.modified; // generated on the hub
@@ -700,16 +700,16 @@ const utils = {
   cleanForHash: function (task) {
     let taskCopy = utils.deepClone(task);
     delete taskCopy.hub;
-    delete taskCopy.processor;
-    delete taskCopy.processors;
+    delete taskCopy.node;
+    delete taskCopy.nodes;
     delete taskCopy.user;
     delete taskCopy.users;
     delete taskCopy.permissions;
     delete taskCopy.meta;
-    // The processor may have copied the commands or not
+    // The node may have copied the commands or not
     delete taskCopy.command;
     delete taskCopy.commandArgs;
-    // Because this is unique to each processor (we could have a hash for each processor)
+    // Because this is unique to each node (we could have a hash for each node)
     if (taskCopy?.state?.last) {
       delete taskCopy.state.last;
       // Otherwise we can end up with an empty state object that causes hash mismatch
@@ -723,11 +723,11 @@ const utils = {
   },
 
   processorDiff: function(task) {
-    if (task.processor.command === "ping") {
+    if (task.node.command === "ping") {
       return task;
     }
     const taskCopy = utils.deepClone(task); // Avoid modifyng object that was passed in
-    const origTask = taskCopy.processor.origTask;
+    const origTask = taskCopy.node.origTask;
     if (!origTask) {
       return task;
     }
@@ -741,7 +741,7 @@ const utils = {
     //console.log("utils.getObjectDifference diffTask?.shared:", JSON.stringify(diffTask?.shared, null, 2));
     // Which properties of the origTask differ from the task
     let diffOrigTask;
-    if (taskCopy.processor?.commandArgs?.sync) {
+    if (taskCopy.node?.commandArgs?.sync) {
       diffOrigTask = undefined;
     } else {
       diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
@@ -765,18 +765,18 @@ const utils = {
     }
     diffTask["instanceId"] = taskCopy.instanceId;
     diffTask["id"] = taskCopy.id; // Could just send the instanceId
-    diffTask["processor"] = taskCopy.processor;
+    diffTask["node"] = taskCopy.node;
     if (!diffTask.user) {
       diffTask["user"] = {id: taskCopy.user.id};
     }
-    delete diffTask.processor.origTask; // Only used internally
+    delete diffTask.node.origTask; // Only used internally
     //console.log("processorDiff out task.output", diffTask.output);
     return diffTask;
   },
 
   // This is only used in the Hub so could move into the Hub utils 
   hubDiff: function(origTask, task) {
-    if (task?.processor?.command === "pong") {
+    if (task?.node?.command === "pong") {
       return task;
     }
     if (!origTask) {
@@ -792,8 +792,8 @@ const utils = {
       diffTask["instanceId"] = taskCopy.instanceId;
       diffTask["id"] = taskCopy.id;
       diffTask["hub"] = taskCopy.hub;
-      diffTask["processor"] = {};
-      diffTask["processors"] = taskCopy.processors;
+      diffTask["node"] = {};
+      diffTask["nodes"] = taskCopy.nodes;
       diffTask["user"] = taskCopy.user;
       diffTask["users"] = taskCopy.users;
       if (!diffTask.meta) {
@@ -805,7 +805,7 @@ const utils = {
       diffTask.meta["hash"] = origTask.meta.hash;
       // Which properties of the origTask differ from the task
       let diffOrigTask;
-      // We do not check the hash for sync (the processor sending may not even have the instance for calculating the diff)
+      // We do not check the hash for sync (the node sending may not even have the instance for calculating the diff)
       if (taskCopy.hub?.commandArgs?.sync) {
         diffOrigTask = undefined;
       } else {
@@ -834,12 +834,12 @@ const utils = {
 
   checkHashDiff: function(taskInStorage, task) {
     let taskCopy = utils.deepClone(task);
-    if (taskCopy?.commandArgs?.sync || taskCopy?.processor?.commandArgs?.sync || taskCopy?.hub?.commandArgs?.sync) {
+    if (taskCopy?.commandArgs?.sync || taskCopy?.node?.commandArgs?.sync || taskCopy?.hub?.commandArgs?.sync) {
       // Sync is not relative to a current value so we cannot use hash
       return;
     }
-    const statesSupported = taskCopy?.processor?.statesSupported || taskCopy?.hub?.statesSupported;
-    const statesNotSupported = taskCopy?.processor?.statesNotSupported || taskCopy?.hub?.statesNotSupported;
+    const statesSupported = taskCopy?.node?.statesSupported || taskCopy?.hub?.statesSupported;
+    const statesNotSupported = taskCopy?.node?.statesNotSupported || taskCopy?.hub?.statesNotSupported;
     if (statesSupported || statesNotSupported) {
       // We are sending full updates not diffs in this case
       // We could also set the task.meta.hashDiff to undefined on the hub?
@@ -873,19 +873,19 @@ const utils = {
 
   // Rename e.g. processorToTaskFunction, taskFunctionToProcessor, processorToHub, hubToProcessor
   processorInTaskOut: function(task) {
-    if (task.processor.stateLast) {
+    if (task.node.stateLast) {
       // Diffs may not have the state information
       // Maybe we do not need to update in this case?
       if (!task.state) {
         task.state = {};
       }
-      task.state["last"] = task.processor.stateLast;
+      task.state["last"] = task.node.stateLast;
     }
     utils.debugTask(task);
     return task;
   },
 
-  taskInProcessorOut_async: async function(task, processorId, getActiveTask_async) {
+  taskInProcessorOut_async: async function(task, nodeId, getActiveTask_async) {
     let taskCopy = utils.deepClone(task); // We do not want any side efects on task
     utils.debugTask(taskCopy, "input");
     //console.log("taskInProcessorOut input taskCopy.output", taskCopy.output);
@@ -896,29 +896,29 @@ const utils = {
     const command = taskCopy.command;
     const commandArgs = taskCopy.commandArgs;
     const commandDescription = taskCopy.commandDescription;
-    // Initialize processor when it does not exist e.g. when starting initial taskCopy
-    if (!taskCopy.processor) {
-      taskCopy.processor = {};
+    // Initialize node when it does not exist e.g. when starting initial taskCopy
+    if (!taskCopy.node) {
+      taskCopy.node = {};
     }
     // Clear down taskCopy commands as we do not want these coming back from the hub
-    taskCopy.processor["command"] = command;
+    taskCopy.node["command"] = command;
     delete taskCopy.command;
     if (taskCopy.commandArgs) {
       // Deep copy because we are going to clear
-      taskCopy.processor["commandArgs"] = JSON.parse(JSON.stringify(taskCopy.commandArgs));
+      taskCopy.node["commandArgs"] = JSON.parse(JSON.stringify(taskCopy.commandArgs));
     } else {
-      taskCopy.processor["commandArgs"] = null;
+      taskCopy.node["commandArgs"] = null;
     }
     delete taskCopy.commandArgs;
     if (taskCopy.commandDescription) {
-      taskCopy.processor["commandDescription"] = commandDescription;
+      taskCopy.node["commandDescription"] = commandDescription;
     } else {
-      taskCopy.processor["commandDescription"] = "";
+      taskCopy.node["commandDescription"] = "";
     }
     delete taskCopy.commandDescription;
-    // Record the state of the taskCopy as it leaves the processor
+    // Record the state of the taskCopy as it leaves the node
     if (taskCopy?.state?.current) {
-      taskCopy.processor["stateLast"] = taskCopy.state.current;
+      taskCopy.node["stateLast"] = taskCopy.state.current;
       delete taskCopy.state.last;
     }
     // Strip Service, Operator, and CEP functions as these are local to the Processor
@@ -931,16 +931,16 @@ const utils = {
     if (taskCopy.ceps) {
       //delete taskCopy.ceps;
     }
-    taskCopy.processor["id"] = processorId;
+    taskCopy.node["id"] = nodeId;
     // The coprocessor processes command init but th task has not been stored yet so diff cannot be calculated
     if (command === "start" || command === "partial" || commandArgs?.sync || command === "init") {
       return taskCopy;
     }
     // This assumes taskCopy is not a partial object e.g. in sync
-    if (taskCopy.processor.origTask && taskCopy.processor.command === "update") {
+    if (taskCopy.node.origTask && taskCopy.node.command === "update") {
       const taskCleaned = utils.cleanForHash(taskCopy);
       //console.log("taskInProcessorOut taskCleaned", taskCleaned);
-      const origTaskCleaned = utils.cleanForHash(taskCopy.processor.origTask);
+      const origTaskCleaned = utils.cleanForHash(taskCopy.node.origTask);
       //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
       // Not sure about removing outputs better to leave them
       delete taskCleaned.output;
@@ -951,16 +951,16 @@ const utils = {
         taskCopy = utils.deepMerge(taskCopy, keysNulled);
       }
     }
-    // This will use taskCopy.processor.origTask to identify the diff
+    // This will use taskCopy.node.origTask to identify the diff
     let diffTask = utils.processorDiff(taskCopy);
     // Send the diff considering the latest taskCopy storage state
     if (taskCopy.instanceId) {
       const lastTask = await getActiveTask_async(diffTask.instanceId);
-      // The taskCopy storage may have been changed after taskCopy.processor.origTask was set
+      // The taskCopy storage may have been changed after taskCopy.node.origTask was set
       //if (lastTask && lastTask.meta && lastTask.meta.hash !== diffTask.meta.hash) {
       if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
-        delete diffTask.processor.origTask; // delete so we do not have ans old copy in origTask
-        diffTask.processor["origTask"] = utils.deepClone(lastTask);
+        delete diffTask.node.origTask; // delete so we do not have ans old copy in origTask
+        diffTask.node["origTask"] = utils.deepClone(lastTask);
         diffTask = utils.processorDiff(diffTask);
         //console.log("taskInProcessorOut_async latest taskCopy storage taskCopy.output", diffTask.output);
       } else {
@@ -974,25 +974,25 @@ const utils = {
     return diffTask;
   },
 
-  // Should not be sending processor from hub ? Allows processor specific config. Also initiatingProcessorId
-  // The processor strips hub specific info because the Task Function should not interact with the Hub
+  // Should not be sending node from hub ? Allows node specific config. Also initiatingProcessorId
+  // The node strips hub specific info because the Task Function should not interact with the Hub
   hubInProcessorOut: function(task) {
     const hub = utils.deepClone(task.hub);
     delete task.hub;
     delete hub.id;
-    task.processor = task.processor || {};
-    if (!task.processor.isCoprocessor) {
-      delete hub.statesSupported; // Copied from processor
-      delete hub.statesNotSupported; // Copied from processor
+    task.node = task.node || {};
+    if (!task.node.isCoprocessor) {
+      delete hub.statesSupported; // Copied from node
+      delete hub.statesNotSupported; // Copied from node
     }
-    task.processor["command"] = hub.command;
-    task.processor["commandArgs"] = hub.commandArgs || {};
-    task.processor["commandDescription"] = hub.commandDescription || "";
-    task.processor = utils.deepMerge(task.processor, hub);
+    task.node["command"] = hub.command;
+    task.node["commandArgs"] = hub.commandArgs || {};
+    task.node["commandDescription"] = hub.commandDescription || "";
+    task.node = utils.deepMerge(task.node, hub);
     if (hub.sourceProcessorId) {
-      task.processor["sourceProcessorId"] = hub.sourceProcessorId;
+      task.node["sourceProcessorId"] = hub.sourceProcessorId;
     } else {
-      delete task.processor.sourceProcessorId;
+      delete task.node.sourceProcessorId;
     }
     utils.debugTask(task);
     return task;
@@ -1003,7 +1003,7 @@ const utils = {
     let currentDateTimeString = currentDateTime.toString();
     return {
       updatedeAt: currentDateTimeString,
-      processor: {},
+      node: {},
       command: "ping",
     }
   },
@@ -1183,15 +1183,15 @@ const utils = {
     }
     task = utils.deepClone(task); // Avoidin issues with logging references
     // This is like a continuous assertion (it runs before debug info is collected)
-    if (task?.processor?.origTask?.id && task?.processor?.origTask?.id !== task?.id) {
+    if (task?.node?.origTask?.id && task?.node?.origTask?.id !== task?.id) {
       console.error("Task:", task);
-      throw new Error("ERROR debugTask: task.processor.origTask.id !== task.id");
+      throw new Error("ERROR debugTask: task.node.origTask.id !== task.id");
     }
     // Could set task.debug via configuration
     if (!task?.config?.debug?.debugTask) {return}
     const isBrowser = typeof window === 'object';
-    const command = task.command || task?.processor?.command || task?.hub?.command;
-    const commandDescription = task.commandDescription || task?.processor?.commandDescription || task?.hub?.commandDescription;
+    const command = task.command || task?.node?.command || task?.hub?.command;
+    const commandDescription = task.commandDescription || task?.node?.commandDescription || task?.hub?.commandDescription;
     if (command === "ping" || command === "pong") {
       return;
     }
@@ -1215,9 +1215,9 @@ const utils = {
     }
 
     // This is an assertion that provides debug info
-    if (task.processor && task.processor.id === "rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.processor.isCoprocessor === false) {
-      console.log("Details:", task.processors, task.processor);
-      throw new Error("task.processor.id === 'rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.processor.isCoprocessor === false");
+    if (task.node && task.node.id === "rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.node.isCoprocessor === false) {
+      console.log("Details:", task.nodes, task.node);
+      throw new Error("task.node.id === 'rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.node.isCoprocessor === false");
     }
 
     if (task?.shared?.configTreeHubconsumerTasks?.children) {
@@ -1239,8 +1239,8 @@ const utils = {
     if (task?.output?.CEPCount) {
       //logParts.push("task.output.CEPCount", task.output.CEPCount);
     }
-    if (task?.processor?.coprocessing) {
-      //logParts.push("task.processor.coprocessing", task.processor.coprocessing);
+    if (task?.node?.coprocessing) {
+      //logParts.push("task.node.coprocessing", task.node.coprocessing);
     }
     if (task?.hub?.coprocessing) {
       //logParts.push("task.hub.coprocessing", task.hub.coprocessing);

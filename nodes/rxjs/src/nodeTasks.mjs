@@ -22,27 +22,27 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
   let nodeFunctionsInitialized = false;
   try {
     utils.logTask(T(), "taskProcess_async", T("id"));
-    utils.logTask(T(), "taskProcess_async processor.coprocessing", T("processor.coprocessing"));
-    const processorMatch = T("processor.initiatingProcessorId") === NODE.id;
+    utils.logTask(T(), "taskProcess_async node.coprocessing", T("node.coprocessing"));
+    const processorMatch = T("node.initiatingProcessorId") === NODE.id;
     const taskFunctionName = `${T("type")}_async`
     if (processorMatch) {
       utils.logTask(T(), "This was the initiatingProcessorId so skipping Task Fuction id:" + T("id"));
-    } else if (T("processor.command") === "error") {
+    } else if (T("node.command") === "error") {
       utils.logTask(T(), "RxJS Processor error so skipping Task Fuction id:" + T("id"));
-    } else if (T("processor.command") === "start") {
+    } else if (T("node.command") === "start") {
       utils.logTask(T(), "RxJS Processor start so skipping Task Fuction id:" + T("id"));
-    } else if (NODE.role === "coprocessor" && T("processor.commandArgs.sync")) {
+    } else if (NODE.role === "coprocessor" && T("node.commandArgs.sync")) {
       // Seems a risk of CEP operating on sync creating loops
       // Could have a rule that sync do not operate on the same task
       // True that in this case we can just modify the task
       utils.logTask(T(), "RxJS Task Coprocessor sync so skipping Task Fuction id:" + T("id"));
     } else if (!T("environments").includes(NODE.environment)) {
-      utils.logTask(T(), "Task is not configured to run on this processor");
+      utils.logTask(T(), "Task is not configured to run on this node");
     // If this is not a coprocessor then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
-      if (T("processor.command") === "init") {
+      if (T("node.command") === "init") {
         let servicesConfig = utils.deepClone(T("services"));
         if (servicesConfig) {
           if (servicesConfig["*"]) {
@@ -63,7 +63,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
               environments = [NODE.environment];
               console.log(`Service ${key} has no environments so it runs everywhere`);
             }
-            // Only try to load a service if it is expected to be on this processor
+            // Only try to load a service if it is expected to be on this node
             if (environments.includes(NODE.environment)) {
               const type = servicesConfig[key].type;
               //console.log("type", type);
@@ -83,7 +83,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
                 throw new Error(`Servicetype ${type} not found in ${key} service of ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
               }
             } else {
-              console.log(`Service ${key} not expected to be on this processor environment ${NODE.environment}`);
+              console.log(`Service ${key} not expected to be on this node environment ${NODE.environment}`);
             }
           });
           // Wait for all the promises to resolve
@@ -111,7 +111,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
             // Dynamically import taskOperators
             const environments = operatorsConfig[key].environments;
             if (environments) {
-              // Only try to load an operator if it is expected to be on this processor
+              // Only try to load an operator if it is expected to be on this node
               if (environments.includes(NODE.environment)) {
                 const type = operatorsConfig[key].type;
                 if (await operatorTypes_async.has(type)) {
@@ -144,7 +144,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       } else {
         // Restore functions which are not synchronized in the Tasks object
         // The services/operators are instablished upon init so values modified will
-        // not be visible in the Task outside of this processor until the Task here performs an update.
+        // not be visible in the Task outside of this node until the Task here performs an update.
         // Maybe this should be automated e.g. if services/operators are set then send a sync for the services/operators
         // Copy the functions into place
         if (T("services")) {
@@ -179,8 +179,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       utils.logTask(T(), "RxJS Processor no Task Function for " + T("type"));
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
-    if (T("processor.command") === "init") {
-      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("processor.coprocessingDone"))) {
+    if (T("node.command") === "init") {
+      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessingDone"))) {
         // How about overriding a match. CEPCreate needs more review/testing
         // Create two functions
         let ceps = T("ceps") || {};
@@ -203,7 +203,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
               // Dynamically import taskCeps
               const environments = cepsConfig[key].environments;
               if (environments) {
-                // Only try to load a cep if it is expected to be on this processor
+                // Only try to load a cep if it is expected to be on this node
                 if (environments.includes(NODE.environment)) {
                   const type = cepsConfig[key].type;
                   //console.log("type", type);
@@ -249,10 +249,10 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       }
       //utils.logTask(T(), "taskProcess_async CEPMatchMap", CEPMatchMap);
     }
-    if (T("processor.command") === "init" && nodeFunctionsInitialized) {
+    if (T("node.command") === "init" && nodeFunctionsInitialized) {
       // Sync these changes
-      // services/operators/ceps should be in a processor namespace ?
-      // Could have different processors with the same service name but different config?
+      // services/operators/ceps should be in a node namespace ?
+      // Could have different nodes with the same service name but different config?
       const syncTask = {};
       if (T("services")) {
         syncTask["services"] = T("services");
@@ -278,8 +278,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     // We could replace updatedTask with T() ?
   } catch (e) {
     console.error(e);
-    // Strictly we should not be updating the task object in the processor
-    // Could set updatedTask.processor.command = "error" ?
+    // Strictly we should not be updating the task object in the node
+    // Could set updatedTask.node.command = "error" ?
     T("error", {message: e.message});
     T("command", "update");
     T("commandArgs", {lockBypass: true});
@@ -297,24 +297,24 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       let instanceId = commandArgs.syncTask.instanceId || T("instanceId");
       T("instanceId", instanceId);
       T("meta", {});
-      T("processor", {});
+      T("node", {});
     }
     if (NODE.role === "coprocessor") {
       if (T() === null) {
         T = utils.createTaskValueGetter(origTask);
         utils.logTask(T(), "taskProcess_async null so task replaces updatedTask", T("id"));
-        // The updatedTask.processor will take effect in wsSendTask
+        // The updatedTask.node will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
       } else if (T("command")) {
-        // This processor wants to make a change
-        // The original processor will no longer see the change as coming from it
+        // This node wants to make a change
+        // The original node will no longer see the change as coming from it
         utils.logTask(T(), "taskProcess_async initiatingProcessorId updated");
-        T("processor.initiatingProcessorId", NODE.id);
+        T("node.initiatingProcessorId", NODE.id);
       }
       if (!T("command")) {
         // Because wsSendTask is expecting task.command
-        T("command", T("processor.command"));
-        T("commandArgs", T("processor.commandArgs"));
+        T("command", T("node.command"));
+        T("commandArgs", T("node.commandArgs"));
       }
       utils.debugTask(T(), "sending");
       wsSendTask(T());

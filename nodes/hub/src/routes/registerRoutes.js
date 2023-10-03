@@ -15,11 +15,11 @@ import { taskLock, taskRelease } from '#shared/taskLock';
 
 const router = express.Router();
 
-// We need to authenticate the processorId
+// We need to authenticate the nodeId
 // Could just be a shared secret in the body
 router.post("/", async (req, res) => {
   console.log("/hub/api/register");
-  let processorId = req.body.processorId;
+  let nodeId = req.body.nodeId;
   let environment = req.body.environment;
   let commandsAccepted = req.body?.commandsAccepted;
   let language = req.body?.language;
@@ -44,11 +44,11 @@ router.post("/", async (req, res) => {
     throw new Error("environment must be a string");
   }
 
-  console.log("processorId " + processorId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
-  console.log("processorId " + processorId + " registered with environment " + JSON.stringify(environment) + " language " + language + " coprocessor " + coprocessor);
+  console.log("nodeId " + nodeId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
+  console.log("nodeId " + nodeId + " registered with environment " + JSON.stringify(environment) + " language " + language + " coprocessor " + coprocessor);
     
   if (coprocessor) {
-    activeCoprocessors.set(processorId, {
+    activeCoprocessors.set(nodeId, {
       environment,
       commandsAccepted,
       language,
@@ -58,7 +58,7 @@ router.post("/", async (req, res) => {
       processing,
     })
   } else {  
-    activeProcessors.set(processorId, {
+    activeProcessors.set(nodeId, {
       environment,
       commandsAccepted,
       language,
@@ -72,7 +72,7 @@ router.post("/", async (req, res) => {
     hubId: hubId,
   });
 
-  // After each processor registers then we can check if there are tasks to autostart
+  // After each node registers then we can check if there are tasks to autostart
   // Check if there are autoStartTasks 
   let countAutoStartTasks = 0;
   let activeEnvironments = [];
@@ -129,10 +129,10 @@ router.post("/", async (req, res) => {
         }
       })
       // If we have already started the task then we should only restart it if the particular
-      // processor registering now is the autoStartEnvironment
+      // node registering now is the autoStartEnvironment
       // This was added because if the coprocessor has not started then we will not autostart
       // Then when the coprocessor starts allEnvironmentsAvailable will be true
-      // We want to start the task once in that case not every time any processor is registered.
+      // We want to start the task once in that case not every time any node is registered.
       if (autoStartTask.started) {
         if (autoStartEnvironment !== environment) {
           allEnvironmentsAvailable = false;
@@ -149,12 +149,12 @@ router.post("/", async (req, res) => {
         task["hub"] = {};
         task.hub["commandArgs"] = {
           init: initTask,
-          authenticate: false, // Do we need this because request is not coming from internet but local processor, would be better to detect this in the authentication?
+          authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
         }
         task.hub["command"] = "start";
         task.hub["sourceProcessorId"] = "hub";
-        task["processor"] = {};
-        task["processor"]["id"] = processorId;
+        task["node"] = {};
+        task["node"]["id"] = nodeId;
         console.log("Autostarting task ", taskId, environment);
         commandStart_async(task);
         if (autoStartTask.once) {

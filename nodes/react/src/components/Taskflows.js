@@ -52,7 +52,7 @@ function Taskflows(props) {
     const selectedTaskId = globalState.selectedTaskId
     if (selectedTaskId) {
       /*
-      // For now we are loading a new instance instead of reseting (resetting requires coordinating processors)
+      // For now we are loading a new instance instead of reseting (resetting requires coordinating nodes)
       // The counter is used in the key of the component
       // If it chenages then this can "reset" the Task as it will be re-mounted.
       // This only happens if we click on the task in the menu while using the same task
@@ -106,8 +106,8 @@ function Taskflows(props) {
   }, [globalState]);
 
   useEffect(() => {
-    // Load the system menu once we have the user and processorId
-    if (!init && globalState.user && globalState?.processorId) {
+    // Load the system menu once we have the user and nodeId
+    if (!init && globalState.user && globalState?.nodeId) {
       setTask({
         command: "start",
         commandArgs: {
@@ -116,7 +116,7 @@ function Taskflows(props) {
       });
       setInit(true);
     }
-  }, [globalState?.user, globalState?.processorId]);
+  }, [globalState?.user, globalState?.nodeId]);
 
   useEffect(() => {
     if (startTask) {

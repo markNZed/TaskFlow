@@ -156,7 +156,7 @@ const TaskSimulateUser = (props) => {
         break;
       case "introduction":
         if (transition()) {
-          // Sync state with rxjs-processor-consumer processor
+          // Sync state with rxjs-processor-consumer node
           modifyTask({ 
             "command": "update",
             "commandDescription": "Transition to introduction state",

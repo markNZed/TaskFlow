@@ -17,7 +17,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
 // eslint-disable-next-line no-unused-vars
 const TaskChoose_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
-  if (T("processor.commandArgs.sync")) {return null} // Ignore sync operations
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
 

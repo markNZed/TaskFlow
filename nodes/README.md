@@ -2,7 +2,7 @@
 
 ## Processor
 
-Information for the Processor is held in the `task.processor` object.
+Information for the Processor is held in the `task.node` object.
 
 The Processor strips the `task.hub` object before passing to a Task Function.
 
@@ -12,9 +12,9 @@ The Task Function mainly communicates with the Processor using the object `task.
   * update
   * start
 
-The Processor communicates with the Hub using the object `task.processor` Only the Processor write to `task.processor`.
+The Processor communicates with the Hub using the object `task.node` Only the Processor write to `task.node`.
 
-`task.processor.command` may be be one of:
+`task.node.command` may be be one of:
   * update
   * start
   * error
@@ -22,7 +22,7 @@ The Processor communicates with the Hub using the object `task.processor` Only t
   * register
   * partial
 
-The `update` sends a diff, not the entire object, this helps to avoid different Processors over-writing parts of the Task they are not modifying. The last state of the task received is stored in `task.processor.origTask` which is used to compute the diff before sending to the Hub.
+The `update` sends a diff, not the entire object, this helps to avoid different Processors over-writing parts of the Task they are not modifying. The last state of the task received is stored in `task.node.origTask` which is used to compute the diff before sending to the Hub.
 
 The Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
 
@@ -30,17 +30,17 @@ The Processor abstraction is useful during development. For example, create a ne
 
 A Processor provides Task Functions which may be further decomposed into finite state machines (FSM), Operators, Services. The `task.fsm` object provides an XState representation of a statee machine. A Task can be configured to us a particular state machine. Operators are functions that receive a Task as input and return a Task as output. Services typically wrap a 3rd party API.
 
-The object `task.processor.shared` provides a "global" space for data to be shared with all Tasks on the processor (other fields of `task.processor`` may be Task specific).
+The object `task.node.shared` provides a "global" space for data to be shared with all Tasks on the processor (other fields of `task.node`` may be Task specific).
 
 The startup seequence involves the Processor requesting a websocket connection, then the Hub will send a "register" command and there is an HTTP request/response that registers the Processor details. This will eventually be replaced with a System Task.
 
-If the `task.processor.statesSupported` array is set then the Hub will only route updates to the processor if `task.processor.statesSupported` includes `task.state.current`.
+If the `task.node.statesSupported` array is set then the Hub will only route updates to the processor if `task.node.statesSupported` includes `task.state.current`.
 
-If the `task.processor.statesNotSupported` array is set then the Hub will not route updates to the processor if `task.processor.statesNotSupported` includes `task.state.current`.
+If the `task.node.statesNotSupported` array is set then the Hub will not route updates to the processor if `task.node.statesNotSupported` includes `task.state.current`.
 
 ### Sharing Task Functionality
 
-In the directory `shared/processor` there can be files shared between procesors, for example `FSM.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/FSM/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 
+In the directory `shared/processor` there can be files shared between procesors, for example `FSM.mjs` provides abstrcations for the XState FSM in Javascript. Obviously, Processors need to share a programming language to share Task Functionality. The finite state machines that define the dynamic behavior of a Task Function may be specified in `shared/FSM/Task...` the XState configuration can be specified using JSON to be programming language agnostic. 
 
 ### Hub Coprocessor
 

@@ -39,11 +39,11 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
-    if (m.task?.processor?.command !== "ping") {
+    if (m.task?.node?.command !== "ping") {
       console.log("sendJsonMessagePlusRef ", m.task);
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
-    if (m.task?.processor?.command === "ping" && logPingPong) {
+    if (m.task?.node?.command === "ping" && logPingPong) {
       console.log("Ping");
     }
     sendJsonMessage(m);
@@ -52,7 +52,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    task = await utils.taskInProcessorOut_async(task, globalState.processorId, globalState?.storageRef?.current.get);
+    task = await utils.taskInProcessorOut_async(task, globalState.nodeId, globalState?.storageRef?.current.get);
     if (globalState.user) {
       task.user = {"id": globalState.user.userId};
     }
@@ -107,14 +107,14 @@ export function WebSocketProvider({ children, socketUrl }) {
         utils.debugTask(message.task, "received on websocket");
         task = utils.hubInProcessorOut(message.task);
         utils.debugTask(message.task, "after hubInProcessorOut");
-        command = task.processor.command;
-        commandArgs = task.processor.commandArgs;
+        command = task.node.command;
+        commandArgs = task.node.commandArgs;
       }
       if (command !== "pong") {
         //console.log("App webSocket command:", command, "commandArgs:", commandArgs, "task:", message.task);
         if (command !== "partial") {
           console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, 
-          "commandDescription:", task.processor.commandDescription, "state:", task?.state?.current, "task:", utils.deepClone(task));
+          "commandDescription:", task.node.commandDescription, "state:", task?.state?.current, "task:", utils.deepClone(task));
         }
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here
