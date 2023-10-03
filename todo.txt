@@ -1,11 +1,11 @@
 /* ToDo
 -------
 TaskRx could be an example of a task only on processor-consumer
-  Could create config/processor-consumer/tasktypes.mjs
-  Would need taskStart.mjs
-    wsSendTask would need to use RxJS not WebSocket
-      task.processor.local = true (not sent to Hub)
-  pip3 install rx redis aioredis
+  Abstract Redis out of TaskRx 
+  Add command protocol
+  use importlib to dynamically import function ?
+    Would be like a Python Service
+      Service config could specify the Python module to be loaded
 Demo of copying a task
   Copy of TaskChat
     System task that starts a conversation 
