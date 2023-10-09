@@ -1192,7 +1192,7 @@ const utils = {
       throw new Error("ERROR debugTask: task.node.origTask.id !== task.id");
     }
     // Could set task.debug via configuration
-    //if (!task?.config?.debug?.debugTask) {return}
+    if (!task?.config?.debug?.debugTask) {return}
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
     const command = task.command || task?.node?.command || task?.hub?.command;
