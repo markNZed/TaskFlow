@@ -88,9 +88,10 @@ const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
       // Update the task which has the effect of setting the state to receiving on other Processors
       T("command", "update");
       T("commandDescription", "Transition other Processors to receiving for streaming response.");
-      wsSendTask(T());
+      break;
+    }
     // We could wait for the hub to synchronize and implement the receiving state
-    //case "receiving":
+    case "receiving": {
       const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
       T("response.LLMResponse", operatorOut.response.LLM);
       if (operatorOut.response.newMessages && operatorOut.response.newMessages.length) {

@@ -21,7 +21,7 @@ const register_async = async () => {
       nodeId: NODE.id,
       environment: NODE.environment,
       // Because this node can serve as a coprocessor it needs to deal with "start"
-      commandsAccepted: ["update", "start", "init", "pong", "register", "error"],
+      commandsAccepted: NODE.commandsAccepted,
       coprocessor: NODE.role === "coprocessor",
       language,
       type: NODE.type,

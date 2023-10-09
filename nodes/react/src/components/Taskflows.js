@@ -26,6 +26,8 @@ import IFrame from './Generic/IFrame.js'
 
 function Taskflows(props) {
   const {
+    task,
+    modifyTask,
     setTask,
     useTasksState,
     startTaskError,
@@ -37,16 +39,13 @@ function Taskflows(props) {
   // We maintain a list of tasksIds so we can quickly find the relevant task
   // if it has been previousyl created in tasks
   const [tasksIds, setTasksIds] = useState([]);
-  const [taskKeys, setTaskKeys] = useState([]);
+  const [taskInstanceIds, setTaskInstanceIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel);
   const [hideSide, setHideSide] = useState(false);
   const [drawWidth, setDrawWidth] = useState(220);
   const [counter, setCounter] = useState(0);
-  const [init, setInit] = useState(false);
   const [taskMenu, setTaskMenu] = useState();
-
-  const taskMenuId = "root.system.menu"; // This should be a config of a Task
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
@@ -58,8 +57,8 @@ function Taskflows(props) {
       // This only happens if we click on the task in the menu while using the same task
       if (selectedTaskId === tasksIds[tasksIdx]) {
         setCounter(prevCounter => prevCounter + 1);
-        setTaskKeys(prevTaskKeys => {
-          const updated = [...prevTaskKeys];
+        setTaskInstanceIds(prevTaskInstanceIds => {
+          const updated = [...prevTaskInstanceIds];
           updated[tasksIdx] = updated[tasksIdx] + counter;
           return updated;
         });
@@ -75,11 +74,10 @@ function Taskflows(props) {
           delete t.instanceId;
           utils.setArrayState(setTasks, tasksIdx, t)
         }
-        setTask({
+        modifyTask({
           command: "start",
           commandArgs: {
             id: selectedTaskId,
-            prevInstanceId: taskMenu.instanceId, // This is a hack until Taskflows.js becomes a real task
           }
         });
         console.log("Taskflows start", selectedTaskId)
@@ -94,45 +92,43 @@ function Taskflows(props) {
     }
     // If we only have one start task and the Processor has registered with the hub
     if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
-      setTask({
+      modifyTask({
         command: "start",
         commandArgs: {
           id: selectedTaskId,
-        }
+        },
       });
       setHideSide(true);
       setDrawWidth(0);
     }
   }, [globalState]);
 
+  // Task state machine
+  // Unique for each component that requires steps
   useEffect(() => {
-    // Load the system menu once we have the nodeId
-    if (!init && globalState.nodeId) {
-      setTask({
-        command: "start",
-        commandArgs: {
-          id: taskMenuId,
-        }
-      });
-      setInit(true);
+    if (!props.checkIfStateReady()) {return}
+    let nextState;
+    if (props.transition()) { props.log(`${props.componentName} State Machine State ${task.state.current}`) }
+    switch (task.state.current) {
+      case "start":
+        if (startTask && startTask.id === task.config.local.menuId) {
+          setTaskMenu(startTask);
+          replaceGlobalState("user", startTask.user);
+        } else if (startTask && !taskInstanceIds.includes(startTask.instanceId) && startTask.id !== task.config.local.menuId) {
+          console.log("selectMenu started", startTask.id);
+          setTasksIdx(tasks.length);
+          setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
+          setTasksIds((p) => [...p, startTask.id]);
+          setTaskInstanceIds((p) => [...p, startTask.instanceId]);
+        }    
+        break;
+      default:
+        console.log("ERROR unknown state : " + task.state.current);
     }
-  }, [globalState?.nodeId]);
-
-  useEffect(() => {
-    if (startTask) {
-      // The HUb sets startTask.user so we do not need to fetch the user info
-      // just pick it out of the startTask
-      if (startTask.id === taskMenuId) {
-        setTaskMenu(startTask);
-        replaceGlobalState("user", startTask.user);
-      } else {
-      setTasksIdx(tasks.length);
-      setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
-      setTasksIds((p) => [...p, startTask.id]);
-      setTaskKeys((p) => [...p, startTask.instanceId]);
-    }
-    }
-  }, [startTask]);
+    // Manage state.current
+    props.modifyState(nextState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task, startTask, globalState.nodeId]);
 
   const handleToggle = () => {
     setTaskMenu((p) => ({...p, input: {"mobileViewOpenToggle": true}}));
@@ -185,8 +181,7 @@ function Taskflows(props) {
 
       <Stack
         direction="row"
-        spacing={3}
-        sx={{ width: "100%", marginRight: "24px" }}
+        sx={{ width: "100%" }}
       >
         <Box
           component="nav"
@@ -194,7 +189,6 @@ function Taskflows(props) {
             width: { sm: drawWidth },
             flexShrink: { sm: 0 },
             ...(hideSide && { display: "none" }),
-            overflowY: "auto",
           }}
         >
           {taskMenu && (
@@ -208,14 +202,21 @@ function Taskflows(props) {
           )}
         </Box>
 
-        <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            flexGrow: 1,
+            overflowY: "auto",
+          }}
+        >
           <Toolbar />
           {tasks.map(
             ({ instanceId }, idx) =>
               instanceId && 
               (
                 <div
-                  key={taskKeys[idx]}
+                  key={taskInstanceIds[idx]}
                   className={`${tasksIdx !== idx ? "hide" : "flex-grow"}`}
                 >
                   <DynamicComponent

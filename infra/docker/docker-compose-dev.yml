@@ -11,7 +11,7 @@ services:
       - mongodb
       - redis-stack-svc
     volumes: 
-      - ../..:/app
+      - ../../../taskflow:/app
       - ../../../meta:/meta
       - ./root:/root # For SSH and gitconfig
     ports:

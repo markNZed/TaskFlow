@@ -22,7 +22,7 @@ const useStartTask = (task, setTask) => {
     const fetchTaskFromAPI = async () => {
       try {
         let snapshot = utils.deepClone(task); // deep copy
-        const updating = { "command": null, "commandArgs": null };
+        const updating = { command: null, commandArgs: null, commandDescription : null };
         utils.setNestedProperties(updating);
         setTask((p) => utils.deepMerge(p, updating));
         utils.log("useStartTask from ", snapshot.id, "launching", snapshot.commandArgs.id);

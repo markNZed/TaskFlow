@@ -8,15 +8,15 @@ import { setActiveTask_async } from "./storage.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
-export async function commandInit_async(task) {
+export async function commandJoin_async(task) {
   let nodeId = task.hub.sourceProcessorId;
   try {
-    utils.logTask(task, "commandInit_async id:" + task.id + " from nodeId:" + nodeId);
+    utils.logTask(task, "commandJoin_async id:" + task.id + " from nodeId:" + nodeId);
     await taskSync_async(task.instanceId, task);
     await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
-    taskRelease(task.instanceId, "commandInit_async");
+    taskRelease(task.instanceId, "commandJoin_async");
   } catch (error) {
-    const msg = `Error commandInit_async task ${task.id}: ${error.message}`;
+    const msg = `Error commandJoin_async task ${task.id}: ${error.message}`;
     console.error(msg);
     throw error;
   }

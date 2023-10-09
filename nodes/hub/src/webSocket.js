@@ -12,6 +12,7 @@ import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
 import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
+import { commandJoin_async } from "./commandJoin.mjs";
 
 /**
  * Sends an object through the WebSocket connection identified by the given node ID.
@@ -33,16 +34,18 @@ function wsSendObject(nodeId, message = {}) {
   }
 }
 
-const wsSendTask = async function (task, nodeId, activeTask) {
-  if (!task?.hub?.command) {
-    throw new Error("Missing hub.command in wsSendTask" + JSON.stringify(task));
+const wsSendTask = async function (taskIn, nodeId, activeTask) {
+  utils.debugTask(taskIn, "input");
+  const currentNode = utils.deepClone(taskIn.hub);
+  if (!currentNode?.command) {
+    throw new Error("Missing command in wsSendTask" + JSON.stringify(taskIn));
   }
   //console.log("wsSendTask task.request", task.request)
-  task = utils.deepClone(task); //deep copy because we make changes e.g. task.node
+  let task = utils.deepClone(taskIn); //deep copy because we make changes e.g. task.node
   // hubDiff will remove nodes and users
-  let node;
+  let outgoingNode;
   if (task.nodes && task.nodes[nodeId]) {
-    node = JSON.parse(JSON.stringify(task.nodes[nodeId]));
+    outgoingNode = JSON.parse(JSON.stringify(task.nodes[nodeId]));
   }
   let user;
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
@@ -50,17 +53,17 @@ const wsSendTask = async function (task, nodeId, activeTask) {
   }
   let message = {}
   // We can only have an activeTask for an update command
-  if (task.hub.command === "update") {
+  if (currentNode.command === "update") {
     //utils.logTask(task, "wsSendTask " + command + " activeTask state", activeTask.state);
     //utils.logTask(task, "wsSendTask " + command + " task state", task.state);
-    const statesSupported = node?.statesSupported
-    const statesNotSupported = node?.statesNotSupported
+    const statesSupported = outgoingNode?.statesSupported
+    const statesNotSupported = outgoingNode?.statesNotSupported
     let diff = {}
     if (activeTask) {
       // If only some states are supported then the task storage may be out of sync so send the entire object
-      // We could potentially have storage on the hub for the task on the node in this case 
+      // We could potentially have storage on the currentNode for the task on the outgoingNode in this case 
       if (statesSupported || statesNotSupported) {
-        //console.log("wsSendTask statesSupported", task.state.current, node);
+        //console.log("wsSendTask statesSupported", task.state.current, outgoingNode);
         diff = task;
       } else {
         diff = utils.hubDiff(activeTask, task);
@@ -76,24 +79,24 @@ const wsSendTask = async function (task, nodeId, activeTask) {
   }
   //utils.logTask(task, "wsSendTask " + command + " message state", message["task"].state);
   // For example task.command === "partial" does not have task.nodes
-  //utils.logTask(task, "wsSendTask task.hub", task.hub);
-  if (node) {
+  //utils.logTask(task, "wsSendTask currentNode", currentNode);
+  if (outgoingNode) {
     //utils.logTask(task, "wsSendTask task.nodes", nodeId, task.nodes);
     //deep copy because we are going to edit the object
-    task["node"] = node;
+    task["node"] = outgoingNode;
     task.node["command"] = null;
     task.node["commandArgs"] = null;
     delete task.nodes;
   } else {
     task.node = {};
   }
-  const { coprocessingPosition, coprocessing, coprocessingDone, initiatingProcessorId, sourceProcessorId } = task.hub;
+  const { coprocessingPosition, coprocessing, coprocessingDone, initiatingNodeId, sourceProcessorId } = currentNode;
   if (task.node.isCoprocessor) {
     task.node["coprocessingPosition"] = coprocessingPosition;
     task.node["coprocessing"] = coprocessing;
     task.node["coprocessingDone"] = coprocessingDone;
   }
-  task.node["initiatingProcessorId"] = initiatingProcessorId;
+  task.node["initiatingNodeId"] = initiatingNodeId;
   task.node["sourceProcessorId"] = sourceProcessorId;
   if (user) {
     if (!task?.user?.id) {
@@ -103,15 +106,14 @@ const wsSendTask = async function (task, nodeId, activeTask) {
     delete task.users;
   }
   task.meta = task.meta || {};
-  if (task.hub.command !== "pong") {
-    //utils.logTask(task, "wsSendTask sourceProcessorId " + task.hub.sourceProcessorId)
+  if (currentNode.command !== "pong") {
+    //utils.logTask(task, "wsSendTask sourceProcessorId " + currentNode.sourceProcessorId)
     //utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId )+ " to " + nodeId)
-    //utils.logTask(task, "wsSendTask task.hub.commandArgs.sync", task?.hub?.commandArgs?.sync);
+    //utils.logTask(task, "wsSendTask currentNode.commandArgs.sync", currentNode?.commandArgs?.sync);
   }
-  delete task.hub.origTask;
   message["task"] = task;
   //utils.logTask(task, "wsSendTask task.node.stateLast", task.node.stateLast, task.node.id);
-  utils.debugTask(task);
+  utils.debugTask(task, "output");
   wsSendObject(nodeId, message);
 }
 
@@ -181,14 +183,10 @@ function initWebSocketServer(server) {
         if (task.hub.coprocessing && wasLastCoProcessor) {
           utils.logTask(task, "wasLastCoProcessor so stop coprocessing")
           task.hub.coprocessing = false;
-          nodeId = task.hub.initiatingProcessorId
+          nodeId = task.hub.initiatingNodeId
           task.hub.sourceProcessorId = nodeId;
         } else {
           nodeId = task.hub.sourceProcessorId;
-        }
-
-        if (task.hub.command !== "partial") {
-          //utils.logTask(task, "isCoprocessor " + task.node.isCoprocessor + " wasLastCoProcessor " + wasLastCoProcessor + " task.hub.coprocessingPosition " + task.hub?.coprocessingPosition + " nodeId " + nodeId);
         }
 
         // Have not tested this yet because we only have one coprocessor
@@ -222,14 +220,14 @@ function initWebSocketServer(server) {
         if (!task.hub.coprocessing) {
           const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
           // Allows us to track where the request came from while coprocessors are in use
-          nodeId = task.hub.initiatingProcessorId || nodeId;
+          nodeId = task.hub.initiatingNodeId || nodeId;
           task.node = task.nodes[nodeId];
           task.hub.sourceProcessorId = nodeId;
           task.hub["coprocessingPosition"] = null;
           if (wasLastCoProcessor) {
             if (task.hub.command !== "partial") {
               utils.logTask(task, "Finished with coprocessors id:", task.id, "nodeId:", nodeId);
-              utils.logTask(task, "initiatingProcessorId", task.hub["initiatingProcessorId"]);
+              utils.logTask(task, "initiatingNodeId", task.hub["initiatingNodeId"]);
             }
             task.hub["coprocessingDone"] = true;
           }
@@ -245,6 +243,9 @@ function initWebSocketServer(server) {
               break;
             case "error":
               commandError_async(task);
+              break;
+            case "join":
+              commandJoin_async(task);
               break;
             case "partial":
               for (const id of activeTaskProcessors) {

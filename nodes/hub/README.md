@@ -2,7 +2,7 @@
 
 The Hub is implemented in Node using the Express framework and SQLite database. 
 
-Information for the Hub is held in the `task.hub` object. Only the Hub writes to the `task.hub` object. The Processor communicates with the Hub using the object `task.procesor` which includes fields: command, commandArgs, and config. 
+Information for the Hub is held in the `task.hub` object. The Processor communicates with the Hub using the object `task.node` which includes fields: command, commandArgs, and config. 
 
 `task.hub.command` maybe be one of:
   * partial
@@ -63,7 +63,6 @@ Then to run: `npm start`
 # Future
 * Hierarchy
   * Many Hubs that can be coordinated by a Hub.
-    * Add task.hubs[NODE.id] (Processor should only see task.hub)
   * Environments not supported by Processors registered with the Hub are passed up to a hub-of-hubs
 * Security/Privacy
   * Filtering of Task content

@@ -10,15 +10,12 @@ import { utils } from "#src/utils";
 // eslint-disable-next-line no-unused-vars
 const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  utils.debugTask(T());
+
   let configTreeEvent; 
-  if (T("node.commandArgs.sync")) {
-    //console.log("TaskSystemMenu_async", T("node.commandArgs"));
-    if (T("meta.modified.shared.configTreeHubconsumerTasks")) {
-      configTreeEvent = true;
-      console.log("configTreeEvent found update to shared.configTreeHubconsumerTasks");
-    } else {
-      return null; // Ignore sync operations
-    }
+  if (T("meta.modified.shared.config-hub-consumer-tasks")) {
+    configTreeEvent = true;
+    console.log("configTreeEvent found update to shared.config-hub-consumer-tasks");
   }
 
   async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async, sort = false) {

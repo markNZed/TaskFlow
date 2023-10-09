@@ -62,6 +62,7 @@ function withTask(Component) {
       }
       return context;
     };
+    const [reinitialize, setReinitialize] = useState(false);
 
     useEffect(() => {
       taskRef.current = props.task;
@@ -69,6 +70,7 @@ function withTask(Component) {
 
     // In HOC create a syncTask function
     function syncTask(syncTask, description) {
+      console.log("syncTask", syncTask, description);
       modifyTask({ 
         "command": "update",
         "commandArgs": {
@@ -134,7 +136,7 @@ function withTask(Component) {
       } else {
         console.log("No FSM");
       }
-    }, []);
+    }, [reinitialize]);
 
     useEffect(() => {
       if (fsm && props.task?.config?.fsm?.useMachine) {
@@ -305,7 +307,7 @@ function withTask(Component) {
         }
       };
       spawnTasks();
-    }, []);
+    }, [reinitialize]);
 
     useEffect(() => {
       if (!props.task) {return}
@@ -371,10 +373,16 @@ function withTask(Component) {
 
     useInitWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
-        console.log("useInitWSFilter withTask " + props.task.id + " started", newTask);
+        console.log("useInitWSFilter withTask ", props.task, " started", newTask);
         setInitTask(null);
         newTask.node["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference
-        setStartTaskReturned(newTask);
+        if (newTask.meta.prevInstanceId === undefined) {
+          console.log("useInitWSFilter prevInstanceId undefined", props.task.id, "with", newTask.id);
+          props.setTask(newTask);
+          setReinitialize(true);
+        } else {
+          setStartTaskReturned(newTask);
+        }
       }
     )
     
@@ -495,7 +503,7 @@ function withTask(Component) {
       if (task) {
         setPrevTask(task);
       }
-    }, []);
+    }, [reinitialize]);
 
     useEffect(() => {
       const { task } = props;

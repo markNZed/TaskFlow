@@ -7,6 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoprocessors, outputStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
+import { NODE } from "../config.mjs";
 
 // Test handling of error
 
@@ -50,6 +51,7 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
 }
 
 async function processInstanceAsync(task, instanceId, mode) {
+  utils.debugTask(task);
   let instance = await instancesStore_async.get(instanceId);
   if (instance) {
     let { activeTask, doesContain } = await checkActiveTaskAsync(instanceId, activeProcessors);
@@ -62,7 +64,7 @@ async function processInstanceAsync(task, instanceId, mode) {
     } else {
       task = instance;
       //utils.logTask(task, "processInstanceAsync task", task);
-      task["hub"]["command"] = "init";
+      task.hub["command"] = "init";
       // Assumes that we have a state entry
       task.state["current"] = "start";
       task.meta["updateCount"] = 0;
@@ -163,6 +165,7 @@ async function processTemplates_async(task, obj, outputs, familyId) {
 }
 
 async function checkUserPermissions_async(task, groupsStore_async, authenticate) {
+  utils.debugTask(task);
   // Check if the user has permissions
   if (authenticate) {
     const authenticated = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
@@ -173,6 +176,7 @@ async function checkUserPermissions_async(task, groupsStore_async, authenticate)
 }
 
 async function updateFamilyStoreAsync(task, familyStore_async) {
+  utils.debugTask(task);
   // Update familyStore_async
   if (task.familyId) {
     // If task.instanceId already exists then do nothing otherwise add instance to family
@@ -204,42 +208,48 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
 }
 
 async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/) {
+  utils.debugTask(task);
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
     // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
     // nextTask on another node, then the originator can associate the task with it's original request
-    task.meta["prevInstanceId"] = prevTask.meta.prevInstanceId || prevTask.instanceId;
+    task.meta["prevInstanceId"] = prevTask?.meta?.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
     // Copying node information from previous task instance
     // In the case where the task sequence advances on another node 
     // we need to be able to associate more recent tasks with an older
     // task that is waiting on the next task.
-    task.nodes = prevTask.nodes;
-    // Iterate over each node in task.nodes
-    if (task.nodes) {
-      Object.keys(task.nodes).forEach(key => {
-        if (task.nodes[key].origTask) {
-          delete task.nodes[key].origTask;
-        }
-      });
-    } else {
-      console
-    }
-    // With a coprocessor and an initial start command there is no instnaceId
-    // The nodes cannot be restored because there is no start task stored
-    if (!prevTask.node) {
-      task.node = {id: nodeId};
-    } else {
-      task.node = prevTask.node;
-      if (task.node.origTask) {
-        delete task.node.origTask;
+    if (task.hub["command"] !== "join") {
+      task.nodes = prevTask.nodes;
+      // Iterate over each node in task.nodes
+      if (task.nodes) {
+        Object.keys(task.nodes).forEach(key => {
+          if (!task.nodes[key]) {
+            throw new Error("Node " + key + " not found" + JSON.stringify(task, null, 2));
+          }
+          if (task.nodes[key].origTask) {
+            delete task.nodes[key].origTask;
+          }
+        });
       }
+      // With a coprocessor and an initial start command there is no instanceId
+      // The nodes cannot be restored because there is no start task stored
+      if (!prevTask.node) {
+        task.node = {id: nodeId};
+      } else {
+        task.node = prevTask.node;
+        if (task.node.origTask) {
+          delete task.node.origTask;
+        }
+      }
+      task.users = prevTask.users || {}; // Could be mepty in the case of error task
+      task.state.address = prevTask.state?.address ?? task.state.address;
+      task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
+    } else {
+      task.node = {id: nodeId};
     }
     task.node["command"] = null;
     task.node["commandArgs"] = null;
-    task.users = prevTask.users || {}; // Could be mepty in the case of error task
-    task.state.address = prevTask.state?.address ?? task.state.address;
-    task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     /*
     // Update all the active prevTask with new child
     prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
@@ -253,7 +263,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
         This has been removed for now becaus sending an update can impact the state machine
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.hub.command = "update";
-        prevTask.hub.sourceProcessorId = "hub";
+        prevTask.hub.sourceProcessorId = NODE.id;
         await utils.hubActiveTasksStoreSet_async(setActiveTask_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
@@ -264,6 +274,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
 }
 
 async function supportMultipleLanguages_async(task, usersStore_async) {
+  utils.debugTask(task);
   // Multiple language support for config fields
   // Eventually replace with a standard solution
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
@@ -294,6 +305,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
 }
 
 function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors) {
+  utils.debugTask(task);
   // Build list of nodes/environments that need to receive this task
   let taskNodes = []
 
@@ -310,6 +322,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
   }
   // Allocate the task to nodes that supports the environment(s) requested
   const sourceProcessor = activeProcessors.get(nodeId);
+  console.log(`allocateTaskToProcessors ${nodeId} sourceProcessor`, sourceProcessor);
   for (const environment of task.environments) {
     // Favor the source Processor if we need that environment
     let found = false;
@@ -371,9 +384,11 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
 }
 
 async function recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
+  utils.debugTask(task);
   // Record which nodes have this task
+  let nodeIds;
   if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
-    let nodeIds = await activeTaskProcessorsStore_async.get(task.instanceId);
+    nodeIds = await activeTaskProcessorsStore_async.get(task.instanceId);
     taskNodes.forEach(id => {
       if (nodeIds && !nodeIds.includes(id)) {
         nodeIds.push(id);
@@ -381,12 +396,13 @@ async function recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcesso
     });
     await activeTaskProcessorsStore_async.set(task.instanceId, nodeIds);
   } else {
+    nodeIds = taskNodes;
     await activeTaskProcessorsStore_async.set(task.instanceId, taskNodes);
   }
-  //utils.logTask(task, "Nodes with task instance " + task.instanceId, taskNodes);
+  //utils.logTask(task, "Nodes with task instance " + task.instanceId, nodeIds);
   // Record which tasks have this node
   await Promise.all(
-    taskNodes.map(async (nodeId) => {
+    nodeIds.map(async (nodeId) => {
       if (await activeProcessorTasksStore_async.has(nodeId)) {
         let taskInstanceIds = await activeProcessorTasksStore_async.get(nodeId);
         if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
@@ -416,13 +432,12 @@ async function taskStart_async(
 
     // Instantiate new task
     let task = utils.deepClone(initTaskConfig); // deep copy (not needed?)
+    utils.debugTask(task, "initTaskConfig");
 
     //utils.logTask(task, "Task template", task)
 
     // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
-
-    const autoStart = initTask?.autoStart;
 
     if (Object.keys(initTask).length > 0) {
       task = utils.deepMerge(task, initTask);
@@ -435,7 +450,20 @@ async function taskStart_async(
 
     await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
-    const prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
+    let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
+
+    // If the Task was created on a Processor (used for React Taskflow)
+    /*
+    if (!prevTask && prevInstanceId && prevInstanceId === NODE.id) {
+      utils.logTask(task, "!prevTask && prevInstanceId && prevInstanceId === NODE.id");
+      prevTask = {
+        instanceId: prevInstanceId,
+        id: initTask.id,
+        familyId: prevInstanceId,
+        nodes: {},
+      }
+    }
+    */
 
     // Is this a user task being launched from a system task ?
     // If so then initialize a new familyId
@@ -467,6 +495,9 @@ async function taskStart_async(
       task.familyId = "system";
       utils.logTask(task, "isFirstSystemTask setting familyId to", task.familyId);
     }
+
+    // May be overwritten in processInstanceAsync
+    task.hub["command"] = "init";
        
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
@@ -487,6 +518,8 @@ async function taskStart_async(
         task = await processInstanceAsync(task, task.instanceId, "collaborate");
       }
     }
+
+    utils.debugTask(task, "after processInstanceAsync");
 
     if (!task.config.oneFamily && !task.config.collaborateGroupId) {
       // task.familyId may set by task.config.oneFamily or task.config.collaborateGroupId
@@ -511,9 +544,9 @@ async function taskStart_async(
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
     // Initialize task.hub.sourceProcessorId
-    task.hub["command"] = "init";
-    task.hub["sourceProcessorId"] = autoStart ? undefined : nodeId; // not sure about this, replace undefined with NODE.id ?
-    task.hub["initiatingProcessorId"] = autoStart ? "autostart" : nodeId;
+    task.hub["id"] = NODE.id;
+    task.hub["sourceProcessorId"] = task.hub["sourceProcessorId"] || nodeId;
+    task.hub["initiatingNodeId"] = task.hub["sourceProcessorId"] || nodeId;
     task.hub["coprocessingDone"] = false;
     
     // Initialize meta object
@@ -525,6 +558,7 @@ async function taskStart_async(
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
+    // When we join we want to keep the nodes info related to the joined task
     task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/);
     // Set task.node.id after copying info from prevTask
     task.nodes[nodeId] = task.nodes[nodeId] ?? {};
@@ -557,7 +591,7 @@ async function taskStart_async(
 
     task = utils.setMetaModified(task);
 
-    utils.logTask(task, "Init task.id:", task.id, task.familyId);
+    utils.logTask(task, task.hub.command, "id:", task.id, "familyId:", task.familyId);
 
     return task;
   }

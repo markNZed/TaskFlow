@@ -224,7 +224,7 @@ const tasks = [
     type: "TaskChat",
     APPEND_environments: ["rxjs-hub-consumer"],
     shared: {
-      configTreeHubconsumerTasks: {},
+      "config-hub-consumer-tasks": {},
     },
     config: {
       local: {

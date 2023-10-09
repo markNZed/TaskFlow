@@ -17,10 +17,6 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     utils.logTask(task, "CEPIncrement doing nothing for start and init command")
     return;
   }
-  if (task.node.coprocessingDone) {
-    utils.logTask(task, "CEPIncrement ignoring task after coprocessing");
-    return
-  }
   if (task.node.commandArgs.sync) {
     utils.logTask(task, "CEPIncrement doing nothing for sync")
     return;
@@ -48,7 +44,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   //let syncDiff = {}
   //syncDiff["output"] = {};
   //syncDiff.output["CEPCount"] = task.output.CEPCount ? task.output.CEPCount + increment : increment;
-  //syncDiff.output["CEPinitiatingProcessorId"] = task.node.initiatingProcessorId;
+  //syncDiff.output["CEPinitiatingNodeId"] = task.node.initiatingNodeId;
   utils.logTask(task, "CEPCount", task.output.CEPCount, increment);
   utils.logTask(task, "CEPIncrement called on " + task.id + " CEP created by " + CEPInstanceId);
   // We can do this if running on coprocessor

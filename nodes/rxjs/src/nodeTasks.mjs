@@ -23,26 +23,20 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
   try {
     utils.logTask(T(), "taskProcess_async", T("id"));
     utils.logTask(T(), "taskProcess_async node.coprocessing", T("node.coprocessing"));
-    const processorMatch = T("node.initiatingProcessorId") === NODE.id;
     const taskFunctionName = `${T("type")}_async`
-    if (processorMatch) {
-      utils.logTask(T(), "This was the initiatingProcessorId so skipping Task Fuction id:" + T("id"));
+    if (T("node.commandArgs.sync")) {
+      utils.logTask(T(), "RxJS sync so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "error") {
       utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "start") {
       utils.logTask(T(), "RxJS start so skipping Task Fuction id:" + T("id"));
-    } else if (NODE.role === "coprocessor" && T("node.commandArgs.sync")) {
-      // Seems a risk of CEP operating on sync creating loops
-      // Could have a rule that sync do not operate on the same task
-      // True that in this case we can just modify the task
-      utils.logTask(T(), "RxJS Task Coprocessor sync so skipping Task Fuction id:" + T("id"));
     } else if (!T("environments").includes(NODE.environment)) {
       utils.logTask(T(), "Task is not configured to run on this node");
     // If this is not a coprocessor then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
-      if (T("node.command") === "init") {
+      if (T("node.command") === "init" || T("node.command") === "join") {
         let servicesConfig = utils.deepClone(T("services"));
         if (servicesConfig) {
           if (servicesConfig["*"]) {
@@ -89,7 +83,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           // Wait for all the promises to resolve
           await Promise.all(promises);
           T("services", services);
-          console.log("init services", T("services"));
+          //console.log("init services", T("services"));
           //ServicesMap.set(T("instanceId"), services);
         }
         let operators = T("operators") || {};
@@ -138,7 +132,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           // Wait for all the promises to resolve
           await Promise.all(promises);
           T("operators", operators);
-          console.log("init operators", T("operators"));
+          //console.log("init operators", T("operators"));
           //OperatorsMap.set(T("instanceId"), operators);
         }
       } else {
@@ -151,13 +145,13 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           Object.keys(T("services")).map(async (key) => {
             T(`services.${key}.module`, ServicesMap.get(T(`services.${key}.moduleName`)));
           });
-          console.log("Restore services", T("services"));
+          //console.log("Restore services", T("services"));
         }
         if (T("operators")) {
           Object.keys(T("operators")).map(async (key) => {
             T(`operators.${key}.module`, OperatorsMap.get(T(`operators.${key}.moduleName`)));
           });
-          console.log("Restore operators", T("operators"));
+          //console.log("Restore operators", T("operators"));
         }
       }
       const taskFunction = await importTaskFunction_async(taskFunctionName);
@@ -249,7 +243,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       }
       //utils.logTask(T(), "taskProcess_async CEPMatchMap", CEPMatchMap);
     }
-    if (T("node.command") === "init" && nodeFunctionsInitialized) {
+    if ((T("node.command") === "init" || T("node.command") === "join") && nodeFunctionsInitialized) {
       // Sync these changes
       // services/operators/ceps should be in a node namespace ?
       // Could have different nodes with the same service name but different config?
@@ -272,10 +266,9 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         },
         commandDescription: `Sync node functions on ${NODE.name}`,
       };
-      // Don;t await as we need to get the lock on this task
+      // Don't await as we need to get the lock on this task
       commandUpdate_async(wsSendTask, syncUpdateTask);
     }
-    // We could replace updatedTask with T() ?
   } catch (e) {
     console.error(e);
     // Strictly we should not be updating the task object in the node
@@ -308,8 +301,8 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       } else if (T("command")) {
         // This node wants to make a change
         // The original node will no longer see the change as coming from it
-        utils.logTask(T(), "taskProcess_async initiatingProcessorId updated");
-        T("node.initiatingProcessorId", NODE.id);
+        utils.logTask(T(), "taskProcess_async initiatingNodeId updated");
+        T("node.initiatingNodeId", NODE.id);
       }
       if (!T("command")) {
         // Because wsSendTask is expecting task.command

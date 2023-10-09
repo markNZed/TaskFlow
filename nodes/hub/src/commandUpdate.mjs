@@ -28,8 +28,6 @@ async function doneTask_async(task) {
       groupId: task?.groupId,
       familyId: task.familyId,
     }
-    let nodeId = task.hub.initiatingProcessorId || task.hub.sourceProcessorId;
-    task.node = task.nodes[nodeId];
     task.hub.commandArgs = {
       init: initTask,
       prevInstanceId: task.instanceId,
@@ -54,6 +52,7 @@ async function doUpdate(commandArgs, task) {
 }
 
 export async function commandUpdate_async(task) {
+  utils.debugTask(task);
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
@@ -77,9 +76,11 @@ export async function commandUpdate_async(task) {
       }
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
-      // This should have only the sync updates in it
       task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
       task.hub.commandArgs["syncTask"] = null;
+      if (commandArgs.syncUpdate) {
+        task.hub.commandArgs["sync"] = null; // Map the sync to a "normal" update
+      }
     } else {
       task = utils.deepMergeHub(activeTask, task, task.hub);
     }
@@ -90,7 +91,7 @@ export async function commandUpdate_async(task) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
     console.error(msg);
     utils.logTask(task, "commandUpdate_async task", task);
-    throw new Error(msg);
+    throw error;
   } finally {
     // Always release the lock
     utils.logTask(task, "commandUpdate_async lock released instanceId:", task.instanceId);

@@ -10,6 +10,12 @@ import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mj
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
 import { utils } from "./utils.mjs";
+import { EventEmitter } from 'events';
+
+// Setting max listeners globally for all new EventEmitter instances
+// Was getting warning MaxListenersExceededWarning: Possible EventEmitter memory leak detected.
+// This is because keyv adds this.redis.on('error', (error) => this.emit('error', error));
+EventEmitter.defaultMaxListeners = 100;
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();

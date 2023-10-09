@@ -124,7 +124,7 @@ const TaskNodeConfigEditor = (props) => {
     return obj;
   }
 
-  // task.shared.configTreeHubconsumerTasks uses a hash because we cannot merge arrays and delete elements
+  // task.shared."config-hub-consumer-tasks" uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
     if (configTreeAsObject) {
       // Deep copy so we do not mess with configTreeAsObject

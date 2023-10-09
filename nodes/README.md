@@ -4,7 +4,7 @@
 
 Information for the Processor is held in the `task.node` object.
 
-The Processor strips the `task.hub` object before passing to a Task Function.
+The Processor replaces the `task.hub` object before passing the task to a Task Function.
 
 The Task Function mainly communicates with the Processor using the object `task.command`. The Processor can use language specific side-channels to communicate with the Task Function e.g., events, callbacks, promises, etc. The principle has a Task Function is implemented for each environment raher than being agnostic, the JSON schema of the Task is language agnostic and allows for synchronization between environments. Only the Task Function writes to `task.command`
 
@@ -24,7 +24,7 @@ The Processor communicates with the Hub using the object `task.node` Only the Pr
 
 The `update` sends a diff, not the entire object, this helps to avoid different Processors over-writing parts of the Task they are not modifying. The last state of the task received is stored in `task.node.origTask` which is used to compute the diff before sending to the Hub.
 
-The Processor receives commands from the Hub via `task.hub.command` and only the Hub writes to `task.hub`.
+The Processor receives commands from the Hub via `task.hub.command`.
 
 The Processor abstraction is useful during development. For example, create a new Processor by copying and renaming an existing one, then allocate a single Task Function to this new processor and remove it from the old processor, now you can experiment with refactoring the Processor without breaking all Task Functions. 
 

@@ -3,6 +3,15 @@ import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
   {
+    name: "Taskflow",
+    config: {
+      LOCAL_autoStartEnvironment: "react",
+    },
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskRx",
   },
   {
@@ -41,7 +50,7 @@ const tasktypes = [
   {
     name: "TaskNodeConfigs",
     services: {
-      config: {
+      systemConfig: {
         type: "systemConfig",
       },
     },
@@ -60,14 +69,14 @@ const tasktypes = [
       legal: ["start", "loaded", "ready"],
     },
     shared: {
-      configTreeHubconsumerTasks: {},
+      "config-hub-consumer-tasks": {},
     },
   },
   {
     name: "TaskNodeConfigEditor",
     environments: ["react"],
     services: {
-      config: {
+      systemConfig: {
         type: "systemConfig",
       },
     },

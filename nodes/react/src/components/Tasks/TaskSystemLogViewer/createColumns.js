@@ -88,7 +88,7 @@ export function createColumns(rowDetailHeight) {
       },
       {  
         name: 'nodeId',
-        dataPath: "current.node.initiatingProcessorId",
+        dataPath: "current.node.initiatingNodeId",
         width: 50,
         key: "nodeId",
         flex: 1,

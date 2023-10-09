@@ -19,63 +19,91 @@ const TaskNodeConfigs_async = async function (wsSendTask, T, FSMHolder, CEPMatch
 
   //console.log("TaskNodeConfigs services", services);
   const services = T("services");
-  if (!services?.config?.module) {
-    throw new Error("config module not found");
+  if (!services?.systemConfig?.module) {
+    throw new Error("systemConfig module not found");
   }
-  const configFunctions = services["config"].module;
+  const configFunctions = services["systemConfig"].module;
   //console.log("TaskNodeConfigs configFunctions", configFunctions);
 
   async function updateTree_async(configFunctions, node, type, wsSendTask, T) {
     utils.logTask(T(), "updateTree_async type:", type);
-    const result = await configFunctions.buildTree_async(services["config"], type); // Get updated tree
+    const result = await configFunctions.buildTree_async(services["systemConfig"], type); // Get updated tree
     // Calculate diff and update
     //const diff = { shared: { [type + "ConfigTree"]: result } };
-    let capitalizedNode = node.charAt(0).toUpperCase() + node.slice(1);
-    let capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
-    const varName = "shared." + "configTree" + capitalizedNode + capitalizedType;
+    const varName = `shared.config-${node}-${type}`;
     T(varName, result)
-    T("commandDescription", `Updating ${varName}`);
-    console.log("Keys result", Object.keys(result));
-    commandUpdate_async(wsSendTask, T()).then(() => {
-      utils.logTask(T(), `Setting ${type}`);
-    });
+    if (T("commandDescription")) {
+      T("commandDescription", T("commandDescription") + ", " + varName);
+    } else {
+      T("commandDescription", "updateTree_async " + varName);
+    }
+    //console.log("Keys result", Object.keys(result));
   }
 
   async function handleChangesForType(node, type, configFunctions, wsSendTask) {
     try {
-      utils.logTask(T(), "configFunctions initialize type:", type);
+      utils.logTask(T(), "handleChangesForType initialize type:", type);
       await updateTree_async(configFunctions, node, type, wsSendTask, T);
   
       // eslint-disable-next-line no-constant-condition
       while (true) {
         //utils.logTask(T(), "handleChangesForType awaiting", type);
+        T("commandDescription", null)
   
         // Wait for change and immediately request for another change promise
         // eslint-disable-next-line no-unused-vars
         const id = await configFunctions.registerForChange_async(type);
   
         //utils.logTask(T(), "configFunctions change type:", type, id);
-        updateTree_async(configFunctions, node, type, wsSendTask, T);
+        await updateTree_async(configFunctions, node, type, wsSendTask, T);
+
+        T("commandArgs", {instanceId: T("instanceId"), sync: true, syncTask: {shared: T("shared")}});
+        commandUpdate_async(wsSendTask, T()).then(() => {
+          utils.logTask(T(), `Setting ${type}`);
+        });
+      
       }
     } catch (error) {
       console.error(`An error occurred while handling changes for ${type}:`, error);
     }
   }
-  
 
+  async function initializeForType(node, type, configFunctions, wsSendTask) {
+    try {
+      utils.logTask(T(), "initializeForType type:", type);
+      await updateTree_async(configFunctions, node, type, wsSendTask, T);
+    } catch (error) {
+      console.error(`An error occurred while initializeForType ${type}:`, error);
+    }
+  }
+ 
   // Start handling changes for different types
   // This should not complete as the handleChangesForType is expected to run for the lifetime of the server
-  // We set the task.config.background=true to avoid awaiting for this task 
+  // We set the task.systemConfig.background=true to avoid awaiting for this task 
 
   let promises = [];
 
-  for (const store of services.config.stores) {
+  for (const store of services.systemConfig.stores) {
+    promises.push(initializeForType(NODE.name, store, configFunctions, wsSendTask));
+  }
+  await Promise.all(promises);
+  T("commandDescription", "");
+  T("commandArgs", {instanceId: T("instanceId"), sync: true, syncTask: {shared: T("shared")}});
+  utils.logTask(T(), "Shared:", T("shared"));
+  commandUpdate_async(wsSendTask, T()).then(() => {
+    utils.logTask(T(), "Initializing", services.systemConfig.stores);
+  });
+  
+
+  promises = [];
+
+  for (const store of services.systemConfig.stores) {
     promises.push(handleChangesForType(NODE.name, store, configFunctions, wsSendTask));
   }
 
   await Promise.all(promises);
 
-  return T();
+  return null;
 };
 
 export { TaskNodeConfigs_async };

@@ -66,6 +66,7 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch", "stream"],
       environment: "rxjs-hub-consumer",
+      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
       wsPort: 5002,
     }
     break;
@@ -75,6 +76,7 @@ switch (NODE_NAME) {
       role: "coprocessor",
       processing: ["stream"],
       environment: "rxjs-hub-coprocessor",
+      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
       wsPort: 5003,
     }
     break;
@@ -84,6 +86,7 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch"],
       environment: "rxjs-processor-consumer",
+      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
       wsPort: 5000,
     }
     break;

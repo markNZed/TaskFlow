@@ -12,14 +12,13 @@ import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task) {
   const commandArgs = task.hub.commandArgs;
-  let nodeId = task.hub.sourceProcessorId;
+  let initiatingNodeId = task.hub.initiatingNodeId || NODE.id;
   try {
-    utils.logTask(task, "commandStart_async from nodeId:" + nodeId);
+    utils.logTask(task, "commandStart_async from initiatingNodeId:" + initiatingNodeId);
     let initTask;
     let authenticate = true;
     if (commandArgs.init) {
       initTask = commandArgs.init;
-      nodeId = task.node.id;
       if (commandArgs.authenticate !== undefined) {
         authenticate = commandArgs.authenticate;
       }
@@ -37,11 +36,11 @@ export async function commandStart_async(task) {
       initTask.meta["prevMessageId"] = task.meta.messageId;
     } 
     initTask.meta["messageId"] = utils.nanoid8();
-    utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
+    //utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {
       if (task.hub.coprocessingDone) {
-        taskStart_async(initTask, authenticate, nodeId, prevInstanceId)
+        taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);
             //utils.logTask(task, "commandStart_async startTask.nodes", startTask.nodes);
@@ -55,7 +54,7 @@ export async function commandStart_async(task) {
         // Start should not function as an update. Could get out of sync when using task to start another task.
       }
     } else {
-      taskStart_async(initTask, authenticate, nodeId, prevInstanceId)
+      taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
         .then(async (startTask) => {
           await taskSync_async(startTask.instanceId, startTask);
           utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
@@ -65,7 +64,7 @@ export async function commandStart_async(task) {
   } catch (error) {
     const msg = `Error commandStart_async task ${task.id}: ${error.message}`;
     console.error(msg);
-    throw new Error(msg);
+    throw error;
   }
   
 }

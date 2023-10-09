@@ -42,7 +42,10 @@ function mergeTasks(task, parentTask) {
   if (task.type) {
     // Need to deal with a list of components
     const tasktemplatename = task.type;
-    if (tasktypes[tasktemplatename]) {
+    let template = tasktypes[tasktemplatename];
+    // Copy LOCAL_ keys
+    template = copyLocalKeys(template);
+    if (template) {
       for (const key2 in tasktypes[tasktemplatename]) {
         if (key2 !== "id" && key2 !== "name" && key2 !== "parentName") {
           //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
@@ -112,16 +115,15 @@ function appendOperation(task, key, parentTask) {
 function copyLocalKeys(obj) {
   for (const key in obj) {
     if (obj[key]) {
-
       // Recurse if it's an object and not null.
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         copyLocalKeys(obj[key]);
       }
-
       // Check for "LOCAL_" prefix.
       if (key.startsWith("LOCAL_")) {
         const newKey = key.slice(6);
         if (!obj[newKey]) {
+          //console.log("Setting LOCAL_", newKey, obj[key]);
           obj[newKey] = obj[key];
         }
       }
@@ -249,6 +251,14 @@ function flattenTasks(tasks) {
 
     if (task?.config?.autoStartEnvironments && !task?.config?.autoStartEnvironment) {
       task.config["autoStartEnvironment"] = task.config.autoStartEnvironments[0];
+    }
+
+    if (!task.environments) {
+      if (task?.config?.autoStartEnvironments) {
+        task.environments = task.config.autoStartEnvironments;
+      } else if (task?.config?.autoStartEnvironment) {
+        task.environments = [task.config.autoStartEnvironment];
+      }
     }
 
     if (task?.config?.autoStartEnvironment) {

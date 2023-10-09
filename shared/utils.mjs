@@ -196,6 +196,10 @@ const utils = {
   deepMergeHub: function(prevState, update, hubIn) {
     const hub = utils.deepClone(hubIn);
     let result = utils.deepMerge(prevState, update);
+    if (!result) {
+      console.log("deepMergeHub prevState:", prevState);
+      console.log("deepMergeHub update:", update)
+    }
     result.hub = hub;
     //utils.removeNullKeys(result);
     return result;
@@ -688,13 +692,12 @@ const utils = {
     // We do not store the start as this would be treating the start command like an update
     if (task.hub.command != "start") {
       //console.log("hubActiveTasksStoreSet_async task.state", task.state);
-      const taskCopy = utils.deepClone(task);
-      delete taskCopy.meta.modified; // generated on the hub
-      await setActiveTask_async(taskCopy);
+      delete task.meta.modified; // generated on the hub
+      task.nodes[task.hub.id] = utils.deepClone(task.hub);
+      await setActiveTask_async(task);
     }
     utils.debugTask(task);
     console.log("hubActiveTasksStoreSet_async", task.id, "state:",task.state.current);
-    return task;
   },
 
   cleanForHash: function (task) {
@@ -838,8 +841,8 @@ const utils = {
       // Sync is not relative to a current value so we cannot use hash
       return;
     }
-    const statesSupported = taskCopy?.node?.statesSupported || taskCopy?.hub?.statesSupported;
-    const statesNotSupported = taskCopy?.node?.statesNotSupported || taskCopy?.hub?.statesNotSupported;
+    const statesSupported = taskCopy?.node?.statesSupported;
+    const statesNotSupported = taskCopy?.node?.statesNotSupported;
     if (statesSupported || statesNotSupported) {
       // We are sending full updates not diffs in this case
       // We could also set the task.meta.hashDiff to undefined on the hub?
@@ -974,7 +977,7 @@ const utils = {
     return diffTask;
   },
 
-  // Should not be sending node from hub ? Allows node specific config. Also initiatingProcessorId
+  // Should not be sending node from hub ? Allows node specific config. Also initiatingNodeId
   // The node strips hub specific info because the Task Function should not interact with the Hub
   hubInProcessorOut: function(task) {
     const hub = utils.deepClone(task.hub);
@@ -1183,16 +1186,17 @@ const utils = {
     if (task === null) {
       throw new Error("Task null in debugTask");
     }
-    task = utils.deepClone(task); // Avoidin issues with logging references
     // This is like a continuous assertion (it runs before debug info is collected)
     if (task?.node?.origTask?.id && task?.node?.origTask?.id !== task?.id) {
       console.error("Task:", task);
       throw new Error("ERROR debugTask: task.node.origTask.id !== task.id");
     }
     // Could set task.debug via configuration
-    if (!task?.config?.debug?.debugTask) {return}
+    //if (!task?.config?.debug?.debugTask) {return}
+    task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
     const command = task.command || task?.node?.command || task?.hub?.command;
+    const commandArgs = task.commandArgs || task?.node?.commandArgs || task?.hub?.commandArgs;
     const commandDescription = task.commandDescription || task?.node?.commandDescription || task?.hub?.commandDescription;
     if (command === "ping" || command === "pong") {
       return;
@@ -1247,6 +1251,24 @@ const utils = {
     if (task?.hub?.coprocessing) {
       //logParts.push("task.hub.coprocessing", task.hub.coprocessing);
     }
+    if (task?.nodes) {
+      //logParts.push("Nodes:", Object.keys(task.nodes));
+    }
+    if (commandArgs?.sync) {
+      logParts.push("commandArgs.syncTask", commandArgs.syncTask);
+    }
+    if (task?.meta?.modified?.shared && task.meta.modified.shared["config-hub-consumer-tasks"]) {
+      logParts.push("task.meta.modified.shared.config-hub-consumer-tasks");
+    }
+    if (commandArgs?.CEPSource) {
+      logParts.push("CEPSource", commandArgs.CEPSource);
+    }
+    /*
+    if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {
+      console.log("Task:", JSON.stringify(task, null, 2));
+      throw new Error("task.nodes has null");
+    }
+    */
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask

@@ -10,6 +10,7 @@ import "./styles/App.css";
 import "./styles/normal.css";
 import Taskflows from "./components/Taskflows";
 import NotFound from "./components/NotFound";
+import Loading from "./components/Loading";
 import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
@@ -21,6 +22,8 @@ import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
   const [nodeId, setNodeId] = useState();
+  // Needed to use Ref to pass into registerProcessor as nodeId state does not work
+  const nodeIdRef = useRef(null);
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
@@ -42,6 +45,7 @@ function App({ activeWorkerCount, workerId }) {
           localStorage.setItem('nodeId' + workerId, id);
         }
         setNodeId(id);
+        nodeIdRef.current = id;
       }
     }
   }, [workerId]);
@@ -54,10 +58,42 @@ function App({ activeWorkerCount, workerId }) {
   //debug.enable(`*`); // Is too general e.g. is can enable messages from libraries
   debug.enable(`${appAbbrev}*`);
 
+  // Register upon request from Hub
+  const registerProcessor = async (nodeId) => {
+    setRegistering(true);
+    try {    
+      const language = navigator?.language?.toLowerCase() ?? 'en';
+      const response = await fetch(`${hubUrl}/api/register`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+           nodeId: nodeId,
+           commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
+           environment: "react",
+           language: language,
+        }),
+      });
+      const data = await response.json();
+      console.log("Registered node: ", nodeId, data);
+      if (data?.hubId) {
+        replaceGlobalState("hubId", data.hubId);
+        // The initial task takes on the nodeId so it can process autostart tasks sent by the hub
+        setTask({...task, instanceId: nodeId});
+      }
+    } catch (err) {
+      console.log("Registered node error ");
+      console.log(err.message);
+    }
+    setRegistering(false);
+  };
+
   useRegisterWSFilter(
     (registerTask) => {
-      console.log("registerTask", registerTask);
-      replaceGlobalState("hubId", null);
+      console.log("registerTask", registerTask, nodeIdRef.current);
+      registerProcessor(nodeIdRef.current);
     }
   )
   
@@ -74,42 +110,6 @@ function App({ activeWorkerCount, workerId }) {
     }
   }, [address, enableGeolocation]);
 
-  // For reasons I don't understand, React hot update keeps the old globalState upon page reload
-  useEffect(() => {
-    const registerProcessor = async () => {
-      setRegistering(true);
-      try {    
-        const language = navigator?.language?.toLowerCase() ?? 'en';
-        const response = await fetch(`${hubUrl}/api/register`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-             nodeId: nodeId,
-             commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
-             environment: "react",
-             language: language,
-          }),
-        });
-        const data = await response.json();
-        console.log("Registered node: ", data);
-        if (data?.hubId) {
-          replaceGlobalState("hubId", data.hubId);
-        }
-      } catch (err) {
-        console.log("Registered node error ");
-        console.log(err.message);
-      }
-      setRegistering(false);
-    };
-    // Wait for the nodeId to be set
-    if (!registering && nodeId && !globalState?.hubId) {
-      registerProcessor();
-    }
-  }, [nodeId]);
-
   // This is a workaround for Firefox private browsing mode not supporting IndexedDB
   // There's an about:config workaround by setting dom.indexedDB.privateBrowsing.enabled to true 
   // Of course this will forego the privacy guarantees of private browsing...
@@ -118,7 +118,7 @@ function App({ activeWorkerCount, workerId }) {
       // For now we have each tab as a separate node
       // So we need to have separate storage to avoid conflicts
       // Ultimatley there should be one node per user on the browser
-      const storageInstance = await openStorage(globalState.nodeId);
+      const storageInstance = await openStorage(nodeId);
       storageRef.current = storageInstance;
       // Set nodeId after storage is seetup because we will use nodeId as an 
       // indication that we can send Tasks and we need both storage + nodeId for this
@@ -131,7 +131,7 @@ function App({ activeWorkerCount, workerId }) {
 
   return (
     <Routes>
-      <Route exact path="/" element={<Taskflows task={task} setTask={setTask} />} />
+      <Route exact path="/" element={globalState.hubId ? <Taskflows task={task} setTask={setTask} /> : <Loading />} />
       <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} nodeId={nodeId}/>} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>

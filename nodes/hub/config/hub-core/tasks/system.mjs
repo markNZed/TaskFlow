@@ -68,7 +68,7 @@ const system = [
       label: "Tasks",
       local: {
         targetStore: "tasks",
-        sharedVariable: "configTreeHubconsumerTasks",
+        sharedVariable: "config-hub-consumer-tasks",
       },
       debug: {
         debugTask: false,
@@ -77,7 +77,7 @@ const system = [
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerTasks: {},
+      "config-hub-consumer-tasks": {},
     },
   },
   {
@@ -88,13 +88,13 @@ const system = [
       label: "Users",
       local: {
         targetStore: "users",
-        sharedVariable: "configTreeHubconsumerUsers",
+        sharedVariable: "config-hub-consumer-users",
       },
     },
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerUsers: {},
+      "config-hub-consumer-users": {},
     },
   },
   {
@@ -104,13 +104,13 @@ const system = [
       label: "Groups",
       local: {
         targetStore: "groups",
-        sharedVariable: "configTreeHubconsumerGroups",
+        sharedVariable: "config-hub-consumer-groups",
       },
     },
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerGroups: {},
+      "config-hub-consumer-groups": {},
     },
   },
   {
@@ -121,13 +121,13 @@ const system = [
       label: "Task Types",
       local: {
         targetStore: "tasktypes",
-        sharedVariable: "configTreeHubconsumerTasktypes",
+        sharedVariable: "config-hub-consumer-tasktypes",
       },
     },
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerTasktypes: {},
+      "config-hub-consumer-tasktypes": {},
     },
   },
   {
@@ -145,13 +145,13 @@ const system = [
       label: "CEP Types",
       local: {
         targetStore: "ceptypes",
-        sharedVariable: "configTreeHubconsumerCeptypes",
+        sharedVariable: "config-hub-consumer-ceptypes",
       },
     },
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerCeptypes: {},
+      "config-hub-consumer-ceptypes": {},
     },
   },
   {
@@ -162,13 +162,13 @@ const system = [
       label: "Service Types",
       local: {
         targetStore: "servicetypes",
-        sharedVariable: "configTreeHubconsumerServicetypes",
+        sharedVariable: "config-hub-consumer-servicetypes",
       },
     },
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerServicetypes: {},
+      "config-hub-consumer-servicetypes": {},
     },
   },
   {
@@ -179,13 +179,13 @@ const system = [
       label: "Operator Types",
       local: {
         targetStore: "operatortypes",
-        sharedVariable: "configTreeHubconsumerOperatortypes",
+        sharedVariable: "config-hub-consumer-peratortypes",
       },
     },
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubconsumerOperatortypes: {},
+      "config-hub-consumer-peratortypes": {},
     },
   },
   {
@@ -203,13 +203,13 @@ const system = [
       label: "CEP Types",
       local: {
         targetStore: "ceptypes",
-        sharedVariable: "configTreeHubcoprocessorCeptypes",
+        sharedVariable: "config-hub-coprocessor-ceptypes",
       },
     },
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubcoprocessorCeptypes: {},
+      "config-hub-coprocessor-ceptypes": {},
     },
   },
   {
@@ -220,13 +220,13 @@ const system = [
       label: "Operator Types",
       local: {
         targetStore: "operatortypes",
-        sharedVariable: "configTreeHubcoprocessorOperatortypes",
+        sharedVariable: "config-hub-coprocessor-operatortypes",
       },
     },
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubcoprocessorOperatortypes: {},
+      "config-hub-coprocessor-operatortypes": {},
     },
   },
   {
@@ -237,17 +237,17 @@ const system = [
       label: "Service Types",
       local: {
         targetStore: "servicetypes",
-        sharedVariable: "configTreeHubcoprocessorServicetypes",
+        sharedVariable: "config-hub-coprocessor-servicetypes",
       },
     },
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeHubcoprocessorServicetypes: {},
+      "config-hub-coprocessor-servicetypes": {},
     },
   },
   {
-    name: "rxjs-hub-consumer",
+    name: "processor-consumer",
     parentName: "config",
     config: {
       label: "RxJS Consumer",
@@ -255,19 +255,19 @@ const system = [
   },
   {
     initiator: true,
-    name: "rxjs-cep-types-config-editor",
+    name: "rxjs-ceptypes-config-editor",
     APPEND_environments: ["rxjs-processor-consumer"],
     config: {
       label: "CEP Types",
       local: {
         targetStore: "ceptypes",
-        sharedVariable: "configTreeRxjsCeptypes",
+        sharedVariable: "config-processor-consumer-ceptypes",
       },
     },
-    parentName: "rxjs-hub-consumer",
+    parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeRxjsCeptypes: {},
+      "config-processor-consumer-ceptypes": {},
     },
   },
   {
@@ -278,13 +278,13 @@ const system = [
       label: "Operator Types",
       local: {
         targetStore: "operatortypes",
-        sharedVariable: "configTreeRxjsOperatortypes",
+        sharedVariable: "config-processor-consumer-operatortypes",
       },
     },
-    parentName: "rxjs-hub-consumer",
+    parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeRxjsOperatortypes: {},
+      "config-processor-consumer-operatortypes": {},
     },
   },
   {
@@ -295,19 +295,29 @@ const system = [
       label: "Service Types",
       local: {
         targetStore: "servicetypes",
-        sharedVariable: "configTreeRxjsServicetypes",
+        sharedVariable: "config-processor-consumer-servicetypes",
       },
     },
-    parentName: "rxjs-hub-consumer",
+    parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      configTreeRxjsServicetypes: {},
+      "config-processor-consumer-servicetypes": {},
     },
   },
 
   {
-    name: "menu",
+    name: "taskflow",
     parentName: "system",
+    type: "Taskflow",
+    config: {
+      local: {
+        menuId: "root.system.taskflow.menu",
+      },
+    },
+  },
+  {
+    name: "menu",
+    parentName: "taskflow",
     type: "TaskSystemMenu",
   },
   {
@@ -321,7 +331,7 @@ const system = [
   },
 
   {
-    name: "rxjs-nodeconfigs",
+    name: "rxjs-hub-consumer-nodeconfigs",
     environments: ["rxjs-hub-consumer"],
     config: {
       background: true,
@@ -334,13 +344,13 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,    
     shared: {
-      configTreeHubconsumerTasks: {},
-      configTreeHubconsumerUsers: {},
-      configTreeHubconsumerGroups: {},
-      configTreeHubconsumerTasktypes: {},
-      configTreeHubconsumerCeptypes: {},
-      configtreeHubconsumerServicetypes: {},
-      configtreeHubconsumerOperatortypes: {},
+      "config-hub-consumer-tasks": {},
+      "config-hub-consumer-users": {},
+      "config-hub-consumer-groups": {},
+      "config-hub-consumer-tasktypes": {},
+      "config-hub-consumer-ceptypes": {},
+      "config-hub-consumer-servicetypes": {},
+      "config-hub-consumer-peratortypes": {},
     },
   },
   {
@@ -357,9 +367,9 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,
     shared: {
-      configTreeHubcoprocessorCeptypes: {},
-      configtreeHubcoprocessorServicetypes: {},
-      configtreeHubcoprocessorOperatortypes: {},
+      "config-hub-coprocessor-ceptypes": {},
+      "config-hub-coprocessor-servicetypes": {},
+      "config-hub-coprocessor-operatortypes": {},
     },
   },
   {
@@ -376,9 +386,9 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,
     shared: {
-      configTreeRxjsCeptypes: {},
-      configtreeRxjsServicetypes: {},
-      configtreeRxjsOperatortypes: {},
+      "config-processor-consumer-ceptypes": {},
+      "config-processor-consumer-servicetypes": {},
+      "config-processor-consumer-operatortypes": {},
     },
   },
 

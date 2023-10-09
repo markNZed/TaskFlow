@@ -26,8 +26,12 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   // We only want to run this during the coprocessing of the task
   // So we can see the null values and detect the deleteion of keys in shared
   // The null values get striped out in normal task processing
-  if (task.node.coprocessing && task?.meta?.modified?.shared !== undefined) {
-    utils.logTask(task, "command:", task.node.command, "commandArgs:", task.node.commandArgs);
+  const modified = task?.meta?.modified?.shared !== undefined
+  const commandArgs = task.node?.commandArgs;
+  // Sync is not coprocessed (maybe it should be but worried about loops)
+  if ((task.node.coprocessing && modified)
+      || (commandArgs?.sync && commandArgs?.CEPSource !== "CEPShared" && modified)) {
+    utils.logTask(task, "CEPShared command:", task.node.command, "commandArgs:", task.node.commandArgs);
     let toSync = {};
     let varNames;
     if (task.node.command === "init") {
@@ -42,14 +46,19 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       // Get the list of instances to update
       let familyId;
       let familyInstanceIds = [];
-      // clarify this
-      familyId = task.meta.systemFamilyId || task.familyId;
+      // this is a huge security issue as anyone can access the system variables
+      // Should prefix these variables e.g. shared.system. and could then limit access
+      if (sharedEntry["system"]) {
+        familyId = "system";
+      } else {
+        familyId = task.familyId;
+      }
       //utils.logTask(task, "task.shared familyId", familyId);
       // Add this instance if it is not already tracked
       sharedEntry[familyId] = sharedEntry[familyId] || {};
       sharedEntry[familyId]["instanceIds"] = sharedEntry[familyId]["instanceIds"] || [];
       if (!sharedEntry[familyId]["instanceIds"].includes(task.instanceId)) {
-        //utils.logTask(task, "Adding instanceId", task.instanceId, "to familyId sharedEntry", familyId, "for varName", varName);
+        utils.logTask(task, "Adding instanceId", task.instanceId, "to familyId", familyId, "for varName", varName);
         sharedEntry[familyId]["instanceIds"].push(task.instanceId);
       }
       familyInstanceIds = sharedEntry[familyId].instanceIds;
@@ -57,10 +66,10 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         toSync[instanceId] = toSync[instanceId] || {};
         if (task.node.command === "init") {
           if (sharedEntry[familyId].value) {
-            //utils.logTask(task, "CEPShared sharedEntry value set for varName", varName);
+            utils.logTask(task, "CEPShared init sharedEntry value set for varName", varName);
             toSync[instanceId][varName] = sharedEntry[familyId].value;
           } else {
-            //utils.logTask(task, "CEPShared sharedEntry value set for varName", varName);
+            utils.logTask(task, "CEPShared init value set for varName", varName);
             toSync[instanceId][varName] = task.shared[varName];
           } 
         } else {
@@ -98,7 +107,9 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
             instanceId: instanceId,
             syncTask: {
               shared: toSync[instanceId],
-            }
+            },
+            CEPSource: "CEPShared",
+            syncUpdate: true, // Ask the Hub to convert the sync into a normal update
           },
           commandDescription: "Updating shared:" + Object.keys(toSync[instanceId]),
         };

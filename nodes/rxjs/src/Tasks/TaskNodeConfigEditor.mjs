@@ -15,7 +15,7 @@ const TaskNodeConfigEditor_async = async function (wsSendTask, T, FSMHolder, CEP
 
   //console.log("TaskNodeConfigEditor_async services", services);
   const services = T("services");
-  const configFunctions = services["config"].module;
+  const configFunctions = services["systemConfig"].module;
   //console.log("TaskNodeConfigEditor_async configFunctions", configFunctions);
 
   /**
@@ -111,7 +111,7 @@ const TaskNodeConfigEditor_async = async function (wsSendTask, T, FSMHolder, CEP
   }
 
   async function parentDiff_async(targetStore, task) {
-    const requestedTaskParent = await configFunctions.read_async(services["config"], targetStore, task?.meta?.parentId);
+    const requestedTaskParent = await configFunctions.read_async(services["systemConfig"], targetStore, task?.meta?.parentId);
     let diff = {};
     if (requestedTaskParent) {
       diff = keepSameProperties(requestedTaskParent, task);
@@ -133,41 +133,41 @@ const TaskNodeConfigEditor_async = async function (wsSendTask, T, FSMHolder, CEP
       if (action) {
         switch (action) {
           case "create": {
-            await configFunctions.create_async(services["config"], targetStore, actionTask);
+            await configFunctions.create_async(services["systemConfig"], targetStore, actionTask);
             break;
           }
           case "read":{
             const [requestedTask, diff] = await Promise.all([
-              configFunctions.read_async(services["config"], targetStore, actionId),
-              parentDiff_async(targetStore, await configFunctions.read_async(services["config"], targetStore, actionId))
+              configFunctions.read_async(services["systemConfig"], targetStore, actionId),
+              parentDiff_async(targetStore, await configFunctions.read_async(services["systemConfig"], targetStore, actionId))
             ]);            
             T("response.task", requestedTask);
             T("response.taskDiff", diff);
             break;
           }
           case "update": {
-            await configFunctions.update_async(services["config"], targetStore, actionTask);
-            const updatedTask = await configFunctions.read_async(services["config"], targetStore, actionId);
+            await configFunctions.update_async(services["systemConfig"], targetStore, actionTask);
+            const updatedTask = await configFunctions.read_async(services["systemConfig"], targetStore, actionId);
             T("response.task", updatedTask);
             const diff = await parentDiff_async(targetStore, updatedTask);
             T("response.taskDiff", diff);
             break;
           }
           case "delete": {
-            await configFunctions.delete_async(services["config"], targetStore, actionId);
+            await configFunctions.delete_async(services["systemConfig"], targetStore, actionId);
             break;
           }
           case "insert": {
             // Create configFunctions.create_async
-            await configFunctions.insert_async(services["config"], targetStore, actionId, T("request.newTaskLabel"));
+            await configFunctions.insert_async(services["systemConfig"], targetStore, actionId, T("request.newTaskLabel"));
             break;
           }
           case "move": {
-            await configFunctions.move_async(services["config"], targetStore, actionId, T("request.destinationId"));
+            await configFunctions.move_async(services["systemConfig"], targetStore, actionId, T("request.destinationId"));
             break;
           }
           case "paste": {
-            await configFunctions.paste_async(services["config"], targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
+            await configFunctions.paste_async(services["systemConfig"], targetStore, T("request.actionId"), T("request.newTaskLabel"), T("request.destinationId"));
             break;
           }
           default:

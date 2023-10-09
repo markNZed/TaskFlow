@@ -35,7 +35,7 @@ const taskSync_async = async (key, value) => {
   const taskCopy = utils.deepClone(value); //deep copy
   let sourceProcessorId = taskCopy.hub.sourceProcessorId;
   // Config can be missing from a start task
-  if (!sourceProcessorId && !taskCopy?.autoStart) {
+  if (!sourceProcessorId) {
     throw new Error("taskSync_async missing sourceProcessorId" + JSON.stringify(taskCopy));
   }
   if (!taskCopy?.hub?.command) {
@@ -59,7 +59,7 @@ const taskSync_async = async (key, value) => {
       const coprocessorData = activeCoprocessors.get(coprocessorId);
       if (coprocessorData.commandsAccepted.includes(command)) {
         taskCopy.hub.coprocessingPosition = position;
-        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingProcessorId);
+        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingNodeId);
         if (!taskCopy.nodes) {
           taskCopy.nodes = {};
         }
@@ -84,9 +84,6 @@ const taskSync_async = async (key, value) => {
   // Every coprocessor needs to be updated/synced
   if (coprocessorIds) {
     for (const coprocessorId of coprocessorIds) {
-      if (command === "join") {
-        continue;
-      }
       const coprocessorData = activeCoprocessors.get(coprocessorId);
       if (coprocessorData) {
         if (coprocessorData.commandsAccepted.includes(command)) {
@@ -107,9 +104,6 @@ const taskSync_async = async (key, value) => {
   })
   if (hubConsumerIds) {
     for (const hubConsumerId of hubConsumerIds) {
-      if (command === "join") {
-        continue;
-      }
       const nodeData = activeProcessors.get(hubConsumerId);
       if (nodeData) {
         if (nodeData.commandsAccepted.includes(command)) {
@@ -125,22 +119,26 @@ const taskSync_async = async (key, value) => {
   //  We do not want coprocessingDone passed on to child tasks
   taskCopy.hub.coprocessingDone = false;
 
-  const initiatingProcessorId = taskCopy.hub.initiatingProcessorId || sourceProcessorId;
-  taskCopy.hub.sourceProcessorId = initiatingProcessorId
+  const initiatingNodeId = taskCopy.hub.initiatingNodeId || sourceProcessorId;
+  taskCopy.hub.sourceProcessorId = initiatingNodeId
 
   taskCopy.meta.broadcastCount = broadcastCount;
   broadcastCount++;
   // foreach nodeId in nodeIds send the task to the node
   const nodeIds = await activeTaskProcessorsStore_async.get(key);
   if (nodeIds) {
-    //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingProcessorId);
+    //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingNodeId);
     let updatedNodeIds = [...nodeIds]; // Make a copy of nodeIds
     for (const nodeId of nodeIds) {
+      // Don't update self
+      if (nodeId === NODE.id) {
+        continue;
+      }
       // Hub consumers have already been updated
       if (hubConsumerIds.includes(nodeId)) {
         continue;
       }
-      if (command === "join" && nodeId !== initiatingProcessorId) {
+      if (command === "join" && nodeId !== initiatingNodeId) {
         continue;
       }
       const nodeData = activeProcessors.get(nodeId);
@@ -149,8 +147,9 @@ const taskSync_async = async (key, value) => {
           utils.logTask(taskCopy, "taskCopy missing nodes", command );
         }
         if (!taskCopy.nodes[nodeId]) {
-          utils.logTask(taskCopy, "taskCopy missing node", command, nodeId );
+          utils.logTask(taskCopy, "taskCopy missing node", nodeId, "initiatingNodeId", initiatingNodeId, "command", command);
         }
+        utils.logTask(taskCopy, "Nodes:", Object.keys(taskCopy.nodes));
         if (nodeData.commandsAccepted.includes(command)) {
           const statesSupported = taskCopy.nodes[nodeId].statesSupported;
           const statesNotSupported = taskCopy.nodes[nodeId].statesNotSupported;

@@ -33,13 +33,13 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.node;
   // Could initiate from a node before going through the coprocessor
   // Could be initiated by the coprocessor
-  //utils.logTask(task, "task.node.initiatingProcessorId ", task.node.initiatingProcessorId);
-  let initiatingProcessorId = task.node.initiatingProcessorId || id;
-  //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
+  //utils.logTask(task, "task.node.initiatingNodeId ", task.node.initiatingNodeId);
+  let initiatingNodeId = task.node.initiatingNodeId || id;
+  //utils.logTask(task, "initiatingNodeId", initiatingNodeId);
   if (!task.node.isCoprocessor) {
-    initiatingProcessorId = id;
+    initiatingNodeId = id;
   }
-  //utils.logTask(task, "initiatingProcessorId", initiatingProcessorId);
+  //utils.logTask(task, "initiatingNodeId", initiatingNodeId);
   let commandArgs = {};
   if (task.node.commandArgs) {
     commandArgs = utils.deepClone(task.node.commandArgs);
@@ -54,11 +54,11 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   task.node.coprocessingDone = null;
   task.node.coprocessingPosition = null;
   const activeTaskProcessors = activeTask?.nodes || {};
-  const node = utils.deepClone(task.node);
+  const incomingNode = utils.deepClone(task.node);
   if (!activeTaskProcessors[id]) {
-    activeTaskProcessors[id] = node;
+    activeTaskProcessors[id] = incomingNode;
   } else {
-    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], node);
+    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], incomingNode);
   }
   task.nodes = activeTaskProcessors;
   /*
@@ -74,13 +74,29 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     const user = await usersStore_async.get(task.user.id);
     task.users[task.user.id] = user;
   }
-
-  task.hub = {
+  // Restore the hub from storage
+  // So we can keep task specific information local to the hub
+  let lastHub;
+  if (activeTask && activeTask.nodes && activeTask.nodes[NODE.id]) {
+    lastHub = activeTask.nodes[NODE.id];
+    if (lastHub.command) {
+      lastHub.command = null;
+    }
+    if (lastHub.commandArgs) {
+      lastHub.commandArgs = null;
+    }
+    if (lastHub.commandDescription) {
+      lastHub.commandDescription = null;
+    }
+  }
+  // Replacing task.node with the hub node information
+  const fromIncomingNode = {
+    id: NODE.id,
     command,
     commandArgs,
     commandDescription,
     sourceProcessorId: id,
-    initiatingProcessorId,
+    initiatingNodeId,
     requestId,
     coprocessingPosition,
     coprocessingDone,
@@ -88,7 +104,8 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     statesSupported,
     statesNotSupported,
   };
-  utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " commandArgs ", commandArgs, " initiatingProcessorId " + initiatingProcessorId);
+  task.hub = utils.deepMerge(lastHub, fromIncomingNode);
+  utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " initiatingNodeId " + initiatingNodeId);
   return task;
 }
 
@@ -98,7 +115,7 @@ function checkLockConflict(task, activeTask) {
     const lock = task.hub.commandArgs.lock || false;
     const unlock = task.hub.commandArgs.unlock || false;
     const lockBypass = task.hub.commandArgs.lockBypass || false;
-    const lockProcessorId = task.hub.initiatingProcessorId;
+    const lockProcessorId = task.hub.initiatingNodeId;
     
     if (lock && activeTask && !activeTask.meta?.locked) {
       task.meta.locked = lockProcessorId;

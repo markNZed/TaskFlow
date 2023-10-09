@@ -57,7 +57,7 @@ taskSubject
     }),
     */
     mergeMap(async (task) => {
-      utils.logTask(task, "Incoming task command:" + task.node.command + " initiatingProcessorId:" + task.node.initiatingProcessorId);
+      utils.logTask(task, "Incoming task command:" + task.node.command + " initiatingNodeId:" + task.node.initiatingNodeId);
       task = utils.processorInTaskOut(task);
       const taskCopy = utils.deepClone(task); //deep copy
       if (!task.node.coprocessing) {
@@ -131,8 +131,7 @@ taskSubject
           // We have not performed utils.removeNullKeys(task);
           if (CEPCoprocessor) {
             // await so that CEP can modify the task during coprocessing
-            // If a Task wants to update itsefl then it should not use a sync command but return the udpated value
-            
+            // If a Task wants to update itself then it should not use a sync command but return the udpated value
             await func(wsSendTask, CEPInstanceId, task, args);
             task.node.CEPExecuted.push(moduleName);
           } else {
@@ -152,9 +151,9 @@ taskSubject
         }
       } else {
         // Process the task to install the CEP
-        if (task.node.initiatingProcessorId !== NODE.id) {
-          await taskProcess_async(wsSendTask, task, CEPMatchMap);
-        }
+        //if (task.node.initiatingNodeId !== NODE.id) {
+        await taskProcess_async(wsSendTask, task, CEPMatchMap);
+        //}
       }
       if (task.node.coprocessing) {
         return task;
@@ -203,7 +202,9 @@ const wsSendTask = async function (task) {
     task.meta.messageId = utils.nanoid8();
   }
   message["task"] = task;
-  //console.log("wsSendTask state:", task?.state?.current)
+  if (task.node.command && task.node.command !== "ping" && task.node.command !== "partial") {
+    console.log("wsSendTask messageId:", task.meta.messageId);
+  }
   utils.debugTask(task);
   wsSendObject(message);
 }
@@ -248,7 +249,7 @@ const connectWebSocket = () => {
       // so it does not get released. Start can have instanceId
       // We do not lock for a sync for the same reason - we do not coprocess sync
       // Check for instanceId to avoid locking for commands like register
-      if (task.instanceId && command !== "start" && task.node.initiatingProcessorId !== NODE.id) {
+      if (task.instanceId && command !== "start" && task.node.initiatingNodeId !== NODE.id) {
         if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.node.coprocessing)) {
            await taskLock(task.instanceId, "processorWs.onmessage");
         }
@@ -280,7 +281,7 @@ const connectWebSocket = () => {
       }
       utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       if (!utils.checkHashDiff(lastTask, mergedTask)) {
-        if (mergedTask.node.initiatingProcessorId === NODE.id) {
+        if (mergedTask.node.initiatingNodeId === NODE.id) {
           console.error("Task hash does not match from this node");
         }
       }

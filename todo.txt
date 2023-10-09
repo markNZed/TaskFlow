@@ -1,11 +1,25 @@
 /* ToDo
 -------
+In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
+sync will not run task function so menu will not be updated
+  should CEPShared be an update ?
+    Should sync become update and rewrite tasks so they avoid issues with updates causing repeat events
+    Could allow task function to choose to see sync events
+    Could have CEP that maps sync to update for specific task
+
+syncTask will be null after processed on the Hub and merged with Task
+CEPShared will not run on sync ?
+  It will not run whennot coporcessing and sync sets coprocessingDone
+Core should request registering so it can wait until coprocessor is in place as the Processor can start things and it will be missed
+  Another reason to autostart from the Hub
 Refactoring 
+  .hub ?.hub hub:
+  task.processor tells us which was the last processor - are we using that information?
   Unique to the hub:
     config of tasks, tasktypes, users, groups
     routes - should transition to websocket ?
       registerRoutes
-        Use the register command
+        Use the register command. Create commandRegister.mjs
     commandError.mjs
     commandInit.mjs
     commandStart.mjs
@@ -24,14 +38,11 @@ Refactoring
       Rename to validateConfigTasks.mjs
     webSocket.js
     server.js
-  Replace task.hub with task.node ?
-    How to distinguish between type/role/processing ?
-      Maybe we iterate over them and filter at the place where we need to - should not be too expensive
+  Replace task.hub with task.node
+    How to distinguish between type/role/processing
+      Iterate over them and filter at the place where we need to - should not be too expensive
   Only the Hub writes to the `task.hub` object.
-  Taskflows.js should be a Task so we can pass user instead of using api/interface
-  Could have a special instanceId which matches the nodeId indicaitng a task for the node ?
-  NOt registerd with te processors so syncTask will not send
-    Probably better to start the task and copy the relevant info
+  The refactoring process will align similar modules on the hub and rxjs
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service
@@ -579,9 +590,8 @@ Features that are manually tested
 ---------------------------------
   Features:
     general
-      mobile
-        screen rotation X
-      websocket (with and without)
+      mobile XX
+        screen rotation XX
       permissions X
       authentication X
       parentName X
@@ -592,7 +602,7 @@ Features that are manually tested
     menu
       user specific X
       labels X
-      menu closes after select
+      mobile menu closes after select XX
     Tasks
       TaskStepper
         next X

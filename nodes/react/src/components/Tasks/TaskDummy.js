@@ -43,7 +43,7 @@ const TaskDummy = (props) => {
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
-    if (transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
+    if (props.transition()) { props.log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
         break;

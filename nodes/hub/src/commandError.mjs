@@ -35,7 +35,7 @@ async function errorTask_async(task) {
       environments: task.environments,
       hub: {
         command: "error",
-        sourceProcessorId: task.hub.initiatingProcessorId,
+        initiatingNodeId: task.hub.initiatingNodeId,
         commandArgs: { unlock: true },
       },
     }
@@ -70,6 +70,6 @@ export async function commandError_async(task) {
   } catch (error) {
     const msg = `Error commandError_async task ${task.id}: ${error.message}`;
     console.error(msg);
-    throw new Error(error);
+    throw error;
   }
 }

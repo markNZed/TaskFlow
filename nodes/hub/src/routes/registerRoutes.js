@@ -105,67 +105,62 @@ router.post("/", async (req, res) => {
     // Alphanumeric Compare using localeCompare
     return autoStartTaskB.autoStartpriority.localeCompare(autoStartTaskA.autoStartpriority, undefined, {numeric: true});
   });
-  console.log("sortedAutoStartTasksArray", sortedAutoStartTasksArray);
+  //console.log("sortedAutoStartTasksArray", sortedAutoStartTasksArray);
   // eslint-disable-next-line no-unused-vars
-  const ids = sortedAutoStartTasksArray.map(([taskId, task]) => taskId);
-  for (const taskId of ids) {
+  for (let [taskId, autoStartTask] of sortedAutoStartTasksArray) {
+    const autoStartEnvironment = autoStartTask.startEnvironment;
+    if (autoStartTask.started && autoStartEnvironment !== environment) {
+      continue;
+    }
     // Lock the task when autostarting to ensure one task is started
     taskLock(taskId, "autostart");
     // Load the task after getting the lock so we can see any updates
-    let autoStartTask = await autoStartTasksStore_async.get(taskId)
+    autoStartTask = await autoStartTasksStore_async.get(taskId)
     countAutoStartTasks++;
-    console.log(`Checking autostart ${environment} for task`, taskId, autoStartTask);
-    const autoStartEnvironment = autoStartTask.startEnvironment;
+    console.log(`Checking autostart ${environment} for task`, taskId, "started", autoStartTask.started);
     let startEnvironments = autoStartTask.startEnvironments || [];
     if (activeEnvironments.includes(autoStartEnvironment)) {
       //console.log("startEnvironments", startEnvironments);
-      let allEnvironmentsAvailable = true;
       // get the environment for this task
-      startEnvironments.forEach(startEnvironment => {
-        // Is each startEnvironment available in environment ?
-        if (!activeEnvironments.includes(startEnvironment)) {
-          //console.log("startEnvironment " + startEnvironment + " not available", environment);
-          allEnvironmentsAvailable = false;
-        }
-      })
+      let allEnvironmentsAvailable = startEnvironments.every(
+        env => activeEnvironments.includes(env)
+      );
+      if (!allEnvironmentsAvailable) {
+        console.log(`Checking autostart !allEnvironmentsAvailable`);
+        continue;
+      }
       // If we have already started the task then we should only restart it if the particular
       // node registering now is the autoStartEnvironment
       // This was added because if the coprocessor has not started then we will not autostart
       // Then when the coprocessor starts allEnvironmentsAvailable will be true
       // We want to start the task once in that case not every time any node is registered.
-      if (autoStartTask.started) {
-        if (autoStartEnvironment !== environment) {
-          allEnvironmentsAvailable = false;
-        }
+      if (autoStartTask.started && autoStartEnvironment !== environment) {
+        console.log(`Checking autostart autoStartTask.started && autoStartEnvironment !== environment`);
+        continue;
       }
-      if (allEnvironmentsAvailable) {
-        //console.log("allEnvironmentsAvailable");
-        const initTask = {
-          id: taskId,
-          user: {id: userId},
-          autoStart: true,
-        }
-        let task = {id: "autoStart"};
-        task["hub"] = {};
-        task.hub["commandArgs"] = {
-          init: initTask,
-          authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
-        }
-        task.hub["command"] = "start";
-        task.hub["sourceProcessorId"] = "hub";
-        task["node"] = {};
-        task["node"]["id"] = nodeId;
-        console.log("Autostarting task ", taskId, environment);
-        commandStart_async(task);
-        if (autoStartTask.once) {
-          await autoStartTasksStore_async.delete(taskId);
-        } else {
-          let newAutoStartTask = autoStartTask;
-          newAutoStartTask["started"] = true;
-          await autoStartTasksStore_async.set(taskId, newAutoStartTask);
-        }
+      //console.log("allEnvironmentsAvailable");
+      const initTask = {
+        id: taskId,
+        user: {id: userId},
+      }
+      let task = {id: "autoStart"};
+      task["instanceId"] = NODE.id;
+      task["hub"] = {};
+      task.hub["commandArgs"] = {
+        init: initTask,
+        authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
+      }
+      task.hub["command"] = "start";
+      task.hub["sourceProcessorId"] = NODE.id;
+      task.hub["initiatingNodeId"] = nodeId; // So the task will start on the processor that is registering 
+      console.log("Autostarting task ", taskId, environment);
+      commandStart_async(task);
+      if (autoStartTask.once) {
+        await autoStartTasksStore_async.delete(taskId);
       } else {
-        //console.log("Not autostarting task allEnvironmentsAvailable false");
+        let newAutoStartTask = autoStartTask;
+        newAutoStartTask["started"] = true;
+        await autoStartTasksStore_async.set(taskId, newAutoStartTask);
       }
     } else {
       //console.log("Not autostarting task autoStartEnvironment", autoStartEnvironment, "not in", activeEnvironments);
@@ -173,6 +168,7 @@ router.post("/", async (req, res) => {
     taskRelease(taskId);
   }
   console.log(countAutoStartTasks + " autostart tasks");
+
 });
 
 // Export the router
