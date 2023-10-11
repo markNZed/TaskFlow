@@ -138,6 +138,10 @@ const taskSync_async = async (key, value) => {
       if (hubConsumerIds.includes(nodeId)) {
         continue;
       }
+      // Hub coprocessors have already been updated
+      if (coprocessorIds.includes(nodeId)) {
+        continue;
+      }
       if (command === "join" && nodeId !== initiatingNodeId) {
         continue;
       }

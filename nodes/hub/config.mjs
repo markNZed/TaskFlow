@@ -27,7 +27,7 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-const SAVE_TASKS = process.env.SAVE_TASKS || false;
+const DUMP_CONFIGS = process.env.DUMP_CONFIGS || false;
 
 let NODE_NAME = "hub-core";
 if (process.env.NODE_NAME !== undefined) {
@@ -64,10 +64,9 @@ try {
 
 NODE["name"] = NODE_NAME;
 NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
-NODE["dumpConfigs"] = SAVE_TASKS;
+NODE["dumpConfigs"] = DUMP_CONFIGS;
 NODE["allowedOrigins"] = ALLOWED_ORIGINS;
-// Need to know this so we can wait for coprocessor before autostarting tasks
-NODE["haveCoprocessor"] = true;
+NODE["hubNodeEnvironments"] = ["rxjs-hub-coprocessor", "rxjs-hub-consumer"];
 NODE["app"] = {
   label: appLabel,
   name: appName,

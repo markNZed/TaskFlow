@@ -8,6 +8,8 @@ import { initiateFsm, updateStates } from "#src/taskFSM";
 // eslint-disable-next-line no-unused-vars
 const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  //if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   const actions = {
     rxjs_start: () => {
       console.log("TaskShowInstruction_async rxjs_start");

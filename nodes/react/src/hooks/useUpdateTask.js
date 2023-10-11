@@ -23,12 +23,17 @@ const useUpdateTask = (task, setTask) => {
     const command = task?.command;
     const commandArgs = task?.commandArgs;
     const commandDescription = task?.commandDescription;
-    if (task && command === "update" && !updateTaskError) {
+    // commandPending is used to wait for the response to a previous update before sending another update
+    // without this the second update may be sent before the Hub returns the first update and then the storage value used for the diff 
+    // would be out of sync with the storage on the hub (the hub will include the first update).
+    const commandPending = task?.node?.commandPending;
+    if (task && command === "update" && !updateTaskError && !commandPending) {
       utils.log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = utils.deepClone(task); // deep copy
-          const updating = { "command": null, "commandArgs": null, "commandDescription": null };
+          snapshot.node["commandPending"] = true;
+          const updating = { "command": null, "commandArgs": null, "commandDescription": null, "node.commandPending": true };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
           if (commandArgs?.sync) {

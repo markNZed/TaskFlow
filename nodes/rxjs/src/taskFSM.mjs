@@ -34,17 +34,17 @@ const loadFSMModule_async = async (task) => {
   } else if (task?.config?.fsm?.name) {
     importPath = `${task.type}/${task.config.fsm.name}.mjs`;
     name = task.config.fsm.name;
-    //console.log("loadFSMModule_async task.config.fsm.name", task.config.fsm.name);
+    console.log("loadFSMModule_async name", task.config.fsm.name);
   } else if (task.type) {
     importPath = `${task.type}/default.mjs`;
     name = 'default';
-    //console.log("loadFSMModule_async default");
+    console.log(`loadFSMModule_async ${task.type}/default.mjs`);
   } else {
     console.log("No FSM");
     return null;
   }
   try {
-    const module = await import('../fsm/' + importPath);
+    const module = await import('./shared/FSM/' + importPath);
     let fsmConfig = module.getFSM(task);
     const fsmDefaults = {
       predictableActionArguments: true,
@@ -63,9 +63,9 @@ const loadFSMModule_async = async (task) => {
     return fsmConfig;
   } catch (error) {
     if (error.message.includes("Cannot find module")) {
-      //console.log(`Failed to load FSM at ${'../fsm/' + importPath}`);
+      console.log(`No FSM at ${'./shared/FSM/' + importPath}`);
     } else {
-      console.error(`Failed to load FSM at ${'../fsm/' + importPath}`, error);
+      console.error(`Failed to load FSM at ${'./shared/FSM/' + importPath}`, error);
       throw error;
     }
   }

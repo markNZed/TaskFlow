@@ -336,42 +336,40 @@ for (const groupKey in groups) {
 //console.log(JSON.stringify(users, null, 2))
 
 /*
- * Save tasks to a file if the file does not exist.
+ * Save config to a file if the file does not exist.
  * If the file exists then perform a diff.
  * This is useful during refactoring to make sure intentional changes are made.
  *
  * @param {Array} tasks - An array of tasks to be saved.
  * @return {Promise<void>} A promise that resolves when the tasks are saved successfully.
  */
-async function saveTasks(tasks) {
-  const tasksJson = JSON.stringify(tasks, null, 2);
-  let existingTasks;
-  const filePath = '/tmp/tasks.json';
-
+async function dumpConfig(configData, configName) {
+  const configDataJson = JSON.stringify(configData, null, 2);
+  let prevConfigData;
+  const filePath = `/tmp/taskflow-${configName}.json`;
   try {
-    const data = await fs.readFile('/tmp/tasks.json', 'utf8');
-    existingTasks = JSON.parse(data);
-    console.log('Successfully read tasks from file ' + filePath);
+    const data = await fs.readFile(filePath, 'utf8');
+    prevConfigData = JSON.parse(data);
+    console.log(`Successfully read configData from file ${filePath}`);
   } catch (error) {
     if (error.code === 'ENOENT') { // file does not exist
-      await fs.writeFile(filePath, tasksJson);
-      console.log('Successfully wrote tasks to file ' + filePath);
+      await fs.writeFile(filePath, configDataJson);
+      console.log(`Successfully wrote ${configName} to file ${filePath}`);
       return;
     } else {
       console.error('Error reading file', error);
       return;
     }
   }
-
-  const diff = jsonDiff.diffString(existingTasks, tasks);
+  const diff = jsonDiff.diffString(prevConfigData, configData);
   if (diff) {
-    console.log('Differences between the existing tasks and the new tasks:', diff);
+    console.log('Differences between the previous ${configName} and the new ${configName}:', diff);
   } else {
     console.log('No differences found');
   }
 }
 if (NODE.dumpConfigs) {
-  await saveTasks(tasks);
+  await dumpConfig(tasks, "tasks");
 }
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));

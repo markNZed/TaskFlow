@@ -18,6 +18,7 @@ const cosineSimilarity = (tensor1, tensor2) => {
 const TaskChoose_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+  
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
 
@@ -62,7 +63,7 @@ const TaskChoose_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) 
     // Remember to clean up tensors to prevent memory leaks
     embeddingsData.dispose();
 
-    // Need to go to next state, can stay on NodeJS Processor side
+    // Need to go to next state, can stay on RxJS Processor Consumer side
     T("commandArgs", {"nextTaskId": nextTaskIds[maxIndex], "done": true});
     T("command", "update");
     T("commandDescription", "Transition to next task:" + nextTaskIds[maxIndex]);

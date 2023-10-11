@@ -3,6 +3,12 @@ import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskWeaviate",
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "Taskflow",
     config: {
       LOCAL_autoStartEnvironment: "react",

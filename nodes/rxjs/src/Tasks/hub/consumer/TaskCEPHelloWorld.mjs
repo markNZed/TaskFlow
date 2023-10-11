@@ -16,6 +16,8 @@ import { CEPregister,CEPCreate } from "#src/taskCEPs";
 // eslint-disable-next-line no-unused-vars
 const TaskCEPHelloWorld_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  //if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   // eslint-disable-next-line no-unused-vars
   function CEPHelloWorld(wsSendTask, CEPInstanceId, CEPtask, args) {
     utils.logTask(T(), "Hello World!");

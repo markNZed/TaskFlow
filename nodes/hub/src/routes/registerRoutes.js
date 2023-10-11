@@ -57,6 +57,7 @@ router.post("/", async (req, res) => {
       role,
       processing,
     })
+    NODE["haveCoprocessor"] = true;
   } else {  
     activeProcessors.set(nodeId, {
       environment,
@@ -84,13 +85,15 @@ router.post("/", async (req, res) => {
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
 
-  // Do not autostart task until after the coprocessor has started
-  // probably need to wait for all coprocessors first but we don't have the list
-  // Probably need to convert NODE.haveCoprocessor into Coprocessors (maybe capitals and set from ENV)
-  if (NODE.haveCoprocessor && activeCoprocessors.size === 0) {
-    console.log("NODE.haveCoprocessor && activeCoprocessors.size === 0");
-    return
+  // Do not autostart task until the hubNodeEnvironments have started
+  // Otherwise a task could start on one Hub node and not another leading to hash mismatches
+  let allHubEnvironmentsAvailable = NODE["hubNodeEnvironments"].every(
+    env => activeEnvironments.includes(env)
+  );
+  if (!allHubEnvironmentsAvailable) {
+    return;
   }
+
   const autoStartTasksArray = [];
   for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
     autoStartTasksArray.push([taskId, autoStartTask]);

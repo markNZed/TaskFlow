@@ -17,6 +17,8 @@ import { NODE } from "#root/config";
 // eslint-disable-next-line no-unused-vars
 const TaskNodeConfigs_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   //console.log("TaskNodeConfigs services", services);
   const services = T("services");
   if (!services?.systemConfig?.module) {

@@ -29,7 +29,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
-      - mongodbdata:/data/db
+      - mongodb-data:/data/db
     networks:
       - taskflow
 
@@ -40,13 +40,41 @@ services:
     environment:
       - REDIS_ARGS=--save 600 1
     volumes:
-      - my-redis-data:/data
+      - redis-data:/data
+    networks:
+      - taskflow
+
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: semitechnologies/weaviate:1.21.2
+    volumes:
+    - weaviate-data:/var/lib/weaviate
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
+      CLUSTER_HOSTNAME: 'weaviate1'
+    networks:
+      - taskflow
+
+  unstructured:
+    image: downloads.unstructured.io/unstructured-io/unstructured:latest
     networks:
       - taskflow
 
 volumes:
-  mongodbdata:
-  my-redis-data:
+  mongodb-data:
+  redis-data:
+  weaviate-data:
 
 networks:
     taskflow:

@@ -34,7 +34,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
         // The initial taskflow task does not have an instanceId (it is created on this processor)
         const prevInstanceId = initiatingInstanceId && (message.task.meta.prevInstanceId === initiatingInstanceId);
         const parentInstanceId = initiatingInstanceId && (message.task.meta.parentInstanceId === initiatingInstanceId);
-        console.log("initialTask.instanceId", initialTask.instanceId, "globalState.nodeId", globalState.nodeId);
+        //console.log("initialTask.instanceId", initialTask.instanceId, "globalState.nodeId", globalState.nodeId);
         const processor = initialTask.instanceId ===  globalState.nodeId && (message.task.meta.parentInstanceId === undefined);
         if (prevInstanceId || parentInstanceId || processor) {
           //console.log("initiatingInstanceId && message.task.meta.prevInstanceId === initiatingInstanceId", initiatingInstanceId && message.task.meta.prevInstanceId === initiatingInstanceId)

@@ -8,6 +8,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 const TaskGeneratePersona_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+  
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
 

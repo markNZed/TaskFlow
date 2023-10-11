@@ -54,6 +54,7 @@
     "rxjs": "^7.8.1",
     "seedrandom": "^3.0.5",
     "tree-model": "^1.0.7",
+    "weaviate-ts-client": "^1.5.0",
     "ws": "^8.12.1",
     "xstate": "^4.38.2"
   },

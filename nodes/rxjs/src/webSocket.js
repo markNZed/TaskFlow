@@ -63,10 +63,10 @@ taskSubject
       if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
       }
-      // We make an exception for sync so we can log sync taht are sent with coprocessingDone
+      // We make an exception for sync so we can log sync that are sent with coprocessingDone
       const CEPCoprocessor = NODE.role === "coprocessor" && (task.node.coprocessing || task.node?.commandArgs?.sync);
-      const CEPprocessor = NODE.role !== "coprocessor";
-      if (CEPCoprocessor || CEPprocessor ) {
+      const processor = NODE.role !== "coprocessor";
+      if (CEPMatchMap.size > 0 && (CEPCoprocessor || processor)) {
         // Complex event processing uses a Map of Map
         //  The outer Map matches a task identity of the task that is being processed
         //  The inner Map associates the CEP initiator task.instanceId with a function
@@ -200,11 +200,11 @@ const wsSendTask = async function (task) {
   if (NODE.role !== "coprocessor") {
     task.meta.prevMessageId = task.meta.messageId;
     task.meta.messageId = utils.nanoid8();
+    if (task.node.command && task.node.command !== "ping" && task.node.command !== "partial") {
+      utils.logTask(task,"New messageId:", task.meta.messageId);
+    }
   }
   message["task"] = task;
-  if (task.node.command && task.node.command !== "ping" && task.node.command !== "partial") {
-    console.log("wsSendTask messageId:", task.meta.messageId);
-  }
   utils.debugTask(task);
   wsSendObject(message);
 }
@@ -249,7 +249,8 @@ const connectWebSocket = () => {
       // so it does not get released. Start can have instanceId
       // We do not lock for a sync for the same reason - we do not coprocess sync
       // Check for instanceId to avoid locking for commands like register
-      if (task.instanceId && command !== "start" && task.node.initiatingNodeId !== NODE.id) {
+      // Removed && task.node.initiatingNodeId !== NODE.id because update could happen during init
+      if (task.instanceId && command !== "start" ) {
         if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.node.coprocessing)) {
            await taskLock(task.instanceId, "processorWs.onmessage");
         }

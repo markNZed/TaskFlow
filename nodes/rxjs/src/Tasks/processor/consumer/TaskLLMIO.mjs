@@ -19,9 +19,10 @@ const TaskLLMIO_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
     case "response": {
       T("state.current", "receiving");
       T("command", "update");
-      T("commandDescription", "Set state to receiving on ohter Processors");
-      // Here we update the task which has the effect of setting the state to receiving
-      wsSendTask(T());
+      T("commandDescription", "Set state to receiving on other Processors");
+      break;
+    }
+    case "receiving": {
       // The response needs to be available for other tasks to point at
       const operatorOut = await operatorLLM.operate_async(wsSendTask, T()); 
       T("output.LLMtext", operatorOut.response.LLM);

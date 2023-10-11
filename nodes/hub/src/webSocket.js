@@ -169,8 +169,10 @@ function initWebSocketServer(server) {
           return;
         }
 
-        const byteSize = Buffer.byteLength(message, 'utf8');
-        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task?.hub?.sourceProcessorId}`);
+        if (task.node.command !== "partial") {
+          const byteSize = Buffer.byteLength(message, 'utf8');
+          utils.logTask(task, `Message size in bytes: ${byteSize} from ${task?.hub?.sourceProcessorId}`);
+        }
 
         // If there are multiple coprocessors then we may need to specify a priority
         // We start the co-processing from taskSync.mjs

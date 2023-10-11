@@ -24,15 +24,13 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     utils.logTask(T(), "taskProcess_async", T("id"));
     utils.logTask(T(), "taskProcess_async node.coprocessing", T("node.coprocessing"));
     const taskFunctionName = `${T("type")}_async`
-    if (T("node.commandArgs.sync")) {
-      utils.logTask(T(), "RxJS sync so skipping Task Fuction id:" + T("id"));
-    } else if (T("node.command") === "error") {
+    if (T("node.command") === "error") {
       utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "start") {
       utils.logTask(T(), "RxJS start so skipping Task Fuction id:" + T("id"));
     } else if (!T("environments").includes(NODE.environment)) {
       utils.logTask(T(), "Task is not configured to run on this node");
-    // If this is not a coprocessor then it must use this environment
+    // If this node is not a hub-coprocessor or hub-consumer then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
@@ -107,7 +105,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
             if (environments) {
               // Only try to load an operator if it is expected to be on this node
               if (environments.includes(NODE.environment)) {
-                const type = operatorsConfig[key].type;
+                const type = operatorsConfig[key].type || key; // default to using the key as the type
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
                   operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
@@ -143,13 +141,19 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
         // Copy the functions into place
         if (T("services")) {
           Object.keys(T("services")).map(async (key) => {
-            T(`services.${key}.module`, ServicesMap.get(T(`services.${key}.moduleName`)));
+            const module = ServicesMap.get(T(`services.${key}.moduleName`));
+            if (module) {
+              T(`services.${key}.module`, module);
+            }
           });
           //console.log("Restore services", T("services"));
         }
         if (T("operators")) {
           Object.keys(T("operators")).map(async (key) => {
-            T(`operators.${key}.module`, OperatorsMap.get(T(`operators.${key}.moduleName`)));
+            const module = OperatorsMap.get(T(`operators.${key}.moduleName`));
+            if (module) {
+              T(`operators.${key}.module`, module);
+            }
           });
           //console.log("Restore operators", T("operators"));
         }

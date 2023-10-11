@@ -199,7 +199,7 @@ const TaskChat = (props) => {
         if (transitionTo("mentionAddress") && !checkLocked()) {
           // Add the input too for the user
           const promptText = "Location: " + task.state?.address;
-          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+          // Lock task so users cannot send at same time. RxJS Processor Consumer will unlock on final response.
           modifyTask({ 
             "output.LLMResponse": { role: "assistant", content: "", user: "assistant", id: uuidv4() },
             "output.sending": true,
@@ -214,7 +214,7 @@ const TaskChat = (props) => {
         break;
       case "send":
         if (transitionTo("send") && !checkLocked()) {
-          // Lock task so users cannot send at same time. NodeJS will unlock on final response.
+          // Lock task so users cannot send at same time. RxJS Processor Consumer will unlock on final response.
           modifyTask({ 
             "output.LLMResponse": {role: "assistant", content: "", user: "assistant", id: uuidv4()},
             "output.sending": true,

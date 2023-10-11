@@ -105,7 +105,9 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     statesNotSupported,
   };
   task.hub = utils.deepMerge(lastHub, fromIncomingNode);
-  utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " initiatingNodeId " + initiatingNodeId);
+  if (command !== "partial") {
+    utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " initiatingNodeId " + initiatingNodeId);
+  }
   return task;
 }
 
@@ -254,7 +256,9 @@ async function taskProcess_async(task, req) {
     if (!task.node) {
       throw new Error("Missing task.node in taskProcess_async");
     }
-    utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
+    if (task.node.command !== "partial") {
+      utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
+    }
     let activeTask = {};
 
     utils.debugTask(task);

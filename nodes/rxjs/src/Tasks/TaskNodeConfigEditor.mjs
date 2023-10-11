@@ -13,6 +13,8 @@ ServiceNodeConfig provides read/write access to configuration data, TaskNodeConf
 // eslint-disable-next-line no-unused-vars
 const TaskNodeConfigEditor_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   //console.log("TaskNodeConfigEditor_async services", services);
   const services = T("services");
   const configFunctions = services["systemConfig"].module;

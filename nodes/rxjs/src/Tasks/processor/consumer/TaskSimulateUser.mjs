@@ -59,6 +59,7 @@ function checkTaskCache (T) {
 const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+  
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;
   
@@ -82,15 +83,15 @@ const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatc
   switch (T("state.current")) {
     case "introduction":
     case "send": {
-      const entryState = T("state.current");
       T("state.current", "receiving");
       T("commandArgs.lockBypass", true);
       // Here we update the task which has the effect of setting the state to receiving
       T("command", "update");
       T("commandDescription", "Set state to receiving on other Processors");
-      // Could error here. How to chek?
-      wsSendTask(T());
-      if (entryState === "introduction") {
+      break;
+    }
+    case "receiving": {
+      if (T("state.last") === "introduction") {
         const simulationPrompt = { role: "user", text: T("config.local.introductionPrompt"), user: T("user.label") };
         T("output.simulationPrompt", simulationPrompt);
         const simulationResponse = { role: "assistant", text: "", user: "assistant" };
@@ -128,7 +129,7 @@ const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatc
       T("state.current", "received");
       T("commandArgs.unlock", true);
       T("command", "update");
-      if (entryState === "introduction") {
+      if (T("state.last") === "introduction") {
         T("commandDescription", "Transition state to received using config.local.introductionPrompt");
       } else {
         T("commandDescription", "Transition state to received with output.simulationResponse");

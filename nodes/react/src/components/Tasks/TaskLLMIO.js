@@ -74,6 +74,8 @@ const TaskLLMIO = (props) => {
               responseTextRef.current = text;
               setResponseText(text);
               break;
+            default:
+              console.log("WARNING unknown mode : " + mode);
           }
         }
         //console.log(`${componentName} processResponses responseTextRef.current:`, responseTextRef.current);
@@ -126,12 +128,12 @@ const TaskLLMIO = (props) => {
         } else if (transition()) {
           modifyTask({
             "command": "update",
-            "commandDescription": "Transition to received state",
+            "commandDescription": "Transition to response state",
           });
         } 
         break;
       case "receiving":
-        // NodeJS should be streaming the response
+        // RxJS Processor Consumer should be streaming the response
         // When it has finished it will set the state to received
         break;
       case "received":
@@ -147,17 +149,6 @@ const TaskLLMIO = (props) => {
           setUserInput(task.output.userInput);
         }
         break;
-      case "exit":
-        if (transitionFrom("input")) {
-          modifyTask({ 
-            "command": "update", 
-            "output.userInput": userInput,
-            "commandDescription": "Transition state to exit ans set output.userInput",
-          });
-        } else {
-          nextState = "stop"
-        }
-        break;
       case "wait":
         // If not collecting input we are in the wait state before exiting
         break;
@@ -165,6 +156,7 @@ const TaskLLMIO = (props) => {
         if (transition()) {
           modifyTask({ "state.done": true });
         }
+        console.log("Task:", task);
         break;
       default:
         console.log("ERROR unknown state : ", task.state.current);
@@ -175,7 +167,18 @@ const TaskLLMIO = (props) => {
   }, [task]);
 
   useEffect(() => {
-    //console.log("task", task);
+    if (task?.input?.exit) {
+      if (task.state.current === "input") {
+        modifyTask({ 
+          "command": "update", 
+          "output.userInput": userInput,
+          "commandDescription": "Transition state to stop and set output.userInput",
+          "state.current": "stop",
+        });
+      } else if (task.state.current !== "stop") {
+        modifyTask({ "state.current": "stop" });
+      }
+    }
   }, [task]);
 
   // Adjust userInput input area size when input grows

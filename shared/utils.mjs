@@ -475,7 +475,7 @@ const utils = {
     if (_.isEqual(obj1, obj2)) {
       return undefined
     }
-    if (!_.isObject(obj1) || !_.isObject(obj2)) {
+    if (obj1 === undefined || obj2 === undefined) {
       return undefined;
     }
     if (Array.isArray(obj1) && _.isEmpty(obj1) && Array.isArray(obj2) && _.isEmpty(obj2)) {
@@ -745,12 +745,12 @@ const utils = {
     // Which properties of the origTask differ from the task
     let diffOrigTask;
     if (taskCopy.node?.commandArgs?.sync) {
-      diffOrigTask = undefined;
+      diffOrigTask = {};
     } else {
       diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-    }
-    if (diffOrigTask === undefined) {
-      diffOrigTask = {};
+      if (diffOrigTask === undefined) {
+        diffOrigTask = {};
+      }
     }
     if (!diffTask.meta) {
       diffTask.meta = {};
@@ -810,12 +810,12 @@ const utils = {
       let diffOrigTask;
       // We do not check the hash for sync (the node sending may not even have the instance for calculating the diff)
       if (taskCopy.hub?.commandArgs?.sync) {
-        diffOrigTask = undefined;
+        diffOrigTask = {};
       } else {
         diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-      }
-      if (diffOrigTask === undefined) {
-        diffOrigTask = {};
+        if (diffOrigTask === undefined) {
+          diffOrigTask = {};
+        }
       }
       diffOrigTask = utils.cleanForHash(diffOrigTask);
       // Allows us to check only the relevant part of the origTask
@@ -906,14 +906,14 @@ const utils = {
     // Clear down taskCopy commands as we do not want these coming back from the hub
     taskCopy.node["command"] = command;
     delete taskCopy.command;
-    if (taskCopy.commandArgs) {
+    if (commandArgs) {
       // Deep copy because we are going to clear
-      taskCopy.node["commandArgs"] = JSON.parse(JSON.stringify(taskCopy.commandArgs));
+      taskCopy.node["commandArgs"] = JSON.parse(JSON.stringify(commandArgs));
     } else {
       taskCopy.node["commandArgs"] = null;
     }
     delete taskCopy.commandArgs;
-    if (taskCopy.commandDescription) {
+    if (commandDescription) {
       taskCopy.node["commandDescription"] = commandDescription;
     } else {
       taskCopy.node["commandDescription"] = "";

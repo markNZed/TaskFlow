@@ -10,6 +10,8 @@ import { utils } from "#src/utils";
 // eslint-disable-next-line no-unused-vars
 const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  //if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   utils.debugTask(T());
 
   let configTreeEvent; 

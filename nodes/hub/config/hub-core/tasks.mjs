@@ -81,7 +81,7 @@ const tasks = [
   {
     config: {
       label: "Example1",
-      spawnTask: false,
+      spawnTask: false, // Because the stepper explicitly starts tasks
       APPEND_caching: [
         {
           operator: "LLM",
@@ -97,6 +97,11 @@ const tasks = [
         temperature: 0.9,
       },
     },
+    operators: {
+      LLM: {
+        environments: ["rxjs-processor-consumer"],
+      }
+    },
     initiator: true,
     name: "stepper1",
     parentName: "stepper",
@@ -105,12 +110,12 @@ const tasks = [
   {
     config: {
       label: "",
-      nextTask: "summarize",
+      nextTask: "story",
       local: {
         instruction: "Hello",
       },
     },
-    name: "start",
+    name: "hello",
     parentName: "stepper1",
     type: "TaskShowInstruction",
   },
@@ -118,9 +123,9 @@ const tasks = [
     config: {
       local: {
         inputLabel: "Respond here.",
-        instruction: "Tell the user what to do",  
+        instruction: "Tell the user a story",  
       },
-      nextTask: "structure"
+      nextTask: "feedback"
     },
     services: {
       chat: {
@@ -130,14 +135,14 @@ const tasks = [
         environments: ["rxjs-processor-consumer"],
       },
     },
-    name: "summarize",
+    name: "story",
     parentName: "stepper1",
     type: "TaskLLMIO",
   },
   {
     config: {
       local: {
-        instruction: "This is what I think of your response",
+        instruction: "This is what I think of your story",
       },
       nextTask: "stop",
     },
@@ -147,7 +152,7 @@ const tasks = [
         forget: true,
         type: "openaigpt.chatgpt",
         promptTemplate: [
-          "Provide feedback on this prompt, is it a good prompt? ",
+          "Provide feedback on this story, is it a good story? ",
           "\"",
           "summarize.output.userInput",
           "\""
@@ -157,7 +162,7 @@ const tasks = [
             role: "user",
             text: [
               "This is a response from an earlier message",
-              "summarize.output.LLMtext"
+              "story.output.LLMtext"
             ]
           },
           {
@@ -167,7 +172,7 @@ const tasks = [
         ],
       },
     },
-    name: "structure",
+    name: "feedback",
     parentName: "stepper1",
     type: "TaskLLMIO",
   },
@@ -357,6 +362,18 @@ const tasks = [
       autoStartEnvironment: "rxjs-processor-consumer",
     },
   },
+
+  {
+    name: "weaviate",
+    type: "TaskWeaviate",
+    parentName: "user",
+    initiator: true,
+    environments: ["rxjs-processor-consumer", "react"],
+    config: {
+      label: "Weaviate",
+    },
+  },
+
 
 ];
 

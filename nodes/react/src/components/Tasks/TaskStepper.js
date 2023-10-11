@@ -37,7 +37,7 @@ function TaskStepper(props) {
   const [keys, setKeys] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
   const [prevTaskName, setPrevTaskName] = useState();
-  const [expanded, setExpanded] = useState(["start"]);
+  const [expanded, setExpanded] = useState([]);
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
   const [stepDone, setStepDone] = useState();
@@ -77,13 +77,13 @@ function TaskStepper(props) {
           setTasks([startTask]);
           setPrevTaskName(startTask.name);
           setKeys([startTask.instanceId + tasksIdx]);
+          setExpanded([startTask.name])
           nextState = "navigate";
         }
         break;
       case "navigate":
         if (stepperNavigation.task) {
           if (stepperNavigation.direction === "forward") {
-            props.modifyChildState("exit");
             props.modifyChildTask({"input.exit": true});
             setStepperNavigation({task: null, direction: null})
             nextState = "waitForDone";
@@ -214,7 +214,7 @@ function TaskStepper(props) {
               )}
             </AccordionDetails>
             <div>
-              {tasks[tasksIdx].name !== "start" &&
+              {tasksIdx !== 0 &&
                 tasks[tasksIdx].name === name && (
                   <Button
                     onClick={() => 

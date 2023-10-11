@@ -88,7 +88,7 @@ const TaskGeneratePersona = (props) => {
     if (transition()) { log(`${componentName} State Machine State ` + task.state.current) }
     switch (task.state.current) {
       case "start":
-        // We are waiting so NodeJS can generate the persona
+        // We are waiting so RxJS Processor Consumer can generate the persona
         setResponseText(task.config.local.display);
         break;
       case "generated":

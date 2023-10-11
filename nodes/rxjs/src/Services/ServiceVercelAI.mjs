@@ -217,7 +217,7 @@ async function openaigpt_async(params) {
       partialText += delta;
       const partialResponse = { delta: delta, text: partialText };
       SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-      await sleep(80);
+      await sleep(40);
     }
     message_from("cache", text, noStreaming, instanceId);
     if (debug) {
@@ -243,7 +243,7 @@ async function openaigpt_async(params) {
         partialText += delta;
         const partialResponse = { delta: delta, text: partialText };
         SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-        await sleep(80);
+        await sleep(40);
       }
       message_from("Dummy API", text, noStreaming, instanceId);
       response_text_promise = Promise.resolve([text, []]);

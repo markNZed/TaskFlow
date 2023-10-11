@@ -39,13 +39,15 @@ Overview of the ports:
 * 5001 Hub Core
 * 5002 RxJS Hub Consumer
 * 5003 RxJS Hub Coprocessor
+* 6379 Redis (in redis-stack-svc container)
+* 8000 Unstructured (in unstructured container)
+* 8001 RedisInsight (in redis-stack-svc container)
+* 8080 Weaviate (in weaviate container)
 * 9229 Hub Core debug
 * 9230 RxJS Processor Consumer debug
 * 9231 RxJS Hub Consumer debug
 * 9232 RxJS Hub Coprocessor node debug
-* 27017 MongoDB (on mongodb container)
-* 6379 Redis (on redis-stack-svc container)
-* 8001 RedisInsight (on redis-stack-svc container)
+* 27017 MongoDB (in mongodb container)
 
 ## Dev
 This assumes T@skFlow is running behind a proxy on a docker network:

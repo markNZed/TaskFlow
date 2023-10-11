@@ -6,7 +6,7 @@ To install the node packages: `npm install`
 
 To run locally: `npm start`
 
-Running on localhost set the port for the React React Processor server in package.json where the default is PORT=3000. Specify the port of the websocket NodeJS Processor with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
+Running on localhost set the port for the React React Processor server in package.json where the default is PORT=3000. Specify the port of the websocket RxJS Processor Consumer with environment variable REACT_APP_WS_LOCALHOST_PORT (default is 5000).
 
 ## Features
 * Queue for updates to maintain order

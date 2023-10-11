@@ -49,13 +49,7 @@ const TaskRx_async = async function (wsSendTask, T) {
     });
 
     // Subscribe to the Redis channel
-    messagingClient.subscribe('channel_from_py', (err) => {
-      if (err) {
-        console.error('Failed to subscribe:', err);
-      } else {
-        console.log('Subscribed to channel_from_py. Waiting for messages...');
-      }
-    });
+    messagingClient.subscribe('channel_from_py');
 
   }
 

@@ -28,6 +28,19 @@ class PythonRunner {
     this.process.stdout.on('data', (data) => {
       console.log(`PythonRunner stdout: ${data.toString()}`);
     });
+
+    // Listen for an exit event on the Node.js process.
+    process.on('exit', () => this.terminatePythonProcess());
+
+    // Listen for SIGINT (e.g., Ctrl+C in the terminal).
+    process.on('SIGINT', () => this.terminatePythonProcess());
+    
+    // Listen for uncaught exceptions and terminate Python script.
+    process.on('uncaughtException', () => this.terminatePythonProcess());
+    
+    // Optional: Listen for more signals as per your requirement, for example SIGTERM.
+    process.on('SIGTERM', () => this.terminatePythonProcess());
+        
   }
 
   stop() {
@@ -35,6 +48,13 @@ class PythonRunner {
       this.process.kill();
     }
   }
+
+  terminatePythonProcess() {
+    if (this.process) {
+        this.process.kill();  // This sends the 'SIGTERM' signal to the process.
+        console.log('Python process killed');
+    }
+}
 }
 
 export { PythonRunner };

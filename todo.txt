@@ -1,17 +1,17 @@
 /* ToDo
 -------
+React sends the update but acts based on its current value however it's storage is not yet updated from hub
+  Would need something like a lock to wait for the update to come back from the hub before sending the next update?
+Can the sync interfere with hash diff ?
+  Can have many Processors trying to sync
+  hashDiff could consider only those values that are changed ? 
+FSM is remounted in previous state
 In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
 sync will not run task function so menu will not be updated
-  should CEPShared be an update ?
-    Should sync become update and rewrite tasks so they avoid issues with updates causing repeat events
-    Could allow task function to choose to see sync events
+  Should CEPShared be an update ?
     Could have CEP that maps sync to update for specific task
-
-syncTask will be null after processed on the Hub and merged with Task
-CEPShared will not run on sync ?
-  It will not run whennot coporcessing and sync sets coprocessingDone
-Core should request registering so it can wait until coprocessor is in place as the Processor can start things and it will be missed
-  Another reason to autostart from the Hub
+    Ignore sync operations is how we were handling this - so Task can decide to deal with the sync or not
+    Created an option syncUpdate that applies a normal update
 Refactoring 
   .hub ?.hub hub:
   task.processor tells us which was the last processor - are we using that information?
@@ -42,7 +42,7 @@ Refactoring
     How to distinguish between type/role/processing
       Iterate over them and filter at the place where we need to - should not be too expensive
   Only the Hub writes to the `task.hub` object.
-  The refactoring process will align similar modules on the hub and rxjs
+  The refactoring process will start with aligning similar modules on the hub and rxjs
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service
@@ -594,30 +594,29 @@ Features that are manually tested
         screen rotation XX
       permissions X
       authentication X
-      parentName X
       user
         name X
         profile X
         interface X
     menu
       user specific X
-      labels X
+      labels XX
       mobile menu closes after select XX
     Tasks
       TaskStepper
-        next X
-        back X
-        skip back X
-        expand multiple X
-        close step X
-        scrolling X
+        next XX
+        back XX
+        skip back XX
+        expand multiple XX
+        close step XX
+        scrolling XX
       TaskChoose
         error
       TaskLLMIO
         input
-          word count X 
+          word count XX
         response
-          word count X
+          word count XX
       TaskShowInstruction
         error
       TaskChat

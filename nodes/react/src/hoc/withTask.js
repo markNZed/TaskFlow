@@ -340,6 +340,10 @@ function withTask(Component) {
           updateDiff["node"] = {};
         }
         updateDiff.node["origTask"] = updatedTask.node.origTask; 
+        if (updateDiff.node.commandPending) {
+          console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
+          updateDiff.node.commandPending = false;
+        }
         // If the resource has been locked by another node then we ignore whatever was done locally
         // If this is the source node then we want to keep any change made to the task since the update was sent
         // There may be meta data like task.meta.lock that we want updated on the source node

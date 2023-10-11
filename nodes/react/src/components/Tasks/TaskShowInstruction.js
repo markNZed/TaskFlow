@@ -24,7 +24,7 @@ To use the XState FSM
 /*
 Task Function
   This component is complete overkill for what it is doing but it is useful during dev
-  Fetches a instruction from the NodeJS Processor that is hard coded in the task
+  Fetches a instruction from the RxJS Processor Consumer that is hard coded in the task
   
 ToDo:
   
@@ -48,7 +48,8 @@ const TaskShowInstruction = (props) => {
   // Actions receive arguments (context, event) which we could choose to use here
   const actions = xutils.logActions({
     react_displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
-    react_finish: () => modifyTask({ "state.done": true }),
+    // We return to the "start" state so the FSM will start from there if remounted
+    react_finish: () => modifyTask({ "state.done": true, "state.current": "start" }),
   });
   
   // Guards receive arguments (context, event) which we could choose to use here
@@ -93,6 +94,7 @@ const TaskShowInstruction = (props) => {
 
   // Each time this component is mounted reset the task state
   useEffect(() => {
+    console.log("Setting task state to start");
     task.state.current = "start";
     task.state.done = false;
   }, []);

@@ -11,7 +11,6 @@ const initializeCEPFilePaths = () => {
   const cepFiles = fs
     .readdirSync(cepsDir)
     .filter((file) => file.startsWith("CEP") && file.endsWith(".mjs"));
-
   cepFiles.forEach((file) => {
     const modulename = path.basename(file, ".mjs");
     const modulePath = `./CEPs/${file}`;
@@ -28,7 +27,6 @@ const importCEP_async = async (name) => {
     console.log("cepFilePaths:", cepFilePaths);
     throw new Error(`CEP ${name} does not exist.`);
   }
-  
   const modulePath = cepFilePaths[name];
   //console.log("importCEP_async " + name)
   const module = await import(modulePath);

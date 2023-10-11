@@ -20,7 +20,6 @@ const register_async = async () => {
     body: JSON.stringify({
       nodeId: NODE.id,
       environment: NODE.environment,
-      // Because this node can serve as a coprocessor it needs to deal with "start"
       commandsAccepted: NODE.commandsAccepted,
       coprocessor: NODE.role === "coprocessor",
       language,

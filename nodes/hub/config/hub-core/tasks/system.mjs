@@ -50,12 +50,12 @@ const system = [
   }, 
 
   {
-    name: "config",
+    name: "configs",
     parentName: "system",
   },
   {
     name: "hub",
-    parentName: "config",
+    parentName: "configs",
     config: {
       label: "Hub",
     }
@@ -132,7 +132,7 @@ const system = [
   },
   {
     name: "hub-consumer",
-    parentName: "config",
+    parentName: "configs",
     config: {
       label: "Hub Consumer",
     }
@@ -190,7 +190,7 @@ const system = [
   },
   {
     name: "hub-coprocessor",
-    parentName: "config",
+    parentName: "configs",
     config: {
       label: "Hub Coprocessor",
     }
@@ -248,7 +248,7 @@ const system = [
   },
   {
     name: "processor-consumer",
-    parentName: "config",
+    parentName: "configs",
     config: {
       label: "RxJS Consumer",
     }
@@ -340,7 +340,7 @@ const system = [
       },
       autoStartEnvironment: "rxjs-hub-consumer",
     },
-    parentName: "config",
+    parentName: "configs",
     type: "TaskNodeConfigs",
     menu: false,    
     shared: {
@@ -363,7 +363,7 @@ const system = [
       },
       autoStartEnvironment: "rxjs-hub-coprocessor",
     },
-    parentName: "config",
+    parentName: "configs",
     type: "TaskNodeConfigs",
     menu: false,
     shared: {
@@ -382,7 +382,7 @@ const system = [
       },
       autoStartEnvironment: "rxjs-processor-consumer",
     },
-    parentName: "config",
+    parentName: "configs",
     type: "TaskNodeConfigs",
     menu: false,
     shared: {

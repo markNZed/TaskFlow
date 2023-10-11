@@ -62,7 +62,6 @@ export async function commandUpdate_async(task) {
   if (commandArgs?.syncTask?.instanceId) {
     instanceId = commandArgs.syncTask.instanceId;
   }
-  //const localTaskRelease = await taskLock(task.instanceId, "commandUpdate_async");
   utils.logTask(task, "commandUpdate_async messageId:", task?.meta?.messageId);
   try {
     utils.logTask(task, "commandUpdate_async from nodeId:" + nodeId);
@@ -94,8 +93,7 @@ export async function commandUpdate_async(task) {
     throw error;
   } finally {
     // Always release the lock
-    utils.logTask(task, "commandUpdate_async lock released instanceId:", task.instanceId);
-    //localTaskRelease();
-    taskRelease(task.instanceId, "commandUpdate_async");
+    utils.logTask(task, "commandUpdate_async lock released instanceId:", instanceId);
+    taskRelease(instanceId, "commandUpdate_async");
   }
 }

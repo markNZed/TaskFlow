@@ -8,6 +8,8 @@ import { utils } from "#src/utils";
 // eslint-disable-next-line no-unused-vars
 const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
+  //if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
   //console.log("TaskChat_async services", services);
 
   function arraysEqualIgnoreOrder(a, b) {

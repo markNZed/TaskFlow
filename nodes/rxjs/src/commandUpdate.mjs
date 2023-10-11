@@ -19,12 +19,13 @@ export async function commandUpdate_async(wsSendTask, task) {
   const commandDescription = task.commandDescription || "";
   const sync = commandArgs.sync;
   const syncInstanceId = commandArgs.instanceId;
+  let taskReleaseLock;
   if (sync) {
     if (!syncInstanceId) {
       console.error("Missing syncInstanceId", task);
       throw new Error("Missing syncInstanceId");
     }
-    await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
+    taskReleaseLock = await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
     mergedTask["instanceId"] = syncInstanceId;
     mergedTask["command"] = "update";
     mergedTask["commandArgs"] = commandArgs;
@@ -34,7 +35,7 @@ export async function commandUpdate_async(wsSendTask, task) {
     mergedTask.node["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
-    await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
+    taskReleaseLock = await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
     const lastTask = await getActiveTask_async(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);
@@ -49,12 +50,8 @@ export async function commandUpdate_async(wsSendTask, task) {
   // Because it is this node that is the initiator
   mergedTask.node["initiatingNodeId"] = NODE.id; //"coprocessor";
   try {
-    //utils.logTask(task, "commandUpdate_async mergedTask.state", mergedTask.state);
-    mergedTask.meta["prevMessageId"] = mergedTask.meta.messageId;
-    mergedTask.meta["messageId"] = utils.nanoid8();
-    utils.logTask(task, "Creating new messageId", mergedTask.meta.messageId, "prevMessageId", mergedTask.meta.prevMessageId);
-    //utils.logTask(task, "wsSendTask");
-    wsSendTask(mergedTask);
+    await wsSendTask(mergedTask);
+    taskReleaseLock();
   } catch (error) {
     console.error(`Command ${mergedTask.command} failed to fetch ${error}`);
   }

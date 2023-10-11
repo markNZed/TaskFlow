@@ -44,10 +44,7 @@ if (process.env.MAP_USER_JSON) {
   console.log("MAP_USER ", MAP_USER);
 }
 
-let NODE_NAME = "hub-consumer";
-if (process.env.NODE_NAME !== undefined) {
-  NODE_NAME = process.env.NODE_NAME;
-}
+const NODE_NAME = process.env.NODE_NAME || "hub-consumer";
 
 /* 
   NODE
@@ -66,11 +63,13 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch", "stream"],
       environment: "rxjs-hub-consumer",
+      // As a Hub node it needs to deal with "start"
       commandsAccepted: ["update", "start", "init", "register", "error", "join"],
       wsPort: 5002,
     }
     break;
   case "hub-coprocessor":
+    // As a Hub node it needs to deal with "start"
     NODE = {
       type: "hub",
       role: "coprocessor",
@@ -86,7 +85,7 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch"],
       environment: "rxjs-processor-consumer",
-      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
+      commandsAccepted: ["update", "init", "register", "error", "join"],
       wsPort: 5000,
     }
     break;

@@ -6,29 +6,23 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useEffect, useState } from "react";
 import withTask from "../../hoc/withTask";
-import { utils } from "../../utils/utils.mjs";
-import JsonEditor from '../Generic/JsonEditor.js'
-
 
 /*
 Task Function
 
-  Fetch any Task and modify it
-
+This is intended to be a placeholder for experimenting with React
   
 ToDo:
   
 */
 
-const TaskSystemUpdate = (props) => {
+const TaskWeaviate = (props) => {
   const {
     log,
     task,
     modifyTask,
     transition,
   } = props;
-
-  const [dummy, setDummy] = useState("");
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
@@ -45,7 +39,7 @@ const TaskSystemUpdate = (props) => {
   useEffect(() => {
     if (!props.checkIfStateReady()) {return}
     let nextState;
-    if (transition()) { log(`${props.componentName} State Machine State ${task.state.current}`) }
+    if (props.transition()) { props.log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
         break;
@@ -57,17 +51,11 @@ const TaskSystemUpdate = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
-  const handleDataChanged = (dataContainer) => {
-    console.log('Edited JSON data:', dataContainer);
-    modifyTask(dataContainer.json);
-  };
-
   return (
     <div>
-      <h1>JSON Editor</h1>
-      <JsonEditor content={task} onDataChanged={handleDataChanged} />
+      <h1>TaskWeaviate</h1>
     </div>
   );
 };
 
-export default withTask(TaskSystemUpdate);
+export default withTask(TaskWeaviate);
