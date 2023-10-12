@@ -36,6 +36,9 @@ export async function commandStart_async(task) {
       initTask.meta["prevMessageId"] = task.meta.messageId;
     } 
     initTask.meta["messageId"] = utils.nanoid8();
+    if (commandArgs.prevInstanceId) {
+      initTask.meta["prevInstanceId"] = commandArgs.prevInstanceId;
+    }
     //utils.logTask(task, "commandStart_async coprocessingDone:", task.hub.coprocessingDone, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {

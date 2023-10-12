@@ -41,7 +41,6 @@ async function errorTask_async(task) {
     }
     task.hub.commandArgs = {
       init: initTask,
-      prevInstanceId: task.instanceId,
       authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
     };
     await commandStart_async(task);

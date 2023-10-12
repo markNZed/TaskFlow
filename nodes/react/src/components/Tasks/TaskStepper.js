@@ -66,6 +66,7 @@ function TaskStepper(props) {
           "command": "start",
           "commandArgs": {
             id: startTaskId,
+            prevInstanceId: task.instanceId,
           }
         });
         nextState = "waitForStart"
@@ -111,6 +112,7 @@ function TaskStepper(props) {
             "command": "start",
             "commandArgs": {
               id: tasks[tasksIdx].config.nextTask,
+              prevInstanceId: task.instanceId,
             }
           });
           const modifiedTask = utils.deepMerge(tasks[tasksIdx], utils.setNestedProperties({ 

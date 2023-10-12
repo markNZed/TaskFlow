@@ -214,7 +214,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
   if (prevTask) {
     // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
     // nextTask on another node, then the originator can associate the task with it's original request
-    task.meta["prevInstanceId"] = prevTask?.meta?.prevInstanceId || prevTask.instanceId;
+    task.meta["prevInstanceId"] = task?.meta?.prevInstanceId || prevTask?.meta?.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
     // Copying node information from previous task instance
     // In the case where the task sequence advances on another node 
@@ -426,45 +426,26 @@ async function taskStart_async(
   ) {
 
     // Could have a TaskEmpty if we do not want to base the task on a task config
-    const initTaskConfig = await tasksStore_async.get(initTask.id);
-    if (!initTaskConfig) {
+    let task  = await tasksStore_async.get(initTask.id);
+    if (!task) {
       throw new Error("Could not find task with id " + initTask.id)
     }
 
-    // Instantiate new task
-    let task = utils.deepClone(initTaskConfig); // deep copy (not needed?)
     utils.debugTask(task, "initTaskConfig");
-
-    //utils.logTask(task, "Task template", task)
 
     // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
 
-    if (Object.keys(initTask).length > 0) {
-      task = utils.deepMerge(task, initTask);
-    }
+    task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
-    //utils.logTask(task, "Task after merge", task)
+    utils.logTask(task, "prevInstanceId:", prevInstanceId);
 
     await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
-
-    // If the Task was created on a Processor (used for React Taskflow)
-    /*
-    if (!prevTask && prevInstanceId && prevInstanceId === NODE.id) {
-      utils.logTask(task, "!prevTask && prevInstanceId && prevInstanceId === NODE.id");
-      prevTask = {
-        instanceId: prevInstanceId,
-        id: initTask.id,
-        familyId: prevInstanceId,
-        nodes: {},
-      }
-    }
-    */
 
     // Is this a user task being launched from a system task ?
     // If so then initialize a new familyId
