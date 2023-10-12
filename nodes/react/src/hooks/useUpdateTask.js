@@ -28,12 +28,19 @@ const useUpdateTask = (task, setTask) => {
     // would be out of sync with the storage on the hub (the hub will include the first update).
     const commandPending = task?.node?.commandPending;
     if (task && command === "update" && !updateTaskError && !commandPending) {
+      if (commandPending) {
+        utils.log("useUpdateTask commandPending", commandPending);
+        return;
+      }
       utils.log("useUpdateTask", task.id, task);
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = utils.deepClone(task); // deep copy
-          snapshot.node["commandPending"] = command;
-          const updating = { "command": null, "commandArgs": null, "commandDescription": null, "node.commandPending": command };
+          const updating = { "command": null, "commandArgs": null, "commandDescription": null };
+          if (!commandArgs?.sync) {
+            snapshot.node["commandPending"] = command;
+            updating["node.commandPending"] = command;
+          }
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
           if (commandArgs?.sync) {

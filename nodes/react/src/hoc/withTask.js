@@ -328,7 +328,7 @@ function withTask(Component) {
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         utils.checkHashDiff(lastTask, updateDiff);
         if (updateDiff.node.commandPending === updateDiff.node.command) {
-          //console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
+          console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
           updateDiff.node["commandPending"] = null;
         }
         let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.node);
@@ -396,7 +396,7 @@ function withTask(Component) {
         }
       }
     )
-    
+
     useErrorWSFilter(useGlobalStateContext, props.task,
       (errorTask) => {
         console.log("useErrorWSFilter", errorTask.id, errorTask.error, errorTask);
