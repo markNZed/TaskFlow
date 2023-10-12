@@ -155,7 +155,7 @@ router.post("/", async (req, res) => {
       }
       task.hub["command"] = "start";
       task.hub["commandDescription"] = "Autostarting task";
-      task.hub["sourceProcessorId"] = NODE.id;
+      task.hub["sourceNodeId"] = NODE.id;
       task.hub["initiatingNodeId"] = nodeId; // So the task will start on the processor that is registering 
       console.log("Autostarting task ", taskId, environment);
       commandStart_async(task);

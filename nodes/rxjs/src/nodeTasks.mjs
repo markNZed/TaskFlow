@@ -283,6 +283,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
     T("commandDescription", "Error in nodeTasks_async");
   }
   if (T("error")) {
+    // It is not natural to set the command to update when we have an error command
+    T("command", "update");
     console.error("Task error: ", T("error"))
   }
   try {
@@ -324,8 +326,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       // When not a coprocessor what do we want to do?
       // Which command should we support here?
       // This is similar to the old do_task
-      if (T("command") === "update") {
-        utils.logTask(T(), "nodeTasks_async sending update");
+      if (T("command")) {
         utils.debugTask(T(), "sending");
         wsSendTask(T());
       } else {

@@ -54,7 +54,7 @@ export async function commandUpdate_async(task) {
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
-  let nodeId = task.hub.sourceProcessorId;
+  let nodeId = task.hub.sourceNodeId;
   const commandArgs = task.hub.commandArgs;
   let instanceId = task.instanceId;
   if (commandArgs?.syncTask?.instanceId) {

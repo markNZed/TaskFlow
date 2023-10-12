@@ -43,7 +43,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
           const taskCopy = JSON.parse(JSON.stringify(message.task)); // deep copy
           delete messageQueue[key];
           startTaskDB(taskCopy);
-          setInitiatingInstanceId(null);
+          setInitiatingInstanceId(initialTask.instanceId);
           await onStart(taskCopy);
           //console.log("useInitWSFilter handleUpdate delete key", messageQueue);
         }
@@ -56,8 +56,14 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
     if (initialTask?.command === "start") {
       //console.log("useInitWSFilter initialTask", initialTask);
       setInitiatingInstanceId(initialTask?.commandArgs?.prevInstanceId || initialTask.instanceId);
+    } else if (!initiatingInstanceId && initialTask?.instanceId) {
+      setInitiatingInstanceId(initialTask.instanceId)
     }
   }, [initialTask]);
+
+  useEffect(() => {
+    console.log(`useInitWSFilter ${initialTask?.instanceId} initiatingInstanceId ${initiatingInstanceId}`);
+  }, [initiatingInstanceId]);
 
   useEffect(() => {
     if (!webSocketEventEmitter) {

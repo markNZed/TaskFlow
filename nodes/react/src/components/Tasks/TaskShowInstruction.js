@@ -47,7 +47,16 @@ const TaskShowInstruction = (props) => {
   // But a point of actions is to allow for side-effects!
   // Actions receive arguments (context, event) which we could choose to use here
   const actions = xutils.logActions({
-    react_displayInstruction: () => task.output.instruction ? setInstructionText(task.output.instruction) : undefined,
+    react_displayInstruction: () => {
+      if (task.output.instruction) {
+        setInstructionText(task.output.instruction);
+      } else if (task.response.text) { // For showing errors
+        setInstructionText(task.response.text);
+        modifyTask({
+          "output.instruction": task.response.text,
+        });
+      }
+    },
     // We return to the "start" state so the FSM will start from there if remounted
     react_finish: () => modifyTask({ "state.done": true, "state.current": "start" }),
   });

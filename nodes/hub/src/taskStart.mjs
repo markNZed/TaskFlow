@@ -216,6 +216,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
     // nextTask on another node, then the originator can associate the task with it's original request
     task.meta["prevInstanceId"] = task?.meta?.prevInstanceId || prevTask?.meta?.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
+    task.meta["errorHandlerInstanceId"] = prevTask?.meta?.errorHandlerInstanceId || task.meta.prevInstanceId;
     // Copying node information from previous task instance
     // In the case where the task sequence advances on another node 
     // we need to be able to associate more recent tasks with an older
@@ -255,7 +256,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
     // Update all the active prevTask with new child
     prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
     prevTask.meta.childrenInstanceId.push(task.instanceId);
-    // We update the prevTask and set sourceProcessorId to hub so all Processors will be updated
+    // We update the prevTask and set sourceNodeId to hub so all Processors will be updated
     await instancesStore_async.set(prevTask.instanceId, prevTask);
     // The prevTask task may be "done" so no longer active
     // Also we do not want to update a task that errored
@@ -264,12 +265,14 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
         This has been removed for now becaus sending an update can impact the state machine
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.hub.command = "update";
-        prevTask.hub.sourceProcessorId = NODE.id;
+        prevTask.hub.sourceNodeId = NODE.id;
         await utils.hubActiveTasksStoreSet_async(setActiveTask_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
     }
     */
+  } else {
+    task.meta["errorHandlerInstanceId"] = task.instanceId;
   }
   return task;
 }
@@ -441,8 +444,6 @@ async function taskStart_async(
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
-    utils.logTask(task, "prevInstanceId:", prevInstanceId);
-
     await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
@@ -525,9 +526,9 @@ async function taskStart_async(
     // Side-effect on task.familyd
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
-    // Initialize task.hub.sourceProcessorId
+    // Initialize task.hub.sourceNodeId
     task.hub["id"] = NODE.id;
-    task.hub["sourceProcessorId"] = task.hub["sourceProcessorId"] || nodeId;
+    task.hub["sourceNodeId"] = task.hub["sourceNodeId"] || nodeId;
     task.hub["initiatingNodeId"] = task.hub["initiatingNodeId"] || nodeId;
     task.hub["coprocessingDone"] = false;
     task.hub["commandDescription"] = task.commandDescription;

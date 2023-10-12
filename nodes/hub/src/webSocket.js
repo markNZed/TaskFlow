@@ -90,13 +90,13 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   } else {
     task.node = {};
   }
-  const { coprocessing, coprocessingDone, initiatingNodeId, sourceProcessorId } = currentNode;
+  const { coprocessing, coprocessingDone, initiatingNodeId, sourceNodeId } = currentNode;
   if (task.node.isCoprocessor) {
     task.node["coprocessing"] = coprocessing;
     task.node["coprocessingDone"] = coprocessingDone;
   }
   task.node["initiatingNodeId"] = initiatingNodeId;
-  task.node["sourceProcessorId"] = sourceProcessorId;
+  task.node["sourceNodeId"] = sourceNodeId;
   if (user) {
     if (!task?.user?.id) {
       utils.logTask(task, "wsSendTask no user", task);
@@ -106,7 +106,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   }
   task.meta = task.meta || {};
   if (currentNode.command !== "pong" && currentNode.command !== "partial") {
-    //utils.logTask(task, "wsSendTask sourceProcessorId " + currentNode.sourceProcessorId)
+    //utils.logTask(task, "wsSendTask sourceNodeId " + currentNode.sourceNodeId)
     utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId) + " to " + nodeId)
     //utils.logTask(task, "wsSendTask currentNode.commandArgs.sync", currentNode?.commandArgs?.sync);
   }
@@ -200,18 +200,18 @@ function initWebSocketServer(server) {
         }
 
         const byteSize = Buffer.byteLength(message, 'utf8');
-        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.hub?.sourceProcessorId}`);
+        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.hub?.sourceNodeId}`);
 
         let nodeId = task.hub.initiatingNodeId;
 
         // We start the co-processing from taskSync.mjs so here has passed through coprocessing
         task.hub["coprocessing"] = false;
         task.hub["coprocessingDone"] = true;
-        task.hub.sourceProcessorId = nodeId;
+        task.hub.sourceNodeId = nodeId;
 
         // Allows us to track where the request came from while coprocessors are in use
         task.node = task.nodes[nodeId];
-        task.hub.sourceProcessorId = nodeId;
+        task.hub.sourceNodeId = nodeId;
 
         utils.logTask(task, "initiatingNodeId", task.hub["initiatingNodeId"]);
 

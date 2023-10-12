@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { setActiveTask_async, getActiveTask_async, activeProcessors } from "./storage.mjs";
+import { setActiveTask_async, getActiveTask_async, activeProcessors, activeCoprocessors } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { utils } from "./utils.mjs";
@@ -15,15 +15,21 @@ async function errorTask_async(task) {
     utils.logTask(task, "task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
-  const nodeId = task.hub.sourceProcessorId;
-  task.error.sourceProcessorId = nodeId;
-  const sourceProcessor = activeProcessors.get(nodeId);
+  // We are handling two lists for activeProcessors and activeCoProcessors
+  // This is messy
+  const nodeId = task.hub.initiatingNodeId;
+  task.error.sourceNodeId = nodeId;
+  let sourceProcessor = activeProcessors.get(nodeId);
+  if (!sourceProcessor) {
+    sourceProcessor = activeCoprocessors.get(nodeId);
+  }
+  console.log("sourceProcessor:", JSON.stringify(sourceProcessor, null, 2), "nodeId", nodeId);
   task.error.environments = [sourceProcessor.environment];
   let nextTaskId = task.hub.commandArgs.errorTask;
   utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
   await setActiveTask_async(task);
 
-  const text = `${task.error.message} from task.id ${task.id} on node ${task.error.sourceProcessorId} with environments ${task.error.environments}`;
+  const text = `${task.error.message} from task.id ${task.id} on node ${task.error.sourceNodeId} with environments ${task.error.environments}`;
 
   if (nextTaskId) {
     const initTask = {
@@ -42,9 +48,10 @@ async function errorTask_async(task) {
     task.hub.commandArgs = {
       init: initTask,
       authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
+      prevInstanceId: task?.meta?.errorHandlerInstanceId,
     };
     await commandStart_async(task);
-    //await taskStart_async(initTask, false, task.hub.sourceProcessorId, task.instanceId);
+    //await taskStart_async(initTask, false, task.hub.sourceNodeId, task.instanceId);
     // In theory the taskStart_async will update activeTasksStore and that will send the task to the correct node(s)
   }
 }

@@ -28,7 +28,6 @@ function withTask(Component) {
     const { globalState, mergeGlobalState, replaceGlobalState } = useGlobalStateContext();
     const isMountedRef = useRef();
     const [prevTask, setPrevTask] = useState();
-    const [initTask, setInitTask] = useState();
     const [childTask, setChildTask] = useState();
     // Updates to the task might be visible in other layers
     // Could allow for things like changing config from an earlier component
@@ -352,7 +351,7 @@ function withTask(Component) {
         // There may be meta data like task.meta.lock that we want updated on the source node
         // The lock effectively makes a node the master so even if changes are made by another node
         // the values of the procesor with the lock will be favored.
-        const thisProcessorIsSource = updateDiff.node.sourceProcessorId === globalState.nodeId;
+        const thisProcessorIsSource = updateDiff.node.sourceNodeId === globalState.nodeId;
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.nodeId;
         if (updateDiff?.node?.commandArgs && updateDiff.node.commandArgs.sync) {
           modifyTask(updateDiff);
@@ -382,10 +381,9 @@ function withTask(Component) {
     useInitWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
         // In the case of an init we cannot have a pending command
-        // A join may have that state
+        // A join may have that state (could clean that up in the Hub)
         newTask.node["commandPending"] = null
         console.log("useInitWSFilter withTask ", props.task, " started", newTask);
-        setInitTask(null);
         newTask.node["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference
         if (newTask.meta.prevInstanceId === undefined) {
           console.log("useInitWSFilter prevInstanceId undefined", props.task.id, "with", newTask.id);

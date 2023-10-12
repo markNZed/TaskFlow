@@ -94,7 +94,7 @@ async function processorInHubOut_async(task, activeTask) {
     command,
     commandArgs,
     commandDescription,
-    sourceProcessorId: id,
+    sourceNodeId: id,
     initiatingNodeId,
     coprocessingDone,
     coprocessing,

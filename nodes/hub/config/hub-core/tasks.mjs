@@ -374,6 +374,34 @@ const tasks = [
     },
   },
 
+  {
+    config: {
+      local: {
+        instruction: "Testing an error by going from start -> error state.",
+      },
+      label: "Test Error",
+      nextStates: {
+        start: "error",
+        error: "error", // Should not need this
+      },
+    },
+    services: {
+      chat: {
+        modelVersion: "gpt-4",
+        forget: true,
+        maxResponseTokens: 4000,
+        maxTokens: 4000,
+        prompt: "Nothing here.",
+        type: "openaigpt.textgenerator",
+        environments: ["rxjs-processor-consumer"],
+      },
+    },
+    name: "testerror",
+    parentName: "user",
+    type: "TaskLLMIO",
+    initiator: true,
+  },
+
 
 ];
 

@@ -1,25 +1,17 @@
 /* ToDo
 -------
-Renaming of menun broken
-Updates on rxjs need to block like on react
-Coprocessor should only coprocess 
-Update needs to hold the lock until the update returns for storage to update
-  Allows for CEP to operate but very slow
-  Could only error if there is a hash mismatch AND the values do not match
-Collaborate is broken
- Command pending might be causing a problem ?
- Need to be careful about setting this with sync ?
-Can the sync interfere with hash diff ?
+Updates on rxjs need to block, like on react
+  Update needs to hold the lock until the update returns for storage to update
+    Allows for CEP to operate but very slow
+    Could only error if there is a hash mismatch AND the values do not match
+Can the sync interfere with hash diff ? No
   We do not use the hashDiff for sync
 FSM is remounted in previous state
-  So need to unmount in the staet we want to restart from - not ideal
+  So unmount in the state we want to restart from - not ideal
   Could have "state.initial" that would allow for control over this when reloading a Task
 In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
 sync will not run task function so menu will not be updated
-  Should CEPShared be an update ?
-    Could have CEP that maps sync to update for specific task
-    Ignore sync operations is how we were handling this - so Task can decide to deal with the sync or not
-    Created an option syncUpdate that applies a normal update
+  Created an option syncUpdate that applies a normal update
 Refactoring 
   Align similar modules on the hub and rxjs
   .hub ?.hub hub:
@@ -625,7 +617,7 @@ Features that are manually tested
         response
           word count XX
       TaskShowInstruction
-        error
+        error XX
       TaskChat
       TaskConversation
         scrolling (stop the bouncing) X

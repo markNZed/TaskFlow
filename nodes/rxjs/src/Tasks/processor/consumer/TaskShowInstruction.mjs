@@ -22,7 +22,7 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   updateStates(T, FSMHolder);
 
   // This task can be used as an errorTask so an error here risks to create a loop
-  // There is an errorRate limit on the hub to catch this (but it will crash the hub)
+  // There is an errorRate limit on the Hub to catch this (but it will crash the Hub)
 
   return T();
 };

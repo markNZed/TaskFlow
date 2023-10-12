@@ -33,10 +33,10 @@ const taskSync_async = async (key, value) => {
 
   // We store excatly what was sent to us
   const taskCopy = utils.deepClone(value); //deep copy
-  let sourceProcessorId = taskCopy.hub.sourceProcessorId;
+  let sourceNodeId = taskCopy.hub.sourceNodeId;
   // Config can be missing from a start task
-  if (!sourceProcessorId) {
-    throw new Error("taskSync_async missing sourceProcessorId" + JSON.stringify(taskCopy));
+  if (!sourceNodeId) {
+    throw new Error("taskSync_async missing sourceNodeId" + JSON.stringify(taskCopy));
   }
   if (!taskCopy?.hub?.command) {
     throw new Error("taskSync_async missing command" + JSON.stringify(taskCopy));
@@ -105,8 +105,8 @@ const taskSync_async = async (key, value) => {
   //  We do not want coprocessingDone passed on to child tasks
   taskCopy.hub.coprocessingDone = false;
 
-  const initiatingNodeId = taskCopy.hub.initiatingNodeId || sourceProcessorId;
-  taskCopy.hub.sourceProcessorId = initiatingNodeId
+  const initiatingNodeId = taskCopy.hub.initiatingNodeId || sourceNodeId;
+  taskCopy.hub.sourceNodeId = initiatingNodeId
 
   taskCopy.meta.broadcastCount = broadcastCount;
   broadcastCount++;
