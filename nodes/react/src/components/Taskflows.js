@@ -111,16 +111,20 @@ function Taskflows(props) {
     if (props.transition()) { props.log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        if (startTask && startTask.id === task.config.local.menuId) {
-          setTaskMenu(startTask);
-          replaceGlobalState("user", startTask.user);
-        } else if (startTask && !taskInstanceIds.includes(startTask.instanceId) && startTask.id !== task.config.local.menuId) {
-          console.log("selectMenu started", startTask.id);
-          setTasksIdx(tasks.length);
-          setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
-          setTasksIds((p) => [...p, startTask.id]);
-          setTaskInstanceIds((p) => [...p, startTask.instanceId]);
-        }    
+        if (startTask) {
+          if (startTask.id === task.config.local.menuId) {
+            if (!taskMenu) {
+              setTaskMenu(startTask);
+              replaceGlobalState("user", startTask.user);
+            }
+          } else if (!taskInstanceIds.includes(startTask.instanceId)) {
+            console.log("selectMenu started", startTask.id);
+            setTasksIdx(tasks.length);
+            setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
+            setTasksIds((p) => [...p, startTask.id]);
+            setTaskInstanceIds((p) => [...p, startTask.instanceId]);
+          }  
+        }  
         break;
       default:
         console.log("ERROR unknown state : " + task.state.current);

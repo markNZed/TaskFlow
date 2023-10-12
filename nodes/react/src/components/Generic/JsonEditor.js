@@ -29,7 +29,7 @@ function SvelteJSONEditor(props) {
   // update props
   useEffect(() => {
     if (refEditor.current) {
-      console.log("update props", props);
+      //console.log("update props", props);
       refEditor.current.updateProps(props);
     }
   }, [props]);

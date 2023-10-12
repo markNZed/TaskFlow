@@ -1,10 +1,8 @@
 /* ToDo
 -------
-root.system.taskflow is used as prevInstanceId but should be the exercise
-Updates on rxjs need to blcok like on react
+Renaming of menun broken
+Updates on rxjs need to block like on react
 Coprocessor should only coprocess 
-On the Collaborate 2nd React processsor LLMResponse can be just the id
-  I guess the diff being sent is somehow wrong ?
 Update needs to hold the lock until the update returns for storage to update
   Allows for CEP to operate but very slow
   Could only error if there is a hash mismatch AND the values do not match
