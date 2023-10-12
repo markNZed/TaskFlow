@@ -194,6 +194,7 @@ const utils = {
   },
 
   deepMergeHub: function(prevState, update, hubIn) {
+    //const start = Date.now();
     const hub = utils.deepClone(hubIn);
     let result = utils.deepMerge(prevState, update);
     if (!result) {
@@ -202,6 +203,7 @@ const utils = {
     }
     result.hub = hub;
     //utils.removeNullKeys(result);
+    //console.log("deepMergeHub duration", Date.now() - start);
     return result;
   },
 
@@ -570,6 +572,16 @@ const utils = {
     return data;
   },
 
+  timeNow: function() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+    const timeString = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+    return timeString;
+  },
+  
   parseRegexString: function(regexStr) {
     const regex = /^\/(.+)\/(.*)$/;
     const match = regexStr.match(regex);
@@ -761,6 +773,8 @@ const utils = {
     // Allows us to check only the relevant part of the origTask
     // More specific than testing for the hash of the entire origTask
     diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
+    diffTask.meta["prevMessageId"] = origTask.meta.prevMessageId;
+    diffTask.meta["messageId"] = taskCopy.meta.messageId;
     const hashDebug = true;
     if (hashDebug || taskCopy.config?.debug?.hash) {
       diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
@@ -821,6 +835,8 @@ const utils = {
       // Allows us to check only the relevant part of the origTask
       // More specific than testing for the hash of the entire origTask
       diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
+      diffTask.meta["prevMessageId"] = origTask.meta.prevMessageId;
+      diffTask.meta["messageId"] = taskCopy.meta.messageId;
       // In theory we could enable the hash debug in the task
       const hashDebug = true;
       if (hashDebug || taskCopy.config?.debug?.hash) {
@@ -924,53 +940,35 @@ const utils = {
       taskCopy.node["stateLast"] = taskCopy.state.current;
       delete taskCopy.state.last;
     }
-    // Strip Service, Operator, and CEP functions as these are local to the node
-    if (taskCopy.services) {
-      //delete taskCopy.services;
-    }
-    if (taskCopy.operators) {
-      //delete taskCopy.operators;
-    }
-    if (taskCopy.ceps) {
-      //delete taskCopy.ceps;
-    }
     taskCopy.node["id"] = nodeId;
     // The coprocessor processes command init but th task has not been stored yet so diff cannot be calculated
     if (command === "start" || command === "partial" || commandArgs?.sync || command === "init") {
       return taskCopy;
     }
-    // This assumes taskCopy is not a partial object e.g. in sync
-    if (taskCopy.node.origTask && taskCopy.node.command === "update") {
-      const taskCleaned = utils.cleanForHash(taskCopy);
-      //console.log("taskInProcessorOut taskCleaned", taskCleaned);
-      const origTaskCleaned = utils.cleanForHash(taskCopy.node.origTask);
-      //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
-      // Not sure about removing outputs better to leave them
-      delete taskCleaned.output;
-      delete origTaskCleaned.output;
-      const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
-      if (keysNulled) {
-        //console.log("taskInProcessorOut keysNulled", keysNulled);
-        taskCopy = utils.deepMerge(taskCopy, keysNulled);
-      }
-    }
-    // This will use taskCopy.node.origTask to identify the diff
-    let diffTask = utils.processorDiff(taskCopy);
-    // Send the diff considering the latest taskCopy storage state
+    let diffTask;
     if (taskCopy.instanceId) {
-      const lastTask = await getActiveTask_async(diffTask.instanceId);
-      // The taskCopy storage may have been changed after taskCopy.node.origTask was set
-      //if (lastTask && lastTask.meta && lastTask.meta.hash !== diffTask.meta.hash) {
-      if (lastTask && lastTask.meta.hash !== diffTask.meta.hash) {
-        delete diffTask.node.origTask; // delete so we do not have ans old copy in origTask
-        diffTask.node["origTask"] = utils.deepClone(lastTask);
-        diffTask = utils.processorDiff(diffTask);
-        //console.log("taskInProcessorOut_async latest taskCopy storage taskCopy.output", diffTask.output);
-      } else {
-        //console.log("taskInProcessorOut lastTask.id, lastTask.meta.hash, diffTask.meta.hash", lastTask.id, lastTask.meta.hash, diffTask.meta.hash);
+      const lastTask = await getActiveTask_async(taskCopy.instanceId);
+      // This assumes taskCopy is not a partial object e.g. in sync
+      if (taskCopy.node.command === "update") {
+        const taskCleaned = utils.cleanForHash(taskCopy);
+        //console.log("taskInProcessorOut taskCleaned", taskCleaned);
+        const origTaskCleaned = utils.cleanForHash(lastTask);
+        //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
+        // Not sure about removing outputs better to leave them
+        delete taskCleaned.output;
+        delete origTaskCleaned.output;
+        const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
+        if (keysNulled) {
+          //console.log("taskInProcessorOut keysNulled", keysNulled);
+          taskCopy = utils.deepMerge(taskCopy, keysNulled);
+        }
       }
+      delete lastTask.node.origTask; // delete so we do not have an old copy in origTask
+      taskCopy.node["origTask"] = utils.deepClone(lastTask); 
+      // This will use taskCopy.node.origTask to identify the diff
+      diffTask = utils.processorDiff(taskCopy)
     } else {
-      //console.log("taskInProcessorOut_async no diffTask.instanceId");
+      diffTask = taskCopy;
     }
     //console.log("taskInProcessorOut diffTask", JSON.stringify(diffTask, null, 2));
     utils.debugTask(diffTask, "output");
@@ -1022,7 +1020,7 @@ const utils = {
     const messageId = task?.meta?.messageId || "";
     const id = task?.id || "";
     const instanceId = task?.instanceId || "";
-    console.log(prevMessageId + "->" + messageId, id, instanceId, ...message);
+    console.log(`${utils.timeNow()} ${prevMessageId} -> ${messageId}`, id, instanceId, ...message);
   },
 
   findCyclicReference: function(obj) {
@@ -1198,21 +1196,22 @@ const utils = {
     const command = task.command || task?.node?.command || task?.hub?.command;
     const commandArgs = task.commandArgs || task?.node?.commandArgs || task?.hub?.commandArgs;
     const commandDescription = task.commandDescription || task?.node?.commandDescription || task?.hub?.commandDescription;
-    if (command === "ping" || command === "pong") {
+    if (command === "ping" || command === "pong" || command === "partial") {
       return;
     }
     const callerDetails = this.getCallerFunctionDetails();
     const callerDetailsText = callerDetails ? callerDetails.functionName + " " + callerDetails.filePath + ":" + callerDetails.lineNumber : null;
     const contextText = callerDetailsText ? context + " " + callerDetailsText : context;
     let logParts = ["DEBUGTASK"];
+    logParts.push(utils.timeNow());
     if (contextText) {
       logParts.push(contextText);
     }
     if (commandDescription) {
       logParts.push(commandDescription);
     }
-    logParts.push(`id: ${task.id}`);
-    logParts.push(`instanceId: ${task.instanceId}`);
+    if (task.id) {logParts.push(`id: ${task.id}`)}
+    if (task.instanceId) {logParts.push(`instanceId: ${task.instanceId}`)}
     if (task?.meta?.messageId) {
       logParts.push(`messageId: ${task.meta.messageId}`);
     }
@@ -1255,13 +1254,19 @@ const utils = {
       //logParts.push("Nodes:", Object.keys(task.nodes));
     }
     if (commandArgs?.sync) {
-      logParts.push("commandArgs.syncTask", commandArgs.syncTask);
+      //logParts.push("commandArgs.syncTask", commandArgs.syncTask);
     }
     if (task?.meta?.modified?.shared && task.meta.modified.shared["config-hub-consumer-tasks"]) {
-      logParts.push("task.meta.modified.shared.config-hub-consumer-tasks");
+      //logParts.push("task.meta.modified.shared.config-hub-consumer-tasks");
     }
     if (commandArgs?.CEPSource) {
-      logParts.push("CEPSource", commandArgs.CEPSource);
+      //logParts.push("CEPSource", commandArgs.CEPSource);
+    }
+    if (task?.hub?.initiatingNodeId) {
+      //logParts.push("task.hub.initiatingNodeId", task.hub.initiatingNodeId);
+    }
+    if (task?.node?.initiatingNodeId) {
+      //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {
@@ -1269,8 +1274,14 @@ const utils = {
       throw new Error("task.nodes has null");
     }
     */
+    /*
+    if (command && !commandDescription) {
+      console.log(logParts.join(' '));
+      throw new Error("ERROR debugTask: task.commandDescription is undefined");
+    }
+    */
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
-    logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
+    //logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask
     console.log(logParts.join(' '));
   },

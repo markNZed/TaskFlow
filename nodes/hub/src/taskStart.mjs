@@ -50,7 +50,7 @@ async function checkActiveTaskAsync(instanceId, activeProcessors) {
   return { activeTask, doesContain };
 }
 
-async function processInstanceAsync(task, instanceId, mode) {
+async function processInstanceAsync(task, instanceId, mode, nodeId) {
   utils.debugTask(task);
   let instance = await instancesStore_async.get(instanceId);
   if (instance) {
@@ -60,6 +60,7 @@ async function processInstanceAsync(task, instanceId, mode) {
       task = activeTask;
       task.hub["command"] = "join";
       task.hub["commandArgs"] = { lockBypass: true };
+      task.hub["initiatingNodeId"] = nodeId;
       utils.logTask(task, `Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
@@ -504,7 +505,7 @@ async function taskStart_async(
       // Maybe this could be added to schema
       task["instanceId"] = (task.id + "-" + task.user.id).replace(/\./g, '-');
       task.familyId = task.instanceId;
-      task = await processInstanceAsync(task, task.instanceId, "oneFamily");
+      task = await processInstanceAsync(task, task.instanceId, "oneFamily", nodeId);
     }
     
     if (task.config.collaborateGroupId) {
@@ -515,7 +516,7 @@ async function taskStart_async(
         // Maybe this could be added to schema
         task["instanceId"] = (task.id + "-" + task.groupId).replace(/\./g, '-');
         task.familyId = task.instanceId;
-        task = await processInstanceAsync(task, task.instanceId, "collaborate");
+        task = await processInstanceAsync(task, task.instanceId, "collaborate", nodeId);
       }
     }
 
@@ -546,8 +547,9 @@ async function taskStart_async(
     // Initialize task.hub.sourceProcessorId
     task.hub["id"] = NODE.id;
     task.hub["sourceProcessorId"] = task.hub["sourceProcessorId"] || nodeId;
-    task.hub["initiatingNodeId"] = task.hub["sourceProcessorId"] || nodeId;
+    task.hub["initiatingNodeId"] = task.hub["initiatingNodeId"] || nodeId;
     task.hub["coprocessingDone"] = false;
+    task.hub["commandDescription"] = task.commandDescription;
     
     // Initialize meta object
     // If already set (e.g. joining the task) keep the current values

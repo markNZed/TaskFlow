@@ -109,7 +109,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
               shared: toSync[instanceId],
             },
             CEPSource: "CEPShared",
-            syncUpdate: true, // Ask the Hub to convert the sync into a normal update
+            // Use sync, the update risks conflicts 
+            //syncUpdate: true, // Ask the Hub to convert the sync into a normal update
           },
           commandDescription: "Updating shared:" + Object.keys(toSync[instanceId]),
         };

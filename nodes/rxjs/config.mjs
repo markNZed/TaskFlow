@@ -64,7 +64,7 @@ switch (NODE_NAME) {
       processing: ["batch", "stream"],
       environment: "rxjs-hub-consumer",
       // As a Hub node it needs to deal with "start"
-      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
+      commandsAccepted: ["update", "start", "init", "register", "error", "join", "pong"],
       wsPort: 5002,
     }
     break;
@@ -85,7 +85,7 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch"],
       environment: "rxjs-processor-consumer",
-      commandsAccepted: ["update", "init", "register", "error", "join"],
+      commandsAccepted: ["update", "init", "register", "error", "join", "pong"],
       wsPort: 5000,
     }
     break;

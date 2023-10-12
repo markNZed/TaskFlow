@@ -89,6 +89,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
 
   switch (T("state.current")) {
     case "start": {
+      // This will turn init into update
       const tasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async, T("config.sort"));
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");

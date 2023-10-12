@@ -65,7 +65,8 @@ export async function commandUpdate_async(task) {
   utils.logTask(task, "commandUpdate_async messageId:", task?.meta?.messageId);
   try {
     utils.logTask(task, "commandUpdate_async from nodeId:" + nodeId);
-    let activeTask = await getActiveTask_async(instanceId)
+    let activeTask = await getActiveTask_async(instanceId);
+    utils.logTask(task, "commandUpdate_async got activeTask");
     if (!activeTask) {
       throw new Error("No active task " + instanceId);
     }
@@ -81,7 +82,8 @@ export async function commandUpdate_async(task) {
         task.hub.commandArgs["sync"] = null; // Map the sync to a "normal" update
       }
     } else {
-      task = utils.deepMergeHub(activeTask, task, task.hub);
+      // There should be no need to do a merge here and it becomes very expensive
+      //task = utils.deepMergeHub(activeTask, task, task.hub);
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     utils.logTask(task, task.meta.broadcastCount + " commandUpdate_async " + task.id);

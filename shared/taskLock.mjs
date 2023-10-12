@@ -7,6 +7,7 @@ import { Mutex } from 'async-mutex';
 
 const mutexes = new Map();
 const releases = new Map();
+const lockTimes = new Map();
 
 export function getMutex(key) {
   if (!mutexes.has(key)) {
@@ -20,10 +21,13 @@ export async function taskLock(key, description = "") {
     throw new Error("No key provided " + key);
   }
   const mutex = getMutex(key);
-  console.log(`Requesting lock ${description} id: ${key}`);
+  console.log(`Requesting lock ${key} ${description}`);
+  const requestTime = Date.now();
   const release = await mutex.acquire();
-  console.log(`Got lock ${description} id: ${key}`);
+  const duration = Date.now() - requestTime;
+  console.log(`Got lock ${key} after ${duration} ${description}`);
   releases.set(key, release); // Store the release function by key
+  lockTimes.set(key, Date.now());
   return release;
 }
 
@@ -32,7 +36,8 @@ export function taskRelease(key, description = "") {
   if (release) {
     release();
     releases.delete(key); // Remove the release function after releasing the lock
-    console.log(`Released lock ${description} id: ${key}`);
+    const duration = Date.now() - lockTimes.get(key);
+    console.log(`Released lock ${key} after ${duration} ${description}`);
   } else {
     // We expect most tasks will not be locked so no need to warn
     //console.warn(`No lock found for key: ${key}`);

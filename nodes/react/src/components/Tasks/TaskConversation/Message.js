@@ -151,7 +151,7 @@ function findJSONIndexes(str, startIdx) {
 
 const Message = ({ role, user, content, sending, id }) => {
   if (!role || !user || !id) {
-    console.error("Message missing ", "role:", role, "user:", user, "content:", content, "sending:",sending, "id:", id);
+    console.error("Message missing", "role:", role, "user:", user, "content:", content, "sending:",sending, "id:", id);
   }
   //console.log("Message content", content);
   // match function_call result

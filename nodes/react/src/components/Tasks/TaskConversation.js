@@ -37,7 +37,8 @@ const TaskConversation = (props) => {
   const [chatContainerTop, setChatContainerTop] = useState();
   const [hasScrolled, setHasScrolled] = useState(false);
   const [msgs, setMsgs] = useState([]);
-  const [chatResponse, setChatResponse] = useState();
+  const [chatResponse, setChatResponse] = useState({});
+  const [LLMResponseContent, setLLMResponseContent] = useState({});
   const chatSectionRef = useRef();
 
   // onDidMount so any initial conditions can be established before updates arrive
@@ -81,8 +82,16 @@ const TaskConversation = (props) => {
   useEffect(() => {
     if (childTask) {
       const childMsgs = childTask.output?.msgs || [];
-      if (childTask.output && childTask.output.LLMResponse !== chatResponse) {
-        setChatResponse(applyRegex(childTask.output.LLMResponse));
+      const LLMResponse = childTask.output?.LLMResponse;
+      if (LLMResponse) {
+        if (LLMResponse.content !== LLMResponseContent || Object.keys(chatResponse).length === 0) {
+          setLLMResponseContent(LLMResponse.content);
+          setChatResponse(applyRegex(childTask.output.LLMResponse));
+        }
+      } else {
+        setLLMResponseContent(null);
+        setChatResponse({});
+        console.log("Clear chatResponse and use childMsgs", childMsgs);
       }
       let welcomeMessage = [];
       //console.log("newMsgArray", newMsgArray);
@@ -100,10 +109,10 @@ const TaskConversation = (props) => {
           const extraMsgs = combinedMsgs.slice(-numberOfExtraMsgs); // Get the extra messages from the end
           msgsHistory = task.output.msgsHistory;
           msgsHistory = [...msgsHistory, ...extraMsgs];
-          console.log("msgsHistory", msgsHistory, "extraMsgs", extraMsgs, "combinedMsgs", combinedMsgs, "numberOfExtraMsgs", numberOfExtraMsgs);
+          //console.log("msgsHistory", msgsHistory, "extraMsgs", extraMsgs, "combinedMsgs", combinedMsgs, "numberOfExtraMsgs", numberOfExtraMsgs);
         } else {
           msgsHistory = combinedMsgs;
-          console.log("msgsHistory", msgsHistory);
+          //console.log("combinedMsgs", combinedMsgs);
         }
         applyRegex(msgsHistory);
         modifyTask({"output.msgsHistory": msgsHistory});
@@ -184,13 +193,13 @@ const TaskConversation = (props) => {
             );
           })
         }
-        { chatResponse && (
+        { chatResponse.id && (
           <Message 
             key={chatResponse.id}
             role={chatResponse.role}
             user={chatResponse.user}
             content={chatResponse.content}
-            sending={childTask.output?.sending}
+            sending={childTask?.output?.sending}
             id={chatResponse.id}
           />
         )}

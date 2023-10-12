@@ -327,6 +327,10 @@ function withTask(Component) {
         //console.log("lastTask", utils.deepClone(lastTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
         utils.checkHashDiff(lastTask, updateDiff);
+        if (updateDiff.node.commandPending === updateDiff.node.command) {
+          //console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
+          updateDiff.node["commandPending"] = null;
+        }
         let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.node);
         //console.log("After deepMergeProcessor updatedTask", utils.deepClone(updatedTask));
         utils.removeNullKeys(updatedTask);
@@ -339,11 +343,10 @@ function withTask(Component) {
         if (!updateDiff.node) {
           updateDiff["node"] = {};
         }
-        updateDiff.node["origTask"] = updatedTask.node.origTask; 
-        if (updateDiff.node.commandPending) {
-          console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
-          updateDiff.node.commandPending = false;
-        }
+        delete updatedTask.node.origTask
+        // Unsure if we need this now
+        updatedTask.node["origTask"] = utils.deepClone(updatedTask);
+        updateDiff.node["origTask"] = utils.deepClone(updatedTask);
         // If the resource has been locked by another node then we ignore whatever was done locally
         // If this is the source node then we want to keep any change made to the task since the update was sent
         // There may be meta data like task.meta.lock that we want updated on the source node
@@ -367,16 +370,20 @@ function withTask(Component) {
           modifyTask(updateDiff);
           console.log("useUpdateWSFilter has lock ", props.task.id);
         } else {
-          props.setTask(updatedTask);
-          console.log("useUpdateWSFilter ", props.task.id, updatedTask);
+          // This is no longer replacing the task so we can keep local changes during collaboration
+          modifyTask(updateDiff);
+          //props.setTask(updatedTask);
+          console.log("useUpdateWSFilter", props.task.id, updatedTask);
         }
-        console.log("useUpdateWSFilter messageId:", props.task.meta.messageId);
-        console.log("Storage update isSource:" + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, "updateDiff, updatedTask", updateDiff, updatedTask);
+        console.log(`Storage update messageId:${updateDiff.meta.messageId} isSource:` + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, "updateDiff, updatedTask", updateDiff, updatedTask);
       }
     )
 
     useInitWSFilter(useGlobalStateContext, props.task, 
       (newTask) => {
+        // In the case of an init we cannot have a pending command
+        // A join may have that state
+        newTask.node["commandPending"] = null
         console.log("useInitWSFilter withTask ", props.task, " started", newTask);
         setInitTask(null);
         newTask.node["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference

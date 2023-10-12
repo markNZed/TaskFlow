@@ -19,13 +19,13 @@ export async function commandUpdate_async(wsSendTask, task) {
   const commandDescription = task.commandDescription || "";
   const sync = commandArgs.sync;
   const syncInstanceId = commandArgs.instanceId;
-  let taskReleaseLock;
   if (sync) {
     if (!syncInstanceId) {
       console.error("Missing syncInstanceId", task);
       throw new Error("Missing syncInstanceId");
     }
-    taskReleaseLock = await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
+    // Dont release lock here as we need o wait for the update to be returned by the Hub
+    await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
     mergedTask["instanceId"] = syncInstanceId;
     mergedTask["command"] = "update";
     mergedTask["commandArgs"] = commandArgs;
@@ -35,7 +35,7 @@ export async function commandUpdate_async(wsSendTask, task) {
     mergedTask.node["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
-    taskReleaseLock = await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
+    await taskLock(task.instanceId, "commandUpdate_async " + commandDescription);
     const lastTask = await getActiveTask_async(task.instanceId);
     if (!lastTask) {
       throw new Error("No lastTask found for " + task.instanceId);
@@ -45,13 +45,13 @@ export async function commandUpdate_async(wsSendTask, task) {
     mergedTask.node["coprocessingDone"] = false;
   } 
   mergedTask["command"] = "update";
+  mergedTask["commandDescription"] = commandDescription;
   // Because this is a fresh command sent from the coprocessor not part of the coprocessing pipeline
   mergedTask.node["coprocessing"] = false;
   // Because it is this node that is the initiator
   mergedTask.node["initiatingNodeId"] = NODE.id; //"coprocessor";
   try {
     await wsSendTask(mergedTask);
-    taskReleaseLock();
   } catch (error) {
     console.error(`Command ${mergedTask.command} failed to fetch ${error}`);
   }

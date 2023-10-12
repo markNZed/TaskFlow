@@ -28,9 +28,9 @@ function hubAssertions(taskDiff, mergedTask) {
   utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
-async function processorInHubOut_async(task, activeTask, requestId) {
+async function processorInHubOut_async(task, activeTask) {
   utils.debugTask(task);
-  const { command, id, coprocessingPosition, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.node;
+  const { command, id, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.node;
   // Could initiate from a node before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.node.initiatingNodeId ", task.node.initiatingNodeId);
@@ -52,7 +52,6 @@ async function processorInHubOut_async(task, activeTask, requestId) {
   task.node.commandArgs = null;
   task.node.coprocessing = null;
   task.node.coprocessingDone = null;
-  task.node.coprocessingPosition = null;
   const activeTaskProcessors = activeTask?.nodes || {};
   const incomingNode = utils.deepClone(task.node);
   if (!activeTaskProcessors[id]) {
@@ -97,8 +96,6 @@ async function processorInHubOut_async(task, activeTask, requestId) {
     commandDescription,
     sourceProcessorId: id,
     initiatingNodeId,
-    requestId,
-    coprocessingPosition,
     coprocessingDone,
     coprocessing,
     statesSupported,
@@ -251,47 +248,41 @@ async function processOutput_async(task, outputStore) {
   return task;
 }
 
-async function taskProcess_async(task, req) {
+async function taskProcess_async(task) {
   try {
     if (!task.node) {
       throw new Error("Missing task.node in taskProcess_async");
     }
+    let activeTask = {};
     if (task.node.command !== "partial") {
       utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
-    }
-    let activeTask = {};
-
-    utils.debugTask(task);
-    checkErrorRate(task);
-    if (task.node.command === "update") {
-      task = utils.setMetaModified(task);
-      //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
-    }
-    if (task.instanceId !== undefined) {
-      activeTask = await getActiveTask_async(task.instanceId);
-      if (activeTask && Object.keys(activeTask).length !== 0) {
-        if (task.meta?.hashDiff) {
-          // This is running on "partial" which seems a waste
-          utils.checkHashDiff(activeTask, task);
+      checkErrorRate(task);
+      if (task.node.command === "update") {
+        task = utils.setMetaModified(task);
+        //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
+      }
+      if (task.instanceId !== undefined) {
+        activeTask = await getActiveTask_async(task.instanceId);
+        if (activeTask && Object.keys(activeTask).length !== 0) {
+          if (task.meta?.hashDiff) {
+            // This is running on "partial" which seems a waste
+            utils.checkHashDiff(activeTask, task);
+          }
+          // Need to restore meta for checkLockConflict, checkAPIRate
+          // Need to restore config for checkAPIRate
+          const taskDiff = utils.deepClone(task);
+          // We want to use the node as sent in
+          // For example sync may not set all the node info and the activeTask may have info form another node
+          activeTask["node"] = null; 
+          task = utils.deepMerge(activeTask, task);
+          hubAssertions(taskDiff, task);
+        } else if (task.node.command !== "start" && task.node.command !== "init") {
+          console.error("Should have activeTask if we have an instanceId", task);
+          throw new Error("Should have activeTask if we have an instanceId");
         }
-        // Need to restore meta for checkLockConflict, checkAPIRate
-        // Need to restore config for checkAPIRate
-        const taskDiff = utils.deepClone(task);
-        // We want to use the node as sent in
-        // For example sync may not set all the node info and the activeTask may have info form another node
-        activeTask["node"] = null; 
-        task = utils.deepMerge(activeTask, task);
-        hubAssertions(taskDiff, task);
-      } else if (task.node.command !== "start" && task.node.command !== "init") {
-        console.error("Should have activeTask if we have an instanceId", task);
-        throw new Error("Should have activeTask if we have an instanceId");
       }
     }
-    let requestId;
-    if (req) {
-      requestId = req.id;
-    }
-    task = await processorInHubOut_async(task, activeTask, requestId);
+    task = await processorInHubOut_async(task, activeTask);
     // Update the node information
     if (activeTask && Object.keys(activeTask).length !== 0) {
       activeTask.nodes = task.nodes;
@@ -303,23 +294,23 @@ async function taskProcess_async(task, req) {
         task = checkAPIRate(task);
       }
       task = await processError_async(task, tasksStore_async);
-    }
-    if (task.hub.command === "update" || task.hub.command === "init") {
-      // We may receive a diff where familyId is not sent but
-      // we need familyId to set the outputStore_async
-      task.familyId = task.familyId || activeTask.familyId;
-      task = await processOutput_async(task, outputStore_async);
-    }
-    if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
-      utils.logTask(task, "sending to coprocessor");
-      // Send to first coprocessor
-      // We will receive the task back from the coprocessor through websocket
-      if (task.instanceId && task.hub.command !== "partial") {
-        // To avoid updates being routed to coprocessor before init completes
-        await taskLock(task.instanceId, "taskProcess");
+      if (task.hub.command === "update" || task.hub.command === "init") {
+        // We may receive a diff where familyId is not sent but
+        // we need familyId to set the outputStore_async
+        task.familyId = task.familyId || activeTask.familyId;
+        task = await processOutput_async(task, outputStore_async);
       }
-      await taskSync_async(task.instanceId, task);
-      return null;
+      if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
+        utils.logTask(task, "sending to coprocessor");
+        // Send to first coprocessor
+        // We will receive the task back from the coprocessor through websocket
+        if (task.instanceId && task.hub.command !== "partial") {
+          // To avoid updates being routed to coprocessor before init completes
+          await taskLock(task.instanceId, "taskProcess");
+        }
+        await taskSync_async(task.instanceId, task);
+        return null;
+      }
     }
   } catch (err) {
     utils.logTask(task, "Error in taskProcess_async " + err.message, task);

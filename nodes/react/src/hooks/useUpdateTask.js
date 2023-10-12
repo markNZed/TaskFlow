@@ -32,8 +32,8 @@ const useUpdateTask = (task, setTask) => {
       const fetchTaskFromAPI = async () => {
         try {
           let snapshot = utils.deepClone(task); // deep copy
-          snapshot.node["commandPending"] = true;
-          const updating = { "command": null, "commandArgs": null, "commandDescription": null, "node.commandPending": true };
+          snapshot.node["commandPending"] = command;
+          const updating = { "command": null, "commandArgs": null, "commandDescription": null, "node.commandPending": command };
           utils.setNestedProperties(updating);
           setTask((p) => utils.deepMerge(p, updating));
           if (commandArgs?.sync) {

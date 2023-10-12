@@ -44,56 +44,42 @@ const taskSync_async = async (key, value) => {
   let command = taskCopy.hub.command;
 
   const coprocessorIds = Array.from(activeCoprocessors.keys());
-  const skipCoProcessingCommands = ["partial"];
-  const skipCoProcessing = skipCoProcessingCommands.includes(command);
-  
+  // Should only have max one coprocessor
+  if (coprocessorIds.length > 1) {
+    throw new Error("taskSync_async more than one coprocessor" + JSON.stringify(taskCopy));
+  }
+  let coprocessorId = coprocessorIds[0];
+  let coprocessorData = activeCoprocessors.get(coprocessorId);
+  let coprocessCommand;
+  if (coprocessorData) {
+    coprocessCommand = coprocessorData.commandsAccepted.includes(command)
+  }
+    
   // Pass to the first coprocessor if we should coprocess first
   // Maybe isCoprocessor is redundant given that we set hub.coprocessing
-  // Update commands with sync option from the coprocessor will be skipped because of isCoprocessor
-  if (NODE.haveCoprocessor && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone && !skipCoProcessing) {
+  if (coprocessorData && coprocessCommand && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone ) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
-    // Send to the first Coprocessor that supports the command 
-    let position = 0;
-    for (const coprocessorId of coprocessorIds) { 
-      const coprocessorData = activeCoprocessors.get(coprocessorId);
-      if (coprocessorData.commandsAccepted.includes(command)) {
-        taskCopy.hub.coprocessingPosition = position;
-        utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingNodeId);
-        if (!taskCopy.nodes) {
-          taskCopy.nodes = {};
-        }
-        if (!taskCopy.nodes[coprocessorId]) {
-          taskCopy.nodes[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
-        }
-        taskCopy.hub["coprocessing"] = true;
-        taskCopy.hub["coprocessingDone"] = false;
-        wsSendTask(taskCopy, coprocessorId, activeTask);
-        break;
-      } else {
-        //utils.logTask(taskCopy, "CoProcessor does not support commmand", command, coprocessorId);
-      }
-      position++;
+    utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingNodeId);
+    if (!taskCopy.nodes) {
+      taskCopy.nodes = {};
     }
-    // Return because we need to wait for coprocessor result before forwarind on via sync
+    if (!taskCopy.nodes[coprocessorId]) {
+      taskCopy.nodes[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
+    }
+    taskCopy.hub["coprocessing"] = true;
+    taskCopy.hub["coprocessingDone"] = false;
+    wsSendTask(taskCopy, coprocessorId, activeTask);
+    // Return because we need to wait for coprocessor result before forwarding on via sync
     return value;
   }
 
   taskCopy.hub.coprocessing = false;
 
   // Every coprocessor needs to be updated/synced
-  if (coprocessorIds) {
-    for (const coprocessorId of coprocessorIds) {
-      const coprocessorData = activeCoprocessors.get(coprocessorId);
-      if (coprocessorData) {
-        if (coprocessorData.commandsAccepted.includes(command)) {
-          utils.logTask(taskCopy, "taskSync_async coprocessor", command, " sent to coprocessor " + coprocessorId);
-          wsSendTask(taskCopy, coprocessorId, activeTask);
-        } else {
-          //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, coprocessorId);
-        }
-      }
-    }
+  if (coprocessorData && coprocessCommand) {
+    //utils.logTask(taskCopy, "taskSync_async sending", command, "sent to coprocessor", coprocessorId);
+    wsSendTask(taskCopy, coprocessorId, activeTask);
   }
 
   // Every type: "hub", role: "consumer" needs to be updated/synced
@@ -107,7 +93,7 @@ const taskSync_async = async (key, value) => {
       const nodeData = activeProcessors.get(hubConsumerId);
       if (nodeData) {
         if (nodeData.commandsAccepted.includes(command)) {
-          utils.logTask(taskCopy, "taskSync_async hub consumer", command, " sent to node " + hubConsumerId);
+          //utils.logTask(taskCopy, "taskSync_async sending", command, "sent to hub consumer", hubConsumerId);
           wsSendTask(taskCopy, hubConsumerId, activeTask);
         } else {
           //utils.logTask(taskCopy, "taskSync_async coprocessor does not support commmand", command, hubConsumerId);
@@ -153,14 +139,13 @@ const taskSync_async = async (key, value) => {
         if (!taskCopy.nodes[nodeId]) {
           utils.logTask(taskCopy, "taskCopy missing node", nodeId, "initiatingNodeId", initiatingNodeId, "command", command);
         }
-        utils.logTask(taskCopy, "Nodes:", Object.keys(taskCopy.nodes));
         if (nodeData.commandsAccepted.includes(command)) {
           const statesSupported = taskCopy.nodes[nodeId].statesSupported;
           const statesNotSupported = taskCopy.nodes[nodeId].statesNotSupported;
           const state = taskCopy.state.current;
           if (!statesSupported || statesSupported.includes(state)) {
             if (!statesNotSupported || !statesNotSupported.includes(state)) {
-              utils.logTask(taskCopy, "taskSync_async", command, key, nodeId);
+              //utils.logTask(taskCopy, "taskSync_async sending", command, key, nodeId);
               wsSendTask(taskCopy, nodeId, activeTask);
             } else {
               utils.logTask(taskCopy, `taskSync_async node:${nodeId} state:${state} in statesNotSupported:${statesNotSupported}`);

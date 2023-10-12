@@ -9,7 +9,7 @@ import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, NODE } from "../config.mjs";
 import { register_async } from "./register.mjs";
 import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
-import { taskProcess_async } from "./nodeTasks.mjs";
+import { nodeTasks_async } from "./nodeTasks.mjs";
 import { utils } from "./utils.mjs";
 import { taskRelease, taskLock } from './shared/taskLock.mjs';
 
@@ -75,7 +75,7 @@ taskSubject
         // We always add familyId so CEP can only operate on its own family
         // CEPCreate is how we create the entries
         const CEPFuncsKeys = CEPMatchMap.keys();
-        utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
+        //utils.logTask(task, "CEPMatchMap", CEPMatchMap.keys());
         //utils.logTask(task, "CEPFuncsKeys", CEPFuncsKeys);
         //utils.logTask(task, "CEP looking for " + task.familyId + "-instance-" + task.instanceId);
         let instanceIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.familyId + "-instance-" + task.instanceId) || new Map();
@@ -88,16 +88,16 @@ taskSubject
         //utils.logTask(task, "CEP familyIdSourceFuncsMap ", [...familyIdSourceFuncsMapArray]);
         let userIdSourceFuncsMapArray = [];
         if (task.user) {
-          utils.logTask(task, "CEP looking for " + task.user.id + "-userId-" + task.id);
+          //utils.logTask(task, "CEP looking for " + task.user.id + "-userId-" + task.id);
           userIdSourceFuncsMapArray = findCEP(CEPFuncsKeys, task.user.id + "-userId-" + task.id) || new Map();
-          utils.logTask(task, "CEP userIdSourceFuncsMap ", [...userIdSourceFuncsMapArray]);      
+          //utils.logTask(task, "CEP userIdSourceFuncsMap ", [...userIdSourceFuncsMapArray]);      
         }
         let CEPSecretSourceFuncsMapArray = [];
         if (task.config?.local?.CEPSecret) {
           const CEPsecret = task.config?.local?.CEPSecret;
-          utils.logTask(task, "CEP looking for CEPSecret-" + CEPsecret);
+          //utils.logTask(task, "CEP looking for CEPSecret-" + CEPsecret);
           CEPSecretSourceFuncsMapArray = findCEP(CEPFuncsKeys, "CEPSecret-" + CEPsecret) || new Map();
-          utils.logTask(task, "CEP CEPSecretSourceFuncsMap ", [...CEPSecretSourceFuncsMapArray]);      
+          //utils.logTask(task, "CEP CEPSecretSourceFuncsMap ", [...CEPSecretSourceFuncsMapArray]);      
         }
         // Retrieve the function arrays from each Map
         let instanceIdCEPFuncs = []
@@ -147,12 +147,12 @@ taskSubject
           utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.node.coprocessingDone);
         } else {
           utils.logTask(task, "CoProcessing task");
-          await taskProcess_async(wsSendTask, task, CEPMatchMap);
+          await nodeTasks_async(wsSendTask, task, CEPMatchMap);
         }
       } else {
         // Process the task to install the CEP
         //if (task.node.initiatingNodeId !== NODE.id) {
-        await taskProcess_async(wsSendTask, task, CEPMatchMap);
+        await nodeTasks_async(wsSendTask, task, CEPMatchMap);
         //}
       }
       if (task.node.coprocessing) {
@@ -171,6 +171,7 @@ taskSubject
           utils.logTask(task, 'Task processed successfully');
           taskRelease(task.instanceId, "Task processed successfully");
         } else {
+          // We do not want the coprocessor generating updates before init has finished (for exmaple)
           utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.node.coprocessingDone", task.node.coprocessingDone);
         }
       }
@@ -250,9 +251,13 @@ const connectWebSocket = () => {
       // We do not lock for a sync for the same reason - we do not coprocess sync
       // Check for instanceId to avoid locking for commands like register
       // Removed && task.node.initiatingNodeId !== NODE.id because update could happen during init
-      if (task.instanceId && command !== "start" ) {
+      // task.node.initiatingNodeId !== NODE.id allows for an update to set the lock and then wait for the
+      // hub to send the update (so storage syncs with the hub before sending more updates)
+      if (task.instanceId && command !== "start") {
         if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && task.node.coprocessing)) {
-           await taskLock(task.instanceId, "processorWs.onmessage");
+           if (task.node.initiatingNodeId !== NODE.id || NODE.role === "coprocessor") {
+            await taskLock(task.instanceId, "processorWs.onmessage");
+           }
         }
       }
      } else {
@@ -262,7 +267,7 @@ const connectWebSocket = () => {
     //utils.logTask(task, "task.node", task.node);
     if (command !== "pong") {
       //utils.logTask(task, "processorWs " + command)
-      let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.node.commandDescription, "state:"];
+      let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.node.commandDescription, "state:", task?.state?.current];
       if (NODE.role === "coprocessor") {
         msgs = [...msgs, "coprocessingDone:", task.node.coprocessingDone, " coprocessing:", task.node.coprocessing];
       }

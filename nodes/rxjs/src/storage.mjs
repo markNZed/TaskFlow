@@ -87,17 +87,20 @@ const groupsStore_async = newKeyV(redisClient, NODE.appAbbrev + "groups"); // Sh
 const tasktypesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasktypes"); // Shared with Hub
 
 async function getActiveTask_async(instanceId) {
+  //const start = Date.now();
   if (await activeTasksStore_async.has(instanceId)) {
     let task = await instancesStore_async.get(instanceId);
+    //console.log(`getActiveTask_async ${instanceId} took ${Date.now() - start}ms`);
     return task;
   } else {
     console.log("Returned undefined from getActiveTask_async for instanceId:", instanceId);
     return undefined;
   }
 }
+
 async function setActiveTask_async(task) {
   utils.assert(task.instanceId !== undefined, JSON.stringify(task));
-  await Promise.all([
+  return Promise.all([
     instancesStore_async.set(task.instanceId, task),
     activeTasksStore_async.set(task.instanceId, true)
   ]);

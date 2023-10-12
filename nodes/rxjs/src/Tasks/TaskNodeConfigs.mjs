@@ -89,14 +89,12 @@ const TaskNodeConfigs_async = async function (wsSendTask, T, FSMHolder, CEPMatch
     promises.push(initializeForType(NODE.name, store, configFunctions, wsSendTask));
   }
   await Promise.all(promises);
-  T("commandDescription", "");
   T("commandArgs", {instanceId: T("instanceId"), sync: true, syncTask: {shared: T("shared")}});
   utils.logTask(T(), "Shared:", T("shared"));
   commandUpdate_async(wsSendTask, T()).then(() => {
     utils.logTask(T(), "Initializing", services.systemConfig.stores);
   });
   
-
   promises = [];
 
   for (const store of services.systemConfig.stores) {

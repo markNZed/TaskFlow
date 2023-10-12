@@ -1,11 +1,20 @@
 /* ToDo
 -------
-React sends the update but acts based on its current value however it's storage is not yet updated from hub
-  Would need something like a lock to wait for the update to come back from the hub before sending the next update?
+Updates on rxjs need to blcok like on react
+Coprocessor should only coprocess 
+On the Collaborate 2nd React processsor LLMResponse can be just the id
+  I guess the diff being sent is somehow wrong ?
+Update needs to hold the lock until the update returns for storage to update
+  Allows for CEP to operate but very slow
+  Could only error if there is a hash mismatch AND the values do not match
+Collaborate is broken
+ Command pending might be causing a problem ?
+ Need to be careful about setting this with sync ?
 Can the sync interfere with hash diff ?
-  Can have many Processors trying to sync
-  hashDiff could consider only those values that are changed ? 
+  We do not use the hashDiff for sync
 FSM is remounted in previous state
+  So need to unmount in the staet we want to restart from - not ideal
+  Could have "state.initial" that would allow for control over this when reloading a Task
 In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
 sync will not run task function so menu will not be updated
   Should CEPShared be an update ?
@@ -13,6 +22,7 @@ sync will not run task function so menu will not be updated
     Ignore sync operations is how we were handling this - so Task can decide to deal with the sync or not
     Created an option syncUpdate that applies a normal update
 Refactoring 
+  Align similar modules on the hub and rxjs
   .hub ?.hub hub:
   task.processor tells us which was the last processor - are we using that information?
   Unique to the hub:
@@ -41,8 +51,6 @@ Refactoring
   Replace task.hub with task.node
     How to distinguish between type/role/processing
       Iterate over them and filter at the place where we need to - should not be too expensive
-  Only the Hub writes to the `task.hub` object.
-  The refactoring process will start with aligning similar modules on the hub and rxjs
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service

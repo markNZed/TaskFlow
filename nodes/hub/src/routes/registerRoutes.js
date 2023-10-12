@@ -154,6 +154,7 @@ router.post("/", async (req, res) => {
         authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
       }
       task.hub["command"] = "start";
+      task.hub["commandDescription"] = "Autostarting task";
       task.hub["sourceProcessorId"] = NODE.id;
       task.hub["initiatingNodeId"] = nodeId; // So the task will start on the processor that is registering 
       console.log("Autostarting task ", taskId, environment);

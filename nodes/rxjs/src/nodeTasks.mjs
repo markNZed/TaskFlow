@@ -15,14 +15,14 @@ import { activeTaskFsm, serviceTypes_async, operatorTypes_async, cepTypes_async,
 import { getFSMHolder_async } from "#src/taskFSM";
 import { commandUpdate_async } from "#src/commandUpdate";
 
-export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
+export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
   const origTask = utils.deepClone(task);
   let T = utils.createTaskValueGetter(task);
   utils.debugTask(T(), "input");
   let nodeFunctionsInitialized = false;
   try {
-    utils.logTask(T(), "taskProcess_async", T("id"));
-    utils.logTask(T(), "taskProcess_async node.coprocessing", T("node.coprocessing"));
+    utils.logTask(T(), "nodeTasks_async", T("id"));
+    utils.logTask(T(), "nodeTasks_async node.coprocessing", T("node.coprocessing"));
     const taskFunctionName = `${T("type")}_async`
     if (T("node.command") === "error") {
       utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
@@ -245,7 +245,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
           }
         }
       }
-      //utils.logTask(T(), "taskProcess_async CEPMatchMap", CEPMatchMap);
+      //utils.logTask(T(), "nodeTasks_async CEPMatchMap", CEPMatchMap);
     }
     if ((T("node.command") === "init" || T("node.command") === "join") && nodeFunctionsInitialized) {
       // Sync these changes
@@ -280,6 +280,7 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     T("error", {message: e.message});
     T("command", "update");
     T("commandArgs", {lockBypass: true});
+    T("commandDescription", "Error in nodeTasks_async");
   }
   if (T("error")) {
     console.error("Task error: ", T("error"))
@@ -288,9 +289,11 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     if (T("commandArgs.sync")) {
       const command = T("command");
       const commandArgs = T("commandArgs");
+      const commandDescription = T("commandDescription");
       T = utils.createTaskValueGetter({});
       T("command", command);
       T("commandArgs", commandArgs);
+      T("commandDescription", commandDescription);
       let instanceId = commandArgs.syncTask.instanceId || T("instanceId");
       T("instanceId", instanceId);
       T("meta", {});
@@ -299,19 +302,20 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
     if (NODE.role === "coprocessor") {
       if (T() === null) {
         T = utils.createTaskValueGetter(origTask);
-        utils.logTask(T(), "taskProcess_async null so task replaces updatedTask", T("id"));
+        utils.logTask(T(), "nodeTasks_async null so task replaces updatedTask", T("id"));
         // The updatedTask.node will take effect in wsSendTask
         // We are not working at the Task scope here so OK to reuse this 
       } else if (T("command")) {
         // This node wants to make a change
         // The original node will no longer see the change as coming from it
-        utils.logTask(T(), "taskProcess_async initiatingNodeId updated");
+        utils.logTask(T(), "nodeTasks_async initiatingNodeId updated");
         T("node.initiatingNodeId", NODE.id);
       }
       if (!T("command")) {
         // Because wsSendTask is expecting task.command
         T("command", T("node.command"));
         T("commandArgs", T("node.commandArgs"));
+        T("commandDescription", T("node.commandDescription"));
       }
       utils.debugTask(T(), "sending");
       wsSendTask(T());
@@ -321,15 +325,15 @@ export async function taskProcess_async(wsSendTask, task, CEPMatchMap) {
       // Which command should we support here?
       // This is similar to the old do_task
       if (T("command") === "update") {
-        utils.logTask(T(), "taskProcess_async sending update");
+        utils.logTask(T(), "nodeTasks_async sending update");
         utils.debugTask(T(), "sending");
         wsSendTask(T());
       } else {
-        utils.logTask(T(), "taskProcess_async nothing to do");
+        utils.logTask(T(), "nodeTasks_async nothing to do");
       }
     }
   } catch (error) {
-    utils.logTask(T(), "taskProcess_async", T());
+    utils.logTask(T(), "nodeTasks_async", T());
     console.error(`Command ${T("command")} failed to send ${error}`);
   }
   //wsSendTask(updatedTask);

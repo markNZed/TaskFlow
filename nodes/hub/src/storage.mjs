@@ -54,23 +54,27 @@ const outputStore_async = newKeyV(redisClient, NODE.appAbbrev + "outputs");
 const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared");
 
 async function getActiveTask_async(instanceId) {
+  //const start = Date.now();
   if (await activeTasksStore_async.has(instanceId)) {
-    return await instancesStore_async.get(instanceId);
+    let task = await instancesStore_async.get(instanceId);
+    //console.log(`getActiveTask_async ${instanceId} took ${Date.now() - start}ms`);
+    return task;
   } else {
+    console.log("Returned undefined from getActiveTask_async for instanceId:", instanceId);
     return undefined;
   }
 }
 
 async function setActiveTask_async(task) {
   utils.assert(task.instanceId !== undefined);
-  await Promise.all([
+  return Promise.all([
     instancesStore_async.set(task.instanceId, task),
     activeTasksStore_async.set(task.instanceId, true)
   ]);
 }
 
 async function deleteActiveTask_async(instanceId) {
-  await Promise.all([
+  return Promise.all([
     activeTasksStore_async.delete(instanceId),
     activeTaskProcessorsStore_async.delete(instanceId)
   ]);
