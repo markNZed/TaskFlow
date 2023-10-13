@@ -514,7 +514,7 @@ async function taskStart_async(
     task.hub["id"] = NODE.id;
     task.hub["sourceNodeId"] = task.hub["sourceNodeId"] || nodeId;
     task.hub["initiatingNodeId"] = task.hub["initiatingNodeId"] || nodeId;
-    task.hub["coprocessingDone"] = false;
+    task.hub["coprocessed"] = false;
     task.hub["commandDescription"] = task.commandDescription;
     
     // Initialize meta object

@@ -110,7 +110,7 @@ export function createColumns(rowDetailHeight) {
       {  
         name: 'coprocessing',
         queryDatatype: "boolean",
-        dataPath: "current.node.coprocessingDone",
+        dataPath: "current.node.coprocessed",
         width: 50,
         key: "coprocessing",
         flex: 1,

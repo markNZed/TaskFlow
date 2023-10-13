@@ -178,7 +178,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (T("node.command") === "init") {
-      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessingDone"))) {
+      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessed"))) {
         // How about overriding a match. CEPCreate needs more review/testing
         // Create two functions
         let ceps = T("ceps") || {};

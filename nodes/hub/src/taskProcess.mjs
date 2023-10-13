@@ -30,7 +30,7 @@ function hubAssertions(taskDiff, mergedTask) {
 
 async function processorInHubOut_async(task, activeTask) {
   utils.debugTask(task);
-  const { command, id, coprocessing, coprocessingDone, statesSupported, statesNotSupported } = task.node;
+  const { command, id, coprocessing, coprocessed, statesSupported, statesNotSupported } = task.node;
   // Could initiate from a node before going through the coprocessor
   // Could be initiated by the coprocessor
   //utils.logTask(task, "task.node.initiatingNodeId ", task.node.initiatingNodeId);
@@ -51,7 +51,7 @@ async function processorInHubOut_async(task, activeTask) {
   task.node.command = null;
   task.node.commandArgs = null;
   task.node.coprocessing = null;
-  task.node.coprocessingDone = null;
+  task.node.coprocessed = null;
   const activeTaskProcessors = activeTask?.nodes || {};
   const incomingNode = utils.deepClone(task.node);
   if (!activeTaskProcessors[id]) {
@@ -96,7 +96,7 @@ async function processorInHubOut_async(task, activeTask) {
     commandDescription,
     sourceNodeId: id,
     initiatingNodeId,
-    coprocessingDone,
+    coprocessed,
     coprocessing,
     statesSupported,
     statesNotSupported,
@@ -300,7 +300,7 @@ async function taskProcess_async(task) {
         task.familyId = task.familyId || activeTask.familyId;
         task = await processOutput_async(task, outputStore_async);
       }
-      if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessingDone) {
+      if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessed) {
         utils.logTask(task, "sending to coprocessor");
         // Send to first coprocessor
         // We will receive the task back from the coprocessor through websocket

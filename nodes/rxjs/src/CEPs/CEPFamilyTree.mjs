@@ -18,7 +18,7 @@ import TreeModel from 'tree-model';
 async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   //utils.logTask(task, "CEPFamilyTree command", task.node.command, task.id);
   // Only run this when going through the coprocessor the first time
-  if (task.node.command === "init" && !task.node.coprocessingDone) {
+  if (task.node.command === "init" && !task.node.coprocessed) {
     let actions = [];
     utils.logTask(task, "CEPFamilyTree adding");
     let CEPtask;

@@ -36,6 +36,7 @@ function wsSendObject(nodeId, message = {}) {
 
 const wsSendTask = async function (taskIn, nodeId, activeTask) {
   utils.debugTask(taskIn, "input");
+  // If we are sending to a Hub node then don't bother sending diff ?
   const currentNode = utils.deepClone(taskIn.hub);
   if (!currentNode?.command) {
     throw new Error("Missing command in wsSendTask" + JSON.stringify(taskIn));
@@ -91,10 +92,10 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     // When sending the register command we do not have a nodeId
     task.node = activeProcessors.get(nodeId) || {};
   }
-  const { coprocessing, coprocessingDone, initiatingNodeId, sourceNodeId } = currentNode;
+  const { coprocessing, coprocessed, initiatingNodeId, sourceNodeId } = currentNode;
   if (task.node.role === "coprocessor") {
     task.node["coprocessing"] = coprocessing;
-    task.node["coprocessingDone"] = coprocessingDone;
+    task.node["coprocessed"] = coprocessed;
   }
   task.node["initiatingNodeId"] = initiatingNodeId;
   task.node["sourceNodeId"] = sourceNodeId;
@@ -207,7 +208,7 @@ function initWebSocketServer(server) {
 
         // We start the co-processing from taskSync.mjs so here has passed through coprocessing
         task.hub["coprocessing"] = false;
-        task.hub["coprocessingDone"] = true;
+        task.hub["coprocessed"] = true;
         task.hub.sourceNodeId = nodeId;
 
         // Allows us to track where the request came from while coprocessors are in use

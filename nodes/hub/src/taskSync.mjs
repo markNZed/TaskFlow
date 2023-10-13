@@ -62,7 +62,7 @@ const taskSync_async = async (key, value) => {
   }
     
   // Pass to the first coprocessor if we should coprocess first
-  if (coprocessorData && coprocessCommand && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone ) {
+  if (coprocessorData && coprocessCommand && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessed ) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
     utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingNodeId);
@@ -73,7 +73,7 @@ const taskSync_async = async (key, value) => {
       taskCopy.nodes[coprocessorId] = coprocessorData;
     }
     taskCopy.hub["coprocessing"] = true;
-    taskCopy.hub["coprocessingDone"] = false;
+    taskCopy.hub["coprocessed"] = false;
     wsSendTask(taskCopy, coprocessorId, activeTask);
     // Return because we need to wait for coprocessor result before forwarding on via sync
     return value;
@@ -107,8 +107,8 @@ const taskSync_async = async (key, value) => {
     }
   }
 
-  //  We do not want coprocessingDone passed on to child tasks
-  taskCopy.hub.coprocessingDone = false;
+  //  We do not want coprocessed passed on to child tasks
+  taskCopy.hub.coprocessed = false;
 
   const initiatingNodeId = taskCopy.hub.initiatingNodeId || sourceNodeId;
   taskCopy.hub.sourceNodeId = initiatingNodeId

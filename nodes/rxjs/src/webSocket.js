@@ -63,7 +63,7 @@ taskSubject
       if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
       }
-      // We make an exception for sync so we can log sync that are sent with coprocessingDone
+      // We make an exception for sync so we can log sync that are sent with coprocessed
       const CEPCoprocessor = NODE.role === "coprocessor" && (task.node.coprocessing || task.node?.commandArgs?.sync);
       const processor = NODE.role !== "coprocessor";
       if (CEPMatchMap.size > 0 && (CEPCoprocessor || processor)) {
@@ -142,9 +142,9 @@ taskSubject
         }
       }
       if (NODE.role === "coprocessor") {
-        //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessingDone", task.node.coprocessingDone);
-        if (task.node.coprocessingDone) {
-          utils.logTask(task, "Skipped taskProcess coprocessingDone:", task.node.coprocessingDone);
+        //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessed", task.node.coprocessed);
+        if (task.node.coprocessed) {
+          utils.logTask(task, "Skipped taskProcess coprocessed:", task.node.coprocessed);
         } else {
           utils.logTask(task, "CoProcessing task");
           await nodeTasks_async(wsSendTask, task, CEPMatchMap);
@@ -167,12 +167,12 @@ taskSubject
       if (task === null) {
         utils.logTask(task, "Task processed with null result");
       } else {
-        if (NODE.role !== "coprocessor" || task.node.coprocessingDone) {
+        if (NODE.role !== "coprocessor" || task.node.coprocessed) {
           utils.logTask(task, 'Task processed successfully');
           taskRelease(task.instanceId, "Task processed successfully");
         } else {
           // We do not want the coprocessor generating updates before init has finished (for exmaple)
-          utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.node.coprocessingDone", task.node.coprocessingDone);
+          utils.logTask(task, 'Task processed NODE.role === "coprocessor"', NODE.role === "coprocessor", "task.node.coprocessed", task.node.coprocessed);
         }
       }
     },
@@ -268,7 +268,7 @@ const connectWebSocket = () => {
       //utils.logTask(task, "processorWs " + command)
       let msgs = ["processorWs command:", command, "commandArgs:", commandArgs, "commandDescription:", task.node.commandDescription, "state:", task?.state?.current];
       if (NODE.role === "coprocessor") {
-        msgs = [...msgs, "coprocessingDone:", task.node.coprocessingDone, " coprocessing:", task.node.coprocessing];
+        msgs = [...msgs, "coprocessed:", task.node.coprocessed, " coprocessing:", task.node.coprocessing];
       }
       utils.logTask(task, ...msgs);
     }
