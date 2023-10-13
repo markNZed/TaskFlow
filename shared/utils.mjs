@@ -672,9 +672,9 @@ const utils = {
     // We do not store the start as this would be treating the start command like an update
     if (task.node.command != "start") {
       //console.log("nodeActiveTasksStoreSet_async task.state", task.state);
-      delete task.meta.modified; // generated on the Hub
-      task.nodes = task.nodes || {};
-      task.nodes[task.node.id] = utils.deepClone(task.node);
+      //delete task.meta.modified; // generated on the Hub
+      //task.nodes = task.nodes || {};
+      //task.nodes[task.node.id] = utils.deepClone(task.node);
       await setActiveTask_async(task);
     }
     utils.debugTask(task);
@@ -706,117 +706,63 @@ const utils = {
     return taskCopy;
   },
 
-  nodeDiff: function(task) {
-    if (task.node.command === "ping") {
+  nodeDiff: function(origTask, task) {
+    if (task.node.command === "ping" || task.node.command === "pong") {
       return task;
     }
-    const taskCopy = utils.deepClone(task); // Avoid modifyng object that was passed in
-    const origTask = taskCopy.node.origTask;
     if (!origTask) {
       return task;
     }
+    const taskCopy = utils.deepClone(task); // Avoid modifyng object that was passed in
+    origTask = utils.deepClone(origTask); // Avoid modifyng object that was passed in
     if (origTask.id !== taskCopy.id) {
       throw new Error("ERROR nodeDiff origTask.id !== taskCopy.id");
     }
+    // Certain things we do not care about so delete to improve perf
+    //if (taskCopy?.meta?.modified) delete taskCopy.meta.modified;
+    //if (origTask?.meta?.modified) delete origTask.meta.modified;
+    if (taskCopy?.node?.origTask) delete taskCopy.node.origTask;
+    if (origTask?.node?.origTask) delete origTask.node.origTask;
+    if (taskCopy?.nodes) delete taskCopy.nodes;
+    if (origTask?.nodes) delete origTask.nodes;
     //console.log("nodeDiff in origTask.output, task.output", origTask?.output, task.output);
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
     //console.log("utils.getObjectDifference origTask?.shared:", JSON.stringify(origTask?.shared, null, 2));
     //console.log("utils.getObjectDifference taskCopy?.shared:", JSON.stringify(taskCopy?.shared, null, 2));
     //console.log("utils.getObjectDifference diffTask?.shared:", JSON.stringify(diffTask?.shared, null, 2));
-    // Which properties of the origTask differ from the task
-    let diffOrigTask;
-    if (taskCopy.node?.commandArgs?.sync) {
-      diffOrigTask = {};
-    } else {
-      diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-      if (diffOrigTask === undefined) {
-        diffOrigTask = {};
-      }
-    }
-    if (!diffTask.meta) {
-      diffTask.meta = {};
-    }
-    diffOrigTask = utils.cleanForHash(diffOrigTask);
-    //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
-    diffTask.meta["hash"] = taskCopy?.meta?.hash;
-    // Allows us to check only the relevant part of the origTask
-    // More specific than testing for the hash of the entire origTask
-    diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
-    diffTask.meta["prevMessageId"] = origTask.meta.prevMessageId;
-    diffTask.meta["messageId"] = taskCopy.meta.messageId;
-    const hashDebug = true;
-    if (hashDebug || taskCopy.config?.debug?.hash) {
-      diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
-      diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
-    }
-    diffTask["instanceId"] = taskCopy.instanceId;
-    diffTask["id"] = taskCopy.id; // Could just send the instanceId
-    diffTask["node"] = taskCopy.node;
-    if (!diffTask.user) {
-      diffTask["user"] = {id: taskCopy.user.id};
-    }
-    delete diffTask.node.origTask; // Only used internally
-    //console.log("nodeDiff out task.output", diffTask.output);
-    return diffTask;
-  },
-
-  // This is only used in the Hub so could move into the Hub utils 
-  hubDiff: function(origTask, task) {
-    if (task?.node?.command === "pong") {
-      return task;
-    }
-    if (!origTask) {
-      return task;
-    }
-    if (origTask.id !== task.id) {
-      throw new Error("ERROR hubDiff: origTask.id !== taskCopy.id");
-    }
-    //console.log("hubDiff origTask.request, task.request", origTask.request, task.request);
-    const taskCopy = utils.deepClone(task) // Avoid modifyng object that was passed in
-    const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
     if (Object.keys(diffTask).length > 0) {
       diffTask["instanceId"] = taskCopy.instanceId;
       diffTask["id"] = taskCopy.id;
       diffTask["node"] = taskCopy.node;
-      diffTask["node"] = {};
-      diffTask["nodes"] = taskCopy.nodes;
       diffTask["user"] = taskCopy.user;
-      diffTask["users"] = taskCopy.users;
-      if (!diffTask.meta) {
-        diffTask["meta"] = {};
-      }
-      if (taskCopy.meta.locked) {
-        diffTask.meta["locked"] = taskCopy.meta.locked;
-      }
+      diffTask["meta"] = taskCopy.meta || {};
+      if (taskCopy.meta.locked) diffTask.meta["locked"] = taskCopy.meta.locked;
       diffTask.meta["hash"] = origTask.meta.hash;
       // Which properties of the origTask differ from the task
       let diffOrigTask;
-      // We do not check the hash for sync (the node sending may not even have the instance for calculating the diff)
       if (taskCopy.node?.commandArgs?.sync) {
         diffOrigTask = {};
       } else {
         diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-        if (diffOrigTask === undefined) {
-          diffOrigTask = {};
-        }
+        if (diffOrigTask === undefined) diffOrigTask = {};
       }
       diffOrigTask = utils.cleanForHash(diffOrigTask);
+      //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
       // Allows us to check only the relevant part of the origTask
       // More specific than testing for the hash of the entire origTask
       diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
       diffTask.meta["prevMessageId"] = origTask.meta.prevMessageId;
       diffTask.meta["messageId"] = taskCopy.meta.messageId;
       // In theory we could enable the hash debug in the task
-      const hashDebug = true;
+      const hashDebug = false;
       if (hashDebug || taskCopy.config?.debug?.hash) {
         diffTask.meta["hashTask"] = utils.deepClone(origTask);
         diffTask.meta.hashTask = utils.cleanForHash(diffTask.meta.hashTask);
         diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
         diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
       }
-      delete diffTask.node.origTask; // Only used internally
+      //console.log("nodeDiff out task.output", diffTask.output);
     }
-    //console.log("hubDiff diffTask.request", diffTask.request);
     return diffTask;
   },
 
@@ -859,7 +805,6 @@ const utils = {
     return true;
   },
 
-  // Rename e.g. processorToTaskFunction, taskFunctionToProcessor, processorToHub, hubToProcessor
   nodeToTask: function(task) {
     if (task.node.stateLast) {
       // Diffs may not have the state information
@@ -935,7 +880,7 @@ const utils = {
       delete lastTask.node.origTask; // delete so we do not have an old copy in origTask
       taskCopy.node["origTask"] = utils.deepClone(lastTask); 
       // This will use taskCopy.node.origTask to identify the diff
-      diffTask = utils.nodeDiff(taskCopy)
+      diffTask = utils.nodeDiff(lastTask, taskCopy)
     } else {
       diffTask = taskCopy;
     }

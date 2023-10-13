@@ -35,7 +35,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           CEPCount: task.output.CEPCount ? task.output.CEPCount + increment : increment,
           modifiedBy: CEPInstanceId,
         },
-      }
+      },
+      messageId: task.messageId,
     },
     commandDescription: "Incrementing output.CEPCount by " + increment,
   };

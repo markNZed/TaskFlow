@@ -17,7 +17,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         response: {
           monitoredTask: task
         },
-      }
+      },
+      messageId: task.messageId,
     },
     commandDescription: `Sending monitored task ${task.instanceId} to monitor task ${CEPInstanceId}`,
   };

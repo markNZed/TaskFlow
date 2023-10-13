@@ -72,6 +72,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
             sync: true,
             instanceId: CEPtask.instanceId,
             syncTask: updateDiff,
+            messageId: task.messageId,
           },
           commandDescription: "Updating state.familyTree" + actions.join(", "),
         };

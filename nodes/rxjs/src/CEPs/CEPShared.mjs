@@ -29,6 +29,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const modified = task?.meta?.modified?.shared !== undefined
   const commandArgs = task.node?.commandArgs;
   // Sync is not coprocessed (maybe it should be but worried about loops)
+  //console.log("CEPShared modified:", modified, "coprocessing:", task.node.coprocessing, "sync:", commandArgs?.sync, "CEPSource:", commandArgs?.CEPSource);
   if ((task.node.coprocessing && modified)
       || (commandArgs?.sync && commandArgs?.CEPSource !== "CEPShared" && modified)) {
     utils.logTask(task, "CEPShared command:", task.node.command, "commandArgs:", task.node.commandArgs);
@@ -62,17 +63,12 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         sharedEntry[familyId]["instanceIds"].push(task.instanceId);
       }
       familyInstanceIds = sharedEntry[familyId].instanceIds;
-      for (const instanceId of familyInstanceIds) {
-        toSync[instanceId] = toSync[instanceId] || {};
-        if (task.node.command === "init") {
-          if (sharedEntry[familyId].value) {
-            utils.logTask(task, "CEPShared init sharedEntry value set for varName", varName);
-            toSync[instanceId][varName] = sharedEntry[familyId].value;
-          } else {
-            utils.logTask(task, "CEPShared init value set for varName", varName);
-            toSync[instanceId][varName] = task.shared[varName];
-          } 
-        } else {
+      if (task.node.command === "init" && sharedEntry[familyId].value) {
+        toSync[task.instanceId] = toSync[task.instanceId] || {};
+        toSync[task.instanceId][varName] = sharedEntry[familyId].value;
+      } else {
+        for (const instanceId of familyInstanceIds) {
+          toSync[instanceId] = toSync[instanceId] || {};
           toSync[instanceId][varName] = task.shared[varName];
         }
       }
@@ -109,6 +105,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
               shared: toSync[instanceId],
             },
             CEPSource: "CEPShared",
+            messageId: task.messageId,
             // Use sync, the update risks conflicts 
             //syncUpdate: true, // Ask the Hub to convert the sync into a normal update
           },

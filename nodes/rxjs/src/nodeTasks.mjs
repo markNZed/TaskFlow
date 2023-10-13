@@ -267,6 +267,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           sync: true,
           instanceId: T("instanceId"),
           syncTask,
+          messageId: task.messageId,
         },
         commandDescription: `Sync node functions on ${NODE.name}`,
       };

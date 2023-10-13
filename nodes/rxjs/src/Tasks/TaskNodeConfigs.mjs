@@ -59,7 +59,11 @@ const TaskNodeConfigs_async = async function (wsSendTask, T, FSMHolder, CEPMatch
         //utils.logTask(T(), "configFunctions change type:", type, id);
         await updateTree_async(configFunctions, node, type, wsSendTask, T);
 
-        T("commandArgs", {instanceId: T("instanceId"), sync: true, syncTask: {shared: T("shared")}});
+        T("commandArgs", {
+          instanceId: T("instanceId"), 
+          sync: true, 
+          syncTask: {shared: T("shared")},
+        });
         commandUpdate_async(wsSendTask, T()).then(() => {
           utils.logTask(T(), `Setting ${type}`);
         });

@@ -43,7 +43,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   }
   //console.log("wsSendTask task.request", task.request)
   let task = utils.deepClone(taskIn); //deep copy because we make changes e.g. task.node
-  // hubDiff will remove nodes and users
+  // nodeDiff will remove nodes and users
   let outgoingNode;
   if (task.nodes && task.nodes[nodeId] && Object.keys(task.nodes[nodeId]).length > 0) {
     outgoingNode = utils.deepClone(task.nodes[nodeId]);
@@ -67,7 +67,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
         //console.log("wsSendTask statesSupported", task.state.current, outgoingNode);
         diff = task;
       } else {
-        diff = utils.hubDiff(activeTask, task);
+        diff = utils.nodeDiff(activeTask, task);
       }
       if (Object.keys(diff).length === 0) {
         utils.logTask(task, "wsSendTask no diff", diff);
