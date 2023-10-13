@@ -58,14 +58,14 @@ async function processInstanceAsync(task, instanceId, mode, nodeId) {
     if (activeTask && doesContain) {
       utils.logTask(task, "Task already active", instanceId);
       task = activeTask;
-      task.hub["command"] = "join";
-      task.hub["commandArgs"] = { lockBypass: true };
-      task.hub["initiatingNodeId"] = nodeId;
+      task.node["command"] = "join";
+      task.node["commandArgs"] = { lockBypass: true };
+      task.node["initiatingNodeId"] = nodeId;
       utils.logTask(task, `Joining ${mode} for ${task.id}`);
     } else {
       task = instance;
       //utils.logTask(task, "processInstanceAsync task", task);
-      task.hub["command"] = "init";
+      task.node["command"] = "init";
       // Assumes that we have a state entry
       task.state["current"] = "start";
       task.meta["updateCount"] = 0;
@@ -221,7 +221,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
     // In the case where the task sequence advances on another node 
     // we need to be able to associate more recent tasks with an older
     // task that is waiting on the next task.
-    if (task.hub["command"] !== "join") {
+    if (task.node["command"] !== "join") {
       task.nodes = prevTask.nodes;
       // Iterate over each node in task.nodes
       if (task.nodes) {
@@ -252,8 +252,8 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
       if (await getActiveTask_async(prevTask.instanceId)) {
         This has been removed for now becaus sending an update can impact the state machine
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
-        prevTask.hub.command = "update";
-        prevTask.hub.sourceNodeId = NODE.id;
+        prevTask.node.command = "update";
+        prevTask.node.sourceNodeId = NODE.id;
         await utils.hubActiveTasksStoreSet_async(setActiveTask_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
@@ -453,7 +453,7 @@ async function taskStart_async(
     }
 
     // May be overwritten in processInstanceAsync
-    task.hub["command"] = "init";
+    task.node["command"] = "init";
        
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
@@ -499,12 +499,12 @@ async function taskStart_async(
     // Side-effect on task.familyd
     task = await updateFamilyStoreAsync(task, familyStore_async)
 
-    // Initialize task.hub.sourceNodeId
-    task.hub["id"] = NODE.id;
-    task.hub["sourceNodeId"] = task.hub["sourceNodeId"] || nodeId;
-    task.hub["initiatingNodeId"] = task.hub["initiatingNodeId"] || nodeId;
-    task.hub["coprocessed"] = false;
-    task.hub["commandDescription"] = task.commandDescription;
+    // Initialize task.node.sourceNodeId
+    task.node["id"] = NODE.id;
+    task.node["sourceNodeId"] = task.node["sourceNodeId"] || nodeId;
+    task.node["initiatingNodeId"] = task.node["initiatingNodeId"] || nodeId;
+    task.node["coprocessed"] = false;
+    task.node["commandDescription"] = task.commandDescription;
     
     // Initialize meta object
     // If already set (e.g. joining the task) keep the current values
@@ -541,11 +541,11 @@ async function taskStart_async(
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);
 
-    task.hub.origTask = utils.deepClone(task);
+    task.node.origTask = utils.deepClone(task);
 
     task = utils.setMetaModified(task);
 
-    utils.logTask(task, task.hub.command, "id:", task.id, "familyId:", task.familyId);
+    utils.logTask(task, task.node.command, "id:", task.id, "familyId:", task.familyId);
 
     return task;
   }

@@ -21,8 +21,8 @@ const taskSync_async = async (key, value) => {
   // key may be undefined if this is a start task that is being forwarded to coprocessor
   // A start command could arrive without familyId set on the value and this would lose
   // failyId which created other issues with loading the prevInstanceId in taskStart
-  if (key && value.hub.command != "start") {
-    utils.logTask(value, "taskSync_async familyId", value.familyId, value.hub.command);
+  if (key && value.node.command != "start") {
+    utils.logTask(value, "taskSync_async familyId", value.familyId, value.node.command);
   } else if (!NODE.haveCoprocessor) {
     throw new Error("taskSync_async missing key" + JSON.stringify(value));
   }
@@ -31,15 +31,15 @@ const taskSync_async = async (key, value) => {
 
   // We store excatly what was sent to us
   const taskCopy = utils.deepClone(value); //deep copy
-  let sourceNodeId = taskCopy.hub.sourceNodeId;
+  let sourceNodeId = taskCopy.node.sourceNodeId;
   // Config can be missing from a start task
   if (!sourceNodeId) {
     throw new Error("taskSync_async missing sourceNodeId" + JSON.stringify(taskCopy));
   }
-  if (!taskCopy?.hub?.command) {
+  if (!taskCopy?.node?.command) {
     throw new Error("taskSync_async missing command" + JSON.stringify(taskCopy));
   }
-  let command = taskCopy.hub.command;
+  let command = taskCopy.node.command;
 
   // In reality there is one coprocessor we should cache this info
   const coprocessorIds = [];
@@ -60,24 +60,24 @@ const taskSync_async = async (key, value) => {
   }
     
   // Pass to the first coprocessor if we should coprocess first
-  if (coprocessorData && coprocessCommand && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessed ) {
+  if (coprocessorData && coprocessCommand && !taskCopy.node.coprocessing && !taskCopy.node.coprocessed ) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
-    utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.hub.initiatingNodeId);
+    utils.logTask(taskCopy, "taskSync_async coprocessor initiate", command, key, coprocessorId, taskCopy.node.initiatingNodeId);
     if (!taskCopy.nodes) {
       taskCopy.nodes = {};
     }
     if (!taskCopy.nodes[coprocessorId]) {
       taskCopy.nodes[coprocessorId] = coprocessorData;
     }
-    taskCopy.hub["coprocessing"] = true;
-    taskCopy.hub["coprocessed"] = false;
+    taskCopy.node["coprocessing"] = true;
+    taskCopy.node["coprocessed"] = false;
     wsSendTask(taskCopy, coprocessorId, activeTask);
     // Return because we need to wait for coprocessor result before forwarding on via sync
     return value;
   }
 
-  taskCopy.hub.coprocessing = false;
+  taskCopy.node.coprocessing = false;
 
   // Every coprocessor needs to be updated/synced
   if (coprocessorData && coprocessCommand) {
@@ -106,10 +106,10 @@ const taskSync_async = async (key, value) => {
   }
 
   //  We do not want coprocessed passed on to child tasks
-  taskCopy.hub.coprocessed = false;
+  taskCopy.node.coprocessed = false;
 
-  const initiatingNodeId = taskCopy.hub.initiatingNodeId || sourceNodeId;
-  taskCopy.hub.sourceNodeId = initiatingNodeId
+  const initiatingNodeId = taskCopy.node.initiatingNodeId || sourceNodeId;
+  taskCopy.node.sourceNodeId = initiatingNodeId
 
   taskCopy.meta.broadcastCount = broadcastCount;
   broadcastCount++;

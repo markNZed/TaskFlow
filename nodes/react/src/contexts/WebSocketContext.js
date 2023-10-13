@@ -105,8 +105,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       let task;
       if (message?.task) {
         utils.debugTask(message.task, "received on websocket");
-        task = utils.hubInProcessorOut(message.task);
-        utils.debugTask(message.task, "after hubInProcessorOut");
+        task = message.task;
         command = task.node.command;
         commandArgs = task.node.commandArgs;
       }

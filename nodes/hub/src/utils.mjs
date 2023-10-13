@@ -150,7 +150,7 @@ const utils = {
   },
   
   setMetaModified: function(task) {
-    const ignore = ["meta", "node", "hub", "privacy", "id", "instanceId", "user.id"];
+    const ignore = ["meta", "node", "privacy", "id", "instanceId", "user.id"];
     task.meta = task.meta || {};
     if (task.node?.commandArgs?.syncTask) {
       task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};

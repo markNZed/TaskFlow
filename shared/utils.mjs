@@ -195,13 +195,13 @@ const utils = {
 
   deepMergeHub: function(prevState, update, hubIn) {
     //const start = Date.now();
-    const hub = utils.deepClone(hubIn);
+    const node = utils.deepClone(hubIn);
     let result = utils.deepMerge(prevState, update);
     if (!result) {
       console.log("deepMergeHub prevState:", prevState);
       console.log("deepMergeHub update:", update)
     }
-    result.hub = hub;
+    result.node = node;
     //utils.removeNullKeys(result);
     //console.log("deepMergeHub duration", Date.now() - start);
     return result;
@@ -632,7 +632,7 @@ const utils = {
     if (!task) {
       return 0; // should error here?
     }
-    // Only hash information that is shared between all nodes and hub
+    // Only hash information that is shared between all nodes and Hub
     const taskCopy = utils.cleanForHash(task);
     const sortedObj = utils.taskHashSortKeys(taskCopy);
     const hash = utils.djb2Hash(JSON.stringify(sortedObj));
@@ -687,7 +687,7 @@ const utils = {
     if (task.node.command != "start") {
       //console.log("nodeActiveTasksStoreSet_async", task);
       const taskCopy = utils.deepClone(task);
-      delete taskCopy.meta.modified; // generated on the hub
+      delete taskCopy.meta.modified; // generated on the Hub
       await setActiveTask_async(taskCopy);
     }
     utils.debugTask(task);
@@ -697,15 +697,15 @@ const utils = {
   // This is having side-effects on task
   hubActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
-    delete task.hub.origTask; // delete so we do not have an old copy in origTask
-    task.hub["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
+    delete task.node.origTask; // delete so we do not have an old copy in origTask
+    task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
     task.meta["hash"] = utils.taskHash(task);
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
-    if (task.hub.command != "start") {
+    if (task.node.command != "start") {
       //console.log("hubActiveTasksStoreSet_async task.state", task.state);
-      delete task.meta.modified; // generated on the hub
-      task.nodes[task.hub.id] = utils.deepClone(task.hub);
+      delete task.meta.modified; // generated on the Hub
+      task.nodes[task.node.id] = utils.deepClone(task.node);
       await setActiveTask_async(task);
     }
     utils.debugTask(task);
@@ -714,7 +714,7 @@ const utils = {
 
   cleanForHash: function (task) {
     let taskCopy = utils.deepClone(task);
-    delete taskCopy.hub;
+    delete taskCopy.node;
     delete taskCopy.node;
     delete taskCopy.nodes;
     delete taskCopy.user;
@@ -808,7 +808,7 @@ const utils = {
     if (Object.keys(diffTask).length > 0) {
       diffTask["instanceId"] = taskCopy.instanceId;
       diffTask["id"] = taskCopy.id;
-      diffTask["hub"] = taskCopy.hub;
+      diffTask["node"] = taskCopy.node;
       diffTask["node"] = {};
       diffTask["nodes"] = taskCopy.nodes;
       diffTask["user"] = taskCopy.user;
@@ -823,7 +823,7 @@ const utils = {
       // Which properties of the origTask differ from the task
       let diffOrigTask;
       // We do not check the hash for sync (the node sending may not even have the instance for calculating the diff)
-      if (taskCopy.hub?.commandArgs?.sync) {
+      if (taskCopy.node?.commandArgs?.sync) {
         diffOrigTask = {};
       } else {
         diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
@@ -845,7 +845,7 @@ const utils = {
         diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
         diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
       }
-      delete diffTask.hub.origTask; // Only used internally
+      delete diffTask.node.origTask; // Only used internally
     }
     //console.log("hubDiff diffTask.request", diffTask.request);
     return diffTask;
@@ -853,7 +853,7 @@ const utils = {
 
   checkHashDiff: function(taskInStorage, task) {
     let taskCopy = utils.deepClone(task);
-    if (taskCopy?.commandArgs?.sync || taskCopy?.node?.commandArgs?.sync || taskCopy?.hub?.commandArgs?.sync) {
+    if (taskCopy?.commandArgs?.sync || taskCopy?.node?.commandArgs?.sync) {
       // Sync is not relative to a current value so we cannot use hash
       return;
     }
@@ -861,7 +861,7 @@ const utils = {
     const statesNotSupported = taskCopy?.node?.statesNotSupported;
     if (statesSupported || statesNotSupported) {
       // We are sending full updates not diffs in this case
-      // We could also set the task.meta.hashDiff to undefined on the hub?
+      // We could also set the task.meta.hashDiff to undefined on the Hub?
       return;
     }
     const expectedHash = task.meta.hashDiff;
@@ -919,7 +919,7 @@ const utils = {
     if (!taskCopy.node) {
       taskCopy.node = {};
     }
-    // Clear down taskCopy commands as we do not want these coming back from the hub
+    // Clear down taskCopy commands as we do not want these coming back from the Hub
     taskCopy.node["command"] = command;
     delete taskCopy.command;
     if (commandArgs) {
@@ -973,25 +973,6 @@ const utils = {
     //console.log("taskInNodeOut diffTask", JSON.stringify(diffTask, null, 2));
     utils.debugTask(diffTask, "output");
     return diffTask;
-  },
-
-  // Should not be sending node from hub ? Allows node specific config. Also initiatingNodeId
-  // The node strips hub specific info because the Task Function should not interact with the Hub
-  hubInProcessorOut: function(task) {
-    const hubIn = utils.deepClone(task.hub);
-    delete task.hub;
-    delete hubIn.id;
-    task.node = task.node || {};
-    if (!task.node.isCoprocessor) {
-      delete hubIn.statesSupported; // Copied from node
-      delete hubIn.statesNotSupported; // Copied from node
-    }
-    task.node = utils.deepMerge(task.node, hubIn);
-    if (!hubIn.sourceProcessorId) {
-      delete task.node.sourceProcessorId;
-    }
-    utils.debugTask(task);
-    return task;
   },
 
   taskPing: function() {
@@ -1190,13 +1171,13 @@ const utils = {
     }
 
     // Can set task.debug via configuration
-    if (!task?.config?.debug?.debugTask) {return}
+    //if (!task?.config?.debug?.debugTask) {return}
 
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
-    const command = task.command || task?.node?.command || task?.hub?.command;
-    const commandArgs = task.commandArgs || task?.node?.commandArgs || task?.hub?.commandArgs;
-    const commandDescription = task.commandDescription || task?.node?.commandDescription || task?.hub?.commandDescription;
+    const command = task.command || task?.node?.command;
+    const commandArgs = task.commandArgs || task?.node?.commandArgs;
+    const commandDescription = task.commandDescription || task?.node?.commandDescription;
     if (command === "ping" || command === "pong" || command === "partial") {
       return;
     }
@@ -1241,8 +1222,8 @@ const utils = {
     if (task?.node?.coprocessing) {
       //logParts.push("task.node.coprocessing", task.node.coprocessing);
     }
-    if (task?.hub?.coprocessing) {
-      //logParts.push("task.hub.coprocessing", task.hub.coprocessing);
+    if (task?.node?.coprocessing) {
+      //logParts.push("task.node.coprocessing", task.node.coprocessing);
     }
     if (task?.nodes) {
       //logParts.push("Nodes:", Object.keys(task.nodes));
@@ -1250,14 +1231,11 @@ const utils = {
     if (commandArgs?.sync) {
       //logParts.push("commandArgs.syncTask", commandArgs.syncTask);
     }
-    if (task?.meta?.modified?.shared && task.meta.modified.shared["config-hub-consumer-tasks"]) {
-      //logParts.push("task.meta.modified.shared.config-hub-consumer-tasks");
-    }
     if (commandArgs?.CEPSource) {
       //logParts.push("CEPSource", commandArgs.CEPSource);
     }
-    if (task?.hub?.initiatingNodeId) {
-      //logParts.push("task.hub.initiatingNodeId", task.hub.initiatingNodeId);
+    if (task?.node?.initiatingNodeId) {
+      //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
@@ -1282,6 +1260,11 @@ const utils = {
     }
     logParts.push('nodeId:', task?.node?.id);
     */
+    if (!command && task.nodes && Object.keys(task.nodes).length) {
+      logParts.push('task:', utils.js(task));
+      console.log(logParts.join(' '));
+      throw new Error("ERROR debugTask: no command");
+    }
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     //logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask

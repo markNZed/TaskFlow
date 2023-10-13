@@ -239,10 +239,10 @@ const connectWebSocket = () => {
     //console.log("processorWs.onMessage", message?.task.node.command);
     let command;
     let commandArgs;
-    //console.log("message.task.hub", message.task.hub);
+    //console.log("message.task.node", message.task.node);
     let task;
     if (message?.task) {
-      task = utils.hubInProcessorOut(message.task);
+      task = message.task;
       command = task.node.command;
       commandArgs = task.node.commandArgs;
       // We do not lock for start because start only arrives once on the coprocessor with task.node.coprocessing 

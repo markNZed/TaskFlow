@@ -2,9 +2,9 @@
 
 The Hub is implemented in NodeJS using the Express framework.
 
-Information for the Hub is held in the `task.hub` object. The Processor communicates with the Hub using the object `task.node` which includes fields: command, commandArgs, and config. 
+Information for the Hub is held in the `task.node` object. The Processor communicates with the Hub using the object `task.node` which includes fields: command, commandArgs, and config. 
 
-`task.hub.command` maybe be one of:
+`task.node.command` maybe be one of:
   * partial
   * update
   * start
@@ -38,7 +38,7 @@ The Hub provides the following features:
 * Insertion of previous Task outputs into Task config template variables
 * User/group permissions to access "Start" Tasks are stored/applied
   * The Task tree is built for the available start Tasks (returned with the interface request at the moment)
-* The `task.hub.command` "pong" command responds to `task.node.command` "ping" commands
+* The `task.node.command` "pong" command responds to `task.node.command` "ping" commands
 * `task.commandArgs.lock` (and `task.commandArgs.lockBypass`) so updates do not collide
 * `task.meta.updateAt` timestamp
 * `task.meta.createdAt` timestamp
@@ -63,7 +63,7 @@ Then to run: `npm start`
 # Future
 * Hierarchy
   * Many Hubs that can be coordinated by a Hub.
-  * Environments not supported by Nodes registered with the Hub passed up to a hub-of-hubs
+  * Environments not supported by Nodes registered with the Hub passed up to a Hub-of-Hubs
 * Security/Privacy
   * Filtering of Task content
 * Separation of concerns into a pipeline

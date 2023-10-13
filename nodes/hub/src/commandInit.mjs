@@ -9,7 +9,8 @@ import taskSync_async from "./taskSync.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandInit_async(task) {
-  let nodeId = task.hub.sourceNodeId;
+  utils.debugTask(task);
+  let nodeId = task.node.sourceNodeId;
   try {
     utils.logTask(task, "commandInit_async id:" + task.id + " from nodeId:" + nodeId);
     await taskSync_async(task.instanceId, task);

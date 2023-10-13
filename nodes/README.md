@@ -4,7 +4,7 @@
 
 Information for the Processor is held in the `task.node` object.
 
-The Processor replaces the `task.hub` object before passing the task to a Task Function.
+The Processor replaces the `task.node` object before passing the task to a Task Function.
 
 The Task Function mainly communicates with the Processor using the object `task.command`. The Processor can use language specific side-channels to communicate with the Task Function e.g., events, callbacks, promises, etc. The principle has a Task Function is implemented for each environment raher than being agnostic, the JSON schema of the Task is language agnostic and allows for synchronization between environments. Only the Task Function writes to `task.command`
 
@@ -24,7 +24,7 @@ The Processor communicates with the Hub using the object `task.node` Only the Pr
 
 The `update` sends a diff, not the entire object, this helps to avoid different Processors over-writing parts of the Task they are not modifying. The last state of the task received is stored in `task.node.origTask` which is used to compute the diff before sending to the Hub.
 
-The Processor receives commands from the Hub via `task.hub.command`.
+The Processor receives commands from the Hub via `task.node.command`.
 
 The Processor abstraction is useful during development. For example, create a new Processor by copying and renaming an existing one, then allocate a single Task Function to this new processor and remove it from the old processor, now you can experiment with refactoring the Processor without breaking all Task Functions. 
 
@@ -44,7 +44,7 @@ In the directory `shared/processor` there can be files shared between procesors,
 
 ### Hub Coprocessor
 
-A Processor may register as a Hub Coprocessor in which case it follows a different protocol. A Hub Coprocessor reveives each task sent to the hub and can operate on that task before returning it to the hub. When a Processor sends a task update to the Hub, like all other Processors assocaited with the task, it also receives the update from the hub. The Hub Coprocessor can intercept a task update modify the task. The Hub Coprocessor sees all tasks that go through the hub while a Processor will only see tasks that are associated with the environment it provides.
+A Processor may register as a Hub Coprocessor in which case it follows a different protocol. A Hub Coprocessor reveives each task sent to the Hub and can operate on that task before returning it to the Hub. When a Processor sends a task update to the Hub, like all other Processors assocaited with the task, it also receives the update from the Hub. The Hub Coprocessor can intercept a task update modify the task. The Hub Coprocessor sees all tasks that go through the Hub while a Processor will only see tasks that are associated with the environment it provides.
 
 ### Future
 

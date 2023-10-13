@@ -131,18 +131,19 @@ router.post("/", async (req, res) => {
       }
       let task = {id: "autoStart"};
       task["instanceId"] = NODE.id;
-      task["hub"] = {};
-      task.hub["commandArgs"] = {
+      task["node"] = {};
+      task.node["commandArgs"] = {
         init: initTask,
         authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
       }
-      task.hub["command"] = "start";
-      task.hub["commandDescription"] = "Autostarting task";
-      task.hub["sourceNodeId"] = NODE.id;
-      task.hub["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
+      task.node["command"] = "start";
+      task.node["commandDescription"] = "Autostarting task";
+      task.node["sourceNodeId"] = NODE.id;
+      task.node["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
       task["nodes"] = {};
       task.nodes[nodeId] = activeNodes.get(nodeId);
       console.log("Autostarting task ", taskId, environment);
+      utils.debugTask(task);
       commandStart_async(task);
       if (autoStartTask.once) {
         await autoStartTasksStore_async.delete(taskId);

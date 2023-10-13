@@ -11,8 +11,9 @@ import { NODE } from "../config.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
 export async function commandStart_async(task) {
-  const commandArgs = task.hub.commandArgs;
-  let initiatingNodeId = task.hub.initiatingNodeId || NODE.id;
+  utils.debugTask(task);
+  const commandArgs = task.node.commandArgs;
+  let initiatingNodeId = task.node.initiatingNodeId || NODE.id;
   try {
     utils.logTask(task, "commandStart_async from initiatingNodeId:" + initiatingNodeId);
     let initTask;
@@ -28,8 +29,8 @@ export async function commandStart_async(task) {
         user: {id: task.user.id},
       };
     }
-    if (task.hub.commandDescription) {
-      initTask["commandDescription"] = task.hub.commandDescription;
+    if (task.node.commandDescription) {
+      initTask["commandDescription"] = task.node.commandDescription;
     }
     initTask["meta"] = initTask.meta || {};
     if (task?.meta?.messageId) {
@@ -39,10 +40,10 @@ export async function commandStart_async(task) {
     if (commandArgs.prevInstanceId) {
       initTask.meta["prevInstanceId"] = commandArgs.prevInstanceId;
     }
-    //utils.logTask(task, "commandStart_async coprocessed:", task.hub.coprocessed, "initTask", initTask);
+    //utils.logTask(task, "commandStart_async coprocessed:", task.node.coprocessed, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {
-      if (task.hub.coprocessed) {
+      if (task.node.coprocessed) {
         taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);

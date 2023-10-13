@@ -95,7 +95,7 @@ async function nodeInHubOut_async(task, activeTask) {
     statesSupported: incomingNode.statesSupported,
     statesNotSupported: incomingNode.statesNotSupported,
   };
-  task.hub = utils.deepMerge(lastHub, fromIncomingNode);
+  task.node = utils.deepMerge(lastHub, fromIncomingNode);
   if (command !== "partial") {
     utils.logTask(task, "processorToHub", command, "state:", task?.state?.current, "initiatingNodeId:", initiatingNodeId);
   }
@@ -105,10 +105,10 @@ async function nodeInHubOut_async(task, activeTask) {
 function checkLockConflict(task, activeTask) {
   utils.debugTask(task);
   if (task.meta) {
-    const lock = task.hub.commandArgs.lock || false;
-    const unlock = task.hub.commandArgs.unlock || false;
-    const lockBypass = task.hub.commandArgs.lockBypass || false;
-    const lockNodeId = task.hub.initiatingNodeId;
+    const lock = task.node.commandArgs.lock || false;
+    const unlock = task.node.commandArgs.unlock || false;
+    const lockBypass = task.node.commandArgs.lockBypass || false;
+    const lockNodeId = task.node.initiatingNodeId;
     
     if (lock && activeTask && !activeTask.meta?.locked) {
       task.meta.locked = lockNodeId;
@@ -133,7 +133,7 @@ function checkLockConflict(task, activeTask) {
       if (differenceInMinutes > 5 || localUpdatedAt === undefined) {
         utils.logTask(task, `UNLOCK task lock expired for ${lockNodeId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
       } else {
-        utils.logTask(task, `CONFLICT Task lock conflict with ${lockNodeId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
+        utils.logTask(task, `CONFLICT Task lock conflict with ${lockNodeId} command ${task.node.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new Error("Task locked", 423);
       }
     }
@@ -174,7 +174,7 @@ function checkAPIRate(task) {
 
 function checkErrorRate(task) {
   utils.debugTask(task);
-  if (task.error || task?.hub?.command === "error" || (task.id && task.id.endsWith(".error"))) {
+  if (task.error || task?.node?.command === "error" || (task.id && task.id.endsWith(".error"))) {
     //console.log("checkErrorRate errorCountThisMinute:", errorCountThisMinute, "lastErrorDate:", lastErrorDate, "task.error:", task.error);
     const currentDate = new Date();
     const resetDate = new Date(
@@ -221,8 +221,8 @@ async function processError_async(task, tasksStore_async) {
     } else {
       errorTask = await findClosestErrorTask_async(task.id, tasksStore_async);
     }
-    task.hub.command = "error";
-    task.hub.commandArgs = { errorTask };
+    task.node.command = "error";
+    task.node.commandArgs = { errorTask };
   }
   return task;
 }
@@ -283,23 +283,23 @@ async function taskProcess_async(task) {
       activeTask.nodes = task.nodes;
       await setActiveTask_async(activeTask);
     }
-    if (task.hub.command !== "partial") {
+    if (task.node.command !== "partial") {
       task = checkLockConflict(task, activeTask);
-      if (!task.hub.coprocessing) {
+      if (!task.node.coprocessing) {
         task = checkAPIRate(task);
       }
       task = await processError_async(task, tasksStore_async);
-      if (task.hub.command === "update" || task.hub.command === "init") {
+      if (task.node.command === "update" || task.node.command === "init") {
         // We may receive a diff where familyId is not sent but
         // we need familyId to set the outputStore_async
         task.familyId = task.familyId || activeTask.familyId;
         task = await processOutput_async(task, outputStore_async);
       }
-      if (NODE.haveCoprocessor && !task.hub.coprocessing && !task.hub.coprocessed) {
+      if (NODE.haveCoprocessor && !task.node.coprocessing && !task.node.coprocessed) {
         utils.logTask(task, "sending to coprocessor");
         // Send to first coprocessor
         // We will receive the task back from the coprocessor through websocket
-        if (task.instanceId && task.hub.command !== "partial") {
+        if (task.instanceId && task.node.command !== "partial") {
           // To avoid updates being routed to coprocessor before init completes
           await taskLock(task.instanceId, "taskProcess");
         }

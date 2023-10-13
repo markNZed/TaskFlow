@@ -14,7 +14,7 @@ sync will not run task function so menu will not be updated
   Created an option syncUpdate that applies a normal update
 Refactoring 
   Replace task.hub with task.node
-    .hub ?.hub hub:
+    \.hub\b hub: "hub"
   Align similar modules on the hub and rxjs
   Unique to the hub:
     config of tasks, tasktypes, users, groups

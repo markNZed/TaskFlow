@@ -10,12 +10,13 @@ import { commandStart_async } from "./commandStart.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
 
 async function doneTask_async(task) {
+  utils.debugTask(task);
   // Should be an assertion
-  if (!task.hub.commandArgs?.done) {
+  if (!task.node.commandArgs?.done) {
     utils.logTask(task, "task", task);
     throw new Error("Called doneTask_async on a task that is not done");
   }
-  let nextTaskId = task.hub.commandArgs?.nextTaskId;
+  let nextTaskId = task.node.commandArgs?.nextTaskId;
   utils.logTask(task, "Task " + task.id + " done, next " + nextTaskId);
   await setActiveTask_async(task);
   // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
@@ -27,17 +28,17 @@ async function doneTask_async(task) {
       groupId: task?.groupId,
       familyId: task.familyId,
     }
-    task.hub.commandArgs = {
+    task.node.commandArgs = {
       init: initTask,
       authenticate: false, // Do we need this because request is not coming from internet but local node, would be better to detect this in the authentication?
     }
     await commandStart_async(task);
-    //await taskStart_async(initTask, false, nodeId, task.instanceId);
     // In theory commandStart_async will update activeTasksStore and that will send the task to the correct node(s)
   }
 }
 
 async function doUpdate(commandArgs, task) {
+  utils.debugTask(task);
   if (commandArgs?.done) {
     utils.logTask(task, "Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
     await doneTask_async(task);
@@ -54,8 +55,8 @@ export async function commandUpdate_async(task) {
   if (task.instanceId === undefined) {
     throw new Error("Missing task.instanceId");
   }
-  let nodeId = task.hub.sourceNodeId;
-  const commandArgs = task.hub.commandArgs;
+  let nodeId = task.node.sourceNodeId;
+  const commandArgs = task.node.commandArgs;
   let instanceId = task.instanceId;
   if (commandArgs?.syncTask?.instanceId) {
     instanceId = commandArgs.syncTask.instanceId;
@@ -74,14 +75,14 @@ export async function commandUpdate_async(task) {
       }
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
-      task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.hub);
-      task.hub.commandArgs["syncTask"] = null;
+      task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.node);
+      task.node.commandArgs["syncTask"] = null;
       if (commandArgs.syncUpdate) {
-        task.hub.commandArgs["sync"] = null; // Map the sync to a "normal" update
+        task.node.commandArgs["sync"] = null; // Map the sync to a "normal" update
       }
     } else {
       // There should be no need to do a merge here and it becomes very expensive
-      //task = utils.deepMergeHub(activeTask, task, task.hub);
+      //task = utils.deepMergeHub(activeTask, task, task.node);
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     utils.logTask(task, task.meta.broadcastCount + " commandUpdate_async " + task.id);

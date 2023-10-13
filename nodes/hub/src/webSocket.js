@@ -27,7 +27,7 @@ function wsSendObject(nodeId, message = {}) {
     console.error(`Lost websocket for wsSendObject with nodeId ${nodeId} and message task ${message.task}`);
   } else {
     ws.send(JSON.stringify(message));
-    if (message.task.hub.command !== "pong") {
+    if (message.task.node.command !== "pong") {
       //console.log("wsSendObject message.task.output.sending", message.task?.output?.sending);
       //console.log("wsSendObject ", nodeId, message.task.node )
     }
@@ -37,7 +37,7 @@ function wsSendObject(nodeId, message = {}) {
 const wsSendTask = async function (taskIn, nodeId, activeTask) {
   utils.debugTask(taskIn, "input");
   // If we are sending to a Hub node then don't bother sending diff ?
-  const currentNode = utils.deepClone(taskIn.hub);
+  const currentNode = utils.deepClone(taskIn.node);
   if (!currentNode?.command) {
     throw new Error("Missing command in wsSendTask" + JSON.stringify(taskIn));
   }
@@ -82,16 +82,18 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   // For example task.command === "partial" does not have task.nodes
   //utils.logTask(task, "wsSendTask currentNode", currentNode);
   if (outgoingNode) {
-    //utils.logTask(task, "wsSendTask task.nodes", nodeId, task.nodes);
+    utils.logTask(task, "wsSendTask outgoingNode", nodeId);
     //deep copy because we are going to edit the object
     task["node"] = outgoingNode;
-    task.node["command"] = null;
-    task.node["commandArgs"] = null;
     delete task.nodes;
   } else {
     // When sending the register command we do not have a nodeId
-    task.node = activeNodes.get(nodeId) || {};
+    utils.logTask(task, "wsSendTask no outgoingNode", nodeId);
+    task["node"] = activeNodes.get(nodeId) || currentNode;
   }
+  task.node["command"] = currentNode.command;
+  task.node["commandArgs"] = currentNode.commandArgs;
+  task.node["commandDescription"] = currentNode.commandDescription;
   const { coprocessing, coprocessed, initiatingNodeId, sourceNodeId } = currentNode;
   if (task.node.role === "coprocessor") {
     task.node["coprocessing"] = coprocessing;
@@ -150,11 +152,10 @@ function initWebSocketServer(server) {
             meta: {
               updatedAt: utils.updatedAt(),
             },
-            hub: {
+            node: {
               command: "register",
               commandDescription: `Request ${nodeId} to register`,
             },
-            node: {},
           };
           console.log("Request for registering " + nodeId)
           wsSendTask(taskRegister, nodeId);
@@ -166,24 +167,23 @@ function initWebSocketServer(server) {
           meta: {
             updatedAt: utils.updatedAt(),
           },
-          hub: {command: "pong"},
-          node: {},
+          node: {command: "pong"},
         };
         //utils.logTask(taskPong, "Pong " + incomingNode.id);
         wsSendTask(taskPong, incomingNode.id);
       } else if (incomingNode?.command === "partial") {
         task = await taskProcess_async(task);
         const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
-        let initiatingNodeId = task.hub.initiatingNodeId
+        let initiatingNodeId = task.node.initiatingNodeId
         for (const nodeId of activeTaskNodes) {
           if (nodeId !== initiatingNodeId) {
             const nodeData = activeNodes.get(nodeId);
-            if (nodeData && nodeData.commandsAccepted.includes(task.hub.command)) {
+            if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
               const ws = connections.get(nodeId);
               if (!ws) {
                 utils.logTask(task, "Lost websocket for ", nodeId, connections.keys());
               } else {
-                //utils.logTask(task, "Forwarding " + task.hub.command + " to " + nodeId + " from " + nodeId)
+                //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
                 wsSendObject(nodeId, {task: task});
               }
             }
@@ -203,21 +203,21 @@ function initWebSocketServer(server) {
         }
 
         const byteSize = Buffer.byteLength(message, 'utf8');
-        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.hub?.sourceNodeId}`);
+        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.node?.sourceNodeId}`);
 
-        let initiatingNodeId = task.hub.initiatingNodeId;
+        let initiatingNodeId = task.node.initiatingNodeId;
 
         // We start the co-processing from taskSync.mjs so here has passed through coprocessing
-        task.hub["coprocessing"] = false;
-        task.hub["coprocessed"] = true;
-        task.hub.sourceNodeId = initiatingNodeId;
+        task.node["coprocessing"] = false;
+        task.node["coprocessed"] = true;
+        task.node.sourceNodeId = initiatingNodeId;
 
         // Allows us to track where the request came from while coprocessors are in use
-        task.hub.sourceNodeId = initiatingNodeId;
+        task.node.sourceNodeId = initiatingNodeId;
 
         utils.logTask(task, "initiatingNodeId", initiatingNodeId);
 
-        switch (task.hub.command) {
+        switch (task.node.command) {
           case "init":
             commandInit_async(task);
             break;
@@ -234,7 +234,7 @@ function initWebSocketServer(server) {
             commandJoin_async(task);
             break;
           default:
-            throw new Error("Unknown command " + task.hub.command);
+            throw new Error("Unknown command " + task.node.command);
         }
       }
 
