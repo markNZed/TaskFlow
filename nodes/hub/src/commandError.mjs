@@ -60,7 +60,7 @@ export async function commandError_async(task) {
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
     }
-    task = utils.deepMergeHub(activeTask, task, task.node);
+    task = utils.deepMergeNode(activeTask, task, task.node);
     if (!task.node.commandArgs?.errorTask) {
       // We are receiving an error after coprocessing
       await taskSync_async(task.instanceId, task);

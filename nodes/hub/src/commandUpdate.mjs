@@ -75,14 +75,14 @@ export async function commandUpdate_async(task) {
       }
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
-      task = utils.deepMergeHub(activeTask, commandArgs.syncTask, task.node);
+      task = utils.deepMergeNode(activeTask, commandArgs.syncTask, task.node);
       task.node.commandArgs["syncTask"] = null;
       if (commandArgs.syncUpdate) {
         task.node.commandArgs["sync"] = null; // Map the sync to a "normal" update
       }
     } else {
       // There should be no need to do a merge here and it becomes very expensive
-      //task = utils.deepMergeHub(activeTask, task, task.node);
+      //task = utils.deepMergeNode(activeTask, task, task.node);
     }
     task.meta.updateCount = activeTask.meta.updateCount;
     utils.logTask(task, task.meta.broadcastCount + " commandUpdate_async " + task.id);

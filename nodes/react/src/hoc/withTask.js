@@ -331,8 +331,8 @@ function withTask(Component) {
           console.log("updateDiff.node.commandPending", updateDiff.node.commandPending);
           updateDiff.node["commandPending"] = null;
         }
-        let updatedTask = utils.deepMergeProcessor(lastTask, updateDiff, updateDiff.node);
-        //console.log("After deepMergeProcessor updatedTask", utils.deepClone(updatedTask));
+        let updatedTask = utils.deepMergeNode(lastTask, updateDiff, updateDiff.node);
+        //console.log("After deepMergeNode updatedTask", utils.deepClone(updatedTask));
         utils.removeNullKeys(updatedTask);
         //console.log("After removeNullKeys updatedTask", utils.deepClone(updatedTask));
         //let updatedTask = utils.deepMerge(lastTask, updateDiff)

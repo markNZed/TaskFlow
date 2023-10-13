@@ -58,7 +58,7 @@ taskSubject
     */
     mergeMap(async (task) => {
       utils.logTask(task, "Incoming task command:" + task.node.command + " initiatingNodeId:" + task.node.initiatingNodeId);
-      task = utils.nodeInTaskOut(task);
+      task = utils.nodeToTask(task);
       const taskCopy = utils.deepClone(task); //deep copy
       if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
@@ -196,7 +196,7 @@ function wsSendObject(message) {
 const wsSendTask = async function (task) {
   //utils.logTask(task, "wsSendTask ", JSON.stringify(task, null, 2));
   let message = {};
-  task = await utils.taskInNodeOut_async(task, NODE.id, getActiveTask_async);
+  task = await utils.taskToNode_async(task, NODE.id, getActiveTask_async);
   task.meta = task.meta || {};
   if (NODE.role !== "coprocessor") {
     task.meta.prevMessageId = task.meta.messageId;
@@ -280,7 +280,7 @@ const connectWebSocket = () => {
         utils.logTask(task, "Missing lastTask for update", JSON.stringify(task, null, 2));
         throw new Error("Missing lastTask for update");
       }
-      const mergedTask = utils.deepMergeProcessor(lastTask, task, task.node);
+      const mergedTask = utils.deepMergeNode(lastTask, task, task.node);
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }

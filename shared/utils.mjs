@@ -185,25 +185,10 @@ const utils = {
     return obj; // Return the modified original object
   },
 
-  deepMergeProcessor: function(prevState, update, processorIn) {
-    const node = utils.deepClone(processorIn);
+  deepMergeNode: function(prevState, update, nodeIn) {
+    const node = utils.deepClone(nodeIn);
     let result = utils.deepMerge(prevState, update);
     result.node = node;
-    //utils.removeNullKeys(result);
-    return result;
-  },
-
-  deepMergeHub: function(prevState, update, hubIn) {
-    //const start = Date.now();
-    const node = utils.deepClone(hubIn);
-    let result = utils.deepMerge(prevState, update);
-    if (!result) {
-      console.log("deepMergeHub prevState:", prevState);
-      console.log("deepMergeHub update:", update)
-    }
-    result.node = node;
-    //utils.removeNullKeys(result);
-    //console.log("deepMergeHub duration", Date.now() - start);
     return result;
   },
 
@@ -875,7 +860,7 @@ const utils = {
   },
 
   // Rename e.g. processorToTaskFunction, taskFunctionToProcessor, processorToHub, hubToProcessor
-  nodeInTaskOut: function(task) {
+  nodeToTask: function(task) {
     if (task.node.stateLast) {
       // Diffs may not have the state information
       // Maybe we do not need to update in this case?
@@ -888,7 +873,7 @@ const utils = {
     return task;
   },
 
-  taskInNodeOut_async: async function(task, nodeId, getActiveTask_async) {
+  taskToNode_async: async function(task, nodeId, getActiveTask_async) {
     let taskCopy = utils.deepClone(task); // We do not want any side efects on task
     utils.debugTask(taskCopy, "input");
     //console.log("taskInNodeOut input taskCopy.output", taskCopy.output);
