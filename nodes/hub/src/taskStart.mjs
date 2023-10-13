@@ -234,24 +234,12 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
           }
         });
       }
-      // With a coprocessor and an initial start command there is no instanceId
-      // The nodes cannot be restored because there is no start task stored
-      if (!prevTask.node) {
-        task.node = activeNodes.get(nodeId);
-      } else {
-        task.node = prevTask.node;
-        if (task.node.origTask) {
-          delete task.node.origTask;
-        }
-      }
       task.users = prevTask.users || {}; // Could be mepty in the case of error task
       task.state.address = prevTask.state?.address ?? task.state.address;
       task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     } else {
-      task.node = activeNodes.get(nodeId);
+      task.nodes[nodeId] = activeNodes.get(nodeId);
     }
-    task.node["command"] = null;
-    task.node["commandArgs"] = null;
     /*
     // Update all the active prevTask with new child
     prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
@@ -273,6 +261,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
     */
   } else {
     task.meta["errorHandlerInstanceId"] = task.instanceId;
+    task.nodes[nodeId] = activeNodes.get(nodeId);
   }
   return task;
 }
@@ -528,9 +517,6 @@ async function taskStart_async(
 
     // When we join we want to keep the nodes info related to the joined task
     task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/);
-    // Set task.node.id after copying info from prevTask
-    task.nodes[nodeId] = task.nodes[nodeId] ?? {};
-    task.nodes[nodeId] = task.node;
 
     const user = await usersStore_async.get(task.user.id);
     if (task.users[task.user.id]) {

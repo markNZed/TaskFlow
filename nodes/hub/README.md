@@ -45,7 +45,7 @@ The Hub provides the following features:
 * `task.meta.parentId` the `task.id` of the Task that started this Task
 * `task.meta.updateCount` the number of Task updates completed
 * `task.meta.updatesThisMinute` rate of API accesses per minute
-* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Nodes.
+* The `update` command sends a diff, not the entire object.
 * A mutex imposes serial updates per task instanceId
 * Assertion if `task.request` and `task.response` both contain values
 * Assertion if `task.state.current` is not listed in `task.state.legal`

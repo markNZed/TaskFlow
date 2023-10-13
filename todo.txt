@@ -14,10 +14,7 @@ sync will not run task function so menu will not be updated
   Created an option syncUpdate that applies a normal update
 Refactoring 
   Replace task.hub with task.node
-    How to distinguish between type/role/processing
-      Iterate over them and filter at the place where we need to - should not be too expensive
     .hub ?.hub hub:
-    task.processor tells us which was the last processor - are we using that information?
   Align similar modules on the hub and rxjs
   Unique to the hub:
     config of tasks, tasktypes, users, groups

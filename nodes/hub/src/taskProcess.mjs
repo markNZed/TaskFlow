@@ -95,7 +95,6 @@ async function nodeInHubOut_async(task, activeTask) {
     statesSupported: incomingNode.statesSupported,
     statesNotSupported: incomingNode.statesNotSupported,
   };
-  delete task.node;
   task.hub = utils.deepMerge(lastHub, fromIncomingNode);
   if (command !== "partial") {
     utils.logTask(task, "processorToHub", command, "state:", task?.state?.current, "initiatingNodeId:", initiatingNodeId);
