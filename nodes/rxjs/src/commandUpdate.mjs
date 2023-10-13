@@ -31,7 +31,7 @@ export async function commandUpdate_async(wsSendTask, task) {
     mergedTask["commandArgs"] = commandArgs;
     mergedTask.commandArgs["lockBypass"] = true; // Could enforce this on the hub when sync is true"]
     mergedTask["meta"] = {};
-    mergedTask["node"] = {};
+    mergedTask.node = utils.deepClone(NODE);
     mergedTask.node["coprocessingDone"] = true; // So sync is not coprocessed again, it can still be logged
   } else {
     utils.logTask(task, "commandUpdate_async requesting lock for update", task.instanceId);
@@ -41,7 +41,7 @@ export async function commandUpdate_async(wsSendTask, task) {
       throw new Error("No lastTask found for " + task.instanceId);
     }
     mergedTask = utils.deepMerge(lastTask, task);
-    mergedTask.node = JSON.parse(JSON.stringify(task.node));
+    mergedTask.node = utils.deepClone(task.node);
     mergedTask.node["coprocessingDone"] = false;
   } 
   mergedTask["command"] = "update";

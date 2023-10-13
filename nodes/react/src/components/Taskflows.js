@@ -78,7 +78,8 @@ function Taskflows(props) {
           command: "start",
           commandArgs: {
             id: selectedTaskId,
-          }
+          },
+          commandDescription: "Task selected",
         });
         console.log("Taskflows start", selectedTaskId)
       } else {
@@ -97,6 +98,7 @@ function Taskflows(props) {
         commandArgs: {
           id: selectedTaskId,
         },
+        commandDescription: "Start the only task",
       });
       setHideSide(true);
       setDrawWidth(0);

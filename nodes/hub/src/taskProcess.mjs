@@ -36,7 +36,7 @@ async function processorInHubOut_async(task, activeTask) {
   //utils.logTask(task, "task.node.initiatingNodeId ", task.node.initiatingNodeId);
   let initiatingNodeId = task.node.initiatingNodeId || id;
   //utils.logTask(task, "initiatingNodeId", initiatingNodeId);
-  if (!task.node.isCoprocessor) {
+  if (task.node.role !== "coprocessor") {
     initiatingNodeId = id;
   }
   //utils.logTask(task, "initiatingNodeId", initiatingNodeId);

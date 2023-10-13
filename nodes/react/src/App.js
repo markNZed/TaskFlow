@@ -61,20 +61,25 @@ function App({ activeWorkerCount, workerId }) {
   // Register upon request from Hub
   const registerProcessor = async (nodeId) => {
     setRegistering(true);
+    const language = navigator?.language?.toLowerCase() ?? 'en';
+    const node = {
+      nodeId: nodeId,
+      commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
+      environment: "react",
+      language: language,
+      type: "processor",
+      role: "consumer",
+      processing: "batch",
+    }
+    replaceGlobalState("node", node);
     try {    
-      const language = navigator?.language?.toLowerCase() ?? 'en';
       const response = await fetch(`${hubUrl}/api/register`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-           nodeId: nodeId,
-           commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error"],
-           environment: "react",
-           language: language,
-        }),
+        body: JSON.stringify(node),
       });
       const data = await response.json();
       console.log("Registered node: ", nodeId, data);

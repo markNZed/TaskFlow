@@ -289,6 +289,7 @@ function withTask(Component) {
               "command": "start",
               "commandArgs": {
                 id: childId,
+                prevInstanceId: props.task.instanceId,
               }
             });
             // Wait for startTaskSentIdRef before continuing the loop
@@ -383,7 +384,7 @@ function withTask(Component) {
         // In the case of an init we cannot have a pending command
         // A join may have that state (could clean that up in the Hub)
         newTask.node["commandPending"] = null
-        console.log("useInitWSFilter withTask ", props.task, " started", newTask);
+        console.log("useInitWSFilter withTask", props.task, " started", newTask);
         newTask.node["origTask"] = utils.deepClone(newTask); // deep copy to avoid self-reference
         if (newTask.meta.prevInstanceId === undefined) {
           console.log("useInitWSFilter prevInstanceId undefined", props.task.id, "with", newTask.id);
@@ -453,7 +454,7 @@ function withTask(Component) {
       if (!currentState) return false;
 
       // The currentState may be initialized and the stateRef.current and lastStateRef.current have not been initialized
-      // Don't initialize lastStateRef.current so we see the initial transition to the "start" state
+      // Don't initialize lastStateRef.current so we see the initial transition to the start state
       if (stateRef.current === undefined) {
         stateRef.current = currentState
       }

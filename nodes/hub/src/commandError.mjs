@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { setActiveTask_async, getActiveTask_async, activeProcessors, activeCoprocessors } from "./storage.mjs";
+import { setActiveTask_async, getActiveTask_async, activeProcessors } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { utils } from "./utils.mjs";
@@ -20,9 +20,6 @@ async function errorTask_async(task) {
   const nodeId = task.hub.initiatingNodeId;
   task.error.sourceNodeId = nodeId;
   let sourceProcessor = activeProcessors.get(nodeId);
-  if (!sourceProcessor) {
-    sourceProcessor = activeCoprocessors.get(nodeId);
-  }
   console.log("sourceProcessor:", JSON.stringify(sourceProcessor, null, 2), "nodeId", nodeId);
   task.error.environments = [sourceProcessor.environment];
   let nextTaskId = task.hub.commandArgs.errorTask;

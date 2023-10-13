@@ -1177,6 +1177,10 @@ const utils = {
     return null;
   },
 
+  js: function(obj) {
+    return JSON.stringify(obj, null, 2)
+  },
+
   debugTask: async function(task, context = "") {
     if (task === undefined) {
       throw new Error("Task undefined in debugTask");
@@ -1189,8 +1193,10 @@ const utils = {
       console.error("Task:", task);
       throw new Error("ERROR debugTask: task.node.origTask.id !== task.id");
     }
-    // Could set task.debug via configuration
+
+    // Can set task.debug via configuration
     if (!task?.config?.debug?.debugTask) {return}
+
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
     const command = task.command || task?.node?.command || task?.hub?.command;
@@ -1280,10 +1286,18 @@ const utils = {
       throw new Error("ERROR debugTask: task.commandDescription is undefined");
     }
     */
+    /*
+    if (task?.node?.id && !task.node.type) {
+      logParts.push('node:', utils.js(task.node));
+      console.log(logParts.join(', '));
+      throw new Error("task?.node?.id && !task.node.type");
+    }
+    logParts.push('nodeId:', task?.node?.id);
+    */
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     //logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask
-    console.log(logParts.join(' '));
+    console.log(logParts.join(', '));
   },
 
   assert: function(condition, msg = 'Assertion failed') {

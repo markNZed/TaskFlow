@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoprocessors, outputStore_async } from "./storage.mjs";
+import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -208,7 +208,7 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   return task;
 }
 
-async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/) {
+async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcessors/*, instancesStore_async, setActiveTask_async*/) {
   utils.debugTask(task);
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
@@ -237,7 +237,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
       // With a coprocessor and an initial start command there is no instanceId
       // The nodes cannot be restored because there is no start task stored
       if (!prevTask.node) {
-        task.node = {id: nodeId};
+        task.node = activeProcessors.get(nodeId);
       } else {
         task.node = prevTask.node;
         if (task.node.origTask) {
@@ -248,7 +248,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesSto
       task.state.address = prevTask.state?.address ?? task.state.address;
       task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     } else {
-      task.node = {id: nodeId};
+      task.node = activeProcessors.get(nodeId);
     }
     task.node["command"] = null;
     task.node["commandArgs"] = null;
@@ -308,7 +308,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
   return task;
 }
 
-function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors) {
+function allocateTaskToProcessors(task, nodeId, activeProcessors) {
   utils.debugTask(task);
   // Build list of nodes/environments that need to receive this task
   let taskNodes = []
@@ -341,7 +341,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
         if (node && node.environment === environment) {
           found = true;
           taskNodes.push(id);
-          task.nodes[id] = {id: id};
+          task.nodes[id] = node;
         }
       }
     }
@@ -351,23 +351,7 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoproces
         if (value.environment === environment) {
             found = true;
             taskNodes.push(activeProcessorId);
-            task.nodes[activeProcessorId] = {
-              id: activeProcessorId
-            };
-            break;
-        }
-      }       
-    }
-    // Find an active coprocessor that supports this environment
-    if (!found) {
-      for (const [activeCoprocessorId, value] of activeCoprocessors.entries()) {
-        if (value.environment === environment) {
-            found = true;
-            taskNodes.push(activeCoprocessorId);
-            task.nodes[activeCoprocessorId] = {
-              id: activeCoprocessorId,
-              isCoprocessor: true,
-            };
+            task.nodes[activeProcessorId] = value;
             break;
         }
       }       
@@ -434,7 +418,7 @@ async function taskStart_async(
       throw new Error("Could not find task with id " + initTask.id)
     }
 
-    utils.debugTask(task, "initTaskConfig");
+    utils.debugTask(task, `initTaskConfig ${nodeId}`);
 
     // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
     task.instanceId = uuidv4();
@@ -543,10 +527,10 @@ async function taskStart_async(
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
     // When we join we want to keep the nodes info related to the joined task
-    task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId/*, instancesStore_async, setActiveTask_async*/);
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcessors/*, instancesStore_async, setActiveTask_async*/);
     // Set task.node.id after copying info from prevTask
     task.nodes[nodeId] = task.nodes[nodeId] ?? {};
-    task.nodes[nodeId]["id"] = nodeId;
+    task.nodes[nodeId] = task.node;
 
     const user = await usersStore_async.get(task.user.id);
     if (task.users[task.user.id]) {
@@ -564,7 +548,7 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
     task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
-    const taskNodes = allocateTaskToProcessors(task, nodeId, activeProcessors, activeCoprocessors);
+    const taskNodes = allocateTaskToProcessors(task, nodeId, activeProcessors);
 
     await recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
 

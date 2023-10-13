@@ -243,7 +243,6 @@ const connectWebSocket = () => {
     let task;
     if (message?.task) {
       task = utils.hubInProcessorOut(message.task);
-      task.node["isCoprocessor"] = NODE.role === "coprocessor";
       command = task.node.command;
       commandArgs = task.node.commandArgs;
       // We do not lock for start because start only arrives once on the coprocessor with task.node.coprocessing 

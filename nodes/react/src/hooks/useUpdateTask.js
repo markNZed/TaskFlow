@@ -47,7 +47,7 @@ const useUpdateTask = (task, setTask) => {
             let instanceId = commandArgs.syncTask.instanceId || task.instanceId;
             snapshot["instanceId"] = instanceId;
             snapshot["meta"] = {};
-            snapshot["node"] = {};
+            snapshot["node"] = globalState.node;
           }
           wsSendTask(snapshot);
         } catch (error) {

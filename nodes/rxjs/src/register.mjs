@@ -21,7 +21,6 @@ const register_async = async () => {
       nodeId: NODE.id,
       environment: NODE.environment,
       commandsAccepted: NODE.commandsAccepted,
-      coprocessor: NODE.role === "coprocessor",
       language,
       type: NODE.type,
       role: NODE.role,

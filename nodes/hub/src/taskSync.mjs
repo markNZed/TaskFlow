@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTaskProcessorsStore_async, activeProcessors, activeCoprocessors, getActiveTask_async } from "./storage.mjs";
+import { activeTaskProcessorsStore_async, activeProcessors, getActiveTask_async } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -43,20 +43,25 @@ const taskSync_async = async (key, value) => {
   }
   let command = taskCopy.hub.command;
 
-  const coprocessorIds = Array.from(activeCoprocessors.keys());
+  // In reality there is one coprocessor we should cache this info
+  const coprocessorIds = [];
+  activeProcessors.forEach((value, key) => {
+    if (value.role === 'coprocessor') {
+      coprocessorIds.push(key);
+    }
+  });
   // Should only have max one coprocessor
   if (coprocessorIds.length > 1) {
     throw new Error("taskSync_async more than one coprocessor" + JSON.stringify(taskCopy));
   }
   let coprocessorId = coprocessorIds[0];
-  let coprocessorData = activeCoprocessors.get(coprocessorId);
+  let coprocessorData = activeProcessors.get(coprocessorId);
   let coprocessCommand;
   if (coprocessorData) {
     coprocessCommand = coprocessorData.commandsAccepted.includes(command)
   }
     
   // Pass to the first coprocessor if we should coprocess first
-  // Maybe isCoprocessor is redundant given that we set hub.coprocessing
   if (coprocessorData && coprocessCommand && !taskCopy.hub.coprocessing && !taskCopy.hub.coprocessingDone ) {
     utils.logTask(taskCopy, "Start coprocessing");
     // Start Co-Processing
@@ -65,7 +70,7 @@ const taskSync_async = async (key, value) => {
       taskCopy.nodes = {};
     }
     if (!taskCopy.nodes[coprocessorId]) {
-      taskCopy.nodes[coprocessorId] = {id: coprocessorId, isCoprocessor: true};
+      taskCopy.nodes[coprocessorId] = coprocessorData;
     }
     taskCopy.hub["coprocessing"] = true;
     taskCopy.hub["coprocessingDone"] = false;

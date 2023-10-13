@@ -19,7 +19,6 @@ EventEmitter.defaultMaxListeners = 100;
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeProcessors = new Map();
-var activeCoprocessors = new Map();
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
 //const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });
@@ -133,7 +132,6 @@ export {
   activeTaskProcessorsStore_async,
   activeProcessorTasksStore_async,
   activeProcessors,
-  activeCoprocessors,
   outputStore_async,
   sharedStore_async,
   connections,

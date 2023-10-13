@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors, activeCoprocessors, autoStartTasksStore_async } from "../storage.mjs";
+import { activeProcessors, autoStartTasksStore_async } from "../storage.mjs";
 import { NODE } from "../../config.mjs";
 import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
@@ -23,7 +23,6 @@ router.post("/", async (req, res) => {
   let environment = req.body.environment;
   let commandsAccepted = req.body?.commandsAccepted;
   let language = req.body?.language;
-  let coprocessor = req.body?.coprocessor;
   let type = req.body?.type;
   let role = req.body?.role;
   let processing = req.body?.processing;
@@ -36,38 +35,25 @@ router.post("/", async (req, res) => {
   if (language === undefined) {
     language = "EN";
   }
-  if (coprocessor === undefined) {
-    coprocessor = false;
-  }
 
   if (typeof environment !== "string") {
     throw new Error("environment must be a string");
   }
 
-  console.log("nodeId " + nodeId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted));
-  console.log("nodeId " + nodeId + " registered with environment " + JSON.stringify(environment) + " language " + language + " coprocessor " + coprocessor);
+  console.log("nodeId " + nodeId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted) + " environment " + JSON.stringify(environment) + " language " + language);
     
-  if (coprocessor) {
-    activeCoprocessors.set(nodeId, {
-      environment,
-      commandsAccepted,
-      language,
-      isCoprocessor: true,
-      type,
-      role,
-      processing,
-    })
+  if (role === "coprocessor") {
     NODE["haveCoprocessor"] = true;
-  } else {  
-    activeProcessors.set(nodeId, {
-      environment,
-      commandsAccepted,
-      language,
-      type,
-      role,
-      processing,
-    })
   }
+
+  activeProcessors.set(nodeId, {
+    environment,
+    commandsAccepted,
+    language,
+    type,
+    role,
+    processing,
+  })
 
   res.send({
     hubId: NODE.id,
@@ -78,9 +64,6 @@ router.post("/", async (req, res) => {
   let countAutoStartTasks = 0;
   let activeEnvironments = [];
   activeProcessors.forEach(item => {
-    activeEnvironments.push(item.environment);
-  });
-  activeCoprocessors.forEach(item => {
     activeEnvironments.push(item.environment);
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
@@ -157,6 +140,8 @@ router.post("/", async (req, res) => {
       task.hub["commandDescription"] = "Autostarting task";
       task.hub["sourceNodeId"] = NODE.id;
       task.hub["initiatingNodeId"] = nodeId; // So the task will start on the processor that is registering 
+      task["nodes"] = {};
+      task.nodes[nodeId] = activeProcessors.get(nodeId);
       console.log("Autostarting task ", taskId, environment);
       commandStart_async(task);
       if (autoStartTask.once) {

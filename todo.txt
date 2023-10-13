@@ -14,6 +14,8 @@ sync will not run task function so menu will not be updated
   Created an option syncUpdate that applies a normal update
 Refactoring 
   Align similar modules on the hub and rxjs
+  Should we use task.nodes[hub] on coprocessor ?
+    Might be quite easy
   .hub ?.hub hub:
   task.processor tells us which was the last processor - are we using that information?
   Unique to the hub:

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, activeCoprocessors } from "./storage.mjs";
+import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -44,8 +44,8 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   let task = utils.deepClone(taskIn); //deep copy because we make changes e.g. task.node
   // hubDiff will remove nodes and users
   let outgoingNode;
-  if (task.nodes && task.nodes[nodeId]) {
-    outgoingNode = JSON.parse(JSON.stringify(task.nodes[nodeId]));
+  if (task.nodes && task.nodes[nodeId] && Object.keys(task.nodes[nodeId]).length > 0) {
+    outgoingNode = utils.deepClone(task.nodes[nodeId]);
   }
   let user;
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
@@ -88,10 +88,11 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     task.node["commandArgs"] = null;
     delete task.nodes;
   } else {
-    task.node = {};
+    // When sending the register command we do not have a nodeId
+    task.node = activeProcessors.get(nodeId) || {};
   }
   const { coprocessing, coprocessingDone, initiatingNodeId, sourceNodeId } = currentNode;
-  if (task.node.isCoprocessor) {
+  if (task.node.role === "coprocessor") {
     task.node["coprocessing"] = coprocessing;
     task.node["coprocessingDone"] = coprocessingDone;
   }
@@ -139,7 +140,7 @@ function initWebSocketServer(server) {
           ws.data["nodeId"] = nodeId;
           console.log("Websocket nodeId", nodeId)
         }
-        if (!activeProcessors.has(nodeId) && !activeCoprocessors.has(nodeId)) {
+        if (!activeProcessors.has(nodeId)) {
           // Need to register again
           const task = {
             meta: {
@@ -244,7 +245,6 @@ function initWebSocketServer(server) {
       if (nodeId) {
         connections.delete(nodeId);
         activeProcessors.delete(nodeId);
-        activeCoprocessors.delete(nodeId);
         const activeProcessorTasks = await activeProcessorTasksStore_async.get(nodeId);
         if (activeProcessorTasks) {
           // for each task delete entry from activeTaskProcessorsStore_async
