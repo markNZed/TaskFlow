@@ -58,7 +58,7 @@ taskSubject
     */
     mergeMap(async (task) => {
       utils.logTask(task, "Incoming task command:" + task.node.command + " initiatingNodeId:" + task.node.initiatingNodeId);
-      task = utils.processorInTaskOut(task);
+      task = utils.nodeInTaskOut(task);
       const taskCopy = utils.deepClone(task); //deep copy
       if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
@@ -196,7 +196,7 @@ function wsSendObject(message) {
 const wsSendTask = async function (task) {
   //utils.logTask(task, "wsSendTask ", JSON.stringify(task, null, 2));
   let message = {};
-  task = await utils.taskInProcessorOut_async(task, NODE.id, getActiveTask_async);
+  task = await utils.taskInNodeOut_async(task, NODE.id, getActiveTask_async);
   task.meta = task.meta || {};
   if (NODE.role !== "coprocessor") {
     task.meta.prevMessageId = task.meta.messageId;
@@ -293,7 +293,7 @@ const connectWebSocket = () => {
       delete mergedTask.node.origTask; // delete so we do not have an old copy in origTask
       mergedTask.node["origTask"] = utils.deepClone(lastTask); // deep copy to avoid self-reference
       if (!mergedTask.node.coprocessing) {
-        await utils.processorActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
+        await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       }
       // Emit the mergedTask into the taskSubject
       taskSubject.next(mergedTask);
@@ -302,14 +302,14 @@ const connectWebSocket = () => {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
       if (!task.node.coprocessing) {
         if (command !== "start") {
-          task = await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
+          task = await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
         }
       }
       taskSubject.next(task);
     } else if (command === "error") {
       utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
       if (!task.node.coprocessing) {
-        await utils.processorActiveTasksStoreSet_async(setActiveTask_async, task);
+        await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
       }
       taskSubject.next(task);
     } else if (command === "pong") {

@@ -28,7 +28,7 @@ function hubAssertions(taskDiff, mergedTask) {
   utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
-async function processorInHubOut_async(task, activeTask) {
+async function nodeInHubOut_async(task, activeTask) {
   utils.debugTask(task);
   const { command, id, coprocessing, coprocessed, statesSupported, statesNotSupported } = task.node;
   // Could initiate from a node before going through the coprocessor
@@ -52,14 +52,14 @@ async function processorInHubOut_async(task, activeTask) {
   task.node.commandArgs = null;
   task.node.coprocessing = null;
   task.node.coprocessed = null;
-  const activeTaskProcessors = activeTask?.nodes || {};
+  const activeTaskNodes = activeTask?.nodes || {};
   const incomingNode = utils.deepClone(task.node);
-  if (!activeTaskProcessors[id]) {
-    activeTaskProcessors[id] = incomingNode;
+  if (!activeTaskNodes[id]) {
+    activeTaskNodes[id] = incomingNode;
   } else {
-    activeTaskProcessors[id] = utils.deepMerge(activeTaskProcessors[id], incomingNode);
+    activeTaskNodes[id] = utils.deepMerge(activeTaskNodes[id], incomingNode);
   }
-  task.nodes = activeTaskProcessors;
+  task.nodes = activeTaskNodes;
   /*
   // For each node in task.nodes log the stateLast
   for (const key in task.nodes) {
@@ -114,20 +114,20 @@ function checkLockConflict(task, activeTask) {
     const lock = task.hub.commandArgs.lock || false;
     const unlock = task.hub.commandArgs.unlock || false;
     const lockBypass = task.hub.commandArgs.lockBypass || false;
-    const lockProcessorId = task.hub.initiatingNodeId;
+    const lockNodeId = task.hub.initiatingNodeId;
     
     if (lock && activeTask && !activeTask.meta?.locked) {
-      task.meta.locked = lockProcessorId;
+      task.meta.locked = lockNodeId;
       utils.logTask(task, "LOCKED ",task.id, task.meta.locked);
     } else if (unlock) {
       task.meta.locked = null;
       utils.logTask(task, "UNLOCK explicit",task.id, task.meta.locked);
-    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockProcessorId) {
+    } else if (activeTask && activeTask.meta?.locked && activeTask.meta.locked === lockNodeId) {
       task.meta.locked = null;
       utils.logTask(task, "UNLOCK implicit",task.id, task.meta.locked);
     }
     
-    if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockProcessorId && !lockBypass && !unlock) {
+    if (activeTask && activeTask.meta?.locked && activeTask.meta.locked !== lockNodeId && !lockBypass && !unlock) {
       const now = new Date();
       let localUpdatedAt;
       if (task.meta.updatedAt) {
@@ -137,9 +137,9 @@ function checkLockConflict(task, activeTask) {
       const differenceInMinutes = (now - localUpdatedAt) / 1000 / 60;
       
       if (differenceInMinutes > 5 || localUpdatedAt === undefined) {
-        utils.logTask(task, `UNLOCK task lock expired for ${lockProcessorId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
+        utils.logTask(task, `UNLOCK task lock expired for ${lockNodeId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
       } else {
-        utils.logTask(task, `CONFLICT Task lock conflict with ${lockProcessorId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
+        utils.logTask(task, `CONFLICT Task lock conflict with ${lockNodeId} command ${task.hub.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new Error("Task locked", 423);
       }
     }
@@ -282,7 +282,7 @@ async function taskProcess_async(task) {
         }
       }
     }
-    task = await processorInHubOut_async(task, activeTask);
+    task = await nodeInHubOut_async(task, activeTask);
     // Update the node information
     if (activeTask && Object.keys(activeTask).length !== 0) {
       activeTask.nodes = task.nodes;

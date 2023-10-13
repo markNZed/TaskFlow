@@ -18,7 +18,7 @@ import { EventEmitter } from 'events';
 EventEmitter.defaultMaxListeners = 100;
 
 var connections = new Map(); // Stores WebSocket instances with unique session IDs
-var activeProcessors = new Map();
+var activeNodes = new Map();
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
 //const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });
@@ -38,11 +38,11 @@ const activeTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeTask
 // Schema:
 //   Key: instanceId
 //   Value: array of nodeIds
-const activeTaskProcessorsStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeTaskProcessors");
+const activeTaskNodesStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeTaskNodes");
 // Schema:
 //   Key: nodeId
 //   Value: array of instanceIds
-const activeProcessorTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeProcessorTasks");
+const activeNodeTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "activeNodeTasks");
 // Schema:
 //   Key: familyId
 //   Value: {taskId : output}
@@ -75,7 +75,7 @@ async function setActiveTask_async(task) {
 async function deleteActiveTask_async(instanceId) {
   return Promise.all([
     activeTasksStore_async.delete(instanceId),
-    activeTaskProcessorsStore_async.delete(instanceId)
+    activeTaskNodesStore_async.delete(instanceId)
   ]);
 }
 
@@ -94,8 +94,8 @@ if (NODE.storage.emptyAllDB) {
     instancesStore_async.clear(),
     familyStore_async.clear(),
     activeTasksStore_async.clear(),
-    activeTaskProcessorsStore_async.clear(),
-    activeProcessorTasksStore_async.clear(),
+    activeTaskNodesStore_async.clear(),
+    activeNodeTasksStore_async.clear(),
     outputStore_async.clear(),
     sharedStore_async.clear(),
     usersStore_async.clear(),
@@ -129,9 +129,9 @@ export {
   instancesStore_async,
   familyStore_async,
   activeTasksStore_async,
-  activeTaskProcessorsStore_async,
-  activeProcessorTasksStore_async,
-  activeProcessors,
+  activeTaskNodesStore_async,
+  activeNodeTasksStore_async,
+  activeNodes,
   outputStore_async,
   sharedStore_async,
   connections,

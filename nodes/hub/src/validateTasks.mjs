@@ -34,7 +34,7 @@ export const configSchema = yup.object()
     background: yup.boolean(),
     autoStartEnvironment: yup.string(),
     autoStartEnvironments: yup.array().of(yup.string()),
-    autoStartCoProcessor: yup.boolean(),
+    autoStartCoprocessor: yup.boolean(),
     autoStartpriority: yup.string(),
   }).noUnknown(true);
 

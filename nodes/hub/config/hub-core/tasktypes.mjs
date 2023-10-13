@@ -116,7 +116,7 @@ const tasktypes = [
     environments: ["rxjs-hub-coprocessor"],
     config: {
       autoStartEnvironment: "rxjs-hub-coprocessor",
-      autoStartCoProcessor: true,
+      autoStartCoprocessor: true,
       autoStartpriority: "1",
     },
     state: {

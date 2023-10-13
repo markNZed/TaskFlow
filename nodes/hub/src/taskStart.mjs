@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors, outputStore_async } from "./storage.mjs";
+import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, outputStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -14,17 +14,17 @@ import { NODE } from "../config.mjs";
 // The async function taskStart_async is where the sequence for starting a task is managed.
 // It makes use of many helper functions defined above it.
 
-async function checkActiveTaskAsync(instanceId, activeProcessors) {
+async function checkActiveTaskAsync(instanceId, activeNodes) {
   let activeTask = await getActiveTask_async(instanceId);
   let doesContain = false;
   if (activeTask) {
-    let activeTaskProcessors = await activeTaskProcessorsStore_async.get(instanceId)
+    let activeTaskNodes = await activeTaskNodesStore_async.get(instanceId)
     let environments = [];
-    if (activeTaskProcessors) {
+    if (activeTaskNodes) {
       // For each of the nodes associated with this task
       // build a list of environments that are already active 
-      for (let taskProcessorId of activeTaskProcessors) {
-        const nodeData = activeProcessors.get(taskProcessorId);
+      for (let taskNodeId of activeTaskNodes) {
+        const nodeData = activeNodes.get(taskNodeId);
         if (nodeData) {
           doesContain = true;
           environments.push(nodeData.environment);
@@ -54,7 +54,7 @@ async function processInstanceAsync(task, instanceId, mode, nodeId) {
   utils.debugTask(task);
   let instance = await instancesStore_async.get(instanceId);
   if (instance) {
-    let { activeTask, doesContain } = await checkActiveTaskAsync(instanceId, activeProcessors);
+    let { activeTask, doesContain } = await checkActiveTaskAsync(instanceId, activeNodes);
     if (activeTask && doesContain) {
       utils.logTask(task, "Task already active", instanceId);
       task = activeTask;
@@ -208,11 +208,11 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   return task;
 }
 
-async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcessors/*, instancesStore_async, setActiveTask_async*/) {
+async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/) {
   utils.debugTask(task);
   // Copy information from prevTask and update prevTask children
   if (prevTask) {
-    // prevTask.meta.prevInstanceId is used so if a Processor starts a task but that task completes and goes to 
+    // prevTask.meta.prevInstanceId is used so if a Node starts a task but that task completes and goes to 
     // nextTask on another node, then the originator can associate the task with it's original request
     task.meta["prevInstanceId"] = task?.meta?.prevInstanceId || prevTask?.meta?.prevInstanceId || prevTask.instanceId;
     task.meta["parentInstanceId"] = prevTask.instanceId;
@@ -237,7 +237,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcesso
       // With a coprocessor and an initial start command there is no instanceId
       // The nodes cannot be restored because there is no start task stored
       if (!prevTask.node) {
-        task.node = activeProcessors.get(nodeId);
+        task.node = activeNodes.get(nodeId);
       } else {
         task.node = prevTask.node;
         if (task.node.origTask) {
@@ -248,7 +248,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcesso
       task.state.address = prevTask.state?.address ?? task.state.address;
       task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     } else {
-      task.node = activeProcessors.get(nodeId);
+      task.node = activeNodes.get(nodeId);
     }
     task.node["command"] = null;
     task.node["commandArgs"] = null;
@@ -256,7 +256,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcesso
     // Update all the active prevTask with new child
     prevTask.meta.childrenInstanceId = prevTask.meta.childrenInstanceId ?? [];
     prevTask.meta.childrenInstanceId.push(task.instanceId);
-    // We update the prevTask and set sourceNodeId to hub so all Processors will be updated
+    // We update the prevTask and set sourceNodeId to hub so all Nodes will be updated
     await instancesStore_async.set(prevTask.instanceId, prevTask);
     // The prevTask task may be "done" so no longer active
     // Also we do not want to update a task that errored
@@ -308,7 +308,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
   return task;
 }
 
-function allocateTaskToProcessors(task, nodeId, activeProcessors) {
+function allocateTaskToNodes(task, nodeId, activeNodes) {
   utils.debugTask(task);
   // Build list of nodes/environments that need to receive this task
   let taskNodes = []
@@ -321,23 +321,23 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors) {
   utils.logTask(task, "task.environments", task.environments);
 
   // If the task only runs on coprocessor
-  if (task.config.autoStartCoProcessor) {
+  if (task.config.autoStartCoprocessor) {
     return [];
   }
   // Allocate the task to nodes that supports the environment(s) requested
-  const sourceProcessor = activeProcessors.get(nodeId);
-  console.log(`allocateTaskToProcessors ${nodeId} sourceProcessor`, sourceProcessor);
+  const sourceNode = activeNodes.get(nodeId);
+  console.log(`allocateTaskToNodes ${nodeId} sourceNode`, sourceNode);
   for (const environment of task.environments) {
-    // Favor the source Processor if we need that environment
+    // Favor the source Node if we need that environment
     let found = false;
-    if (sourceProcessor && sourceProcessor.environment === environment) {
+    if (sourceNode && sourceNode.environment === environment) {
       found = true;
       taskNodes.push(nodeId);
     }
     // If there are already node entries then favor these
     if (!found && task.nodes) {
       for (let id in task.nodes) {
-        const node = activeProcessors.get(id);
+        const node = activeNodes.get(id);
         if (node && node.environment === environment) {
           found = true;
           taskNodes.push(id);
@@ -347,11 +347,11 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors) {
     }
     // Find an active node that supports this environment
     if (!found) {
-      for (const [activeProcessorId, value] of activeProcessors.entries()) {
+      for (const [activeNodeId, value] of activeNodes.entries()) {
         if (value.environment === environment) {
             found = true;
-            taskNodes.push(activeProcessorId);
-            task.nodes[activeProcessorId] = value;
+            taskNodes.push(activeNodeId);
+            task.nodes[activeNodeId] = value;
             break;
         }
       }       
@@ -371,34 +371,34 @@ function allocateTaskToProcessors(task, nodeId, activeProcessors) {
   return taskNodes;
 }
 
-async function recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async) {
+async function recordTasksAndNodesAsync(task, taskNodes, activeTaskNodesStore_async, activeNodeTasksStore_async) {
   utils.debugTask(task);
   // Record which nodes have this task
   let nodeIds;
-  if (await activeTaskProcessorsStore_async.has(task.instanceId)) {
-    nodeIds = await activeTaskProcessorsStore_async.get(task.instanceId);
+  if (await activeTaskNodesStore_async.has(task.instanceId)) {
+    nodeIds = await activeTaskNodesStore_async.get(task.instanceId);
     taskNodes.forEach(id => {
       if (nodeIds && !nodeIds.includes(id)) {
         nodeIds.push(id);
       } 
     });
-    await activeTaskProcessorsStore_async.set(task.instanceId, nodeIds);
+    await activeTaskNodesStore_async.set(task.instanceId, nodeIds);
   } else {
     nodeIds = taskNodes;
-    await activeTaskProcessorsStore_async.set(task.instanceId, taskNodes);
+    await activeTaskNodesStore_async.set(task.instanceId, taskNodes);
   }
   //utils.logTask(task, "Nodes with task instance " + task.instanceId, nodeIds);
   // Record which tasks have this node
   await Promise.all(
     nodeIds.map(async (nodeId) => {
-      if (await activeProcessorTasksStore_async.has(nodeId)) {
-        let taskInstanceIds = await activeProcessorTasksStore_async.get(nodeId);
+      if (await activeNodeTasksStore_async.has(nodeId)) {
+        let taskInstanceIds = await activeNodeTasksStore_async.get(nodeId);
         if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
           taskInstanceIds.push(task.instanceId);
         }
-        await activeProcessorTasksStore_async.set(nodeId, taskInstanceIds);
+        await activeNodeTasksStore_async.set(nodeId, taskInstanceIds);
       } else {
-        await activeProcessorTasksStore_async.set(nodeId, [task.instanceId]);
+        await activeNodeTasksStore_async.set(nodeId, [task.instanceId]);
       }
       //utils.logTask(task, "Added task instance " + task.instanceId + " to node " + nodeId);
     })
@@ -527,7 +527,7 @@ async function taskStart_async(
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
 
     // When we join we want to keep the nodes info related to the joined task
-    task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeProcessors/*, instancesStore_async, setActiveTask_async*/);
+    task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/);
     // Set task.node.id after copying info from prevTask
     task.nodes[nodeId] = task.nodes[nodeId] ?? {};
     task.nodes[nodeId] = task.node;
@@ -548,9 +548,9 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
     task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
 
-    const taskNodes = allocateTaskToProcessors(task, nodeId, activeProcessors);
+    const taskNodes = allocateTaskToNodes(task, nodeId, activeNodes);
 
-    await recordTasksAndProcessorsAsync(task, taskNodes, activeTaskProcessorsStore_async, activeProcessorTasksStore_async);
+    await recordTasksAndNodesAsync(task, taskNodes, activeTaskNodesStore_async, activeNodeTasksStore_async);
 
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);

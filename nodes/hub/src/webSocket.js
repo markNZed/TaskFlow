@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskProcessorsStore_async, activeProcessorTasksStore_async, activeProcessors } from "./storage.mjs";
+import { connections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -90,7 +90,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     delete task.nodes;
   } else {
     // When sending the register command we do not have a nodeId
-    task.node = activeProcessors.get(nodeId) || {};
+    task.node = activeNodes.get(nodeId) || {};
   }
   const { coprocessing, coprocessed, initiatingNodeId, sourceNodeId } = currentNode;
   if (task.node.role === "coprocessor") {
@@ -141,7 +141,7 @@ function initWebSocketServer(server) {
           ws.data["nodeId"] = nodeId;
           console.log("Websocket nodeId", nodeId)
         }
-        if (!activeProcessors.has(nodeId)) {
+        if (!activeNodes.has(nodeId)) {
           // Need to register again
           const task = {
             meta: {
@@ -171,11 +171,11 @@ function initWebSocketServer(server) {
       } else if (j?.task?.node?.command === "partial") {
         let task = j.task;
         task = await taskProcess_async(task);
-        const activeTaskProcessors = await activeTaskProcessorsStore_async.get(task.instanceId);
+        const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
         let nodeId = task.hub.initiatingNodeId
-        for (const id of activeTaskProcessors) {
+        for (const id of activeTaskNodes) {
           if (id !== nodeId) {
-            const nodeData = activeProcessors.get(id);
+            const nodeData = activeNodes.get(id);
             if (nodeData && nodeData.commandsAccepted.includes(task.hub.command)) {
               const ws = connections.get(id);
               if (!ws) {
@@ -245,24 +245,24 @@ function initWebSocketServer(server) {
       console.log("ws nodeId " + nodeId + " is closed with code: " + code + " reason: ", reason);
       if (nodeId) {
         connections.delete(nodeId);
-        activeProcessors.delete(nodeId);
-        const activeProcessorTasks = await activeProcessorTasksStore_async.get(nodeId);
-        if (activeProcessorTasks) {
-          // for each task delete entry from activeTaskProcessorsStore_async
-          for (const taskId of activeProcessorTasks) {
-            let activeTaskProcessors = await activeTaskProcessorsStore_async.get(taskId);
-            if (activeTaskProcessors) {
+        activeNodes.delete(nodeId);
+        const activeNodeTasks = await activeNodeTasksStore_async.get(nodeId);
+        if (activeNodeTasks) {
+          // for each task delete entry from activeTaskNodesStore_async
+          for (const taskId of activeNodeTasks) {
+            let activeTaskNodes = await activeTaskNodesStore_async.get(taskId);
+            if (activeTaskNodes) {
               console.log("Removing node " + nodeId + " from task " + taskId);
-              activeTaskProcessors = activeTaskProcessors.filter(id => id !== nodeId);
-              if (activeTaskProcessors.length > 0) {
-                await activeTaskProcessorsStore_async.set(taskId, activeTaskProcessors);
+              activeTaskNodes = activeTaskNodes.filter(id => id !== nodeId);
+              if (activeTaskNodes.length > 0) {
+                await activeTaskNodesStore_async.set(taskId, activeTaskNodes);
               } else {
                 console.log("No node for task " + taskId);
-                await activeTaskProcessorsStore_async.delete(taskId);                
+                await activeTaskNodesStore_async.delete(taskId);                
               }
             }
           }
-          await activeProcessorTasksStore_async.delete(nodeId);
+          await activeNodeTasksStore_async.delete(nodeId);
         }
       }
     });

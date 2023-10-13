@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import express from "express";
-import { activeProcessors, autoStartTasksStore_async } from "../storage.mjs";
+import { activeNodes, autoStartTasksStore_async } from "../storage.mjs";
 import { NODE } from "../../config.mjs";
 import { commandStart_async } from "../commandStart.mjs";
 import { utils } from "../utils.mjs";
@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
     NODE["haveCoprocessor"] = true;
   }
 
-  activeProcessors.set(nodeId, {
+  activeNodes.set(nodeId, {
     environment,
     commandsAccepted,
     language,
@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
   // Check if there are autoStartTasks 
   let countAutoStartTasks = 0;
   let activeEnvironments = [];
-  activeProcessors.forEach(item => {
+  activeNodes.forEach(item => {
     activeEnvironments.push(item.environment);
   });
   activeEnvironments = [...new Set(activeEnvironments)]; // uniquify
@@ -139,9 +139,9 @@ router.post("/", async (req, res) => {
       task.hub["command"] = "start";
       task.hub["commandDescription"] = "Autostarting task";
       task.hub["sourceNodeId"] = NODE.id;
-      task.hub["initiatingNodeId"] = nodeId; // So the task will start on the processor that is registering 
+      task.hub["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
       task["nodes"] = {};
-      task.nodes[nodeId] = activeProcessors.get(nodeId);
+      task.nodes[nodeId] = activeNodes.get(nodeId);
       console.log("Autostarting task ", taskId, environment);
       commandStart_async(task);
       if (autoStartTask.once) {

@@ -34,7 +34,7 @@ const system = [
     environments: ["rxjs-hub-coprocessor"],
     config: {
       autoStartEnvironment: "rxjs-hub-coprocessor",
-      autoStartCoProcessor: true,
+      autoStartCoprocessor: true,
       autoStartpriority: "0",
     },
     type: "TaskCEP",

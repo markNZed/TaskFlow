@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { setActiveTask_async, getActiveTask_async, activeProcessors } from "./storage.mjs";
+import { setActiveTask_async, getActiveTask_async, activeNodes } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import taskSync_async from "./taskSync.mjs";
 import { utils } from "./utils.mjs";
@@ -15,13 +15,13 @@ async function errorTask_async(task) {
     utils.logTask(task, "task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
-  // We are handling two lists for activeProcessors and activeCoProcessors
+  // We are handling two lists for activeNodes
   // This is messy
   const nodeId = task.hub.initiatingNodeId;
   task.error.sourceNodeId = nodeId;
-  let sourceProcessor = activeProcessors.get(nodeId);
-  console.log("sourceProcessor:", JSON.stringify(sourceProcessor, null, 2), "nodeId", nodeId);
-  task.error.environments = [sourceProcessor.environment];
+  let sourceNode = activeNodes.get(nodeId);
+  console.log("sourceNode:", JSON.stringify(sourceNode, null, 2), "nodeId", nodeId);
+  task.error.environments = [sourceNode.environment];
   let nextTaskId = task.hub.commandArgs.errorTask;
   utils.logTask(task, "errorTask_async task " + task.id + " error, next " + nextTaskId);
   await setActiveTask_async(task);

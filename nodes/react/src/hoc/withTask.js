@@ -336,8 +336,8 @@ function withTask(Component) {
         utils.removeNullKeys(updatedTask);
         //console.log("After removeNullKeys updatedTask", utils.deepClone(updatedTask));
         //let updatedTask = utils.deepMerge(lastTask, updateDiff)
-        await utils.processorActiveTasksStoreSet_async(utils.createSetStorage(globalState.storageRef), updatedTask);
-        //console.log("After processorActiveTasksStoreSet_async updatedTask", utils.deepClone(updatedTask));
+        await utils.nodeActiveTasksStoreSet_async(utils.createSetStorage(globalState.storageRef), updatedTask);
+        //console.log("After nodeActiveTasksStoreSet_async updatedTask", utils.deepClone(updatedTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.set", lastTask.meta.hash, updatedTask);
         // Keep the origTask up to date i th eactive task
         if (!updateDiff.node) {

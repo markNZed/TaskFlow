@@ -677,7 +677,7 @@ const utils = {
   },
 
   // This is having side-effects on task
-  processorActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
+  nodeActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     task.meta = task.meta || {};
     delete task.node.origTask; // delete so we do not have an old copy in origTask
     task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
@@ -685,7 +685,7 @@ const utils = {
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
     if (task.node.command != "start") {
-      //console.log("processorActiveTasksStoreSet_async", task);
+      //console.log("nodeActiveTasksStoreSet_async", task);
       const taskCopy = utils.deepClone(task);
       delete taskCopy.meta.modified; // generated on the hub
       await setActiveTask_async(taskCopy);
@@ -737,7 +737,7 @@ const utils = {
     return taskCopy;
   },
 
-  processorDiff: function(task) {
+  nodeDiff: function(task) {
     if (task.node.command === "ping") {
       return task;
     }
@@ -747,9 +747,9 @@ const utils = {
       return task;
     }
     if (origTask.id !== taskCopy.id) {
-      throw new Error("ERROR processorDiff origTask.id !== taskCopy.id");
+      throw new Error("ERROR nodeDiff origTask.id !== taskCopy.id");
     }
-    //console.log("processorDiff in origTask.output, task.output", origTask?.output, task.output);
+    //console.log("nodeDiff in origTask.output, task.output", origTask?.output, task.output);
     const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
     //console.log("utils.getObjectDifference origTask?.shared:", JSON.stringify(origTask?.shared, null, 2));
     //console.log("utils.getObjectDifference taskCopy?.shared:", JSON.stringify(taskCopy?.shared, null, 2));
@@ -787,7 +787,7 @@ const utils = {
       diffTask["user"] = {id: taskCopy.user.id};
     }
     delete diffTask.node.origTask; // Only used internally
-    //console.log("processorDiff out task.output", diffTask.output);
+    //console.log("nodeDiff out task.output", diffTask.output);
     return diffTask;
   },
 
@@ -891,7 +891,7 @@ const utils = {
   },
 
   // Rename e.g. processorToTaskFunction, taskFunctionToProcessor, processorToHub, hubToProcessor
-  processorInTaskOut: function(task) {
+  nodeInTaskOut: function(task) {
     if (task.node.stateLast) {
       // Diffs may not have the state information
       // Maybe we do not need to update in this case?
@@ -904,10 +904,10 @@ const utils = {
     return task;
   },
 
-  taskInProcessorOut_async: async function(task, nodeId, getActiveTask_async) {
+  taskInNodeOut_async: async function(task, nodeId, getActiveTask_async) {
     let taskCopy = utils.deepClone(task); // We do not want any side efects on task
     utils.debugTask(taskCopy, "input");
-    //console.log("taskInProcessorOut input taskCopy.output", taskCopy.output);
+    //console.log("taskInNodeOut input taskCopy.output", taskCopy.output);
     if (!taskCopy.command) {
       console.error("ERROR: Missing taskCopy.command", taskCopy);
       throw new Error(`Missing taskCopy.command`);
@@ -951,26 +951,26 @@ const utils = {
       // This assumes taskCopy is not a partial object e.g. in sync
       if (taskCopy.node.command === "update") {
         const taskCleaned = utils.cleanForHash(taskCopy);
-        //console.log("taskInProcessorOut taskCleaned", taskCleaned);
+        //console.log("taskInNodeOut taskCleaned", taskCleaned);
         const origTaskCleaned = utils.cleanForHash(lastTask);
-        //console.log("taskInProcessorOut origTaskCleaned", origTaskCleaned);
+        //console.log("taskInNodeOut origTaskCleaned", origTaskCleaned);
         // Not sure about removing outputs better to leave them
         delete taskCleaned.output;
         delete origTaskCleaned.output;
         const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
         if (keysNulled) {
-          //console.log("taskInProcessorOut keysNulled", keysNulled);
+          //console.log("taskInNodeOut keysNulled", keysNulled);
           taskCopy = utils.deepMerge(taskCopy, keysNulled);
         }
       }
       delete lastTask.node.origTask; // delete so we do not have an old copy in origTask
       taskCopy.node["origTask"] = utils.deepClone(lastTask); 
       // This will use taskCopy.node.origTask to identify the diff
-      diffTask = utils.processorDiff(taskCopy)
+      diffTask = utils.nodeDiff(taskCopy)
     } else {
       diffTask = taskCopy;
     }
-    //console.log("taskInProcessorOut diffTask", JSON.stringify(diffTask, null, 2));
+    //console.log("taskInNodeOut diffTask", JSON.stringify(diffTask, null, 2));
     utils.debugTask(diffTask, "output");
     return diffTask;
   },

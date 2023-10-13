@@ -52,7 +52,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   const wsSendTask = async function (task) {
     //console.log("wsSendTask " + message)
     let message = {}; 
-    task = await utils.taskInProcessorOut_async(task, globalState.nodeId, globalState?.storageRef?.current.get);
+    task = await utils.taskInNodeOut_async(task, globalState.nodeId, globalState?.storageRef?.current.get);
     if (globalState.user) {
       task.user = {"id": globalState.user.id};
     }

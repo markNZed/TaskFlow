@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { activeTaskProcessorsStore_async, activeProcessors, getActiveTask_async } from "./storage.mjs";
+import { activeTaskNodesStore_async, activeNodes, getActiveTask_async } from "./storage.mjs";
 import { wsSendTask } from "./webSocket.js";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -45,7 +45,7 @@ const taskSync_async = async (key, value) => {
 
   // In reality there is one coprocessor we should cache this info
   const coprocessorIds = [];
-  activeProcessors.forEach((value, key) => {
+  activeNodes.forEach((value, key) => {
     if (value.role === 'coprocessor') {
       coprocessorIds.push(key);
     }
@@ -55,7 +55,7 @@ const taskSync_async = async (key, value) => {
     throw new Error("taskSync_async more than one coprocessor" + JSON.stringify(taskCopy));
   }
   let coprocessorId = coprocessorIds[0];
-  let coprocessorData = activeProcessors.get(coprocessorId);
+  let coprocessorData = activeNodes.get(coprocessorId);
   let coprocessCommand;
   if (coprocessorData) {
     coprocessCommand = coprocessorData.commandsAccepted.includes(command)
@@ -88,14 +88,14 @@ const taskSync_async = async (key, value) => {
   }
 
   // Every type: "hub", role: "consumer" needs to be updated/synced
-  const activeProcessorIds = Array.from(activeProcessors.keys());
-  const hubConsumerIds = activeProcessorIds.filter(nodeId => {
-    const nodeData = activeProcessors.get(nodeId);
+  const activeNodeIds = Array.from(activeNodes.keys());
+  const hubConsumerIds = activeNodeIds.filter(nodeId => {
+    const nodeData = activeNodes.get(nodeId);
     return nodeData?.role === "consumer" && nodeData?.type === "hub";
   })
   if (hubConsumerIds) {
     for (const hubConsumerId of hubConsumerIds) {
-      const nodeData = activeProcessors.get(hubConsumerId);
+      const nodeData = activeNodes.get(hubConsumerId);
       if (nodeData) {
         if (nodeData.commandsAccepted.includes(command)) {
           //utils.logTask(taskCopy, "taskSync_async sending", command, "sent to hub consumer", hubConsumerId);
@@ -116,7 +116,7 @@ const taskSync_async = async (key, value) => {
   taskCopy.meta.broadcastCount = broadcastCount;
   broadcastCount++;
   // foreach nodeId in nodeIds send the task to the node
-  const nodeIds = await activeTaskProcessorsStore_async.get(key);
+  const nodeIds = await activeTaskNodesStore_async.get(key);
   if (nodeIds) {
     //utils.logTask(taskCopy, "taskSync_async task " + taskCopy.id + " from " + initiatingNodeId);
     let updatedNodeIds = [...nodeIds]; // Make a copy of nodeIds
@@ -136,7 +136,7 @@ const taskSync_async = async (key, value) => {
       if (command === "join" && nodeId !== initiatingNodeId) {
         continue;
       }
-      const nodeData = activeProcessors.get(nodeId);
+      const nodeData = activeNodes.get(nodeId);
       if (nodeData) {
         if (!taskCopy.nodes) {
           utils.logTask(taskCopy, "taskCopy missing nodes", command );
@@ -163,15 +163,15 @@ const taskSync_async = async (key, value) => {
         }
       } else {
         updatedNodeIds = updatedNodeIds.filter(id => id !== nodeId);
-        utils.logTask(taskCopy, `Node ${nodeId} not found in active nodes. It will be removed from activeTaskProcessorsStore_async`);
+        utils.logTask(taskCopy, `Node ${nodeId} not found in active nodes. It will be removed from activeTaskNodesStore_async`);
       }
     }
-    // Update activeTaskProcessorsStore_async with the updatedNodeIds only if the nodes have changed
+    // Update activeTaskNodesStore_async with the updatedNodeIds only if the nodes have changed
     if (nodeIds.length !== updatedNodeIds.length) {
-      await activeTaskProcessorsStore_async.set(key, updatedNodeIds);
+      await activeTaskNodesStore_async.set(key, updatedNodeIds);
     }
   } else {
-    utils.logTask(taskCopy, "taskSync_async no activeTaskProcessors available", key, value);
+    utils.logTask(taskCopy, "taskSync_async no activeTaskNodes available", key, value);
   }
   //utils.logTask(taskCopy, "taskSync_async after", key, value.node);
   return value;

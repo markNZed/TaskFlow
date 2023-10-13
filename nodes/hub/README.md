@@ -1,6 +1,6 @@
 # Hub
 
-The Hub is implemented in Node using the Express framework and SQLite database. 
+The Hub is implemented in NodeJS using the Express framework.
 
 Information for the Hub is held in the `task.hub` object. The Processor communicates with the Hub using the object `task.node` which includes fields: command, commandArgs, and config. 
 
@@ -15,9 +15,9 @@ Information for the Hub is held in the `task.hub` object. The Processor communic
 
 The Hub provides the following features:
 * Task flows (i.e., task configurations) are stored
-* The Hub maintains Processor information in the `task.node` object
+* The Hub maintains Node information in the `task.node` object
   * This is simplified when communicating with a specific node by replacing `task.node` with `task.nodes[nodeId]`
-    * This could allow for Processor specific `task.nodes[nodeId].config`
+    * This could allow for Node specific `task.nodes[nodeId].config`
 * Processors register with the Hub
   * Maintains the list of active nodes
 * Processors send `task.command.start` to initiate a Task
@@ -45,14 +45,14 @@ The Hub provides the following features:
 * `task.meta.parentId` the `task.id` of the Task that started this Task
 * `task.meta.updateCount` the number of Task updates completed
 * `task.meta.updatesThisMinute` rate of API accesses per minute
-* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Processors.
+* The `update` command sends a diff, not the entire object. The last state of the task received is stored in `task.hub.origTask` which is used to compute the diff before sending to the Nodes.
 * A mutex imposes serial updates per task instanceId
 * Assertion if `task.request` and `task.response` both contain values
 * Assertion if `task.state.current` is not listed in `task.state.legal`
 * Only route task to node if `task.node.statesSupported` is not set or includes `task.state.current`. If `task.node.statesSupported` is set then the Hub sends the entire Task object not a diff (or it needs to track the current storage of the target node).
 * Only route task to node if `task.node.statesNotSupported` is not set or does not include `task.state.current`. If `task.node.statesNotSupported` is set then the Hub sends the entire Task object not a diff (or it needs to track the current storage of the target node).
 
-When the Hub receives an `update` command it will send the update back to the source Processor. This provides the source Processor with task meta information (e.g. lock acquired). By using the broadcasted update the source Processor is synchronized with all other Processors.
+When the Hub receives an `update` command it will send the update back to the source Node. This provides the source Node with task meta information (e.g. lock acquired). By using the broadcasted update the source Node is synchronized with all other Nodes.
 
 # Launch
 
@@ -63,7 +63,7 @@ Then to run: `npm start`
 # Future
 * Hierarchy
   * Many Hubs that can be coordinated by a Hub.
-  * Environments not supported by Processors registered with the Hub are passed up to a hub-of-hubs
+  * Environments not supported by Nodes registered with the Hub passed up to a hub-of-hubs
 * Security/Privacy
   * Filtering of Task content
 * Separation of concerns into a pipeline
