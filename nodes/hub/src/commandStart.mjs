@@ -46,9 +46,6 @@ export async function commandStart_async(task) {
         taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);
-            //utils.logTask(task, "commandStart_async startTask.nodes", startTask.nodes);
-            //utils.logTask(task, "commandStart_async startTask.node", startTask.node);
-            //utils.logTask(task, "commandStart_async startTask.hub", startTask.hub);
             await utils.hubActiveTasksStoreSet_async(setActiveTask_async, startTask);
             taskRelease(task.instanceId, "commandStart_async");
           })

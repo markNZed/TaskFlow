@@ -30,43 +30,37 @@ function hubAssertions(taskDiff, mergedTask) {
 
 async function nodeInHubOut_async(task, activeTask) {
   utils.debugTask(task);
-  const { command, id, coprocessing, coprocessed, statesSupported, statesNotSupported } = task.node;
+  const incomingNode = utils.deepClone(task.node);
   // Could initiate from a node before going through the coprocessor
   // Could be initiated by the coprocessor
-  //utils.logTask(task, "task.node.initiatingNodeId ", task.node.initiatingNodeId);
-  let initiatingNodeId = task.node.initiatingNodeId || id;
+  //utils.logTask(task, "incomingNode.initiatingNodeId ", incomingNode.initiatingNodeId);
+  let initiatingNodeId = incomingNode.initiatingNodeId || incomingNode.id;
   //utils.logTask(task, "initiatingNodeId", initiatingNodeId);
-  if (task.node.role !== "coprocessor") {
-    initiatingNodeId = id;
+  if (incomingNode.role !== "coprocessor") {
+    initiatingNodeId = incomingNode.id;
   }
+  const command = incomingNode.command;
   //utils.logTask(task, "initiatingNodeId", initiatingNodeId);
   let commandArgs = {};
-  if (task.node.commandArgs) {
-    commandArgs = utils.deepClone(task.node.commandArgs);
+  if (incomingNode.commandArgs) {
+    commandArgs = utils.deepClone(incomingNode.commandArgs);
   }
   let commandDescription = "";
-  if (task.node.commandDescription) {
-    commandDescription = task.node.commandDescription;
+  if (incomingNode.commandDescription) {
+    commandDescription = incomingNode.commandDescription;
   }
-  task.node.command = null;
-  task.node.commandArgs = null;
-  task.node.coprocessing = null;
-  task.node.coprocessed = null;
   const activeTaskNodes = activeTask?.nodes || {};
-  const incomingNode = utils.deepClone(task.node);
-  if (!activeTaskNodes[id]) {
-    activeTaskNodes[id] = incomingNode;
+  let cleanedNode = utils.deepClone(incomingNode);
+  cleanedNode.command = null;
+  cleanedNode.commandArgs = null;
+  cleanedNode.coprocessing = null;
+  cleanedNode.coprocessed = null;
+  if (!activeTaskNodes[incomingNode.id]) {
+    activeTaskNodes[incomingNode.id] = cleanedNode;
   } else {
-    activeTaskNodes[id] = utils.deepMerge(activeTaskNodes[id], incomingNode);
+    activeTaskNodes[incomingNode.id] = utils.deepMerge(activeTaskNodes[incomingNode.id], cleanedNode);
   }
   task.nodes = activeTaskNodes;
-  /*
-  // For each node in task.nodes log the stateLast
-  for (const key in task.nodes) {
-    const node = task.nodes[key];
-    console.log(`node: ${key}, StateLast: ${node.stateLast}`);
-  }
-  */
   task.users = activeTask?.users || {};
   // This allows us to incorporate admin changes to user
   if (task?.user?.id) {
@@ -94,16 +88,17 @@ async function nodeInHubOut_async(task, activeTask) {
     command,
     commandArgs,
     commandDescription,
-    sourceNodeId: id,
+    sourceNodeId: incomingNode.id,
     initiatingNodeId,
-    coprocessed,
-    coprocessing,
-    statesSupported,
-    statesNotSupported,
+    coprocessed: incomingNode.coprocessed,
+    coprocessing: incomingNode.coprocessing,
+    statesSupported: incomingNode.statesSupported,
+    statesNotSupported: incomingNode.statesNotSupported,
   };
+  delete task.node;
   task.hub = utils.deepMerge(lastHub, fromIncomingNode);
   if (command !== "partial") {
-    utils.logTask(task, "processorToHub " + command + " state " + task?.state?.current + " initiatingNodeId " + initiatingNodeId);
+    utils.logTask(task, "processorToHub", command, "state:", task?.state?.current, "initiatingNodeId:", initiatingNodeId);
   }
   return task;
 }
@@ -254,10 +249,11 @@ async function taskProcess_async(task) {
       throw new Error("Missing task.node in taskProcess_async");
     }
     let activeTask = {};
-    if (task.node.command !== "partial") {
-      utils.logTask(task, "From node:" + task.node.id + " command:" + task.node.command + " commandDescription:" + task.node.commandDescription + " state:" + task?.state?.current);
+    const incomingNode = task.node;
+    if (incomingNode.command !== "partial") {
+      utils.logTask(task, "From node:" + incomingNode.id + " command:" + incomingNode.command + " commandDescription:" + incomingNode.commandDescription + " state:" + task?.state?.current);
       checkErrorRate(task);
-      if (task.node.command === "update") {
+      if (incomingNode.command === "update") {
         task = utils.setMetaModified(task);
         //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
       }
@@ -276,7 +272,7 @@ async function taskProcess_async(task) {
           activeTask["node"] = null; 
           task = utils.deepMerge(activeTask, task);
           hubAssertions(taskDiff, task);
-        } else if (task.node.command !== "start" && task.node.command !== "init") {
+        } else if (incomingNode.command !== "start" && incomingNode.command !== "init") {
           console.error("Should have activeTask if we have an instanceId", task);
           throw new Error("Should have activeTask if we have an instanceId");
         }

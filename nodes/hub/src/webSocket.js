@@ -133,8 +133,11 @@ function initWebSocketServer(server) {
 
       const j = JSON.parse(message);
 
-      if (j?.task?.node?.id) {
-        const nodeId = j.task.node.id;
+      let task = j?.task;
+      let incomingNode = task?.node;
+
+      if (incomingNode?.id) {
+        const nodeId = incomingNode.id;
         //console.log("nodeId", nodeId)
         if (!connections.get(nodeId)) {
           connections.set(nodeId, ws);
@@ -143,7 +146,7 @@ function initWebSocketServer(server) {
         }
         if (!activeNodes.has(nodeId)) {
           // Need to register again
-          const task = {
+          const taskRegister = {
             meta: {
               updatedAt: utils.updatedAt(),
             },
@@ -154,41 +157,39 @@ function initWebSocketServer(server) {
             node: {},
           };
           console.log("Request for registering " + nodeId)
-          wsSendTask(task, nodeId);
+          wsSendTask(taskRegister, nodeId);
           return;
         }
       }
-      if (j?.task?.node?.command === "ping") {
-        const task = {
+      if (incomingNode?.command === "ping") {
+        const taskPong = {
           meta: {
             updatedAt: utils.updatedAt(),
           },
           hub: {command: "pong"},
           node: {},
         };
-        //utils.logTask(task, "Pong " + j.task.node.id)
-        wsSendTask(task, j.task.node.id);
-      } else if (j?.task?.node?.command === "partial") {
-        let task = j.task;
+        //utils.logTask(taskPong, "Pong " + incomingNode.id);
+        wsSendTask(taskPong, incomingNode.id);
+      } else if (incomingNode?.command === "partial") {
         task = await taskProcess_async(task);
         const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
-        let nodeId = task.hub.initiatingNodeId
-        for (const id of activeTaskNodes) {
-          if (id !== nodeId) {
-            const nodeData = activeNodes.get(id);
+        let initiatingNodeId = task.hub.initiatingNodeId
+        for (const nodeId of activeTaskNodes) {
+          if (nodeId !== initiatingNodeId) {
+            const nodeData = activeNodes.get(nodeId);
             if (nodeData && nodeData.commandsAccepted.includes(task.hub.command)) {
-              const ws = connections.get(id);
+              const ws = connections.get(nodeId);
               if (!ws) {
-                utils.logTask(task, "Lost websocket for ", id, connections.keys());
+                utils.logTask(task, "Lost websocket for ", nodeId, connections.keys());
               } else {
-                //utils.logTask(task, "Forwarding " + task.hub.command + " to " + id + " from " + nodeId)
-                wsSendObject(id, {task: task});
+                //utils.logTask(task, "Forwarding " + task.hub.command + " to " + nodeId + " from " + nodeId)
+                wsSendObject(nodeId, {task: task});
               }
             }
           }
         }
-      } else if (j?.task) {
-        let task = j.task;
+      } else if (task) {
         // Add the user id if it is not set
         if (!task?.user?.id && userId) {
           task["user"] = {id: userId};
@@ -204,18 +205,17 @@ function initWebSocketServer(server) {
         const byteSize = Buffer.byteLength(message, 'utf8');
         utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.hub?.sourceNodeId}`);
 
-        let nodeId = task.hub.initiatingNodeId;
+        let initiatingNodeId = task.hub.initiatingNodeId;
 
         // We start the co-processing from taskSync.mjs so here has passed through coprocessing
         task.hub["coprocessing"] = false;
         task.hub["coprocessed"] = true;
-        task.hub.sourceNodeId = nodeId;
+        task.hub.sourceNodeId = initiatingNodeId;
 
         // Allows us to track where the request came from while coprocessors are in use
-        task.node = task.nodes[nodeId];
-        task.hub.sourceNodeId = nodeId;
+        task.hub.sourceNodeId = initiatingNodeId;
 
-        utils.logTask(task, "initiatingNodeId", task.hub["initiatingNodeId"]);
+        utils.logTask(task, "initiatingNodeId", initiatingNodeId);
 
         switch (task.hub.command) {
           case "init":

@@ -978,21 +978,16 @@ const utils = {
   // Should not be sending node from hub ? Allows node specific config. Also initiatingNodeId
   // The node strips hub specific info because the Task Function should not interact with the Hub
   hubInProcessorOut: function(task) {
-    const hub = utils.deepClone(task.hub);
+    const hubIn = utils.deepClone(task.hub);
     delete task.hub;
-    delete hub.id;
+    delete hubIn.id;
     task.node = task.node || {};
     if (!task.node.isCoprocessor) {
-      delete hub.statesSupported; // Copied from node
-      delete hub.statesNotSupported; // Copied from node
+      delete hubIn.statesSupported; // Copied from node
+      delete hubIn.statesNotSupported; // Copied from node
     }
-    task.node["command"] = hub.command;
-    task.node["commandArgs"] = hub.commandArgs || {};
-    task.node["commandDescription"] = hub.commandDescription || "";
-    task.node = utils.deepMerge(task.node, hub);
-    if (hub.sourceProcessorId) {
-      task.node["sourceProcessorId"] = hub.sourceProcessorId;
-    } else {
+    task.node = utils.deepMerge(task.node, hubIn);
+    if (!hubIn.sourceProcessorId) {
       delete task.node.sourceProcessorId;
     }
     utils.debugTask(task);
@@ -1224,13 +1219,6 @@ const utils = {
     if (task?.state?.current) {
       logParts.push(`state.current: ${task.state.current}`);
     }
-
-    // This is an assertion that provides debug info
-    if (task.node && task.node.id === "rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b" && task.node.isCoprocessor === false) {
-      console.log("Details:", task.nodes, task.node);
-      throw new Error("task.node.id === 'rxjs-hub-coprocessor-9fe33ade-35d5-4bc6-9776-a2589636ec6b' && task.node.isCoprocessor === false");
-    }
-
     if (task?.shared?.configTreeHubconsumerTasks?.children) {
       const title = task.shared.configTreeHubconsumerTasks.children["root.user"].title;
       logParts.push("configTreeHubconsumerTasks children root.user title", title);

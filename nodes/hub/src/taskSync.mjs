@@ -13,8 +13,6 @@ let broadcastCount = 0;
 
 const taskSync_async = async (key, value) => {
 
-  //utils.logTask(value, "taskSync_async", key, value.node)
-
   if (value.meta) {
     value.meta.lastUpdatedAt = value.meta.updatedAt;
     value.meta.updatedAt = utils.updatedAt();
@@ -173,7 +171,6 @@ const taskSync_async = async (key, value) => {
   } else {
     utils.logTask(taskCopy, "taskSync_async no activeTaskNodes available", key, value);
   }
-  //utils.logTask(taskCopy, "taskSync_async after", key, value.node);
   return value;
 
 };
