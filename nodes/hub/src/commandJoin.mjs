@@ -14,7 +14,7 @@ export async function commandJoin_async(task) {
   try {
     utils.logTask(task, "commandJoin_async id:" + task.id + " from nodeId:" + nodeId);
     await taskSync_async(task.instanceId, task);
-    await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+    await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
     taskRelease(task.instanceId, "commandJoin_async");
   } catch (error) {
     const msg = `Error commandJoin_async task ${task.id}: ${error.message}`;

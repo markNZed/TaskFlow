@@ -64,7 +64,7 @@ export async function commandError_async(task) {
     if (!task.node.commandArgs?.errorTask) {
       // We are receiving an error after coprocessing
       await taskSync_async(task.instanceId, task);
-      await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+      await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
       taskRelease(task.instanceId, "commandError_async");
     } else {
       await errorTask_async(task);

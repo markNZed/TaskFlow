@@ -678,6 +678,7 @@ const utils = {
 
   // This is having side-effects on task
   nodeActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
+    console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task.state.current);
     task.meta = task.meta || {};
     delete task.node.origTask; // delete so we do not have an old copy in origTask
     task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
@@ -685,31 +686,14 @@ const utils = {
     //utils.removeNullKeys(task);
     // We do not store the start as this would be treating the start command like an update
     if (task.node.command != "start") {
-      //console.log("nodeActiveTasksStoreSet_async", task);
-      const taskCopy = utils.deepClone(task);
-      delete taskCopy.meta.modified; // generated on the Hub
-      await setActiveTask_async(taskCopy);
-    }
-    utils.debugTask(task);
-    return task;
-  },
-
-  // This is having side-effects on task
-  hubActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
-    task.meta = task.meta || {};
-    delete task.node.origTask; // delete so we do not have an old copy in origTask
-    task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
-    task.meta["hash"] = utils.taskHash(task);
-    //utils.removeNullKeys(task);
-    // We do not store the start as this would be treating the start command like an update
-    if (task.node.command != "start") {
-      //console.log("hubActiveTasksStoreSet_async task.state", task.state);
+      //console.log("nodeActiveTasksStoreSet_async task.state", task.state);
       delete task.meta.modified; // generated on the Hub
+      task.nodes = task.nodes || {};
       task.nodes[task.node.id] = utils.deepClone(task.node);
       await setActiveTask_async(task);
     }
     utils.debugTask(task);
-    console.log("hubActiveTasksStoreSet_async", task.id, "state:",task.state.current);
+    
   },
 
   cleanForHash: function (task) {

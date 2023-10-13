@@ -254,7 +254,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
         and it is not intuitive. We need another way of managing the familyTree - TaskFamilyTree
         prevTask.node.command = "update";
         prevTask.node.sourceNodeId = NODE.id;
-        await utils.hubActiveTasksStoreSet_async(setActiveTask_async, prevTask);
+        await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, prevTask);
         await taskSync_async(prevTask.instanceId, prevTask);
       }
     }
@@ -315,7 +315,7 @@ function allocateTaskToNodes(task, nodeId, activeNodes) {
   }
   // Allocate the task to nodes that supports the environment(s) requested
   const sourceNode = activeNodes.get(nodeId);
-  console.log(`allocateTaskToNodes ${nodeId} sourceNode`, sourceNode);
+  console.log(`allocateTaskToNodes ${nodeId} sourceNode Id`, nodeId);
   for (const environment of task.environments) {
     // Favor the source Node if we need that environment
     let found = false;
@@ -371,24 +371,24 @@ async function recordTasksAndNodesAsync(task, taskNodes, activeTaskNodesStore_as
         nodeIds.push(id);
       } 
     });
-    await activeTaskNodesStore_async.set(task.instanceId, nodeIds);
   } else {
     nodeIds = taskNodes;
-    await activeTaskNodesStore_async.set(task.instanceId, taskNodes);
   }
+  await activeTaskNodesStore_async.set(task.instanceId, nodeIds);
   //utils.logTask(task, "Nodes with task instance " + task.instanceId, nodeIds);
   // Record which tasks have this node
   await Promise.all(
     nodeIds.map(async (nodeId) => {
+      let taskInstanceIds;
       if (await activeNodeTasksStore_async.has(nodeId)) {
-        let taskInstanceIds = await activeNodeTasksStore_async.get(nodeId);
+        taskInstanceIds = await activeNodeTasksStore_async.get(nodeId);
         if (taskInstanceIds && !taskInstanceIds.includes(task.instanceId)) {
           taskInstanceIds.push(task.instanceId);
         }
-        await activeNodeTasksStore_async.set(nodeId, taskInstanceIds);
       } else {
-        await activeNodeTasksStore_async.set(nodeId, [task.instanceId]);
+        taskInstanceIds = [task.instanceId];
       }
+      await activeNodeTasksStore_async.set(nodeId, taskInstanceIds);
       //utils.logTask(task, "Added task instance " + task.instanceId + " to node " + nodeId);
     })
   );

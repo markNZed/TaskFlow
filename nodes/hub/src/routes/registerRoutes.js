@@ -143,7 +143,7 @@ router.post("/", async (req, res) => {
       task["nodes"] = {};
       task.nodes[nodeId] = activeNodes.get(nodeId);
       console.log("Autostarting task ", taskId, environment);
-      utils.debugTask(task);
+      utils.debugTask(task, `Autostarting task ${taskId}`);
       commandStart_async(task);
       if (autoStartTask.once) {
         await autoStartTasksStore_async.delete(taskId);

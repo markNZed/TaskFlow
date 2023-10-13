@@ -46,7 +46,7 @@ async function doUpdate(commandArgs, task) {
     task.meta.updateCount = task.meta.updateCount + 1;
     utils.logTask(task, "Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);
     await taskSync_async(task.instanceId, task)
-    await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+    await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
   }
 }
 

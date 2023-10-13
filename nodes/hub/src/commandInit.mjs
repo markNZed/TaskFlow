@@ -14,7 +14,7 @@ export async function commandInit_async(task) {
   try {
     utils.logTask(task, "commandInit_async id:" + task.id + " from nodeId:" + nodeId);
     await taskSync_async(task.instanceId, task);
-    await utils.hubActiveTasksStoreSet_async(setActiveTask_async, task);
+    await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
     taskRelease(task.instanceId, "commandInit_async");
   } catch (error) {
     const msg = `Error commandInit_async task ${task.id}: ${error.message}`;

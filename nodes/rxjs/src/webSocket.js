@@ -302,7 +302,7 @@ const connectWebSocket = () => {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
       if (!task.node.coprocessing) {
         if (command !== "start") {
-          task = await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
+          await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
         }
       }
       taskSubject.next(task);
