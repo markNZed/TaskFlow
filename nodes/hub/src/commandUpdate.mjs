@@ -11,16 +11,8 @@ import { taskRelease } from './shared/taskLock.mjs';
 
 async function doneTask_async(task) {
   utils.debugTask(task);
-  // Should be an assertion
-  if (!task.node.commandArgs?.done) {
-    utils.logTask(task, "task", task);
-    throw new Error("Called doneTask_async on a task that is not done");
-  }
   let nextTaskId = task.node.commandArgs?.nextTaskId;
   utils.logTask(task, "Task " + task.id + " done, next " + nextTaskId);
-  await setActiveTask_async(task);
-  // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
-  deleteActiveTask_async(task.instanceId);
   if (nextTaskId) {
     const initTask = {
       id: nextTaskId,
@@ -40,8 +32,14 @@ async function doneTask_async(task) {
 async function doUpdate(commandArgs, task) {
   utils.debugTask(task);
   if (commandArgs?.done) {
-    utils.logTask(task, "Update task done " + task.id + " in state " + task.state?.current + " sync " + commandArgs.sync);
-    await doneTask_async(task);
+    utils.logTask(task, "Update task done " + task.id + " in state " + task.state?.current);
+    // Send an update to validate done (Processor may have commandPending set)
+    await Promise.all([
+      taskSync_async(task.instanceId, task),
+      doneTask_async(task)
+    ]);
+    // We should send a delete message to all the copies and also delete those (see Meteor protocol?)
+    deleteActiveTask_async(task.instanceId);
   } else {
     task.meta.updateCount = task.meta.updateCount + 1;
     utils.logTask(task, "Update task " + task.id + " in state " + task.state?.current + " sync:" + commandArgs.sync + " instanceId:" + task.instanceId + " updateCount:" + task.meta.updateCount);

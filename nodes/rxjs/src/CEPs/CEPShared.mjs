@@ -67,9 +67,12 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         toSync[task.instanceId] = toSync[task.instanceId] || {};
         toSync[task.instanceId][varName] = sharedEntry[familyId].value;
       } else {
-        for (const instanceId of familyInstanceIds) {
-          toSync[instanceId] = toSync[instanceId] || {};
-          toSync[instanceId][varName] = task.shared[varName];
+        if (!utils.deepEqual(sharedEntry[familyId].value, task.shared[varName])) {
+          //utils.logTask(task, "CEPShared varName", varName, "diff", utils.js(utils.getObjectDifference(sharedEntry[familyId].value, task.shared[varName])));
+          for (const instanceId of familyInstanceIds) {
+            toSync[instanceId] = toSync[instanceId] || {};
+            toSync[instanceId][varName] = task.shared[varName];
+          }
         }
       }
       // The diff used by Task synchronization does not support efficient deleting of array elements
@@ -105,7 +108,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
               shared: toSync[instanceId],
             },
             CEPSource: "CEPShared",
-            messageId: task.messageId,
+            messageId: task.meta.messageId,
             // Use sync, the update risks conflicts 
             //syncUpdate: true, // Ask the Hub to convert the sync into a normal update
           },

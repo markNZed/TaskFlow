@@ -13,6 +13,7 @@ import { commandInit_async } from "./commandInit.mjs";
 import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
+import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
 
 /**
  * Sends an object through the WebSocket connection identified by the given node ID.
@@ -147,18 +148,7 @@ function initWebSocketServer(server) {
           console.log("Websocket nodeId", nodeId)
         }
         if (!activeNodes.has(nodeId)) {
-          // Need to register again
-          const taskRegister = {
-            meta: {
-              updatedAt: utils.updatedAt(),
-            },
-            node: {
-              command: "register",
-              commandDescription: `Request ${nodeId} to register`,
-            },
-          };
-          console.log("Request for registering " + nodeId)
-          wsSendTask(taskRegister, nodeId);
+          registerTask_async(wsSendTask, nodeId);
           return;
         }
       }
@@ -175,16 +165,18 @@ function initWebSocketServer(server) {
         task = await taskProcess_async(task);
         const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
         let initiatingNodeId = task.node.initiatingNodeId
-        for (const nodeId of activeTaskNodes) {
-          if (nodeId !== initiatingNodeId) {
-            const nodeData = activeNodes.get(nodeId);
-            if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
-              const ws = connections.get(nodeId);
-              if (!ws) {
-                utils.logTask(task, "Lost websocket for ", nodeId, connections.keys());
-              } else {
-                //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
-                wsSendObject(nodeId, {task: task});
+        if (activeTaskNodes) {
+          for (const nodeId of activeTaskNodes) {
+            if (nodeId !== initiatingNodeId) {
+              const nodeData = activeNodes.get(nodeId);
+              if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
+                const ws = connections.get(nodeId);
+                if (!ws) {
+                  utils.logTask(task, "Lost websocket for ", nodeId, connections.keys());
+                } else {
+                  //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
+                  wsSendObject(nodeId, {task: task});
+                }
               }
             }
           }
@@ -232,6 +224,9 @@ function initWebSocketServer(server) {
             break;
           case "join":
             commandJoin_async(task);
+            break;
+          case "register":
+            commandRegister_async(task);
             break;
           default:
             throw new Error("Unknown command " + task.node.command);

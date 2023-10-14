@@ -1,11 +1,22 @@
 import { useEffect, useCallback } from "react";
-import { webSocketEventEmitter, messageQueueRef } from "../contexts/WebSocketContext";
+import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 
 function useRegisterWSFilter(onMessage) {
 
-  const handleMessage = (task) => {
+  const handleMessage = async (task) => {
     //console.log("useRegisterWSFilter handleMessage", task);
-    onMessage(task);
+    const keys = Object.keys(messageQueue);
+    // sort the keyys so we process the oldest first
+    keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    //console.log("useUpdateWSFilter initialTask.instanceId", initialTask.instanceId, "keys", keys);
+    for (let key of keys) {
+      const message = messageQueue[key];
+      //console.log("message", message, key);
+      if (message && message?.command && message.command === "register") {
+        await onMessage(message.task);
+        delete messageQueue[key];
+      }
+    }
   };
 
   useEffect(() => {

@@ -36,9 +36,10 @@ function withTask(Component) {
       props.setTask,
     );
     const [startTaskReturned, setStartTaskReturned] = useState();
-    const { startTaskError, startTaskSentIdRef } = useStartTask(
+    const { startTaskError, startTaskSentIdRef} = useStartTask(
       props.task, 
       props.setTask,
+      setStartTaskReturned,
     );
     const lastStateRef = useRef();
     const stateRef = useRef();
@@ -295,7 +296,7 @@ function withTask(Component) {
             // Wait for startTaskSentIdRef before continuing the loop
             await new Promise(resolve => {
               const intervalId = setInterval(() => {
-                console.log("startTaskSentIdRef.current", startTaskSentIdRef.current);
+                console.log("reinitialize startTaskSentIdRef.current", startTaskSentIdRef.current);
                 if (startTaskSentIdRef.current === childId) {
                   clearInterval(intervalId);
                   resolve();
@@ -399,6 +400,7 @@ function withTask(Component) {
     useErrorWSFilter(useGlobalStateContext, props.task,
       (errorTask) => {
         console.log("useErrorWSFilter", errorTask.id, errorTask.error, errorTask);
+        modifyTask({"commandPending": null}); // In case this is an error in response to an update
         // We do not have a plan for dealing with errors here yet
         alert("Task error: " + errorTask?.response?.text);
         // Probably better to "remount" the component

@@ -121,6 +121,8 @@ export function WebSocketProvider({ children, socketUrl }) {
         message.commandArgs = commandArgs;
         messageQueue[messageQueueIdx] = message;
         messageQueueIdx = messageQueueIdx + 1;
+        window.messageQueue = messageQueue;
+        window.messageQueueIdx = messageQueueIdx;
         // Could eventaully just emit the index
         webSocketEventEmitter.emit(command, task);
       } else if (command === "pong") {

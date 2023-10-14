@@ -50,6 +50,7 @@ function TaskStepper(props) {
     if (tasks.length && tasks[tasksIdx].state?.done !== stepDone) {
       setStepDone(tasks[tasksIdx].state.done);
     }
+    window.stepperTasks = tasks;
   }, [tasksIdx, tasks]);
       
   // Task state machine
@@ -90,12 +91,13 @@ function TaskStepper(props) {
             nextState = "waitForDone";
           } else if (stepperNavigation.direction === "back") {
             setTasksIdx(tasks.length - 2);
+            // Removing the task from the array
             setTasks((prevVisitedTasks) => prevVisitedTasks.slice(0, -1));
             const newIdx = tasks.length - 2;
             // By changing the key we force the component to re-mount. This is like a reset in some ways
             setKeys(prevKeys => {
               let newKeys = [...prevKeys];
-                newKeys[newIdx] += newIdx;
+              newKeys[newIdx] += newIdx;
               return newKeys;
             });
             setStepperNavigation({task: null, direction: null})
@@ -105,7 +107,6 @@ function TaskStepper(props) {
         break;
       case "waitForDone":
         if (stepDone) {
-          props.modifyChildTask({"input.exit": false});
           // The stepper requests a new Task
           // will set startTask or startTaskError
           modifyTask({
@@ -113,15 +114,17 @@ function TaskStepper(props) {
             "commandArgs": {
               id: tasks[tasksIdx].config.nextTask,
               prevInstanceId: task.instanceId,
-            }
+            },
           });
+          /*
           const modifiedTask = utils.deepMerge(tasks[tasksIdx], utils.setNestedProperties({ 
             "state.done": false, 
           }));
           setTasksTask((p) => {
             return modifiedTask;
           }, tasksIdx);
-          setKeys(p => [...p, modifiedTask.instanceId + tasksIdx]);
+          setKeys(p => [...p, tasks[tasksIdx].instanceId + tasksIdx]);
+          */
           nextState = "waitForNext";
         }
         break;
@@ -131,15 +134,17 @@ function TaskStepper(props) {
         // Need to check that this is the start task we are expecting as we may have 
         // previously started another task. It would be better to clear this down.
         // But I'm not sure how to automate that
-        } else if (startTask.id !== tasks[tasksIdx].id) {
+        } else if (startTask && startTask.id !== tasks[tasksIdx].id) {
           console.log("TaskStepper nextTask", startTask);
           setTasksIdx(tasks.length);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
+          setKeys(p => [...p, startTask.instanceId]);
           nextState = "navigate";
         }
         break;
       case "error":
         setModalInfo({title: "Error", description: "An error occurred"});
+        break;
       default:
         console.log(`${componentName} State Machine unknown state:`, task.state.current);
     }

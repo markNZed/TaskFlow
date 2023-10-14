@@ -52,8 +52,11 @@ const TaskLLMIO = (props) => {
   // Each time this component is mounted then we reset the task state
   useEffect(() => {
     // This can write over the update
-    task.state.current = "start";
-    task.state.done = false;
+    console.log("Mounting state.current: start, state.done: false, input.exit: false");
+    modifyTask({ 
+      "state.current": "start",
+      "state.done": false,
+    });
   }, []);
 
   // This is asynchronous to the rendering so there may be conflicts where
@@ -154,9 +157,11 @@ const TaskLLMIO = (props) => {
         break;
       case "stop":
         if (transition()) {
-          modifyTask({ "state.done": true });
+          modifyTask({
+            "state.done": true,
+            "input.exit": false,
+          });
         }
-        console.log("Task:", task);
         break;
       default:
         console.log("ERROR unknown state : ", task.state.current);

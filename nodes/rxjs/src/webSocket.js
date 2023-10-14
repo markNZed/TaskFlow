@@ -63,6 +63,7 @@ taskSubject
       if (!task.node.coprocessing) {
         utils.removeNullKeys(task);
       }
+      utils.debugTask(task, "removeNullKeys");
       // We make an exception for sync so we can log sync that are sent with coprocessed
       const CEPCoprocessor = NODE.role === "coprocessor" && (task.node.coprocessing || task.node?.commandArgs?.sync);
       const processor = NODE.role !== "coprocessor";
@@ -141,6 +142,7 @@ taskSubject
           }
         }
       }
+      utils.debugTask(task, "after CEP");
       if (NODE.role === "coprocessor") {
         //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessed", task.node.coprocessed);
         if (task.node.coprocessed) {
@@ -243,6 +245,7 @@ const connectWebSocket = () => {
     let task;
     if (message?.task) {
       task = message.task;
+      utils.debugTask(task, "message task");
       command = task.node.command;
       commandArgs = task.node.commandArgs;
       // We do not lock for start because start only arrives once on the coprocessor with task.node.coprocessing 
@@ -296,6 +299,7 @@ const connectWebSocket = () => {
         await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, mergedTask);
       }
       // Emit the mergedTask into the taskSubject
+      utils.debugTask(mergedTask, "mergedTask");
       taskSubject.next(mergedTask);
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {

@@ -284,7 +284,7 @@ const utils = {
   },
 
   deepEqualDebug: function(obj1, obj2) {
-    return utils.deepEqual(obj1, obj2,new WeakSet(), true);
+    return utils.deepEqual(utils.deepClone(obj1), utils.deepClone(obj2), new WeakSet(), true);
   },
 
   deepEqual: function(obj1, obj2, visitedObjects = new WeakSet(), debug = false) {
@@ -302,12 +302,15 @@ const utils = {
       visitedObjects.add(obj1);
       visitedObjects.add(obj2);
 
-      const keys1 = Object.keys(obj1);
-      const keys2 = Object.keys(obj2);
+      // Strip out keys that are undefined
+      const keys1 = Object.keys(obj1).filter(key => obj1[key] !== undefined);
+      const keys2 = Object.keys(obj2).filter(key => obj2[key] !== undefined);
 
       // Check if the inputs have different lengths
       if (keys1.length !== keys2.length) {
-        if (debug) {console.log("deepEqual keys1.length !== keys2.length", keys1, keys2)}
+        if (debug) {console.log("deepEqual keys1.length !== keys2.length", utils.js(keys1), utils.js(keys2))}
+        if (debug) {console.log("obj1", obj1, Object.keys(obj1))}
+        if (debug) {console.log("obj2", obj2, Object.keys(obj2))}
         return false;
       }
 
@@ -682,6 +685,9 @@ const utils = {
   },
 
   cleanForHash: function (task) {
+    if (!task) {
+      return {};
+    }
     let taskCopy = utils.deepClone(task);
     delete taskCopy.node;
     delete taskCopy.node;
@@ -866,7 +872,7 @@ const utils = {
       if (taskClone.node.command === "update") {
         const taskCleaned = utils.cleanForHash(taskClone);
         //console.log("taskInNodeOut taskCleaned", taskCleaned);
-        const origTaskCleaned = utils.cleanForHash(lastTask);
+        const origTaskCleaned = utils.cleanForHash(taskClone.node.origTask);
         //console.log("taskInNodeOut origTaskCleaned", origTaskCleaned);
         // Not sure about removing outputs better to leave them
         delete taskCleaned.output;
@@ -1152,6 +1158,9 @@ const utils = {
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
+    if (task?.operators?.LLM) {
+      logParts.push("operators.LLM", utils.js(task.operators.LLM));
+    }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {
       console.log("Task:", JSON.stringify(task, null, 2));
@@ -1172,16 +1181,20 @@ const utils = {
     }
     logParts.push('nodeId:', task?.node?.id);
     */
+    /*
     if (!command && task.nodes && Object.keys(task.nodes).length) {
       logParts.push('task:', utils.js(task));
       console.log(logParts.join(' '));
       throw new Error("ERROR debugTask: no command");
     }
+    */
+    /*
     if (command === "error") {
       logParts.push('task:', utils.js(task));
       console.log(logParts.join(' '));
       throw new Error("ERROR command === error");
     }
+    */
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     //logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));
     // Use a single console.log at the end of debugTask

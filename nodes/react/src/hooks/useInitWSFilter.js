@@ -62,7 +62,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
   }, [initialTask]);
 
   useEffect(() => {
-    console.log(`useInitWSFilter ${initialTask?.instanceId} initiatingInstanceId ${initiatingInstanceId}`);
+    //console.log(`useInitWSFilter ${initialTask?.instanceId} initiatingInstanceId ${initiatingInstanceId}`);
   }, [initiatingInstanceId]);
 
   useEffect(() => {

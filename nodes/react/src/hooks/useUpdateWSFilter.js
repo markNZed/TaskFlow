@@ -21,7 +21,7 @@ function useUpdateWSFilter(isMountedRef, initialTask, onUpdate) {
     const keys = Object.keys(messageQueue);
     // sort the keyys so we process the oldest first
     keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-    //console.log("useUpdateWSFilter initialTask.instanceId", initialTask.instanceId, "keys", keys);
+    //console.log("useUpdateWSFilter handleUpdate initialTask.instanceId", initialTask.instanceId, "keys", keys);
     for (let key of keys) {
       const message = messageQueue[key];
       //console.log("message", message, key);

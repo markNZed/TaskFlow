@@ -223,6 +223,7 @@ async function processError_async(task, tasksStore_async) {
     }
     task.node.command = "error";
     task.node.commandArgs = { errorTask };
+    utils.logTask(task,"processError_async found task.error and set errorTask", errorTask.id);
   }
   return task;
 }
@@ -249,7 +250,7 @@ async function taskProcess_async(task) {
     }
     let activeTask = {};
     const incomingNode = task.node;
-    if (incomingNode.command !== "partial") {
+    if (incomingNode.command !== "partial" && task.node.command !== "register") {
       utils.logTask(task, "From node:" + incomingNode.id + " command:" + incomingNode.command + " commandDescription:" + incomingNode.commandDescription + " state:" + task?.state?.current);
       checkErrorRate(task);
       if (incomingNode.command === "update") {
@@ -271,9 +272,6 @@ async function taskProcess_async(task) {
           activeTask["node"] = null; 
           task = utils.deepMerge(activeTask, task);
           hubAssertions(taskDiff, task);
-        } else if (incomingNode.command !== "start" && incomingNode.command !== "init") {
-          console.error("Should have activeTask if we have an instanceId", task);
-          throw new Error("Should have activeTask if we have an instanceId");
         }
       }
     }
@@ -283,7 +281,7 @@ async function taskProcess_async(task) {
       activeTask.nodes = task.nodes;
       await setActiveTask_async(activeTask);
     }
-    if (task.node.command !== "partial") {
+    if (task.node.command !== "partial" && task.node.command !== "register") {
       task = checkLockConflict(task, activeTask);
       if (!task.node.coprocessing) {
         task = checkAPIRate(task);

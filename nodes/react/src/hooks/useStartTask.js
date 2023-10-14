@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { utils } from "../utils/utils.mjs";
 import useWebSocketContext from "../contexts/WebSocketContext";
 
-const useStartTask = (task, setTask) => {
+const useStartTask = (task, setTask, setStartTask) => {
   const { wsSendTask } = useWebSocketContext();
   const [startTaskError, setStartTaskError] = useState();
   const startTaskSentIdRef = useRef();
@@ -21,6 +21,7 @@ const useStartTask = (task, setTask) => {
     }
     const fetchTaskFromAPI = async () => {
       try {
+        setStartTask(null);
         let snapshot = utils.deepClone(task); // deep copy
         const updating = { command: null, commandArgs: null, commandDescription : null };
         utils.setNestedProperties(updating);
@@ -33,7 +34,7 @@ const useStartTask = (task, setTask) => {
         setStartTaskError(error.message);
         startTaskSentIdRef.current = commandArgs.id;
       }
-      console.log("startTaskSentIdRef.current", startTaskSentIdRef.current);
+      console.log("useStartTask startTaskSentIdRef.current", startTaskSentIdRef.current);
     };
 
     fetchTaskFromAPI();

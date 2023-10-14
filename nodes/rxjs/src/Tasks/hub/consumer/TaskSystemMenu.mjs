@@ -91,6 +91,9 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       if (configTreeEvent) {
         const newTasksTree = await getAuthorisedTasks_async(T("user.id"), tasksStore_async, groupsStore_async, T("config.sort"));
         const oldTasksTree = T("state.tasksTree");
+        // There was a very nast issue where a key in the tasksTree could be set to undefined in getAuthorisedTasks_async
+        // Then the conversion of the object to JSON will remove the key and deepEqual would see a difference in the number of keys
+        // deepEqual was modified to remove undefined keys
         if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
           T("state.tasksTree", newTasksTree);
           T("command", "update");

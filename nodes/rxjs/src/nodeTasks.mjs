@@ -86,7 +86,6 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           await Promise.all(promises);
           T("services", services);
           //console.log("init services", T("services"));
-          //ServicesMap.set(T("instanceId"), services);
         }
         let operators = T("operators") || {};
         let operatorsConfig = utils.deepClone(T("operators"));
@@ -141,7 +140,6 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           await Promise.all(promises);
           T("operators", operators);
           //console.log("init operators", T("operators"));
-          //OperatorsMap.set(T("instanceId"), operators);
         }
       } else {
         // Restore functions which are not synchronized in the Tasks object
@@ -165,7 +163,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
               T(`operators.${key}.module`, module);
             }
           });
-          //console.log("Restore operators", T("operators"));
+          console.log("Restore operators", T("operators"));
+          console.log("OperatorsMap.keys", OperatorsMap.keys());
         }
       }
       const taskFunction = await importTaskFunction_async(taskFunctionName);
@@ -277,7 +276,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           sync: true,
           instanceId: T("instanceId"),
           syncTask,
-          messageId: task.messageId,
+          messageId: task.meta.messageId,
         },
         commandDescription: `Sync node functions on ${NODE.name}`,
       };

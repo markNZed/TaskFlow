@@ -16,8 +16,6 @@ async function errorTask_async(task) {
     utils.logTask(task, "task", task);
     throw new Error("Called errorTask_async on a task that is not errored");
   }
-  // We are handling two lists for activeNodes
-  // This is messy
   const nodeId = task.node.initiatingNodeId;
   task.error.sourceNodeId = nodeId;
   let sourceNode = activeNodes.get(nodeId);
@@ -55,7 +53,7 @@ async function errorTask_async(task) {
 export async function commandError_async(task) {
   utils.debugTask(task);
   try {
-    utils.logTask(task, "errorCommnad_async " + task.id);
+    utils.logTask(task, "commandError_async " + task.id);
     const activeTask = await getActiveTask_async(task.instanceId);
     if (!activeTask) {
       throw new Error("No active task " + task.instanceId);
