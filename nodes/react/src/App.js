@@ -15,17 +15,23 @@ import IndexedDBViewer from "./components/IndexedDBViewer";
 import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
 import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
+import useRegisterTask from "./hooks/useRegisterTask";
 import { hubUrl, appAbbrev } from "./config.mjs";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
 
 function App({ activeWorkerCount, workerId }) {
+
+  const [registerTask, setRegisterTask] = useState();
+  const { registerTaskError } = useRegisterTask(
+    registerTask, 
+    setRegisterTask,
+  );
   const [nodeId, setNodeId] = useState();
   // Needed to use Ref to pass into registerProcessor as nodeId state does not work
   const nodeIdRef = useRef(null);
   const [enableGeolocation, setEnableGeolocation] = useState(false);
-  const [registering, setRegistering] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
   const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
   const storageRef = useRef(null);
@@ -60,7 +66,6 @@ function App({ activeWorkerCount, workerId }) {
 
   // Register upon request from Hub
   const registerProcessor = async (nodeId) => {
-    setRegistering(true);
     const language = navigator?.language?.toLowerCase() ?? 'en';
     const node = {
       nodeId: nodeId,
@@ -71,33 +76,20 @@ function App({ activeWorkerCount, workerId }) {
       role: "consumer",
       processing: "batch",
     }
+    setRegisterTask({
+      command: "register",
+      commandDescription: `Request ${nodeId} to register`,
+      node,
+    })
     replaceGlobalState("node", node);
-    try {    
-      const response = await fetch(`${hubUrl}/api/register`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(node),
-      });
-      const data = await response.json();
-      console.log("Registered node: ", nodeId, data);
-      if (data?.hubId) {
-        replaceGlobalState("hubId", data.hubId);
-        // The initial task takes on the nodeId so it can process autostart tasks sent by the hub
-        setTask({...task, instanceId: nodeId});
-      }
-    } catch (err) {
-      console.log("Registered node error ");
-      console.log(err.message);
-    }
-    setRegistering(false);
+    // The initial task takes on the nodeId so it can process autostart tasks sent by the hub
+    setTask({...task, instanceId: nodeId});
   };
 
   useRegisterWSFilter(
     (registerTask) => {
       console.log("registerTask", registerTask, nodeIdRef.current);
+      replaceGlobalState("hubId", registerTask.node.commandArgs.hubId);
       registerProcessor(nodeIdRef.current);
     }
   )

@@ -147,7 +147,7 @@ function initWebSocketServer(server) {
           ws.data["nodeId"] = nodeId;
           console.log("Websocket nodeId", nodeId)
         }
-        if (!activeNodes.has(nodeId)) {
+        if (!activeNodes.has(nodeId) && incomingNode?.command !== "register") {
           registerTask_async(wsSendTask, nodeId);
           return;
         }

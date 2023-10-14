@@ -25,6 +25,7 @@ export async function registerTask_async(wsSendTask, nodeId) {
     node: {
       command: "register",
       commandDescription: `Request ${nodeId} to register`,
+      commandArgs: {hubId: NODE.id},
     },
   };
   console.log("registerTask_async request for registering " + nodeId)
@@ -34,21 +35,12 @@ export async function registerTask_async(wsSendTask, nodeId) {
 export async function commandRegister_async(task) {
   utils.debugTask(task);
   try {
-    utils.logTask(task, "commandRegister_async " + task.id);
-    const activeTask = await getActiveTask_async(task.instanceId);
-    if (!activeTask) {
-      throw new Error("No active task " + task.instanceId);
-    }
-    task = utils.deepMergeNode(activeTask, task, task.node);
-    if (!task.node.commandArgs?.errorTask) {
-      // We are receiving an error after coprocessing
-      await taskSync_async(task.instanceId, task);
-      await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
-      taskRelease(task.instanceId, "commandRegister_async");
-    } else {
-      await registerTask_async(task);
-      taskRelease(task.instanceId, "commandRegister_async");
-    }
+    utils.logTask(task, "commandRegister_async", task);
+    const initiatingNodeId = task.node.initiatingNodeId;
+    let node = task.nodes[initiatingNodeId];
+    node["userId"] = task?.user?.id;
+    node["nodeId"] = initiatingNodeId;
+    registerCopy(node);
   } catch (error) {
     const msg = `Error commandRegister_async task ${task.id}: ${error.message}`;
     console.error(msg);
@@ -56,15 +48,8 @@ export async function commandRegister_async(task) {
   }
 }
 
-async function registerCopy(req, res, userId) {
-  console.log("/hub/api/register");
-  let nodeId = req.body.nodeId;
-  let environment = req.body.environment;
-  let commandsAccepted = req.body?.commandsAccepted;
-  let language = req.body?.language;
-  let type = req.body?.type;
-  let role = req.body?.role;
-  let processing = req.body?.processing;
+async function registerCopy({ nodeId, environment, commandsAccepted, language, type, role, processing, userId }) {
+  console.log("registerCopy");
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "init", "join", "pong", "register", "error"];
@@ -91,10 +76,6 @@ async function registerCopy(req, res, userId) {
     role,
     processing,
   })
-
-  res.send({
-    hubId: NODE.id,
-  });
 
   // After each node registers then we can check if there are tasks to autostart
   // Check if there are autoStartTasks 
