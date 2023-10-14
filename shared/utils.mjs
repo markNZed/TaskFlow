@@ -706,63 +706,63 @@ const utils = {
     return taskCopy;
   },
 
-  nodeDiff: function(origTask, task) {
+  nodeDiff: function(lastTask, task) {
     if (task.node.command === "ping" || task.node.command === "pong") {
       return task;
     }
-    if (!origTask) {
+    if (!lastTask) {
       return task;
     }
-    const taskCopy = utils.deepClone(task); // Avoid modifyng object that was passed in
-    origTask = utils.deepClone(origTask); // Avoid modifyng object that was passed in
-    if (origTask.id !== taskCopy.id) {
-      throw new Error("ERROR nodeDiff origTask.id !== taskCopy.id");
+    const taskClone = utils.deepClone(task); // Avoid modifyng object that was passed in
+    const lastTaskClone = utils.deepClone(lastTask); // Avoid modifyng object that was passed in
+    if (lastTaskClone.id !== taskClone.id) {
+      throw new Error("ERROR nodeDiff lastTaskClone.id !== taskClone.id");
     }
-    // Certain things we do not care about so delete to improve perf
-    //if (taskCopy?.meta?.modified) delete taskCopy.meta.modified;
-    //if (origTask?.meta?.modified) delete origTask.meta.modified;
-    if (taskCopy?.node?.origTask) delete taskCopy.node.origTask;
-    if (origTask?.node?.origTask) delete origTask.node.origTask;
-    if (taskCopy?.nodes) delete taskCopy.nodes;
-    if (origTask?.nodes) delete origTask.nodes;
-    //console.log("nodeDiff in origTask.output, task.output", origTask?.output, task.output);
-    const diffTask = utils.getObjectDifference(origTask, taskCopy) || {};
-    //console.log("utils.getObjectDifference origTask?.shared:", JSON.stringify(origTask?.shared, null, 2));
-    //console.log("utils.getObjectDifference taskCopy?.shared:", JSON.stringify(taskCopy?.shared, null, 2));
+    // Things we do not care about so delete to improve perf
+    //if (taskClone?.meta?.modified) delete taskClone.meta.modified;
+    //if (lastTaskClone?.meta?.modified) delete lastTaskClone.meta.modified;
+    if (taskClone?.nodes) delete taskClone.nodes;
+    if (lastTaskClone?.nodes) delete lastTaskClone.nodes;
+    //console.log("nodeDiff in lastTaskClone.output, task.output", lastTaskClone?.output, task.output);
+    let diffTask;
+    if (taskClone.node?.origTask) {
+      // Get what has changed relative to the values of the task when recreated
+      diffTask = utils.getObjectDifference(taskClone.node.origTask, taskClone)
+      // Get what has changed relative to the latest task in storage (i.e. account for updates)
+      diffTask = utils.getObjectDifference(lastTaskClone, diffTask);
+    } else {
+      diffTask = utils.getObjectDifference(lastTaskClone, taskClone);
+    }
+    if (diffTask === undefined) diffTask = {};
+    const lastValues = utils.getIntersectionWithDifferentValues(lastTaskClone, diffTask);
+    //console.log("utils.getObjectDifference lastTaskClone?.shared:", JSON.stringify(lastTaskClone?.shared, null, 2));
+    //console.log("utils.getObjectDifference taskClone?.shared:", JSON.stringify(taskClone?.shared, null, 2));
     //console.log("utils.getObjectDifference diffTask?.shared:", JSON.stringify(diffTask?.shared, null, 2));
-    if (Object.keys(diffTask).length > 0) {
-      diffTask["instanceId"] = taskCopy.instanceId;
-      diffTask["id"] = taskCopy.id;
-      diffTask["node"] = taskCopy.node;
-      diffTask["user"] = taskCopy.user;
-      diffTask["meta"] = taskCopy.meta || {};
-      if (taskCopy.meta.locked) diffTask.meta["locked"] = taskCopy.meta.locked;
-      diffTask.meta["hash"] = origTask.meta.hash;
-      // Which properties of the origTask differ from the task
-      let diffOrigTask;
-      if (taskCopy.node?.commandArgs?.sync) {
-        diffOrigTask = {};
-      } else {
-        diffOrigTask = utils.getIntersectionWithDifferentValues(origTask, taskCopy);
-        if (diffOrigTask === undefined) diffOrigTask = {};
-      }
-      diffOrigTask = utils.cleanForHash(diffOrigTask);
-      //console.log("diffOrigTask", diffOrigTask, origTask, taskCopy);
-      // Allows us to check only the relevant part of the origTask
-      // More specific than testing for the hash of the entire origTask
-      diffTask.meta["hashDiff"] = utils.taskHash(diffOrigTask);
-      diffTask.meta["prevMessageId"] = origTask.meta.prevMessageId;
-      diffTask.meta["messageId"] = taskCopy.meta.messageId;
-      // In theory we could enable the hash debug in the task
-      const hashDebug = false;
-      if (hashDebug || taskCopy.config?.debug?.hash) {
-        diffTask.meta["hashTask"] = utils.deepClone(origTask);
-        diffTask.meta.hashTask = utils.cleanForHash(diffTask.meta.hashTask);
-        diffTask.meta["hashDiffOrigTask"] = utils.deepClone(diffOrigTask);
-        diffTask.meta.hashDiffOrigTask = utils.cleanForHash(diffTask.meta.hashDiffOrigTask);
-      }
-      //console.log("nodeDiff out task.output", diffTask.output);
+    const cleanValues = utils.cleanForHash(lastValues);
+    const hashDiff = utils.taskHash(cleanValues);
+    diffTask["instanceId"] = taskClone.instanceId;
+    diffTask["id"] = taskClone.id;
+    diffTask["node"] = taskClone.node;
+    diffTask["user"] = taskClone.user;
+    diffTask["meta"] = taskClone.meta || {};
+    if (taskClone.meta?.locked) diffTask.meta["locked"] = taskClone.meta.locked;
+    // This hash gives us an id for the particular value of the task instance
+    // It might be better to use updatedAt
+    if (taskClone.meta?.hash) diffTask.meta["hash"] = taskClone.meta.hash;
+    // Which properties of the lastTaskClone differ from the task
+    //console.log("cleanDiff", cleanDiff, lastTaskClone, taskClone);
+    // Allows us to check only the relevant part of the lastTaskClone
+    // More specific than testing for the hash of the entire lastTaskClone
+    diffTask.meta["hashDiff"] = hashDiff;
+    diffTask.meta["prevMessageId"] = lastTaskClone.meta.prevMessageId;
+    diffTask.meta["messageId"] = taskClone.meta.messageId;
+    // In theory we could enable the hash debug in the task
+    const hashDebug = false;
+    if (hashDebug || taskClone.config?.debug?.hash) {
+      diffTask.meta["hashDebugLastTaskValues"] = utils.deepClone(cleanValues);
+      diffTask.meta.hashDebugLastTaskValues = utils.cleanForHash(diffTask.meta.hashDebugLastTaskValues);
     }
+    //console.log("nodeDiff out task.output", diffTask.output);
     return diffTask;
   },
 
@@ -787,15 +787,15 @@ const utils = {
     //console.log("diffOrigTask messageId:", task.meta.messageId, "cleanForHash diffOrigTask:", utils.cleanForHash(diffOrigTask));
     const localHash = utils.taskHash(diffOrigTask);
     if (expectedHash !== localHash) {
-      if (task.meta.hashDiffOrigTask) {
-        //console.error("Remote hashDiffOrigTask", task.meta.hashDiffOrigTask);
-        let hashDiff = utils.getObjectDifference(taskInStorage, task.meta.hashDiffOrigTask) || {};
+      if (task.meta.hashDebugLastTaskValues) {
+        //console.error("Remote hashDebugLastTaskValues", task.meta.hashDebugLastTaskValues);
+        let hashDiff = utils.getObjectDifference(taskInStorage, task.meta.hashDebugLastTaskValues) || {};
         hashDiff = utils.cleanForHash(hashDiff);
         console.error("checkHashDiff hashDiff from remote", hashDiff);
       }
       diffOrigTask = utils.cleanForHash(diffOrigTask);
       console.error("Local diffOrigTask", JSON.stringify(diffOrigTask, null, 2));
-      console.error("task.meta.hashDiffOrigTask", task.meta?.hashDiffOrigTask);
+      console.error("task.meta.hashDebugLastTaskValues", task.meta?.hashDebugLastTaskValues);
       console.error("taskInStorage:", taskInStorage);
       console.error("taskCopy:", taskCopy);
       throw new Error("ERROR: Task hashDiff does not match messageId:" + task.meta.messageId + " local:" + localHash + " remote:" + expectedHash);
@@ -819,52 +819,52 @@ const utils = {
   },
 
   taskToNode_async: async function(task, nodeId, getActiveTask_async) {
-    let taskCopy = utils.deepClone(task); // We do not want any side efects on task
-    utils.debugTask(taskCopy, "input");
-    //console.log("taskInNodeOut input taskCopy.output", taskCopy.output);
-    if (!taskCopy.command) {
-      console.error("ERROR: Missing taskCopy.command", taskCopy);
-      throw new Error(`Missing taskCopy.command`);
+    let taskClone = utils.deepClone(task); // We do not want any side efects on task
+    utils.debugTask(taskClone, "input");
+    //console.log("taskInNodeOut input taskClone.output", taskClone.output);
+    if (!taskClone.command) {
+      console.error("ERROR: Missing taskClone.command", taskClone);
+      throw new Error(`Missing taskClone.command`);
     }
-    const command = taskCopy.command;
-    const commandArgs = taskCopy.commandArgs;
-    const commandDescription = taskCopy.commandDescription;
-    // Initialize node when it does not exist e.g. when starting initial taskCopy
-    if (!taskCopy.node) {
-      taskCopy.node = {};
+    const command = taskClone.command;
+    const commandArgs = taskClone.commandArgs;
+    const commandDescription = taskClone.commandDescription;
+    // Initialize node when it does not exist e.g. when starting initial taskClone
+    if (!taskClone.node) {
+      taskClone.node = {};
     }
-    // Clear down taskCopy commands as we do not want these coming back from the Hub
-    taskCopy.node["command"] = command;
-    delete taskCopy.command;
+    // Clear down taskClone commands as we do not want these coming back from the Hub
+    taskClone.node["command"] = command;
+    delete taskClone.command;
     if (commandArgs) {
       // Deep copy because we are going to clear
-      taskCopy.node["commandArgs"] = JSON.parse(JSON.stringify(commandArgs));
+      taskClone.node["commandArgs"] = JSON.parse(JSON.stringify(commandArgs));
     } else {
-      taskCopy.node["commandArgs"] = null;
+      taskClone.node["commandArgs"] = null;
     }
-    delete taskCopy.commandArgs;
+    delete taskClone.commandArgs;
     if (commandDescription) {
-      taskCopy.node["commandDescription"] = commandDescription;
+      taskClone.node["commandDescription"] = commandDescription;
     } else {
-      taskCopy.node["commandDescription"] = "";
+      taskClone.node["commandDescription"] = "";
     }
-    delete taskCopy.commandDescription;
-    // Record the state of the taskCopy as it leaves the node
-    if (taskCopy?.state?.current) {
-      taskCopy.node["stateLast"] = taskCopy.state.current;
-      delete taskCopy.state.last;
+    delete taskClone.commandDescription;
+    // Record the state of the taskClone as it leaves the node
+    if (taskClone?.state?.current) {
+      taskClone.node["stateLast"] = taskClone.state.current;
+      delete taskClone.state.last;
     }
-    taskCopy.node["id"] = nodeId;
+    taskClone.node["id"] = nodeId;
     // The coprocessor processes command init but th task has not been stored yet so diff cannot be calculated
     if (command === "start" || command === "partial" || commandArgs?.sync || command === "init") {
-      return taskCopy;
+      return taskClone;
     }
     let diffTask;
-    if (taskCopy.instanceId) {
-      const lastTask = await getActiveTask_async(taskCopy.instanceId);
-      // This assumes taskCopy is not a partial object e.g. in sync
-      if (taskCopy.node.command === "update") {
-        const taskCleaned = utils.cleanForHash(taskCopy);
+    if (taskClone.instanceId) {
+      const lastTask = await getActiveTask_async(taskClone.instanceId);
+      // This assumes taskClone is not a partial object e.g. in sync
+      if (taskClone.node.command === "update") {
+        const taskCleaned = utils.cleanForHash(taskClone);
         //console.log("taskInNodeOut taskCleaned", taskCleaned);
         const origTaskCleaned = utils.cleanForHash(lastTask);
         //console.log("taskInNodeOut origTaskCleaned", origTaskCleaned);
@@ -874,15 +874,13 @@ const utils = {
         const keysNulled = utils.identifyAbsentKeysWithNull(origTaskCleaned, taskCleaned);
         if (keysNulled) {
           //console.log("taskInNodeOut keysNulled", keysNulled);
-          taskCopy = utils.deepMerge(taskCopy, keysNulled);
+          taskClone = utils.deepMerge(taskClone, keysNulled);
         }
       }
-      delete lastTask.node.origTask; // delete so we do not have an old copy in origTask
-      taskCopy.node["origTask"] = utils.deepClone(lastTask); 
-      // This will use taskCopy.node.origTask to identify the diff
-      diffTask = utils.nodeDiff(lastTask, taskCopy)
+      // This will use taskClone.node.origTask to identify the diff
+      diffTask = utils.nodeDiff(lastTask, taskClone)
     } else {
-      diffTask = taskCopy;
+      diffTask = taskClone;
     }
     //console.log("taskInNodeOut diffTask", JSON.stringify(diffTask, null, 2));
     utils.debugTask(diffTask, "output");
@@ -1085,7 +1083,7 @@ const utils = {
     }
 
     // Can set task.debug via configuration
-    //if (!task?.config?.debug?.debugTask) {return}
+    if (!task?.config?.debug?.debugTask) {return}
 
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
@@ -1124,8 +1122,8 @@ const utils = {
     if (task?.state?.tasksTree) {
       //logParts.push("tasksTree", task.state.tasksTree);
     }
-    if (task?.meta?.hashDiffOrigTask) {
-      //logParts.push("task.meta.hashDiffOrigTask:", JSON.stringify(task.meta.hashDiffOrigTask));
+    if (task?.meta?.hashDebugLastTaskValues) {
+      //logParts.push("task.meta.hashDebugLastTaskValues:", JSON.stringify(task.meta.hashDebugLastTaskValues));
     }
     if (task?.meta?.hashTask?.state?.current) {
       //logParts.push("task?.meta?.hashTask?.state?.current:", task?.meta?.hashTask?.state?.current);
@@ -1178,6 +1176,11 @@ const utils = {
       logParts.push('task:', utils.js(task));
       console.log(logParts.join(' '));
       throw new Error("ERROR debugTask: no command");
+    }
+    if (command === "error") {
+      logParts.push('task:', utils.js(task));
+      console.log(logParts.join(' '));
+      throw new Error("ERROR command === error");
     }
     //logParts.push("task.services", JSON.stringify(task.services, null, 2));
     //logParts.push("task.ceps", JSON.stringify(task.ceps, null, 2));

@@ -1,5 +1,9 @@
 /* ToDo
 -------
+TaskShowInstruction misses update because too slow to init relative to message from nodejs
+Back in Exercise for input broken
+commandPending upon done/error
+Steppertest broken
 Updates on rxjs need to block, like on react
   Update needs to hold the lock until the update returns for storage to update
     Allows for CEP to operate but very slow
@@ -13,14 +17,13 @@ In Firefox mobile need to move the Toolbar to the Top so it does not hide conten
 sync will not run task function so menu will not be updated
   Created an option syncUpdate that applies a normal update
 Refactoring 
-  Replace task.hub with task.node
-    \.hub\b hub: "hub"
   Align similar modules on the hub and rxjs
+    Softlink to use rxjs src from hub/src/rxjs-src 
   Unique to the hub:
-    config of tasks, tasktypes, users, groups
     routes - should transition to websocket ?
       registerRoutes
         Use the register command. Create commandRegister.mjs
+    config of tasks, tasktypes, users, groups
     commandError.mjs
     commandInit.mjs
     commandStart.mjs

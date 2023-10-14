@@ -48,8 +48,8 @@ async function updateTaskWithHistory(newTaskData) {
 function stripTask(task) {
   // deep copy
   const taskCopy = utils.deepClone(task);
-  // hashDiffOrigTask is for debug of the hash but it also helps spot what changes in the task
-  //delete taskCopy.meta.hashDiffOrigTask; 
+  // hashDebugLastTaskValues is for debug of the hash but it also helps spot what changes in the task
+  //delete taskCopy.meta.hashDebugLastTaskValues; 
   delete taskCopy.meta.hashTask;
   delete taskCopy.node.origTask;
   return taskCopy;

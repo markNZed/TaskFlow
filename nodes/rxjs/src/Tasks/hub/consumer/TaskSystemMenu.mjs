@@ -60,18 +60,6 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       if (wf?.config?.label) {
         wf['label'] = wf.config.label;
       }
-      if (wf.initiator === undefined) {
-        const hasStart = key.endsWith(".start") ? true : false;
-        let initiator;
-        if (hasStart) {
-          if (authorised_tasks[key].initiator === false) {
-            initiator = false;
-          } else {
-            initiator = true;
-          }
-        }
-        wf['initiator'] = initiator;
-      }
       wf['childrenId'] = wf.meta.childrenId;
       if (sort && wf['childrenId']) {
         wf['childrenId'] = wf['childrenId'].sort();

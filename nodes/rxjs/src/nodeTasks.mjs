@@ -52,16 +52,20 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
             // Dynamically import taskServices
             let environments = servicesConfig[key].environments;
             if (!environments) {
-              environments = [NODE.environment];
-              console.log(`Service ${key} has no environments so it runs everywhere`);
+              if (!environments) {
+                environments = T("environments");
+                console.log(`Service ${key} has no environments so defaulting to Task environments`);
+              }
             }
             // Only try to load a service if it is expected to be on this node
             if (environments.includes(NODE.environment)) {
-              const type = servicesConfig[key].type;
+              const type = servicesConfig[key].type || key; // default to using the key as the type;
               //console.log("type", type);
               if (await serviceTypes_async.has(type)) {
                 services[key] = await serviceTypes_async.get(type);
-                services[key] = utils.deepMerge(services[key], servicesConfig[key]);
+                if (Object.keys(servicesConfig[key]).length) {
+                  services[key] = utils.deepMerge(services[key], servicesConfig[key]);
+                }
                 //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                 const serviceName = services[key]["moduleName"];
                 if (await serviceExists_async(serviceName)) {
@@ -101,14 +105,20 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           //console.log("operatorsConfig", JSON.stringify(operatorsConfig))
           const promises = Object.keys(operatorsConfig).map(async (key) => {
             // Dynamically import taskOperators
-            const environments = operatorsConfig[key].environments;
+            let environments = operatorsConfig[key].environments;
+            if (!environments) {
+              environments = T("environments");
+              console.log(`Operator ${key} has no environments so defaulting to Task environments`);
+            }
             if (environments) {
               // Only try to load an operator if it is expected to be on this node
               if (environments.includes(NODE.environment)) {
                 const type = operatorsConfig[key].type || key; // default to using the key as the type
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
-                  operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
+                  if (Object.keys(operatorsConfig[key]).length) {
+                    operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
+                  }
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"];
                   if (await operatorExists_async(operatorName)) {
@@ -117,7 +127,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                     nodeFunctionsInitialized = true;
                     //console.log("operators", operators);
                   } else {
-                    throw new Error(`Operator ${operatorName} not found for ${T("id")} config: ${JSON.stringify(operatorsConfig)}`);
+                    throw new Error(`Operator ${operatorName} of type ${type} not found for ${T("id")} config: ${JSON.stringify(operatorsConfig)}`);
                   }
                 } else {
                   throw new Error(`Operatortype ${type} not found in ${key} operator of ${T("id")} config: ${JSON.stringify(operatorsConfig)}`);

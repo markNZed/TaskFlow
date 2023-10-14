@@ -271,7 +271,12 @@ const tasktypes = [
     output: {
       userInput: "",
       LLMtext: "",
-    }
+    },
+    operators: {
+      "LLM": {
+        environments: ["rxjs-processor-consumer"],
+      }
+    },
   },
   {
     name: "TaskShowInstruction",
@@ -294,6 +299,9 @@ const tasktypes = [
   {
     name: "TaskChoose",
     environments: ["rxjs-processor-consumer"],
+    operators: {
+      "LLM": {},
+    },
   },
   {
     name: "TaskGeneratePersona",
