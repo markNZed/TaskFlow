@@ -375,6 +375,43 @@ const tasks = [
   },
 
   {
+    name: "ragpreprocessing",
+    type: "TaskRAGPreprocessing",
+    parentName: "user",
+    initiator: true,
+    environments: ["rxjs-processor-consumer"],
+    config: {
+      label: "RAGPreprocessing",
+      local: {
+        corpusDir: '/app/data/rag/corpus',
+        coordinates: false,
+        encoding: "utf-8",
+        ocrLanguages: "frm", // French
+        outputFormat: "json",
+        includePageBreaks: false,
+        strategy: "auto",
+      },
+    },
+    state: {
+      current: "start",
+    },
+
+  },
+  {
+    name: "rag",
+    type: "TaskRAG",
+    parentName: "user",
+    initiator: true,
+    environments: ["rxjs-processor-consumer", "react"],
+    config: {
+      label: "RAG Demo",
+      local: {
+        maxChunks: 10,
+      },
+    },
+  },
+
+  {
     config: {
       local: {
         instruction: "Testing an error by going from start -> error state.",

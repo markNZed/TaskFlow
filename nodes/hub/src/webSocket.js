@@ -25,7 +25,7 @@ import { commandRegister_async, registerTask_async } from "./commandRegister.mjs
 function wsSendObject(nodeId, message = {}) {
   const ws = connections.get(nodeId);
   if (!ws) {
-    console.error(`Lost websocket for wsSendObject with nodeId ${nodeId} and message task ${message.task}`);
+    console.error(`Lost websocket for wsSendObject with nodeId ${nodeId} and message task ${utils.js(message.task)}`);
   } else {
     ws.send(JSON.stringify(message));
     if (message.task.node.command !== "pong") {

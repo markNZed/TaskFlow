@@ -126,9 +126,6 @@
         "users": {
           "$ref": "./genericV02schema.json#/definitions/Users"
         },
-        "hub": {
-          "$ref": "./genericV02schema.json#/definitions/Hub"
-        },
         "request": {
           "$ref": "./genericV02schema.json#/definitions/Request"
         },

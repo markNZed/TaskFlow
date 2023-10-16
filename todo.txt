@@ -1,5 +1,69 @@
 /* ToDo
 -------
+Simplest RAG:
+  PDF -> embeddings
+  embeddings -> weaviate
+  question/answers
+  TaskRAGPreprocessing
+      Preprocessing: from pdf into JSON chunks
+      Vectorizing: from JSON chunks into JSON vectors
+      Vector storage: from JSON vectors into Weaviate
+  Steps:
+    Preprocessing
+	    Collect documents
+	      Cleaning
+		    Normalization
+		    Tokenize into phrases/words
+		    Stopword removal
+	  Chunking
+	  Embedding
+	  Vector store
+	      Metadata (context)
+      Prompting
+	       Prompt rewriting
+      Search & Retrieving
+	      Question embedding
+	      Semantic search
+	      Hybrid search
+	  Fusion
+	    Rewrite
+    Generation
+Refactoring 
+  Align similar modules on the hub and rxjs
+    Softlink to use rxjs src from hub/src/rxjs-src 
+    Could pull out common functions
+  Naming convention is confused for e.g. commandUpdate
+    On the hub commandUpdate processes an update task
+      processUpdate ?
+    On rxjs commandUpdate generates an update task
+  Should disintguish between requesting to register and register
+    Or does the hub register with the nodes and then inverse
+    So not really a request it is just that the node responds by also Registering
+  The processor should also have a local task.nodes (so it can support multiple hubs)
+    First (common) step is to copy task.node into task.nodes
+  Should we only use task.command instead of task.node.command ?
+    Avoids needing to copy it, seems reasonable
+  Unique to the hub:
+    taskConverterWrapper.mjs 
+      fromTask is used
+      Rework as explicit validation
+    validateTasks.mjs
+      Rename to validateConfigTasks.mjs
+    config of tasks, tasktypes, users, groups
+    commandError.mjs
+    commandInit.mjs
+    commandStart.mjs
+    commandUpdate.mjs (different)
+    commandRegister.mjs (different)
+    configdata.mjs
+      Close to how we need to treat operators/services/CEPs
+    storage 
+      Identify the differences in export
+    taskProcess.mjs -> nodeTasks.mjs
+    taskStart.mjs
+    taskSync.mjs
+    webSocket.js
+    server.js
 Updates on rxjs need to block, like on react
   Update needs to hold the lock until the update returns for storage to update
     Allows for CEP to operate but slow
@@ -13,36 +77,9 @@ FSM is remounted in previous state
   So unmount in the state we want to restart from - not ideal
   Could have "state.initial" that would allow for control over this when reloading a Task
 In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
-Refactoring 
-  Align similar modules on the hub and rxjs
-    Softlink to use rxjs src from hub/src/rxjs-src 
-  Unique to the hub:
-    routes - should transition to websocket ?
-      registerRoutes
-        Use the register command. Create commandRegister.mjs
-    config of tasks, tasktypes, users, groups
-    commandError.mjs
-    commandInit.mjs
-    commandStart.mjs
-    commandUpdate.mjs (different)
-    configdata.mjs
-      Close to how we need to treat operators/services/CEPs
-    storage 
-      Identify the differences in export
-    taskConverterWrapper.mjs 
-      fromTask is used
-      Rework as explicit validation
-    taskProcess.mjs
-    taskStart.mjs
-    taskSync.mjs
-    validateTasks.mjs
-      Rename to validateConfigTasks.mjs
-    webSocket.js
-    server.js
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service
-Simplest RAG:
   
 Demo of copying a task
   Copy of TaskChat

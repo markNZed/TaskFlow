@@ -28,7 +28,7 @@ screen -S app -X screen -t processor-consumer bash
 screen -S app -p processor-consumer -X stuff "cd /app/nodes/rxjs\n"
 # We do not npm install here because we can assume that processor-consumer is doing that but wait for it to finish
 screen -S app -p processor-consumer -X stuff "touch processor-consumer.log && chmod 444 processor-consumer.log\n"
-screen -S app -p processor-consumer -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 processor-consumer.log; NODE_NAME=processor-consumer DEBUG_PORT=0.0.0.0:9230 npm run debug 2>&1 | tee -a rxjs.log\n"
+screen -S app -p processor-consumer -X stuff "while [ ! -f /tmp/rxjs_npm_install_done ]; do sleep 1; done && truncate -s 0 processor-consumer.log; NODE_NAME=processor-consumer DEBUG_PORT=0.0.0.0:9230 npm run debug 2>&1 | tee -a processor-consumer.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t shared bash

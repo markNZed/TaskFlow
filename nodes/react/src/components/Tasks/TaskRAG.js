@@ -18,7 +18,7 @@ ToDo:
   
 */
 
-const TaskWeaviate = (props) => {
+const TaskRAG = (props) => {
 
   const {
     log,
@@ -30,7 +30,7 @@ const TaskWeaviate = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  const [question, setQuestion] = useState("");  // State for the question input
+  const [query, setQuery] = useState("");  // State for the query input
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {
@@ -72,15 +72,15 @@ const TaskWeaviate = (props) => {
   }, [task]);
 
   const handleChange = (e) => {
-    setQuestion(e.target.value);
-    console.log("question: ", e.target.value);
+    setQuery(e.target.value);
+    console.log("query: ", e.target.value);
   }
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       modifyTask({
         "input.submit": true,
-        "input.question": question,
+        "input.query": query,
       });
     }
   }
@@ -108,17 +108,17 @@ const TaskWeaviate = (props) => {
 
   return (
     <div>
-      <h1>TaskWeaviate</h1>
+      <h1>RAG Demo</h1>
       <TextField
-        label="Enter your question"
+        label="Enter your query"
         variant="outlined"
-        value={question}
+        value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}  // Detect "Enter" key press
       />
-      <DisplayObject obj={task?.response?.answer} />;
+      <DisplayObject obj={task?.response?.result} />;
     </div>
   );
 };
 
-export default withTask(TaskWeaviate);
+export default withTask(TaskRAG);

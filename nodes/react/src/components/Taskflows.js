@@ -114,7 +114,7 @@ function Taskflows(props) {
     switch (task.state.current) {
       case "start":
         if (startTask) {
-          if (startTask.id === task.config.local.menuId) {
+          if (startTask.id === task?.config?.local?.menuId) {
             if (!taskMenu) {
               setTaskMenu(startTask);
               replaceGlobalState("user", startTask.user);

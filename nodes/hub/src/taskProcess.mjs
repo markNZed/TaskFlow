@@ -290,7 +290,7 @@ async function taskProcess_async(task) {
       if (task.node.command === "update" || task.node.command === "init") {
         // We may receive a diff where familyId is not sent but
         // we need familyId to set the outputStore_async
-        task.familyId = task.familyId || activeTask.familyId;
+        task.familyId = task.familyId || activeTask?.familyId;
         task = await processOutput_async(task, outputStore_async);
       }
       if (NODE.haveCoprocessor && !task.node.coprocessing && !task.node.coprocessed) {

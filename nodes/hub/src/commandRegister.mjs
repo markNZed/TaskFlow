@@ -12,7 +12,6 @@ import { taskLock, taskRelease } from '#shared/taskLock';
 import * as dotenv from "dotenv";
 dotenv.config();
 
-
 // We need to authenticate the nodeId
 // Could just be a shared secret in the body
 
@@ -35,12 +34,12 @@ export async function registerTask_async(wsSendTask, nodeId) {
 export async function commandRegister_async(task) {
   utils.debugTask(task);
   try {
-    utils.logTask(task, "commandRegister_async", task);
     const initiatingNodeId = task.node.initiatingNodeId;
+    utils.logTask(task, "commandRegister_async initiatingNodeId", initiatingNodeId);
     let node = task.nodes[initiatingNodeId];
     node["userId"] = task?.user?.id;
     node["nodeId"] = initiatingNodeId;
-    registerCopy(node);
+    await register(node);
   } catch (error) {
     const msg = `Error commandRegister_async task ${task.id}: ${error.message}`;
     console.error(msg);
@@ -48,8 +47,8 @@ export async function commandRegister_async(task) {
   }
 }
 
-async function registerCopy({ nodeId, environment, commandsAccepted, language, type, role, processing, userId }) {
-  console.log("registerCopy");
+async function register({ nodeId, environment, commandsAccepted, language, type, role, processing, userId }) {
+  console.log("register");
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "init", "join", "pong", "register", "error"];

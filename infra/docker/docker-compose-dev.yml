@@ -67,11 +67,14 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
       CLUSTER_HOSTNAME: 'weaviate1'
+      LOG_LEVEL: 'debug'
     networks:
       - web-proxy
 
   unstructured:
-    image: downloads.unstructured.io/unstructured-io/unstructured:latest
+    image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    volumes:
+      - ../../../taskflow/data/:/data
     networks:
       - web-proxy
 

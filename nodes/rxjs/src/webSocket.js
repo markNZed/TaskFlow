@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
 import { hubSocketUrl, NODE } from "../config.mjs";
-import { register_async } from "./register.mjs";
+import { commandRegister_async } from "./commandRegister.mjs";
 import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
 import { nodeTasks_async } from "./nodeTasks.mjs";
 import { utils } from "./utils.mjs";
@@ -184,7 +184,7 @@ taskSubject
 
 function wsSendObject(message) {
   if (!processorWs) {
-    console.log("Lost websocket for wsSendObject", message);
+    console.log("Lost websocket for wsSendObject", utils.js(message));
   } else {
     if (message.task.node.command !== "ping") {
       //console.log("wsSendObject ", JSON.stringify(message) )
@@ -320,7 +320,7 @@ const connectWebSocket = () => {
       //utils.logTask(task, "ws pong received", message)
     } else if (command === "register") {
       utils.logTask(task, "ws register request received")
-      register_async();
+      commandRegister_async(wsSendTask, task);
     } else {
       console.log("Unexpected message command ", command)
     }

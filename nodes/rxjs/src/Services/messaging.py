@@ -26,9 +26,9 @@ class MessagingClient:
 
     async def disconnect(self):
         if self.subscriber is not None:
-            self.subscriber.close()
+            await self.subscriber.close()
         if self.publisher is not None:
-            self.publisher.close()
+            await self.publisher.close()
 
     async def subscribe(self, channel):
         self.subscribe_channel = channel

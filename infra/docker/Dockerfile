@@ -22,7 +22,7 @@ RUN chmod a+x /usr/local/bin/websocat
 #    apt-get install -y mongodb-mongosh mongodb-org-tools
 
 RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add
-RUN apt-get install software-properties-common
+RUN apt-get update && apt-get install -y software-properties-common
 RUN apt-get update
 RUN add-apt-repository 'deb https://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main'
 RUN apt-get update
@@ -40,6 +40,14 @@ RUN npm install -g quicktype
 RUN npm install -g node-gyp
 
 RUN pip3 install rx redis aioredis
+
+# The jq command-line utility is a lightweight and flexible command-line JSON processor. It's widely used for parsing, filtering, and transforming JSON data.
+RUN apt-get install -y jq 
+
+# To provide support for encoding like d’assurance
+RUN apt-get install -y locales
+# To get unicode chars working in screen I needed to set "defutf8 on" in ~/.screenrc 
+# Also added "export LANG=en_US.UTF-8" to ~/.bashrc
 
 # Instead of the hacks below I deleted node_modules/@tensorflow and ran npm install again
 # RUN cd /app/nodes/rxjs/node_modules/@tensorflow/tfjs-node/deps/lib && \

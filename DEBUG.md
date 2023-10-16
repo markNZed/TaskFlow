@@ -35,6 +35,7 @@ Using VS Code
 * The `nodes/hub/src/configdata.mjs` can generate a file `/tmp/tasks.json` which can be copied using a linux shell to `/app/dead` so it can be loaded into VS Code but ignored by git. This shows the task object after initialisation. The `nodes/hub/src/configdata.mjs` module uses that file to perform a diff and print to the screen/log which can be a way to see the impacts of changes to the tasks configuration. The diff can be "reset" by deleting `/tmp/tasks.json`.
 * here is a debugTask function in `shared/utils.mjs` that is called from strategic locations with the Task object. From within that function we can add logic to debug and add tracing of particular "aspects" of functionality.
 * The EMPTY_ALL_DB variable in `shared/config.mjs` can be set to true and then upon restarting a Task Node it should empty its DBs. This can help during debug by starting the systme in a known state. Hoever if this is enabled and only one of the Task NOdes restarts (e.g. due to nodemon monitoring) then active Tasks will get out of sync. The script `./restartServers.sh` can restart everything in one step.
+* nodes/rxjs/scripts/runFunction.mjs allows for standalone testing of Task Functions
 
 ## Tips
 
