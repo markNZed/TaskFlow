@@ -85,4 +85,4 @@ server.setTimeout(300000);
 initWebSocketServer(server);
 
 const port = process.env.WS_PORT || 5001;
-server.listen(port, () => console.log(NODE.appName + " Hub started on port " + port));
+server.listen(port, () => console.log(NODE.app.name + " Hub started on port " + port));

@@ -13,13 +13,15 @@ dotenv.config(); // For process.env.OPENAI_API_KEY
 async function operate_async(wsSendTask, task) {
   const taskCopy = utils.deepClone(task);
   const T = utils.createTaskValueGetter(taskCopy);
-  const service = T("services.chat.module");
+  const chatServiceName = T("operators.LLM.chatServiceName") || "chat"; 
+  const service = T(`services.${chatServiceName}.module`);
   let params = await chatPrepare_async(T);
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
   //console.log("params.serviceConfig", params.serviceConfig);
   const [text, newMessages] = await callFunctionByName(service, functionName, params);
+  taskCopy["response"] = taskCopy.response || {}
   taskCopy.response.LLM = text;
   taskCopy.response.newMessages = newMessages;
   return taskCopy;

@@ -21,7 +21,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
   }
 
   async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async, sort = false) {
-    //console.log("getAuthorisedTasks_async", userId);
+    console.log("getAuthorisedTasks_async", userId);
     let authorised_tasks = {};
     let tasksTree = {};
     for await (const [key, value] of tasksStore_async.iterator()) {

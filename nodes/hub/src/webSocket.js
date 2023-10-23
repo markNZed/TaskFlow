@@ -76,7 +76,8 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
       }
       task = diff;
     } else {
-      throw new Error("Update but no active task for " + task.id);
+      console.error("Update but no active task for " + task.id);
+      return;
     }
   }
   //utils.logTask(task, "wsSendTask " + command + " message state", message["task"].state);
@@ -89,7 +90,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     delete task.nodes;
   } else {
     // When sending the register command we do not have a nodeId
-    utils.logTask(task, "wsSendTask no outgoingNode", nodeId);
+    //utils.logTask(task, "wsSendTask no outgoingNode", nodeId);
     task["node"] = activeNodes.get(nodeId) || currentNode;
   }
   task.node["command"] = currentNode.command;

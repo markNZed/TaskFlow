@@ -367,6 +367,7 @@ const TaskChat = (props) => {
         >
           {/* The key stops React double loading the image */}
           <img
+            alt="send"
             key={send}
             src={send}
             className={"send-" + sendReady}

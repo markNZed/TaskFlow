@@ -24,7 +24,7 @@ const DEFAULT_USER = "test@testing.com";
 let MAP_USER = {};
 if (process.env.MAP_USER_JSON) {
   MAP_USER = JSON.parse(process.env.MAP_USER_JSON)
-  console.log("MAP_USER ", MAP_USER);
+  console.log("MAP_USER", MAP_USER);
 }
 
 const DUMP_CONFIGS = process.env.DUMP_CONFIGS || false;

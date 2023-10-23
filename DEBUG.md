@@ -52,3 +52,7 @@ Using VS Code
 * The log files can be "cleared" without restartin the server e.g. `truncate -s 0 nodes/hub/hub.log`
 * In Preferences there is an option "Files: Readonly From Permissions" which will respect file system permissions - this is useful for respecting logs as read only
 * It does support multi-line regex `(\s+)services: \[([\s\S\n]+?)\]`
+
+### Linux
+
+* Find the process using a port 5000 `netstat -tulnp | grep :5000`

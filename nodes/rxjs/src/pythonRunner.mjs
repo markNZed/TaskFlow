@@ -54,7 +54,7 @@ class PythonRunner {
         this.process.kill();  // This sends the 'SIGTERM' signal to the process.
         console.log('Python process killed');
     }
-}
+  }
 }
 
 export { PythonRunner };

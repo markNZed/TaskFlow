@@ -4,7 +4,7 @@ export function newTask(NODE, state, taskFunctionName) {
       instance: "runFunction-" + taskFunctionName,
       config: {
         local: {
-          corpusDir: '/app/data/rag/corpus',
+          corpusName: "FLE",
         },
       },
       type: taskFunctionName,

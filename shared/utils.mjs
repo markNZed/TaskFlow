@@ -972,15 +972,18 @@ const utils = {
     let authenticated = false;
     if (task?.permissions) {
       for (const group_name of task.permissions) {
+        if (group_name === "*") {
+          authenticated = true;
+          break;
+        }
         let group = await groupsStore_async.get(group_name);
         if (!group?.users) {
           console.log("Group " + group_name + " has no users");
         } else if (group.users.includes(userId)) {
           authenticated = true;
+          break;
         }
       }
-    } else {
-      authenticated = true;
     }
     //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
     return authenticated;

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { TASKHUB_URL, NODE } from "../config.mjs";
+import { NODE } from "../config.mjs";
 import { utils } from "./utils.mjs";
 
 let hubId;
@@ -35,6 +35,6 @@ async function commandRegister_async(wsSendTask, task) {
     console.error(`Command ${registerTask.command} failed to fetch ${error}`);
   }
 
-};
+}
 
 export { commandRegister_async, hubId };

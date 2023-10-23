@@ -172,7 +172,7 @@ async function openaigpt_async(params) {
     ]
       .join("-")
       .replace(/\s+/g, "-");
-    console.log("cacheKeyText ", cacheKeyText);
+    //console.log("cacheKeyText ", cacheKeyText);
     computedCacheKey = utils.djb2Hash(cacheKeyText);
     console.log("computedCacheKey " + computedCacheKey);
     cachedValue = await cacheStore_async.get(computedCacheKey);
@@ -263,6 +263,7 @@ async function openaigpt_async(params) {
           options.functions = functions;
           options.function_call = "auto";
         }   
+        console.log("openai.chat.completions.create(options)", options);
         const response = await openai.chat.completions.create(options);
         //console.log("response", response);
         // eslint-disable-next-line no-unused-vars

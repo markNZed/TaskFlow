@@ -4,10 +4,12 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import withTask from "../../hoc/withTask";
-import TextField from '@mui/material/TextField';
-import { sendTo } from "xstate/lib/actions";
+import usePartialWSFilter from "../../hooks/usePartialWSFilter";
+import { Typography } from "@mui/material";
+import { utils } from "../../utils/utils.mjs";
+import DynamicComponent from "./../Generic/DynamicComponent";
 
 /*
 Task Function
@@ -25,12 +27,16 @@ const TaskRAG = (props) => {
     task,
     modifyTask,
     transition,
+    childTask
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
   const [query, setQuery] = useState("");  // State for the query input
+  const [responseText, setResponseText] = useState("");
+  const responseTextRef = useRef("");
+  const [socketResponses, setSocketResponses] = useState([]);
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {
@@ -38,6 +44,47 @@ const TaskRAG = (props) => {
     task.state.current = "start";
     task.state.done = false;
   }, []);
+
+  // This is asynchronous to the rendering so there may be conflicts where
+  // state is updated during rendering and this impacts the parent
+  // Probably needs to be moved outside of the component maybe into Redux
+  useEffect(() => {
+    const processResponses = () => {
+      setSocketResponses((prevResponses) => {
+        for (const response of prevResponses) {
+          const text = response.partial.text;
+          const mode = response.partial.mode;
+          switch (mode) {
+            case 'delta':
+              responseTextRef.current += text;
+              break;
+            case 'partial':
+            case 'final':
+              responseTextRef.current = text;
+              setResponseText(text);
+              break;
+            default:
+              console.log("WARNING unknown mode : " + mode);
+          }
+        }
+        //console.log(`${componentName} processResponses responseTextRef.current:`, responseTextRef.current);
+        setResponseText(responseTextRef.current);
+        return []; // Clear the processed responses
+      });
+    };
+    if (socketResponses.length > 0) {
+      processResponses();
+    }
+  }, [socketResponses]);
+
+  // I guess the websocket can cause events during rendering
+  // Putting this in the HoC causes a warning about setting state during rendering
+  usePartialWSFilter(task,
+    (partialTask) => {
+      //console.log(`${componentName} usePartialWSFilter partialTask`, partialTask.response);
+      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+    }
+  )
 
   // Task state machine
   // Unique for each component that requires steps
@@ -61,6 +108,7 @@ const TaskRAG = (props) => {
       case "sent":
         break;
       case "response":
+        setResponseText(task?.response?.result);
         nextState = "input";
         break;
       default:
@@ -73,15 +121,18 @@ const TaskRAG = (props) => {
 
   const handleChange = (e) => {
     setQuery(e.target.value);
-    console.log("query: ", e.target.value);
   }
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
+      e.preventDefault(); 
       modifyTask({
         "input.submit": true,
         "input.query": query,
       });
+      setResponseText("");
+      responseTextRef.current = "";
+      console.log("query", query);
     }
   }
 
@@ -107,16 +158,43 @@ const TaskRAG = (props) => {
   };
 
   return (
-    <div>
-      <h1>RAG Demo</h1>
-      <TextField
+    <div style={{ textAlign: 'left', marginLeft: `24px`, width: '100%', maxWidth: '800px' }}>
+      <h1>{task.config.label}</h1>
+      <textarea
+        placeholder={task.config?.local?.inputLabel}
         label="Enter your query"
         variant="outlined"
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}  // Detect "Enter" key press
       />
-      <DisplayObject obj={task?.response?.result} />;
+      <div>
+        {responseText ? (
+          responseText.split("\\n").map((line, index) => (
+            <Typography 
+              style={{ marginTop: "16px" }} 
+              key={index}
+              className="text2html"
+              dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
+            />
+          ))
+        ) : (
+          ""
+        )}
+      </div>
+      
+      <div>
+        {childTask && (
+          <DynamicComponent
+            key={childTask.id}
+            is={childTask.type}
+            task={childTask}
+            setTask={props.setChildTask}
+            handleModifyChildTask={props.handleModifyChildTask}
+            parentTask={task}
+          />
+        )}
+      </div>
     </div>
   );
 };

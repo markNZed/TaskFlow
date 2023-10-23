@@ -1,34 +1,29 @@
 /* ToDo
 -------
-Simplest RAG:
-  PDF -> embeddings
-  embeddings -> weaviate
-  question/answers
-  TaskRAGPreprocessing
-      Preprocessing: from pdf into JSON chunks
-      Vectorizing: from JSON chunks into JSON vectors
-      Vector storage: from JSON vectors into Weaviate
-  Steps:
-    Preprocessing
-	    Collect documents
-	      Cleaning
-		    Normalization
-		    Tokenize into phrases/words
-		    Stopword removal
-	  Chunking
-	  Embedding
-	  Vector store
-	      Metadata (context)
-      Prompting
-	       Prompt rewriting
-      Search & Retrieving
-	      Question embedding
-	      Semantic search
-	      Hybrid search
-	  Fusion
-	    Rewrite
-    Generation
-Refactoring 
+https://cookbook.openai.com/examples/clustering clustering 
+Disk space on server1
+Priorities
+    Interaction to improve the quality of the question
+      Move to TaskConversation
+        TaskRAG above
+          Improve the question to get a better match in vector DB
+            Ask chatGPT "Does this text provide enough information for a high quality answer to the query? If not then list the concepts you want clarified.
+              Use functions -"clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
+                This would probably be very good.
+                  Decide how detailed the answer should be (user could make adjustment via UI)
+                    An "effort" indicator
+Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style
+Styles of data processing
+  What are the main insights ? Meta questions.
+  Educational format
+Experiment with Apify for web scraping
+Simple RAG:
+  https://verba.weaviate.io/ RAG system https://github.com/weaviate/Verba 
+  Prepare the clarifying question in parallel
+  Give the user the option to tell the system to "think harder" and then use query decomposition as a query transformation as per https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engine/advanced/query_transformations.html Then next step could be to use GPT4.
+  If multiple files are in the corpus then the user could choose which to use.
+  Returning references - linking to PDF can we do that without reloading the page
+Refactoring
   Align similar modules on the hub and rxjs
     Softlink to use rxjs src from hub/src/rxjs-src 
     Could pull out common functions

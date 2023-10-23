@@ -1,14 +1,14 @@
 
 //NODE_NAME=processor-consumer ./nodes/rxjs/scripts/runFunction.js ./runFunctionTaskRAG.mjs
 export function newTask(NODE, state, taskFunctionName) {
-  taskFunctionName = 'TaskRAG';
-  state = "debug";
+  taskFunctionName = 'TaskRAGPreprocessing';
   return {
     id: "runFunction." + taskFunctionName,
     instance: "runFunction-" + taskFunctionName,
     config: {
       local: {
-        corpusName: "GB",
+        corpusName: "DTF", //KG
+        ripple: false,
       },
     },
     type: taskFunctionName,
@@ -26,7 +26,7 @@ export function newTask(NODE, state, taskFunctionName) {
     },
     services: {
       chat: {
-        type: "openaigpt.rag-gb",
+        type: "openaigpt.rag-dataprocessing",
         environments: ["rxjs-processor-consumer"],
       },
     },

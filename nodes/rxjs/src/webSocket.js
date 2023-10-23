@@ -281,7 +281,8 @@ const connectWebSocket = () => {
       // A hack is to "convert" the hub task into a node task
       if (!lastTask) {
         utils.logTask(task, "Missing lastTask for update", JSON.stringify(task, null, 2));
-        throw new Error("Missing lastTask for update");
+        return;
+        //throw new Error("Missing lastTask for update");
       }
       const mergedTask = utils.deepMergeNode(lastTask, task, task.node);
       if (!mergedTask.id) {

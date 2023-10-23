@@ -6,7 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import weaviate from 'weaviate-ts-client';
 import fetch from 'node-fetch';
-import { utils } from '#shared/utils';
+import { utils } from '#src/utils';
 import OpenAI from "openai";
 import axios from 'axios';
 import fs from 'fs';

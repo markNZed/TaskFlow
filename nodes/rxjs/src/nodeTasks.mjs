@@ -32,9 +32,34 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       utils.logTask(T(), "Task is not configured to run on this node");
     // If this node is not a hub-coprocessor or hub-consumer then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
+      let initServices = false;
+      if (T("services")) {
+        Object.keys(T("services")).map(async (key) => {
+          const module = ServicesMap.get(T(`services.${key}.moduleName`));
+          if (module) {
+            T(`services.${key}.module`, module);
+          } else {
+            initServices = true;
+          }
+        });
+        //console.log("Restore services", T("services"));
+      }
+      let initOperators = false;
+      if (T("operators")) {
+        Object.keys(T("operators")).map(async (key) => {
+          const module = OperatorsMap.get(T(`operators.${key}.moduleName`));
+          if (module) {
+            T(`operators.${key}.module`, module);
+          } else {
+            initOperators = true;
+          }
+        });
+        console.log("Restore operators", T("operators"));
+        console.log("OperatorsMap.keys", OperatorsMap.keys());
+      }
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
-      if (T("node.command") === "init" || T("node.command") === "join") {
+      if (initServices) {
         let servicesConfig = utils.deepClone(T("services"));
         if (servicesConfig) {
           if (servicesConfig["*"]) {
@@ -87,6 +112,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           T("services", services);
           //console.log("init services", T("services"));
         }
+      }
+      if (initOperators) {
         let operators = T("operators") || {};
         let operatorsConfig = utils.deepClone(T("operators"));
         if (operatorsConfig) {
@@ -141,32 +168,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
           T("operators", operators);
           //console.log("init operators", T("operators"));
         }
-      } else {
-        // Restore functions which are not synchronized in the Tasks object
-        // The services/operators are instablished upon init so values modified will
-        // not be visible in the Task outside of this node until the Task here performs an update.
-        // Maybe this should be automated e.g. if services/operators are set then send a sync for the services/operators
-        // Copy the functions into place
-        if (T("services")) {
-          Object.keys(T("services")).map(async (key) => {
-            const module = ServicesMap.get(T(`services.${key}.moduleName`));
-            if (module) {
-              T(`services.${key}.module`, module);
-            }
-          });
-          //console.log("Restore services", T("services"));
-        }
-        if (T("operators")) {
-          Object.keys(T("operators")).map(async (key) => {
-            const module = OperatorsMap.get(T(`operators.${key}.moduleName`));
-            if (module) {
-              T(`operators.${key}.module`, module);
-            }
-          });
-          console.log("Restore operators", T("operators"));
-          console.log("OperatorsMap.keys", OperatorsMap.keys());
-        }
-      }
+      } 
       const taskFunction = await importTaskFunction_async(taskFunctionName);
       // Option to run in background
       if (T("config.background")) {

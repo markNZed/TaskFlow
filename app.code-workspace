@@ -8,6 +8,10 @@
 		}
 	],
 	"settings": {
-		"files.readonlyFromPermissions": true
+		"files.readonlyFromPermissions": true,
+		"files.watcherExclude": {
+			"**/build/**": true,
+			"**/src/shared/**": true
+		}
 	}
 }

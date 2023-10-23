@@ -6,7 +6,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
+import { getEncoding } from "js-tiktoken";
 import { utils as sharedUtils } from "./shared/utils.mjs";
+
+let jsTiktokenEncoder;
 
 const utils = {
 
@@ -98,6 +101,16 @@ const utils = {
 
   capitalizeFirstLetter: function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+
+  stringTokens: function (s) {
+    if (!s) { 
+      return 0;
+    }
+    if (!jsTiktokenEncoder) {
+      jsTiktokenEncoder = getEncoding("cl100k_base");
+    }
+    return jsTiktokenEncoder.encode(s).length;
   },
 
 };

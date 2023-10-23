@@ -14,6 +14,7 @@ const servicetypes = [
     modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     //modelVersion: 'gpt-4-0613', // Should understand functions
     //modelVersion: 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)
+    //modelVersion: 'gpt-3.5-turbo-16k', // large prompt
     temperature: 1.0, // range of 0-2
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context
@@ -279,6 +280,22 @@ const servicetypes = [
     systemMessage: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${currentDate}`,
     forget: true,
   },
+  {
+    name: "rag-dataprocessing",
+    parentName: "openaigpt",
+    label: "ChatGPT RAG",
+    systemMessage: `You are a large language model, operating as part of a Retrieval-Augmented Generation (RAG) service. You are to process data that will later be used in the retrieval and and generation of the RAG system.`,
+    forget: true,
+  },
+  {
+    name: "rag-summary",
+    parentName: "openaigpt",
+    modelVersion: 'gpt-3.5-turbo-16k', // large prompt
+    label: "ChatGPT RAG",
+    systemMessage: `You are a large language model, operating as part of a Retrieval-Augmented Generation (RAG) service. You are to process data that will later be used in the retrieval and and generation of the RAG system.`,
+    forget: true,
+  },
+
 ];
 
 export { servicetypes }

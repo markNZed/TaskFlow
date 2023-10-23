@@ -171,6 +171,7 @@ async function checkUserPermissions_async(task, groupsStore_async, authenticate)
   if (authenticate) {
     const authenticated = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
     if (!authenticated) {
+      console.error("Task:", utils.js(task));
       throw new Error("Task authentication failed");
     }
   }
@@ -346,14 +347,16 @@ function allocateTaskToNodes(task, nodeId, activeNodes) {
       }       
     }
     if (!found) {
-      console.error("No node found for environment " + environment);
+      console.warn("WARNING: No node found for environment " + environment);
       //throw new Error("No node found for environment " + environment);
     }
   }
 
+  /*
   if (taskNodes.length == 0) {
     throw new Error("No nodes allocated for task " + task.id);
   }
+  */
 
   utils.logTask(task, "Allocated new task " + task.id + " to nodes ", taskNodes);
 

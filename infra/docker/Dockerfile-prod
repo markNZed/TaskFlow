@@ -8,9 +8,16 @@ ENV SHELL /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip build-essential screen procps vim wget
+    apt-get install -y bash git build-essential screen procps vim wget
 
-RUN pip3 install rx redis aioredis
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh && \
+    bash ./Anaconda3-2023.09-0-Linux-x86_64.sh -b && \
+    eval "$(/root/anaconda3/bin/conda shell.bash hook)" && \
+    conda init && \
+    pip install sumy && \
+    python -c "import nltk; nltk.download('punkt')"
+
+RUN pip install rx redis aioredis
 
 EXPOSE 3000
 EXPOSE 5000

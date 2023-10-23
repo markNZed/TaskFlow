@@ -35,15 +35,6 @@ if (process.env.OPENAI_API_KEY === "") {
 }
 console.log("DUMMY_OPENAI " + DUMMY_OPENAI);
 
-const DEFAULT_USER = "test@testing.com";
-// For teting we can map one user to any ohter user e.g.
-// MAP_USER_JSON={ "dev@email.com" : "user@email.org" }
-let MAP_USER = {};
-if (process.env.MAP_USER_JSON) {
-  MAP_USER = JSON.parse(process.env.MAP_USER_JSON)
-  console.log("MAP_USER ", MAP_USER);
-}
-
 const NODE_NAME = process.env.NODE_NAME || "hub-consumer";
 
 /* 
@@ -118,7 +109,13 @@ NODE["storage"] = {
   emptyAllDB: EMPTY_ALL_DB,
   mongoMaster: "hub-coprocessor",
   redisMaster: "hub-coprocessor",
+  weaviateScheme: 'http',
+  weaviateHost: 'weaviate:8080',
+  dataDir: "/app/data",
 };
+NODE["sevices"] = {
+  unstructuredUrl: process.env.UNSTRUCTURED_API_URL || "http://unstructured:8000/general/v0/general",
+}
 NODE["id"] = nodeId;
 if (process.env.WS_PORT) {
   NODE["wsPort"] = process.env.WS_PORT
@@ -126,4 +123,4 @@ if (process.env.WS_PORT) {
 
 console.log({NODE});
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, DUMMY_OPENAI, TASKHUB_URL, hubSocketUrl };
+export { CACHE_ENABLE, NODE, DUMMY_OPENAI, TASKHUB_URL, hubSocketUrl };

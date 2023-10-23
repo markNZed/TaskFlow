@@ -7,9 +7,16 @@ RUN chsh -s /bin/bash
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y bash git python3 python3-pip python3-dev build-essential screen procps vim wget net-tools curl iputils-ping redis-tools && \
+    apt-get install -y bash git build-essential screen procps vim wget net-tools curl iputils-ping redis-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh && \
+    bash ./Anaconda3-2023.09-0-Linux-x86_64.sh -b && \
+    eval "$(/root/anaconda3/bin/conda shell.bash hook)" && \
+    conda init && \
+    pip install sumy && \
+    python -c "import nltk; nltk.download('punkt')"
 
 RUN wget -qO /usr/local/bin/websocat https://github.com/vi/websocat/releases/latest/download/websocat.x86_64-unknown-linux-musl
 RUN chmod a+x /usr/local/bin/websocat
@@ -39,7 +46,7 @@ RUN npm install -g quicktype
 # Install node-gyp for better-sqlite3 (which will be replaced by Redis/MongoDB)
 RUN npm install -g node-gyp
 
-RUN pip3 install rx redis aioredis
+RUN pip install rx redis aioredis
 
 # The jq command-line utility is a lightweight and flexible command-line JSON processor. It's widely used for parsing, filtering, and transforming JSON data.
 RUN apt-get install -y jq 

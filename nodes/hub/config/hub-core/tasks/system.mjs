@@ -47,7 +47,36 @@ const system = [
     },
     parentName: "system",
     type: "TaskSystemLogViewer",
+  },
+  {
+    initiator: true,
+    name:"systemrestart",
+    config: {
+      label: "Restart", 
+    },
+    type: "TaskSystemRestart",
+    parentName: "system",
   }, 
+
+  {
+    name: "taskflow",
+    parentName: "system",
+    type: "Taskflow",
+    config: {
+      local: {
+        menuId: "root.system.taskflow.menu",
+      },
+    },
+  },
+  {
+    name: "menu",
+    parentName: "taskflow",
+    type: "TaskSystemMenu",
+    permissions: [
+      "*",
+    ]
+  },
+
 
   {
     name: "configs",
@@ -303,31 +332,6 @@ const system = [
     shared: {
       "config-processor-consumer-servicetypes": {},
     },
-  },
-
-  {
-    name: "taskflow",
-    parentName: "system",
-    type: "Taskflow",
-    config: {
-      local: {
-        menuId: "root.system.taskflow.menu",
-      },
-    },
-  },
-  {
-    name: "menu",
-    parentName: "taskflow",
-    type: "TaskSystemMenu",
-  },
-  {
-    initiator: true,
-    name:"systemrestart",
-    config: {
-      label: "Restart", 
-    },
-    type: "TaskSystemRestart",
-    parentName: "system",
   },
 
   {

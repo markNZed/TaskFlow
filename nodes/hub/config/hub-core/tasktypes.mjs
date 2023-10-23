@@ -3,6 +3,49 @@ import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskRAGPreprocessing",
+    environments: ["rxjs-processor-consumer"],
+    config: {
+      local: {
+        coordinates: false,
+        encoding: "utf-8",
+        ocrLanguages: "frm", // French
+        outputFormat: "json",
+        includePageBreaks: true,
+        strategy: "hi_res",
+      },
+    },
+    state: {
+      current: "start",
+    },
+    operators: {
+      LLM: {
+        environments: ["rxjs-processor-consumer"],
+      },
+    },
+    services: {
+      chat: {
+        type: "openaigpt.rag-dataprocessing",
+        environments: ["rxjs-processor-consumer"],
+      },
+    },
+  },
+  {
+    name: "TaskRAG",
+    environments: ["rxjs-processor-consumer", "react"],
+    config: {
+      local: {
+        maxChunks: 10,
+        inputLabel: "Entrez votre question ici..."
+      },
+    },
+    operators: {
+      LLM: {
+        environments: ["rxjs-processor-consumer"],
+      },
+    },
+  },
+  {
     name: "TaskWeaviate",
     state: {
       current: "start",
