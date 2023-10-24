@@ -17,7 +17,7 @@ import { EventEmitter } from 'events';
 // This is because keyv adds this.redis.on('error', (error) => this.emit('error', error));
 EventEmitter.defaultMaxListeners = 100;
 
-var connections = new Map(); // Stores WebSocket instances with unique session IDs
+var WSConnections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeNodes = new Map();
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
@@ -30,7 +30,7 @@ const instancesStore_async = newKeyV(redisClient, NODE.appAbbrev + "instances");
 // Schema:
 //   Key: familyId || taskId + userId || taskId + groupId
 //   Value: array of instanceId
-const familyStore_async = newKeyV(redisClient, NODE.appAbbrev + "threads");
+const familyStore_async = newKeyV(redisClient, NODE.appAbbrev + "family");
 // Schema:
 //   Key: instanceId
 //   Value: boolean indicating the task is active
@@ -51,6 +51,7 @@ const outputStore_async = newKeyV(redisClient, NODE.appAbbrev + "outputs");
 //   Key: familyId (there is also a "system" entry)
 //   Value: {shared: task.shared, instanceIds: array of instanceIds}
 const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared");
+const connectionsStore_async = newKeyV(redisClient, NODE.appAbbrev + "connections"); // Shared with Hub
 
 async function getActiveTask_async(instanceId) {
   //const start = Date.now();
@@ -103,6 +104,7 @@ if (NODE.storage.emptyAllDB) {
     tasktypesStore_async.clear(),
     tasksStore_async.clear(),
     autoStartTasksStore_async.clear(),
+    connectionsStore_async.clear(),
   ]);
   console.log("Empty DB: cleared all KeyV");
 }
@@ -134,7 +136,7 @@ export {
   activeNodes,
   outputStore_async,
   sharedStore_async,
-  connections,
+  WSConnections,
   getActiveTask_async,
   deleteActiveTask_async,
   setActiveTask_async,
@@ -143,4 +145,5 @@ export {
   tasktypesStore_async,
   tasksStore_async,
   autoStartTasksStore_async,
+  connectionsStore_async,
 };

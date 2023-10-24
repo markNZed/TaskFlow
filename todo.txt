@@ -1,15 +1,23 @@
 /* ToDo
 -------
+Replace throw with devThrow 
+Task object are getting very big ?
+  Storing origTask for node on hub ?
+Why is SEP of : not working?
+  Specific to key starting with : - deepClone?
 https://cookbook.openai.com/examples/clustering clustering 
 Disk space on server1
 Priorities
+  Improve the question
+    Connection of IO
+      Using dtf as example
     Interaction to improve the quality of the question
       Move to TaskConversation
         TaskRAG above
           Improve the question to get a better match in vector DB
             Ask chatGPT "Does this text provide enough information for a high quality answer to the query? If not then list the concepts you want clarified.
               Use functions -"clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
-                This would probably be very good.
+                This would probably be very good. Set a depth limit
                   Decide how detailed the answer should be (user could make adjustment via UI)
                     An "effort" indicator
 Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, familyStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, outputStore_async } from "./storage.mjs";
+import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, outputStore_async, familyStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -182,28 +182,18 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   // Update familyStore_async
   if (task.familyId) {
     // If task.instanceId already exists then do nothing otherwise add instance to family
-    let instanceIds = await familyStore_async.get(task.familyId);
+    let family = await familyStore_async.get(task.familyId) || {};
+    const instanceIds = Object.values(family);
     if (!instanceIds) {
-      await familyStore_async.set(task.familyId, [task.instanceId]);
+      family[task.id] = task.instanceId;
+      await familyStore_async.set(task.familyId, family);
       utils.logTask(task, "Initiating family " + task.familyId + " with instanceId: " + task.instanceId);
     } else if (!instanceIds.includes(task.instanceId)) {
-      instanceIds.push(task.instanceId);
-      await familyStore_async.set(task.familyId, instanceIds);
+      family[task.id] = task.instanceId;
+      await familyStore_async.set(task.familyId, family);
       utils.logTask(task, "Adding to family " + task.familyId + " instanceId: " + task.instanceId);
     } else {
       utils.logTask(task, "Instance already in family " + task.familyId + " instanceId: " + task.instanceId);
-    }
-  }
-  if (task.meta.systemFamilyId) {
-    let instanceIds = await familyStore_async.get(task.meta.systemFamilyId);
-    if (instanceIds) {
-      if (!instanceIds.includes(task.instanceId)) {
-        instanceIds.push(task.instanceId);
-        await familyStore_async.set(task.meta.systemFamilyId, instanceIds);
-        utils.logTask(task, "Adding to systemFamilyId " + task.meta.systemFamilyId + " instanceId: " + task.instanceId);
-      }
-    } else {
-      throw new Error("systemFamilyId " + task.meta.systemFamilyId + " not found");
     }
   }
   return task;
@@ -418,7 +408,7 @@ async function taskStart_async(
     task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
+    ['connections', 'config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
 
     await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
@@ -435,9 +425,6 @@ async function taskStart_async(
     let isFirstUserTask = false;
     if (isPrevSystemTask && task.id.startsWith("root.user.")) {
       isFirstUserTask = true;
-    }
-    if (isFirstUserTask && prevTaskFamilyId) {
-      task.meta["systemFamilyId"] = prevTaskFamilyId; // Assumes it was launched from a system task
     }
     if (isFirstUserTask) {
       prevTaskFamilyId = task.instanceId;

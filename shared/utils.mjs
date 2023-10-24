@@ -763,7 +763,7 @@ const utils = {
     diffTask.meta["prevMessageId"] = lastTaskClone.meta.prevMessageId;
     diffTask.meta["messageId"] = taskClone.meta.messageId;
     // In theory we could enable the hash debug in the task
-    const hashDebug = false;
+    const hashDebug = true;
     if (hashDebug || taskClone.config?.debug?.hash) {
       diffTask.meta["hashDebugLastTaskValues"] = utils.deepClone(cleanValues);
       diffTask.meta.hashDebugLastTaskValues = utils.cleanForHash(diffTask.meta.hashDebugLastTaskValues);
@@ -1161,8 +1161,14 @@ const utils = {
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
-    if (task?.operators?.LLM) {
-      logParts.push("operators.LLM", utils.js(task.operators.LLM));
+    if (task?.connections) {
+      logParts.push("connections", utils.js(task.connections));
+    }
+
+    if (task?.connections && task.connections["::::output.sending"]) {
+      logParts.push('task:', utils.js(task));
+      console.log(logParts.join(' '));
+      throw new Error("ERROR debugTask: connections");
     }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {

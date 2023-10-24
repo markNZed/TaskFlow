@@ -257,6 +257,7 @@ async function taskProcess_async(task) {
         task = utils.setMetaModified(task);
         //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
       }
+      utils.debugTask(task);
       if (task.instanceId !== undefined) {
         activeTask = await getActiveTask_async(task.instanceId);
         if (activeTask && Object.keys(activeTask).length !== 0) {

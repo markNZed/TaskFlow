@@ -414,7 +414,26 @@ const system = [
     },
     parentName: "system",
     type: "TaskEdit",
-  }, 
+  },
+
+  {
+    name: "systemconnections",
+    ceps: {
+      CEPConnect: {
+        isRegex: true,
+        match: ".*instance.*",
+        environments: ["rxjs-hub-consumer"],
+        isSingleton: true,
+      }
+    },
+    parentName: "system",
+    environments: ["rxjs-hub-consumer"],
+    config: {
+      autoStartEnvironment: "rxjs-hub-consumer",
+      autoStartCoprocessor: true,
+    },
+    type: "TaskCEP",
+  },
   
 ];
 

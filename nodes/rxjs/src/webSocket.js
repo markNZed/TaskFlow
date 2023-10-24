@@ -284,11 +284,13 @@ const connectWebSocket = () => {
         return;
         //throw new Error("Missing lastTask for update");
       }
+      utils.debugTask(task, "before deepMerge");
       const mergedTask = utils.deepMergeNode(lastTask, task, task.node);
+      utils.debugTask(task, "after deepMerge");
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }
-      utils.logTask(task, "ws " + command + " commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
+      utils.logTask(task, "ws update commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       if (!utils.checkHashDiff(lastTask, mergedTask)) {
         if (mergedTask.node.initiatingNodeId === NODE.id) {
           console.error("Task hash does not match from this node");

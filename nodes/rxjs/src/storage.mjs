@@ -11,7 +11,7 @@ import mongoose from 'mongoose';
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 import { utils } from "./utils.mjs";
 
-var connections = new Map(); // Stores WebSocket instances with unique session IDs
+var WSConnections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
 
 var CEPsMap = new Map();
@@ -78,6 +78,10 @@ const operatorTypes_async = newKeyV(redisClient, keyvPrefix + "operatorTypes");
 
 const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared"); // Shared with Hub
 
+const connectionsStore_async = newKeyV(redisClient, NODE.appAbbrev + "connections"); // Shared with Hub
+
+const familyStore_async = newKeyV(redisClient, NODE.appAbbrev + "family"); // Shared with Hub
+
 const tasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasks"); // Shared with Hub
 
 const usersStore_async = newKeyV(redisClient, NODE.appAbbrev + "users"); // Shared with Hub
@@ -137,7 +141,7 @@ if (NODE.storage.emptyAllDB) {
 console.log("Loading config data from " + NODE.configDir);
 let cepTypes = await utils.load_data_async(NODE.configDir, "ceptypes");
 cepTypes = utils.flattenObjects(cepTypes);
-//console.log("cepTypes", JSON.stringify(cepTypes, null, 2))
+console.log("cepTypes", JSON.stringify(cepTypes, null, 2))
 let serviceTypes = await utils.load_data_async(NODE.configDir, "servicetypes");
 serviceTypes = utils.flattenObjects(serviceTypes);
 //console.log("serviceTypes", JSON.stringify(serviceTypes, null, 2))
@@ -161,7 +165,7 @@ for (const [key, value] of Object.entries(operatorTypes)) {
 
 export {
   cacheStore_async,
-  connections,
+  WSConnections,
   activeTaskFsm,
   mongoConnection,
   tasksStore_async,
@@ -169,6 +173,8 @@ export {
   groupsStore_async,
   tasktypesStore_async,
   sharedStore_async,
+  connectionsStore_async,
+  familyStore_async,
   setActiveTask_async,
   getActiveTask_async,
   keysActiveTask_async,

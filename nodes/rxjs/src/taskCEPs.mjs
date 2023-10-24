@@ -30,7 +30,7 @@ function CEPget(name) {
 
 function CEPCreate(CEPMatchMap, task, match, config) {
   console.log(`CEPCreate by ${task.instanceId} with config`, config)
-  const name = config.CEPName || config.moduleName;
+  const name = config.CEPName || config.moduleName || config.name;
   if (name === undefined || name === null) {
     console.error("CEPCreate name is undefined/null", config);
     throw Error("CEPCreate name is undefined/null");

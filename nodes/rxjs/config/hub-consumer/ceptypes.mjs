@@ -4,6 +4,9 @@ const ceptypes = [
         name: "inc",
         moduleName: "CEPIncrement",
     },
+    {
+        name: "CEPConnect",
+    },
 ];
 
 export { ceptypes }

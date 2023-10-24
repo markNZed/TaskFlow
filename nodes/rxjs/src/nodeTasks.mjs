@@ -92,7 +92,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                   services[key] = utils.deepMerge(services[key], servicesConfig[key]);
                 }
                 //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
-                const serviceName = services[key]["moduleName"];
+                const serviceName = services[key]["moduleName"] || key;
                 if (await serviceExists_async(serviceName)) {
                   services[key]["module"] = await importService_async(serviceName);
                   ServicesMap.set(serviceName, services[key]["module"]);
@@ -146,7 +146,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                     operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
                   }
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
-                  const operatorName = operators[key]["moduleName"];
+                  const operatorName = operators[key]["moduleName"] || key;
                   if (await operatorExists_async(operatorName)) {
                     operators[key]["module"] = await importOperator_async(operatorName);
                     OperatorsMap.set(operatorName, operators[key]["module"]);
@@ -214,13 +214,13 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
               if (environments) {
                 // Only try to load a cep if it is expected to be on this node
                 if (environments.includes(NODE.environment)) {
-                  const type = cepsConfig[key].type;
+                  const type = cepsConfig[key].type || key;
                   //console.log("type", type);
                   if (await cepTypes_async.has(type)) {
                     ceps[key] = await cepTypes_async.get(type);
                     ceps[key] = utils.deepMerge(ceps[key], cepsConfig[key]);
                     //console.log("ceps[key]", key, JSON.stringify(ceps[key], null, 2));
-                    const moduleName = ceps[key]["moduleName"];
+                    const moduleName = ceps[key]["moduleName"] || key;
                     if (await CEPExists_async(moduleName)) {
                       ceps[key]["module"] = await importCEP_async(moduleName);
                       // The default function is cep_async

@@ -8,6 +8,7 @@ import { getActiveTask_async, setActiveTask_async, deleteActiveTask_async } from
 import taskSync_async from "./taskSync.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { taskRelease } from './shared/taskLock.mjs';
+import { NODE } from "../config.mjs";
 
 async function doneTask_async(task) {
   utils.debugTask(task);
@@ -73,7 +74,9 @@ export async function commandUpdate_async(task) {
       }
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
+      utils.debugTask(task, "before deepMerge");
       task = utils.deepMergeNode(activeTask, commandArgs.syncTask, task.node);
+      utils.debugTask(task, "after deepMerge");
       task.node.commandArgs["syncTask"] = null;
       if (commandArgs.syncUpdate) {
         task.node.commandArgs["sync"] = null; // Map the sync to a "normal" update
@@ -89,7 +92,9 @@ export async function commandUpdate_async(task) {
     const msg = `Error commandUpdate_async task ${task.id}: ${error.message}`;
     console.error(msg);
     utils.logTask(task, "commandUpdate_async task", task);
-    throw error;
+    if (NODE.mode === "development") {
+      throw error;
+    }
   } finally {
     // Always release the lock
     utils.logTask(task, "commandUpdate_async lock released instanceId:", instanceId);

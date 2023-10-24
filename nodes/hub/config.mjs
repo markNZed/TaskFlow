@@ -83,6 +83,7 @@ NODE["id"] = nodeId;
 if (process.env.WS_PORT) {
   NODE["wsPort"] = process.env.WS_PORT
 }
+NODE["mode"] = "production"; //"development"
 
 console.log({NODE});
 

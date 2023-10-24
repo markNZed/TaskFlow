@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { connections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes } from "./storage.mjs";
+import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -23,7 +23,7 @@ import { commandRegister_async, registerTask_async } from "./commandRegister.mjs
  * @throws {Error} If the message object does not have a task property.
  */
 function wsSendObject(nodeId, message = {}) {
-  const ws = connections.get(nodeId);
+  const ws = WSConnections.get(nodeId);
   if (!ws) {
     console.error(`Lost websocket for wsSendObject with nodeId ${nodeId} and message task ${utils.js(message.task)}`);
   } else {
@@ -143,8 +143,8 @@ function initWebSocketServer(server) {
       if (incomingNode?.id) {
         const nodeId = incomingNode.id;
         //console.log("nodeId", nodeId)
-        if (!connections.get(nodeId)) {
-          connections.set(nodeId, ws);
+        if (!WSConnections.get(nodeId)) {
+          WSConnections.set(nodeId, ws);
           ws.data["nodeId"] = nodeId;
           console.log("Websocket nodeId", nodeId)
         }
@@ -171,9 +171,9 @@ function initWebSocketServer(server) {
             if (nodeId !== initiatingNodeId) {
               const nodeData = activeNodes.get(nodeId);
               if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
-                const ws = connections.get(nodeId);
+                const ws = WSConnections.get(nodeId);
                 if (!ws) {
-                  utils.logTask(task, "Lost websocket for ", nodeId, connections.keys());
+                  utils.logTask(task, "Lost websocket for ", nodeId, WSConnections.keys());
                 } else {
                   //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
                   wsSendObject(nodeId, {task: task});
@@ -240,7 +240,7 @@ function initWebSocketServer(server) {
       const nodeId = ws.data.nodeId;
       console.log("ws nodeId " + nodeId + " is closed with code: " + code + " reason: ", reason);
       if (nodeId) {
-        connections.delete(nodeId);
+        WSConnections.delete(nodeId);
         activeNodes.delete(nodeId);
         const activeNodeTasks = await activeNodeTasksStore_async.get(nodeId);
         if (activeNodeTasks) {
