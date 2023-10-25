@@ -248,13 +248,6 @@ const tasktypes = [
         useAddress: false,
       },
     },
-    operators: {
-      "LLM": {
-        type: "LLM",
-        environments: ["rxjs-processor-consumer"],
-        promptWithTime: false,
-      }
-    },
     state: {
       current: "start",
     },

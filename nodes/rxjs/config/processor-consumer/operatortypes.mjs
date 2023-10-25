@@ -5,6 +5,11 @@ const operatortypes = [
     moduleName: "OperatorLLM",
     environments: ["rxjs-processor-consumer"],
   },
+  {
+    name: "RAG",
+    moduleName: "OperatorRAG",
+    environments: ["rxjs-processor-consumer"],
+  },
 ];
 
 export { operatortypes }

@@ -1,5 +1,14 @@
 /* ToDo
 -------
+RAG Chat is not dealing with cache do this in the operator
+Dealing with context
+hashDiff on the input but why?
+  Not being merged on React
+  The update from node to received does not include the old response in the diff 
+    Inspect task.input why is diff showing empty object ?
+    Can we have remote diffOrigTask ?
+Create Service for embeddings
+  Also SendIncrementalWs
 Not cleaning up connectionsStore_async
 Use a function to update task then we can trace this
 Replace throw with devThrow 

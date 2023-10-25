@@ -62,7 +62,7 @@ const TaskConversation = (props) => {
         for (const [regexStr, replacement] of regexProcessMessages) {
           let { pattern, flags } = utils.parseRegexString(regexStr);
           const regex = new RegExp(pattern, flags);
-          if (msgsToProcess.length) {
+          if (Array.isArray(msgsToProcess)) {
             for (const msg of msgsToProcess) {
               if (msg.content) {
                 msg.content = msg.content.replace(regex, replacement);
@@ -70,6 +70,7 @@ const TaskConversation = (props) => {
             }
           } else {
             if (msgsToProcess.content) {
+              console.log("msgsToProcess.content", msgsToProcess.content);
               msgsToProcess.content = msgsToProcess.content.replace(regex, replacement);
             }
           }

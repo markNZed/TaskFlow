@@ -65,6 +65,7 @@ const TaskChat = (props) => {
 
   const [submitPrompt, setSubmitPrompt] = useState(false);
   const [responseText, setResponseText] = useState("");
+  const responseFinal = useRef(true);
   const responseTextRef = useRef("");
   const textareaRef = useRef();
   const formRef = useRef();
@@ -125,11 +126,19 @@ const TaskChat = (props) => {
           const mode = response.partial.mode;
           switch (mode) {
             case 'delta':
-              responseTextRef.current += text;
+              if (responseFinal.current) {
+                responseTextRef.current = text;
+                responseFinal.current = false;
+              } else {
+                responseTextRef.current += text;
+              }
               break;
             case 'partial':
+              responseTextRef.current = text;
+              break;
             case 'final':
               responseTextRef.current = text;
+              responseFinal.current = true; // So we can reset between messages
               break;
             default:
               console.error("Unknown mode " + mode);

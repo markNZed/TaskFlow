@@ -22,14 +22,16 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function SendIncrementalWs(wsSendTask, partialResponse, instanceId) {
+function SendIncrementalWs(wsSendTask, partialResponse, instanceId, final) {
   //console.log("partialResponse.delta", partialResponse.delta);
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
   let response;
   if (wsDelta[instanceId] === undefined) {
     wsDelta[instanceId] = 0;
   }
-  if (wsDelta[instanceId] && wsDelta[instanceId] % 20 === 0) {
+  if (final) {
+    response = {partial: {text: partialResponse.text, mode: "final" }};
+  } else if (wsDelta[instanceId] && wsDelta[instanceId] % 20 === 0) {
     response = {partial: {text: partialResponse.text, mode: "partial" }};
   } else if (incr) {
     response = {partial: {text: partialResponse.delta, mode: "delta" }};
@@ -77,6 +79,8 @@ async function openaigpt_async(params) {
   } = params;
 
   const debug = true;
+
+  console.log("openaigpt_async noStreaming",noStreaming);
 
   // Need to build messages from systemMessage, messages, prompt
 
@@ -207,17 +211,19 @@ async function openaigpt_async(params) {
     } else {
       console.warn("cachedValue.text is not a string. Cannot split into words.");
     }
-    // call SendIncrementalWs for pairs of word
-    let partialText = "";
-    for (let i = 0; i < words.length; i += 2) {
-      let delta = words[i] + " ";
-      if (words[i + 1]) {
-        delta += words[i + 1] + " ";
+    if (!noStreaming) {
+      // call SendIncrementalWs for pairs of word
+      let partialText = "";
+      for (let i = 0; i < words.length; i += 2) {
+        let delta = words[i] + " ";
+        if (words[i + 1]) {
+          delta += words[i + 1] + " ";
+        }
+        partialText += delta;
+        const partialResponse = { delta: delta, text: partialText };
+        SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+        await sleep(40);
       }
-      partialText += delta;
-      const partialResponse = { delta: delta, text: partialText };
-      SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-      await sleep(40);
     }
     message_from("cache", text, noStreaming, instanceId);
     if (debug) {
@@ -233,17 +239,19 @@ async function openaigpt_async(params) {
       const text = "Dummy text ".repeat(10) + new Date().toISOString();
       //const text = "Dummy text ";;
       const words = text.split(" ");
-      // call SendIncrementalWs for pairs of word
-      let partialText = "";
-      for (let i = 0; i < words.length; i += 2) {
-        let delta = words[i] + " ";
-        if (words[i + 1]) {
-          delta += words[i + 1] + " ";
+      if (!noStreaming) {
+        // call SendIncrementalWs for pairs of word
+        let partialText = "";
+        for (let i = 0; i < words.length; i += 2) {
+          let delta = words[i] + " ";
+          if (words[i + 1]) {
+            delta += words[i + 1] + " ";
+          }
+          partialText += delta;
+          const partialResponse = { delta: delta, text: partialText };
+          SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+          await sleep(40);
         }
-        partialText += delta;
-        const partialResponse = { delta: delta, text: partialText };
-        SendIncrementalWs(wsSendTask, partialResponse, instanceId);
-        await sleep(40);
       }
       message_from("Dummy API", text, noStreaming, instanceId);
       response_text_promise = Promise.resolve([text, []]);
@@ -352,9 +360,11 @@ async function openaigpt_async(params) {
               // This callback is called for each token in the stream
               // You can use this to debug the stream or save the tokens to your database
               //console.log("onToken:", token);
-              partialText += token;
-              const partialResponse = { delta: token, text: partialText };
-              SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+              if (!noStreaming) {
+                partialText += token;
+                const partialResponse = { delta: token, text: partialText };
+                SendIncrementalWs(wsSendTask, partialResponse, instanceId);
+              }
             },
             onFinal: async (completion) => {
               console.log("final messages", messages);

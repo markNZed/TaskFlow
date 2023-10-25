@@ -70,7 +70,14 @@ const utils = {
           //   {"a.b" = {c: "d"}} will set a.b to null then set a.b.c = d
           //   {"a.b.e" = "f"} will set a.b.e to null then set a.b.e = f
           //   The object would then have a.b.c = d and a.b.e = f
-          task = utils.deepMerge(task, arg1);
+          // Use intermediate variable to keep the original task reference
+          let mergedTask = utils.deepMerge(task, arg1);
+          // Clear the original task
+          Object.keys(task).forEach(key => delete task[key]);
+          // Populate the original task with the merged values
+          Object.keys(mergedTask).forEach(key => {
+            task[key] = mergedTask[key];
+          });
           //utils.updateLeafKeys(task, arg1);
           return task;
         } else {
@@ -85,7 +92,14 @@ const utils = {
         });
         utils.setNestedProperties(mod);
         // Merge values or write over them
-        task = utils.deepMerge(task, mod);
+        // Use intermediate variable to keep the original task reference
+        let mergedTask= utils.deepMerge(task, mod);
+        // Clear the original task
+        Object.keys(task).forEach(key => delete task[key]);
+        // Populate the original task with the merged values
+        Object.keys(mergedTask).forEach(key => {
+            task[key] = mergedTask[key];
+        });
         //utils.updateLeafKeys(task, mod);
         return task;
         //console.log("createTaskValueGetter set ", arg1, value)
@@ -740,12 +754,12 @@ const utils = {
       diffTask = utils.getObjectDifference(lastTaskClone, taskClone);
     }
     if (diffTask === undefined) diffTask = {};
-    const lastValues = utils.getIntersectionWithDifferentValues(lastTaskClone, diffTask);
-    //console.log("utils.getObjectDifference lastTaskClone?.shared:", JSON.stringify(lastTaskClone?.shared, null, 2));
-    //console.log("utils.getObjectDifference taskClone?.shared:", JSON.stringify(taskClone?.shared, null, 2));
-    //console.log("utils.getObjectDifference diffTask?.shared:", JSON.stringify(diffTask?.shared, null, 2));
-    const cleanValues = utils.cleanForHash(lastValues);
-    const hashDiff = utils.taskHash(cleanValues);
+    const diffValues = utils.getIntersectionWithDifferentValues(lastTaskClone, diffTask);
+    console.log("utils.getObjectDifference what was in storage lastTaskClone?.input:", JSON.stringify(lastTaskClone?.input, null, 2));
+    console.log("utils.getObjectDifference what changed diffTask?.input:", JSON.stringify(diffTask?.input, null, 2));
+    console.log("utils.getObjectDifference final diffValues?.input:", JSON.stringify(diffValues?.input, null, 2));
+    const cleanDiffValues = utils.cleanForHash(diffValues);
+    const hashDiff = utils.taskHash(cleanDiffValues);
     diffTask["instanceId"] = taskClone.instanceId;
     diffTask["id"] = taskClone.id;
     diffTask["node"] = taskClone.node;
@@ -765,8 +779,7 @@ const utils = {
     // In theory we could enable the hash debug in the task
     const hashDebug = true;
     if (hashDebug || taskClone.config?.debug?.hash) {
-      diffTask.meta["hashDebugLastTaskValues"] = utils.deepClone(cleanValues);
-      diffTask.meta.hashDebugLastTaskValues = utils.cleanForHash(diffTask.meta.hashDebugLastTaskValues);
+      diffTask.meta["hashDebugLastTaskValues"] = utils.deepClone(cleanDiffValues);
     }
     //console.log("nodeDiff out task.output", diffTask.output);
     return diffTask;
@@ -797,7 +810,7 @@ const utils = {
         //console.error("Remote hashDebugLastTaskValues", task.meta.hashDebugLastTaskValues);
         let hashDiff = utils.getObjectDifference(taskInStorage, task.meta.hashDebugLastTaskValues) || {};
         hashDiff = utils.cleanForHash(hashDiff);
-        console.error("checkHashDiff hashDiff from remote", hashDiff);
+        console.error("checkHashDiff difference between the remote storage and the local storage", hashDiff);
       }
       diffOrigTask = utils.cleanForHash(diffOrigTask);
       console.error("Local diffOrigTask", JSON.stringify(diffOrigTask, null, 2));
@@ -1092,7 +1105,8 @@ const utils = {
     }
 
     // Can set task.debug via configuration
-    if (!task?.config?.debug?.debugTask) {return}
+    // Comment out this line to see all the debug messages for everything
+    //if (!task?.config?.debug?.debugTask) {return}
 
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
@@ -1161,14 +1175,14 @@ const utils = {
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
-    if (task?.connections) {
-      logParts.push("connections", utils.js(task.connections));
+    if (task?.inputs?.query) {
+      logParts.push("task.input.query", utils.js(task.input.query));
     }
 
-    if (task?.connections && task.connections["::::output.sending"]) {
+    if (task?.input && task.input.query === null) {
       logParts.push('task:', utils.js(task));
       console.log(logParts.join(' '));
-      throw new Error("ERROR debugTask: connections");
+      throw new Error("ERROR debugTask: query is null");
     }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {

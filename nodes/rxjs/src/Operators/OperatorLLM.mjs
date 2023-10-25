@@ -151,7 +151,7 @@ async function chatPrepare_async(T) {
 
   if (serviceConfig.noStreaming !== undefined) {
     noStreaming = serviceConfig.noStreaming;
-    console.log("Request noStreaming");
+    console.log("Request noStreaming", noStreaming);
   }
 
   if (serviceConfig.forget !== undefined) {
