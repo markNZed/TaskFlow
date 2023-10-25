@@ -11,8 +11,10 @@ import App from "./App";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { GlobalStateProvider } from "./contexts/GlobalStateContext";
 import { EventSourceProvider } from './contexts/EventSourceContext';
-import { hubSocketUrl } from "./config.mjs";
+import { hubSocketUrl, appLabel } from "./config.mjs";
 import { BrowserRouter as Router } from "react-router-dom";
+
+document.title = appLabel || "Default Title";
 
 // service-worker.js is in the public folder
 // it needed to be added to index.html as well
