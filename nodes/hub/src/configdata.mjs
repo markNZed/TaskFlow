@@ -63,13 +63,13 @@ function mergeTasks(task, parentTask) {
   }
   for (const key in parentTask) {
     if (parentTask[key]) {
-      if (key === "label" || key === "type" || key === "meta" || key === "initiator") {
+      if (["label", "type", "meta", "initiator", "connections"].includes(key)) {
         continue;
       }
       if (key === "config" && task.config) {
         for (const configKey in parentTask.config) {
           // We don't want to copy task.config.local
-          if (configKey !== "local" && configKey !== "ceps" && configKey !== "operators") {
+          if (configKey !== "local") {
             mergeObj(task.config, configKey, parentTask.config);
           }
         }

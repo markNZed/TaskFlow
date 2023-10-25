@@ -1,10 +1,12 @@
 /* ToDo
 -------
+Not cleaning up connectionsStore_async
+Use a function to update task then we can trace this
 Replace throw with devThrow 
 Task object are getting very big ?
   Storing origTask for node on hub ?
 Why is SEP of : not working?
-  Specific to key starting with : - deepClone?
+  Specific to key starting with :
 https://cookbook.openai.com/examples/clustering clustering 
 Disk space on server1
 Priorities

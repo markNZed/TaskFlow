@@ -223,7 +223,7 @@ async function processError_async(task, tasksStore_async) {
     }
     task.node.command = "error";
     task.node.commandArgs = { errorTask };
-    utils.logTask(task,"processError_async found task.error and set errorTask", errorTask.id);
+    utils.logTask(task,"processError_async found task.error and set errorTask", errorTask?.id);
   }
   return task;
 }

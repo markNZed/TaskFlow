@@ -94,7 +94,7 @@ const tasksSchema = yup.array().of(yup.object()
     ).notRequired(),
     ceps: yup.object(),
     operators: yup.object(),
-    connections: yup.object(),
+    connections: yup.array().of(yup.array()),
   })
   .noUnknown(true)
 );

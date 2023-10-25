@@ -32,7 +32,7 @@
           "type": "string"
         },
         "connections": {
-          "type": "object"
+          "type": "array"
         },
         "error": {
           "anyOf": [
