@@ -8,3 +8,4 @@ tailLogs.txt
 core
 dist
 /data
+__pycache__

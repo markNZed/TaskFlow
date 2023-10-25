@@ -1,6 +1,7 @@
 import asyncio
 import redis.asyncio as redis_async
 import logging
+import os 
 
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -9,7 +10,7 @@ logging.basicConfig(level=logging.INFO,
 class MessagingClient:
     STOPWORD = "STOP"
 
-    def __init__(self, subscribe_channel=None, publish_channel=None, redis_url="redis://redis-stack-svc"):
+    def __init__(self, subscribe_channel=None, publish_channel=None, redis_url=os.environ.get("REDIS_URL", "redis://redis-stack-svc")):
         self.subscribe_channel = subscribe_channel
         self.publish_channel = publish_channel
         self.redis_url = redis_url
