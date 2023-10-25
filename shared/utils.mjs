@@ -1106,7 +1106,7 @@ const utils = {
 
     // Can set task.debug via configuration
     // Comment out this line to see all the debug messages for everything
-    //if (!task?.config?.debug?.debugTask) {return}
+    if (!task?.config?.debug?.debugTask) {return}
 
     task = utils.deepClone(task); // Avoiding issues with logging references
     const isBrowser = typeof window === 'object';
