@@ -110,11 +110,11 @@ NODE["storage"] = {
   mongoMaster: "hub-coprocessor",
   redisMaster: "hub-coprocessor",
   weaviateScheme: 'http',
-  weaviateHost: 'weaviate:8080',
+  weaviateHost: process.env.WEAVIATE_URL || 'weaviate:8080',
   dataDir: "/app/data",
 };
 NODE["sevices"] = {
-  unstructuredUrl: process.env.UNSTRUCTURED_API_URL || "http://unstructured:8000/general/v0/general",
+  unstructuredUrl: process.env.UNSTRUCTURED_URL || "http://unstructured:8000/general/v0/general",
 }
 NODE["id"] = nodeId;
 if (process.env.WS_PORT) {

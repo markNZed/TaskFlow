@@ -755,9 +755,9 @@ const utils = {
     }
     if (diffTask === undefined) diffTask = {};
     const diffValues = utils.getIntersectionWithDifferentValues(lastTaskClone, diffTask);
-    console.log("utils.getObjectDifference what was in storage lastTaskClone?.input:", JSON.stringify(lastTaskClone?.input, null, 2));
-    console.log("utils.getObjectDifference what changed diffTask?.input:", JSON.stringify(diffTask?.input, null, 2));
-    console.log("utils.getObjectDifference final diffValues?.input:", JSON.stringify(diffValues?.input, null, 2));
+    //console.log("utils.getObjectDifference what was in storage lastTaskClone?.input:", JSON.stringify(lastTaskClone?.input, null, 2));
+    //console.log("utils.getObjectDifference what changed diffTask?.input:", JSON.stringify(diffTask?.input, null, 2));
+    //console.log("utils.getObjectDifference final diffValues?.input:", JSON.stringify(diffValues?.input, null, 2));
     const cleanDiffValues = utils.cleanForHash(diffValues);
     const hashDiff = utils.taskHash(cleanDiffValues);
     diffTask["instanceId"] = taskClone.instanceId;

@@ -11,11 +11,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+WORKDIR /root
+
 RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh && \
-    bash ./Anaconda3-2023.09-0-Linux-x86_64.sh -b && \
-    eval "$(/root/anaconda3/bin/conda shell.bash hook)" && \
+    bash ./Anaconda3-2023.09-0-Linux-x86_64.sh -b -p /opt/anaconda3 && \
+    eval "$(/opt/anaconda3/bin/conda shell.bash hook)" && \
     conda init && \
-    pip install sumy && \
+    pip install sumy rx redis aioredis && \
     python -c "import nltk; nltk.download('punkt')"
 
 RUN wget -qO /usr/local/bin/websocat https://github.com/vi/websocat/releases/latest/download/websocat.x86_64-unknown-linux-musl
@@ -28,12 +30,10 @@ RUN chmod a+x /usr/local/bin/websocat
 #RUN apt-get update && \
 #    apt-get install -y mongodb-mongosh mongodb-org-tools
 
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add
-RUN apt-get update && apt-get install -y software-properties-common
-RUN apt-get update
-RUN add-apt-repository 'deb https://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main'
-RUN apt-get update
-RUN apt install -y mongodb-mongosh
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository 'deb https://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main' && \
+    apt install -y mongodb-mongosh
 
 # Install Nodemon, ESLint, Prettier, and Jest
 RUN yarn global add nodemon eslint prettier jest
@@ -43,10 +43,6 @@ WORKDIR /app
 RUN npm update -g
 RUN npm install -g quicktype
 #RUN npm install pm2 -g
-# Install node-gyp for better-sqlite3 (which will be replaced by Redis/MongoDB)
-RUN npm install -g node-gyp
-
-RUN pip install rx redis aioredis
 
 # The jq command-line utility is a lightweight and flexible command-line JSON processor. It's widely used for parsing, filtering, and transforming JSON data.
 RUN apt-get install -y jq 

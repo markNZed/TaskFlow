@@ -1,7 +1,7 @@
 /* ToDo
 -------
-RAG Chat is not dealing with cache do this in the operator
-Dealing with context
+Getting user from http authentication ?
+https://github.com/RManLuo/Awesome-LLM-KG
 hashDiff on the input but why?
   Not being merged on React
   The update from node to received does not include the old response in the diff 
@@ -42,6 +42,7 @@ Simple RAG:
   Give the user the option to tell the system to "think harder" and then use query decomposition as a query transformation as per https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engine/advanced/query_transformations.html Then next step could be to use GPT4.
   If multiple files are in the corpus then the user could choose which to use.
   Returning references - linking to PDF can we do that without reloading the page
+  https://gpt-index.readthedocs.io/en/latest/examples/low_level/evaluation.html
 Refactoring
   Align similar modules on the hub and rxjs
     Softlink to use rxjs src from hub/src/rxjs-src 
