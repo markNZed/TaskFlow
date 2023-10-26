@@ -142,14 +142,14 @@ function initWebSocketServer(server) {
 
       if (!task) {
         console.log("No task", message);
-        throw new Error("No task");
-        //return;
+        //throw new Error("No task");
+        return;
       }
 
       if (!task?.tokens?.app || task.tokens.app !== NODE.app.token) {
         console.log("No task.tokens.app", message);
-        throw new Error("No task.tokens.app");
-        //return;
+        //throw new Error("No task.tokens.app");
+        return;
       }
 
 

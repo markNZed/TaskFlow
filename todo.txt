@@ -17,10 +17,6 @@ How to provide logout endpoint for basic auth?
 Hugo - not clarifying question with concepts
 Websocket does not work with basic auth
   First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
-Shared Web Workers are not supported on Chrome for Android
-  Remove this for now
-    Problem is multiple tabs sharing browser storage
-      Replace with BroadcastChannel to negotiate id for tab
 Refresh tuteur SSL cert ?
 When using basic auth we don't apply this to the websocket
   Should set a secret for the websocket
