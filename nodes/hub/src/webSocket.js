@@ -14,6 +14,7 @@ import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
+import { NODE } from "../config.mjs";
 
 /**
  * Sends an object through the WebSocket connection identified by the given node ID.
@@ -138,6 +139,20 @@ function initWebSocketServer(server) {
       const j = JSON.parse(message);
 
       let task = j?.task;
+
+      if (!task) {
+        console.log("No task", message);
+        throw new Error("No task");
+        //return;
+      }
+
+      if (!task?.tokens?.app || task.tokens.app !== NODE.app.token) {
+        console.log("No task.tokens.app", message);
+        throw new Error("No task.tokens.app");
+        //return;
+      }
+
+
       let incomingNode = task?.node;
 
       if (incomingNode?.id) {

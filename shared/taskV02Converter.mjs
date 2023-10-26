@@ -197,6 +197,7 @@ const typeMap = {
         { json: "services", js: "services", typ: u(undefined, u(r("CepsEnum"), m("any"))) },
         { json: "shared", js: "shared", typ: u(undefined, m("any")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },
+        { json: "tokens", js: "tokens", typ: u(undefined, m("any")) },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "user", js: "user", typ: u(undefined, m("any")) },
         { json: "users", js: "users", typ: u(undefined, m("any")) },

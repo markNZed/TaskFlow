@@ -89,7 +89,10 @@
               "type": "object"
             }
           ]
-        },        
+        },
+        "tokens": {
+          "type": "object"
+        },     
         "type": {
           "type": "string"
         },

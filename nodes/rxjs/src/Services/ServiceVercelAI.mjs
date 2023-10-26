@@ -79,6 +79,7 @@ async function openaigpt_async(params) {
   } = params;
 
   const debug = true;
+  let response_text_promise = Promise.resolve(["", []]);
 
   console.log("openaigpt_async noStreaming",noStreaming);
 
@@ -145,7 +146,13 @@ async function openaigpt_async(params) {
   }
 
   if (currentMaxResponse < minimalTokens) {
-    messages = shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse);
+    // Avoid crashing out
+    try {
+      messages = shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse);
+    } catch (e) {
+      response_text_promise = Promise.resolve(["Internal ERROR, the prompt was too big, sorry.", []]);
+      return response_text_promise;
+    }
   }
 
   // This is a hack to get parameters into the API
@@ -200,8 +207,6 @@ async function openaigpt_async(params) {
       wsSendTask(partialTask);
     }
   }
-
-  let response_text_promise = Promise.resolve(["", []]);
 
   if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
     let text = cachedValue;

@@ -16,77 +16,51 @@ import { BrowserRouter as Router } from "react-router-dom";
 
 document.title = appLabel || "Default Title";
 
-// service-worker.js is in the public folder
-// it needed to be added to index.html as well
-/*
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./serviceWorker.js')
-      .then(registration => {
-        console.log('Service Worker registered:', registration);
-      })
-      .catch(error => {
-        console.log('Service Worker registration failed:', error);
-        throw error;
-      });
-  });
-}
-*/
-
-/*
-const mySharedWorker = new SharedWorker('./sharedWorker.js');
-const port = mySharedWorker.port;
-// Sends a message to the shard worker that is echoed back
-port.postMessage('Test message to worker.');
-port.onmessage = (e) => {
-  console.log('Receive data from shared worker:', e.data);
-};
-*/
-
 function Root() {
   const [workerCount, setWorkerCount] = useState();
   const [workerId, setWorkerId] = useState();
 
   useEffect(() => {
-    // Connect to the shared worker initially
-    let mySharedWorker = new SharedWorker('./sharedWorker.js');
-    const port = mySharedWorker.port;
+    // Generate a unique ID for this tab/window
+    const uid = window.taskflowUID;
 
+    //console.log("BroadcastChannel root", uid);
+  
+    let channel = new BroadcastChannel('sharedChannel');
+  
     setTimeout(function() {
-      port.postMessage("activeWorkerCount");
-    }, 500);
-
-    port.onmessage = (e) => {
-      //console.log("e.data", e.data);
-      if (e.data === "ping") {
-        port.postMessage("pong");
-      } else if (e.data.startsWith("activeWorkerCount:")) {
-        let activeWorkerCount = e.data.split(":")[1];
-        console.log("activeWorkerCount:", activeWorkerCount);
-        // Update the state with the activeWorkerCount
-        setWorkerCount(activeWorkerCount);
-      } else if (e.data.startsWith("id:")) {
-        let workerId = e.data.split(":")[1];
-        console.log("workerId:", workerId);
-        // Update the state with the activeWorkerCount
+      //console.log(`BroadcastChannel ${uid} sent workerCount`);
+      channel.postMessage({ type: "workerCount", uid});
+    }, 100);
+  
+    channel.onmessage = (e) => {
+  
+      if (e.data.type === "ping" && e.data.uid === uid) {
+        //console.log(`BroadcastChannel ${uid} received ping from ${e.data.uid}`);
+        channel.postMessage({ type: "pong", uid});
+        //console.log(`BroadcastChannel ${uid} sent pong`);
+      } else if (e.data.type && e.data.type.startsWith("setWorkerCount")) {
+        //console.log(`BroadcastChannel ${uid} received workerCount from ${e.data.uid}`);
+        let workerCount = e.data.workerCount;
+        setWorkerCount(workerCount);
+        console.log('BroadcastChannel setWorkerCount(workerCount)', workerCount);
+      } else if (e.data.type && e.data.type.startsWith("setWorkerId") && e.data.uid === uid) {
+        //console.log(`BroadcastChannel ${uid} received id from ${e.data.uid}`);
+        let workerId = e.data.workerId;
         setWorkerId(workerId);
+        console.log('BroadcastChannel setWorkerId(workerId)', workerId);
       } else {
-        console.log('Received data from shared worker:', e.data);
+        //console.log('Received data from BroadcastChannel:', e.data);
       }
     };
-
-    port.onmessageerror = (e) => {
-      console.log('Received message error from shared worker:', e);
-    }
-
-    // Clean up the shared worker connection when the component unmounts
+  
     return () => {
-      mySharedWorker.port.postMessage('shutdown');
+      channel.close();
     };
   }, []);
 
   if (!workerCount) {
-    // Render a loading state or placeholder while waiting for the activeWorkerCount
+    // Render a loading state or placeholder while waiting for the workerCount
     return <div>Loading...</div>;
   }
 
@@ -95,7 +69,7 @@ function Root() {
       <WebSocketProvider socketUrl={hubSocketUrl}>
         <EventSourceProvider>
           <Router>
-            <App activeWorkerCount={workerCount} workerId={workerId} />
+            <App workerCount={workerCount} workerId={workerId} />
           </Router>
         </EventSourceProvider>
       </WebSocketProvider>

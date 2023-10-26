@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { appLabel as appLabelDefault, appName, appAbbrev } from "./shared/config.mjs";
+import { appLabel as appLabelDefault, appName, appAbbrev, TOKEN_APP } from "./shared/config.mjs";
 
 const appLabel = process.env.REACT_APP_LABEL || appLabelDefault;
 
@@ -43,5 +43,6 @@ export {
   appAbbrev,
   appLabel,
   hubUrl,
-  hubSocketUrl
+  hubSocketUrl,
+  TOKEN_APP,
 };

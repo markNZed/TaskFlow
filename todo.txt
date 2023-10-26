@@ -1,51 +1,23 @@
 /* ToDo
 -------
-file:///app/nodes/hub/src/taskProcess.mjs:137
-        throw new Error("Task locked", 423);
-              ^
-
-Error: Task locked
-    at checkLockConflict (file:///app/nodes/hub/src/taskProcess.mjs:137:15)
-    at taskProcess_async (file:///app/nodes/hub/src/taskProcess.mjs:286:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async WebSocket.<anonymous> (file:///app/nodes/hub/src/webSocket.js:191:16)
-
-Tokens maxTokens 4000 availableTokens -650 maxResponseTokens 1000
-Error: currentMaxResponse too low and no messages to remove
-    at shrinkMessages (file:///app/nodes/rxjs/src/Services/ServiceVercelAI.mjs:141:15)
-    at openaigpt_async (file:///app/nodes/rxjs/src/Services/ServiceVercelAI.mjs:148:16)
-    at callFunctionByName (file:///app/nodes/rxjs/src/Operators/OperatorLLM.mjs:38:12)
-    at Object.operate_async (file:///app/nodes/rxjs/src/Operators/OperatorLLM.mjs:23:37)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async RAG_async (file:///app/nodes/rxjs/src/Operators/OperatorRAG.mjs:492:31)
-    at async Object.operate_async (file:///app/nodes/rxjs/src/Operators/OperatorRAG.mjs:37:10)
-    at async TaskChat_async (file:///app/nodes/rxjs/src/Tasks/processor/consumer/TaskChat.mjs:95:27)
-    at async nodeTasks_async (file:///app/nodes/rxjs/src/nodeTasks.mjs:181:29)
-    at async file:///app/nodes/rxjs/src/webSocket.js:157:9
-Task error:  { message: 'currentMaxResponse too low and no messages to remove' }
-
 Could keep historyContext on the processor
-Limit the size of the input prompt
-Preprocessing to replace slang terms with formal terms before searching
-Could avoid repetetive responses
-Meta questions like "What is the most complex concept in work safety?"
-Problem with meta questions such as
-  Which document did you use in your last response.
-  Give some examples of difficult to understand concepts.
-  Could be interesting to imagien what a "normal" person might ask an "expert"
+RAG Ideas
+  Preprocessing to replace slang terms with formal terms before searching
+  Could avoid repetetive responses
+RAG problems
+  Meta questions
+    e.g. What is the most complex concept in work safety?
+    Which document did you use in your last response.
+    Give some examples of difficult to understand concepts.
+  Could be interesting to imagine what a "normal" person might ask an "expert"
 Log questions that can't be responded to - could be a good reason to follow up with a client
 Logout option on menu for basic auth
   Point to https://u:p@...
 How to provide logout endpoint for basic auth?
 Hugo - not clarifying question with concepts
 Websocket does not work with basic auth
-  Could use a globalkey to check websocket connections
-  Add a route to the hub to return a websocket key
-    On the server check if there is an authorized header ?
-  Could use a key in the websocket url so unlikley to find it 
-    e.g. /XXXXXX/ws instead of /ws
   First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
-Shared Web Workers ar enot supported on Chrome for Android
+Shared Web Workers are not supported on Chrome for Android
   Remove this for now
     Problem is multiple tabs sharing browser storage
       Replace with BroadcastChannel to negotiate id for tab

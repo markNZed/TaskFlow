@@ -207,6 +207,8 @@ const wsSendTask = async function (task) {
       utils.logTask(task,"New messageId:", task.meta.messageId);
     }
   }
+  task["tokens"] = task.tokens || {};
+  task.tokens["app"] = NODE.app.token;
   message["task"] = task;
   utils.debugTask(task);
   wsSendObject(message);
@@ -336,9 +338,9 @@ const connectWebSocket = () => {
       if (connectionAttempts < maxAttempts) {
         //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
         let backoffTime = 1000;
-        let currentDateTime = new Date();
-        let currentDateTimeString = currentDateTime.toString();
-        console.log(`Attempting onclose reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
+        //let currentDateTime = new Date();
+        //let currentDateTimeString = currentDateTime.toString();
+        //console.log(`Attempting onclose reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
         setTimeout(connectWebSocket, backoffTime);
         connectionAttempts++;
       } else {
@@ -353,9 +355,9 @@ const connectWebSocket = () => {
     if (connectionAttempts < maxAttempts) {
       //let backoffTime = Math.pow(2, connectionAttempts) * 1000; // Exponential backoff
       let backoffTime = 5002;
-      let currentDateTime = new Date();
-      let currentDateTimeString = currentDateTime.toString();
-      console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
+      //let currentDateTime = new Date();
+      //let currentDateTimeString = currentDateTime.toString();
+      //console.log(`Attempting onerror reconnection ${connectionAttempts} in ${backoffTime}ms from ${currentDateTimeString}`);
       setTimeout(connectWebSocket, backoffTime);
       connectionAttempts++;
     } else {

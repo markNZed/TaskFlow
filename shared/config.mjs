@@ -10,3 +10,4 @@ export const appAbbrev = process.env.APP_ABBREV || "TF";
 export const REDIS_URL = process.env.REDIS_URL || "redis://redis-stack-svc:6379";
 export const MONGO_URL = process.env.MONGO_URL || "mongodb://user:pass@mongodb:27017/taskflow?authSource=admin";
 export const EMPTY_ALL_DB = true;
+export const TOKEN_APP = process.env.TOKEN_APP || "NoAppWideTokenYet"

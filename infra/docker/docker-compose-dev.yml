@@ -7,6 +7,10 @@ services:
     image: taskflow:latest
     environment:
       - TASKFLOW_DEV=true
+      - APP_LABEL='T@skFlow-Dev'
+      - APP_NAME='T@skFlow-Dev'
+      - APP_ABBREV='TFD'
+      - TOKEN_APP='StillNoAppWideTokenYet'
     depends_on:
       - mongodb
       - redis-stack-svc

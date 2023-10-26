@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // .env is intended to allow for config that is not under version control
-import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTY_ALL_DB } from "./src/shared/config.mjs"
+import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTY_ALL_DB, TOKEN_APP } from "./src/shared/config.mjs"
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -70,7 +70,8 @@ NODE["hubNodeEnvironments"] = ["rxjs-hub-coprocessor", "rxjs-hub-consumer"];
 NODE["app"] = {
   label: appLabel,
   name: appName,
-  abbrev: appAbbrev
+  abbrev: appAbbrev,
+  token: TOKEN_APP,
 };
 NODE["storage"] = {
   redisUrl: REDIS_URL,
