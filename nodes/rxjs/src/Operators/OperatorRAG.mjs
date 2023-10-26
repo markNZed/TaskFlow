@@ -64,7 +64,7 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId, final) {
     wsDelta[instanceId] = 0;
   }
   if (final) {
-    response = {partial: {text: partialResponse.text, mode: "final" }};
+    response = {partial: {text: partialResponse.text, mode: "final" }}
   } else if (wsDelta[instanceId] && wsDelta[instanceId] % 20 === 0) {
     response = {partial: {text: partialResponse.text, mode: "partial" }};
   } else if (incr) {
@@ -312,6 +312,7 @@ const RAG_async = async function (wsSendTask, T) {
   const metadataDir = path.join(corpusDir, 'metadata');
   const CACHE_ID = "TASKFLOW CACHE";
   let cache;
+  let availableTokens = serviceConfig.maxTokens;
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
@@ -350,20 +351,16 @@ const RAG_async = async function (wsSendTask, T) {
       case "rewriteQuery": {
         let prompt = '';
         // Just let chatGPT try to anser
-        if (T("response.futureContext")) {
-          prompt += "The following text is part of a conversation that you are continuing:\n";
-          prompt += "<BEGIN HISTORY>\n";
-          prompt += T("response.futureContext");
-          prompt += "\n<END HISTORY>\n";
-        }
+        prompt = historyPrompt(T, prompt);
         if (T("config.local.user")) {
           prompt += "This query is from " + T("config.local.user") + "\n";
         }
-        prompt += T("config.local.rewritePrompt") || `Answer this query or if you do not have enough information the provide a bullet list of concepts that could help clarify this question.`;
+        prompt += T("config.local.rewritePrompt") || `Answer this question or if you do not have enough information then provide a bullet list of concepts that could help clarify this question.`;
         prompt += "\n" 
-        prompt += T("input.query");
+        prompt += "Question: " + T("input.query");
         T("request.prompt", prompt);
         T("request.service.noStreaming", true);
+        utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
         const operatorOutPromise = operatorLLM.operate_async(wsSendTask, T());
         const searchingMessage = T("config.local.searchingMessage") || "I could not immediately find relevant information to your question, so I am searching for more information. Please wait, this can take some time.";
         const words = searchingMessage.split(" ");
@@ -403,7 +400,10 @@ const RAG_async = async function (wsSendTask, T) {
       case "context": {
         let titles = [];
         let tokens = 0;
-        const availableTokens = serviceConfig.maxTokens - 1500; // leave space for response
+        availableTokens -= 1000; // leave space for response
+        availableTokens -= utils.stringTokens(T("response.historyContext"));
+        availableTokens -= utils.stringTokens(T("input.query"));
+        console.log("availableTokens", availableTokens);
         let metadata = {};
         const maxSections = 1;
         if (response.length) {
@@ -414,7 +414,7 @@ const RAG_async = async function (wsSendTask, T) {
             const elementContext = addReference(metadata[element.filename], element);
             const newTokenLength = utils.stringTokens(elementContext);
             if ((tokens + newTokenLength) >= availableTokens) {
-              console.log("Breaking out of context loop tokens:", tokens);
+              console.log("Breaking out of context loop tokens:", tokens, "section number:", i);
               // Don't break so we accumulate all the titles
               break;  // Exit the loop early if tokens exceed or are equal to availableTokens
             } else {
@@ -437,18 +437,22 @@ const RAG_async = async function (wsSendTask, T) {
           console.log("Requesting chunks that make up the sections");
           response = await queryWeaviateSections_async(titles, queryVector);
           tokens = 0;
+          let i = 0;
           if (response) {
             for (const element of response) {
               await getMetadata_async(metadata, element);
               const elementContext = addReference(metadata[element.filename], element);
               const newTokenLength = utils.stringTokens(elementContext);
-              tokens += newTokenLength;
-              if (tokens >= availableTokens) {
+              if ((tokens + newTokenLength) >= availableTokens) {
+                console.log("Breaking out of context loop tokens:", tokens, "chunk number:", i);
                 break;
                 // Exit the loop early if tokens exceed or are equal to availableTokens
+              } else {
+                tokens += newTokenLength;
               }
               context += "\n" + elementContext;
               titles.push(element.title);
+              i++;
             }            
           }
         } else {
@@ -467,11 +471,14 @@ const RAG_async = async function (wsSendTask, T) {
           if (T("config.local.noInformation")) {
             T("response.result", T("config.local.noInformation"));
           } else {
-            let prompt = `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
-            prompt += `
+            let prompt = '';
+              prompt = historyPrompt(T, prompt);
+              prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
+              prompt += `
             Question : ${T("input.query")}
             Réponse :`;
             T("request.prompt", prompt);
+            utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
             const operatorOut = await operatorLLM.operate_async(wsSendTask, T()); 
             let result = operatorOut.response.LLM;
             if (T("config.local.helpMessage")) {
@@ -482,12 +489,7 @@ const RAG_async = async function (wsSendTask, T) {
           T("response.retrieved", false);
         } else {
           let prompt = '';
-          if (T("response.futureContext")) {
-            prompt += "The following text is part of a conversation that you are continuing:\n";
-            prompt += "<BEGIN HISTORY>\n";
-            prompt += T("response.futureContext");
-            prompt += "\n<END HISTORY>\n";
-          }
+          prompt = historyPrompt(T, prompt);
           prompt += T("config.local.contextPrompt") || `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`;
           prompt += `Cite the relevant reference material at the end of your response using the information from the <TITLE>, <AUTHOR>, <PAGE> tags in the context.`
           prompt += `
@@ -495,19 +497,20 @@ const RAG_async = async function (wsSendTask, T) {
           Question : ${T("input.query")}
           Réponse : (remember to cite the relevant reference material at the end of your response)`;
           T("request.prompt", prompt);
+          utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
           const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
           T("response.result", operatorOut.response.LLM);
           T("response.retrieved", true);
         }
         T("response.query", T("input.query"));
-        let futureContext = T("response.futureContext") || '';
-        futureContext += "\n" + T("input.query") + "\n" + T("response.result");
-        let words = futureContext.split(/\s+/);  // Split the string into an array of words.
+        let historyContext = T("response.historyContext") || '';
+        historyContext += "\n" + T("input.query") + "\n" + T("response.result");
+        let words = historyContext.split(/\s+/);  // Split the string into an array of words.
         if (words.length > 500) {
           words = words.slice(-500);   // Get the most recent 500 words.
         }
-        futureContext = words.join(" ");  // Join the words back into a string.
-        T("response.futureContext", futureContext);
+        historyContext = words.join(" ");  // Join the words back into a string.
+        T("response.historyContext", historyContext);
 
         // Caching
         if (T("response.retrieved")) {
@@ -543,3 +546,14 @@ const RAG_async = async function (wsSendTask, T) {
 export const OperatorRAG = {
   operate_async,
 } 
+
+function historyPrompt(T, prompt) {
+  if (T("response.historyContext")) {
+    prompt += "The following text is part of a conversation that you are continuing:\n";
+    prompt += "<BEGIN HISTORY>\n";
+    prompt += T("response.historyContext");
+    prompt += "\n<END HISTORY>\n\n";
+  }
+  return prompt;
+}
+

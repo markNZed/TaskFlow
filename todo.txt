@@ -24,7 +24,16 @@ Error: currentMaxResponse too low and no messages to remove
     at async file:///app/nodes/rxjs/src/webSocket.js:157:9
 Task error:  { message: 'currentMaxResponse too low and no messages to remove' }
 
-Problem with meta questions such as - which document did you use in your last response.
+Could keep historyContext on the processor
+Limit the size of the input prompt
+Preprocessing to replace slang terms with formal terms before searching
+Could avoid repetetive responses
+Meta questions like "What is the most complex concept in work safety?"
+Problem with meta questions such as
+  Which document did you use in your last response.
+  Give some examples of difficult to understand concepts.
+  Could be interesting to imagien what a "normal" person might ask an "expert"
+Log questions that can't be responded to - could be a good reason to follow up with a client
 Logout option on menu for basic auth
   Point to https://u:p@...
 How to provide logout endpoint for basic auth?
@@ -33,6 +42,9 @@ Websocket does not work with basic auth
   Could use a globalkey to check websocket connections
   Add a route to the hub to return a websocket key
     On the server check if there is an authorized header ?
+  Could use a key in the websocket url so unlikley to find it 
+    e.g. /XXXXXX/ws instead of /ws
+  First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
 Shared Web Workers ar enot supported on Chrome for Android
   Remove this for now
     Problem is multiple tabs sharing browser storage
