@@ -1,5 +1,42 @@
 /* ToDo
 -------
+file:///app/nodes/hub/src/taskProcess.mjs:137
+        throw new Error("Task locked", 423);
+              ^
+
+Error: Task locked
+    at checkLockConflict (file:///app/nodes/hub/src/taskProcess.mjs:137:15)
+    at taskProcess_async (file:///app/nodes/hub/src/taskProcess.mjs:286:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async WebSocket.<anonymous> (file:///app/nodes/hub/src/webSocket.js:191:16)
+
+Tokens maxTokens 4000 availableTokens -650 maxResponseTokens 1000
+Error: currentMaxResponse too low and no messages to remove
+    at shrinkMessages (file:///app/nodes/rxjs/src/Services/ServiceVercelAI.mjs:141:15)
+    at openaigpt_async (file:///app/nodes/rxjs/src/Services/ServiceVercelAI.mjs:148:16)
+    at callFunctionByName (file:///app/nodes/rxjs/src/Operators/OperatorLLM.mjs:38:12)
+    at Object.operate_async (file:///app/nodes/rxjs/src/Operators/OperatorLLM.mjs:23:37)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async RAG_async (file:///app/nodes/rxjs/src/Operators/OperatorRAG.mjs:492:31)
+    at async Object.operate_async (file:///app/nodes/rxjs/src/Operators/OperatorRAG.mjs:37:10)
+    at async TaskChat_async (file:///app/nodes/rxjs/src/Tasks/processor/consumer/TaskChat.mjs:95:27)
+    at async nodeTasks_async (file:///app/nodes/rxjs/src/nodeTasks.mjs:181:29)
+    at async file:///app/nodes/rxjs/src/webSocket.js:157:9
+Task error:  { message: 'currentMaxResponse too low and no messages to remove' }
+
+Problem with meta questions such as - which document did you use in your last response.
+Logout option on menu for basic auth
+  Point to https://u:p@...
+How to provide logout endpoint for basic auth?
+Hugo - not clarifying question with concepts
+Websocket does not work with basic auth
+  Could use a globalkey to check websocket connections
+  Add a route to the hub to return a websocket key
+    On the server check if there is an authorized header ?
+Shared Web Workers ar enot supported on Chrome for Android
+  Remove this for now
+    Problem is multiple tabs sharing browser storage
+      Replace with BroadcastChannel to negotiate id for tab
 Refresh tuteur SSL cert ?
 When using basic auth we don't apply this to the websocket
   Should set a secret for the websocket

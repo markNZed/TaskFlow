@@ -350,6 +350,12 @@ const RAG_async = async function (wsSendTask, T) {
       case "rewriteQuery": {
         let prompt = '';
         // Just let chatGPT try to anser
+        if (T("response.futureContext")) {
+          prompt += "The following text is part of a conversation that you are continuing:\n";
+          prompt += "<BEGIN HISTORY>\n";
+          prompt += T("response.futureContext");
+          prompt += "\n<END HISTORY>\n";
+        }
         if (T("config.local.user")) {
           prompt += "This query is from " + T("config.local.user") + "\n";
         }
