@@ -18,6 +18,7 @@ document.title = appLabel || "Default Title";
 
 // service-worker.js is in the public folder
 // it needed to be added to index.html as well
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./serviceWorker.js')
@@ -30,6 +31,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 /*
 const mySharedWorker = new SharedWorker('./sharedWorker.js');
@@ -40,9 +42,6 @@ port.onmessage = (e) => {
   console.log('Receive data from shared worker:', e.data);
 };
 */
-
-let mySharedWorker;
-let activeWorkerCount;
 
 function Root() {
   const [workerCount, setWorkerCount] = useState();

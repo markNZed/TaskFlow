@@ -1,7 +1,18 @@
 /* ToDo
 -------
-Revire Python runner (broken after chanegd for sumy)
-Getting user from http authentication ?
+Refresh tuteur SSL cert ?
+When using basic auth we don't apply this to the websocket
+  Should set a secret for the websocket
+    Hub only communciates via websocket
+    Could be a secret that is for all users
+Web worker with basic auth in mobile seems to be broken
+  Do we need this (maybe let the Hub give the processor an Id)
+  Move to using cloudflare for Hugo? $7 per user...
+Could manage the basic auth on the Hub instead of the proxy
+  Allow user to create new users and set a password
+  Could also have a simple flow for registering into a default group autonomously
+    Need to rate limit user and control abuse
+Review Python runner (broken after chanegd for sumy)
 https://github.com/RManLuo/Awesome-LLM-KG
 hashDiff on the input but why?
   Not being merged on React
