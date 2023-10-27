@@ -27,13 +27,13 @@ const TaskRAG = (props) => {
     task,
     modifyTask,
     transition,
-    childTask
+    childTasks,
+    setChildTasksTask,
   } = props;
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  const [query, setQuery] = useState("");  // State for the query input
   const [responseText, setResponseText] = useState("");
   const responseTextRef = useRef("");
   const [socketResponses, setSocketResponses] = useState([]);
@@ -94,22 +94,6 @@ const TaskRAG = (props) => {
     if (props.transition()) { props.log(`${props.componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        nextState = "input";
-        break;
-      case "input":
-        if (task.input.submit) {
-          modifyTask({
-            "input.submit": false,
-            "state.current": "sent",
-            "command": "update",
-          });
-        }
-        break;
-      case "sent":
-        break;
-      case "response":
-        setResponseText(task?.response?.result);
-        nextState = "input";
         break;
       default:
         console.log("ERROR unknown state : " + task.state.current);
@@ -119,81 +103,43 @@ const TaskRAG = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
-  const handleChange = (e) => {
-    setQuery(e.target.value);
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); 
-      modifyTask({
-        "input.submit": true,
-        "input.query": query,
-      });
-      setResponseText("");
-      responseTextRef.current = "";
-      console.log("query", query);
+  useEffect(() => {
+    if (task?.input?.select) {
+      const selectedModelVersion = task?.output?.chat?.services?.chat?.modelVersion;
+      const hard = "gpt-4-0613";
+      if (task?.input?.select && task.input.select[0] && task.input.select[0][0] === "thinkharder") {
+        if (selectedModelVersion !== hard) {
+          modifyTask({ 
+            "command": "update", 
+            "output.chat.services.chat.modelVersion": hard,
+            "commandDescription": "Think harder",
+          });
+        }
+      } else if (selectedModelVersion === hard) {
+        modifyTask({ 
+          "command": "update", 
+          "output.chat.services.chat.modelVersion": "gpt-3.5-turbo-0613",
+          "commandDescription": "Think softer",
+        });
+      }
     }
-  }
-
-  const DisplayObject = ({ obj, level = 0 }) => {
-    const indent = 10 * level; // 40px indentation for each level
-    if (!obj) {
-      return null;
-    }
-    return (
-      <ul style={{ textAlign: 'left', marginLeft: `${indent}px` }}>
-        {Object.keys(obj).map((key, index) => (
-          <li key={index}>
-            {key}:{" "}
-            {typeof obj[key] === "object" ? (
-              <DisplayObject obj={obj[key]} level={level + 1} />
-            ) : (
-              obj[key]
-            )}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  }, [task?.input?.select]);
 
   return (
-    <div style={{ textAlign: 'left', marginLeft: `24px`, width: '100%', maxWidth: '800px' }}>
-      <h1>{task.config.label}</h1>
-      <textarea
-        placeholder={task.config?.local?.inputLabel}
-        label="Enter your query"
-        variant="outlined"
-        value={query}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}  // Detect "Enter" key press
-      />
+    <div>
       <div>
-        {responseText ? (
-          responseText.split("\\n").map((line, index) => (
-            <Typography 
-              style={{ marginTop: "16px" }} 
-              key={index}
-              className="text2html"
-              dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
-            />
-          ))
-        ) : (
-          ""
-        )}
-      </div>
-      
-      <div>
-        {childTask && (
+      {/* The component layout order is the order of task.meta.childrenIds which is the order the tasks are declared in the task configuration*/}
+      {childTasks && childTasks.map((childTask, idx) => (
+        <div key={"styling" + childTask.id} style={childTask?.config?.local?.style || {}}>
           <DynamicComponent
-            key={childTask.id}
-            is={childTask.type}
-            task={childTask}
-            setTask={props.setChildTask}
-            handleModifyChildTask={props.handleModifyChildTask}
-            parentTask={task}
+              key={childTask.id}
+              is={childTask.type}
+              task={childTask}
+              setTask={(t) => setChildTasksTask(t, idx)} // Pass idx as an argument
+              parentTask={task}
           />
-        )}
+        </div>
+      ))}
       </div>
     </div>
   );

@@ -29,6 +29,8 @@ function withTask(Component) {
     const isMountedRef = useRef();
     const [prevTask, setPrevTask] = useState();
     const [childTask, setChildTask] = useState();
+    const [childTasks, setChildTasks] = useState([]);
+    const [childTasksIdx, setChildTasksIdx] = useState(0);
     // Updates to the task might be visible in other layers
     // Could allow for things like changing config from an earlier component
     const { updateTaskError } = useUpdateTask(
@@ -283,9 +285,9 @@ function withTask(Component) {
         if (!props.task) {return}
         const spawnTask = props.task.config?.spawnTask === false ? false : true;
         //console.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
-        if (spawnTask && props.task?.meta?.childrenId) {
+        if (spawnTask && props.task?.meta?.childrenId && props.task?.meta?.childrenId.length) {
           for (const childId of props.task.meta.childrenId) {
-            console.log(childId);
+            console.log("spawnTask", childId);
             modifyTask({
               "command": "start",
               "commandArgs": {
@@ -313,10 +315,15 @@ function withTask(Component) {
     useEffect(() => {
       if (!props.task) {return}
       const spawnTask = props.task.config?.spawnTask === false ? false : true;
-      if (spawnTask && !childTask) {
+      if (spawnTask && props.task?.meta?.childrenId && childTasks.length < props.task.meta.childrenId.length) {
         if (startTaskReturned) {
-          setChildTask(startTaskReturned)
-          console.log("setChildTask", startTaskReturned.id)
+          let startTask = utils.deepClone(startTaskReturned);
+          console.log(props.task.id, startTask.id, "childTasksIdx", childTasksIdx, childTasks);
+          setChildTasksIdx(p => p + 1);
+          startTask.meta["childTasksIdx"] = childTasksIdx;
+          setChildTasks((p) => [...p, startTask]);
+          setChildTask(startTask);
+          console.log("setChildTask", startTask.id)
         }
       }
     }, [startTaskReturned]);
@@ -671,6 +678,10 @@ function withTask(Component) {
       //console.log("Tracing prevTask ", prevTask)
     }, [prevTask]);
 
+    function setChildTasksTask(t, idx) {
+      utils.setArrayState(setChildTasks, idx, t);
+    }
+
     const componentProps = {
       ...props,
       task: props.task,
@@ -705,6 +716,8 @@ function withTask(Component) {
       taskRef,
       FSMachine,
       useShareFsm,
+      childTasks,
+      setChildTasksTask,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it

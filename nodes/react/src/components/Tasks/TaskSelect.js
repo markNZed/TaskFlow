@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Checkbox, Radio, FormGroup, FormControlLabel, Button, Select, MenuItem, Autocomplete, TextField, Switch, Slider, Chip } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import Stack from '@mui/material/Stack';
+import { utils } from "../../shared/utils.mjs";
 
 const TaskSelect = (props) => {
   const {
@@ -13,6 +14,10 @@ const TaskSelect = (props) => {
   } = props;
 
   const [selectedOptions, setSelectedOptions] = useState();
+  const [debouncedOptions, setDebouncedOptions] = useState();
+  const [debouncedValue, setDebouncedValue] = useState(null);
+  const debounceTimeout = useRef(null);
+
 
   props.onDidMount();
 
@@ -22,7 +27,7 @@ const TaskSelect = (props) => {
   }, []);
 
   useEffect(() => {
-    console.log("selectedOptions: ", selectedOptions);
+    console.log("selectedOptions: ", selectedOptions, task);
   }, [selectedOptions]);
 
   useEffect(() => {
@@ -38,58 +43,94 @@ const TaskSelect = (props) => {
     switch (task.state.current) {
       case "start":
         if (Object.keys(task.output.selected).length > 0) {
-            setSelectedOptions(task.output.selected);
+          setSelectedOptions(task.output.selected);
         } else {
-            const init = task.config.local.fields.map(() => []);
-            setSelectedOptions(init);
+          // Create and empty array for each entry
+          const init = task.config.local.fields.map((f) => []);
+          setSelectedOptions(init);
         }
+        nextState = "select";
         break;
-      case "exit":
-        if (transition()) {
-          modifyTask({ 
-            "command": "update", 
-            "output.selected": selectedOptions,
-            "commandDescription": "Transition state to exit and set output.selected",
-          });
+      case "select":
+        if (!task.config?.local?.submit || task.input.submit) {
+          console.log("deepEqual:", debouncedOptions, task.output.selected); 
+          if (!utils.deepEqual(debouncedOptions, task.output.selected)) {
+            console.log("Updating debouncedOptions: ", debouncedOptions, task.output.selected);
+            modifyTask({ 
+              "command": "update", 
+              "input.submit": false,
+              "output.selected": debouncedOptions,
+              "commandDescription": "Set output.selected",
+            });
+          }
         }
-        nextState = "start";
         break;
       default:
         console.log("ERROR: Unknown state - " + task.state.current);
     }
 
     props.modifyState(nextState);
-  }, [task]);
+  }, [task, debouncedOptions]);
 
   const handleOptionChange = (fieldIndex, value) => {
     setSelectedOptions(prevState => {
-        const prevSelectedOption = prevState[fieldIndex];
+      const field = task.config.local.fields[fieldIndex];
+      const prevSelectedOption = prevState[fieldIndex];
+      console.log("fieldIndex", fieldIndex, "field:", field, "value:", value);
+      let result;
+      const singleValue = field.options.length === 1 || field.singleSelection;
+      if (singleValue) {
         if (prevSelectedOption.includes(value)) {
-          return {
+          console.log("prevSelectedOption.includes(value)", singleValue, prevState);
+          result = {
             ...prevState,
-            [fieldIndex]: prevSelectedOption.filter(option => option !== value),
+            [fieldIndex]: ["unselected"]
           };
-        } else if (task.config.local.fields[fieldIndex].options.length === 1 || task.config.local.fields[fieldIndex].singleSelection) {
-          return {
+        } else {
+          console.log("!prevSelectedOption.includes(value)", singleValue, prevState);
+          result = {
             ...prevState,
             [fieldIndex]: [value],
           };
-        } else {
-          return {
+        }
+      } else {
+        if (prevSelectedOption.includes(value)) {
+          console.log("prevSelectedOption.includes(value)", singleValue, prevState);
+          const newValue = prevSelectedOption.map(option => option === value ? "unselected" : option)
+          console.log("prevSelectedOption, newValue: ", prevSelectedOption, newValue);
+          result = {
             ...prevState,
-            [fieldIndex]: [...prevSelectedOption, value],
+            [fieldIndex]: newValue
+          };
+        } else {
+          console.log("!prevSelectedOption.includes(value)", singleValue, prevState);
+          result = {
+            ...prevState,
+            [fieldIndex]: [...prevSelectedOption, singleValue, value],
           };
         }
+      }
+      console.log("result", result);
+      return result;
     });
   };
-  
 
   const handleSubmit = () => {
-    modifyTask({ "state.current": "exit" });
+    modifyTask({ "input.submit": true });
   };
 
+  useEffect(() => {
+    // Clear any existing timeout
+    clearTimeout(debounceTimeout.current);
+    // Set a new timeout
+    debounceTimeout.current = setTimeout(() => {
+      // This code will run after 200ms unless a new value comes in and clears the timeout
+      setDebouncedOptions(selectedOptions);
+    }, 200);
+  }, [selectedOptions]);
+
   const renderOptions = () => {
-    const { fields } = task.config;
+    const { fields } = task.config.local;
 
     if (!selectedOptions) {return;}
 
@@ -112,6 +153,7 @@ const TaskSelect = (props) => {
           );
 
         case 'autocomplete':
+          field.singleSelection = true;
           return (
             <Autocomplete
               key={fieldIndex}
@@ -123,16 +165,17 @@ const TaskSelect = (props) => {
           );
           
         case 'slider':
-            return (
-                <Slider
-                key={fieldIndex}
-                value={selectedOptions[fieldIndex][0] || 0} // default value is 0 if there's no selected value
-                onChange={(event, newValue) => handleOptionChange(fieldIndex, newValue)}
-                min={field.options[0].value}
-                max={field.options[field.options.length - 1].value}
-                valueLabelDisplay="auto"
-                />
-            );
+          field.singleSelection = true;
+          return (
+              <Slider
+              key={fieldIndex}
+              value={selectedOptions[fieldIndex][0] || 0} // default value is 0 if there's no selected value
+              onChange={(event, newValue) => handleOptionChange(fieldIndex, newValue)}
+              min={field.min}
+              max={field.max}
+              valueLabelDisplay="auto"
+              />
+          );
 
         case 'switch':
             return field.options.map((option, index) => (
@@ -189,16 +232,18 @@ const TaskSelect = (props) => {
     });
   };
 
-  console.log("renderOptions()", renderOptions());
+  //console.log("renderOptions()", renderOptions());
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <Paper elevation={3} style={{ overflow: "auto", textAlign: "justify", padding: "16px" }}>
         <FormGroup>{renderOptions()}</FormGroup>
       </Paper>
-      <Button variant="contained" color="primary" onClick={handleSubmit}>
-        Submit
-      </Button>
+      {task.config.local.submit && (
+        <Button variant="contained" color="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
+      )}
     </div>
   );
 };

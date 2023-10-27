@@ -205,6 +205,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
 
   }
 
+  //utils.logTask(task, "CEPConnect modifiedOutput", modifiedOutput);
+
   // Update any connections
   if (modifiedOutput) {
     const T = utils.createTaskValueGetter(task);
@@ -225,7 +227,9 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         if (toTask && toTask.instanceId) {
           const Tto = utils.createTaskValueGetter(toTask);
           // LOG HERE
-          if (!utils.deepEqual(T(fromPath), Tto(toPath))) {
+          const deepEqual = utils.deepEqual(T(fromPath), Tto(toPath));
+          //utils.logTask(task, "CEPConnect deepEqual", deepEqual, T(fromPath), Tto(toPath));
+          if (!deepEqual) {
             Tto(toPath, T(fromPath));
             instancesToUpdate[Tto("instanceId")] = Tto();
           }

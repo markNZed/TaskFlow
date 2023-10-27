@@ -30,8 +30,8 @@ const useStartTask = (task, setTask, setStartTask) => {
         wsSendTask(snapshot);
         startTaskSentIdRef.current = snapshot.commandArgs.id;
       } catch (error) {
-        console.log(error)
         setStartTaskError(error.message);
+        console.log("useStartTask error", error);
         startTaskSentIdRef.current = commandArgs.id;
       }
       console.log("useStartTask startTaskSentIdRef.current", startTaskSentIdRef.current);

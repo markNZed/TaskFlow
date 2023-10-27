@@ -62,7 +62,7 @@ function mergeTasks(task, parentTask) {
     }
   }
   for (const key in parentTask) {
-    if (parentTask[key]) {
+    if (parentTask[key] !== undefined) {
       if (["label", "type", "meta", "initiator", "connections"].includes(key)) {
         continue;
       }
@@ -82,13 +82,13 @@ function mergeTasks(task, parentTask) {
 
 // Could replace PREPEND_ with ...+ and APPEND with +...
 function mergeObj(task, key, parentTask) {
-  if (task["PREPEND_" + key]) {
+  if (task["PREPEND_" + key] !== undefined) {
     task[key] = prependOperation(task, key, parentTask);
-  } else if (task["APPEND_" + key]) {
+  } else if (task["APPEND_" + key] !== undefined) {
     task[key] = appendOperation(task, key, parentTask);
   // Don't copy LOCAL info (specific to the task)
   } else if (!key.startsWith("LOCAL_") && !parentTask["LOCAL_" + key]) {
-    if (task[key]) {
+    if (task[key] !== undefined) {
       task[key] = utils.deepMerge(parentTask[key], task[key]);
      } else {
       task[key] = parentTask[key];
@@ -114,7 +114,7 @@ function appendOperation(task, key, parentTask) {
 
 function copyLocalKeys(obj) {
   for (const key in obj) {
-    if (obj[key]) {
+    if (obj[key] !== undefined) {
       // Recurse if it's an object and not null.
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         copyLocalKeys(obj[key]);
@@ -122,10 +122,8 @@ function copyLocalKeys(obj) {
       // Check for "LOCAL_" prefix.
       if (key.startsWith("LOCAL_")) {
         const newKey = key.slice(6);
-        if (!obj[newKey]) {
-          //console.log("Setting LOCAL_", newKey, obj[key]);
-          obj[newKey] = obj[key];
-        }
+        //console.log("Setting LOCAL_", newKey, obj[key]);
+        obj[newKey] = obj[key];
       }
 
     }
@@ -135,7 +133,7 @@ function copyLocalKeys(obj) {
 
 function stripChildrenPrefix(obj) {
   for (const key in obj) {
-    if (obj[key]) {
+    if (obj[key] !== undefined) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         stripChildrenPrefix(obj[key]);
       }
@@ -150,7 +148,7 @@ function stripChildrenPrefix(obj) {
 
 function stripAppendKeys(obj) {
   for (const key in obj) {
-    if (obj[key]) {
+    if (obj[key] !== undefined) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         stripChildrenPrefix(obj[key]);
       }
@@ -241,7 +239,7 @@ function flattenTasks(tasks) {
     const nextTaskTemplate = task?.config?.nextTaskTemplate;
     if (nextTaskTemplate) {
       for (const key in nextTaskTemplate) {
-        if (nextTaskTemplate[key]) {
+        if (nextTaskTemplate[key] !== undefined) {
           if (!nextTaskTemplate[key].includes(".")) {
             nextTaskTemplate[key] = parentId + "." + nextTaskTemplate[key];
           }
@@ -298,7 +296,7 @@ users = utils.flattenObjects(users);
 for (const userKey in users) {
   if (users[userKey]) {
     //console.log("Creating group for user " + userKey)
-    if (!groups[userKey]) {
+    if (groups[userKey] === undefined) {
       const group = {
         name: users[userKey].name,
         users: [userKey],
@@ -318,12 +316,12 @@ for (const groupKey in groups) {
     assert(group["users"], "Group " + groupKey + " has no users");
     group.users.forEach(function (id) {
       // Groups may have users that do not exist
-      if (!users[id]) {
+      if (users[id] === undefined) {
         console.log(
           "Could not find user " + id + " expected in group " + groupKey
         );
       } else {
-        if (users[id]["groups"]) {
+        if (users[id]["groups"] !== undefined) {
           // Should check that not already in groups
           users[id]["groups"].push(groupKey);
         } else {

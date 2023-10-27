@@ -1,65 +1,117 @@
 /* ToDo
 -------
+Slider not working with "undefined" value assigned
+Styling of the tasks
+  Add task.name to div
+  Could be in the config - yes
+  Could be in the CSS file (but would not be dynamic)
+Disk space on server1
+Not cleaning up connectionsStore_async
+  Remove when deleting activeTask (we maange family already?)
+Websocket secret use
+Create Service for embeddings
+  Also SendIncrementalWs
+Security
+  https://deno.com/ instead of nodejs
+Protecting keys
+  https://github.com/KenyonY/openai-forward
+Local LLM
+  https://github.com/mudler/LocalAI https://localai.io/basics/getting_started/ 
+  https://ollama.ai/
+    https://hub.docker.com/r/ollama/ollama
+Authentication as a task
+  Autostart like menu
+    Needs an admin user
+      Store user's password as hash
+      Store user's email to send initial password
+      Cache the credentials
+        Cookie or local storage?
+How to limit access to the keys
+  Something like a proxy 
 Could keep historyContext on the processor
-RAG Ideas
-  Preprocessing to replace slang terms with formal terms before searching
-  Could avoid repetetive responses
-RAG problems
-  Meta questions
-    e.g. What is the most complex concept in work safety?
-    Which document did you use in your last response.
-    Give some examples of difficult to understand concepts.
-  Could be interesting to imagine what a "normal" person might ask an "expert"
+RAG
+  ToDo
+    Add concept of UI options
+      Think harder - use GPT4 for summary
+      User profile
+  Ideas
+    Log questions that can't be responded to - could be a good reason to follow up with a client
+      Also can help with caching e.g. when we do not find relevant material
+    Improve the question
+      Use functions -"clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
+        This would probably be very good. Set a depth limit
+          Decide how detailed the answer should be (user could make adjustment via UI)
+            An "effort" indicator
+      Could pass an array of concepts to clarify
+        Could use vector DB to find previous clarifications
+    Preprocessing to replace slang terms with formal terms before searching
+    Extract entities, https://arxiv.org/abs/2305.15444 PromptNER: Prompting For Named Entity Recognition
+    Could process doc once for definition extraction
+      Extract entities into JSON with LLM
+        Generate embeddings 
+          Identify analogies
+            Generate set of entities
+    Use entities to extract relations (could use text to describe the relation)
+      Could the extract relevant entities and relations based on embedding of chatGPT initial answer
+        Providing most relevant entities and relations to the query rewrite prompt should help
+    Could avoid repetetive responses
+  Problems
+    Meta questions
+      e.g. 
+        What is the most complex concept in work safety?
+        Which document did you use in your last response.
+        Give some examples of difficult to understand concepts.
+    Imagine what a "normal" person might ask an "expert"
+      This is another one-offwhere we can reuse the questions
+        Benchmark different strategies for answer generation.
+          Use the answers in RAG (need to manage references to references)
 Log questions that can't be responded to - could be a good reason to follow up with a client
+  Can we log JSON for each interaction and later analyze 
+    Notebook for analysing
+      A task could be a Notebook
+        Can we use Javacsript+Python
+      https://observablehq.com/cloud hosted
+      https://polynote.org 
+      https://github.com/ipyflow/ipyflow
+      Should be able to load the task as JSON
+        How to access the Node API ?
+      Jupyter has an API so we can create a notebook on the fly and populate it.
+      https://docs.deno.com/runtime/manual/tools/jupyter
+        Could be a way to experiment with Deno
+      https://github.com/yunabe/tslab
+      https://github.com/yunabe/tslab
+      Two separate Tasks - edit+execute and execute
+      The execute task would run the notebook and just get back the task (maybe using REST API or just launch)
+      The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end. 
 Logout option on menu for basic auth
   Point to https://u:p@...
-How to provide logout endpoint for basic auth?
-Hugo - not clarifying question with concepts
 Websocket does not work with basic auth
   First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
-Refresh tuteur SSL cert ?
-When using basic auth we don't apply this to the websocket
-  Should set a secret for the websocket
-    Hub only communciates via websocket
-    Could be a secret that is for all users
-Web worker with basic auth in mobile seems to be broken
-  Do we need this (maybe let the Hub give the processor an Id)
-  Move to using cloudflare for Hugo? $7 per user...
 Could manage the basic auth on the Hub instead of the proxy
   Allow user to create new users and set a password
   Could also have a simple flow for registering into a default group autonomously
     Need to rate limit user and control abuse
-Review Python runner (broken after chanegd for sumy)
+Review Python runner (broken after changed for sumy)
 https://github.com/RManLuo/Awesome-LLM-KG
 hashDiff on the input but why?
   Not being merged on React
   The update from node to received does not include the old response in the diff 
     Inspect task.input why is diff showing empty object ?
     Can we have remote diffOrigTask ?
-Create Service for embeddings
-  Also SendIncrementalWs
-Not cleaning up connectionsStore_async
 Use a function to update task then we can trace this
+ T(task, "input.test")
+ T(task, "input.test", "new value")
+ Or we create a function instead of task and pass that
 Replace throw with devThrow 
 Task object are getting very big ?
   Storing origTask for node on hub ?
 Why is SEP of : not working?
   Specific to key starting with :
 https://cookbook.openai.com/examples/clustering clustering 
-Disk space on server1
-Priorities
-  Improve the question
-    Connection of IO
-      Using dtf as example
-    Interaction to improve the quality of the question
-      Move to TaskConversation
-        TaskRAG above
-          Improve the question to get a better match in vector DB
-            Ask chatGPT "Does this text provide enough information for a high quality answer to the query? If not then list the concepts you want clarified.
-              Use functions -"clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
-                This would probably be very good. Set a depth limit
-                  Decide how detailed the answer should be (user could make adjustment via UI)
-                    An "effort" indicator
+  Could experiment with ART for hierarchical clustering
+    Create up to N categories
+     If the input mathcs with a category but id more distant than the most distant category pair then create a new category and merge the closest two categories.
+     Could reduce N but on what basis ?
 Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style
 Styles of data processing
   What are the main insights ? Meta questions.

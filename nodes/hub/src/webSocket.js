@@ -147,7 +147,7 @@ function initWebSocketServer(server) {
       }
 
       if (!task?.tokens?.app || task.tokens.app !== NODE.app.token) {
-        console.log("No task.tokens.app", message);
+        console.log("No task.tokens.app expecting", NODE.app.token, task);
         //throw new Error("No task.tokens.app");
         return;
       }

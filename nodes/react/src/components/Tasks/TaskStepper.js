@@ -50,7 +50,7 @@ function TaskStepper(props) {
     if (tasks.length && tasks[tasksIdx].state?.done !== stepDone) {
       setStepDone(tasks[tasksIdx].state.done);
     }
-    window.stepperTasks = tasks;
+    window.stepperTasks = tasks; // For debug
   }, [tasksIdx, tasks]);
       
   // Task state machine

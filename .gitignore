@@ -8,5 +8,5 @@ tailLogs.txt
 core
 dist
 /data
-__pycache__/
+__pycache__
 *.pyc

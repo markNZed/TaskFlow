@@ -6,13 +6,25 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React from "react";
 
-function ObjectDisplay({ data }) {
-  const jsonString = JSON.stringify(data, null, 2);
+const ObjectDisplay = ({ obj, level = 0 }) => {
+  const indent = 10 * level; // 40px indentation for each level
+  if (!obj) {
+    return null;
+  }
   return (
-    <div>
-      <pre>{jsonString}</pre>
-    </div>
+    <ul style={{ textAlign: 'left', marginLeft: `${indent}px` }}>
+      {Object.keys(obj).map((key, index) => (
+        <li key={index}>
+          {key}:{" "}
+          {typeof obj[key] === "object" ? (
+            <ObjectDisplay obj={obj[key]} level={level + 1} />
+          ) : (
+            obj[key]
+          )}
+        </li>
+      ))}
+    </ul>
   );
-}
+};
 
 export default ObjectDisplay;
