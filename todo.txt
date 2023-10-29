@@ -1,5 +1,7 @@
 /* ToDo
 -------
+Move RAG prompts into tasktype?
+Process topics into not more than X categories (will need this when there are too many docs)
 Do we limit the document search to the topic ?
   Not yet I guess.
 To allow task config to be modified during init via connections we need to run CEPConnect on the Coprocessor

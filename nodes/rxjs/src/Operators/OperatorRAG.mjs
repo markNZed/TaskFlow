@@ -500,9 +500,15 @@ const RAG_async = async function (wsSendTask, T) {
             T("response.result", T("config.local.noInformation"));
           } else {
             let prompt = '';
-              prompt = historyPrompt(T, prompt);
-              prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
-              prompt += `
+            prompt = historyPrompt(T, prompt);
+            prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
+            if (T("config.local.user")) {
+              prompt += `User: ${T("config.local.user")}\n`;
+            }
+            if (topic) {
+              prompt += `Topic: ${topic}\n`;
+            }
+            prompt += `
             Question : ${T("input.query")}
             Réponse :`;
             T("request.prompt", prompt);
