@@ -1,5 +1,7 @@
 /* ToDo
 -------
+Do we limit the document search to the topic ?
+  Not yet I guess.
 To allow task config to be modified during init via connections we need to run CEPConnect on the Coprocessor
   Could use .shared ? No that still requires modifying the Task to use shared instad of its config
 Test muliple select

@@ -519,7 +519,11 @@ const RAG_async = async function (wsSendTask, T) {
           let prompt = '';
           prompt = historyPrompt(T, prompt);
           prompt += T("config.local.contextPrompt") || `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`;
-          prompt += `Cite the relevant reference material at the end of your response using the information from the <TITLE>, <AUTHOR>, <PAGE> tags in the context.`
+          prompt += `
+          Cite the relevant reference material at the end of your response using the information from the <TITLE>, <AUTHOR>, <PAGE> tags in the context. For example:
+          Références :
+          [1] "Name of the document", author's name, publisher, page number
+          `
           if (T("config.local.user")) {
             prompt += `User: ${T("config.local.user")}\n`;
           }

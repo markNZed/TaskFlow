@@ -1126,33 +1126,38 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     // For each section find the most relevant chunks that are not in this section
     if (element.mergedSection && element.vector) {
       //console.log("Element:", element.title, element.text)
-      let response = await client.graphql
-        .get()
-        .withClassName(className)
-        .withFields('text tokenLength _additional {distance id}')
-        .withWhere({
-          operator: "And",
-          operands: [
-            {
-              path: ['mergedSection'],
-              operator: 'Equal',
-              valueBoolean: false,
-            },
-            // For this to work we needed to modify the tokenization of the title to "field"
-            {
-              path: ['title'],
-              operator: 'NotEqual',
-              valueText: element.title,
-            },
-          ],
-        })
-        .withNearVector({ 
-          vector: element.vector,
-          "distance": T("config.local.maxDistance") || 0.14,
-        })
-        .withAutocut(2)
-        .withLimit(T("config.local.maxChunks") || 10)
-        .do();
+      let response;
+      try {
+        response = await client.graphql
+          .get()
+          .withClassName(className)
+          .withFields('text tokenLength _additional {distance id}')
+          .withWhere({
+            operator: "And",
+            operands: [
+              {
+                path: ['mergedSection'],
+                operator: 'Equal',
+                valueBoolean: false,
+              },
+              // For this to work we needed to modify the tokenization of the title to "field"
+              {
+                path: ['title'],
+                operator: 'NotEqual',
+                valueText: element.title,
+              },
+            ],
+          })
+          .withNearVector({ 
+            vector: element.vector,
+            "distance": T("config.local.maxDistance") || 0.14,
+          })
+          .withAutocut(2)
+          .withLimit(T("config.local.maxChunks") || 10)
+          .do();
+      } catch (error) {
+        console.error("Error in specific part of the function:", error);
+      }
       const responseElements = response?.data?.Get[className];
       let nearElements = [];
       for (const obj of responseElements) {
@@ -1178,15 +1183,19 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
           }
         }
         //console.log("Element", element);
-        await client.data
-          .merger()  // merges properties into the object
-          .withId(element.id).withClassName(className)
-          .withProperties({
-            text: element.text,
-            tokenLength: tokens,
-          })
-          .do();
-          //console.log("Updated element:", element.id, "original tokenLength of", element.tokenLength, "now", tokens);
+        try {
+          await client.data
+            .merger()  // merges properties into the object
+            .withId(element.id).withClassName(className)
+            .withProperties({
+              text: element.text,
+              tokenLength: tokens,
+            })
+            .do();
+            //console.log("Updated element:", element.id, "original tokenLength of", element.tokenLength, "now", tokens);
+        } catch (error) {
+          console.error("Error in specific part of the function:", error);
+        }
       }
     }
   }
