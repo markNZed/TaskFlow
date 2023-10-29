@@ -53,6 +53,7 @@ async function nodeInHubOut_async(task, activeTask) {
   let cleanedNode = utils.deepClone(incomingNode);
   cleanedNode.command = null;
   cleanedNode.commandArgs = null;
+  cleanedNode.commandDescription = null;
   cleanedNode.coprocessing = null;
   cleanedNode.coprocessed = null;
   if (!activeTaskNodes[incomingNode.id]) {

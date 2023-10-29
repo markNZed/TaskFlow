@@ -4,6 +4,7 @@ import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import Stack from '@mui/material/Stack';
 import { utils } from "../../shared/utils.mjs";
+import { result } from "lodash";
 
 const TaskSelect = (props) => {
   const {
@@ -13,11 +14,10 @@ const TaskSelect = (props) => {
     transition,
   } = props;
 
-  const [selectedOptions, setSelectedOptions] = useState();
-  const [debouncedOptions, setDebouncedOptions] = useState();
-  const [debouncedValue, setDebouncedValue] = useState(null);
-  const debounceTimeout = useRef(null);
-
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [debouncedOptions, setDebouncedOptions] = useState({});
+  const debounceTimeout = useRef();
+  const [sentOptions, setSentOptions] = useState();
 
   props.onDidMount();
 
@@ -27,7 +27,7 @@ const TaskSelect = (props) => {
   }, []);
 
   useEffect(() => {
-    console.log("selectedOptions: ", selectedOptions, task);
+    console.log("selectedOptions: ", selectedOptions);
   }, [selectedOptions]);
 
   useEffect(() => {
@@ -46,20 +46,24 @@ const TaskSelect = (props) => {
           setSelectedOptions(task.output.selected);
         } else {
           // Create and empty array for each entry
-          const init = task.config.local.fields.map((f) => []);
+          const init = Object.fromEntries(
+            Object.keys(task.config.local.fields).map(key => [key, task.config.local.initValue])
+          );        
           setSelectedOptions(init);
         }
         nextState = "select";
         break;
       case "select":
         if (!task.config?.local?.submit || task.input.submit) {
-          console.log("deepEqual:", debouncedOptions, task.output.selected); 
-          if (!utils.deepEqual(debouncedOptions, task.output.selected)) {
-            console.log("Updating debouncedOptions: ", debouncedOptions, task.output.selected);
+          console.log("deepEqual:", debouncedOptions, sentOptions); 
+          const copyDebouncedOptions = utils.deepClone(debouncedOptions);
+          if (!utils.deepEqual(copyDebouncedOptions, sentOptions)) {
+            console.log("Updating debouncedOptions: ", copyDebouncedOptions);
+            setSentOptions(copyDebouncedOptions);
             modifyTask({ 
               "command": "update", 
               "input.submit": false,
-              "output.selected": debouncedOptions,
+              "output.selected": copyDebouncedOptions,
               "commandDescription": "Set output.selected",
             });
           }
@@ -76,41 +80,40 @@ const TaskSelect = (props) => {
     setSelectedOptions(prevState => {
       const field = task.config.local.fields[fieldIndex];
       const prevSelectedOption = prevState[fieldIndex];
-      console.log("fieldIndex", fieldIndex, "field:", field, "value:", value);
+      console.log("handleOptionChange fieldIndex", fieldIndex, "field:", field, "value:", value, "prevSelectedOption", prevSelectedOption);
       let result;
       const singleValue = field.options.length === 1 || field.singleSelection;
       if (singleValue) {
-        if (prevSelectedOption.includes(value)) {
-          console.log("prevSelectedOption.includes(value)", singleValue, prevState);
+        if (prevSelectedOption && prevSelectedOption.includes(value)) {
+          console.log("handleOptionChange single prevSelectedOption", prevState);
           result = {
             ...prevState,
-            [fieldIndex]: ["unselected"]
+            [fieldIndex]: '',
           };
         } else {
-          console.log("!prevSelectedOption.includes(value)", singleValue, prevState);
+          console.log("handleOptionChange single !prevSelectedOption", prevState);
           result = {
             ...prevState,
-            [fieldIndex]: [value],
+            [fieldIndex]: value,
           };
         }
       } else {
-        if (prevSelectedOption.includes(value)) {
-          console.log("prevSelectedOption.includes(value)", singleValue, prevState);
-          const newValue = prevSelectedOption.map(option => option === value ? "unselected" : option)
-          console.log("prevSelectedOption, newValue: ", prevSelectedOption, newValue);
+        if (prevSelectedOption && prevSelectedOption.includes(value)) {
+          const newValueArray = prevSelectedOption.map(option => option === value ? '' : option)
+          console.log("handleOptionChange multiple prevSelectedOption, newValue: ", newValueArray);
           result = {
             ...prevState,
-            [fieldIndex]: newValue
+            [fieldIndex]: newValueArray,
           };
         } else {
-          console.log("!prevSelectedOption.includes(value)", singleValue, prevState);
+          console.log("handleOptionChange multiple !prevSelectedOption", prevState);
           result = {
             ...prevState,
-            [fieldIndex]: [...prevSelectedOption, singleValue, value],
+            [fieldIndex]: [...prevSelectedOption, value],
           };
         }
       }
-      console.log("result", result);
+      console.log("handleOptionChange result", result);
       return result;
     });
   };
@@ -129,19 +132,42 @@ const TaskSelect = (props) => {
     }, 200);
   }, [selectedOptions]);
 
+  function substituteString(message, task) {
+    const pattern = /%([\w.]+)%/g;
+    return message.replace(pattern, (_, key) => {
+      const value = key.split('.').reduce((acc, curr) => acc && acc[curr], task);
+      return value || '';
+    });
+  }
+
   const renderOptions = () => {
     const { fields } = task.config.local;
 
-    if (!selectedOptions) {return;}
+    if (!selectedOptions) {return}
 
-    return fields.map((field, fieldIndex) => {
+    let result = [];
+    for (const [fieldIndex, field] of Object.entries(fields)) {
+      const index = field.position;
+      console.log("Rendering fieldIndex", fieldIndex, "field:", field, "options", field.options, "length", field.options?.length);
+      if (!field.options || field.options.length  === 0 || field.hide === true) {
+        result[index] = '';
+        continue;
+      }
       switch (field.type) {
 
-        case 'dropdown':
-          return (
+        case 'dropdown': {
+          field.singleSelection = true;
+          let value;
+          if (selectedOptions[fieldIndex] === undefined) {
+            value = field.initValue || '';
+          } else {
+            value = selectedOptions[fieldIndex]
+          }
+          console.log("renderOptions dropdown", value);
+          result[index] =  (
             <Select
               key={fieldIndex}
-              value={selectedOptions[fieldIndex][0] || ''}
+              value={value}
               onChange={(event) => handleOptionChange(fieldIndex, event.target.value)}
             >
               {field.options.map((option, index) => (
@@ -151,10 +177,11 @@ const TaskSelect = (props) => {
               ))}
             </Select>
           );
-
-        case 'autocomplete':
+          break;
+        }
+        case 'autocomplete': {
           field.singleSelection = true;
-          return (
+          result[index] =  (
             <Autocomplete
               key={fieldIndex}
               options={field.options}
@@ -163,22 +190,31 @@ const TaskSelect = (props) => {
               onChange={(event, option) => handleOptionChange(fieldIndex, option.value)}
             />
           );
-          
-        case 'slider':
+          break;
+        }
+        case 'slider': {
           field.singleSelection = true;
-          return (
+          let value;
+          if (selectedOptions[fieldIndex][0] === undefined) {
+            value = field.initValue || '';
+          } else {
+            value = selectedOptions[fieldIndex];
+          }
+          console.log("renderOptions slider", value);
+          result[index] =  (
               <Slider
               key={fieldIndex}
-              value={selectedOptions[fieldIndex][0] || 0} // default value is 0 if there's no selected value
+              value={value} // default value is 0 if there's no selected value
               onChange={(event, newValue) => handleOptionChange(fieldIndex, newValue)}
               min={field.min}
               max={field.max}
               valueLabelDisplay="auto"
               />
           );
-
-        case 'switch':
-            return field.options.map((option, index) => (
+          break;
+        }
+        case 'switch': {
+          result[index] =  field.options.map((option, index) => (
               <FormControlLabel
                 key={fieldIndex + "-" + index}
                 control={<Switch />}
@@ -187,9 +223,10 @@ const TaskSelect = (props) => {
                 onChange={() => handleOptionChange(fieldIndex, option.value)} // onChange does not receive a value in Switch
               />
             ));
-          
-        case 'buttons':
-            return field.options.map((option, index) => (
+            break;
+        }
+        case 'buttons': {
+            result[index] =  field.options.map((option, index) => (
               <Button 
                 key={fieldIndex + "-" + index} 
                 variant={selectedOptions[fieldIndex].includes(option.value) ? "contained" : "outlined"} 
@@ -198,9 +235,10 @@ const TaskSelect = (props) => {
                 {option.label}
               </Button>
             ));
-          
-        case 'chips':
-            return (
+            break;
+        } 
+        case 'chips': {
+          result[index] =  (
               <Stack direction="row" spacing={1} key={fieldIndex + "-chips"}>
                 {field.options.map((option, index) => (
                   <Chip
@@ -212,24 +250,45 @@ const TaskSelect = (props) => {
                 ))}
               </Stack>
             );
-        
-        case 'checkboxes':
-            return field.options.map((option, index) => (
+            break;
+        }
+        case 'checkboxes': {
+          result[index] =  field.options.map((option, index) => {
+            let checked = false;
+            if (selectedOptions[fieldIndex]) {
+              checked = selectedOptions[fieldIndex].includes(option.value);
+            }
+            return (
               <FormControlLabel
                 key={fieldIndex + "-" + index}
                 control={<Checkbox 
-                  checked={selectedOptions[fieldIndex].includes(option.value)}
+                  checked={checked}
                   onChange={() => handleOptionChange(fieldIndex, option.value)}
                 />}
                 value={option.value}
                 label={option.label}
               />
-            ));
-
+            );
+          });
+          break;
+        }
         default:
           console.log("ERROR: Unknown select UI - " + field.type);
       }
-    });
+      console.log("Rendering result", result);
+      if (field.preMessage || field.postMessage) {
+        const substitutedPreMessage = substituteString(field.preMessage || '', task);
+        const substitutedPostMessage = substituteString(field.postMessage || '', task);
+        result[index] = (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {substitutedPreMessage && <span>{substitutedPreMessage}</span>}
+            {result[index]}
+            {substitutedPostMessage && <span>{substitutedPostMessage}</span>}
+          </div>
+        );
+      }      
+    }
+    return result;
   };
 
   //console.log("renderOptions()", renderOptions());

@@ -293,12 +293,13 @@ function withTask(Component) {
               "commandArgs": {
                 id: childId,
                 prevInstanceId: props.task.instanceId,
-              }
+              },
+              "commandDescription": `Spawn task ${childId} from ${props.task.id}`,
             });
             // Wait for startTaskSentIdRef before continuing the loop
             await new Promise(resolve => {
               const intervalId = setInterval(() => {
-                console.log("reinitialize startTaskSentIdRef.current", startTaskSentIdRef.current);
+                console.log("Wait for startTaskSentIdRef", startTaskSentIdRef.current, childId);
                 if (startTaskSentIdRef.current === childId) {
                   clearInterval(intervalId);
                   resolve();

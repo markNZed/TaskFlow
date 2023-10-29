@@ -58,6 +58,8 @@ const useUpdateTask = (task, setTask) => {
         }
       };
       fetchTaskFromAPI();
+    } else if (command === "update" && commandPending) {
+      utils.log("useUpdateTask pending", task.id, task);
     }
   // eslint-disable-next-line
   }, [task]);

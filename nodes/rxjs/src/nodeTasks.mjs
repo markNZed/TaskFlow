@@ -185,7 +185,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       }
       utils.logTask(T(), `Finished ${T("type")} in state ${T("state.current")}`);
     } else {
-      utils.logTask(T(), "RxJS no Task Function for " + T("type"));
+      utils.logTask(T(), `RxJS no Task Function ${taskFunctionName} for ${T("type")}`);
     }
     // Create the CEP during the init of the task in the coprocessing step if a coprocessor
     if (T("node.command") === "init") {

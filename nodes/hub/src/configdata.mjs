@@ -123,6 +123,7 @@ function copyLocalKeys(obj) {
       if (key.startsWith("LOCAL_")) {
         const newKey = key.slice(6);
         //console.log("Setting LOCAL_", newKey, obj[key]);
+        // Check for references to parent values e.g. name:path
         obj[newKey] = obj[key];
       }
 

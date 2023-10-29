@@ -34,15 +34,9 @@ const tasktypes = [
     name: "TaskRAG",
     environments: ["rxjs-processor-consumer", "react"],
     config: {
-      local: {
-        maxChunks: 10,
-        inputLabel: "Entrez votre question ici..."
-      },
     },
-    operators: {
-      LLM: {
-        environments: ["rxjs-processor-consumer"],
-      },
+    state: {
+      current: "start",
     },
   },
   {
@@ -180,22 +174,8 @@ const tasktypes = [
   {
     name: "TaskSelect",
     environments: ["react"],
-    config: {
-      local: {
-        fields: [
-          {
-            singleSelection: undefined,
-            type: undefined,
-            options: [
-              { value: "default1", label: "Default 1" },
-              { value: "default2", label: "Default 2" }
-            ],
-          },
-        ],
-      }
-    },
     output: {
-      selected: [],
+      selected: {},
     },
     state: {
       current: "start",

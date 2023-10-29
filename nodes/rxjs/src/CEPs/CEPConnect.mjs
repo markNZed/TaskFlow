@@ -7,7 +7,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 /*
   CEP that will look after task.connections
     Detect when connections has changed
-    Maintain a list of Tasks that must be update
+    Maintain a list of Tasks that must be updated
+  
+  Could add the connection to the To taks also so we can see where connections are coming from in the Task
 */
 import { utils } from "#src/utils";
 import { familyStore_async, getActiveTask_async, connectionsStore_async } from "#src/storage";
@@ -38,7 +40,6 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   }
 
   const modifiedConnections = task?.meta?.modified?.connections !== undefined;
-  const modifiedOutput = task?.meta?.modified?.output !== undefined
   const commandArgs = task.node?.commandArgs;
   const SEP = ':';
   // Sync is not coprocessed (maybe it should be but worried about loops)
@@ -55,7 +56,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     let connectLater = await connectionsStore_async.get(family) || [];
     //console.log("family", utils.js(family), connectLater);
 
-    let instancesToUpdate = {};
+    let instancesToEstablish = {};
+    let instancesToInit = {};
     let updateConnectLater = false;
     
     const processConnection = async (connection, task, family, connectLaterHash, connectingLater) => {
@@ -85,24 +87,37 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       if (fromId === task.id) {
         utils.logTask(task, "CEPConnect fromId === task.id");
         if (!task?.meta?.connectionsMap || !task.meta.connectionsMap[toId]) {      
+          const from = `${task.id}${SEP}${fromPath}`;
+          const to = `${toId}${SEP}${toPath}`;
           if (toInstanceId) {
             if (connectingLater) {
-              task.connections.push([
-                `${SEP}${fromPath}`,
-                `${toId}${SEP}${toPath}`
-              ]);
+              utils.logTask(task, "CEPConnect fromId === task.id adding connection", from, to);
+              // It would be nice to lean up the connections rather than just pushing
+              task.connections.push([from, to]);
+              connectLaterHash[from + to] = "done";
+              updateConnectLater = true;
             } else {
-              connection[0] = `${task.id}${SEP}${fromPath}`;
-              connection[1] = `${toId}${SEP}${toPath}`;
+              utils.logTask(task, "CEPConnect fromId === task.id replacing connection", from, to);
+              connection[0] = from;
+              connection[1] = to;
             }
             task.meta = task.meta || {};
             task.meta.connectionsMap = task.meta.connectionsMap || {};
             task.meta.connectionsMap[toId] = toInstanceId;
-            utils.logTask(task, "CEPConnect fromId === task.id from path", fromPath, "toId", toId, "toPath", toPath, "toInstanceId", toInstanceId, "connection", connection);
-            instancesToUpdate[task.instanceId] = task;
+            instancesToEstablish[task.instanceId] = task;
+            // Need to initialize the values in to task
+            const toTask = await getActiveTask_async(toInstanceId);
+            const Tto = utils.createTaskValueGetter(toTask);
+            const Tfrom = utils.createTaskValueGetter(task);
+            utils.logTask(task, "CEPConnect init", toPath, Tfrom(fromPath));
+            if (Tfrom(fromPath) !== undefined) {
+              const Tupdate = utils.createTaskValueGetter({});
+              Tupdate(toPath, Tfrom(fromPath));
+              instancesToInit[Tto("instanceId")] = instancesToInit[Tto("instanceId")] || {};
+              instancesToInit[Tto("instanceId")] = utils.deepMerge(instancesToInit[Tto("instanceId")], Tupdate());
+              utils.logTask(task, "CEPConnect init fromPath", fromPath, "toPath", toPath); 
+            }
           } else {
-            const from = `${task.id}${SEP}${fromPath}`;
-            const to = `${toId}${SEP}${toPath}`;
             if (!connectLaterHash[from + to]) {
               connection[0] = null;
               connection[1] = null;
@@ -115,7 +130,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           }
         }
       } else if (toId === task.id) {
-        utils.logTask(task, "CEPConnect toId === task.id");
+        utils.logTask(task, "CEPConnect toId === task.id fromInstanceId", fromInstanceId);
         let connected = false;
         if (fromInstanceId) {
           const fromTask = await getActiveTask_async(fromInstanceId);
@@ -127,8 +142,19 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
               fromTask.meta.connectionsMap = fromTask.meta.connectionsMap || {};
               fromTask.meta.connectionsMap[task.id] = task.instanceId;
               utils.logTask(task, "CEPConnect toId === task.id fromId", fromId, "path", fromPath, "toPath", toPath, "fromInstanceId", fromInstanceId);
-              instancesToUpdate[fromTask.instanceId] = fromTask;
+              instancesToEstablish[fromTask.instanceId] = fromTask;
               connected = true;
+              // Need to initialize the values in this to task
+              const Tto = utils.createTaskValueGetter(task);
+              const Tfrom = utils.createTaskValueGetter(fromTask);
+              utils.logTask(task, "CEPConnect init", toPath, Tfrom(fromPath));
+              if (Tfrom(fromPath) !== undefined) {
+                const Tupdate = utils.createTaskValueGetter({});
+                Tupdate(toPath, Tfrom(fromPath));
+                instancesToInit[Tto("instanceId")] = instancesToInit[Tto("instanceId")] || {};
+                instancesToInit[Tto("instanceId")] = utils.deepMerge(instancesToInit[Tto("instanceId")], Tupdate());
+                utils.logTask(task, "CEPConnect init fromPath", fromPath, "toPath", toPath); 
+              }
             }
           }
         }
@@ -144,6 +170,16 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
             connectLaterHash[from + to] = true;
             updateConnectLater = true;
           }
+        }
+      } else {
+        if (!connectLaterHash[from + to]) {
+          connection[0] = null;
+          connection[1] = null;
+          const newConnection = [from, to];
+          utils.logTask(task, "CEPConnect toId !== task.id and fromId !== task.id connectLater", newConnection);
+          connectLater.push(newConnection);
+          connectLaterHash[from + to] = true;
+          updateConnectLater = true;
         }
       }
     };
@@ -171,36 +207,62 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
 
     utils.logTask(task, "CEPConnect connectLater", connectLater);
     
-    // Could clean out connectLater entries that are null
     if (updateConnectLater) {
-      await connectionsStore_async.set(family, connectLater);
+      let updatedConnectLater = [];
+      // Remove those that are "done"
+      for (let connection of connectLater) {
+        const from = connection[0];
+        const to = connection[1];
+        if (connectLaterHash[from + to] === "done") {
+          continue;
+        } else {
+          updatedConnectLater.push(connection);
+        }
+      }
+      await connectionsStore_async.set(family, updatedConnectLater);
     }
 
     const promises = [];
 
-    console.log("instancesToUpdate", Object.keys(instancesToUpdate));
+    //console.log("instancesToEstablish", Object.keys(instancesToEstablish));
 
-    for (const instanceId of Object.keys(instancesToUpdate)) {
-      utils.logTask(task, "CEPConnect syncUpdate",  instancesToUpdate[instanceId].connections);
+    for (const instanceId of Object.keys(instancesToEstablish)) {  
       let syncUpdateTask = {
         command: "update",
         commandArgs: {
           sync: true,
           instanceId: instanceId,
           syncTask: {
-              connections: instancesToUpdate[instanceId].connections,
-              meta: {
-                connectionsMap: instancesToUpdate[instanceId].meta.connectionsMap,
-              }
+            connections: instancesToEstablish[instanceId].connections,
+            meta: {
+              connectionsMap: instancesToEstablish[instanceId].meta.connectionsMap,
+            }
           },
           CEPSource: "CEPConnect",
           messageId: task.meta.messageId,
         },
         commandDescription: `CEPConnect creation for ${instanceId}`,
       };
+      utils.logTask(task, "CEPConnect sync establish connection syncUpdateTask",  utils.js(syncUpdateTask));
       promises.push(commandUpdate_async(wsSendTask, syncUpdateTask));
     }
-    
+
+    for (const instanceId of Object.keys(instancesToInit)) {  
+      let syncUpdateTask = {
+        command: "update",
+        commandArgs: {
+          sync: true,
+          instanceId: instanceId,
+          syncTask: instancesToInit[instanceId],
+          CEPSource: "CEPConnect",
+          messageId: task.meta.messageId,
+        },
+        commandDescription: `CEPConnect init for ${instanceId}`,
+      };
+      utils.logTask(task, "CEPConnect sync init connections",  utils.js(syncUpdateTask));
+      promises.push(commandUpdate_async(wsSendTask, syncUpdateTask));
+    }
+
     await Promise.all(promises);
 
   }
@@ -208,30 +270,42 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   //utils.logTask(task, "CEPConnect modifiedOutput", modifiedOutput);
 
   // Update any connections
-  if (modifiedOutput) {
+  if (task.connections && task.connections.length > 0) {
+
     const T = utils.createTaskValueGetter(task);
     const taskConnections = task.connections || [];
     let instancesToUpdate = {};
     for (let connection of taskConnections) {
       const from = connection[0];
       const to = connection[1];
+      if (from === null) {
+        // Has been move dinto connectLater
+        continue;
+      }
       const fromSplit = from.split(SEP)
       const fromId = fromSplit[0];
       const fromPath = fromSplit[1];
       const toSplit = to.split(SEP)
       const toId = toSplit[0];
       const toPath = toSplit[1];
-      utils.logTask(task, "CEPConnect output from", from, "fromId", fromId, "fromPath", fromPath, "to", to, "toId", toId, "toPath", toPath, connection);
       if ((from.startsWith(SEP) || fromId === task.id) && task?.meta?.connectionsMap && task.meta.connectionsMap[toId]) {
-        const toTask = await getActiveTask_async(task.meta.connectionsMap[toId]);
-        if (toTask && toTask.instanceId) {
-          const Tto = utils.createTaskValueGetter(toTask);
-          // LOG HERE
-          const deepEqual = utils.deepEqual(T(fromPath), Tto(toPath));
-          //utils.logTask(task, "CEPConnect deepEqual", deepEqual, T(fromPath), Tto(toPath));
-          if (!deepEqual) {
-            Tto(toPath, T(fromPath));
-            instancesToUpdate[Tto("instanceId")] = Tto();
+        // Could be undefined in the case of a sync that does not include this path
+        utils.logTask(task, "CEPConnect modified", "fromPath", fromPath, T("meta.modified." + fromPath), "T(fromPath)", T(fromPath));
+        // Could use the meta.modified to detect a change but also need to track if the connection has been initialized in that case
+        if (T(fromPath) !== undefined) {
+          const toTask = await getActiveTask_async(task.meta.connectionsMap[toId]);
+          if (toTask && toTask.instanceId) {
+            const Tto = utils.createTaskValueGetter(toTask);
+            // LOG HERE
+            const deepEqual = utils.deepEqual(T(fromPath), Tto(toPath));
+            utils.logTask(task, "CEPConnect deepEqual", deepEqual);
+            if (!deepEqual) {
+              const Tupdate = utils.createTaskValueGetter({});
+              Tupdate(toPath, T(fromPath));
+              console.log("CEPConnect Tto(instanceId)", Tto("instanceId"), "Tupdate", Tupdate());
+              instancesToUpdate[Tto("instanceId")] = instancesToUpdate[Tto("instanceId")] || {};
+              instancesToUpdate[Tto("instanceId")] = utils.deepMerge(instancesToUpdate[Tto("instanceId")], Tupdate());
+            }
           }
         }
       }
@@ -240,6 +314,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     const promises = [];
 
     for (const instanceId of Object.keys(instancesToUpdate)) {
+      utils.logTask(task, "CEPConnect sync connection value",  instancesToUpdate[instanceId]);
       let syncUpdateTask = {
         command: "update",
         commandArgs: {

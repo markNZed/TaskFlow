@@ -297,6 +297,19 @@ const utils = {
     return update;
   },
 
+  arraysHaveSameElements: function(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+
+    const sortedArr1 = arr1.slice().sort();
+    const sortedArr2 = arr2.slice().sort();
+
+    for (let i = 0; i < sortedArr1.length; i++) {
+        if (sortedArr1[i] !== sortedArr2[i]) return false;
+    }
+
+    return true;
+  },
+
   deepEqualDebug: function(obj1, obj2) {
     return utils.deepEqual(utils.deepClone(obj1), utils.deepClone(obj2), new WeakSet(), true);
   },
@@ -785,11 +798,16 @@ const utils = {
     return diffTask;
   },
 
+  isEmpty: function(obj) {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
+  },
+  
   checkHashDiff: function(taskInStorage, task) {
     let taskCopy = utils.deepClone(task);
-    if (taskCopy?.commandArgs?.sync || taskCopy?.node?.commandArgs?.sync) {
-      // Sync is not relative to a current value so we cannot use hash
-      return;
+    // Sync is not relative to a current value so we cannot use hash
+    // Start is not updating the task that contains the start command
+    if (taskCopy?.commandArgs?.sync || taskCopy?.node?.commandArgs?.sync || taskCopy?.node?.command === "start") {
+      return true;
     }
     const statesSupported = taskCopy?.node?.statesSupported;
     const statesNotSupported = taskCopy?.node?.statesNotSupported;
@@ -800,8 +818,9 @@ const utils = {
     }
     const expectedHash = task.meta.hashDiff;
     let diffOrigTask = utils.getIntersectionWithDifferentValues(taskInStorage, taskCopy);
-    if (diffOrigTask === undefined) {
-      diffOrigTask = {};
+    diffOrigTask = utils.cleanForHash(diffOrigTask);
+    if (diffOrigTask === undefined || utils.isEmpty(diffOrigTask)) {
+      return true; // Thre is no diff to be concerned about
     }
     //console.log("diffOrigTask messageId:", task.meta.messageId, "cleanForHash diffOrigTask:", utils.cleanForHash(diffOrigTask));
     const localHash = utils.taskHash(diffOrigTask);
@@ -812,7 +831,6 @@ const utils = {
         hashDiff = utils.cleanForHash(hashDiff);
         console.error("checkHashDiff difference between the remote storage and the local storage", hashDiff);
       }
-      diffOrigTask = utils.cleanForHash(diffOrigTask);
       console.error("Local diffOrigTask", JSON.stringify(diffOrigTask, null, 2));
       console.error("task.meta.hashDebugLastTaskValues", task.meta?.hashDebugLastTaskValues);
       console.error("taskInStorage:", taskInStorage);
@@ -1177,6 +1195,10 @@ const utils = {
     }
     if (task?.inputs?.query) {
       logParts.push("task.input.query", utils.js(task.input.query));
+    }
+
+    if (task.id === "root.user.dtf.rag.select") {
+      logParts.push("task.output", utils.js(task.output));
     }
 
     if (task?.input && task.input.query === null) {

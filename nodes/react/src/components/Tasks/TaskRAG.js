@@ -37,12 +37,16 @@ const TaskRAG = (props) => {
   const [responseText, setResponseText] = useState("");
   const responseTextRef = useRef("");
   const [socketResponses, setSocketResponses] = useState([]);
+  const [level, setLevel] = useState();
+  const [topic, setTopic] = useState();
+  const [initialUser, setInitialUser] = useState();
 
   // Each time this component is mounted then we reset the task state
   useEffect(() => {
     // This can write over the update
     task.state.current = "start";
     task.state.done = false;
+    setInitialUser(task?.config?.local?.user);
   }, []);
 
   // This is asynchronous to the rendering so there may be conflicts where
@@ -95,6 +99,8 @@ const TaskRAG = (props) => {
     switch (task.state.current) {
       case "start":
         break;
+      case "loaded":
+        break;
       default:
         console.log("ERROR unknown state : " + task.state.current);
     }
@@ -107,7 +113,8 @@ const TaskRAG = (props) => {
     if (task?.input?.select) {
       const selectedModelVersion = task?.output?.chat?.services?.chat?.modelVersion;
       const hard = "gpt-4-0613";
-      if (task?.input?.select && task.input.select[0] && task.input.select[0][0] === "thinkharder") {
+      const think = task?.input?.select?.think;
+      if (think === "thinkharder") {
         if (selectedModelVersion !== hard) {
           modifyTask({ 
             "command": "update", 
@@ -122,6 +129,28 @@ const TaskRAG = (props) => {
           "commandDescription": "Think softer",
         });
       }
+      const inputLevel = task?.input?.select?.level;
+      if (inputLevel !== level) {
+        console.log("setLevel", inputLevel);
+        setLevel(inputLevel);
+        const user = initialUser + "The user is a " + inputLevel + " in " + task?.input?.select?.topic + "."; 
+        modifyTask({ 
+          "command": "update", 
+          "output.config.local.user": user,
+          "commandDescription": "Update RAG user level",
+        });
+      }
+      const inputTopic = task?.input?.select?.topic;
+      if (inputTopic !== topic) {
+        console.log("setTopic", inputTopic);
+        setTopic(inputTopic);
+        modifyTask({ 
+          "command": "update", 
+          "output.select.config.local.fields.level.hide": false,
+          "commandDescription": "Unhide the level checkboxes",
+        });
+      }
+
     }
   }, [task?.input?.select]);
 

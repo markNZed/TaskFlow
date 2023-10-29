@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 // eslint-disable-next-line no-unused-vars
-const TaskTest_async = async function (wsSendTask, T) {
+const TaskTest_async = async function (wsSendTask, T, FSMHolder) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 

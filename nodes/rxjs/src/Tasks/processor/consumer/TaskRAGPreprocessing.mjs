@@ -196,6 +196,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         name: "cache",
         dataType: ["boolean"],
       },
+      {
+        name: "query",
+        dataType: ["text"],
+      },
     ];
     for (const [name, dataType] of Object.entries(ElementMetadata)) {
       if (!excludeMetadataKeys.includes(name)) {
@@ -557,29 +561,30 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   }
 
   // eslint-disable-next-line no-unused-vars
-  async function extractMetadata_async(text, tokens) {
-    console.log("extractMetadata_async in length", text.substring(0, 256) + "...");
-    console.log("extractMetadata_async in length", text.length, "tokens", tokens);
+  async function textToMetadata(text, tokens) {
+    console.log("textToMetadata in length", text.substring(0, 256) + "...");
+    console.log("textToMetadata in length", text.length, "tokens", tokens);
     /*
     const response = await openai.completions.create({ 
       model: 'gpt-3.5-turbo-instruct', 
       max_tokens: (4000 - tokens),
-      prompt: "Below is the initial content of a document:\n\n" + text + + "\n\nBased on the previous initial content of the document (e.g. table of contents, introduction etc) generate an overview, in French, of what the full document will contain: \nCe document",
+      prompt: "Below is the initial content of a document:\n\n" + text + + "\n\nBased on the previous initial content of the document (e.g. table of contents, introduction etc) generate an overview of what the full document will contain: \n",
     });
-    console.log("extractMetadata_async response", utils.js(response));
+    console.log("textToMetadata response", utils.js(response));
     const content = response.choices[0].text;
     */
     const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo-16k',
-      messages: [{ role: "user", content: `Below is the initial content of a document. Based on the partial content generate a metadata object that conforms strictly to this schema:
+      //model: 'gpt-3.5-turbo-16k',
+      model: 'gpt-4-0613',
+      messages: [{ role: "user", content: `Below is the initial content of a document. Based on the partial content generate a metadata object that will validate against the following "Metadata" schema. Use the same language as the language in which the document is written for your response.:
       {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
-        "title": "Document Metadata",
+        "title": "Metadata",
         "properties": {
           "title": {
             "type": "string",
-            "description": "The title or headline of the document."
+            "description": "The title or headline of the document, "
           },
           "author": {
             "type": "array",
@@ -623,10 +628,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
             "enum": ["General Public", "Experts", "Students", "Other"]
           }
         },
-        "required": ["Title", "Author", "PublicationDate", "Summary", "Type", "Language"]
+        "required": ["title", "author", "publicationDate", "summary", "type", "language", "topic"]
       }
       
-      The partial document starts with <BEGIN> and ends with <END>\n\n<BEGIN>\n\n${text}\nn<END>\n\nAbove is the initial content of a document. Based on that partial content (e.g. table of contents, introduction etc) generate a metadata object that conforms strictly to th "Document Metadata" schema and complete each entry that you can. Use the same langauge as the document for your response.` }],
+      The partial document starts with <BEGIN> and ends with <END>\n\n<BEGIN>\n\n${text}\nn<END>\n\nAbove is the initial content of a document. Based on that partial content (e.g. table of contents, introduction etc) generate a metadata object that will validate against the "Metadata" schema and complete each entry that you can. Use the same langauge as the document for your response.` }],
     });
     const content = response.choices[0].message.content;
     const regex = /\{.*\}/s; // match newlines
@@ -637,7 +642,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     } catch {
       metadata = {};
     }
-    console.log("extractMetadata_async out", metadata)
+    console.log("textToMetadata out", metadata)
     return metadata;
   }
 
@@ -833,43 +838,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         let questionElements = []
         let i = 0;
         let sectionCount = 0;
-        let sectionsMerged = "";
         let totalSections = 0;
-        let sectionsMergedToken = 0;
-        // Assume we are limited to 16k context window
-        const sectionsMergedMax = 13000;
-        //const sectionsMergedMax = 3000;
-        let filename = '';
-        let filetype = '';
         for (const element of elements) {
           if (!element.metadata.mergedSection) continue;
-          const elementTokens = utils.stringTokens(element.text)
-          //console.log("element.metadata.sectionCount", element.metadata.sectionCount);
-          if (sectionsMergedToken + elementTokens > sectionsMergedMax) break;
           totalSections++;
-          sectionsMerged += element.text;
-          sectionsMergedToken += elementTokens;// has issues with element.metadata.tokenLength;
-          if (!filename && element.metadata.filename) {
-            filename = element.metadata.filename;
-          }
-          if (!filetype && element.metadata.filetype) {
-            filetype = element.metadata.filetype;
-          }
-        }
-        metadata = await extractMetadata_async(sectionsMerged, sectionsMergedToken);
-        console.log(`Adding summary of ${metadata.summary.length} chars.`)
-        const summaryElement = {
-          type: "NarrativeText",
-          text: metadata.summary, 
-          element_id: uuidv4(),
-          metadata: {
-            filename,
-            filetype,
-            merged: false,
-            mergedSection: false,
-            tokenLength: utils.stringTokens(metadata.summary),
-            summary: true,
-          },
         }
         let numberToGenerate = totalSections;
         numberToGenerate = 0;
@@ -889,15 +861,15 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
             //progressBar.update(i); // Update the progress bar for each item in the batch
           }
           //element["text"] = await shrink_async(element.text); // Not reliable in French
-          //element["text"] = await extractMetadata_async(element.text)
+          //element["text"] = await textToMetadata(element.text)
           let questions = await generateQuestions_async(metadata.summary, element);
           questions = questions.map(question => ({
             type: element.type,
             text: question, 
             element_id: uuidv4(),
             metadata: {
-              filename,
-              filetype,
+              filename: element.metadata.filename,
+              filetype: element.metadata.filetype,
               merged: false,
               mergedSection: false,
               tokenLength: utils.stringTokens(question),
@@ -909,8 +881,6 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         }
         //progressBar.stop(); 
         console.log(`Adding ${questionElements.length} questions for ${sectionCount} sections`);
-        elements = [...elements, ...questionElements, summaryElement];
-        await fs.promises.writeFile(metadataFilePath, JSON.stringify(metadata, null, 2));
         await fs.promises.writeFile(outputFilePath, JSON.stringify(elements, null, 2));
         console.log(`File ${outputFilePath} has been created.`);
         const nextFilename = path.basename(outputFilePath);
@@ -918,6 +888,56 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
     }
   };
+
+  const extractMetadata_async = async (inputDir, outputDir) => {
+    const files = await searchDirectory_async(inputDir);
+    for (const file of files) {
+      const outputFilePath = path.join(outputDir, path.basename(file));
+      try {
+        await fs.promises.access(outputFilePath); // Use fs.promises.access() for async operation
+        console.log(`File ${outputFilePath} already exists. Skipping.`);
+      } catch (error) {
+        const fileContent = await fs.promises.readFile(file, 'utf-8'); // Read the file content as UTF-8 text
+        const elements = JSON.parse(fileContent); // Parse the JSON content
+        let sectionsMerged = "";
+        let sectionsMergedToken = 0;
+        // Assume we are limited to 4k context window
+        const sectionsMergedMax = 3500;
+        for (const element of elements) {
+          if (element.metadata.mergedSection) continue;
+          const elementTokens = utils.stringTokens(element.text)
+          //console.log("element.metadata.sectionCount", element.metadata.sectionCount);
+          if (sectionsMergedToken + elementTokens > sectionsMergedMax) break;
+          sectionsMerged += element.text;
+          sectionsMergedToken += elementTokens;// has issues with element.metadata.tokenLength;
+        }
+        const metadata = await textToMetadata(sectionsMerged, sectionsMergedToken);
+        await fs.promises.writeFile(outputFilePath, JSON.stringify(metadata, null, 2));
+      }
+    }
+  };
+
+  const extractTopics_async = async (inputOutputDir) => {
+    let files = await searchDirectory_async(inputOutputDir);
+    const topicsFile = "taskflow-topics.json";
+    const topicsFilePath = path.join(inputOutputDir, topicsFile);
+    let topics = [];
+    files = files.filter(file => path.basename(file) !== topicsFile);
+    for (const file of files) {
+      const metadataFilePath = path.join(inputOutputDir, path.basename(file));
+      const fileContent = await fs.promises.readFile(metadataFilePath, 'utf-8');
+      const metadata = JSON.parse(fileContent); // Parse the JSON content
+      const topic = metadata?.topic;
+      if (topic) { 
+        console.log(`File ${metadataFilePath} has topic ${topic}`);
+        topics.push(topic);
+      } else {
+        console.log(`File ${metadataFilePath} does not have metadata. Skipping.`);
+      }
+    }
+    console.log(`Extracted ${topics.length} topics:`, topics);
+    await fs.promises.writeFile(topicsFilePath, JSON.stringify(topics, null, 2));
+  }
 
   const vectorizeFiles_async = async (chunkedDir, vectorizedDir, nextDir) => {
     const files = await searchDirectory_async(chunkedDir);
@@ -1070,7 +1090,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   }
 
   async function getMetadata_async(metadata, element) {
-    if (!metadata[element.filename]) {
+    if (!metadata[element.filename] && element.filename) {
       const jsonFileName = path.basename(element.filename).replace(/\.[^/.]+$/, '.json');
       const metadataFilePath = path.join(metadataDir, jsonFileName);
       console.log("metadataFilePath", metadataFilePath);
@@ -1231,6 +1251,12 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
       case "chunk": {
         await chunkFiles_async(unstructuredDir, chunkedDir, dataProcessedChunksDir);
+        nextState = "extractMetadata";
+        break;
+      }
+      case "extractMetadata": {
+        await extractMetadata_async(dataProcessedChunksDir, metadataDir);
+        await extractTopics_async(metadataDir);
         nextState = "dataProcessChunks";
         break;
       }
@@ -1245,6 +1271,13 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         break;
       }
       case "ingest": {
+        // Check if the ingest dir is empty
+        const files = await searchDirectory_async(ingestedDir);
+        let reloadAll = false;
+        if (files.length === 0) {
+          // Assume we want to delete the data
+          reloadAll = true;
+        }
         // This is completely removing the data
         // Instead we should just add if the class already exists
         const classObj = createUnstructuredWeaviateClass(className);
@@ -1270,8 +1303,8 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
                 break;
               }
             }
-            if (!match) {
-              console.log("Deleting class", className, prop);
+            if (!match || reloadAll) {
+              console.log("Deleting class could not find prop or reloadAll", reloadAll, className, prop);
               await client.schema.classDeleter().withClassName(className).do();
               exists = false;
               break;

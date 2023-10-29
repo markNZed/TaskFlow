@@ -79,7 +79,7 @@ function Taskflows(props) {
           commandArgs: {
             id: selectedTaskId,
           },
-          commandDescription: "Task selected",
+          commandDescription: `Task ${selectedTaskId} selected in menu`,
         });
         console.log("Taskflows start", selectedTaskId)
       } else {

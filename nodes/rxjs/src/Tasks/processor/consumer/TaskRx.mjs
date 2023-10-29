@@ -9,6 +9,7 @@ import { map, filter } from 'rxjs/operators';
 import { MessagingClient } from '#src/messaging';
 import { NODE } from "#root/config";
 import { PythonRunner } from '#src/pythonRunner';
+import { utils } from '#src/utils';
 
 // eslint-disable-next-line no-unused-vars
 const TaskRx_async = async function (wsSendTask, T) {
@@ -17,7 +18,7 @@ const TaskRx_async = async function (wsSendTask, T) {
 
   if (T("node.command") === "init") {
 
-    console.log("TaskRx init");
+    utils.logTask(T(), "init");
 
     // Prepare the Python script runner
     const pythonRunner = new PythonRunner();
@@ -37,15 +38,15 @@ const TaskRx_async = async function (wsSendTask, T) {
     // Subscribe for logging every message and publishing one
     logMessage$.subscribe({
       next: ({ message }) => {
-        console.log(`Received: ${message} on channel_from_py`);
+        utils.logTask(T(), `Received: ${message} on channel_from_py`);
         if (!messagePublished) {
-          console.log(`Publishing "Hello World from JS!" to channel_from_js`);
+          utils.logTask(T(), `Publishing "Hello World from JS!" to channel_from_js`);
           messagingClient.publish('channel_from_js', `Hello World from JS!`);
           messagePublished = true;
         }
       },
-      error: (err) => console.error('Logging error:', err),
-      complete: () => console.log('Logging observable complete')
+      error: (err) => utils.logTask(T(), 'Logging error:', err),
+      complete: () => utils.logTask(T(), 'Logging observable complete')
     });
 
     // Subscribe to the Redis channel

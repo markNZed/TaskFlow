@@ -276,9 +276,15 @@ async function openaigpt_async(params) {
           options.functions = functions;
           options.function_call = "auto";
         }   
+        const TIMEOUT_DURATION = 20000; // 20 seconds, adjust as needed
         console.log("openai.chat.completions.create(options)", options);
-        const response = await openai.chat.completions.create(options);
-        //console.log("response", response);
+        let response = await Promise.race([
+            openai.chat.completions.create(options),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timed out')), TIMEOUT_DURATION)
+            )
+        ]);
+        console.log("openai.chat.completions.create responded");
         // eslint-disable-next-line no-unused-vars
         response_text_promise = new Promise((resolve, reject) => {
           // eslint-disable-next-line no-unused-vars

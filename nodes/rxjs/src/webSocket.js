@@ -178,8 +178,8 @@ taskSubject
         }
       }
     },
-    error: (e) => console.error(e),
-    complete: () => console.info('complete'),
+    error: (e) => console.error("Subscriber error", e),
+    complete: () => console.error("Subscriber complete"),
   });
 
 function wsSendObject(message) {
@@ -309,6 +309,7 @@ const connectWebSocket = () => {
     // Only the coprocessor should receive start (it is transformed into an init on the hub)
     } else if (command === "start" || command === "join" || command === "init") {
       utils.logTask(task, "ws " + command + " id:", task.id, " commandArgs:", task.commandArgs, " state:", task?.state?.current);
+      // init should be saved after, in case we generate an update during init ?
       if (!task.node.coprocessing) {
         if (command !== "start") {
           await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
@@ -316,7 +317,7 @@ const connectWebSocket = () => {
       }
       taskSubject.next(task);
     } else if (command === "error") {
-      utils.logTask(task, "ws " + command + " id ", task.id, task.instanceId + " familyId:" + task.familyId);
+      utils.logTask(task, "ws error id ", task.id, task.instanceId + " familyId:" + task.familyId);
       if (!task.node.coprocessing) {
         await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, task);
       }
