@@ -40,13 +40,17 @@ function TaskflowTree({ onClose }) {
 
   function countSubtreeLeafNodes() {
     let leafCountLocal = 0;
+    let singleId;
     Object.keys(globalState.tasksTree).forEach((nodeId) => {
       if (globalState.tasksTree[nodeId].leaf === true) {
         leafCountLocal++;
+        if (leafCountLocal === 1) {
+          singleId = nodeId;
+        }
       }
     });
     setLeafCount(leafCountLocal);
-    return leafCountLocal;
+    return [leafCountLocal, singleId];
   }
 
   useEffect(() => {
@@ -57,7 +61,11 @@ function TaskflowTree({ onClose }) {
       countSubtreeLeafNodes();
       //const subtreeLeafCount = countSubtreeLeafNodes('root');
       // This code will run after the component mounts and renders
-      replaceGlobalState("taskflowLeafCount", countSubtreeLeafNodes());
+      const [leafCount, singleId] = countSubtreeLeafNodes();
+      replaceGlobalState("taskflowLeafCount", leafCount);
+      if (singleId) {
+        replaceGlobalState("selectedTaskId", singleId);
+      }
     }
   });
 

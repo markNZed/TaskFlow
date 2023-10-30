@@ -91,8 +91,8 @@ function Taskflows(props) {
       replaceGlobalState("maxWidth", globalState.maxWidthDefault);
       replaceGlobalState("xStateDevTools", false);
     }
-    // If we only have one start task and the Processor has registered with the hub
-    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && !globalState?.hubId) {
+    // If we only have one start task
+    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && selectedTaskId) {
       modifyTask({
         command: "start",
         commandArgs: {
