@@ -2,6 +2,45 @@
 import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
+  // TaskChatRAG is not a base type but serves as a template and sets the type to TaskChat
+  // So we need to keep TaskChatRAG aligned with TaskChat
+  {
+    name: "TaskChatRAG",
+    streaming: true,
+    // If multiple environments then it will be synchronized
+    environments: ["react", "rxjs-processor-consumer"],
+    config: {
+      local: {
+        promptPlaceholder_FR: "Écrivez votre prompt ici.",
+        promptPlaceholder_EN: "Write your prompt here.",
+        regexProcessMessages: [
+          ["<BEGIN>", ""],
+          ["<END>", ""],
+        ],
+        // Could tansfer to tasktype: rewritePrompt, contextPrompt, searchingMessage, respondingMessage
+        rewritePrompt_EN: `Answer this question or if you do not have enough information then provide a bullet list of concepts that could help clarify this question.`,
+        rewritePrompt_FR: `Répondez à cette requête ou, si vous n'avez pas suffisamment d'informations, fournissez une liste à puces de concepts qui pourraient aider à clarifier cette question:`,
+        contextPrompt_EN: `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`,
+        contextPrompt_FR: `Utilisez les morceaux de contexte suivants pour répondre à la question à la fin. Si le contexte est le message 'NO INFORMATION AVAILABLE', alors ne fournissez pas de réponse et présentez des excuses. Si vous n'êtes pas sûr, dites-le simplement. S'il y a plusieurs réponses possibles, résumez-les comme des réponses possibles.`,
+        searchingMessage_EN: `I could not immediately find relevant information to your question, so I am searching for more information. Please wait, this can take some time.`,
+        searchingMessage_FR: "Je n'ai pas pu trouver immédiatement des informations pertinentes à votre question, donc je recherche davantage d'informations. Veuillez patienter, cela peut prendre un certain temps.",
+        respondingMessage_EN: `I found some relevant information, now I'm reading it and will respond shortly.`,
+        respondingMessage_FR: `J'ai trouvé des informations pertinentes, maintenant je les lis et je répondrai sous peu!`,
+        //noInformation: "Nous sommes désolés, mais nous n'avons pas de réponse disponible pour votre demande actuelle. Pour obtenir de l'aide ou des informations supplémentaires, veuillez contacter directement Domène Technologies Formations par téléphone 04 76 77 55 00 ou par e-mail contact@domene-technologies-formations.fr",
+        helpMessage_FR: `Pour obtenir de l'aide ou des informations supplémentaires, veuillez contacter directement Domène Technologies Formations par téléphone 04 76 77 55 00 ou par e-mail contact@domene-technologies-formations.fr`,
+      },
+    },
+    operators: {
+      "LLM": {
+        type: "RAG",
+        environments: ["rxjs-processor-consumer"],
+      }
+    },
+    state: {
+      current: "start",
+    },
+    type: "TaskChat",
+  },
   {
     name: "TaskRAGPreprocessing",
     environments: ["rxjs-processor-consumer"],

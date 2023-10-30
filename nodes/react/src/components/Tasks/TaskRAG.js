@@ -6,9 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import React, { useEffect, useState, useRef } from "react";
 import withTask from "../../hoc/withTask";
-import usePartialWSFilter from "../../hooks/usePartialWSFilter";
-import { Typography } from "@mui/material";
-import { utils } from "../../utils/utils.mjs";
 import DynamicComponent from "./../Generic/DynamicComponent";
 
 /*
@@ -34,11 +31,12 @@ const TaskRAG = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  const [responseText, setResponseText] = useState("");
-  const responseTextRef = useRef("");
-  const [socketResponses, setSocketResponses] = useState([]);
-  const [level, setLevel] = useState();
-  const [topic, setTopic] = useState();
+  const hardModelVersion = "gpt-4-0613";
+  const softModelVersion = "gpt-3.5-turbo-0613";
+  const [think, setThink] = useState(softModelVersion);
+  const [level, setLevel] = useState('');
+  const [topic, setTopic] = useState('');
+  const [cachePrefix, setCachePrefix] = useState();
   const [initialUser, setInitialUser] = useState();
 
   // Each time this component is mounted then we reset the task state
@@ -48,47 +46,6 @@ const TaskRAG = (props) => {
     task.state.done = false;
     setInitialUser(task?.config?.local?.user);
   }, []);
-
-  // This is asynchronous to the rendering so there may be conflicts where
-  // state is updated during rendering and this impacts the parent
-  // Probably needs to be moved outside of the component maybe into Redux
-  useEffect(() => {
-    const processResponses = () => {
-      setSocketResponses((prevResponses) => {
-        for (const response of prevResponses) {
-          const text = response.partial.text;
-          const mode = response.partial.mode;
-          switch (mode) {
-            case 'delta':
-              responseTextRef.current += text;
-              break;
-            case 'partial':
-            case 'final':
-              responseTextRef.current = text;
-              setResponseText(text);
-              break;
-            default:
-              console.log("WARNING unknown mode : " + mode);
-          }
-        }
-        //console.log(`${componentName} processResponses responseTextRef.current:`, responseTextRef.current);
-        setResponseText(responseTextRef.current);
-        return []; // Clear the processed responses
-      });
-    };
-    if (socketResponses.length > 0) {
-      processResponses();
-    }
-  }, [socketResponses]);
-
-  // I guess the websocket can cause events during rendering
-  // Putting this in the HoC causes a warning about setting state during rendering
-  usePartialWSFilter(task,
-    (partialTask) => {
-      //console.log(`${componentName} usePartialWSFilter partialTask`, partialTask.response);
-      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
-    }
-  )
 
   // Task state machine
   // Unique for each component that requires steps
@@ -111,25 +68,32 @@ const TaskRAG = (props) => {
 
   useEffect(() => {
     if (task?.input?.select) {
+      const inputThink = task?.input?.select?.think || '';
+      const inputLevel = task?.input?.select?.level || '';
+      const inputTopic = task?.input?.select?.topic || '';
+      const inputCachePrefix = `${inputThink}-${inputLevel}-${inputTopic}`;
       const selectedModelVersion = task?.output?.chat?.services?.chat?.modelVersion;
-      const hard = "gpt-4-0613";
-      const think = task?.input?.select?.think;
-      if (think === "thinkharder") {
-        if (selectedModelVersion !== hard) {
+      if (inputThink !== think) {
+        setThink(inputThink);
+        if (inputThink === "thinkharder") {
+          if (selectedModelVersion !== hardModelVersion) {
+            modifyTask({ 
+              "command": "update", 
+              "output.chat.services.chat.modelVersion": hardModelVersion,
+              "output.config.local.cachePrefix": inputCachePrefix,
+              "commandDescription": "Think harder",
+            });
+          }
+        // Switch back, should not hard code modelVersion
+        } else if (selectedModelVersion === hardModelVersion) {
           modifyTask({ 
             "command": "update", 
-            "output.chat.services.chat.modelVersion": hard,
-            "commandDescription": "Think harder",
+            "output.chat.services.chat.modelVersion": softModelVersion,
+            "output.config.local.cachePrefix": inputCachePrefix,
+            "commandDescription": "Think softer",
           });
         }
-      } else if (selectedModelVersion === hard) {
-        modifyTask({ 
-          "command": "update", 
-          "output.chat.services.chat.modelVersion": "gpt-3.5-turbo-0613",
-          "commandDescription": "Think softer",
-        });
       }
-      const inputLevel = task?.input?.select?.level;
       if (inputLevel !== level) {
         console.log("setLevel", inputLevel);
         setLevel(inputLevel);
@@ -137,20 +101,20 @@ const TaskRAG = (props) => {
         modifyTask({ 
           "command": "update", 
           "output.config.local.user": user,
+          "output.config.local.cachePrefix": inputCachePrefix,
           "commandDescription": "Update RAG user level",
         });
       }
-      const inputTopic = task?.input?.select?.topic;
       if (inputTopic !== topic) {
         console.log("setTopic", inputTopic);
         setTopic(inputTopic);
         modifyTask({ 
           "command": "update", 
           "output.select.config.local.fields.level.hide": false,
+          "output.config.local.cachePrefix": inputCachePrefix,
           "commandDescription": "Unhide the level checkboxes",
         });
       }
-
     }
   }, [task?.input?.select]);
 

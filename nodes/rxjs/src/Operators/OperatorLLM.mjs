@@ -19,11 +19,24 @@ async function operate_async(wsSendTask, task) {
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
-  //console.log("params.serviceConfig", params.serviceConfig);
-  const [text, newMessages] = await callFunctionByName(service, functionName, params);
+  const TIMEOUT_DURATION = 90000; // 90 seconds, adjust as needed
+  let text, newMessages, errored;
+  try {
+    [text, newMessages, errored] = await Promise.race([
+      callFunctionByName(service, functionName, params),
+      new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timed out')), TIMEOUT_DURATION)
+      )
+    ]);
+  } catch (e) {
+    text = 'Timeout due to slow repsonse from LLM, sorry.';
+    newMessages = [];
+    errored = true;
+  }
   taskCopy["response"] = taskCopy.response || {}
   taskCopy.response.LLM = text;
   taskCopy.response.newMessages = newMessages;
+  taskCopy.response.LLMerror = errored;
   return taskCopy;
 }
 

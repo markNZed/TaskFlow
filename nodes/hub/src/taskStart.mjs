@@ -263,7 +263,7 @@ async function supportMultipleLanguages_async(task, usersStore_async) {
   // Eventually replace with a standard solution
   // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
   const user = await usersStore_async.get(task.user.id);
-  const language = user?.language || "EN";
+  const language = task?.config?.local?.language || user?.language || "EN";
   // Array of the objects
   let configs = [task.config];
   if (task.config?.local) {

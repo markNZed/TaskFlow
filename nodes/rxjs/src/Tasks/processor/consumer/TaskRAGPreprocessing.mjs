@@ -200,6 +200,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         name: "query",
         dataType: ["text"],
       },
+      {
+        name: "cachePrefix",
+        dataType: ["text"],
+      }
     ];
     for (const [name, dataType] of Object.entries(ElementMetadata)) {
       if (!excludeMetadataKeys.includes(name)) {
@@ -919,24 +923,29 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
 
   const extractTopics_async = async (inputOutputDir) => {
     let files = await searchDirectory_async(inputOutputDir);
-    const topicsFile = "taskflow-topics.json";
-    const topicsFilePath = path.join(inputOutputDir, topicsFile);
-    let topics = [];
-    files = files.filter(file => path.basename(file) !== topicsFile);
-    for (const file of files) {
-      const metadataFilePath = path.join(inputOutputDir, path.basename(file));
-      const fileContent = await fs.promises.readFile(metadataFilePath, 'utf-8');
-      const metadata = JSON.parse(fileContent); // Parse the JSON content
-      const topic = metadata?.topic;
-      if (topic) { 
-        console.log(`File ${metadataFilePath} has topic ${topic}`);
-        topics.push(topic);
-      } else {
-        console.log(`File ${metadataFilePath} does not have metadata. Skipping.`);
+    const topicsFilePath = "taskflow-topics.json";
+    try {
+      await fs.promises.access(topicsFilePath); // Use fs.promises.access() for async operation
+      console.log(`File ${topicsFilePath} already exists. Skipping.`);
+    } catch (error) {
+      const topicsFilePathPath = path.join(inputOutputDir, topicsFilePath);
+      let topics = [];
+      files = files.filter(file => path.basename(file) !== topicsFilePath);
+      for (const file of files) {
+        const metadataFilePath = path.join(inputOutputDir, path.basename(file));
+        const fileContent = await fs.promises.readFile(metadataFilePath, 'utf-8');
+        const metadata = JSON.parse(fileContent); // Parse the JSON content
+        const topic = metadata?.topic;
+        if (topic) { 
+          console.log(`File ${metadataFilePath} has topic ${topic}`);
+          topics.push(topic);
+        } else {
+          console.log(`File ${metadataFilePath} does not have metadata. Skipping.`);
+        }
       }
+      console.log(`Extracted ${topics.length} topics:`, topics);
+      await fs.promises.writeFile(topicsFilePathPath, JSON.stringify(topics, null, 2));
     }
-    console.log(`Extracted ${topics.length} topics:`, topics);
-    await fs.promises.writeFile(topicsFilePath, JSON.stringify(topics, null, 2));
   }
 
   const vectorizeFiles_async = async (chunkedDir, vectorizedDir, nextDir) => {

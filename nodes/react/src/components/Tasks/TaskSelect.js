@@ -170,8 +170,8 @@ const TaskSelect = (props) => {
               value={value}
               onChange={(event) => handleOptionChange(fieldIndex, event.target.value)}
             >
-              {field.options.map((option, index) => (
-                <MenuItem key={fieldIndex + "-" + index} value={option.value}>
+              {field.options.map((option, optionIndex) => (
+                <MenuItem key={fieldIndex + "-" + optionIndex} value={option.value}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -214,9 +214,9 @@ const TaskSelect = (props) => {
           break;
         }
         case 'switch': {
-          result[index] =  field.options.map((option, index) => (
+          result[index] =  field.options.map((option, optionIndex) => (
               <FormControlLabel
-                key={fieldIndex + "-" + index}
+                key={fieldIndex + "-" + optionIndex}
                 control={<Switch />}
                 value={option.value}
                 label={option.label}
@@ -226,9 +226,9 @@ const TaskSelect = (props) => {
             break;
         }
         case 'buttons': {
-            result[index] =  field.options.map((option, index) => (
+            result[index] =  field.options.map((option, optionIndex) => (
               <Button 
-                key={fieldIndex + "-" + index} 
+                key={fieldIndex + "-" + optionIndex} 
                 variant={selectedOptions[fieldIndex].includes(option.value) ? "contained" : "outlined"} 
                 onClick={() => handleOptionChange(fieldIndex, option.value)}
               >
@@ -240,9 +240,9 @@ const TaskSelect = (props) => {
         case 'chips': {
           result[index] =  (
               <Stack direction="row" spacing={1} key={fieldIndex + "-chips"}>
-                {field.options.map((option, index) => (
+                {field.options.map((option, optionIndex) => (
                   <Chip
-                    key={fieldIndex + "-" + index}
+                    key={fieldIndex + "-" + optionIndex}
                     label={option.label}
                     onClick={() => handleOptionChange(fieldIndex, option.value)}
                     color={selectedOptions[fieldIndex].includes(option.value) ? "primary" : "default"}
@@ -253,14 +253,14 @@ const TaskSelect = (props) => {
             break;
         }
         case 'checkboxes': {
-          result[index] =  field.options.map((option, index) => {
+          result[index] =  field.options.map((option, optionIndex) => {
             let checked = false;
             if (selectedOptions[fieldIndex]) {
               checked = selectedOptions[fieldIndex].includes(option.value);
             }
             return (
               <FormControlLabel
-                key={fieldIndex + "-" + index}
+                key={fieldIndex + "-" + optionIndex}
                 control={<Checkbox 
                   checked={checked}
                   onChange={() => handleOptionChange(fieldIndex, option.value)}

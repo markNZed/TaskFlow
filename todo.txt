@@ -1,13 +1,17 @@
 /* ToDo
 -------
-Move RAG prompts into tasktype?
-Process topics into not more than X categories (will need this when there are too many docs)
-Do we limit the document search to the topic ?
-  Not yet I guess.
+Test muliple select (fix demo of select)
+Could experiment with huggingface pro account as an inherent cap on API usage
+In the case where GPT decides there is no information we could add the canned response but would need to do a text substitution.
+TaskConversation option to start a new conversation
+  RAG would need to deal with this too
+  Forget this conversation
+Upper bound for the conversation depth
+  Just remove old messages ?
+Add Frontend for TaskRAGProcessing - to indicate progress/done
+Improve prompt for adding of references.
 To allow task config to be modified during init via connections we need to run CEPConnect on the Coprocessor
   Could use .shared ? No that still requires modifying the Task to use shared instad of its config
-Test muliple select
-Display the closest queries for the cache check
 Services should still use the Task interface by preference?
 Disk space on server1
 Not cleaning up connectionsStore_async
@@ -59,6 +63,9 @@ RAG
       Could the extract relevant entities and relations based on embedding of chatGPT initial answer
         Providing most relevant entities and relations to the query rewrite prompt should help
     Avoid repetetive responses
+    Process topics into not more than X categories (will need this when there are too many docs)
+    Should we limit the document search to the topic ?
+      Not yet I guess.
   Problems
     Meta questions
       e.g. 
@@ -69,23 +76,22 @@ RAG
       This is another one-offwhere we can reuse the questions
         Benchmark different strategies for answer generation.
           Use the answers in RAG (need to manage references to references)
-Log questions that can't be responded to - could be a good reason to follow up with a client
-  Notebook for analysing
-    A task could be a Notebook
-      Can we use Javacsript+Python
-    https://observablehq.com/cloud hosted
-    https://polynote.org 
-    https://github.com/ipyflow/ipyflow
-    Should be able to load the task as JSON
-      How to access the Node API ?
-    Jupyter has an API so we can create a notebook on the fly and populate it.
-    https://docs.deno.com/runtime/manual/tools/jupyter
-      Could be a way to experiment with Deno
-    https://github.com/yunabe/tslab
-    https://github.com/yunabe/tslab
-    Two separate Tasks - edit+execute and execute
-    The execute task would run the notebook and just get back the task (maybe using REST API or just launch)
-    The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end. 
+Notebook for analysing data
+  A task could be a Notebook
+    Can we use Javacsript+Python
+  https://observablehq.com/cloud hosted
+  https://polynote.org 
+  https://github.com/ipyflow/ipyflow
+  Should be able to load the task as JSON
+    How to access the Node API ?
+  Jupyter has an API so we can create a notebook on the fly and populate it.
+  https://docs.deno.com/runtime/manual/tools/jupyter
+    Could be a way to experiment with Deno
+  https://github.com/yunabe/tslab
+  https://github.com/yunabe/tslab
+  Two separate Tasks - edit+execute and execute
+  The execute task would run the notebook and just get back the task (maybe using REST API or just launch)
+  The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end. 
 Logout option on menu for basic auth
   Point to https://u:p@...
 Websocket does not work with basic auth

@@ -79,7 +79,7 @@ async function openaigpt_async(params) {
   } = params;
 
   const debug = true;
-  let response_text_promise = Promise.resolve(["", []]);
+  let response_text_promise = Promise.resolve(["", [], false]);
 
   console.log("openaigpt_async noStreaming",noStreaming);
 
@@ -150,7 +150,7 @@ async function openaigpt_async(params) {
     try {
       messages = shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse);
     } catch (e) {
-      response_text_promise = Promise.resolve(["Internal ERROR, the prompt was too big, sorry.", []]);
+      response_text_promise = Promise.resolve(["Internal ERROR, the prompt was too big, sorry.", [], true]);
       return response_text_promise;
     }
   }
@@ -234,7 +234,7 @@ async function openaigpt_async(params) {
     if (debug) {
       console.log("Debug: ", cacheKeyText);
     }
-    response_text_promise = Promise.resolve([text, []]);
+    response_text_promise = Promise.resolve([text, [], false]);
   } else {
     // Need to return a promise
     if (dummyAPI) {
@@ -259,10 +259,11 @@ async function openaigpt_async(params) {
         }
       }
       message_from("Dummy API", text, noStreaming, instanceId);
-      response_text_promise = Promise.resolve([text, []]);
+      response_text_promise = Promise.resolve([text, [], false]);
     } else {
       let newMessages = [];
       let functionDepth = 0;
+      let errored = false;
       //console.log("messages", messages);
       try {
         let options = {
@@ -344,6 +345,7 @@ async function openaigpt_async(params) {
                   } catch (error) {
                     console.error(`An error occurred while processing ${name}:`, error);
                     newMessages = createFunctionCallMessages({error: `function ${name} failed.`});
+                    errored = true;
                   }
                   break;
                 }
@@ -385,7 +387,7 @@ async function openaigpt_async(params) {
                 cacheStore_async.set(computedCacheKey, completion);
                 console.log("cache stored key ", computedCacheKey);
               }
-              resolve([completion, newMessages]);
+              resolve([completion, newMessages, errored]);
             },
             // eslint-disable-next-line no-unused-vars
             onCompletion: async (completion) => {
@@ -406,14 +408,14 @@ async function openaigpt_async(params) {
           }
           read();
         });
-      } catch (error) {
-        let text = "ERROR " + error.message;
-        if (error instanceof OpenAI.APIError) {
-          const { name, status, headers, message } = error;
+      } catch (err) {
+        let text = "ERROR " + err.message;
+        if (err instanceof OpenAI.APIError) {
+          const { name, status, headers, message } = err;
           text = `OpenAI.APIError ${name} ${status} ${headers} ${message}`;
         }
         message_from("API", text, noStreaming, instanceId);
-        response_text_promise = Promise.resolve([text, []]);
+        response_text_promise = Promise.resolve([text, [], true]);
       }
     }
   }
@@ -445,7 +447,8 @@ function getObjectPaths(obj, currentPath = '', result = []) {
 // eslint-disable-next-line no-unused-vars
 async function openaistub_async(params) {
   const newMessages = [];
-  let response_text_promise = Promise.resolve(["test text", newMessages]);
+  const errored = false;
+  let response_text_promise = Promise.resolve(["test text", newMessages, errored]);
   return response_text_promise;
 }
 

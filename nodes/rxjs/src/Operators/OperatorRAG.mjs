@@ -124,11 +124,26 @@ const RAG_async = async function (wsSendTask, T) {
     host: NODE.storage.weaviateHost,
   });
 
-  const queryWeaviateCache_async = async (queryVector) => {
+  const queryWeaviateCache_async = async (cachePrefix, queryVector) => {
     const response = await weaviateClient.graphql
     .get()
     .withClassName(className)
     .withFields('title tokenLength text query _additional {distance certainty}')
+    .withWhere({
+      operator: "And",
+      operands: [
+        {
+          path: ['title'],
+          operator: 'Equal',
+          valueText: CACHE_ID,
+        },
+        {
+          path: ['cachePrefix'],
+          operator: 'Equal',
+          valueTextArray: cachePrefix,
+        },
+      ]
+    })
     .withWhere({
       path: ['title'],
       operator: 'Equal',
@@ -285,7 +300,7 @@ const RAG_async = async function (wsSendTask, T) {
   }
 
   async function sendIncrementalResponseInBackground() {
-    const respondingMessage = T("config.local.respondingMessage") || "I found some relevant information, now I'm reading it and will respond shortly.";
+    const respondingMessage = T("config.local.respondingMessage");
     const words = respondingMessage.split(" ");
     // call SendIncrementalWs for pairs of word
     let partialText = "";
@@ -313,7 +328,9 @@ const RAG_async = async function (wsSendTask, T) {
   const CACHE_ID = "TASKFLOW CACHE";
   let cache;
   let availableTokens = serviceConfig.maxTokens;
-  let topic = T("config.local.topic");
+  const topic = T("config.local.topic");
+  const user = T("config.local.user");
+  const cachePrefix = T("config.local.cachePrefix");
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
@@ -329,14 +346,10 @@ const RAG_async = async function (wsSendTask, T) {
         //nextState = "debug";
         //break;
         let query = '';
-        if (topic !== undefined) {
-          console.log("Found topic", topic);
-          query += topic + "\n";
-        }
         query += T("input.query");
         queryVector = await embedText_async(query);
         let close;
-        [cache, close] = await queryWeaviateCache_async(queryVector);
+        [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
         console.log("Checked cache for query", query, "match", utils.js(cache), "close", utils.js(close));
         if (cache) {
           nextState = "prompt";
@@ -359,20 +372,20 @@ const RAG_async = async function (wsSendTask, T) {
         let prompt = '';
         // Just let chatGPT try to anser
         prompt = historyPrompt(T, prompt);
-        if (T("config.local.user")) {
-          prompt += "This query is from " + T("config.local.user") + "\n";
+        if (user) {
+          prompt += "This query is from " + user + "\n";
         }
         if (topic) {
           prompt += "This query concerns " + topic + "\n";
         }
-        prompt += T("config.local.rewritePrompt") || `Answer this question or if you do not have enough information then provide a bullet list of concepts that could help clarify this question.`;
+        prompt += T("config.local.rewritePrompt");
         prompt += "\n" 
         prompt += "Question: " + T("input.query");
         T("request.prompt", prompt);
         T("request.service.noStreaming", true);
         utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
         const operatorOutPromise = operatorLLM.operate_async(wsSendTask, T());
-        const searchingMessage = T("config.local.searchingMessage") || "I could not immediately find relevant information to your question, so I am searching for more information. Please wait, this can take some time.";
+        const searchingMessage = T("config.local.searchingMessage");
         const words = searchingMessage.split(" ");
         // call SendIncrementalWs for pairs of word
         let partialText = "";
@@ -502,8 +515,8 @@ const RAG_async = async function (wsSendTask, T) {
             let prompt = '';
             prompt = historyPrompt(T, prompt);
             prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
-            if (T("config.local.user")) {
-              prompt += `User: ${T("config.local.user")}\n`;
+            if (user) {
+              prompt += `User: ${user}\n`;
             }
             if (topic) {
               prompt += `Topic: ${topic}\n`;
@@ -519,19 +532,22 @@ const RAG_async = async function (wsSendTask, T) {
               result += "\n\n" + T("config.local.helpMessage")
             }
             T("response.result", result);
+            if (operatorOut.response.LLMerror) {
+              addToCache = false;
+            }
             // Add this query to a DB of failed questions - w already hav eit in MOngo just need to add property
           }
         } else {
           let prompt = '';
           prompt = historyPrompt(T, prompt);
-          prompt += T("config.local.contextPrompt") || `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`;
+          prompt += T("config.local.contextPrompt");
           prompt += `
           Cite the relevant reference material at the end of your response using the information from the <TITLE>, <AUTHOR>, <PAGE> tags in the context. For example:
           Références :
           [1] "Name of the document", author's name, publisher, page number
           `
-          if (T("config.local.user")) {
-            prompt += `User: ${T("config.local.user")}\n`;
+          if (user) {
+            prompt += `User: ${user}\n`;
           }
           if (topic) {
             prompt += `Topic: ${topic}\n`;
@@ -544,6 +560,9 @@ const RAG_async = async function (wsSendTask, T) {
           utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
           const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
           T("response.result", operatorOut.response.LLM);
+          if (operatorOut.response.LLMerror) {
+            addToCache = false;
+          }
         }
         T("response.query", T("input.query"));
         let historyContext = T("response.historyContext") || '';
@@ -564,6 +583,7 @@ const RAG_async = async function (wsSendTask, T) {
               text: T("response.result"),
               tokenLength: utils.stringTokens(T("response.result")),
               query: T("response.query"),
+              cachePrefix,
             })
             .withVector(queryVector)
             .do();
