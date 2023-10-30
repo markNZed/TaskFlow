@@ -325,7 +325,7 @@ const RAG_async = async function (wsSendTask, T) {
   let availableTokens = serviceConfig.maxTokens;
   const topic = T("config.local.topic");
   const user = T("config.local.user");
-  const cachePrefix = T("config.local.cachePrefix") || '';
+  const cachePrefix = T("config.local.cachePrefix") || 'undefined';
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
