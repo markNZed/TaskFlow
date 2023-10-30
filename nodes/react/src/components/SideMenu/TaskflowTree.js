@@ -46,6 +46,8 @@ function TaskflowTree({ onClose }) {
         leafCountLocal++;
         if (leafCountLocal === 1) {
           singleId = nodeId;
+        } else {
+          singleId = undefined;
         }
       }
     });

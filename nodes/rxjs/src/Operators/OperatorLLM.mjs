@@ -19,13 +19,13 @@ async function operate_async(wsSendTask, task) {
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
-  const TIMEOUT_DURATION = 90000; // 90 seconds, adjust as needed
+  const TIMEOUT_DURATION = 120000; // 90 seconds, adjust as needed
   let text, newMessages, errored;
   try {
     [text, newMessages, errored] = await Promise.race([
       callFunctionByName(service, functionName, params),
       new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timed out')), TIMEOUT_DURATION)
+          setTimeout(() => reject(new Error('OperatorLLM timed out after ' + TIMEOUT_DURATION + 'ms')), TIMEOUT_DURATION)
       )
     ]);
   } catch (e) {

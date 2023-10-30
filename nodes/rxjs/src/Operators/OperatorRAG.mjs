@@ -128,7 +128,7 @@ const RAG_async = async function (wsSendTask, T) {
     const response = await weaviateClient.graphql
     .get()
     .withClassName(className)
-    .withFields('title tokenLength text query _additional {distance certainty}')
+    .withFields('title tokenLength text query cachePrefix _additional {distance certainty}')
     .withWhere({
       operator: "And",
       operands: [
@@ -140,14 +140,9 @@ const RAG_async = async function (wsSendTask, T) {
         {
           path: ['cachePrefix'],
           operator: 'Equal',
-          valueTextArray: cachePrefix,
+          valueText: cachePrefix,
         },
       ]
-    })
-    .withWhere({
-      path: ['title'],
-      operator: 'Equal',
-      valueText: CACHE_ID,
     })
     .withNearVector({ 
       vector: queryVector,
@@ -350,7 +345,7 @@ const RAG_async = async function (wsSendTask, T) {
         queryVector = await embedText_async(query);
         let close;
         [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
-        console.log("Checked cache for query", query, "match", utils.js(cache), "close", utils.js(close));
+        console.log("Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
         if (cache) {
           nextState = "prompt";
         } else {

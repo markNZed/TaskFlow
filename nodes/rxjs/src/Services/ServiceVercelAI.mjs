@@ -282,7 +282,7 @@ async function openaigpt_async(params) {
         let response = await Promise.race([
             openai.chat.completions.create(options),
             new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Request timed out')), TIMEOUT_DURATION)
+                setTimeout(() => reject(new Error('ServiceVercelAI timed out after' + TIMEOUT_DURATION + 'ms')), TIMEOUT_DURATION)
             )
         ]);
         console.log("openai.chat.completions.create responded");
