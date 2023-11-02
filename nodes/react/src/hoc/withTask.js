@@ -331,7 +331,7 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMountedRef, props.task,
       async (updateDiff) => {
-        //console.log("useUpdateWSFilter updateDiff", updateDiff);
+        console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         //console.log("lastTask", utils.deepClone(lastTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);

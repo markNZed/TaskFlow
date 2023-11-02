@@ -77,6 +77,19 @@ const system = [
     ]
   },
 
+  {
+    name: "admin",
+    parentName: "system",
+  },
+  {
+    initiator: true,
+    name: "users",
+    config: {
+      label: "Users",
+    },
+    parentName: "admin",
+    type: "TaskUsers",
+  },
 
   {
     name: "configs",
@@ -433,6 +446,20 @@ const system = [
       autoStartCoprocessor: true,
     },
     type: "TaskCEP",
+  },
+
+  {
+    name: "config-reload",
+    initiator: true,
+    config: {
+      label: "Reload",
+    },
+    parentName: "configs",
+    environments: ["rxjs-hub-consumer"],
+    type: "TaskConfigReload",
+    state: {
+      current: "start",
+    },
   },
   
 ];

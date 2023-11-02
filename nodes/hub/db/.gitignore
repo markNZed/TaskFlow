@@ -1,2 +1,4 @@
 *-id.txt
-main.sqlite
+*.sqlite
+*.sqlite3
+config/

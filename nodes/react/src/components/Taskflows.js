@@ -43,7 +43,7 @@ function Taskflows(props) {
   const [tasksIdx, setTasksIdx] = useState(0);
   const [title, setTitle] = useState(appLabel);
   const [hideSide, setHideSide] = useState(false);
-  const [drawWidth, setDrawWidth] = useState(220);
+  const [drawWidth, setDrawWidth] = useState(0);
   const [counter, setCounter] = useState(0);
   const [taskMenu, setTaskMenu] = useState();
 
@@ -92,16 +92,23 @@ function Taskflows(props) {
       replaceGlobalState("xStateDevTools", false);
     }
     // If we only have one start task
-    if (globalState?.taskflowLeafCount && globalState.taskflowLeafCount === 1 && selectedTaskId) {
-      modifyTask({
-        command: "start",
-        commandArgs: {
-          id: selectedTaskId,
-        },
-        commandDescription: "Start the only task",
-      });
-      setHideSide(true);
-      setDrawWidth(0);
+    const taskflowLeafCount = globalState?.taskflowLeafCount;
+    if (taskflowLeafCount === 1) {
+      if (selectedTaskId) {
+        modifyTask({
+          command: "start",
+          commandArgs: {
+            id: selectedTaskId,
+          },
+          commandDescription: "Start the only task",
+        });
+        setHideSide(true);
+        setDrawWidth(0);
+      }
+    } else if (taskflowLeafCount > 1) {
+      // Once the menu is ready it will have set taskflowLeafCount
+      // This avoids a glitch of defaulting to 220 and it shrinking to 0 if the menu has only one item
+      setDrawWidth(220);
     }
   }, [globalState]);
 
@@ -159,8 +166,8 @@ function Taskflows(props) {
   //Tracing
 
   useEffect(() => {
-    //console.log("Tasks ", tasks, tasksIdx)
-  }, [tasks]);
+    console.log("drawWidth ", drawWidth)
+  }, [drawWidth]);
 
   return (
     <div className="App" style={{maxWidth: globalState.maxWidth}}>
@@ -205,7 +212,7 @@ function Taskflows(props) {
               task={taskMenu}
               setTask={setTaskMenu}
               parentTask={null}
-          />
+            />
           )}
         </Box>
 

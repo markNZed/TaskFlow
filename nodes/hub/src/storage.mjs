@@ -6,11 +6,17 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as dotenv from "dotenv";
 import { NODE } from "../config.mjs";
-import { users, groups, tasktypes, tasks, autoStartTasks } from "./configdata.mjs";
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 dotenv.config();
 import { utils } from "./utils.mjs";
 import { EventEmitter } from 'events';
+import sqlite3 from 'sqlite3';
+const { verbose } = sqlite3;
+import { fileURLToPath } from 'url';
+import { join, dirname } from 'path';
+import { exec as execCallback } from 'child_process';
+import { readFile } from 'fs/promises';
+import { promisify } from 'util';
 
 // Setting max listeners globally for all new EventEmitter instances
 // Was getting warning MaxListenersExceededWarning: Possible EventEmitter memory leak detected.
@@ -19,6 +25,21 @@ EventEmitter.defaultMaxListeners = 100;
 
 var WSConnections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeNodes = new Map();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const exec = promisify(execCallback);
+let loadedAutoStartTasksStore = false;
+
+const dbPath = `${__dirname}/../db/access.sqlite3`;
+console.log("accessDB path", dbPath);
+const accessDB = new (verbose().Database)(dbPath);
+
+accessDB.run(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL
+)`);
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
 //const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });
@@ -109,23 +130,82 @@ if (NODE.storage.emptyAllDB) {
   console.log("Empty DB: cleared all KeyV");
 }
 
-for (const [key, value] of Object.entries(users)) {
-  usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
-}
-for (const [key, value] of Object.entries(groups)) {
-  groupsStore_async.set(key, value).catch(err => console.log('groupsStore_async set error:', err));
-}
-for (const [key, value] of Object.entries(tasktypes)) {
-  tasktypesStore_async.set(key, value).catch(err => console.log('tasktypesStore_async set error:', err));
-}
-for (const [key, value] of Object.entries(tasks)) {
-  tasksStore_async.set(key, value).catch(err => console.log('tasksStore_async set error:', err));
-}
-for (const [key, value] of Object.entries(autoStartTasks)) {
-  autoStartTasksStore_async.set(key, value).catch(err => console.log('autoStartTasksStore_async set error:', err));
+async function loadOneConfig_async(type) {
+  const configDir = '../db/config';
+  try {
+    const data = JSON.parse(await readFile(join(__dirname, configDir + '/' + type + '.json'), 'utf8'));
+    return data;
+  } catch (error) {
+    console.error('An error occurred while reading configuration files:', error);
+  }
 }
 
-console.log("Initialized usersStore_async, groupsStore_async, tasktypesStore_async, tasksStore_async, autoStartTasksStore_async");
+async function runDumpOneConfigScript(type, verbose = false) {
+  try {
+    const { stdout } = await exec('node ' + join(__dirname, '../scripts/dumpOneConfig.js') + ' ' + type);
+    if (verbose) {
+      const scriptOutput = stdout.trim();
+      console.log(scriptOutput);
+    }
+    // Handle script output as needed
+  } catch (error) {
+    console.error(`Execution error: ${error}`);
+  }
+}
+
+async function reloadOneConfig_async(type) { 
+  console.log("Storage reloadOneConfig_async", type);
+  await runDumpOneConfigScript(type);
+  //console.log(`Dumped the config`, type);
+  const data = await loadOneConfig_async(type);
+  //console.log(`Loaded the config`, type);
+  switch (type) {
+    case "users":
+      await usersStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
+      }
+      break;
+    case "groups":
+      await groupsStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        groupsStore_async.set(key, value).catch(err => console.log('groupsStore_async set error:', err));
+      }
+      break;
+    case "tasks":
+      await tasksStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        tasksStore_async.set(key, value).catch(err => console.log('tasksStore_async set error:', err));
+      }
+      if (!loadedAutoStartTasksStore) {
+        const data = await loadOneConfig_async("autoStartTasks");
+        loadedAutoStartTasksStore = true;
+        // We do not reload the autoStartTasks - this should require a restart of the app
+        for (const [key, value] of Object.entries(data)) {
+          autoStartTasksStore_async.set(key, value).catch(err => console.log('autoStartTasksStore_async set error:', err));
+        }
+      }
+      break;
+    case "tasktypes":
+      await tasktypesStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        tasktypesStore_async.set(key, value).catch(err => console.log('tasktypesStore_async set error:', err));
+      }
+      break;
+    default:
+      throw new Error("Unknown type", type);
+  }
+}
+
+async function loadHubConfig_async() { 
+  // We need tasktypes before tasks and users before groups
+  await reloadOneConfig_async("tasktypes");
+  await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
+  await reloadOneConfig_async("users");
+  await reloadOneConfig_async("groups");
+}
+
+await loadHubConfig_async();
 
 export {
   instancesStore_async,
@@ -146,4 +226,6 @@ export {
   tasksStore_async,
   autoStartTasksStore_async,
   connectionsStore_async,
+  accessDB,
+  reloadOneConfig_async,
 };

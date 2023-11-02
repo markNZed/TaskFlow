@@ -1,81 +1,71 @@
 /* ToDo
 -------
-Test muliple select (fix demo of select)
-Could experiment with huggingface pro account as an inherent cap on API usage
-In the case where GPT decides there is no information we could add the canned response but would need to do a text substitution.
-TaskConversation option to start a new conversation
-  RAG would need to deal with this too
-  Forget this conversation
-Upper bound for the conversation depth
-  Just remove old messages ?
-Add Frontend for TaskRAGProcessing - to indicate progress/done
-Improve prompt for adding of references.
+Remove getUserId ?
+Allow for users to be created by hub-consumer could write to hub/db/config/override/users.json
+  Upon startup merge it into usersStore_async 
+  Modify on the fly also from TaskUsers
+  Still allows for easy flushing of Redis but can keep app specific users during upgrade.
+  How to stop this saving initial config into user config? Don't worry about it
+    Could warn about what is changed by the override
+Add Frontend for TaskRAGProcessing - to indicate progress/done, just needs to display the state
+  Could experiment with a progress meter via websocket
 To allow task config to be modified during init via connections we need to run CEPConnect on the Coprocessor
   Could use .shared ? No that still requires modifying the Task to use shared instad of its config
-Services should still use the Task interface by preference?
+Services should still use the Task schema (command) by preference?
 Disk space on server1
 Not cleaning up connectionsStore_async
   Remove when deleting activeTask (we maange family already?)
-Websocket secret use (during update of server2)
 Create Service for embeddings
   Also SendIncrementalWs
 Security
   https://deno.com/ instead of nodejs
-Protecting keys
-  https://github.com/KenyonY/openai-forward
+  Protecting keys
+    https://github.com/KenyonY/openai-forward
+    https://docs.litellm.ai/docs/proxy_server can b used as a proxy and I got this running with ollama
 Local LLM
-  https://github.com/mudler/LocalAI https://localai.io/basics/getting_started/ 
+  https://github.com/mudler/LocalAI 
+    Followed https://localai.io/basics/getting_started/#example-use-luna-ai-llama2-model-with-docker-compose
+    The llama model output german junk
+    Seems very heavy with many things installe dinto the Docker container
   https://ollama.ai/
     https://hub.docker.com/r/ollama/ollama
-Authentication as a task
-  Autostart like menu
-    Needs an admin user
-      Store user's password as hash
-      Store user's email to send initial password
-      Cache the credentials
-        Cookie or local storage?
-How to limit access to the keys
-  Something like a proxy 
+      docker run -d -v ollama:/root/.ollama -p 127.0.0.1:11434:11434 --name ollama ollama/ollama
+      List models: curl http://localhost:11434/api/tags
+      Install model: curl -X POST http://localhost:11434/api/pull -d '{ "name": "mistral" }'
+      Query:
+      curl -X POST http://localhost:11434/api/generate -d '{
+        "model": "mistral",
+        "prompt":"Here is a story about llamas eating grass"
+      }'
+      Connect to bash: docker exec -it ollama /bin/bash
+       Then can run CLI chat: ollama run mistral:instruct
+  https://docs.litellm.ai/docs/proxy_server
+    git clone https://github.com/BerriAI/litellm.git
+    cd litellm
+    cp ./router_config_template.yaml ./config.yaml
+    vi ./config.yaml
+      Modify for Mistral api_base: 127.0.0.1:11434
+    docker build -t litellm_server . --build-arg CONFIG_FILE=./router_config.yaml
+    docker run --name litellm_server -e PORT=8000 -p 127.0.0.1:8000:8000 litellm_server
+    curl -X POST localhost:8000/v1/chat/completions \
+      -H 'Content-Type: application/json' \
+      -d '{
+        "model": "mistral",
+        "messages": [{
+          "content": "Hello, how are you?",
+          "role": "user"
+        }]
+      }'
+    I created docker-compose.yaml with litellm_server and added in the ollama service (but need to install model with curl -X POST http://localhost:11434/api/pull -d '{ "name": "mistral" }')
+    baseURL: `http://litellm_server:8000`
+    See /root/litellm on server1
+    Still quite slow, maybe RWKV would be possible
+Experiment with huggingface
+  The models do not have drop-in replacement for OpenAI
+  Pro account as an inherent cap on API usage
+  Maybe we could put this behind liteLLM?  Yes
+    https://github.com/BerriAI/litellm/issues/361#issuecomment-1722350013
 Could keep historyContext on the processor
-RAG
-  ToDo
-    Add concept of UI options
-      Think harder - use GPT4 for summary
-      User profile
-  Ideas
-    Log questions that can't be responded to - could be a good reason to follow up with a client
-      We already have this in the timeseries DB
-    Improve the question
-      Use functions -"clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
-        This would probably be very good. Set a depth limit
-          Decide how detailed the answer should be (user could make adjustment via UI)
-            An "effort" indicator
-      Could pass an array of concepts to clarify
-        Could use vector DB to find previous clarifications
-    Preprocessing to replace slang terms with formal terms before searching
-    Extract entities, https://arxiv.org/abs/2305.15444 PromptNER: Prompting For Named Entity Recognition
-    Could process doc once for definition extraction
-      Extract entities into JSON with LLM
-        Generate embeddings 
-          Identify analogies
-            Generate set of entities
-    Use entities to extract relations (could use text to describe the relation)
-      Could the extract relevant entities and relations based on embedding of chatGPT initial answer
-        Providing most relevant entities and relations to the query rewrite prompt should help
-    Avoid repetetive responses
-    Process topics into not more than X categories (will need this when there are too many docs)
-    Should we limit the document search to the topic ?
-      Not yet I guess.
-  Problems
-    Meta questions
-      e.g. 
-        What is the most complex concept in work safety?
-        Which document did you use in your last response.
-        Give some examples of difficult to understand concepts.
-    Imagine what a "normal" person might ask an "expert"
-      This is another one-offwhere we can reuse the questions
-        Benchmark different strategies for answer generation.
-          Use the answers in RAG (need to manage references to references)
 Notebook for analysing data
   A task could be a Notebook
     Can we use Javacsript+Python
@@ -96,17 +86,6 @@ Logout option on menu for basic auth
   Point to https://u:p@...
 Websocket does not work with basic auth
   First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
-Could manage the basic auth on the Hub instead of the proxy
-  Allow user to create new users and set a password
-  Could also have a simple flow for registering into a default group autonomously
-    Need to rate limit user and control abuse
-Review Python runner (broken after changed for sumy)
-https://github.com/RManLuo/Awesome-LLM-KG
-hashDiff on the input but why?
-  Not being merged on React
-  The update from node to received does not include the old response in the diff 
-    Inspect task.input why is diff showing empty object ?
-    Can we have remote diffOrigTask ?
 Use a function to update task then we can trace this
  T(task, "input.test")
  T(task, "input.test", "new value")
@@ -126,14 +105,11 @@ Styles of data processing
   What are the main insights ? Meta questions.
   Educational format
 Experiment with Apify for web scraping
-Simple RAG:
-  https://verba.weaviate.io/ RAG system https://github.com/weaviate/Verba 
-  Prepare the clarifying question in parallel
-  Give the user the option to tell the system to "think harder" and then use query decomposition as a query transformation as per https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engine/advanced/query_transformations.html Then next step could be to use GPT4.
-  If multiple files are in the corpus then the user could choose which to use.
-  Returning references - linking to PDF can we do that without reloading the page
-  https://gpt-index.readthedocs.io/en/latest/examples/low_level/evaluation.html
 Refactoring
+  Should we only use task.command instead of task.node.command ?
+    Avoids needing to copy it, seems reasonable
+  The processor should also have a local task.nodes (so it can support multiple hubs)
+    First (common) step is to copy task.node into task.nodes
   Align similar modules on the hub and rxjs
     Softlink to use rxjs src from hub/src/rxjs-src 
     Could pull out common functions
@@ -144,10 +120,6 @@ Refactoring
   Should disintguish between requesting to register and register
     Or does the hub register with the nodes and then inverse
     So not really a request it is just that the node responds by also Registering
-  The processor should also have a local task.nodes (so it can support multiple hubs)
-    First (common) step is to copy task.node into task.nodes
-  Should we only use task.command instead of task.node.command ?
-    Avoids needing to copy it, seems reasonable
   Unique to the hub:
     taskConverterWrapper.mjs 
       fromTask is used

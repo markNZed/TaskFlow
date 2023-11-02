@@ -88,4 +88,6 @@ NODE["mode"] = "production"; //"development"
 
 console.log({NODE});
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE };
+const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
+
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET };

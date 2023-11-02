@@ -2,6 +2,18 @@
 import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
+  {
+    name: "TaskUsers",
+    environments: ["react", "rxjs-hub-consumer"],
+    state: {
+      current: "start",
+    },
+    services: {
+      systemConfig: {
+        type: "systemConfig",
+      },
+    },
+  },
   // TaskChatRAG is not a base type but serves as a template and sets the type to TaskChat
   // So we need to keep TaskChatRAG aligned with TaskChat
   {
@@ -136,6 +148,13 @@ const tasktypes = [
         type: "systemConfig",
       },
     },
+    state: {
+      current: "start",
+    },
+  },
+  {
+    name: "TaskLogin",
+    environments: ["react", "rxjs-hub-consumer"],
     state: {
       current: "start",
     },

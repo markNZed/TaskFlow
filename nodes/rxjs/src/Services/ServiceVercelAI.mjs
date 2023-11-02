@@ -158,11 +158,16 @@ async function openaigpt_async(params) {
   // This is a hack to get parameters into the API
   // We should be able to change this on the fly, I requested a feature
   // https://github.com/transitive-bullshit/chatgpt-api/issues/434
-  let openai;
+  let llmapi;
   if (!dummyAPI) {
-    openai = new OpenAI({
+    let llmconfig = {
       apiKey: process.env.OPENAI_API_KEY,
-    });
+    }
+    // Used this with proxy e.g. http://litellm_server:8000
+    if (process.env.OPENAI_API_URL) {
+      llmconfig["baseURL"] = process.env.OPENAI_API_URL;
+    }
+    llmapi = new OpenAI(llmconfig);
   }
 
   let cachedValue = null;
@@ -268,6 +273,7 @@ async function openaigpt_async(params) {
       try {
         let options = {
           model: modelVersion,
+          //model: "mistral", // When experimenting with LiteLLM as a proxy to ollama running mistral
           stream: true,
           // messages, maybe need to do this explicitly if using sendExtraMessageFields
           // https://github.com/vercel/ai/issues/551
@@ -278,14 +284,14 @@ async function openaigpt_async(params) {
           options.function_call = "auto";
         }   
         const TIMEOUT_DURATION = 20000; // 20 seconds, adjust as needed
-        console.log("openai.chat.completions.create(options)", options);
+        console.log("llmapi.chat.completions.create(options)", options);
         let response = await Promise.race([
-            openai.chat.completions.create(options),
+            llmapi.chat.completions.create(options),
             new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('ServiceVercelAI timed out after' + TIMEOUT_DURATION + 'ms')), TIMEOUT_DURATION)
             )
         ]);
-        console.log("openai.chat.completions.create responded");
+        console.log("llmapi.chat.completions.create responded");
         // eslint-disable-next-line no-unused-vars
         response_text_promise = new Promise((resolve, reject) => {
           // eslint-disable-next-line no-unused-vars
@@ -367,7 +373,7 @@ async function openaigpt_async(params) {
                 completionOptions["functions"] = functions;
                 completionOptions["function_call"] = "auto";
               }
-              return openai.chat.completions.create(completionOptions);
+              return llmapi.chat.completions.create(completionOptions);
             },
             onToken: async (token) => {
               // This callback is called for each token in the stream

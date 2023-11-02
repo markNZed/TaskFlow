@@ -311,6 +311,11 @@ form img {
 }
 */
 
+/* For TaskUsers grid */
+.leftAlign {
+  text-align: left;
+}
+
 
 /* TaskSystemLogViewer */
 

@@ -58,6 +58,7 @@ async function processInstanceAsync(task, instanceId, mode, nodeId) {
     if (activeTask && doesContain) {
       utils.logTask(task, "Task already active", instanceId);
       task = activeTask;
+      task.node = {};
       task.node["command"] = "join";
       task.node["commandArgs"] = { lockBypass: true };
       task.node["initiatingNodeId"] = nodeId;

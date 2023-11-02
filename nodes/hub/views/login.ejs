@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <script>
+        window.onload = function() {
+            document.getElementById('loginForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // If credentials are invalid, parse the JSON to get the error message
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Invalid credentials');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    // Handle success, maybe redirect or store token in localStorage
+                    //localStorage.setItem('authToken', data.token);
+                    document.cookie = `authToken=${data.authToken}; path=/; secure; SameSite=Strict;`;
+                    
+                    // Redirect to the root path ("/")
+                    window.location.href = '/';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    // Handle errors, show a message to the user
+                    alert(error.message);
+                });
+            });
+        };
+    </script>
+    <style>
+        /* This will center the form on the screen */
+        #centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        /* This will center the submit button horizontally */
+        .submit-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px; /* You can adjust this value to add more space above the button */
+        }
+        /* This will center the form on the screen */
+        #loginForm {
+            border: 1px solid black;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);
+            background-color: #474e68;
+            color: white;
+        }
+        /* Adding some basic styling to the body to ensure full height */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF; 
+        }
+        /* Styling the heading */
+        h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="centered">
+        <h2><%= appName %></h2>
+        <form id="loginForm">
+            <label for="username">Username:</label><br>
+            <input type="text" id="username" name="username" required><br>
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br><br>
+            <div class="submit-container">
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+    </div>
+</body>
+</html>

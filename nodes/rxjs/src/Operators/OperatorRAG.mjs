@@ -23,8 +23,54 @@ Enhanced Generation:
     Diverse outputs: Use techniques like beam search, top-k sampling, or nucleus sampling to generate diverse and high-quality answers.
     Feedback loop: Implement a feedback system where users can rate or correct the generated responses, which can then be used to improve the generation model further.
 
-*/
+  Ideas
+    Log questions that can't be responded to - could be a good reason to follow up with a client
+      We already have this in the timeseries DB
+    Improve the question
+      Use functions "clarify concept" etc "provide more information about" Could provide a list of concepts that it wants clarified. Could clarify user intention.
+        This would probably be very good. Set a depth limit
+          Decide how detailed the answer should be (user could make adjustment via UI)
+            An "effort" indicator
+      Could pass an array of concepts to clarify
+        Could use vector DB to find previous clarifications
+    Preprocessing to replace slang terms with formal terms before searching
+    Extract entities, https://arxiv.org/abs/2305.15444 PromptNER: Prompting For Named Entity Recognition
+    Could process doc once for definition extraction
+      Extract entities into JSON with LLM
+        Generate embeddings 
+          Identify analogies
+            Generate set of entities
+    Use entities to extract relations (could use text to describe the relation)
+      Could the extract relevant entities and relations based on embedding of chatGPT initial answer
+        Providing most relevant entities and relations to the query rewrite prompt should help
+    Avoid repetetive responses
+    Process topics into not more than X categories (will need this when there are too many docs)
+      Can manually modify the topics for now
+    Should we limit the document search to the topic ? Not yet.
+    https://github.com/RManLuo/Awesome-LLM-KG for knowledge maps
+    query decomposition as a query transformation as per https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engine/advanced/query_transformations.html Then next step could be to use GPT4.
+    If multiple files are in the corpus then the user could choose which to use.
+    Returning references - linking to PDF can we do that without reloading the page
+    https://gpt-index.readthedocs.io/en/latest/examples/low_level/evaluation.html
+  Problems
+    Meta questions
+      e.g. 
+        What is the most complex concept in work safety?
+        Which document did you use in your last response.
+        Give some examples of difficult to understand concepts.
+    Imagine what a "normal" person might ask an "expert"
+      This is another one-offwhere we can reuse the questions
+        Benchmark different strategies for answer generation.
+          Use the answers in RAG (need to manage references to references)
+    In the case where GPT decides there is no information we could append the canned response but would need to do a text substitution.
+    TaskConversation option to start a new conversation
+      RAG would need to deal with this too
+      Forget this conversation
+    Upper bound for the conversation depth
+      Just remove old messages ?
+    Improve prompt for adding of references.
 
+*/
 
 async function operate_async(wsSendTask, task) {
   const T = utils.createTaskValueGetter(task);

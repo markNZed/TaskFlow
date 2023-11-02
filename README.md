@@ -166,6 +166,22 @@ You will need to include TaskNew in a sequence of tasks (or it could be standalo
 
 Available in the `task.output` object of the previous Task Instance.
 
+# Authentication
+
+With a proxy T@skFlow provides a simple authentication mechanism:
+* The proxy should generate a sub-request to /auth that is a routed to the Hub for authentication
+* The proxy needs to allow unauthenticated access to /login.html and /login 
+* The proxy should redirect to /login.html if the /auth fails (returns HTTP error 401)
+* The user enters credentials at /login.html which posts a request for a JWT token at /login and stores the token in a cookie
+* The /auth path checks the cookie for the JWT token, the token contains the user id which will correspond to `task.user.id`
+* The Hub checks task.tokens.authToken to authenticate websocket messages 
+
+One advantage of this approach is that the React client is only served after authentication. The username and password hash are stored in nodes/hub/db/accessDB.sqlite3 other information about the user is stored in usersStore_async. The password_hash storage is separated from the user data so authentication can be independent of T@skFlow internal data structure. 
+
+# Configuration
+
+The primary configuration of Taskflow uses Javascript objects. These objects are read by the script/dumpOneConfig.js which imports Javascript modules from the CONFIG_DIR and writes JSON configuration files to the db/config directory. This is a result of the development history: setting a javascript object in a module was an easy way to configure the early system, the flexibility of using Javascript allowed for "programming" the configuration (e.g. a tree structure with inheritance). To reload the primary configuraton without restarting T@skFlow the configuration modules need to be reloaded which is not obvous in nodejs, this is why a script is usd to dump the configuration in JSON format that can be reloaded without restarting the app.
+
 # Coding Guidelines
 
 Code is currently formatted using Prettier defaults.

@@ -165,7 +165,8 @@ function checkAPIRate(task) {
     const maxRequestCount = task?.config?.maxRequestCount;
     if (maxRequestCount && task.meta.requestCount > maxRequestCount) {
       utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
-      task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
+      throw new Error("Task request count exceeded");
+      //task.error = {message: "Task request count of " + maxRequestCount + " exceeded."};
     }
     //utils.logTask(task, `Task request count: ${task.meta.requestCount} of ${maxRequestCount}`);
     task.meta.requestCount++;
@@ -183,7 +184,7 @@ function checkErrorRate(task) {
       currentDate.getUTCMonth(),
       currentDate.getUTCDate(),
       currentDate.getUTCHours(),
-      currentDate.getUTCMinutes()
+      currentDate.getUTCMinutes(),
     );
     const maxRequestRate = maxErrorRate ?? 0;
     if (maxRequestRate) {
@@ -216,6 +217,8 @@ async function findClosestErrorTask_async(taskId, tasksStore_async) {
 async function processError_async(task, tasksStore_async) {
   utils.debugTask(task);
   if (task.error) {
+    task["meta"] = task.meta || {};
+    task.meta["errorCount"] = (task.meta["errorCount"] + 1) || 0;
     let errorTask;
     if (task.config && task.config.errorTask) {
       errorTask = task.config.errorTask;
@@ -224,7 +227,7 @@ async function processError_async(task, tasksStore_async) {
     }
     task.node.command = "error";
     task.node.commandArgs = { errorTask };
-    utils.logTask(task,"processError_async found task.error and set errorTask", errorTask?.id);
+    utils.logTask(task,"processError_async found task.error and set errorTask", errorTask?.id, "errorCount", task.meta["errorCount"]);
   }
   return task;
 }

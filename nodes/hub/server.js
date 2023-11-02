@@ -11,6 +11,7 @@ import cors from "cors";
 import http from "http";
 import bodyParser from "body-parser";
 import path from "path";
+import cookieParser from 'cookie-parser';
 
 import { fileURLToPath } from "url";
 import * as dotenv from "dotenv";
@@ -19,7 +20,12 @@ dotenv.config();
 // App specific modules
 import { NODE } from "./config.mjs";
 import miscRoutes from "./src/routes/miscRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
+import loginRoutes from "./src/routes/loginRoutes.js";
 import { initWebSocketServer } from "./src/webSocket.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -36,6 +42,7 @@ app.use((req, res, next) => {
 
 app.use(requestId());
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // To use CloudFlare with POST requests we need to add the allowedOrigins to allow pre-flight requests (OPTIONS request) see
 // https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/cors/#allow-preflighted-requests
@@ -69,14 +76,44 @@ app.use(
   })
 );
 
+// Parse URL-encoded bodies (as sent by HTML forms)
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.json());
 
-// Serve static files from the public directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Set the view engine to ejs
+app.set('view engine', 'ejs');
+// Set the views directory
+const viewsDir = path.join(__dirname, 'views');
+app.set('views', viewsDir);
+console.log("Views dir:", viewsDir)
+
+// Route to serve the login.html file when /login.html is accessed
+app.get('/login.html', (req, res) => {
+  console.log("Serving login.html appName",NODE.app.label);
+  res.render('login', { appName: NODE.app.label });
+});
+
+app.use("/auth", authRoutes);
+app.use("/login", loginRoutes);
+app.use("/", miscRoutes); // After other routes because it has the default route
+
+// Serve static files from the public directory after ejs rendering
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", miscRoutes); // After other routes because it has the default route
+// Catch-all route for handling unknown endpoints
+app.use('*', (req, res) => {
+  res.status(404).send('404 Not Found');
+  // Or if you have a 404.html or 404.ejs page, you can render it
+  // res.status(404).render('404');
+});
+
+// Error handling middleware at the end
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 const serverOptions = {};
 const server = http.createServer(serverOptions, app);

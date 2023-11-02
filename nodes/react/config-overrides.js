@@ -49,6 +49,16 @@ module.exports = {
       config.resolve.modules
     );
 
+    // Add fallback for crypto module to use crypto-browserify
+    // This is to use password-generator in the browser
+    config.resolve.fallback = {
+      ...(config.resolve.fallback || {}), // Preserve existing fallbacks
+      crypto: require.resolve('crypto-browserify'),
+      stream: require.resolve('stream-browserify'),
+    };
+
+    
+
     // Add Babel plugin
     const babelLoaderFilter = rule =>
       rule.loader &&

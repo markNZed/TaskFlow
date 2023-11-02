@@ -294,7 +294,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
     T("commandArgs", {lockBypass: true});
     T("commandDescription", "Error in nodeTasks_async");
   }
-  if (T("error")) {
+  if (T("error") && T("node.command") !== "error") {
     // It is not natural to set the command to update when we have an error command
     T("command", "update");
     console.error("Task error: ", T("error"))

@@ -24,7 +24,7 @@ Review Qs
   * Is createContext really needed as it seems we re-render anyway
 
 Issues:
-  Is react-data-grid a good choic e.g. https://github.com/adazzle/react-data-grid/issues/3043
+  Is react-data-grid a good choice e.g. https://github.com/adazzle/react-data-grid/issues/3043
     react-data-grid examples seem to be out of date, check the index.ts in node_modules
   Date picker for datatype date
 

@@ -4,7 +4,6 @@ import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
 import Stack from '@mui/material/Stack';
 import { utils } from "../../shared/utils.mjs";
-import { result } from "lodash";
 
 const TaskSelect = (props) => {
   const {

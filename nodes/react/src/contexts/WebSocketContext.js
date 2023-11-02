@@ -10,6 +10,7 @@ import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
 import { utils } from "../utils/utils.mjs";
 import { TOKEN_APP } from "../config.mjs";
+import Cookies from 'js-cookie';
 
 class WebSocketEventEmitter extends EventEmitter {}
 
@@ -32,6 +33,8 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   const { globalState, replaceGlobalState } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();
+  // To get a cookie
+  const authToken = Cookies.get('authToken');
 
   // The default is 10 but we have at least 3 listeners per task
   // There is also the listener for partial results
@@ -62,6 +65,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     task.meta.messageId = utils.nanoid8();
     task.tokens = task.tokens || {};
     task.tokens["app"] = TOKEN_APP;
+    task.tokens["authToken"] = authToken;
     message["task"] = task;
     utils.debugTask(task);
     sendJsonMessagePlusRef.current(message);

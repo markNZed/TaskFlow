@@ -11,8 +11,8 @@
     "#shared/*": "./src/shared/*.mjs"
   },
   "scripts": {
-    "start": "nodemon --watch ../config --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
-    "debug": "nodemon --watch ../config --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --trace-warnings --inspect=${DEBUG_PORT:-0.0.0.0:9229} server.js"
+    "start": "nodemon --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --ignore 'db' server",
+    "debug": "nodemon --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --ignore 'db' --trace-warnings --inspect=${DEBUG_PORT:-0.0.0.0:9229} server.js"
   },
   "dependencies": {
     "@keyv/redis": "^2.7.0",
@@ -20,12 +20,15 @@
     "@tensorflow/tfjs": "^4.4.0",
     "@tensorflow/tfjs-node": "^4.4.0",
     "async-mutex": "^0.4.0",
+    "bcrypt": "^5.1.1",
     "beaver-logger": "^4.0.34",
     "better-sqlite3": "^8.1.0",
     "chatgpt": "^5.1.3",
     "config": "^3.3.9",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-request-id": "^3.0.0",
     "express-ws": "^5.0.2",
@@ -36,6 +39,7 @@
     "iconv-lite": "^0.6.3",
     "intl": "^1.2.5",
     "json-diff": "^1.0.6",
+    "jsonwebtoken": "^9.0.2",
     "keyv": "^4.5.3",
     "keyv-better-sqlite3": "^1.0.0",
     "keyv-redis": "^1.3.4",
@@ -47,6 +51,7 @@
     "nodemon": "^2.0.21",
     "redis": "^4.6.8",
     "seedrandom": "^3.0.5",
+    "sqlite3": "^5.1.6",
     "ws": "^8.12.1",
     "yup": "^1.2.0"
   },

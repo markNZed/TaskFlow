@@ -12,31 +12,23 @@ import { fromTask } from "./taskConverterWrapper.mjs";
 import fs from 'fs/promises'; // Use promises variant of fs for async/await style
 import jsonDiff from 'json-diff'; // You need to install this package: npm install json-diff
 
-// For now we use JS data structures instead of a DB
-// Reduces need for an admin interface during dev
-console.log("Loading config data from " + NODE.configDir);
-var users = await utils.load_data_async(NODE.configDir, "users");
-var groups = await utils.load_data_async(NODE.configDir, "groups");
-var tasks = await utils.load_data_async(NODE.configDir, "tasks");
-var tasktypes = await utils.load_data_async(NODE.configDir, "tasktypes");
-var autoStartTasks = {};
+async function loadConfigOne_async(type) {
+  const config = await utils.load_data_async(NODE.configDir, type);
+  return config;
+}
 
 // We adopt a DRY strategy in the code and config files
 // But not in the data structures that are generated from the config for the code
 // Transform hierarchical tasks structure into a hash
 // Build tasks hash from the tasks array
 
-tasktypes = utils.flattenObjects(tasktypes);
-//console.log(JSON.stringify(tasktypes, null, 2))
-
-try {
-  await validateTasks(tasks);
-} catch (e) {
-  console.error("Error validating tasks", e);
-  throw new Error("Error validating tasks");
+function initTasktypes(tasktypes) {
+  tasktypes = utils.flattenObjects(tasktypes);
+  //console.log(JSON.stringify(tasktypes, null, 2))
+  return tasktypes;
 }
 
-function mergeTasks(task, parentTask) {
+function mergeTasks(tasktypes, task, parentTask) {
   // Merge the taskType first so we can take APPEND_ PREPREND_ into account from tasktype
   //console.log("mergeTasks ", task.id, parentTask.id);
   if (task.type) {
@@ -164,12 +156,13 @@ function stripAppendKeys(obj) {
 
 // Not that this has huge side-effects
 // Transform tasks array into flattened tasks hash
-function flattenTasks(tasks) {
+function flattenTasks(tasktypes, tasksConfig) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
   var taskLookup = {};
-  tasks.forEach(function (task) {
+  let autoStartTasks = {};
+  tasksConfig.forEach(function (task) {
     // Debug option 
     let debug = false;
     //if (task.name.includes("chatgptzeroshot")) {debug = true;}
@@ -226,11 +219,11 @@ function flattenTasks(tasks) {
       const parentTaskflow = JSON.parse(JSON.stringify(taskLookup[parentId]));
       stripChildrenPrefix(parentTaskflow);
       stripAppendKeys(parentTaskflow);
-      mergeTasks(task, parentTaskflow);
+      mergeTasks(tasktypes, task, parentTaskflow);
     }
 
     // Process APPEND_, PREPEND_
-    mergeTasks(task, task);
+    mergeTasks(tasktypes, task, task);
 
     // Convert relative task references to absolute
     const nextTask = task?.config?.nextTask;
@@ -282,57 +275,77 @@ function flattenTasks(tasks) {
 
   // Replace array of tasks with hash
   // Array just made it easier for the user to specify parents in the config file
-  return taskLookup;
+  return [taskLookup, autoStartTasks];
 }
 
-// This has side-effects, modifying tasks in-place
-// Could check that each task has a 'start' task
-tasks = flattenTasks(tasks);
-//console.log(JSON.stringify(tasks, null, 2))
+function initTasks(tasktypes, tasksConfig) {
+  try {
+    validateTasks(tasksConfig);
+  } catch (e) {
+    console.error("Error validating tasksConfig", e);
+    throw new Error("Error validating tasksConfig");
+  }
+  // This has side-effects, modifying tasks in-place
+  // Could check that each task has a 'start' task
+  const [flattasks, autoStartTasks] = flattenTasks(tasktypes, tasksConfig);
+  //console.log(JSON.stringify(tasks, null, 2))
+  // For each task in tasks run fromTask to validate the task
+  Object.keys(flattasks).forEach(key => {
+    const task = flattasks[key];
+    fromTask(task);
+  });
+  return [flattasks, autoStartTasks];
+}
 
-users = utils.flattenObjects(users);
-//console.log(JSON.stringify(users, null, 2))
-
-//Create a group for each user
-for (const userKey in users) {
-  if (users[userKey]) {
-    //console.log("Creating group for user " + userKey)
-    if (groups[userKey] === undefined) {
-      const group = {
-        name: users[userKey].name,
-        users: [userKey],
+function initUsers(users) {
+  let groups = {};
+  users = utils.flattenObjects(users);
+  //console.log(JSON.stringify(users, null, 2))
+  //Create a group for each user
+  for (const userKey in users) {
+    if (users[userKey]) {
+      //console.log("Creating group for user " + userKey)
+      if (groups[userKey] === undefined) {
+        const group = {
+          name: userKey,
+          users: [userKey],
+        }
+        groups[userKey] = group;
       }
-      groups.push(group)
     }
   }
+  return [users, groups];
 }
 
-groups = utils.flattenObjects(groups);
-//console.log(JSON.stringify(groups, null, 2))
-
-//Add list of groups to each user (a view in a DB)
-for (const groupKey in groups) {
-  if (groups[groupKey]) {
-    const group = groups[groupKey];
-    assert(group["users"], "Group " + groupKey + " has no users");
-    group.users.forEach(function (id) {
-      // Groups may have users that do not exist
-      if (users[id] === undefined) {
-        console.log(
-          "Could not find user " + id + " expected in group " + groupKey
-        );
-      } else {
-        if (users[id]["groups"] !== undefined) {
-          // Should check that not already in groups
-          users[id]["groups"].push(groupKey);
+function initGroups(users, groupsConfig, groups) {
+  const newGroups = utils.flattenObjects(groupsConfig);
+  groups = utils.deepMerge(groups, newGroups);
+  //console.log(JSON.stringify(groups, null, 2))
+  //Add list of groups to each user (a view in a DB)
+  for (const groupKey in groups) {
+    if (groups[groupKey]) {
+      const group = groups[groupKey];
+      assert(group["users"], "Group " + groupKey + " has no users");
+      group.users.forEach(function (id) {
+        // Groups may have users that do not exist
+        if (users[id] === undefined) {
+          console.log(
+            "Could not find user " + id + " expected in group " + groupKey
+          );
         } else {
-          users[id]["groups"] = [groupKey];
+          if (users[id]["groups"] !== undefined) {
+            // Should check that not already in groups
+            users[id]["groups"].push(groupKey);
+          } else {
+            users[id]["groups"] = [groupKey];
+          }
         }
-      }
-    });
+      });
+    }
   }
+  //console.log(JSON.stringify(users, null, 2))
+  return [groups, users];
 }
-//console.log(JSON.stringify(users, null, 2))
 
 /*
  * Save config to a file if the file does not exist.
@@ -367,19 +380,51 @@ async function dumpConfig(configData, configName) {
     console.log('No differences found');
   }
 }
-if (NODE.dumpConfigs) {
-  await dumpConfig(tasks, "tasks");
-}
 
 //console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
 //console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 
 
-// For each task in tasks run fromTask to validate the task
-Object.keys(tasks).forEach(key => {
-  const task = tasks[key];
-  fromTask(task);
-});
-
 //console.log("autoStartTasks", JSON.stringify(autoStartTasks, null,2));
 
-export { users, groups, tasktypes, tasks, autoStartTasks };
+async function configInitOne_async(type) {
+  console.log("configInitOne_async");
+  let config = await loadConfigOne_async(type);
+  config = utils.deepClone(config);
+  switch (type) {
+    case "tasktypes":
+      tasktypes = initTasktypes(config);
+      break;
+    case "tasks":
+      if (!tasktypes) {
+        await configInitOne_async("tasktypes")
+      }
+      [tasks, autoStartTasks] = initTasks(tasktypes, config);
+      if (NODE.dumpConfigs) {
+        await dumpConfig(tasks, "tasks");
+      }
+      break;
+    case "users":
+      [users, groups] = initUsers(config);
+      break;
+    case "groups":
+      if (!users) {
+        await configInitOne_async("users")
+      }
+      [groups, users] = initGroups(users, config, groups);
+      break;
+    default:
+      throw new Error("Unknown config", type);
+  }
+}
+
+async function configInit_async() {
+  await configInitOne_async("tasktypes");
+  await configInitOne_async("tasks");
+  await configInitOne_async("users");
+  await configInitOne_async("groups");
+}
+
+// The variables will be initialized when configInit_async is called
+var users, groups, tasktypes, tasks, autoStartTasks;
+
+export { configInit_async, configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks };

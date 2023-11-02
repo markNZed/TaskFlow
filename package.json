@@ -10,6 +10,7 @@
     "prettier": "2.8.8"
   },
   "dependencies": {
+    "@huggingface/inference": "^2.6.4",
     "clipboard-copy": "^4.0.1",
     "cohere-ai": "^6.2.2"
   }

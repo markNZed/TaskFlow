@@ -501,12 +501,18 @@ const utils = {
     if (_.isEmpty(obj1) && _.isEmpty(obj2)) {
       return undefined;
     }
+    if (_.isEmpty(obj1)) {
+      return obj1;
+    }
+    if (_.isEmpty(obj2)) {
+      return obj1;
+    }
     let diffObj = Array.isArray(obj1) && Array.isArray(obj2) ? [] : {};
     _.each(obj1, (value, key) => {
       if (key in obj2) {
         if (_.isObject(value) && _.isObject(obj2[key])) {
           let diff = utils.getIntersectionWithDifferentValues(value, obj2[key]);
-          if (!_.isEmpty(diff) && diff !== undefined) {
+          if (diff !== undefined) {
             diffObj[key] = diff;
           }
         } else if (!_.isEqual(value, obj2[key])) {
@@ -717,7 +723,6 @@ const utils = {
     }
     let taskCopy = utils.deepClone(task);
     delete taskCopy.node;
-    delete taskCopy.node;
     delete taskCopy.nodes;
     delete taskCopy.user;
     delete taskCopy.users;
@@ -734,12 +739,15 @@ const utils = {
         delete taskCopy.state;
       }
     }
+    // Because React is adding token during the sending of the Task so it will not be stored
+    delete taskCopy.tokens;
     // Sending null is used to delete so we can get mismatches when the entry is deleted
     utils.removeNullKeys(taskCopy);
     return taskCopy;
   },
 
   nodeDiff: function(lastTask, task) {
+    utils.debugTask(task);
     if (task.node.command === "ping" || task.node.command === "pong") {
       return task;
     }
@@ -756,6 +764,19 @@ const utils = {
     //if (lastTaskClone?.meta?.modified) delete lastTaskClone.meta.modified;
     if (taskClone?.nodes) delete taskClone.nodes;
     if (lastTaskClone?.nodes) delete lastTaskClone.nodes;
+    // Cannot transmit functions
+    for (const key of ['operators', 'services', 'ceps']) {
+      if (taskClone[key]) {
+        //console.log("cleanForHash key", key);
+        const entries = Object.keys(taskClone[key]);
+        for (const entry of entries) {
+        //console.log("cleanForHash entry", entry);
+          if (taskClone[key][entry]["module"]) {
+            delete taskClone[key][entry]["module"];
+          }
+        }
+      }
+    }
     //console.log("nodeDiff in lastTaskClone.output, task.output", lastTaskClone?.output, task.output);
     let diffTask;
     if (taskClone.node?.origTask) {
@@ -831,10 +852,10 @@ const utils = {
         hashDiff = utils.cleanForHash(hashDiff);
         console.error("checkHashDiff difference between the remote storage and the local storage", hashDiff);
       }
-      console.error("Local diffOrigTask", JSON.stringify(diffOrigTask, null, 2));
-      console.error("task.meta.hashDebugLastTaskValues", task.meta?.hashDebugLastTaskValues);
-      console.error("taskInStorage:", taskInStorage);
-      console.error("taskCopy:", taskCopy);
+      console.error("Diff against local storage", JSON.stringify(diffOrigTask, null, 2));
+      console.error("Diff against remote storage", task.meta?.hashDebugLastTaskValues);
+      console.error("task in local storage:", taskInStorage);
+      console.error("Incoming task:", taskCopy);
       throw new Error("ERROR: Task hashDiff does not match messageId:" + task.meta.messageId + " local:" + localHash + " remote:" + expectedHash);
     } else {
       //console.log("checkHashDiff OK");
@@ -1113,9 +1134,6 @@ const utils = {
     if (task === undefined) {
       throw new Error("Task undefined in debugTask");
     }
-    if (task === null) {
-      throw new Error("Task null in debugTask");
-    }
     // This is like a continuous assertion (it runs before debug info is collected)
     if (task?.node?.origTask?.id && task?.node?.origTask?.id !== task?.id) {
       console.error("Task:", task);
@@ -1192,19 +1210,6 @@ const utils = {
     }
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
-    }
-    if (task?.inputs?.query) {
-      logParts.push("task.input.query", utils.js(task.input.query));
-    }
-
-    if (task.id === "root.user.dtf.rag.select") {
-      logParts.push("task.output", utils.js(task.output));
-    }
-
-    if (task?.input && task.input.query === null) {
-      logParts.push('task:', utils.js(task));
-      console.log(logParts.join(' '));
-      throw new Error("ERROR debugTask: query is null");
     }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {

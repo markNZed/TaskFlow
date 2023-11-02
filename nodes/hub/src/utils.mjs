@@ -13,15 +13,25 @@ const utils = {
   
   ...sharedUtils,
 
-  getUserId: function (req) {
-    let userId = DEFAULT_USER;
+  getSourceIP: function (req) {
     let sourceIP = req.ip;
+    if (!sourceIP && req.socket) {
+      sourceIP = req.socket.remoteAddress;
+    }
     if (sourceIP && sourceIP.startsWith('::ffff:')) {
       sourceIP = sourceIP.substring('::ffff:'.length);
+    } else {
+      console.log("WARNING: Unknown source IP: " + req.ip, req);
     }
+    return sourceIP;
+  },
+
+  getUserId: function (req) {
+    let userId = DEFAULT_USER;
+    const sourceIP = utils.getSourceIP(req);
     // If the request is from localhost then no need to authenticate
     if (sourceIP === "127.0.0.1") {
-      if (req.body.userId) {
+      if (req?.body?.userId) {
         userId = req.body.userId;
       }
     } else if (process.env.AUTHENTICATION === "basic") { // untested

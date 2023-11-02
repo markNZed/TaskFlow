@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes } from "./storage.mjs";
+import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -14,7 +14,8 @@ import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
-import { NODE } from "../config.mjs";
+import { NODE, JWT_SECRET, MAP_USER } from "../config.mjs";
+import jwt from 'jsonwebtoken';
 
 /**
  * Sends an object through the WebSocket connection identified by the given node ID.
@@ -127,9 +128,9 @@ function initWebSocketServer(server) {
 
   const websocketServer = new WebSocketServer({ server: server, path: "/hub/ws" });
 
+  // eslint-disable-next-line no-unused-vars
   websocketServer.on("connection", (ws, req) => {
-    // Accessing headers from the request (req) object
-    const userId = utils.getUserId(req);
+    
     console.log("websocketServer.on");
 
     ws.data = { nodeId: undefined };
@@ -139,19 +140,29 @@ function initWebSocketServer(server) {
       const j = JSON.parse(message);
 
       let task = j?.task;
+      let userId;
 
       if (!task) {
         console.log("No task", message);
-        //throw new Error("No task");
         return;
       }
 
       if (!task?.tokens?.app || task.tokens.app !== NODE.app.token) {
         console.log("No task.tokens.app expecting", NODE.app.token, task.tokens.app, task);
-        //throw new Error("No task.tokens.app");
         return;
       }
 
+      if (task?.tokens?.authToken) {
+        const decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+        //console.log("authToken found", decoded);
+        userId = decoded.username;
+        if (MAP_USER && MAP_USER[userId]) {
+          userId = MAP_USER[userId];
+        } else if (task?.user?.id && task.user.id !== userId) {
+          console.log("task.user.id does not match JWT token", task.user.id, userId);
+          return;
+        }
+      }
 
       let incomingNode = task?.node;
 
@@ -168,7 +179,12 @@ function initWebSocketServer(server) {
           return;
         }
       }
-      if (incomingNode?.command === "ping") {
+      if (incomingNode?.command === "usersConfigLoad") {
+        // This is a hack because we have not yet merged hub and rxjs
+        // Should be replaced with a service but for now rxjs does not 
+        // have access to the configdata so only hub can reload
+        reloadOneConfig_async("users");
+      } else if (incomingNode?.command === "ping") {
         const taskPong = {
           meta: {
             updatedAt: utils.updatedAt(),
@@ -178,7 +194,12 @@ function initWebSocketServer(server) {
         //utils.logTask(taskPong, "Pong " + incomingNode.id);
         wsSendTask(taskPong, incomingNode.id);
       } else if (incomingNode?.command === "partial") {
-        task = await taskProcess_async(task);
+        try {
+          task = await taskProcess_async(task);
+        } catch {
+          console.error("taskProcess_async error", task);
+          return;
+        }
         const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
         let initiatingNodeId = task.node.initiatingNodeId
         if (activeTaskNodes) {

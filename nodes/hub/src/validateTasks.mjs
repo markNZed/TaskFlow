@@ -115,9 +115,13 @@ function transformKeys(obj) {
   }, {});
 }
 
-export const validateTasks = async (tasks) => {
+export const validateTasks = (tasks) => {
   //console.log("Validating tasks", tasks);
-  const transformedTasks = tasks.map(taskflow => transformKeys(taskflow));
-  await tasksSchema.validate(transformedTasks, { strict: true, noUnknown: true });
+  if (tasks) {
+    const transformedTasks = tasks.map(taskflow => transformKeys(taskflow));
+    tasksSchema.validateSync(transformedTasks, { strict: true, noUnknown: true });
+  } else {
+    console.error("Tasks undefined");
+  }
   //console.log("Valid tasks");
 }

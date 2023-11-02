@@ -10,6 +10,13 @@ dotenv.config();
 import mongoose from 'mongoose';
 import { newKeyV, redisClient } from "./shared/storage/redisKeyV.mjs";
 import { utils } from "./utils.mjs";
+import sqlite3 from 'sqlite3';
+const { verbose } = sqlite3;
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 var WSConnections = new Map(); // Stores WebSocket instances with unique session IDs
 var activeTaskFsm = new Map(); // Reference to the FSM if it is long running
@@ -20,6 +27,10 @@ var OperatorsMap = new Map();
 
 var CEPMatchMap = new Map();
 var CEPFunctionMap = new Map();
+
+const dbPath = `${__dirname}/../../hub/db/access.sqlite3`;
+console.log("accessDB path", dbPath);
+const accessDB = new (verbose().Database)(dbPath);
 
 mongoose.connect(NODE.storage.mongoUrl, {
   useNewUrlParser: true,
@@ -186,4 +197,5 @@ export {
   operatorTypes_async,
   CEPMatchMap,
   CEPFunctionMap,
+  accessDB,
 };
