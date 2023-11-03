@@ -11,6 +11,7 @@ import { NODE } from "#root/config";
 import path from 'path';
 import fs from 'fs';
 import { OperatorLLM } from "./OperatorLLM.mjs";
+import { DUMMY_OPENAI } from "#root/config";
 
 /*
 curl -X POST "http://weaviate:8080/v1/graphql" -H "Content-Type: application/json" -d '{
@@ -614,7 +615,7 @@ const RAG_async = async function (wsSendTask, T) {
         }
         historyContext = words.join(" ");  // Join the words back into a string.
         T("response.historyContext", historyContext);
-        if (addToCache) {
+        if (addToCache && !DUMMY_OPENAI) {
           queryVector = await embedText_async(T("response.query"));
           await weaviateClient.data
             .creator()

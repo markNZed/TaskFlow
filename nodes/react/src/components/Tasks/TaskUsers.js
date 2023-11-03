@@ -24,11 +24,10 @@ const TaskUsers = (props) => {
 
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [editUserId, setEditUserId] = useState(null);
+  const [editUser, setEditUser] = useState(null);
   const [users, setUsers] = useState([]);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState({});
   const [page, setPage] = useState(1);
   const [prevPage, setPrevPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -43,7 +42,8 @@ const TaskUsers = (props) => {
   const columns = [
     SelectColumn,
     //{ key: 'id', name: 'ID' },
-    { key: 'username', name: 'Username', minWidth: 400, cellClass: 'leftAlign' },
+    { key: 'name', name: 'Username', minWidth: 300, cellClass: 'leftAlign' },
+    { key: 'profile', name: 'Profile', minWidth: 400, cellClass: 'leftAlign' },
     // More columns as needed
   ];
 
@@ -71,6 +71,7 @@ const TaskUsers = (props) => {
         nextState = "reactRequest";
         break;
       case "action":
+        console.log("action", task.input);
         if (task.input.action === "create") {
           nextState = "create";
         } else if (task.input.action === "read") {
@@ -135,6 +136,7 @@ const TaskUsers = (props) => {
             break;
           case "update":
             setUser(task.response.user);
+            setUsers(task.response.users);
             break;
           case "delete":
             setUsers(task.response.users);
@@ -162,25 +164,23 @@ const TaskUsers = (props) => {
   const handleCreateUser = useCallback(() => {
     modifyTask({
       "input.action": "create",
-      "input.username": username,
+      "input.user": user,
       "input.password": password,
     });
     setIsDialogOpen(false);
-    setUsername("");
     setPassword("");
-  }, [username, password]);
+  }, [user, password]);
 
   const handleUpdateUser = useCallback(() => {
     modifyTask({
       "input.action": "update",
-      "input.username": username,
+      "input.user": user,
       "input.password": password,
     });
     setIsDialogOpen(false);
-    setUsername("");
     setPassword("");
-    setEditUserId(null);
-  }, [username, password]);
+    setEditUser(null);
+  }, [user, password]);
 
   const handleDeleteUser = useCallback(() => {
     modifyTask({
@@ -189,34 +189,49 @@ const TaskUsers = (props) => {
     });
   }, [selectedRows]);
 
+  const handleCheckboxChange = (permission) => {
+    let newGroups;
+    if (user?.groups?.includes(permission)) {
+      newGroups = user.groups.filter((group) => group !== permission);
+    } else {
+      newGroups = [...user.groups, permission];
+    }
+
+    // Update the user.groups with the selection
+    setUser({ ...user, groups: newGroups });
+  };
+
   // Handlers for dialog actions
   const openCreateDialog = () => {
     setIsDialogOpen(true);
-    setEditUserId(null);
-    setUsername("");
+    setEditUser(null);
+    setUser({
+      groups: [],
+    });
     generateEasyPassword(); // Generate a new password when opening the dialog
   };
 
   const openEditDialog = () => {
     if (selectedRows.size === 1) {
-      const username = Array.from(selectedRows)[0];
-      const user = users.find(u => u.username === username);
-      setUsername(user.username);
+      const name = Array.from(selectedRows)[0];
+      const user = users.find(u => u.name === name);
+      user["groups"] = user.groups || [];
+      setUser(user);
+      //console.log("user", user);
       setPassword(""); // Don't prefill password for security
-      setEditUserId(username);
+      setEditUser(name);
       setIsDialogOpen(true);
     }
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setUsername("");
     setPassword("");
-    setEditUserId(null);
+    setEditUser(null);
   };
 
   function rowKeyGetter(row) {
-    return row.username;
+    return row.name;
   }
 
   // User selects a new page of results
@@ -230,7 +245,7 @@ const TaskUsers = (props) => {
   }, [page]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', minWidth: '600px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', minWidth: '700px' }}>
       <div style={{ display: 'flex', flexDirection: 'row', gap: '10px', marginBottom: '20px' }}>
         <Button onClick={openCreateDialog}>Create User</Button>
         <Button onClick={openEditDialog} disabled={selectedRows.size !== 1}>Edit User</Button>
@@ -248,9 +263,14 @@ const TaskUsers = (props) => {
         //className="fill-grid"
       />
       <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>{editUserId ? "Edit User" : "Create User"}</DialogTitle>
+        <DialogTitle>{editUser ? "Edit User" : "Create User"}</DialogTitle>
         <DialogContent>
-          <TextField autoFocus margin="dense" label="Username" fullWidth value={username} onChange={(e) => setUsername(e.target.value)} />
+          <TextField autoFocus margin="dense" label="Username" fullWidth value={user.name} 
+            onChange={(e) => setUser(p => {
+              return {...p, name: e.target.value}
+            })} 
+            disabled={editUser !== null}
+          />
           <TextField
             margin="dense"
             label="Password"
@@ -259,10 +279,28 @@ const TaskUsers = (props) => {
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button onClick={generateEasyPassword}>Generate Password</Button>
+          Assign user groups:
+          <div style={{ display: 'flex' }}>
+            {task.user?.groups?.map((group, index) => (
+              <label key={index} style={{ marginRight: '10px' }}>
+                <input
+                  type="checkbox"
+                  checked={user?.groups?.includes(group)}
+                  onChange={() => handleCheckboxChange(group)}
+                />
+                {group}
+              </label>
+            ))}
+          </div>
+          <TextField margin="dense" label="Profile" fullWidth value={user.profile} 
+            onChange={(e) => setUser(p => { 
+              return {...p, profile: e.target.value}
+            })} 
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          {editUserId ? <Button onClick={handleUpdateUser}>Update</Button> : <Button onClick={handleCreateUser}>Create</Button>}
+          {editUser ? <Button onClick={handleUpdateUser}>Update</Button> : <Button onClick={handleCreateUser}>Create</Button>}
         </DialogActions>
       </Dialog>
     </div>

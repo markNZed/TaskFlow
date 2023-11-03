@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
 import { exec as execCallback } from 'child_process';
 import { readFile } from 'fs/promises';
+import fs from 'fs';
 import { promisify } from 'util';
 
 // Setting max listeners globally for all new EventEmitter instances
@@ -132,9 +133,20 @@ if (NODE.storage.emptyAllDB) {
 
 async function loadOneConfig_async(type) {
   const configDir = '../db/config';
+  let initialData = {};
+  let runtimeData = {};
+  let mergedData = {};
   try {
-    const data = JSON.parse(await readFile(join(__dirname, configDir + '/' + type + '.json'), 'utf8'));
-    return data;
+    let path = join(__dirname, configDir + '/initial/' + type + '.json');
+    initialData = JSON.parse(await readFile(path, 'utf8'));
+    path = join(__dirname, configDir + '/runtime/' + type + '.json');
+    if (fs.existsSync(path)) {
+      runtimeData = JSON.parse(await readFile(path, 'utf8'));
+      mergedData = utils.deepMerge(initialData, runtimeData);
+    } else {
+      mergedData = initialData;
+    }
+    return mergedData;
   } catch (error) {
     console.error('An error occurred while reading configuration files:', error);
   }
@@ -142,10 +154,14 @@ async function loadOneConfig_async(type) {
 
 async function runDumpOneConfigScript(type, verbose = false) {
   try {
-    const { stdout } = await exec('node ' + join(__dirname, '../scripts/dumpOneConfig.js') + ' ' + type);
+    const { stdout, stderr } = await exec('node ' + join(__dirname, '../scripts/dumpOneConfig.js') + ' ' + type);
     if (verbose) {
       const scriptOutput = stdout.trim();
       console.log(scriptOutput);
+    }
+    const scriptError = stderr.trim();
+    if (scriptError) {
+      console.error(scriptError);
     }
     // Handle script output as needed
   } catch (error) {
@@ -154,7 +170,7 @@ async function runDumpOneConfigScript(type, verbose = false) {
 }
 
 async function reloadOneConfig_async(type) { 
-  console.log("Storage reloadOneConfig_async", type);
+  console.log("reloadOneConfig_async", type);
   await runDumpOneConfigScript(type);
   //console.log(`Dumped the config`, type);
   const data = await loadOneConfig_async(type);
@@ -197,7 +213,7 @@ async function reloadOneConfig_async(type) {
   }
 }
 
-async function loadHubConfig_async() { 
+async function initHubConfig_async() { 
   // We need tasktypes before tasks and users before groups
   await reloadOneConfig_async("tasktypes");
   await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
@@ -205,7 +221,7 @@ async function loadHubConfig_async() {
   await reloadOneConfig_async("groups");
 }
 
-await loadHubConfig_async();
+await initHubConfig_async();
 
 export {
   instancesStore_async,

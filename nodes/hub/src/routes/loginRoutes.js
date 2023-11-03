@@ -18,6 +18,7 @@ router.post("/", async (req, res) => {
     }
 
     if (!row) {
+      console.log("Invalid user /login from", req.ip, username);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -27,10 +28,10 @@ router.post("/", async (req, res) => {
         const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
         // Generate JWT Token
         const authToken = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
-
         console.log("/login from", req.ip, username);
         res.json({ authToken });
       } else {
+        console.log("Invalid password /login from", req.ip, username, submittedPassword);
         res.status(401).json({ message: "Invalid credentials" });
       }
     } catch (error) {

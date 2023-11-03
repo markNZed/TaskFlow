@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async } from "./storage.mjs";
+import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async, usersStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -160,6 +160,11 @@ function initWebSocketServer(server) {
           userId = MAP_USER[userId];
         } else if (task?.user?.id && task.user.id !== userId) {
           console.log("task.user.id does not match JWT token", task.user.id, userId);
+          return;
+        }
+        // Check that the user still exists
+        if (!await usersStore_async.has(userId)) {
+          console.log("User not found", userId);
           return;
         }
       }

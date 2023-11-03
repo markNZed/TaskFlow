@@ -5,8 +5,9 @@ import { configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks } 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Could replace initial with subdir
 async function writeConfigToFile(type) {
-  const configDir = '../db/config';
+  const configDir = '../db/config/initial';
   const configMap = {
     users,
     groups,
@@ -23,6 +24,12 @@ async function writeConfigToFile(type) {
     await writeFile(join(__dirname, `${configDir}/${type}.json`), JSON.stringify(configMap[type], null, 2));
     if (type === "tasks") {
       await writeFile(join(__dirname, `${configDir}/autoStartTasks.json`), JSON.stringify(autoStartTasks, null, 2));
+    }
+    if (type === "users") {
+      await writeFile(join(__dirname, `${configDir}/groups.json`), JSON.stringify(groups, null, 2));
+    }
+    if (type === "groups") {
+      await writeFile(join(__dirname, `${configDir}/users.json`), JSON.stringify(users, null, 2));
     }
     console.log(`The ${type} configuration file has been written successfully.`);
   } catch (error) {

@@ -333,9 +333,10 @@ function initGroups(users, groupsConfig, groups) {
             "Could not find user " + id + " expected in group " + groupKey
           );
         } else {
-          if (users[id]["groups"] !== undefined) {
-            // Should check that not already in groups
-            users[id]["groups"].push(groupKey);
+          if (users[id]["groups"]) {
+            if (!users[id]["groups"].includes(groupKey)) {
+              users[id]["groups"].push(groupKey);
+            }
           } else {
             users[id]["groups"] = [groupKey];
           }
@@ -387,7 +388,7 @@ async function dumpConfig(configData, configName) {
 //console.log("autoStartTasks", JSON.stringify(autoStartTasks, null,2));
 
 async function configInitOne_async(type) {
-  console.log("configInitOne_async");
+  console.log("configInitOne_async loadConfigOne_async", type);
   let config = await loadConfigOne_async(type);
   config = utils.deepClone(config);
   switch (type) {
@@ -405,10 +406,11 @@ async function configInitOne_async(type) {
       break;
     case "users":
       [users, groups] = initUsers(config);
+      await configInitOne_async("groups");
       break;
     case "groups":
       if (!users) {
-        await configInitOne_async("users")
+        await configInitOne_async("users");
       }
       [groups, users] = initGroups(users, config, groups);
       break;

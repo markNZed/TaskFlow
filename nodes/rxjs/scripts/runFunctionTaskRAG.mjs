@@ -8,7 +8,7 @@ export function newTask(NODE, state, taskFunctionName) {
     instance: "runFunction-" + taskFunctionName,
     config: {
       local: {
-        corpusName: "GB",
+        corpusName: "SG",
       },
     },
     type: taskFunctionName,

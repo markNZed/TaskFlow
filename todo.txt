@@ -1,12 +1,9 @@
 /* ToDo
 -------
-Remove getUserId ?
-Allow for users to be created by hub-consumer could write to hub/db/config/override/users.json
-  Upon startup merge it into usersStore_async 
-  Modify on the fly also from TaskUsers
-  Still allows for easy flushing of Redis but can keep app specific users during upgrade.
-  How to stop this saving initial config into user config? Don't worry about it
-    Could warn about what is changed by the override
+Option to delete cache responses (also indicate them)
+Add a redirect command so we can rdirect user after they are removed
+Masking should allow for read only properties (stripped upon incoming)
+Callbacks that error are not caught in try/catch e.g. sqlite3 library
 Add Frontend for TaskRAGProcessing - to indicate progress/done, just needs to display the state
   Could experiment with a progress meter via websocket
 To allow task config to be modified during init via connections we need to run CEPConnect on the Coprocessor

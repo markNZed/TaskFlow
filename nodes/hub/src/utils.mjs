@@ -6,7 +6,6 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 "use strict";
 import { v4 as uuidv4 } from "uuid";
-import { MAP_USER, DEFAULT_USER } from "../config.mjs";
 import { utils as sharedUtils } from "./shared/utils.mjs";
 
 const utils = {
@@ -24,33 +23,6 @@ const utils = {
       console.log("WARNING: Unknown source IP: " + req.ip, req);
     }
     return sourceIP;
-  },
-
-  getUserId: function (req) {
-    let userId = DEFAULT_USER;
-    const sourceIP = utils.getSourceIP(req);
-    // If the request is from localhost then no need to authenticate
-    if (sourceIP === "127.0.0.1") {
-      if (req?.body?.userId) {
-        userId = req.body.userId;
-      }
-    } else if (process.env.AUTHENTICATION === "basic") { // untested
-      const authHeader = req.headers.authorization;
-      if (authHeader) {
-        const encodedCredentials = authHeader.split(' ')[1];
-        const decodedCredentials = Buffer.from(encodedCredentials, 'base64').toString();
-        // eslint-disable-next-line no-unused-vars
-        const [username, password] = decodedCredentials.split(':');
-        userId = username;
-      }
-      //userId = req.headers["x-authenticated-userid"]; // unsure if this works
-    } else if (process.env.AUTHENTICATION === "cloudflare") {
-      userId = req.headers["cf-access-authenticated-user-email"];
-    }
-    if (MAP_USER && MAP_USER[userId]) {
-      userId = MAP_USER[userId];
-    }
-    return userId;
   },
 
   formatDateAndTime: function (date) {

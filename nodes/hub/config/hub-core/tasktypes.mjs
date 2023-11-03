@@ -8,11 +8,6 @@ const tasktypes = [
     state: {
       current: "start",
     },
-    services: {
-      systemConfig: {
-        type: "systemConfig",
-      },
-    },
   },
   // TaskChatRAG is not a base type but serves as a template and sets the type to TaskChat
   // So we need to keep TaskChatRAG aligned with TaskChat
@@ -23,6 +18,7 @@ const tasktypes = [
     environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
+        language: "EN", // default
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
         promptPlaceholder_EN: "Write your prompt here.",
         regexProcessMessages: [
@@ -246,6 +242,7 @@ const tasktypes = [
     environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
+        language: "EN",
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
         promptPlaceholder_EN: "Write your prompt here.",
         regexProcessMessages: [
