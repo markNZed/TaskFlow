@@ -173,7 +173,7 @@ async function reloadOneConfig_async(type) {
   console.log("reloadOneConfig_async", type);
   await runDumpOneConfigScript(type);
   //console.log(`Dumped the config`, type);
-  const data = await loadOneConfig_async(type);
+  let data = await loadOneConfig_async(type);
   //console.log(`Loaded the config`, type);
   switch (type) {
     case "users":
@@ -181,11 +181,24 @@ async function reloadOneConfig_async(type) {
       for (const [key, value] of Object.entries(data)) {
         usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
       }
+      await runDumpOneConfigScript("groups");
+      //console.log(`Dumped the config`, type);
+      data = await loadOneConfig_async("groups");
+      await groupsStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        groupsStore_async.set(key, value).catch(err => console.log('groupsStore_async set error:', err));
+      }
       break;
     case "groups":
       await groupsStore_async.clear();
       for (const [key, value] of Object.entries(data)) {
         groupsStore_async.set(key, value).catch(err => console.log('groupsStore_async set error:', err));
+      }
+      await runDumpOneConfigScript("users");
+      data = await loadOneConfig_async("users");
+      await usersStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
       }
       break;
     case "tasks":
@@ -211,14 +224,15 @@ async function reloadOneConfig_async(type) {
     default:
       throw new Error("Unknown type", type);
   }
+  console.log("reloadOneConfig_async", type, "finished");
 }
 
 async function initHubConfig_async() { 
   // We need tasktypes before tasks and users before groups
   await reloadOneConfig_async("tasktypes");
   await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
-  await reloadOneConfig_async("users");
-  await reloadOneConfig_async("groups");
+  await reloadOneConfig_async("users"); // side effect of initializing groupsStore_async
+  //await reloadOneConfig_async("groups");
 }
 
 await initHubConfig_async();

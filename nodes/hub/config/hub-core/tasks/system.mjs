@@ -62,6 +62,7 @@ const system = [
     name: "taskflow",
     parentName: "system",
     type: "Taskflow",
+    menu: false,
     config: {
       local: {
         menuId: "root.system.taskflow.menu",
@@ -80,6 +81,7 @@ const system = [
   {
     name: "admin",
     parentName: "system",
+    permissions: ['admin'],
   },
   {
     initiator: true,

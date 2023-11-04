@@ -1,5 +1,18 @@
 /* ToDo
 -------
+Dynamic modification of users/groups might be better with a separate user<->groups and users<->group mapping
+  But this is another data structure ?
+  Groups could use hierarchy
+  Could abstract into a function that operates on both users and groups
+  Replace with authorization
+Loading indicator in Taskflow.js
+We should treat users+groups as one type?
+  Do not need to load groups if we load users
+  Should still load users before groups in the case of loading groups? (see storage)
+  Allow for first/last name in Users
+  Create dtf-test group
+Use the runtime config to add admin-dtf to permisssion of root.system.
+Separate TF Storage servers into another container for Dev (so can be shared)
 Option to delete cache responses (also indicate them)
 Add a redirect command so we can rdirect user after they are removed
 Masking should allow for read only properties (stripped upon incoming)
@@ -78,11 +91,7 @@ Notebook for analysing data
   https://github.com/yunabe/tslab
   Two separate Tasks - edit+execute and execute
   The execute task would run the notebook and just get back the task (maybe using REST API or just launch)
-  The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end. 
-Logout option on menu for basic auth
-  Point to https://u:p@...
-Websocket does not work with basic auth
-  First message authenticaton - the client sends authorization after connecting and if not valid then close the connection  
+  The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end.  
 Use a function to update task then we can trace this
  T(task, "input.test")
  T(task, "input.test", "new value")
@@ -90,14 +99,14 @@ Use a function to update task then we can trace this
 Replace throw with devThrow 
 Task object are getting very big ?
   Storing origTask for node on hub ?
-Why is SEP of : not working?
+Why is CEPConnect SEP of : not working?
   Specific to key starting with :
 https://cookbook.openai.com/examples/clustering clustering 
   Could experiment with ART for hierarchical clustering
     Create up to N categories
      If the input mathcs with a category but id more distant than the most distant category pair then create a new category and merge the closest two categories.
      Could reduce N but on what basis ?
-Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style
+Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style API
 Styles of data processing
   What are the main insights ? Meta questions.
   Educational format
