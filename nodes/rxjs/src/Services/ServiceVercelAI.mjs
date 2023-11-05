@@ -150,7 +150,7 @@ async function openaigpt_async(params) {
     try {
       messages = shrinkMessages(systemMessage, prevMessages, prompt, functions, minimalTokens, maxResponseTokens, currentMaxResponse);
     } catch (e) {
-      response_text_promise = Promise.resolve(["Internal ERROR, the prompt was too big, sorry.", [], true]);
+      response_text_promise = Promise.resolve([`Internal ERROR, the prompt was too big, sorry. (${minimalTokens})`, [], true]);
       return response_text_promise;
     }
   }
@@ -386,8 +386,8 @@ async function openaigpt_async(params) {
               }
             },
             onFinal: async (completion) => {
-              console.log("final messages", messages);
-              console.log("onFinal", completion);
+              //console.log("final messages", messages);
+              //console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {
                 cacheStore_async.set(computedCacheKey, completion);

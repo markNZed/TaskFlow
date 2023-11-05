@@ -501,7 +501,7 @@ const RAG_async = async function (wsSendTask, T) {
           // Request chunks that make up the sections
           console.log("Requesting chunks that make up the sections");
           response = await queryWeaviateSections_async(titles, queryVector);
-          tokens = 0;
+          tokens = approxTokenCount;
           let i = 0;
           if (response) {
             for (const element of response) {
