@@ -36,11 +36,26 @@ const dbPath = `${__dirname}/../db/access.sqlite3`;
 console.log("accessDB path", dbPath);
 const accessDB = new (verbose().Database)(dbPath);
 
-accessDB.run(`CREATE TABLE IF NOT EXISTS users (
+const runAsync = (sql) => {
+  return new Promise((resolve, reject) => {
+    accessDB.run(sql, function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this);
+      }
+    });
+  });
+};
+
+await runAsync(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL
+  username TEXT NOT NULL,
+  tribe TEXT,
+  password_hash TEXT NOT NULL,
+  UNIQUE(username, tribe)
 )`);
+
 
 // Can't substitute KeyvRedis with Redis drectly because Redis does not store JS objects i.e. the following will not work
 //const activeTasksStore_async = new Redis('redis://redis-stack-svc:6379', { keyPrefix: "activeTasks:" });

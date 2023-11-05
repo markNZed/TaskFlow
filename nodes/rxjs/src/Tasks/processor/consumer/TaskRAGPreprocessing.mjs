@@ -203,6 +203,18 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       {
         name: "cachePrefix",
         dataType: ["text"],
+      },
+      {
+        name: "elementCount",
+        dataType: ["number"],
+      },
+      {
+        name: "merged",
+        dataType: ["boolean"],
+      },
+      {
+        name: 'sectionCount',
+        dataType: ["number"],
       }
     ];
     for (const [name, dataType] of Object.entries(ElementMetadata)) {
@@ -1332,6 +1344,11 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         if (!exists) {
           await client.schema.classCreator().withClass(classObj).do();
           console.log(`Created class ${className} in Weaviate.`);
+          // delete all ingested files
+          const files = await searchDirectory_async(ingestedDir);
+          for (const file of files) {
+            await fsPromises.unlink(file);
+          }
         }
         //console.log("currentClassObj", currentClassObj.properties);
         //console.log("classObj", classObj.properties);
