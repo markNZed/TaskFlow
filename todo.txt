@@ -1,16 +1,25 @@
 /* ToDo
 -------
-Dynamic modification of users/groups might be better with a separate user<->groups and users<->group mapping
-  But this is another data structure ?
-  Groups could use hierarchy
-  Could abstract into a function that operates on both users and groups
-  Replace with authorization
-Loading indicator in Taskflow.js
-We should treat users+groups as one type?
+Masking for authorization
+  Admin user should share another group to see the users
+  User count becomes difficult - access db does not have groups
+  For each group that the admin is in count the number of users ?
+  Could have config in TaskUsers that filters for a specific group
+  Could filter based on URL
+  Could use hierarchy for different sets of users/groups
+    User could be allocated to one or more
+  Like  anamespace that is passed between tasks task.???
+When user is removed from group the group is not updated
+  We should treat users+groups as one type?
   Do not need to load groups if we load users
   Should still load users before groups in the case of loading groups? (see storage)
   Allow for first/last name in Users
-  Create dtf-test group
+  Dynamic modification of users/groups might be better with a separate user<->groups and users<->group mapping
+    But this is another data structure ?
+    Groups could use hierarchy
+    Could abstract into a function that operates on both users and groups
+    Replace with authorization
+Loading indicator in Taskflow.js
 Use the runtime config to add admin-dtf to permisssion of root.system.
 Separate TF Storage servers into another container for Dev (so can be shared)
 Option to delete cache responses (also indicate them)

@@ -42,7 +42,8 @@ const TaskUsers = (props) => {
   const columns = [
     SelectColumn,
     //{ key: 'id', name: 'ID' },
-    { key: 'name', name: 'Username', minWidth: 300, cellClass: 'leftAlign' },
+    { key: 'name', name: 'Username', minWidth: 200, cellClass: 'leftAlign' },
+    { key: 'label', name: 'Name', minWidth: 200, cellClass: 'leftAlign' },
     { key: 'profile', name: 'Profile', minWidth: 400, cellClass: 'leftAlign' },
     // More columns as needed
   ];
@@ -245,7 +246,7 @@ const TaskUsers = (props) => {
   }, [page]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', minWidth: '700px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', minWidth: '850px' }}>
       <div style={{ display: 'flex', flexDirection: 'row', gap: '10px', marginBottom: '20px' }}>
         <Button onClick={openCreateDialog}>Create User</Button>
         <Button onClick={openEditDialog} disabled={selectedRows.size !== 1}>Edit User</Button>
@@ -270,6 +271,11 @@ const TaskUsers = (props) => {
               return {...p, name: e.target.value}
             })} 
             disabled={editUser !== null}
+          />
+          <TextField margin="dense" label="Name" fullWidth value={user.label} 
+            onChange={(e) => setUser(p => { 
+              return {...p, profile: e.target.value}
+            })} 
           />
           <TextField
             margin="dense"

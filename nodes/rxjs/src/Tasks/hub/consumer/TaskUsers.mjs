@@ -213,7 +213,6 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     
     return null;
 
-
   async function getRowCount_async(username) {
     return new Promise((resolve, reject) => {
       accessDB.get("SELECT COUNT(*) AS count FROM users WHERE username = ?", [username], (err, row) => {

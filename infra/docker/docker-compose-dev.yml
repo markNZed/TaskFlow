@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: taskflow:latest
+    restart: on-failure:1
     environment:
       - TASKFLOW_DEV=true
       - APP_LABEL=T@skFlow-Dev
@@ -32,6 +33,7 @@ services:
     # Had issues with docker on MacOS with the latest so went back to 4.4
     #image: mongodb/mongodb-community-server:latest
     image: mongodb/mongodb-community-server:4.4.22-ubuntu2004
+    restart: on-failure:1
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=user
       - MONGODB_INITDB_ROOT_PASSWORD=pass
@@ -44,6 +46,7 @@ services:
     image: redis/redis-stack:latest
     # use REDIS_ARGS for redis-stack-server instead of command arguments
     # Writes to disk every 10 minutes if at least 1 change.
+    restart: on-failure:1
     environment:
       - REDIS_ARGS=--save 600 1
       # Could not get this working with a proxy maybe not supporting a proxy path
@@ -63,20 +66,21 @@ services:
     image: semitechnologies/weaviate:1.21.2
     volumes:
     - weaviate-data:/var/lib/weaviate
-    restart: on-failure:0
+    restart: on-failure:1
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'none'
-      ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
+      #ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
       CLUSTER_HOSTNAME: 'weaviate1'
-      LOG_LEVEL: 'debug'
+      #LOG_LEVEL: 'debug'
     networks:
       - web-proxy
 
   unstructured:
     image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    restart: on-failure:1
     volumes:
       - ../../../taskflow/data/:/data
     networks:
