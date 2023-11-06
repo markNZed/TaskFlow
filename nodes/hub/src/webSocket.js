@@ -14,7 +14,7 @@ import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
-import { NODE, JWT_SECRET, MAP_USER } from "../config.mjs";
+import { JWT_SECRET, MAP_USER } from "../config.mjs";
 import jwt from 'jsonwebtoken';
 
 /**
@@ -165,7 +165,13 @@ function initWebSocketServer(server) {
       }
 
       if (task?.tokens?.authToken) {
-        const decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+        let decoded;
+        try {
+          decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+        } catch (err) {
+          console.log("authToken invalid", err);
+          return;
+        }
         //console.log("authToken found", decoded);
         userId = decoded.username;
         if (MAP_USER && MAP_USER[userId]) {
