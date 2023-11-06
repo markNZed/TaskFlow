@@ -187,6 +187,7 @@ function initWebSocketServer(server) {
         }
         // Could also have an option to refresh the JWT based on e.g. data
         let  tribeName = decoded.hostname;
+        console.log("Incoming tribe", userId, tribeName);
         // If the hostname is taskflow then we assume an internal connection
         if (hostname !== "taskflow") {
           if (tribeName && hostname !== tribeName) {
