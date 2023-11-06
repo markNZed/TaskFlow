@@ -214,7 +214,7 @@ function initWebSocketServer(server) {
           task["user"] = task.user || {};
           task.user["tribe"] = tribeName;
           console.log("Set user tribe", userId, tribeName);
-          NODETribe(tribeName);
+          NODETribe(tribe);
         }
       }
 

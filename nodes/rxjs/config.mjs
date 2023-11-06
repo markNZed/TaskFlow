@@ -13,6 +13,7 @@ dotenv.config();
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { utils } from "./src/utils.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -124,4 +125,12 @@ NODE["mode"] = "development"; // "production"
 
 console.log({NODE});
 
-export { CACHE_ENABLE, NODE, DUMMY_OPENAI, TASKHUB_URL, hubSocketUrl };
+function NODETribe(tribe) {
+  //console.log("NODETribe", tribe);
+  // tribe can override NODE 
+  if (tribe?.NODE) {
+    NODE = utils.deepMerge(NODE, tribe.NODE);
+  }
+}
+
+export { CACHE_ENABLE, NODE, DUMMY_OPENAI, TASKHUB_URL, hubSocketUrl, NODETribe };

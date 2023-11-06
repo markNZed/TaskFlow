@@ -7,9 +7,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { hubSocketUrl, NODE } from "../config.mjs";
+import { hubSocketUrl, NODE, NODETribe } from "../config.mjs";
 import { commandRegister_async } from "./commandRegister.mjs";
-import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, CEPMatchMap, tribesStore_async } from "./storage.mjs";
 import { nodeTasks_async } from "./nodeTasks.mjs";
 import { utils } from "./utils.mjs";
 import { taskRelease, taskLock } from './shared/taskLock.mjs';
@@ -277,7 +277,15 @@ const connectWebSocket = () => {
            }
         }
       }
-     } else {
+      if (task?.user?.tribe) {
+        const tribeName = task.user.tribe;
+        const tribe = await tribesStore_async.get(tribeName);
+        if (tribe) {
+          //console.log("Set tribe", tribeName);
+          NODETribe(tribe);
+        }
+      }
+    } else {
       console.error("Missing task in message");
       return;
     }
