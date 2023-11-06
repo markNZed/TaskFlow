@@ -9,7 +9,6 @@ import { EventEmitter } from "events";
 import useWebSocket from "react-use-websocket";
 import useGlobalStateContext from "./GlobalStateContext";
 import { utils } from "../utils/utils.mjs";
-import { TOKEN_APP } from "../config.mjs";
 import Cookies from 'js-cookie';
 
 class WebSocketEventEmitter extends EventEmitter {}
@@ -64,7 +63,6 @@ export function WebSocketProvider({ children, socketUrl }) {
     task.meta.prevMessageId = task.meta.messageId;
     task.meta.messageId = utils.nanoid8();
     task.tokens = task.tokens || {};
-    task.tokens["app"] = TOKEN_APP;
     task.tokens["authToken"] = authToken;
     message["task"] = task;
     utils.debugTask(task);

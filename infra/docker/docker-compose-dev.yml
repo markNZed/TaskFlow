@@ -11,7 +11,7 @@ services:
       - APP_LABEL=T@skFlow-Dev
       - APP_NAME=T@skFlow-Dev
       - APP_ABBREV=TFD
-      - TOKEN_APP=StillNoAppWideTokenYet
+      - JWT_SECRET=StillNoJWTToken
     depends_on:
       - mongodb
       - redis-stack-svc
