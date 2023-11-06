@@ -143,8 +143,8 @@ const taskSync_async = async (key, value) => {
           utils.logTask(taskCopy, "taskCopy missing node", nodeId, "initiatingNodeId", initiatingNodeId, "command", command);
         }
         if (nodeData.commandsAccepted.includes(command)) {
-          const statesSupported = taskCopy.nodes[nodeId].statesSupported;
-          const statesNotSupported = taskCopy.nodes[nodeId].statesNotSupported;
+          const statesSupported = taskCopy.nodes[nodeId]?.statesSupported;
+          const statesNotSupported = taskCopy.nodes[nodeId]?.statesNotSupported;
           const state = taskCopy.state.current;
           if (!statesSupported || statesSupported.includes(state)) {
             if (!statesNotSupported || !statesNotSupported.includes(state)) {
