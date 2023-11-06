@@ -81,9 +81,10 @@ app.use(
 
 app.use(async (req, res, next) => {
   // Using host not origin as origin may not be set by client and host is set by proxy
+  // This is primarily for the login.html route 
   const host = req.get('host');
   const tribe = await tribesStore_async.get(host);
-  console.log("Server found host", host, "tribe", tribe);
+  //console.log("Server found host", host, "tribe", tribe, req.headers);
   // Allows us to override NODE settings based on Tribe
   if (tribe && tribe.NODE) {
     NODETribe(tribe);

@@ -91,6 +91,7 @@ console.log({NODE});
 const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
 
 function NODETribe(tribe) {
+  //console.log("NODETribe", tribe);
   // tribe can override NODE 
   if (tribe?.NODE) {
     NODE = utils.deepMerge(NODE, tribe.NODE);

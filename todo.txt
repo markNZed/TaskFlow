@@ -1,5 +1,7 @@
 /* ToDo
 -------
+When registering the Hub should provide the app info : 
+  appAbbrev is used in the Node id
 Move runDumpOneConfigScript from storage to configdata
 TaskMe - Editing of personal info
 Masking for authorization

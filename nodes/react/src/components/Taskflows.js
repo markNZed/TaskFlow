@@ -19,7 +19,6 @@ import useGlobalStateContext from "../contexts/GlobalStateContext";
 import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
 import { utils } from "../utils/utils.mjs";
-import { appLabel } from "../config.mjs";
 import IFrame from './Generic/IFrame.js'
 
 // If there is only one agent then do not show side menu
@@ -41,7 +40,7 @@ function Taskflows(props) {
   const [tasksIds, setTasksIds] = useState([]);
   const [taskInstanceIds, setTaskInstanceIds] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
-  const [title, setTitle] = useState(appLabel);
+  const [title, setTitle] = useState(globalState.appLabel);
   const [hideSide, setHideSide] = useState(false);
   const [drawWidth, setDrawWidth] = useState(0);
   const [counter, setCounter] = useState(0);

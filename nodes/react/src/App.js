@@ -16,7 +16,7 @@ import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
 import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
 import useRegisterTask from "./hooks/useRegisterTask";
-import { hubUrl, appAbbrev } from "./config.mjs";
+import { appAbbrev } from "./config.mjs";
 import debug from "debug";
 import { v4 as uuidv4 } from 'uuid';
 import { openStorage } from "./storage.js";
@@ -90,7 +90,12 @@ function App({ activeWorkerCount, workerId }) {
     (registerTask) => {
       console.log("registerTask", registerTask, nodeIdRef.current);
       replaceGlobalState("hubId", registerTask.node.commandArgs.hubId);
+      replaceGlobalState("appName", registerTask.node.commandArgs.appName);
+      const appLabel = registerTask.node.commandArgs.appLabel;
+      replaceGlobalState("appLabel", appLabel);
+      replaceGlobalState("appAbbrev", registerTask.node.commandArgs.appAbbrev);
       registerProcessor(nodeIdRef.current);
+      document.title = appLabel || "Default Title";
     }
   )
   

@@ -11,10 +11,8 @@ import App from "./App";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { GlobalStateProvider } from "./contexts/GlobalStateContext";
 import { EventSourceProvider } from './contexts/EventSourceContext';
-import { hubSocketUrl, appLabel } from "./config.mjs";
+import { hubSocketUrl } from "./config.mjs";
 import { BrowserRouter as Router } from "react-router-dom";
-
-document.title = appLabel || "Default Title";
 
 function Root() {
   const [workerCount, setWorkerCount] = useState();

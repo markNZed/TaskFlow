@@ -4,9 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { appLabel as appLabelDefault, appName, appAbbrev } from "./shared/config.mjs";
-
-const appLabel = process.env.REACT_APP_APP_LABEL || appLabelDefault;
+import { appAbbrev } from "./shared/config.mjs";
 
 // Define protocol and hostname based on the environment
 let protocol, hostname;
@@ -39,9 +37,7 @@ if (process.env.REACT_APP_TASKHUB_WS) {
 }
 
 export {
-  appName,
   appAbbrev,
-  appLabel,
   hubUrl,
   hubSocketUrl,
 };

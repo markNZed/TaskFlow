@@ -14,7 +14,7 @@ import { commandError_async } from "./commandError.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
-import { JWT_SECRET, MAP_USER } from "../config.mjs";
+import { JWT_SECRET, MAP_USER, NODETribe } from "../config.mjs";
 import jwt from 'jsonwebtoken';
 
 /**
@@ -214,6 +214,7 @@ function initWebSocketServer(server) {
           task["user"] = task.user || {};
           task.user["tribe"] = tribeName;
           console.log("Set user tribe", userId, tribeName);
+          NODETribe(tribeName);
         }
       }
 

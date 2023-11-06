@@ -23,7 +23,12 @@ export async function registerTask_async(wsSendTask, nodeId) {
     node: {
       command: "register",
       commandDescription: `Request ${nodeId} to register`,
-      commandArgs: {hubId: NODE.id},
+      commandArgs: {
+        hubId: NODE.id,
+        appLabel: NODE.app.label,
+        appName: NODE.app.name, 
+        appAbbrev: NODE.app.abbrev,
+      },
     },
   };
   console.log("registerTask_async request for registering " + nodeId)
