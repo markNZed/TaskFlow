@@ -193,7 +193,7 @@ function initWebSocketServer(server) {
         if (hostname !== "taskflow") {
           if (user.tribes.includes("god")) {
             tribeName = hostname;
-            console.log("God droppng into tribe", userId, tribeName);
+            console.log("God dropping into tribe", userId, tribeName);
           } else if (tribeName && hostname !== tribeName) {
             console.log("Wrong hostname", hostname, tribeName);
             return;

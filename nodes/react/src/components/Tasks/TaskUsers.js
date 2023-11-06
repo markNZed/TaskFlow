@@ -277,7 +277,7 @@ const TaskUsers = (props) => {
           />
           <TextField margin="dense" label="Name" fullWidth value={user.label} 
             onChange={(e) => setUser(p => { 
-              return {...p, profile: e.target.value}
+              return {...p, label: e.target.value}
             })} 
           />
           <TextField
