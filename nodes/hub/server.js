@@ -83,6 +83,7 @@ app.use(async (req, res, next) => {
   // Using host not origin as origin may not be set by client and host is set by proxy
   const host = req.get('host');
   const tribe = await tribesStore_async.get(host);
+  console.log("Server found host", host, "tribe", tribe);
   // Allows us to override NODE settings based on Tribe
   if (tribe && tribe.NODE) {
     NODETribe(tribe);
