@@ -192,10 +192,12 @@ function initWebSocketServer(server) {
         if (hostname !== "taskflow") {
           if (tribeName === "god") {
             tribeName = hostname;
+            console.log("God droppng into tribe", userId, tribeName);
           } else if (tribeName && hostname !== tribeName) {
             console.log("Wrong hostname", hostname, tribeName);
             return;
           } else {
+            console.log("No tribe found so default to world");
             tribeName = "world";
           }
           const tribe = await tribesStore_async.get(tribeName);
