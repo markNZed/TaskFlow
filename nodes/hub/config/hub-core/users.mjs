@@ -5,6 +5,7 @@ const users = [
       profile: "A student",
       interface: "simple",
       language: "en",
+      tribes: ["world"],
     },
   ];
   export { users };

@@ -125,22 +125,22 @@ const TaskUsers = (props) => {
         // Handle the response from the server
         switch (task.input.action) {
           case "create":
-            setUsers(task.response.users);
+            setUsers(task.response.users || []);
             setTotalUserCount(task.response.totalUserCount);
             break;
           case "read":
             setUser(task.response.user);
             break;
           case "readAll":
-            setUsers(task.response.users);
+            setUsers(task.response.users || []);
             setTotalUserCount(task.response.totalUserCount);
             break;
           case "update":
             setUser(task.response.user);
-            setUsers(task.response.users);
+            setUsers(task.response.users || []);
             break;
           case "delete":
-            setUsers(task.response.users);
+            setUsers(task.response.users || []);
             setTotalUserCount(task.response.totalUserCount);
             break;
           default:
@@ -207,7 +207,10 @@ const TaskUsers = (props) => {
     setIsDialogOpen(true);
     setEditUser(null);
     setUser({
+      name: "",
+      label: "",
       groups: [],
+      profile: "",
     });
     generateEasyPassword(); // Generate a new password when opening the dialog
   };
@@ -252,7 +255,7 @@ const TaskUsers = (props) => {
         <Button onClick={openEditDialog} disabled={selectedRows.size !== 1}>Edit User</Button>
         <Button onClick={handleDeleteUser} disabled={selectedRows.size === 0}>Delete User</Button>
       </div>
-      <PaginationControls totalCount={totalUserCount} pageSize={limit} page={page} setPage={setPage} rowCount={users.length} />
+      <PaginationControls totalCount={totalUserCount} pageSize={limit} page={page} setPage={setPage} rowCount={users?.length} />
       <DataGrid 
         columns={columns} 
         rows={users} 

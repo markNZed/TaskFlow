@@ -1,5 +1,7 @@
 /* ToDo
 -------
+Move runDumpOneConfigScript from storage to configdata
+TaskMe - Editing of personal info
 Masking for authorization
   Admin user should share another group to see the users
   User count becomes difficult - access db does not have groups

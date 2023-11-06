@@ -317,6 +317,11 @@ function initUsers(users) {
   return [users, groups];
 }
 
+function initTribes(users) {
+  users = utils.flattenObjects(users);
+  return users;
+}
+
 function initGroups(users, groupsConfig, groups) {
   const newGroups = utils.flattenObjects(groupsConfig);
   groups = utils.deepMerge(groups, newGroups);
@@ -382,11 +387,6 @@ async function dumpConfig(configData, configName) {
   }
 }
 
-//console.log(JSON.stringify(tasks["root.conversation.chatgptzeroshot.start"], null, 2));
-//console.log(JSON.stringify(tasks["root.exercices.production.ecrit.resume.start"], null, 2)); 
-
-//console.log("autoStartTasks", JSON.stringify(autoStartTasks, null,2));
-
 async function configInitOne_async(type) {
   console.log("configInitOne_async loadConfigOne_async", type);
   let config = await loadConfigOne_async(type);
@@ -414,19 +414,16 @@ async function configInitOne_async(type) {
       }
       [groups, users] = initGroups(users, config, groups);
       break;
+    case "tribes":
+      tribes = initTribes(config);
+      //console.log("tribes:", utils.js(tribes, null,2));
+      break;
     default:
       throw new Error("Unknown config", type);
   }
 }
 
-async function configInit_async() {
-  await configInitOne_async("tasktypes");
-  await configInitOne_async("tasks");
-  await configInitOne_async("users");
-  await configInitOne_async("groups");
-}
-
 // The variables will be initialized when configInit_async is called
-var users, groups, tasktypes, tasks, autoStartTasks;
+var users, groups, tasktypes, tasks, autoStartTasks, tribes;
 
-export { configInit_async, configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks };
+export { configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks, tribes };

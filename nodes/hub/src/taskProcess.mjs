@@ -68,6 +68,10 @@ async function nodeInHubOut_async(task, activeTask) {
     const user = await usersStore_async.get(task.user.id);
     task.users[task.user.id] = user;
   }
+  // Keep the tribe that was set through websocket
+  if (task?.user?.tribe) {
+    task.users[task.user.id]["tribe"] = task.user.tribe;
+  }
   // Restore the hub from storage
   // So we can keep task specific information local to the hub
   let lastHub;

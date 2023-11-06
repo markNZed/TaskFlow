@@ -127,6 +127,8 @@ const tasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasks");
 
 const autoStartTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "autoStartTasks");
 
+const tribesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tribes");
+
 if (NODE.storage.emptyAllDB) {
   await Promise.all([
     instancesStore_async.clear(),
@@ -141,6 +143,7 @@ if (NODE.storage.emptyAllDB) {
     tasktypesStore_async.clear(),
     tasksStore_async.clear(),
     autoStartTasksStore_async.clear(),
+    tribesStore_async.clear(),
     connectionsStore_async.clear(),
   ]);
   console.log("Empty DB: cleared all KeyV");
@@ -167,7 +170,7 @@ async function loadOneConfig_async(type) {
   }
 }
 
-async function runDumpOneConfigScript(type, verbose = false) {
+async function runDumpOneConfigScript(type, verbose = true) {
   try {
     const { stdout, stderr } = await exec('node ' + join(__dirname, '../scripts/dumpOneConfig.js') + ' ' + type);
     if (verbose) {
@@ -236,7 +239,13 @@ async function reloadOneConfig_async(type) {
         tasktypesStore_async.set(key, value).catch(err => console.log('tasktypesStore_async set error:', err));
       }
       break;
-    default:
+    case "tribes":
+      await tribesStore_async.clear();
+      for (const [key, value] of Object.entries(data)) {
+        tribesStore_async.set(key, value).catch(err => console.log('tribesStore_async set error:', err));
+      }
+      break;
+      default:
       throw new Error("Unknown type", type);
   }
   console.log("reloadOneConfig_async", type, "finished");
@@ -248,6 +257,7 @@ async function initHubConfig_async() {
   await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
   await reloadOneConfig_async("users"); // side effect of initializing groupsStore_async
   //await reloadOneConfig_async("groups");
+  await reloadOneConfig_async("tribes");
 }
 
 await initHubConfig_async();
@@ -270,6 +280,7 @@ export {
   tasktypesStore_async,
   tasksStore_async,
   autoStartTasksStore_async,
+  tribesStore_async,
   connectionsStore_async,
   accessDB,
   reloadOneConfig_async,

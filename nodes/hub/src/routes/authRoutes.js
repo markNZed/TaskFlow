@@ -28,7 +28,11 @@ router.get("/", async (req, res) => {
   try {
     // Verify authToken
     const decoded = jwt.verify(authToken, JWT_SECRET);
-    console.log(decoded);
+    console.log("JWT decoded", decoded);
+    if (!decoded.hostname) {
+      // old JWT so reauthenticate
+      throw new Error("Invalid JWT missing hostname");
+    }
 
     // Token is valid, proceed with request
     res.status(200).send("Authorized");

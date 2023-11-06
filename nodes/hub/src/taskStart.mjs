@@ -226,7 +226,9 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
           }
         });
       }
-      task.users = prevTask.users || {}; // Could be mepty in the case of error task
+      task.users = prevTask.users || {}; // Could be empty in the case of error task
+      task.users[task.user.id] = task.users[task.user.id] || {};
+      task.users[task.user.id]["tribe"] = prevTask.user.tribe;
       task.state.address = prevTask.state?.address ?? task.state.address;
       task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     } else {
@@ -409,7 +411,7 @@ async function taskStart_async(
     task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'users'].forEach(key => task[key] = task[key] || {});
+    ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
     ['connections'].forEach(key => task[key] = task[key] || []);
 
     await checkUserPermissions_async(task, groupsStore_async, authenticate);

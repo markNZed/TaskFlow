@@ -13,6 +13,11 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/*
+
+  The user can only modify users of the same tribe (except god)
+*/
+
 // eslint-disable-next-line no-unused-vars
 const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
 
@@ -108,6 +113,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
           break;
         }
         case "reactRequest": {
+          const tribe = T("user.tribe");
           utils.logTask(T(), "action", T("input.action"), utils.js(T("input")));
           const page = T("input.page") || 1;
           const limit = T("input.limit") || 10;
@@ -115,22 +121,24 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
           switch (T("input.action")) {
             case "create": {
               const user = T("input.user");
+              user["tribes"] = [T("user.tribe")];
               const password = T("input.password");
               // Check if the user already exists
-              const count = await getRowCount_async(user.name);
+              const count = await getRowCount_async(user.name, tribe);
               console.log("count", count);
+              // Ultimately we could allow a user to be in multiple tribes
               if (count > 0) {
                 T("error", { message: "A user with this username already exists." });
               } else {
                 // Insert the new user into the database
                 const passwordHash = await hashPassword(password);
-                await accessDB.run("INSERT INTO users (username, password_hash) VALUES (?, ?)", [user.name, passwordHash]);
+                await accessDB.run("INSERT INTO users (username, password_hash, tribe) VALUES (?, ?, ?)", [user.name, passwordHash, tribe]);
               }
               user["id"] = user.name;
               // We will need to save to the config file but that will be expanded
               // Write the user to runtime - read/modify/write
               updateRuntimeUsers_async(user);
-              await usersResponse(limit, offset);
+              await usersResponse(limit, offset, tribe);
               T("commandDescription", "Created user " + user.name);
               break;
             }
@@ -138,11 +146,15 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               const readUsername = T("input.user.name");
               const TFuser = await usersStore_async.get(readUsername);
               if (TFuser) {
-                T("response.user", TFuser);
+                if (tribe && !TFuser.tribe.includes(tribe)) {
+                  T("response.user", TFuser);
+                } else {
+                  T("error", { message: "User not found." });
+                }
               } else {
                 T("error", { message: "User not found." });
               }
-              T("commandDescription", "Read user ");
+              T("commandDescription", "Read user " + readUsername);
               break;
             }
             case "update": {
@@ -150,7 +162,10 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               const updateUsername = T("input.user.name");
               const newPassword = T("input.password");
               const newPasswordHash = await hashPassword(newPassword);
-              await accessDB.run("UPDATE users SET password_hash = ? WHERE username = ?", [newPasswordHash, updateUsername]);
+              await accessDB.run(
+                "UPDATE users SET password_hash = ? WHERE username = ? AND tribe = ?",
+                [newPasswordHash, updateUsername, tribe]
+              );              
               T("commandDescription", "Updated user " + updateUsername);
               user["id"] = user.name;
               // We will need to save to the config file but that will be expanded
@@ -159,7 +174,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               T("response.user", user);
               // After the update we reset the response.users array
               // Only the diff will be sent
-              await usersResponse(limit, offset);
+              await usersResponse(limit, offset, tribe);
               break;
             }
             case "delete": {
@@ -168,7 +183,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               const deletedUsers = [];
               for (const username of deleteUsernames) {
                 try {
-                  const result = await deleteUser(username);
+                  const result = await deleteUser(username, tribe);
                   if (result.changes > 0) {
                     deletedUsers.push(result.username); // Add username to deletedUsers if it was deleted
                   }
@@ -183,7 +198,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               }
               T("commandDescription", `Deleted users: ${deletedUsers.join(", ")}`);
               // So we can see the users that are deleted (the diff will not remove entries that disappear from an array)
-              await usersResponse(limit, offset);
+              await usersResponse(limit, offset, tribe);
               break;
             }
             case "readAll": {
@@ -192,7 +207,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               //const TFusers = userConfig.children;
               //console.log(`TFusers`, TFusers);
               utils.logTask(T(), "readAll", limit, offset);
-              let users = await usersResponse(limit, offset);
+              let users = await usersResponse(limit, offset, tribe);
               T("commandDescription", "Updated users ", users.length);
               utils.logTask(T(), "Users", users);
               break;
@@ -213,9 +228,9 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     
     return null;
 
-  async function getRowCount_async(username) {
+  async function getRowCount_async(username, tribe) {
     return new Promise((resolve, reject) => {
-      accessDB.get("SELECT COUNT(*) AS count FROM users WHERE username = ?", [username], (err, row) => {
+      accessDB.get("SELECT COUNT(*) AS count FROM users WHERE username = ? AND tribe = ?", [username, tribe], (err, row) => {
         if (err) {
           reject(err);
         } else {
@@ -225,11 +240,11 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     });
   }
     
-  async function getTotalUserCount_async() {
+  async function getTotalUserCount_async(tribe) {
     let totalCount = 0;
     try {
       totalCount = await new Promise((resolve, reject) => {
-        accessDB.get(`SELECT COUNT(*) AS count FROM users`, [], function (err, row) {
+        accessDB.get(`SELECT COUNT(*) AS count FROM users WHERE tribe = ?`, [tribe], function (err, row) {
           if (err) {
             console.error(err.message);
             reject(err);
@@ -246,12 +261,12 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     return totalCount;
   }
 
-  async function usersResponse(limit, offset) {
+  async function usersResponse(limit, offset, tribe) {
     let users = [];
     try {
       //"promisifying" the callback-based function. This is a common pattern when working with older Node.js libraries or APIs that haven't been updated to return Promises natively. Allows for use of try/catch
       users = await new Promise((resolve, reject) => {
-        accessDB.all(`SELECT * FROM users ORDER BY username COLLATE NOCASE ASC LIMIT ? OFFSET ?`, [limit, offset], function (err, rows) {
+        accessDB.all(`SELECT * FROM users WHERE tribe = ? ORDER BY username COLLATE NOCASE ASC LIMIT ? OFFSET ?`, [tribe, limit, offset], function (err, rows) {
           if (err) {
             console.error(err.message);
             reject(err);
@@ -285,15 +300,15 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       }
     }));
     T("response.users", users);
-    let totalUserCount = await getTotalUserCount_async();
+    let totalUserCount = await getTotalUserCount_async(tribe);
     T("response.totalUserCount", totalUserCount);
     return users;
   }
 
-  async function deleteUser(username) {
+  async function deleteUser(username, tribe) {
     try {
       let result = await new Promise((resolve, reject) => {
-        accessDB.run("DELETE FROM users WHERE username = ?", [username], function (err) {
+        accessDB.run("DELETE FROM users WHERE username = ? AND tribe = ?", [username, tribe], function (err) {
           if (err) {
             console.error(err.message);
             reject(err);

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async, usersStore_async } from "./storage.mjs";
+import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async, usersStore_async, tribesStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -53,7 +53,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   }
   let user;
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
-    user = JSON.parse(JSON.stringify(task.users[task.user.id]));
+    user = utils.deepClone(task.users[task.user.id]);
   }
   let message = {}
   // We can only have an activeTask for an update command
@@ -110,7 +110,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
       utils.logTask(task, "wsSendTask no user", task);
     }
     task["user"] = user;
-    delete task.users;
+    //delete task.users;
   }
   task.meta = task.meta || {};
   if (currentNode.command !== "pong" && currentNode.command !== "partial") {
@@ -119,7 +119,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     //utils.logTask(task, "wsSendTask currentNode.commandArgs.sync", currentNode?.commandArgs?.sync);
   }
   message["task"] = task;
-  //utils.logTask(task, "wsSendTask task.node.stateLast", task.node.stateLast, task.node.id);
+  //utils.logTask(task, "wsSendTask user", task.user);
   utils.debugTask(task, "output");
   wsSendObject(nodeId, message);
 }
@@ -134,6 +134,23 @@ function initWebSocketServer(server) {
     console.log("websocketServer.on");
 
     ws.data = { nodeId: undefined };
+
+    const sourceIP = utils.getSourceIP(req);
+    const origin = req.headers['origin'];
+    let hostname;
+    if (origin) {
+      try {
+        const url = new URL(origin);
+        hostname = url.hostname;
+        console.log(`Websocket connecting to ${hostname} from ${sourceIP}`);
+      } catch (e) {
+        console.log("Websocket connecting invalid origin", origin, sourceIP);
+        return;
+      }
+    } else {
+      console.log("Websocket connecting no origin", origin, sourceIP);
+      return;
+    }
 
     ws.on("message", async (message) => {
 
@@ -162,10 +179,35 @@ function initWebSocketServer(server) {
           console.log("task.user.id does not match JWT token", task.user.id, userId);
           return;
         }
+        const user = await usersStore_async.get(userId);
         // Check that the user still exists
-        if (!await usersStore_async.has(userId)) {
+        if (!user) {
           console.log("User not found", userId);
           return;
+        }
+        // Could also have an option to refresh the JWT based on e.g. data
+        let  tribeName = decoded.hostname;
+        // If the hostname is taskflow then we assume an internal connection
+        if (hostname !== "taskflow") {
+          if (tribeName && hostname !== tribeName) {
+            console.log("Wrong hostname", hostname, tribeName);
+            return;
+          } else {
+            tribeName = "world";
+          }
+          const tribe = await tribesStore_async.get(tribeName);
+          if (!tribe) {
+            console.log("No tribe found", userId, tribeName);
+            return;
+          }
+          if (user.tribes && !user.tribes.includes(tribeName) && !user.tribes.includes("god")) {
+            console.log("User not in tribe", userId, tribeName);
+            return;
+          }
+          // Allocate user to tribe
+          task["user"] = task.user || {};
+          task.user["tribe"] = tribeName;
+          console.log("Set user tribe", userId, tribeName);
         }
       }
 

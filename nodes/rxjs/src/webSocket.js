@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import { WebSocket } from "ws";
 import { mergeMap, Subject } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { hubSocketUrl, NODE } from "../config.mjs";
 import { commandRegister_async } from "./commandRegister.mjs";
 import { getActiveTask_async, setActiveTask_async, CEPMatchMap } from "./storage.mjs";
@@ -163,6 +164,10 @@ taskSubject
         return taskCopy;
       }
     }),
+    catchError((error, caught) => {
+      console.error('Caught error in taskSubject:', error);
+      return caught; // Return the caught observable to continue processing tasks
+    })
   )
   .subscribe({
     next: async (task) => {
@@ -215,7 +220,15 @@ const wsSendTask = async function (task) {
 }
 
 const connectWebSocket = () => {
-  processorWs = new WebSocket(hubSocketUrl);
+
+  // use a URL encoding because the Hub is expecting that
+  const options = {
+    headers: {
+      'Origin': `http://taskflow`,
+    }
+  };
+
+  processorWs = new WebSocket(hubSocketUrl, options);
 
   processorWs.onopen = () => {
     console.log("processorWs.onOpen");

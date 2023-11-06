@@ -1208,8 +1208,8 @@ const utils = {
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
-    if (task?.node?.initiatingNodeId) {
-      //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
+    if (task?.user?.tribe) {
+      logParts.push("user.tribe", task.user.tribe);
     }
     /*
     if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {

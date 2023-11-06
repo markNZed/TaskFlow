@@ -1,7 +1,7 @@
 import { writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks } from "../src/configdata.mjs";
+import { configInitOne_async, users, groups, tasktypes, tasks, autoStartTasks, tribes } from "../src/configdata.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -12,7 +12,8 @@ async function writeConfigToFile(type) {
     users,
     groups,
     tasktypes,
-    tasks
+    tasks,
+    tribes,
   };
 
   if (!configMap[type]) {

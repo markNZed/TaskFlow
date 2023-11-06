@@ -101,6 +101,8 @@ const groupsStore_async = newKeyV(redisClient, NODE.appAbbrev + "groups"); // Sh
 
 const tasktypesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasktypes"); // Shared with Hub
 
+const tribesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tribes"); // Shared with Hub
+
 async function getActiveTask_async(instanceId) {
   //const start = Date.now();
   if (await activeTasksStore_async.has(instanceId)) {
@@ -183,6 +185,7 @@ export {
   usersStore_async,
   groupsStore_async,
   tasktypesStore_async,
+  tribesStore_async,
   sharedStore_async,
   connectionsStore_async,
   familyStore_async,

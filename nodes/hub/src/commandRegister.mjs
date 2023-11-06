@@ -3,9 +3,8 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-import { setActiveTask_async, getActiveTask_async, activeNodes, autoStartTasksStore_async } from "./storage.mjs";
+import { activeNodes, autoStartTasksStore_async } from "./storage.mjs";
 import { commandStart_async } from "./commandStart.mjs";
-import taskSync_async from "./taskSync.mjs";
 import { utils } from "./utils.mjs";
 import { NODE } from "#root/config";
 import { taskLock, taskRelease } from '#shared/taskLock';
