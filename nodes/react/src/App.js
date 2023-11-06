@@ -89,13 +89,15 @@ function App({ activeWorkerCount, workerId }) {
   useRegisterWSFilter(
     (registerTask) => {
       console.log("registerTask", registerTask, nodeIdRef.current);
-      replaceGlobalState("hubId", registerTask.node.commandArgs.hubId);
-      replaceGlobalState("appName", registerTask.node.commandArgs.appName);
-      const appLabel = registerTask.node.commandArgs.appLabel;
-      replaceGlobalState("appLabel", appLabel);
-      replaceGlobalState("appAbbrev", registerTask.node.commandArgs.appAbbrev);
-      registerProcessor(nodeIdRef.current);
+      const appLabel = registerTask.node.commandArgs?.appLabel;
       document.title = appLabel || "Default Title";
+      mergeGlobalState({ 
+        hubId: registerTask.node.commandArgs.hubId,
+        appName: registerTask.node.commandArgs?.appName,
+        appLabel: appLabel,
+        appAbbrev: registerTask.node.commandArgs?.appAbbrev
+      });
+      registerProcessor(nodeIdRef.current);
     }
   )
   
