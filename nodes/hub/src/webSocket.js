@@ -164,11 +164,6 @@ function initWebSocketServer(server) {
         return;
       }
 
-      if (!task?.tokens?.app || task.tokens.app !== NODE.app.token) {
-        console.log("No task.tokens.app expecting", NODE.app.token, task.tokens.app, task);
-        return;
-      }
-
       if (task?.tokens?.authToken) {
         const decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
         //console.log("authToken found", decoded);
