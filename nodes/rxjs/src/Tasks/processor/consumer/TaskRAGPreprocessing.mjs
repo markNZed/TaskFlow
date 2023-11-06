@@ -1179,7 +1179,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       } catch (error) {
         console.error("Error in specific part of the function:", error);
       }
-      const responseElements = response?.data?.Get[className];
+      const responseElements = response?.data?.Get[className] || []
       let nearElements = [];
       for (const obj of responseElements) {
         if (obj._additional.distance < (T("config.local.maxDistance") || 0.14)) {
