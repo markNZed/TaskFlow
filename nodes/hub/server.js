@@ -18,11 +18,12 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // App specific modules
-import { NODE } from "./config.mjs";
+import { NODE, NODETribe } from "./config.mjs";
 import miscRoutes from "./src/routes/miscRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import loginRoutes from "./src/routes/loginRoutes.js";
 import { initWebSocketServer } from "./src/webSocket.js";
+import { tribesStore_async } from "./src/storage.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,7 +67,9 @@ app.use(
       if (!origin) {
         // Allow requests without "Origin" header (such as img requests)
         callback(null, true);
+        //console.log("Server found no origin", origin);
       } else if (allowedOrigins.indexOf(origin) !== -1) {
+        //console.log("Server found origin", origin);
         callback(null, origin);
       } else {
         callback(new Error("Not allowed by CORS origin is " + origin + " allowedOrigins ", allowedOrigins));
@@ -75,6 +78,18 @@ app.use(
     },
   })
 );
+
+app.use(async (req, res, next) => {
+  // Using host not origin as origin may not be set by client and host is set by proxy
+  const host = req.get('host');
+  const tribe = await tribesStore_async.get(host);
+  // Allows us to override NODE settings based on Tribe
+  if (tribe && tribe.NODE) {
+    NODETribe(tribe);
+    //console.log("Server found tribe", tribe);
+  }
+  next();
+});
 
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(express.urlencoded({ extended: true }));

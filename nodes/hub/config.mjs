@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import * as dotenv from "dotenv";
+import { utils } from "./src/utils.mjs";
 dotenv.config();
 
 // This is used for the allowedOrigins
@@ -90,4 +91,11 @@ console.log({NODE});
 
 const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET };
+function NODETribe(tribe) {
+  // tribe can override NODE 
+  if (tribe?.NODE) {
+    NODE = utils.deepMerge(NODE, tribe.NODE);
+  }
+}
+
+export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET, NODETribe };
