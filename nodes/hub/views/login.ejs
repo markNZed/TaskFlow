@@ -20,11 +20,14 @@
                     body: JSON.stringify({ username, password }),
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        // If credentials are invalid, parse the JSON to get the error message
+                    if (contentType && contentType.includes('application/json')) {
+                        // If response is JSON, parse it and throw an error
                         return response.json().then(data => {
                             throw new Error(data.message || 'Invalid credentials');
                         });
+                    } else {
+                        // If response is not JSON, throw a generic error
+                        throw new Error('Invalid credentials');
                     }
                     return response.json();
                 })
