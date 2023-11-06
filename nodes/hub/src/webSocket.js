@@ -197,7 +197,7 @@ function initWebSocketServer(server) {
           } else if (tribeName && hostname !== tribeName) {
             console.log("Wrong hostname", hostname, tribeName);
             return;
-          } else {
+          } else if (!tribeName) {
             console.log("No tribe found so default to world");
             tribeName = "world";
           }
