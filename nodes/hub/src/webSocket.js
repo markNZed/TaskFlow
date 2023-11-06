@@ -190,7 +190,9 @@ function initWebSocketServer(server) {
         console.log("Incoming tribe", userId, tribeName);
         // If the hostname is taskflow then we assume an internal connection
         if (hostname !== "taskflow") {
-          if (tribeName && hostname !== tribeName) {
+          if (tribeName === "god") {
+            tribeName = hostname;
+          } else if (tribeName && hostname !== tribeName) {
             console.log("Wrong hostname", hostname, tribeName);
             return;
           } else {
