@@ -20,14 +20,17 @@
                     body: JSON.stringify({ username, password }),
                 })
                 .then(response => {
-                    if (contentType && contentType.includes('application/json')) {
-                        // If response is JSON, parse it and throw an error
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Invalid credentials');
-                        });
-                    } else {
-                        // If response is not JSON, throw a generic error
-                        throw new Error('Invalid credentials');
+                    const contentType = response.headers.get('content-type');
+                    if (!response.ok) {
+                        if (contentType && contentType.includes('application/json')) {
+                            // If response is JSON, parse it and throw an error
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Invalid credentials');
+                            });
+                        } else {
+                            // If response is not JSON, throw a generic error
+                            throw new Error('Invalid credentials');
+                        }
                     }
                     return response.json();
                 })
