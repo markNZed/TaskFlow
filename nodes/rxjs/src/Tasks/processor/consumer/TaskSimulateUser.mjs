@@ -92,11 +92,11 @@ const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatc
     }
     case "receiving": {
       if (T("state.last") === "introduction") {
-        const simulationPrompt = { role: "user", text: T("config.local.introductionPrompt"), user: T("user.label") };
+        const simulationPrompt = { role: "user", content: T("config.local.introductionPrompt"), user: T("user.label") };
         T("output.simulationPrompt", simulationPrompt);
-        const simulationResponse = { role: "assistant", text: "", user: "assistant" };
+        const simulationResponse = { role: "assistant", content: "", user: "assistant" };
         T("output.simulationResponse", simulationResponse);
-        T("request.prompt", T("output.simulationPrompt.text"));
+        T("request.prompt", T("output.simulationPrompt.content"));
         const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
         T("output.simulationResponse.text", operatorOut.response.LLM);
       } else {
@@ -118,11 +118,11 @@ const TaskSimulateUser_async = async function (wsSendTask, T, FSMHolder, CEPMatc
           });
         }
         // The last message in output.msgs should become the prompt
-        const simulationPrompt = msgs.pop().text;
+        const simulationPrompt = msgs.pop().content;
         ST("input.msgs", msgs);
         ST("request.prompt", simulationPrompt)
         const operatorOut = await operatorLLM.operate_async(wsSendTask, operatorIn);
-        const simulationResponse = { role: "assistant", text: operatorOut.response.LLM, user: "assistant" };
+        const simulationResponse = { role: "assistant", content: operatorOut.response.LLM, user: "assistant" };
         T("output.simulationResponse", simulationResponse);
       }
       // Send to sync latest outputs via Hub, should also unlock

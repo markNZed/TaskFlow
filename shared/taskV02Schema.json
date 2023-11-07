@@ -53,6 +53,9 @@
         "id": {
           "type": "string"
         },
+        "mask": {
+          "type": "object"
+        },
         "name": {
           "type": "string"
         },

@@ -5,7 +5,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
 import { WebSocketServer } from "ws";
-import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async, usersStore_async, tribesStore_async } from "./storage.mjs";
+import { WSConnections, activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, reloadOneConfig_async, usersStore_async, tribesStore_async, groupsStore_async } from "./storage.mjs";
 import { utils } from "./utils.mjs";
 import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
@@ -35,6 +35,40 @@ function wsSendObject(nodeId, message = {}) {
       //console.log("wsSendObject ", nodeId, message.task.node )
     }
   }
+}
+
+async function maskOutgoing_async(task) {
+  // We trust the task.masks
+  if (task.node.type !== "hub" && task.masks) {
+    let mask = utils.deepClone(task.masks.outgoing) || {};
+    //utils.logTask(task, "maskOutgoing_async mask before env", task.node.id, mask);
+    const nodeEnv = task.node.environment;
+    if (task.masks[nodeEnv] && task.masks[nodeEnv].outgoing) {
+      mask = utils.deepMerge(mask, task.masks[nodeEnv].outgoing);
+      //utils.logTask(task, "maskOutgoing_async mask after env", task.node.id, nodeEnv, mask);
+    }
+    const groupId = task.groupId;
+    if (groupId) {
+      let group = await groupsStore_async.get(groupId);
+      if (group?.unmask?.outgoing) {
+        utils.deleteKeysBasedOnMask(mask, group.unmask.outgoing);
+        //utils.logTask(task, "maskOutgoing_async unmask group", task.node.id, groupId, mask);
+      }
+    }
+    const devGroupId = "dev";
+    if (task.user?.groups && task.user?.groups.includes(devGroupId)) {
+      let group = await groupsStore_async.get(devGroupId);
+      if (group?.unmask?.outgoing) {
+        utils.deleteKeysBasedOnMask(mask, group.unmask.outgoing);
+        //utils.logTask(task, "maskOutgoing_async unmask dev", task.node.id, devGroupId, group, mask);
+      }
+    }
+    //utils.logTask(task, "maskOutgoing_async after unmask", task.node.id, mask);
+    if (Object.keys(mask).length > 0) {
+      utils.deleteKeysBasedOnMask(task, mask);
+    }
+  }
+  return task;
 }
 
 const wsSendTask = async function (taskIn, nodeId, activeTask) {
@@ -118,7 +152,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId) + " to " + nodeId)
     //utils.logTask(task, "wsSendTask currentNode.commandArgs.sync", currentNode?.commandArgs?.sync);
   }
-  message["task"] = task;
+  message["task"] = await maskOutgoing_async(task);
   //utils.logTask(task, "wsSendTask user", task.user);
   utils.debugTask(task, "output");
   wsSendObject(nodeId, message);

@@ -7,6 +7,14 @@ const users = [
       language: "en",
       tribes: ["world"],
     },
+    {
+      name: "developer1",
+      label: 'Developer One',
+      profile: "A developer",
+      interface: "dev",
+      language: "en",
+      tribes: ["god"],
+    },
   ];
   export { users };
   

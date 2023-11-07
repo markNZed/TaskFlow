@@ -699,7 +699,7 @@ const utils = {
 
   // This is having side-effects on task
   nodeActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
-    console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task.state.current);
+    console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task?.state?.current);
     task.meta = task.meta || {};
     delete task.node.origTask; // delete so we do not have an old copy in origTask
     task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
@@ -1022,6 +1022,7 @@ const utils = {
 
   authenticatedTask_async: async function (task, userId, groupsStore_async) {
     let authenticated = false;
+    let groupId;
     if (task?.permissions) {
       for (const group_name of task.permissions) {
         if (group_name === "*") {
@@ -1033,12 +1034,13 @@ const utils = {
           console.log("Group " + group_name + " has no users");
         } else if (group.users.includes(userId)) {
           authenticated = true;
+          groupId = group_name;
           break;
         }
       }
     }
     //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
-    return authenticated;
+    return [authenticated, groupId];
   },
 
   deepClone: function(obj) {
@@ -1126,6 +1128,29 @@ const utils = {
     return null;
   },
 
+  deleteKeysBasedOnMask: function (obj, mask) {
+    // Directly check for the wildcard '*' in mask.
+    if (mask['*']) {
+      //console.log("Found * in mask, deleting all keys from obj");
+      Object.keys(obj).forEach(key => {
+        delete obj[key];
+      });
+    } else {
+      // No wildcard, proceed with individual key deletion.
+      for (const key in mask) {
+        if (Object.prototype.hasOwnProperty.call(mask, key)) {
+          if (typeof mask[key] === 'object' && mask[key] !== null && typeof obj[key] === 'object' && obj[key] !== null) {
+            // If the mask key is an object, recurse.
+            utils.deleteKeysBasedOnMask(obj[key], mask[key]);
+          } else {
+            // Otherwise, delete the key from the obj.
+            delete obj[key];
+          }
+        }
+      }
+    }
+  },
+
   js: function(obj) {
     return JSON.stringify(obj, null, 2)
   },
@@ -1134,11 +1159,7 @@ const utils = {
     if (task === undefined) {
       throw new Error("Task undefined in debugTask");
     }
-    // This is like a continuous assertion (it runs before debug info is collected)
-    if (task?.node?.origTask?.id && task?.node?.origTask?.id !== task?.id) {
-      console.error("Task:", task);
-      throw new Error("ERROR debugTask: task.node.origTask.id !== task.id");
-    }
+    // Could add continuous assertion (it runs before debug info is collected)
 
     // Can set task.debug via configuration
     // Comment out this line to see all the debug messages for everything

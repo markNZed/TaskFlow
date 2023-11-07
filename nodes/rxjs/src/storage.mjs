@@ -136,7 +136,6 @@ async function keysActiveTask_async() {
 
 if (NODE.storage.emptyAllDB) {
   let toClear = [
-    cacheStore_async.clear(),
     cepTypes_async.clear(),
     serviceTypes_async.clear(),
     operatorTypes_async.clear(),
@@ -147,6 +146,14 @@ if (NODE.storage.emptyAllDB) {
   }
   await Promise.all(toClear);
   console.log("Empty DB: cleared all KeyV");
+}
+
+if (NODE.storage.emptyCache) {
+  let toClear = [
+    cacheStore_async.clear(),
+  ];
+  await Promise.all(toClear);
+  console.log("Empty Cache: cleared all KeyV");
 }
 
 // For now we use JS data structures instead of a DB

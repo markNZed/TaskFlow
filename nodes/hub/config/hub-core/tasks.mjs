@@ -35,7 +35,34 @@ const tasks = [
     name: "root",
     permissions: [
       "dev",
-    ]
+    ],
+    masks: {
+      outgoing: {
+        connections: true,
+        familyId: true,
+        groupId: true,
+        masks: true,
+        nodes: true,
+        users: true,
+      },
+      incoming: {
+        config: true,
+        //id: true, can't mask id 
+        type: true,
+        user: true, 
+        fsm: true,
+      },
+      "react": {
+        outgoing: {
+          services: true,
+          operators: true,
+          ceps: true,
+        },
+        incoming: {
+          meta: true,
+        },
+      }
+    }
   },
   {
     CHILDREN_menu: true,
@@ -163,14 +190,14 @@ const tasks = [
         messagesTemplate: [
           {
             role: "user",
-            text: [
+            content: [
               "This is a response from an earlier message",
               "story.output.LLMtext"
             ]
           },
           {
             role: "assistant",
-            text: "OK. Thank you. What would you like me to do?"
+            content: "OK. Thank you. What would you like me to do?"
           }
         ],
       },

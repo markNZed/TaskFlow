@@ -108,6 +108,7 @@ NODE["storage"] = {
   redisUrl: REDIS_URL,
   mongoUrl: MONGO_URL,
   emptyAllDB: EMPTY_ALL_DB,
+  emptyCache: false,
   mongoMaster: "hub-coprocessor",
   redisMaster: "hub-coprocessor",
   weaviateScheme: 'http',

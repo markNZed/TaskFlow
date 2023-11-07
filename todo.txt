@@ -1,18 +1,29 @@
 /* ToDo
 -------
+review OpenAI pricing
+Cookie could encode array of tribes
+  Problem if user is not unique
+    Should just enforce this
+Version table in accessdb
+  version.current
+  we load and modify schema
+    first time will be to add the version table
+  Could do something similar for config (version in dir path)
+    Need to "rewrite" nicely
+  Could also have similar approach for tasks
+    Processor registers task version
+      Hub maps (requires going in both directions)
+With task.node.command we can have parallel commands from different processors
+Review for security holes
+Hash diff to treat {}, [], null, missing, as equivalent
+Create RAG chat for taos, permissions taos
+Create tuteur.understudy.top
 When registering the Hub should provide the app info : 
-  appAbbrev is used in the Node id
+  appAbbrev is used in the Node id of React for storage
+    could connect after registering ?
 Move runDumpOneConfigScript from storage to configdata
 TaskMe - Editing of personal info
-Masking for authorization
-  Admin user should share another group to see the users
-  User count becomes difficult - access db does not have groups
-  For each group that the admin is in count the number of users ?
-  Could have config in TaskUsers that filters for a specific group
-  Could filter based on URL
-  Could use hierarchy for different sets of users/groups
-    User could be allocated to one or more
-  Like  anamespace that is passed between tasks task.???
+Could use hierarchy for different sets of users/groups
 When user is removed from group the group is not updated
   We should treat users+groups as one type?
   Do not need to load groups if we load users

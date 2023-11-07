@@ -84,7 +84,7 @@ const utils = {
         user: message?.user,
         id: id,
         parentMessageId: lastMessageId,
-        text: message.content,
+        content: message.content,
       };
 
       if (message.role === "system") {

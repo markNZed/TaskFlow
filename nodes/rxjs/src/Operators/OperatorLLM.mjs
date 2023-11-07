@@ -179,11 +179,13 @@ async function chatPrepare_async(T) {
     console.log(
       "Initial messages from serviceConfig " + serviceConfig.name
     );
+    //console.log("messages", messages);
   }
 
   if (serviceConfig.messages) {
     messages.push(...serviceConfig.messages)
     console.log("Found config messages");
+    //console.log("messages", messages);
   }
 
   // This is assuming the structure used in TaskChat
@@ -239,6 +241,8 @@ async function chatPrepare_async(T) {
   }
 
   const maxFunctionDepth = serviceConfig.maxFunctionDepth || 1; 
+
+  //console.log("Final prevMessages", prevMessages);
 
   return {
     systemMessage,

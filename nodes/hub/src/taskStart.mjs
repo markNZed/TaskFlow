@@ -153,7 +153,7 @@ async function processTemplates_async(task, obj, outputs, familyId) {
   for (const [key, value] of Object.entries(obj)) {
     // If the value is an object, then recurse
     if (typeof value === 'object' && value !== null) {
-      await processTemplates_async(task, value, outputs, familyId);
+      task = await processTemplates_async(task, value, outputs, familyId);
     }
 
     // If the key ends with "Template", process it
@@ -170,12 +170,15 @@ async function checkUserPermissions_async(task, groupsStore_async, authenticate)
   utils.debugTask(task);
   // Check if the user has permissions
   if (authenticate) {
-    const authenticated = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
+    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
     if (!authenticated) {
       console.error("Task:", utils.js(task));
       throw new Error("Task authentication failed");
+    } else {
+      task.groupId = groupId;
     }
   }
+  return task;
 }
 
 async function updateFamilyStoreAsync(task, familyStore_async) {
@@ -411,10 +414,10 @@ async function taskStart_async(
     task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
-    ['config', 'input', 'meta', 'output', 'privacy', 'node', 'nodes', 'hub', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
+    ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
     ['connections'].forEach(key => task[key] = task[key] || []);
 
-    await checkUserPermissions_async(task, groupsStore_async, authenticate);
+    task = await checkUserPermissions_async(task, groupsStore_async, authenticate);
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
 
@@ -456,6 +459,19 @@ async function taskStart_async(
       task.familyId = task.instanceId;
       task = await processInstanceAsync(task, task.instanceId, "oneFamily", nodeId);
     }
+
+    if (initTask.groupId) {
+      task.groupId = initTask.groupId;
+      if (!await checkUserGroup_async(task.groupId, task.user.id)) {
+        throw new Error("User " + task.user.id + " does not belong to initTask.groupId " + task.groupId);
+      }
+    // The task can specify the group through task.permissions 
+    // then groupId will be set above by checkUserPermissions_async
+    } else if (!task.groupId) {
+      if (prevTask && prevTask.groupId) {
+        task.groupId = prevTask.groupId;
+      }
+    } 
     
     if (task.config.collaborateGroupId) {
       // GroupId should be an array of group Ids?
@@ -523,10 +539,14 @@ async function taskStart_async(
     task = await supportMultipleLanguages_async(task, usersStore_async);
 
     // Templating functionality
-    const outputs = await outputStore_async.get(task.familyId);
+    const outputs = await outputStore_async.get(task.familyId) || {};
     // Using side-effects to update task.config
     task = await processTemplates_async(task, task.config, outputs, task.familyId);
-    task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
+    //task = await processTemplates_async(task, task.config.local, outputs, task.familyId);
+    task = await processTemplates_async(task, task.services, outputs, task.familyId);
+    task = await processTemplates_async(task, task.operations, outputs, task.familyId);
+    task = await processTemplates_async(task, task.ceps, outputs, task.familyId);
+
 
     const taskNodes = allocateTaskToNodes(task, nodeId, activeNodes);
 

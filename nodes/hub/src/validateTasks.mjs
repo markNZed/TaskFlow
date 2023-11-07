@@ -12,7 +12,7 @@ const stringOrArrayOfStrings = yup
 
 const templateSchema = yup.object({
   role: yup.string().required(),
-  text: stringOrArrayOfStrings.required(),
+  content: stringOrArrayOfStrings.required(),
 }).noUnknown(true);
 
 export const configSchema = yup.object()
@@ -95,6 +95,7 @@ const tasksSchema = yup.array().of(yup.object()
     ceps: yup.object(),
     operators: yup.object(),
     connections: yup.array().of(yup.array()),
+    masks: yup.object(),
   })
   .noUnknown(true)
 );

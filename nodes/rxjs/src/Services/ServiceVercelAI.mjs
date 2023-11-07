@@ -86,6 +86,9 @@ async function openaigpt_async(params) {
   // Need to build messages from systemMessage, messages, prompt
 
   function buildMessages(systemMessage, prevMessages, prompt) {
+    //console.log("buildMessages systemMessage", systemMessage);
+    //console.log("buildMessages prevMessages", prevMessages);
+    //console.log("buildMessages prompt", prompt);
     let messages = [];
     if (systemMessage) {
       const systemMessageElement = {
@@ -94,7 +97,9 @@ async function openaigpt_async(params) {
       }
       messages.push(systemMessageElement);
     }
+    //console.log("buildMessages after systemMessage messages", messages);
     messages = [...messages, ...prevMessages];
+    //console.log("buildMessages after prevMessages messages", messages);
     if (prompt) {
       const promptElement = {
         role: "user",
@@ -102,12 +107,14 @@ async function openaigpt_async(params) {
       }
       messages.push(promptElement);
     }
+    //console.log("buildMessages after prompt messages", messages);
     const mappedMessages = messages.map((message) => ({
       role: message.role,
       content: message.content, // mapping text -> content
       function_call: message.function_call,
       name: message.name,
     }));
+    //console.log("buildMessages mappedMessages", mappedMessages);
     return mappedMessages;
   }
 
@@ -386,7 +393,7 @@ async function openaigpt_async(params) {
               }
             },
             onFinal: async (completion) => {
-              //console.log("final messages", messages);
+              console.log("final messages", messages);
               //console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {

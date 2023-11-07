@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async } from "./storage.mjs";
+import { getActiveTask_async, setActiveTask_async, outputStore_async, tasksStore_async, usersStore_async, groupsStore_async } from "./storage.mjs";
 import { utils } from './utils.mjs';
 import taskSync_async from "./taskSync.mjs";
 import { NODE } from "../config.mjs";
@@ -251,13 +251,53 @@ async function processOutput_async(task, outputStore) {
   return task;
 }
 
+async function maskIncoming_async(task) {
+  // We trust the task.masks
+  if (task.node.type !== "hub" && task.masks) {
+    let mask = utils.deepClone(task.masks.incoming) || {};
+    mask = utils.deepMerge(mask, task.masks.outgoing);
+    //utils.logTask(task, "maskIncoming_async mask before env", task.node.id, mask);
+    const nodeEnv = task.node.environment;
+    if (task.masks[nodeEnv] && task.masks[nodeEnv].incoming) {
+      mask = utils.deepMerge(mask, task.masks[nodeEnv].incoming);
+      mask = utils.deepMerge(mask, task.masks[nodeEnv].outgoing);
+      //utils.logTask(task, "maskIncoming_async mask after env", task.node.id, nodeEnv, mask);
+    }
+    const groupId = task.groupId;
+    if (groupId) {
+      let group = await groupsStore_async.get(groupId);
+      if (group?.unmask?.incoming) {
+        utils.deleteKeysBasedOnMask(mask, group.unmask.incoming);
+        //utils.logTask(task, "maskIncoming_async unmask group", task.node.id, groupId, mask);
+      }
+    }
+    const devGroupId = "dev";
+    if (task.user?.groups && task.user?.groups.includes(devGroupId)) {
+      let group = await groupsStore_async.get(devGroupId);
+      if (group?.unmask?.incoming) {
+        utils.deleteKeysBasedOnMask(mask, group.unmask.incoming);
+        //utils.logTask(task, "maskIncoming_async unmask dev", task.node.id, devGroupId, group, mask);
+      }
+    }
+    //utils.logTask(task, "maskIncoming_async after unmask", task.node.id, mask);
+    if (Object.keys(mask).length > 0) {
+      utils.deleteKeysBasedOnMask(task, mask);
+    }
+  }
+  return task;
+}
+
 async function taskProcess_async(task) {
   try {
     if (!task.node) {
       throw new Error("Missing task.node in taskProcess_async");
     }
-    let activeTask = {};
+    let activeTask = await getActiveTask_async(task.instanceId);
     const incomingNode = task.node;
+    if (activeTask?.masks) {
+      task.masks = activeTask.masks;
+      task = await maskIncoming_async(task);
+    }
     if (incomingNode.command !== "partial" && task.node.command !== "register") {
       utils.logTask(task, "From node:" + incomingNode.id + " command:" + incomingNode.command + " commandDescription:" + incomingNode.commandDescription + " state:" + task?.state?.current);
       checkErrorRate(task);
@@ -267,7 +307,6 @@ async function taskProcess_async(task) {
       }
       utils.debugTask(task);
       if (task.instanceId !== undefined) {
-        activeTask = await getActiveTask_async(task.instanceId);
         if (activeTask && Object.keys(activeTask).length !== 0) {
           if (task.meta?.hashDiff) {
             // This is running on "partial" which seems a waste

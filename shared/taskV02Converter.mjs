@@ -183,6 +183,7 @@ const typeMap = {
         { json: "groupId", js: "groupId", typ: u(undefined, "") },
         { json: "id", js: "id", typ: u(undefined, "") },
         { json: "input", js: "input", typ: u(undefined, m("any")) },
+        { json: "mask", js: "mask", typ: u(undefined, m("any")) },
         { json: "meta", js: "meta", typ: u(undefined, m("any")) },
         { json: "name", js: "name", typ: u(undefined, "") },
         { json: "node", js: "node", typ: u(undefined, m("any")) },

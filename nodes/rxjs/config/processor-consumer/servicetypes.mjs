@@ -11,7 +11,8 @@ const servicetypes = [
     name: "openaigpt",
     API: "openaigpt",
     moduleName: "ServiceVercelAI",
-    modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
+    modelVersion: 'gpt-3.5-turbo-1106',
+    //modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     //modelVersion: 'gpt-4-0613', // Should understand functions
     //modelVersion: 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)
     //modelVersion: 'gpt-3.5-turbo-16k', // large prompt
@@ -264,11 +265,11 @@ const servicetypes = [
     messages: [
       {
         role: 'user',
-        text: `When I amke a spelling mistake tell me.`,
+        content: `When I amke a spelling mistake tell me.`,
       },
       {
         role: 'assistant',
-        text: `OK. You made a spelling mistake: "amake" should be "make"`,
+        content: `OK. You made a spelling mistake: "amake" should be "make"`,
       },
     ],
     */
