@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Create RAG chat for taos, permissions taos
 review OpenAI pricing
 Cookie could encode array of tribes
   Problem if user is not unique
@@ -15,9 +16,8 @@ Version table in accessdb
       Hub maps (requires going in both directions)
 With task.node.command we can have parallel commands from different processors
 Review for security holes
+  commandArgs.authenticate
 Hash diff to treat {}, [], null, missing, as equivalent
-Create RAG chat for taos, permissions taos
-Create tuteur.understudy.top
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?

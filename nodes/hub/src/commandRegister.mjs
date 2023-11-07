@@ -43,6 +43,7 @@ export async function commandRegister_async(task) {
     let node = task.nodes[initiatingNodeId];
     node["userId"] = task?.user?.id;
     node["nodeId"] = initiatingNodeId;
+    node["tribe"] = task?.user?.tribe;
     await register(node);
   } catch (error) {
     const msg = `Error commandRegister_async task ${task.id}: ${error.message}`;
@@ -51,7 +52,7 @@ export async function commandRegister_async(task) {
   }
 }
 
-async function register({ nodeId, environment, commandsAccepted, language, type, role, processing, userId }) {
+async function register({ nodeId, environment, commandsAccepted, language, type, role, processing, userId, tribe }) {
   console.log("register");
 
   if (commandsAccepted === undefined) {
@@ -148,7 +149,10 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       //console.log("allEnvironmentsAvailable");
       const initTask = {
         id: taskId,
-        user: {id: userId},
+        user: {
+          id: userId,
+          tribe,
+        },
       }
       let task = {id: "autoStart"};
       task["instanceId"] = NODE.id;
@@ -163,7 +167,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       task.node["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
       task["nodes"] = {};
       task.nodes[nodeId] = activeNodes.get(nodeId);
-      console.log("Autostarting task ", taskId, environment);
+      console.log("Autostarting task ", taskId, environment, userId, tribe);
       utils.debugTask(task, `Autostarting task ${taskId}`);
       commandStart_async(task);
       if (autoStartTask.once) {

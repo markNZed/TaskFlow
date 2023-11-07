@@ -20,6 +20,48 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
     console.log("configTreeEvent found update to shared.config-hub-consumer-tasks");
   }
 
+  function deleteNonInitiatorBranches(tasks) {
+    // Helper function to determine if a task should be deleted
+    function shouldDeleteTask(task) {
+      return !task.initiator && (!task.meta?.childrenId || task.meta.childrenId.length === 0);
+    }
+    // Recursive function to delete non-initiator leaf nodes and their parents if applicable
+    function recursiveDelete(taskKey, tasks, parentKey = null) {
+      const task = tasks[taskKey];
+      if (!task) return true;
+  
+      // Process all children first
+      if (task.meta?.childrenId && task.meta.childrenId.length > 0) {
+        // Use a reverse loop for safe removal of items during iteration
+        for (let i = task.meta.childrenId.length - 1; i >= 0; i--) {
+          const childKey = task.meta.childrenId[i];
+          if (recursiveDelete(childKey, tasks, taskKey)) {
+            // Remove the deleted child from the childrenId array
+            task.meta.childrenId.splice(i, 1);
+          }
+        }
+      }
+      // After processing children, check if the task itself should be deleted
+      if (shouldDeleteTask(task)) {
+        // If this task has a parent, defer deletion to the parent's check
+        if (parentKey) {
+          return true; // Signify that this task should be deleted
+        } else {
+          delete tasks[taskKey]; // Delete the task if it has no parent (root-level task)
+        }
+      }
+      // If a task was marked for deletion (child returned true), handle deletion here
+      if (parentKey && shouldDeleteTask(tasks[parentKey])) {
+        delete tasks[parentKey]; // Delete the parent task
+        return true; // Propagate deletion signal up the stack
+      }
+      return false; // Task was not deleted, do not propagate deletion signal
+    }
+  
+    // Start the recursion from the root tasks
+    Object.keys(tasks).forEach(taskKey => recursiveDelete(taskKey, tasks));
+  }
+
   async function getAuthorisedTasks_async(userId, tasksStore_async, groupsStore_async, sort = false) {
     console.log("getAuthorisedTasks_async", userId);
     let authorised_tasks = {};
@@ -34,6 +76,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
         //console.log("task key not authorised", key);
       }
     }
+    deleteNonInitiatorBranches(authorised_tasks);
     // If a taskflow is authorized then the path to that taskflow is authorized
     for (const key in authorised_tasks) {
       let id = authorised_tasks[key].id
@@ -48,7 +91,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
         }
       }    
     }
-    //console.log("authorised_tasks ", authorised_tasks)
+    console.log("authorised_tasks ", authorised_tasks)
     let keys = []
     if (sort) {
       keys = Object.keys(authorised_tasks).sort();

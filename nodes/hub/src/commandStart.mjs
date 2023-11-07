@@ -40,6 +40,11 @@ export async function commandStart_async(task) {
     if (commandArgs.prevInstanceId) {
       initTask.meta["prevInstanceId"] = commandArgs.prevInstanceId;
     }
+    if (task?.user?.tribe) {
+      //utils.logTask(task, "commandStart_async task.user.tribe", task.user.tribe);
+      initTask["user"] = initTask.user || {};
+      initTask.user["tribe"] = task.user.tribe; // Maybe should use NODE ?
+    }
     //utils.logTask(task, "commandStart_async coprocessed:", task.node.coprocessed, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {

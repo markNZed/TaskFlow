@@ -222,34 +222,38 @@ function initWebSocketServer(server) {
         }
         // Could also have an option to refresh the JWT based on e.g. data
         let  tribeName = decoded.hostname;
-        console.log("Incoming tribe", userId, tribeName);
+        utils.logTask(task, "Incoming tribe", userId, tribeName);
         // If the hostname is taskflow then we assume an internal connection
         if (hostname !== "taskflow") {
           if (user.tribes.includes("god")) {
             tribeName = hostname;
-            console.log("God dropping into tribe", userId, tribeName);
+            utils.logTask(task,"God dropping into tribe", userId, tribeName);
           } else if (tribeName && hostname !== tribeName) {
             console.log("Wrong hostname", hostname, tribeName);
             return;
           } else if (!tribeName) {
-            console.log("No tribe found so default to world");
+            utils.logTask(task, "No tribe found so default to world");
             tribeName = "world";
           }
           const tribe = await tribesStore_async.get(tribeName);
           if (!tribe) {
-            console.log("No tribe found", userId, tribeName);
+            utils.logTask(task, "No tribe found", userId, tribeName);
             return;
           }
           if (user.tribes && !user.tribes.includes(tribeName) && !user.tribes.includes("god")) {
-            console.log("User not in tribe", userId, tribeName);
+            utils.logTask(task, "User not in tribe", userId, tribeName);
             return;
           }
           // Allocate user to tribe
           task["user"] = task.user || {};
           task.user["tribe"] = tribeName;
-          console.log("Set user tribe", userId, tribeName);
+          utils.logTask(task, "Set user tribe", userId, tribeName);
           NODETribe(tribe);
+          utils.debugTask(task, "set tribe");
         }
+      } else if (hostname !== "taskflow") {
+        console.log("No authToken");
+        return;
       }
 
       let incomingNode = task?.node;
@@ -309,7 +313,8 @@ function initWebSocketServer(server) {
       } else if (task) {
         // Add the user id if it is not set
         if (!task?.user?.id && userId) {
-          task["user"] = {id: userId};
+          task["user"] = task.user || {}; // user.tribe may be set
+          task.user["id"] = userId;
         }
         
         task = await taskProcess_async(task);

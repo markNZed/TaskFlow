@@ -528,7 +528,11 @@ async function taskStart_async(
     // When we join we want to keep the nodes info related to the joined task
     task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/);
 
-    const user = await usersStore_async.get(task.user.id);
+    let user = await usersStore_async.get(task.user.id);
+    if (task.user) {
+      //console.log("Starting with user", task.user, initTask);  
+      user = utils.deepMerge(user, task.user);
+    }
     if (task.users[task.user.id]) {
       task.users[task.user.id] = utils.deepMerge(task.users[task.user.id], user);
     } else {

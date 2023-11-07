@@ -71,6 +71,7 @@ async function nodeInHubOut_async(task, activeTask) {
   // Keep the tribe that was set through websocket
   if (task?.user?.tribe) {
     task.users[task.user.id]["tribe"] = task.user.tribe;
+    //utils.logTask(task, "nodeInHubOut_async tribe", task.user.tribe);
   }
   // Restore the hub from storage
   // So we can keep task specific information local to the hub
@@ -295,7 +296,7 @@ async function taskProcess_async(task) {
     let activeTask = await getActiveTask_async(task.instanceId);
     const incomingNode = task.node;
     if (activeTask?.masks) {
-      task.masks = activeTask.masks;
+      task.masks = utils.deepClone(activeTask.masks);
       task = await maskIncoming_async(task);
     }
     if (incomingNode.command !== "partial" && task.node.command !== "register") {
