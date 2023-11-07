@@ -68,6 +68,7 @@ async function maskOutgoing_async(task) {
       utils.deleteKeysBasedOnMask(task, mask);
     }
   }
+  //utils.logTask(task, "maskOutgoing_async keys", task.node.id, task.node.type, task.masks, Object.keys(task), );
   return task;
 }
 
@@ -84,6 +85,10 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   let outgoingNode;
   if (task.nodes && task.nodes[nodeId] && Object.keys(task.nodes[nodeId]).length > 0) {
     outgoingNode = utils.deepClone(task.nodes[nodeId]);
+  }
+  let masks;
+  if (activeTask?.masks) {
+    masks = utils.deepClone(activeTask.masks);
   }
   let user;
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
@@ -152,6 +157,8 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     utils.logTask(task, "wsSendTask task " + (task.id || task.instanceId) + " to " + nodeId)
     //utils.logTask(task, "wsSendTask currentNode.commandArgs.sync", currentNode?.commandArgs?.sync);
   }
+  // Need to restore task.masks for maskOutgoing_async
+  task.masks = masks;
   message["task"] = await maskOutgoing_async(task);
   //utils.logTask(task, "wsSendTask user", task.user);
   utils.debugTask(task, "output");

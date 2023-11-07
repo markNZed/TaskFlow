@@ -193,9 +193,11 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     }
     utils.logTask(task, "CEPConnect connectLaterHash1", connectLaterHash);
     
-    for (let connection of task.connections) {
-      console.log("processConnection task.connections", connection);
-      await processConnection(connection, task, family, connectLaterHash, false);
+    if (task.connections) {
+      for (let connection of task.connections) {
+        console.log("processConnection task.connections", connection);
+        await processConnection(connection, task, family, connectLaterHash, false);
+      }
     }
 
     utils.logTask(task, "CEPConnect task.connections", task.connections);

@@ -51,6 +51,7 @@ const tasks = [
         type: true,
         user: true, 
         fsm: true,
+        permissions: true,
       },
       "react": {
         outgoing: {

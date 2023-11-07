@@ -1,5 +1,7 @@
 /* ToDo
 -------
+Support for children 
+  childNames - would be filled in during a second pass ?  
 Create RAG chat for taos, permissions taos
 review OpenAI pricing
 Cookie could encode array of tribes

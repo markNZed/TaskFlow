@@ -73,6 +73,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
   }
 
   activeNodes.set(nodeId, {
+    id: nodeId,
     environment,
     commandsAccepted,
     language,
