@@ -121,8 +121,12 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
           switch (T("input.action")) {
             case "create": {
               const user = T("input.user");
-              const username = T("input.user.name").toLowerCase();
-              T("input.user.name", username);
+              if (user?.name) {
+                user["name"] = user.name.toLowerCase();
+              } else {
+                throw new Error("User not found." + utils.js(user));
+              }
+              const username = user.name;
               user["tribes"] = [T("user.tribe")];
               const password = T("input.password");
               // Check if the user already exists
@@ -145,8 +149,8 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               break;
             }
             case "read": {
-              const readUsername = T("input.user.name").toLowerCase();
-              const TFuser = await usersStore_async.get(readUsername);
+              const username = T("input.user.name").toLowerCase();
+              const TFuser = await usersStore_async.get(username);
               if (TFuser) {
                 if (tribe && !TFuser.tribe.includes(tribe)) {
                   T("response.user", TFuser);
@@ -156,21 +160,25 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               } else {
                 T("error", { message: "User not found." });
               }
-              T("commandDescription", "Read user " + readUsername);
+              T("commandDescription", "Read user " + username);
               break;
             }
             case "update": {
-              const user = T("input.user");
-              const updateUsername = T("input.user.name").toLowerCase();
-              T("input.user.name", updateUsername);
+              let user = T("input.user");
+              if (user?.name) {
+                user["name"] = user.name.toLowerCase();
+              } else {
+                throw new Error("User not found." + utils.js(user));
+              }
+              const username = user.name;
               const newPassword = T("input.password");
               const newPasswordHash = await hashPassword(newPassword);
               await accessDB.run(
                 "UPDATE users SET password_hash = ? WHERE username = ? AND tribe = ?",
-                [newPasswordHash, updateUsername, tribe]
+                [newPasswordHash, username, tribe]
               );              
-              T("commandDescription", "Updated user " + updateUsername);
-              user["id"] = updateUsername;
+              T("commandDescription", "Updated user " + username);
+              user["id"] = username;
               // We will need to save to the config file but that will be expanded
               // Write the user to runtime - read/modify/write
               updateRuntimeUsers_async(user);
@@ -292,12 +300,10 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     }
     console.log("Sorted users", users);
     users = await Promise.all(users.map(async (user) => {
-      const TFuser = await usersStore_async.get(user.username);
+      const TFuser = await usersStore_async.get(user.username.toLowerCase());
       if (TFuser) {
         return TFuser;
       } else {
-        user.name = user.username; // hack for the frontend
-        // Handle the case where TFuser is not found
         console.error(`User ${user.username} not found in store.`);
         return user; // Or you might want to return null or handle it differently
       }
