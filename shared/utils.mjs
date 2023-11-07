@@ -697,6 +697,28 @@ const utils = {
     return obj;
   },
 
+  removeEmptyKeys: function(obj, depth = 0) {
+    if (_.isEmpty(obj)) {
+      return null;
+    }
+    if (Array.isArray(obj)) {
+      return obj;
+    }
+    if (typeof obj === 'object') {
+      for (let key in obj) {
+        if (_.isEmpty(obj[key])) {
+          delete obj[key];
+        }
+        if (typeof obj[key] === 'object') {
+          obj[key] = utils.removeEmptyKeys(obj[key], depth + 1);
+        }
+        if (obj[key] === null) {
+          delete obj[key];
+        }
+      }
+    }
+  },
+
   // This is having side-effects on task
   nodeActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
     console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task?.state?.current);
@@ -739,6 +761,9 @@ const utils = {
         delete taskCopy.state;
       }
     }
+    // Delete any empty objects because this was causing hash mismathc e.g. one storage does not have the key and the other has {}
+    // Should look more into this...
+    utils.removeEmptyKeys(taskCopy);
     // Because React is adding token during the sending of the Task so it will not be stored
     delete taskCopy.tokens;
     // Sending null is used to delete so we can get mismatches when the entry is deleted
