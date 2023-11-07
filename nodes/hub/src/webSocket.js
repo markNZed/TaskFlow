@@ -214,7 +214,7 @@ function initWebSocketServer(server) {
           return;
         }
         //console.log("authToken found", decoded);
-        userId = decoded.username;
+        userId = decoded.username.toLowerCase();
         if (MAP_USER && MAP_USER[userId]) {
           userId = MAP_USER[userId];
         } else if (task?.user?.id && task.user.id !== userId) {

@@ -121,10 +121,12 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
           switch (T("input.action")) {
             case "create": {
               const user = T("input.user");
+              const username = T("input.user.name").toLowerCase();
+              T("input.user.name", username);
               user["tribes"] = [T("user.tribe")];
               const password = T("input.password");
               // Check if the user already exists
-              const count = await getRowCount_async(user.name, tribe);
+              const count = await getRowCount_async(username, tribe);
               console.log("count", count);
               // Ultimately we could allow a user to be in multiple tribes
               if (count > 0) {
@@ -132,18 +134,18 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               } else {
                 // Insert the new user into the database
                 const passwordHash = await hashPassword(password);
-                await accessDB.run("INSERT INTO users (username, password_hash, tribe) VALUES (?, ?, ?)", [user.name, passwordHash, tribe]);
+                await accessDB.run("INSERT INTO users (username, password_hash, tribe) VALUES (?, ?, ?)", [username, passwordHash, tribe]);
               }
-              user["id"] = user.name;
+              user["id"] = username;
               // We will need to save to the config file but that will be expanded
               // Write the user to runtime - read/modify/write
               updateRuntimeUsers_async(user);
               await usersResponse(limit, offset, tribe);
-              T("commandDescription", "Created user " + user.name);
+              T("commandDescription", "Created user " + username);
               break;
             }
             case "read": {
-              const readUsername = T("input.user.name");
+              const readUsername = T("input.user.name").toLowerCase();
               const TFuser = await usersStore_async.get(readUsername);
               if (TFuser) {
                 if (tribe && !TFuser.tribe.includes(tribe)) {
@@ -159,7 +161,8 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
             }
             case "update": {
               const user = T("input.user");
-              const updateUsername = T("input.user.name");
+              const updateUsername = T("input.user.name").toLowerCase();
+              T("input.user.name", updateUsername);
               const newPassword = T("input.password");
               const newPasswordHash = await hashPassword(newPassword);
               await accessDB.run(
@@ -167,7 +170,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
                 [newPasswordHash, updateUsername, tribe]
               );              
               T("commandDescription", "Updated user " + updateUsername);
-              user["id"] = user.name;
+              user["id"] = updateUsername;
               // We will need to save to the config file but that will be expanded
               // Write the user to runtime - read/modify/write
               updateRuntimeUsers_async(user);
@@ -183,7 +186,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               const deletedUsers = [];
               for (const username of deleteUsernames) {
                 try {
-                  const result = await deleteUser(username, tribe);
+                  const result = await deleteUser(username.toLowerCase(), tribe);
                   if (result.changes > 0) {
                     deletedUsers.push(result.username); // Add username to deletedUsers if it was deleted
                   }

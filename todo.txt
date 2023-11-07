@@ -1,7 +1,12 @@
 /* ToDo
 -------
+corpusName might be better in shared not config
+TaskSelect supports multilingual labels?
 Support for children 
-  childNames - would be filled in during a second pass ?  
+  childNames - would be filled in during a second pass ?
+    Is it better to use the full path ?
+    Use tasktypes instead
+config.local -> config.self ?    
 Create RAG chat for taos, permissions taos
 review OpenAI pricing
 Cookie could encode array of tribes

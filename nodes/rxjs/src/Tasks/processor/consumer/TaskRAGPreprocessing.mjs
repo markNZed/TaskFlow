@@ -1242,7 +1242,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     }
   };
   
-  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.local.corpusName"));
+  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.corpusName"));
   const pdfDir = path.join(corpusDir, 'pdf');
   const metadataDir = path.join(corpusDir, 'metadata');
   const unstructuredDir = path.join(corpusDir, 'unstructured');
@@ -1251,7 +1251,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   const vectorizedDir = path.join(corpusDir, 'vectorized');
   const ingestedDir = path.join(corpusDir, 'ingested');
   const dataProcessedEmbeddingsDir = path.join(corpusDir, 'dataProcessedEmbeddings');
-  const className = T("config.local.corpusName");
+  const className = T("config.corpusName");
   const inputDirectories = [pdfDir];
   const outputDirectories = [metadataDir, unstructuredDir, chunkedDir, dataProcessedChunksDir, vectorizedDir, ingestedDir, dataProcessedEmbeddingsDir];
 

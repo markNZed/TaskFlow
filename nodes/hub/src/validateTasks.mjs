@@ -36,6 +36,7 @@ export const configSchema = yup.object()
     autoStartEnvironments: yup.array().of(yup.string()),
     autoStartCoprocessor: yup.boolean(),
     autoStartpriority: yup.string(),
+    corpusName: yup.string(),
   }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

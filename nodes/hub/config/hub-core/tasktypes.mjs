@@ -85,6 +85,16 @@ const tasktypes = [
     state: {
       current: "start",
     },
+    connections: [
+      [":output.chat.services",                            "chat:services"], // How to map entire :output.chat to chat: ?
+      [":output.config.local.user",                        "chat:config.local.user"],
+      [":output.config.local.cachePrefix",                 "chat:config.local.cachePrefix"],
+      [":output.select.config.local.fields.topic.options", "select:config.local.fields.topic.options"],
+      [":output.select.config.local.fields.level.hide",    "select:config.local.fields.level.hide"],
+      ["select:output.selected",                           ":input.select"], // could allow "input.test"
+      ["select:output.selected.topic",                     ":config.local.topic"],
+      ["select:output.selected.topic",                     "chat:config.local.topic"],
+    ],
   },
   {
     name: "TaskWeaviate",

@@ -6,8 +6,8 @@ export function newTask(NODE, state, taskFunctionName) {
     id: "runFunction." + taskFunctionName,
     instance: "runFunction-" + taskFunctionName,
     config: {
+      corpusName: "DTF", //KG
       local: {
-        corpusName: "DTF", //KG
         ripple: false,
       },
     },

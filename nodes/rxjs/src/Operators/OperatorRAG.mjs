@@ -163,7 +163,7 @@ const RAG_async = async function (wsSendTask, T) {
   }
 
   let response;
-  const className = T("config.local.corpusName");
+  const className = T("config.corpusName");
   let queryVector;
 
   const weaviateClient = weaviate.client({
@@ -365,7 +365,7 @@ const RAG_async = async function (wsSendTask, T) {
 
   let nextState = T("state.current");
   let context = '';
-  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.local.corpusName"));
+  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.corpusName"));
   const metadataDir = path.join(corpusDir, 'metadata');
   const CACHE_ID = "TASKFLOW CACHE";
   let cache;

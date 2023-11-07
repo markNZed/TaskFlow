@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
   const hostname = url.hostname;
 
   // Retrieve user by username
-  accessDB.get("SELECT password_hash FROM users WHERE username = ?", [username], async (err, row) => {
+  accessDB.get("SELECT password_hash FROM users WHERE LOWER(username) = LOWER(?)", [username], async (err, row) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "Server error" });
