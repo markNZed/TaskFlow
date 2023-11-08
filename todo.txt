@@ -1,6 +1,11 @@
 /* ToDo
 -------
-review OpenAI pricing gpt4-turbo available? 
+Share the caching of services/operators across tasks (will make copy easier)
+Restoring of a previous family (so could review conversations)
+Copy of an active conversation
+  Does this imply copying a family set?
+  React will try to spawn tasks
+OpenAI featurse: JSON mode, parallel functions calls 
 Cookie could encode array of tribes
   Problem if user is not unique
     Should just enforce this

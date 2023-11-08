@@ -74,26 +74,30 @@ Enhanced Generation:
 */
 
 async function operate_async(wsSendTask, task) {
-  const T = utils.createTaskValueGetter(task);
-  // Mapping for TaskChat
-  const origQuery = T("input.query");
-  if (T("request.prompt")) {
-    T("input.query", T("request.prompt"));
+  try {
+    const T = utils.createTaskValueGetter(task);
+    // Mapping for TaskChat
+    const origQuery = T("input.query");
+    if (T("request.prompt")) {
+      T("input.query", T("request.prompt"));
+    }
+    console.log("RAG_async Input", task.input);
+    task = await RAG_async(wsSendTask, T);
+    task.response["LLM"] = task.response.result; // For TaskChat
+    task.response["newMessages"] = []; // For TaskChat
+    // Restoring query is a hack to workaround issues with hash mismatches
+    // Why do I need to do this?
+    // It seems input.query if set gets set to null somewhere (probably deleted on the React side because it does not exist?)
+    // The hash diff for input then becomes {} which should probably be ignored for the hash
+    if (origQuery === undefined) {
+      delete task.input.query;
+    } else {
+      task.input.query = origQuery;
+    }
+    console.log("RAG_async Response", task.response);
+  } catch (error) {
+    task.error = { message: error.message };
   }
-  console.log("RAG_async Input", task.input);
-  task = await RAG_async(wsSendTask, T);
-  task.response["LLM"] = task.response.result; // For TaskChat
-  task.response["newMessages"] = []; // For TaskChat
-  // Restoring query is a hack to workaround issues with hash mismatches
-  // Why do I need to do this?
-  // It seems input.query if set gets set to null somewhere (probably deleted on the React side because it does not exist?)
-  // The hash diff for input then becomes {} which should probably be ignored for the hash
-  if (origQuery === undefined) {
-    delete task.input.query;
-  } else {
-    task.input.query = origQuery;
-  }
-  console.log("RAG_async Response", task.response);
   return task
 }
 
@@ -391,7 +395,13 @@ const RAG_async = async function (wsSendTask, T) {
         query += T("input.query");
         queryVector = await embedText_async(query);
         let close;
-        [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
+        if (queryVector) {
+          [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
+          console.log("Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
+        } else {
+          console.log("queryVector is undefined");
+          throw new Error("queryVector is undefined");
+        }
         console.log("Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
         if (cache) {
           nextState = "prompt";

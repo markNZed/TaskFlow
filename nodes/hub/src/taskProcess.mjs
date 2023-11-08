@@ -138,6 +138,9 @@ function checkLockConflict(task, activeTask) {
       
       if (differenceInMinutes > 5 || localUpdatedAt === undefined) {
         utils.logTask(task, `UNLOCK task lock expired for ${lockNodeId} locked by ${activeTask.meta.locked} localUpdatedAt ${localUpdatedAt}`);
+      } else if (task.node.command === "error") {
+        utils.logTask(task, `UNLOCK task due to error command`);
+        task.meta.locked = null;
       } else {
         utils.logTask(task, `CONFLICT Task lock conflict with ${lockNodeId} command ${task.node.command} locked by ${activeTask.meta.locked} ${differenceInMinutes} minutes ago.`);
         throw new Error("Task locked", 423);
