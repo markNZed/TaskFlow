@@ -556,7 +556,7 @@ const RAG_async = async function (wsSendTask, T) {
           } else {
             let prompt = '';
             prompt = historyPrompt(T, prompt);
-            prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
+            prompt += `You do not have sufficient information to answer the question below. Suggest how the user could clarify their question.\n`;
             if (RAGUser) {
               prompt += `User: ${RAGUser}\n`;
             }

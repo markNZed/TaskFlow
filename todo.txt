@@ -1,15 +1,14 @@
 /* ToDo
 -------
+review OpenAI pricing gpt4-turbo available? 
+Cookie could encode array of tribes
+  Problem if user is not unique
+    Should just enforce this
 Support for children 
   childNames - would be filled in during a second pass ?
     Is it better to use the full path ?
     Use tasktypes instead
 config.local -> config.self ?    
-Create RAG chat for taos, permissions taos
-review OpenAI pricing
-Cookie could encode array of tribes
-  Problem if user is not unique
-    Should just enforce this
 Version table in accessdb
   version.current
   we load and modify schema
@@ -22,7 +21,6 @@ Version table in accessdb
 With task.node.command we can have parallel commands from different processors
 Review for security holes
   commandArgs.authenticate
-Hash diff to treat {}, [], null, missing, as equivalent
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?
