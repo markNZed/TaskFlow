@@ -1,5 +1,9 @@
 /* ToDo
 -------
+Cron to allow TaskStatus
+  TaskSystemCron where we can register cron jobs
+  https://github.com/harrisiirak/cron-parser
+  It could send an update command with args indicating it is a cron job
 Share the caching of services/operators across tasks (will make copy easier)
 Restoring of a previous family (so could review conversations)
 Copy of an active conversation

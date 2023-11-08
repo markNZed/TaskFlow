@@ -172,12 +172,12 @@ function initWebSocketServer(server) {
   // eslint-disable-next-line no-unused-vars
   websocketServer.on("connection", (ws, req) => {
     
-    console.log("websocketServer.on");
+    console.log("websocketServer connection");
 
     ws.data = { nodeId: undefined };
 
     const sourceIP = utils.getSourceIP(req);
-    const origin = req.headers['origin'];
+    const origin = req.headers.origin;
     let hostname;
     if (origin) {
       try {

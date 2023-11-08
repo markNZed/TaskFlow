@@ -13,7 +13,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import cookieParser from 'cookie-parser';
 
-import { fileURLToPath } from "url";
+import { fileURLToPath, URL } from "url";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -80,15 +80,33 @@ app.use(
 );
 
 app.use(async (req, res, next) => {
-  // Using host not origin as origin may not be set by client and host is set by proxy
+  // Using host not origin because origin may not be set by client and host is set by proxy
   // This is primarily for the login.html route 
-  const host = req.get('host');
-  const tribe = await tribesStore_async.get(host);
-  //console.log("Server found host", host, "tribe", tribe, req.headers);
-  // Allows us to override NODE settings based on Tribe
-  if (tribe && tribe.NODE) {
-    NODETribe(tribe);
-    //console.log("Server found tribe", tribe);
+  //console.log("req.headers",req.headers, );
+  const referer = req?.headers?.referer;
+  if (referer) {
+    const url = new URL(referer);
+    const host = url.host;
+    // This is not yet implemented on the websocket
+    // nginx upgrades the HTTP request to a websocket request
+    // We are then using the origin header to find the tribe, we would need to modify
+    // the websocket to allow for a tribe to be passed (maybe using URL query param also)
+    const searchParamTribe = url.searchParams.get("tribe");
+    const tribeName = searchParamTribe || host;
+    const tribe = await tribesStore_async.get(tribeName);
+    console.log("Server found host", host, "searchParam", url.searchParams.get("tribe"), "tribeName", tribeName);
+    // Allows us to override NODE settings based on Tribe
+    if (tribe) {
+      if (tribe.NODE) {
+        NODETribe(tribe);
+        req.tribeName = tribeName;
+        //console.log("Server found tribe", tribe);
+      } else {
+        console.log("Server could not find tribe.NODE for", tribe);
+      }
+    } else {
+      console.log("Server could not find tribe", tribeName);
+    }
   }
   next();
 });
