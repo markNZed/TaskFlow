@@ -265,32 +265,39 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
 
 async function supportMultipleLanguages_async(task, usersStore_async) {
   utils.debugTask(task);
-  // Multiple language support for config fields
-  // Eventually replace with a standard solution
-  // For example, task.config.demo_FR is moved to task.config.demo if user.language is FR
   const user = await usersStore_async.get(task.user.id);
   const language = task?.config?.local?.language || user?.language || "EN";
-  // Array of the objects
-  let configs = [task.config];
-  if (task.config?.local) {
-    configs.push(task.config.local);
-  }
-  // Loop over the objects in the array
-  for (const config of configs) {
+  function processConfig(config, lang) {
     for (const [key, value] of Object.entries(config)) {
-      if (key.endsWith("_" + language.toUpperCase())) {
+      // If it's an object (and not null or an array), recurse into it
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        processConfig(value, lang);
+      }
+      // If it's an array, loop through each element
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          if (typeof item === 'object' && item !== null) {
+            processConfig(item, lang);
+          }
+        });
+      }
+      // Replace or create the key without the language code for both label and value
+      if (typeof value === 'string' && key.endsWith("_" + lang.toUpperCase())) {
         const newKey = key.replace(/_\w{2}$/, "");
         if (config[newKey] === undefined) {
           config[newKey] = value;
         }
       }
-      // Strip out the language configs
+    }
+    // After processing all keys, remove language-specific keys
+    Object.keys(config).forEach(key => {
       const match = key.match(/_(\w{2})$/);
-      if (match) {
+      if (match && match[1].toUpperCase() === lang.toUpperCase()) {
         delete config[key];
       }
-    }
+    });
   }
+  processConfig(task.config, language);
   return task;
 }
 

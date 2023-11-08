@@ -278,11 +278,14 @@ function initWebSocketServer(server) {
           return;
         }
       }
-      if (incomingNode?.command === "usersConfigLoad") {
+      if (incomingNode?.command === "configLoad") {
         // This is a hack because we have not yet merged hub and rxjs
         // Should be replaced with a service but for now rxjs does not 
         // have access to the configdata so only hub can reload
-        reloadOneConfig_async("users");
+        await reloadOneConfig_async("tasktypes");
+        await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
+        await reloadOneConfig_async("users"); // side effect of initializing groupsStore_async
+        await reloadOneConfig_async("tribes");
       } else if (incomingNode?.command === "ping") {
         const taskPong = {
           meta: {

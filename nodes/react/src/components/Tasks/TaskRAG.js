@@ -36,7 +36,6 @@ const TaskRAG = (props) => {
   const [think, setThink] = useState(softModelVersion);
   const [level, setLevel] = useState('');
   const [topic, setTopic] = useState('');
-  const [cachePrefix, setCachePrefix] = useState();
   const [initialUser, setInitialUser] = useState();
 
   // Each time this component is mounted then we reset the task state
@@ -44,7 +43,7 @@ const TaskRAG = (props) => {
     // This can write over the update
     task.state.current = "start";
     task.state.done = false;
-    setInitialUser(task?.config?.local?.user);
+    setInitialUser(task?.shared?.RAGUser);
   }, []);
 
   // Task state machine
@@ -97,10 +96,10 @@ const TaskRAG = (props) => {
       if (inputLevel !== level) {
         console.log("setLevel", inputLevel);
         setLevel(inputLevel);
-        const user = initialUser + "The user is a " + inputLevel + " in " + task?.input?.select?.topic + "."; 
+        const RAGUser = initialUser + " The user is a " + inputLevel + " in " + task?.input?.select?.topic + "."; 
         modifyTask({ 
           "command": "update", 
-          "output.config.local.user": user,
+          "shared.RAGUser": RAGUser,
           "output.config.local.cachePrefix": inputCachePrefix,
           "commandDescription": "Update RAG user level",
         });
@@ -112,7 +111,8 @@ const TaskRAG = (props) => {
           "command": "update", 
           "output.select.config.local.fields.level.hide": false,
           "output.config.local.cachePrefix": inputCachePrefix,
-          "commandDescription": "Unhide the level checkboxes",
+          "commandDescription": "Unhide the level checkboxes and set topic",
+          "shared.topic": topic,
         });
       }
     }

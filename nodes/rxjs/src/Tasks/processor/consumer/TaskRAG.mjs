@@ -13,7 +13,7 @@ const TaskRAG_async = async function (wsSendTask, T, FSMHolder) {
 
     if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
-    const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.corpusName"));
+    const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("shared.corpusName"));
     const metadataDir = path.join(corpusDir, 'metadata');
     const topicsFile = "taskflow-topics.json"; // Should be shared with TaskRAGProcessing
     const topicsFilePath = path.join(metadataDir, topicsFile);
@@ -26,6 +26,7 @@ const TaskRAG_async = async function (wsSendTask, T, FSMHolder) {
 
     switch (T("state.current")) {
         case "start": {
+          console.log("TaskRAG_async", topicsFilePath, T("shared"));
           const topics = await getTopics(topicsFilePath);
           let topicOptions = []
           for (let i = 0; i < topics.length; i++) {
@@ -33,9 +34,8 @@ const TaskRAG_async = async function (wsSendTask, T, FSMHolder) {
             topicOptions.push({ value: option, label: option });
           }
           T("output.select.config.local.fields.topic.options", topicOptions);
-          T("output.config.corpusName", T("config.corpusName"));
-          T("output.config.local.user", T("config.local.user"));
           T("config.local.topics", topics);
+          T("shared.topics", topics);
           T("state.current", "loaded");
           T("command", "update");
           T("commandDescription", "Loaded the topics into config");

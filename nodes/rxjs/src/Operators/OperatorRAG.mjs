@@ -163,7 +163,7 @@ const RAG_async = async function (wsSendTask, T) {
   }
 
   let response;
-  const className = T("config.corpusName");
+  const className = T("shared.corpusName");
   let queryVector;
 
   const weaviateClient = weaviate.client({
@@ -365,13 +365,13 @@ const RAG_async = async function (wsSendTask, T) {
 
   let nextState = T("state.current");
   let context = '';
-  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("config.corpusName"));
+  const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("shared.corpusName"));
   const metadataDir = path.join(corpusDir, 'metadata');
   const CACHE_ID = "TASKFLOW CACHE";
   let cache;
   let availableTokens = serviceConfig.maxTokens;
-  const topic = T("config.local.topic");
-  const user = T("config.local.user");
+  const topic = T("shared.topic");
+  const RAGUser = T("shared.RAGUser");
   const cachePrefix = T("config.local.cachePrefix") || 'undefined';
 
   while (!T("command") && nextState) {
@@ -414,8 +414,8 @@ const RAG_async = async function (wsSendTask, T) {
         let prompt = '';
         // Just let chatGPT try to anser
         prompt = historyPrompt(T, prompt);
-        if (user) {
-          prompt += "This query is from " + user + "\n";
+        if (RAGUser) {
+          prompt += "This query is from " + RAGUser + "\n";
         }
         if (topic) {
           prompt += "This query concerns " + topic + "\n";
@@ -557,8 +557,8 @@ const RAG_async = async function (wsSendTask, T) {
             let prompt = '';
             prompt = historyPrompt(T, prompt);
             prompt += `You do not have sufficient information to answer this question. Suggest how the user could clarify their question.`;
-            if (user) {
-              prompt += `User: ${user}\n`;
+            if (RAGUser) {
+              prompt += `User: ${RAGUser}\n`;
             }
             if (topic) {
               prompt += `Topic: ${topic}\n`;
@@ -585,11 +585,11 @@ const RAG_async = async function (wsSendTask, T) {
           prompt += T("config.local.contextPrompt");
           prompt += `
           Cite the relevant reference material at the end of your response using the information from the <TITLE>, <AUTHOR>, <PAGE> tags in the context. For example:
-          Références :
+          References:
           [1] "Name of the document", author's name, publisher, page number
           `
-          if (user) {
-            prompt += `User: ${user}\n`;
+          if (RAGUser) {
+            prompt += `User: ${RAGUser}\n`;
           }
           if (topic) {
             prompt += `Topic: ${topic}\n`;
@@ -608,7 +608,8 @@ const RAG_async = async function (wsSendTask, T) {
         }
         T("response.query", T("input.query"));
         let historyContext = T("response.historyContext") || '';
-        historyContext += "\n" + T("input.query") + "\n" + T("response.result");
+        const responseResultWithoutReferences = stripReferences(T("response.result"));
+        historyContext += "\n" + T("input.query") + "\n" + responseResultWithoutReferences;
         let words = historyContext.split(/\s+/);  // Split the string into an array of words.
         if (words.length > 500) {
           words = words.slice(-500);   // Get the most recent 500 words.
@@ -658,5 +659,13 @@ function historyPrompt(T, prompt) {
     prompt += "\n<END HISTORY>\n\n";
   }
   return prompt;
+}
+
+function stripReferences(text) {
+  const lastIndex = text.lastIndexOf("References:");
+  if (lastIndex !== -1) {
+    return text.substring(0, lastIndex);
+  }
+  return text;
 }
 

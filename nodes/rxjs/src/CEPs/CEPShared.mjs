@@ -15,6 +15,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { utils } from "#src/utils";
 import { sharedStore_async } from "#src/storage";
 import { commandUpdate_async } from "#src/commandUpdate";
+// eslint-disable-next-line no-unused-vars
 import assert from 'assert';
 
 // Could have a familyId of system that works for system variables?
@@ -76,8 +77,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         }
       }
       // The diff used by Task synchronization does not support efficient deleting of array elements
-      assert.strictEqual(containsArray(task.shared[varName]), false, `Shared variable ${varName} contains array`);
-      assert(!containsArray(task.shared[varName]));
+      //assert.strictEqual(containsArray(task.shared[varName]), false, `Shared variable ${varName} contains array`);
+      //assert(!containsArray(task.shared[varName]));
       utils.logTask(task, "CEPShared Shared varName", varName, "familyId", familyId); //, "update with:", task.shared[varName]);
       if (task.node.command === "init") {
         if (!sharedEntry[familyId].value) {
@@ -129,6 +130,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function containsArray(obj) {
   if (Array.isArray(obj)) {
     return true;

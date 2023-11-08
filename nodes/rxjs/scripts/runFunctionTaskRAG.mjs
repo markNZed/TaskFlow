@@ -8,7 +8,6 @@ export function newTask(NODE, state, taskFunctionName) {
     instance: "runFunction-" + taskFunctionName,
     config: {
       local: {
-        corpusName: "SG",
       },
     },
     type: taskFunctionName,
@@ -29,6 +28,9 @@ export function newTask(NODE, state, taskFunctionName) {
         type: "openaigpt.rag-gb",
         environments: ["rxjs-processor-consumer"],
       },
+    },
+    shared: {
+      corpusName: "SG",
     },
   };
 }

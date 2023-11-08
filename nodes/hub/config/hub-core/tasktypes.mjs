@@ -18,14 +18,10 @@ const tasktypes = [
     environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
-        language: "EN", // default
-        promptPlaceholder_FR: "Écrivez votre prompt ici.",
-        promptPlaceholder_EN: "Write your prompt here.",
         regexProcessMessages: [
           ["<BEGIN>", ""],
           ["<END>", ""],
         ],
-        // Could tansfer to tasktype: rewritePrompt, contextPrompt, searchingMessage, respondingMessage
         rewritePrompt_EN: `Answer this question or if you do not have enough information then provide a bullet list of concepts that could help clarify this question.`,
         rewritePrompt_FR: `Répondez à cette requête ou, si vous n'avez pas suffisamment d'informations, fournissez une liste à puces de concepts qui pourraient aider à clarifier cette question:`,
         contextPrompt_EN: `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`,
@@ -34,8 +30,8 @@ const tasktypes = [
         searchingMessage_FR: "Je n'ai pas pu trouver immédiatement des informations pertinentes à votre question, donc je recherche davantage d'informations. Veuillez patienter, cela peut prendre un certain temps.",
         respondingMessage_EN: `I found some relevant information, now I'm reading it and will respond shortly.`,
         respondingMessage_FR: `J'ai trouvé des informations pertinentes, maintenant je les lis et je répondrai sous peu!`,
-        //noInformation: "Nous sommes désolés, mais nous n'avons pas de réponse disponible pour votre demande actuelle. Pour obtenir de l'aide ou des informations supplémentaires, veuillez contacter directement Domène Technologies Formations par téléphone 04 76 77 55 00 ou par e-mail contact@domene-technologies-formations.fr",
-        helpMessage_FR: `Pour obtenir de l'aide ou des informations supplémentaires, veuillez contacter directement Domène Technologies Formations par téléphone 04 76 77 55 00 ou par e-mail contact@domene-technologies-formations.fr`,
+        promptPlaceholder_EN: "Type your question here.",
+        promptPlaceholder_FR: "Tapez votre question ici.",
       },
     },
     operators: {
@@ -48,6 +44,11 @@ const tasktypes = [
       current: "start",
     },
     type: "TaskChat",
+    shared: {
+      corpusName: '',
+      user: '',
+      topic: '',
+    },
   },
   {
     name: "TaskRAGPreprocessing",
@@ -87,14 +88,16 @@ const tasktypes = [
     },
     connections: [
       [":output.chat.services",                            "chat:services"], // How to map entire :output.chat to chat: ?
-      [":output.config.local.user",                        "chat:config.local.user"],
       [":output.config.local.cachePrefix",                 "chat:config.local.cachePrefix"],
       [":output.select.config.local.fields.topic.options", "select:config.local.fields.topic.options"],
       [":output.select.config.local.fields.level.hide",    "select:config.local.fields.level.hide"],
       ["select:output.selected",                           ":input.select"], // could allow "input.test"
-      ["select:output.selected.topic",                     ":config.local.topic"],
-      ["select:output.selected.topic",                     "chat:config.local.topic"],
     ],
+    shared: {
+      corpusName: '',
+      RAGUser: '',
+      topic: '',
+    },
   },
   {
     name: "TaskWeaviate",
@@ -252,7 +255,6 @@ const tasktypes = [
     environments: ["react", "rxjs-processor-consumer"],
     config: {
       local: {
-        language: "EN",
         promptPlaceholder_FR: "Écrivez votre prompt ici.",
         promptPlaceholder_EN: "Write your prompt here.",
         regexProcessMessages: [

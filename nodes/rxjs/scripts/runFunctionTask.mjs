@@ -3,7 +3,6 @@ export function newTask(NODE, state, taskFunctionName) {
       id: "runFunction." + taskFunctionName,
       instance: "runFunction-" + taskFunctionName,
       config: {
-        corpusName: "FLE",
         local: {
         },
       },
@@ -11,6 +10,9 @@ export function newTask(NODE, state, taskFunctionName) {
       environments: ["rxjs-" + NODE.name],
       state: {
         current: state,
+      },
+      shared: {
+        corpusName: "FLE",
       },
     };
   }

@@ -6,7 +6,6 @@ export function newTask(NODE, state, taskFunctionName) {
     id: "runFunction." + taskFunctionName,
     instance: "runFunction-" + taskFunctionName,
     config: {
-      corpusName: "DTF", //KG
       local: {
         ripple: false,
       },
@@ -29,6 +28,9 @@ export function newTask(NODE, state, taskFunctionName) {
         type: "openaigpt.rag-dataprocessing",
         environments: ["rxjs-processor-consumer"],
       },
+    },
+    shared: {
+      corpusName: "DTF", //KG
     },
   };
 }

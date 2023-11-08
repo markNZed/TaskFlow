@@ -12,7 +12,7 @@ const TaskConfigReload_async = async function (wsSendTask, T, FSMHolder) {
     switch (T("state.current")) {
         case "start": {
           T("state.current", "done");
-          T("command", "usersConfigLoad");
+          T("command", "configLoad");
           T("commandDescription", "Config reload");
           break;
         }

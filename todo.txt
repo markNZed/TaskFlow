@@ -1,7 +1,5 @@
 /* ToDo
 -------
-corpusName might be better in shared not config
-TaskSelect supports multilingual labels?
 Support for children 
   childNames - would be filled in during a second pass ?
     Is it better to use the full path ?
