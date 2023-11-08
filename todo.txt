@@ -1,27 +1,33 @@
 /* ToDo
 -------
+If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
+Restoring of a previous family (so could review conversations)
+  List all conversations (query MongoDB)
+  Copy of an active conversation
+    Does this imply copying a family set?
+    How to load tasks ? From the UI
+    React will try to spawn tasks
+      Allow start to pass an instance ID then restore instead of creating
+  Ability to navigate through the history ?
+    Risk of an intermediate state
+      Could specify which states can be restored ? e.g. input for chat
+      
 Cron to allow TaskStatus
   TaskSystemCron where we can register cron jobs
   https://github.com/harrisiirak/cron-parser
   It could send an update command with args indicating it is a cron job
 Share the caching of services/operators across tasks (will make copy easier)
-Restoring of a previous family (so could review conversations)
-Copy of an active conversation
-  Does this imply copying a family set?
-  React will try to spawn tasks
-OpenAI featurse: JSON mode, parallel functions calls 
+OpenAI features: JSON mode, parallel functions calls 
 Cookie could encode array of tribes
   Problem if user is not unique
-    Should just enforce this
+    Should just enforce unique users
 Support for children 
-  childNames - would be filled in during a second pass ?
-    Is it better to use the full path ?
-    Use tasktypes instead
+  Use tasktypes instead
 config.local -> config.self ?    
 Version table in accessdb
   version.current
-  we load and modify schema
-    first time will be to add the version table
+  Create a new table with new schema, copy data into it, delete old table, rename new table (all in a transaction)
+    First time will be to add the version table
   Could do something similar for config (version in dir path)
     Need to "rewrite" nicely
   Could also have similar approach for tasks
@@ -48,10 +54,8 @@ When user is removed from group the group is not updated
     Replace with authorization
 Loading indicator in Taskflow.js
 Use the runtime config to add admin-dtf to permisssion of root.system.
-Separate TF Storage servers into another container for Dev (so can be shared)
 Option to delete cache responses (also indicate them)
-Add a redirect command so we can rdirect user after they are removed
-Masking should allow for read only properties (stripped upon incoming)
+Add a redirect command so we can redirect user after they are removed (can't redirect from websocket)
 Callbacks that error are not caught in try/catch e.g. sqlite3 library
 Add Frontend for TaskRAGProcessing - to indicate progress/done, just needs to display the state
   Could experiment with a progress meter via websocket
@@ -60,7 +64,7 @@ To allow task config to be modified during init via connections we need to run C
 Services should still use the Task schema (command) by preference?
 Disk space on server1
 Not cleaning up connectionsStore_async
-  Remove when deleting activeTask (we maange family already?)
+  Remove when deleting activeTask (we manage family already?)
 Create Service for embeddings
   Also SendIncrementalWs
 Security
@@ -108,7 +112,7 @@ Local LLM
     Still quite slow, maybe RWKV would be possible
 Experiment with huggingface
   The models do not have drop-in replacement for OpenAI
-  Pro account as an inherent cap on API usage
+  Pro account has an inherent cap on API usage
   Maybe we could put this behind liteLLM?  Yes
     https://github.com/BerriAI/litellm/issues/361#issuecomment-1722350013
 Could keep historyContext on the processor
