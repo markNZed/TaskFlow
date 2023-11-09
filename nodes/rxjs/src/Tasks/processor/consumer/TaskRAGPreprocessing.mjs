@@ -15,6 +15,12 @@ import { utils } from '#src/utils';
 import { v4 as uuidv4 } from "uuid";
 import { promises as fsPromises } from 'fs';
 import { NODE } from "#root/config";
+import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'url';
+import { join, dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 /*
 // For extractive summary
 import { PythonRunner } from '#src/pythonRunner';
@@ -46,6 +52,17 @@ import cohere from 'cohere-ai';
 const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
+
+  // This is an example of a worker thread
+  // The worker runs a separate javascript process
+  const worker = new Worker(join(__dirname, 'TaskRAGPreprocessing_worker.mjs'));
+  worker.on('message', (msg) => {
+    console.log(`Received message from worker: ${msg}`);
+  });
+  const message = { type: 'greeting', text: 'Hello, worker!' };
+  // Send the object to the worker
+  worker.postMessage(message);
 
   /*
   // This requires running Anaconda
@@ -446,8 +463,9 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
           // If there are sequences of short NarrativeText then merge them until reaching a period character.
           } else {
             if (isMerging || (element.type === "NarrativeText" && wordLength < 20 )) {
-              if (mergedTextTokens + tokenLength > maxTokenLength) {
-                console.log(`id ${element.element_id} exceeded ${maxTokenLength} tokens`);
+              const mergedTokenLength = mergedTextTokens + tokenLength;
+              if (mergedTokenLength > maxTokenLength) {
+                console.log(`id ${element.element_id} ${mergedTokenLength} exceeded ${maxTokenLength} tokens`);
                 mergeText(element)
                 // Calculate the starting index for the last 25%
                 let startIndex = Math.floor(mergedText.length * 0.75);
@@ -935,14 +953,13 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
 
   const extractTopics_async = async (inputOutputDir) => {
     let files = await searchDirectory_async(inputOutputDir);
-    const topicsFilePath = "taskflow-topics.json";
+    const topicsFilePath = path.join(inputOutputDir, "taskflow-topics.json");
     try {
       await fs.promises.access(topicsFilePath); // Use fs.promises.access() for async operation
       console.log(`File ${topicsFilePath} already exists. Skipping.`);
     } catch (error) {
-      const topicsFilePathPath = path.join(inputOutputDir, topicsFilePath);
       let topics = [];
-      files = files.filter(file => path.basename(file) !== topicsFilePath);
+      files = files.filter(file => path.basename(file) !== path.basename(topicsFilePath));
       for (const file of files) {
         const metadataFilePath = path.join(inputOutputDir, path.basename(file));
         const fileContent = await fs.promises.readFile(metadataFilePath, 'utf-8');
@@ -956,7 +973,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         }
       }
       console.log(`Extracted ${topics.length} topics:`, topics);
-      await fs.promises.writeFile(topicsFilePathPath, JSON.stringify(topics, null, 2));
+      await fs.promises.writeFile(topicsFilePath, JSON.stringify(topics, null, 2));
     }
   }
 

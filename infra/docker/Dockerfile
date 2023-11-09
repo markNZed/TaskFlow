@@ -54,6 +54,9 @@ RUN apt-get install -y locales
 # To get unicode chars working in screen I needed to set "defutf8 on" in ~/.screenrc 
 # Also added "export LANG=en_US.UTF-8" to ~/.bashrc
 
+# For crawling
+RUN apt-get intall -y lynx
+
 # Instead of the hacks below I deleted node_modules/@tensorflow and ran npm install again
 # RUN cd /app/nodes/rxjs/node_modules/@tensorflow/tfjs-node/deps/lib && \
 #     ln -s libtensorflow.so.2.9.1 libtensorflow.so.2 && \

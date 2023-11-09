@@ -81,7 +81,7 @@ async function operate_async(wsSendTask, task) {
     if (T("request.prompt")) {
       T("input.query", T("request.prompt"));
     }
-    console.log("RAG_async Input", task.input);
+    utils.logTask(T(), "RAG_async Input", task.input);
     task = await RAG_async(wsSendTask, T);
     task.response["LLM"] = task.response.result; // For TaskChat
     task.response["newMessages"] = []; // For TaskChat
@@ -94,7 +94,7 @@ async function operate_async(wsSendTask, task) {
     } else {
       task.input.query = origQuery;
     }
-    console.log("RAG_async Response", task.response);
+    utils.logTask(T(), "RAG_async Response", task.response);
   } catch (error) {
     task.error = { message: error.message };
   }
@@ -108,7 +108,7 @@ function sleep(ms) {
 }
 
 function SendIncrementalWs(wsSendTask, partialResponse, instanceId, final) {
-  //console.log("partialResponse.delta", partialResponse.delta);
+  //utils.logTask(T(), "partialResponse.delta", partialResponse.delta);
   const incr = JSON.stringify(partialResponse.delta); // check if we can send this
   let response;
   if (wsDelta[instanceId] === undefined) {
@@ -130,11 +130,11 @@ function SendIncrementalWs(wsSendTask, partialResponse, instanceId, final) {
     };
     wsSendTask(partialTask);
     wsDelta[instanceId] += 1;
-    //console.log(partialResponse.delta);
+    //utils.logTask(T(), partialResponse.delta);
     //process.stdout.write(wsDelta[instanceId]);
     //process.stdout.write("\r");
   }
-  //console.log("ws.data['delta_count'] " + ws.data['delta_count'])
+  //utils.logTask(T(), "ws.data['delta_count'] " + ws.data['delta_count'])
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -207,11 +207,11 @@ const RAG_async = async function (wsSendTask, T) {
     for (const obj of response['data']['Get'][className]) {
       if (obj._additional.distance < (T("config.local.maxCacheDistance") || 0.02)) {
         filteredResult = obj;
-        console.log("queryWeaviateCache_async hit", obj._additional.distance);
+        utils.logTask(T(), "queryWeaviateCache_async hit", obj._additional.distance);
       }
       if (obj._additional.distance < 0.05) {
         filteredResultClose = obj;
-        console.log("queryWeaviateCache_async close", obj._additional.distance);
+        utils.logTask(T(), "queryWeaviateCache_async close", obj._additional.distance);
       }
     }
     return [filteredResult, filteredResultClose];
@@ -249,7 +249,7 @@ const RAG_async = async function (wsSendTask, T) {
       .withClassName(className)
       .withFields('meta { count }')
       .do();
-    console.log(JSON.stringify(resp, null, 2));
+    utils.logTask(T(), JSON.stringify(resp, null, 2));
     */
     return filteredResults;
   };
@@ -317,7 +317,7 @@ const RAG_async = async function (wsSendTask, T) {
     if (!metadata[element.filename]) {
       const jsonFileName = path.basename(element.filename).replace(/\.[^/.]+$/, '.json');
       const metadataFilePath = path.join(metadataDir, jsonFileName);
-      console.log("metadataFilePath", metadataFilePath);
+      utils.logTask(T(), "metadataFilePath", metadataFilePath);
       let elementMetadata;
       try {
         const metadataContent = await fs.promises.readFile(metadataFilePath, 'utf-8'); // Read the file content as UTF-8 text
@@ -325,12 +325,15 @@ const RAG_async = async function (wsSendTask, T) {
       } catch (error) {
         elementMetadata = {};
       }
-      console.log("elementMetadata", elementMetadata);
+      utils.logTask(T(), "elementMetadata", elementMetadata);
       metadata[element.filename] = elementMetadata;
     }
   }
 
   function addReference(metadata, element) {
+    if (metadata.title === undefined) {
+      console.log("WARNING: metadata.title is undefined");
+    }
     let prefix = '';
     prefix += `The context below, starting with <BEGIN> and ending with <END> was extacted from <TITLE>"${metadata.title}"</TITLE>`;
     if (metadata.author) {
@@ -396,13 +399,16 @@ const RAG_async = async function (wsSendTask, T) {
         queryVector = await embedText_async(query);
         let close;
         if (queryVector) {
-          [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
-          console.log("Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
+          if (T("config.family.queryCacheDisabled")) {
+            utils.logTask(T(), "queryCacheDisabled");
+          } else {
+            [cache, close] = await queryWeaviateCache_async(cachePrefix, queryVector);
+            utils.logTask(T(), "Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
+          } 
         } else {
-          console.log("queryVector is undefined");
+          utils.logTask(T(), "queryVector is undefined");
           throw new Error("queryVector is undefined");
         }
-        console.log("Checked cache for query", query, "cachePrefix", cachePrefix, "match", utils.js(cache), "close", utils.js(close));
         if (cache) {
           nextState = "prompt";
         } else {
@@ -410,7 +416,7 @@ const RAG_async = async function (wsSendTask, T) {
             queryVector = await embedText_async(close.text);
           }
           response = await queryWeaviate_async(queryVector)
-          console.log("response:", response);
+          utils.logTask(T(), "response:", response);
           if (!response.length) {
             response = await queryWeaviateSections_async([], queryVector);
             nextState = "rewriteQuery";
@@ -475,12 +481,12 @@ const RAG_async = async function (wsSendTask, T) {
       case "context": {
         let titles = [];
         let tokens = 0;
-        availableTokens -= 1000; // leave space for response
+        availableTokens -= 1500; // leave space for response and smaller chunks
         availableTokens -= utils.stringTokens(T("response.historyContext"));
         availableTokens -= utils.stringTokens(T("input.query"));
-        console.log("availableTokens", availableTokens);
+        utils.logTask(T(), "availableTokens", availableTokens);
         let metadata = {};
-        const maxSections = 1;
+        const maxSections = 20;
         if (response.length) {
           sendIncrementalResponseInBackground();
           let i = 0;
@@ -489,7 +495,7 @@ const RAG_async = async function (wsSendTask, T) {
             const elementContext = addReference(metadata[element.filename], element);
             const newTokenLength = utils.stringTokens(elementContext);
             if ((tokens + newTokenLength) >= availableTokens) {
-              console.log("Breaking out of context loop tokens:", tokens, "section number:", i);
+              utils.logTask(T(), "Breaking out of context loop tokens:", tokens, "section number:", i);
               // Don't break so we accumulate all the titles
               break;  // Exit the loop early if tokens exceed or are equal to availableTokens
             } else {
@@ -497,19 +503,21 @@ const RAG_async = async function (wsSendTask, T) {
             }
             context += elementContext;
             titles.push(element.title);
-            console.log("element:", element);
+            //utils.logTask(T(), "element:", element);
             i++;
             if (i >= maxSections) {
+              utils.logTask(T(), "Breaking out of context loop maxSections ${maxSections} tokens:", tokens);
               break;
             }
           }
-          //console.log("Found titles", titles);
+          //utils.logTask(T(), "Found titles", titles);
         }
+        availableTokens += 500; // Complete with specific chunks
         const approxTokenCount = tokens;
         // Complete with chunks
         if (approxTokenCount < availableTokens) {
           // Request chunks that make up the sections
-          console.log("Requesting chunks that make up the sections");
+          utils.logTask(T(), "Requesting chunks that make up the sections");
           response = await queryWeaviateSections_async(titles, queryVector);
           tokens = approxTokenCount;
           let i = 0;
@@ -519,7 +527,7 @@ const RAG_async = async function (wsSendTask, T) {
               const elementContext = addReference(metadata[element.filename], element);
               const newTokenLength = utils.stringTokens(elementContext);
               if ((tokens + newTokenLength) >= availableTokens) {
-                console.log("Breaking out of context loop tokens:", tokens, "chunk number:", i);
+                utils.logTask(T(), "Breaking out of context loop tokens:", tokens, "chunk number:", i);
                 break;
                 // Exit the loop early if tokens exceed or are equal to availableTokens
               } else {
@@ -531,7 +539,7 @@ const RAG_async = async function (wsSendTask, T) {
             }            
           }
         } else {
-          console.log(`Using context with approxTokenCount ${approxTokenCount}`);
+          utils.logTask(T(), `Using context with approxTokenCount ${approxTokenCount}`);
         }
         nextState = "prompt";
         break;
@@ -540,7 +548,7 @@ const RAG_async = async function (wsSendTask, T) {
         let addToCache = true;
         T("response.found", true); // Could be used for analytics later
         if (cache) {
-          console.log("Returning cached response", cache);
+          utils.logTask(T(), "Returning cached response", cache);
           T("response.result", cache.text);
           addToCache = false;
           // Send cache response incrementally too
@@ -640,17 +648,17 @@ const RAG_async = async function (wsSendTask, T) {
             })
             .withVector(queryVector)
             .do();
-          console.log("Stored result in cache for query", T("response.query"));
+          utils.logTask(T(), "Stored result in cache for query", T("response.query"));
         }
 
         break;
       }
       default:
-        console.log("WARNING unknown state : " + T("state.current"));
+        utils.logTask(T(), "WARNING unknown state : " + T("state.current"));
     }
     // The while loop can move to next state by assigning nextState
     if (nextState) {
-      console.log(`nextState ${nextState}`);
+      utils.logTask(T(), `nextState ${nextState}`);
     }
   }
 

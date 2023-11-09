@@ -83,6 +83,15 @@ const system = [
     parentName: "system",
     permissions: ['admin'],
   },
+
+  {
+    name: "admin-rag",
+    config: {
+      label: "RAG",
+    },
+    parentName: "admin",
+  },
+  
   {
     initiator: true,
     name: "users",

@@ -1,6 +1,10 @@
 /* ToDo
 -------
-nginx setup for ia42
+Remove duplicates
+Add sections up to token limit e.g. 2k
+
+Need separate threads for data processing - ability to detach a task as a separate process
+Deduplicating chunks should be quite easy
 extacted from <TITLE>"undefined"</TITLE>
 Cache match for French needs to be closer?
   Need to be able to delete entries

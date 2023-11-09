@@ -22,7 +22,7 @@ OUTPUT_FILE="./${DOMAIN}.txt"
 mkdir -p "$MIRROR_DIR"
 
 # Use wget to download the content based on MIME-type
-wget --recursive --no-clobber --page-requisites --convert-links --adjust-extension --domains "$DOMAIN" --no-parent --execute robots=off --reject "jpg,jpeg,gif,png,css,js" --directory-prefix="$MIRROR_DIR" "$URL"
+wget --referer "$URL" --user-agent="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36" --recursive --no-clobber --page-requisites --convert-links --adjust-extension --domains "$DOMAIN" --no-parent --execute robots=off --reject "jpg,jpeg,gif,png,css,js" --directory-prefix="$MIRROR_DIR" "$URL"
 
 # Find all HTML files in the mirror directory, dump the content to text files,
 # and append them into the single output file, while removing the References section.
