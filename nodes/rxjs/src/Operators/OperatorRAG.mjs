@@ -371,7 +371,7 @@ const RAG_async = async function (wsSendTask, T) {
   let context = '';
   const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("shared.corpusName"));
   const metadataDir = path.join(corpusDir, 'metadata');
-  const CACHE_ID = "TASKFLOW CACHE";
+  const CACHE_ID = "TASKFLOW-CACHE";
   let cache;
   let availableTokens = serviceConfig.maxTokens;
   const topic = T("shared.topic");

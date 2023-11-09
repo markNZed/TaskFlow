@@ -1,5 +1,9 @@
 /* ToDo
 -------
+nginx setup for ia42
+extacted from <TITLE>"undefined"</TITLE>
+Cache match for French needs to be closer?
+  Need to be able to delete entries
 If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
 Restoring of a previous family (so could review conversations)
   List all conversations (query MongoDB)

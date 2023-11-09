@@ -306,7 +306,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   const unstructuredFiles_async = async (inputDir, outputDir, nextDir) => {
     const files = await searchDirectory_async(inputDir);
     for (const file of files) {
-      const outputFilePath = path.join(outputDir, path.basename(file).replace('.pdf', '.json'));
+      const outputFilePath = path.join(outputDir, path.basename(file).replace(/\.[^.]+$/, '.json'));
       try {
         await fs.promises.access(outputFilePath); // Use fs.promises.access() for async operation
         console.log(`File ${outputFilePath} already exists. Skipping.`);
@@ -1244,6 +1244,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   
   const corpusDir = path.join(NODE.storage.dataDir, "RAG", T("shared.corpusName"));
   const pdfDir = path.join(corpusDir, 'pdf');
+  const txtDir = path.join(corpusDir, 'txt');
   const metadataDir = path.join(corpusDir, 'metadata');
   const unstructuredDir = path.join(corpusDir, 'unstructured');
   const chunkedDir = path.join(corpusDir, 'chunked');
@@ -1252,7 +1253,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   const ingestedDir = path.join(corpusDir, 'ingested');
   const dataProcessedEmbeddingsDir = path.join(corpusDir, 'dataProcessedEmbeddings');
   const className = T("shared.corpusName");
-  const inputDirectories = [pdfDir];
+  const inputDirectories = [pdfDir, txtDir];
   const outputDirectories = [metadataDir, unstructuredDir, chunkedDir, dataProcessedChunksDir, vectorizedDir, ingestedDir, dataProcessedEmbeddingsDir];
 
   let nextState = T("state.current");
@@ -1276,6 +1277,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
       case "parse": {
         await unstructuredFiles_async(pdfDir, unstructuredDir, chunkedDir);
+        await unstructuredFiles_async(txtDir, unstructuredDir, chunkedDir);
         nextState = "chunk";
         break;
       }
