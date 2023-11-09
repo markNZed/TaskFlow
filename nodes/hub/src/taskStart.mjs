@@ -266,7 +266,7 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
 async function supportMultipleLanguages_async(task, usersStore_async) {
   utils.debugTask(task);
   const user = await usersStore_async.get(task.user.id);
-  const language = task?.config?.local?.language || user?.language || "EN";
+  const language = task?.config?.language || task?.config?.local?.language || user?.language || "EN";
   function processConfig(config, lang) {
     for (const [key, value] of Object.entries(config)) {
       // If it's an object (and not null or an array), recurse into it
