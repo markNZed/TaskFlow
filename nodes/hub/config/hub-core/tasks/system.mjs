@@ -39,24 +39,6 @@ const system = [
     },
     type: "TaskCEP",
   }, 
-  {
-    initiator: true,
-    name: "systemlogviewer",
-    config: {
-      label: "Log",
-    },
-    parentName: "system",
-    type: "TaskSystemLogViewer",
-  },
-  {
-    initiator: true,
-    name:"systemrestart",
-    config: {
-      label: "Restart", 
-    },
-    type: "TaskSystemRestart",
-    parentName: "system",
-  }, 
 
   {
     name: "taskflow",
@@ -81,7 +63,9 @@ const system = [
   {
     name: "sysadmin",
     parentName: "system",
-    permissions: ['sysadmin'],
+    config: {
+      label: "Admin",
+    },
   },
 
   {
@@ -90,23 +74,6 @@ const system = [
       label: "RAG",
     },
     parentName: "sysadmin",
-  },
-  
-
-  {
-    name: "admin",
-    parentName: "system",
-    permissions: ['admin'],
-  },
-
-  {
-    initiator: true,
-    name: "users",
-    config: {
-      label: "Users",
-    },
-    parentName: "admin",
-    type: "TaskUsers",
   },
 
   {
@@ -460,26 +427,6 @@ const system = [
   },
 
   {
-    initiator: true,
-    name: "instanceedit",
-    ceps: {
-      monitorInstance: {
-        type: "monitorInstance",
-        environments: ["rxjs-hub-coprocessor"],
-        match: "tbd", // To be defined
-      }
-    },
-    config: {
-      label: "Edit Task",
-      debug: {
-        debugTask: true,
-      },
-    },
-    parentName: "system",
-    type: "TaskEdit",
-  },
-
-  {
     name: "systemconnections",
     ceps: {
       CEPConnect: {
@@ -499,17 +446,61 @@ const system = [
   },
 
   {
+    name: "systasks",
+    parentName: "system",
+    config: {
+      label: "Tasks",
+    },
+  },
+  {
     name: "config-reload",
     initiator: true,
     config: {
       label: "Reload",
     },
-    parentName: "configs",
+    parentName: "systasks",
     environments: ["rxjs-hub-consumer"],
     type: "TaskConfigReload",
     state: {
       current: "start",
     },
+  },
+  {
+    initiator: true,
+    name:"systemrestart",
+    config: {
+      label: "Restart", 
+    },
+    type: "TaskSystemRestart",
+    parentName: "systasks",
+  },
+  {
+    initiator: true,
+    name: "systemlogviewer",
+    config: {
+      label: "Log",
+    },
+    parentName: "systasks",
+    type: "TaskSystemLogViewer",
+  },
+  {
+    initiator: true,
+    name: "instanceedit",
+    ceps: {
+      monitorInstance: {
+        type: "monitorInstance",
+        environments: ["rxjs-hub-coprocessor"],
+        match: "tbd", // To be defined
+      }
+    },
+    config: {
+      label: "Edit",
+      debug: {
+        debugTask: true,
+      },
+    },
+    parentName: "systasks",
+    type: "TaskEdit",
   },
   
 ];

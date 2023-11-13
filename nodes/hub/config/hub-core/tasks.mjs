@@ -58,6 +58,9 @@ const tasks = [
           services: true,
           operators: true,
           ceps: true,
+          shared: {
+            system: true,
+          }
         },
         incoming: {
           meta: true,
@@ -74,6 +77,7 @@ const tasks = [
     name: "system",
     parentName: "root",
     menu: true,
+    permissions: ['sysadmin'],
   },
   ...taskSet.system,
 
@@ -431,6 +435,21 @@ const tasks = [
     parentName: "user",
     type: "TaskLLMIO",
     initiator: true,
+  },
+
+  {
+    name: "admin",
+    parentName: "user",
+    permissions: ['admin'],
+  },
+  {
+    initiator: true,
+    name: "users",
+    config: {
+      label: "Users",
+    },
+    parentName: "admin",
+    type: "TaskUsers",
   },
 
 

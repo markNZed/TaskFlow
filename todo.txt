@@ -1,27 +1,14 @@
 /* ToDo
 -------
-Note that adding a domain should also disable the CloudFlare caching
-TaskRAGAdmin
-  Choose a corpus, restart, prepare, upload, delete
-  Remove elements from cache
-How to add UI elements to existing Task ?
-  Could have a pre-post component slot that the HoC can insert and pass the parent task down as prop
-    task down task.inputs (writable) and task.outputs (readable)
-  Just create new TaskRAGChat based on TaskChat
-Managing secrets https://hub.docker.com/r/hashicorp/vault
+shared.family (forces all to subscribe)
+mask shared.systme on react?
 Cloning tasks
   Run the init phase with the initial configuration, then coordinate update
     How to know when the init is done, what about early messages etc ?
       If the task has a state then wait until start state has been run
-        Can detect this on the processor and signla to Hub: initDone
+        Can detect this on the processor and signal to Hub: initDone
           Pause the Task until updated (e.g. block UI events - loading page)
             How does React know the Start is finished - it will see the SM update
-In a post config step transfer config.local into config ?
-
-Need separate threads for data processing - ability to detach a task as a separate process
-  Task could launch worker_threads
-  Multiple processors could share a queue
-If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
 Restoring of a previous family (so could review conversations)
   List all conversations (query MongoDB)
   Copy of an active conversation
@@ -32,13 +19,26 @@ Restoring of a previous family (so could review conversations)
   Ability to navigate through the history ?
     Risk of an intermediate state
       Could specify which states can be restored ? e.g. input for chat
-      
+
+Note that adding a domain should also disable the CloudFlare caching
+TaskRAGAdmin
+  Choose a corpus, restart, prepare, upload, delete
+  Remove elements from cache
+How to add UI elements to existing Task ?
+  Could have a pre-post component slot that the HoC can insert and pass the parent task down as prop
+    task down task.inputs (writable) and task.outputs (readable)
+  Just create new TaskRAGChat based on TaskChat
+Managing secrets https://hub.docker.com/r/hashicorp/vault
+In a post config step transfer config.local into config ?
+Need separate threads for data processing - ability to detach a task as a separate process
+  Task could launch worker_threads
+  Multiple processors could share a queue
 Cron to allow TaskStatus
   TaskSystemCron where we can register cron jobs
   https://github.com/harrisiirak/cron-parser
   It could send an update command with args indicating it is a cron job
 Share the caching of services/operators across tasks (will make copy easier)
-OpenAI features: JSON mode, parallel functions calls 
+OpenAI features: JSON mode, parallel function calls 
 Cookie could encode array of tribes
   Problem if user is not unique
     Should just enforce unique users

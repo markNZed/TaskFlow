@@ -92,11 +92,13 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       }    
     }
     //console.log("authorised_tasks ", authorised_tasks)
-    let keys = []
+    let keys = Object.keys(authorised_tasks);
     if (sort) {
-      keys = Object.keys(authorised_tasks).sort();
-    } else {
-      keys = Object.keys(authorised_tasks);
+        keys = keys.sort((keyA, keyB) => {
+            const labelA = authorised_tasks[keyA].config?.label || '';
+            const labelB = authorised_tasks[keyB].config?.label || '';
+            return labelA.localeCompare(labelB);
+        });
     }
     for (const key of keys) {
       let wf = authorised_tasks[key];
@@ -107,7 +109,11 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       }
       wf['childrenId'] = wf.meta.childrenId;
       if (sort && wf['childrenId']) {
-        wf['childrenId'] = wf['childrenId'].sort();
+        wf['childrenId'] = wf['childrenId'].sort((childA, childB) => {
+            const childLabelA = authorised_tasks[childA].config?.label || '';
+            const childLabelB = authorised_tasks[childB].config?.label || '';
+            return childLabelA.localeCompare(childLabelB);
+        });
       }
       tasksTree[key] = utils.filter_in_list(wf, [
         "id",
