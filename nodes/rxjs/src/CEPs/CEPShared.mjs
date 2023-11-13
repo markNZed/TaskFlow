@@ -67,6 +67,9 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       if (task.node.command === "init" && sharedEntry[familyId].value) {
         toSync[task.instanceId] = toSync[task.instanceId] || {};
         toSync[task.instanceId][varName] = sharedEntry[familyId].value;
+      // Only systme tasks can write system variables
+      } else if (task.id.startsWith("root.user") && familyId === "system") {
+        // Nothing to do
       // Allows for read only shared variables
       } else if (task.config?.shared?.[varName] !== "read") {
         if (!utils.deepEqual(sharedEntry[familyId].value, task.shared[varName])) {

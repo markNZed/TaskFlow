@@ -1,17 +1,14 @@
 /* ToDo
 -------
-sva tribe ?
-Use vector similarity to classify the nature of question and priooritze response approach
-
-For the website should be able to use the URL to get structure (could use site map too)
-
+remote.SSH.serverInstallPath and to point to a location which was a local disk 
+Groups could be allocated to tribes (so user only sees tribe related tasks)
 TaskRAGAdmin
   Choose a corpus, restart, prepare, upload, delete
+  Remove elements from cache
 How to add UI elements to existing Task ?
-  Ability to "inject UI" ? Render React 
   Could have a pre-post component slot that the HoC can insert and pass the parent task down as prop
+    task down task.inputs (writable) and task.outputs (readable)
   Just create new TaskRAGChat based on TaskChat
-Using Weaviate classification for ?
 Managing secrets https://hub.docker.com/r/hashicorp/vault
 Cloning tasks
   Run the init phase with the initial configuration, then coordinate update
@@ -20,18 +17,11 @@ Cloning tasks
         Can detect this on the processor and signla to Hub: initDone
           Pause the Task until updated (e.g. block UI events - loading page)
             How does React know the Start is finished - it will see the SM update
-Menu looping - maybe due to tasks updating then bouncing - need to check the date/version ?
-  Can we specify it is read only for certain tasks ? e.g. shared.read
-    It would need to be per environment?
-      task.config.environment.shared.readonly
-In a post config step transfer config.local into config ? Also for family
-Remove duplicates
+In a post config step transfer config.local into config ?
 
 Need separate threads for data processing - ability to detach a task as a separate process
-Deduplicating chunks should be quite easy
-extacted from <TITLE>"undefined"</TITLE>
-Cache match for French needs to be closer?
-  Need to be able to delete entries
+  Task could launch worker_threads
+  Multiple processors could share a queue
 If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
 Restoring of a previous family (so could review conversations)
   List all conversations (query MongoDB)

@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, usersStore_async, instancesStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, outputStore_async, familyStore_async } from "./storage.mjs";
+import { tasksStore_async, groupsStore_async, tribesStore_async, usersStore_async, instancesStore_async, deleteActiveTask_async, getActiveTask_async, /*setActiveTask_async,*/ activeTaskNodesStore_async, activeNodeTasksStore_async, activeNodes, outputStore_async, familyStore_async } from "./storage.mjs";
 import { v4 as uuidv4 } from "uuid";
 import { utils } from "./utils.mjs";
 import { NODE } from "../config.mjs";
@@ -170,7 +170,7 @@ async function checkUserPermissions_async(task, groupsStore_async, authenticate)
   utils.debugTask(task);
   // Check if the user has permissions
   if (authenticate) {
-    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async);
+    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async, tribesStore_async);
     if (!authenticated) {
       console.error("Task:", utils.js(task));
       throw new Error("Task authentication failed");
@@ -493,11 +493,16 @@ async function taskStart_async(
           utils.logTask(task, "No familyId in prevTask", prevTask);
           utils.logTask(task, "No familyId prevInstanceId", prevInstanceId);
         }
-      } else if (initTask.familyId) { 
-        utils.logTask(task, "Using init familyId", initTask.familyId);
-        task.familyId = initTask.familyId;
+      } else if (initTask.familyId) {
+        if (initTask.familyId.startsWith("root.system.") && task.id.startsWith("root.user.")) {
+          utils.logTask(task, "First user task using instanceId for familyId", task.instanceId);
+          task.familyId = task.instanceId;
+        } else {
+          utils.logTask(task, "Using init familyId", initTask.familyId);
+          task.familyId = initTask.familyId;
+        }
       } else if (!task.familyId) {
-        utils.logTask(task, "Using instanceId familyId", task.instanceId);
+        utils.logTask(task, "Using instanceId for familyId", task.instanceId);
         task.familyId = task.instanceId;
       }
     }

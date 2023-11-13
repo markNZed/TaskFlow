@@ -1599,6 +1599,8 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     return item;
   }
 
+  // This is an expensive operation
+  // If the number of duplicates is below some ratios then could stop (need to randomly order the elements)
   async function findDuplicates_async(item) {
     let response;
     try {

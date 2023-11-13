@@ -171,12 +171,14 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
                 throw new Error("User not found." + utils.js(user));
               }
               const username = user.name;
-              const newPassword = T("input.password");
-              const newPasswordHash = await hashPassword(newPassword);
-              await accessDB.run(
-                "UPDATE users SET password_hash = ? WHERE username = ? AND tribe = ?",
-                [newPasswordHash, username, tribe]
-              );              
+              if (T("input.password")) {
+                const newPassword = T("input.password");
+                const newPasswordHash = await hashPassword(newPassword);
+                await accessDB.run(
+                  "UPDATE users SET password_hash = ? WHERE username = ? AND tribe = ?",
+                  [newPasswordHash, username, tribe]
+                );
+              }
               T("commandDescription", "Updated user " + username);
               user["id"] = username;
               // We will need to save to the config file but that will be expanded

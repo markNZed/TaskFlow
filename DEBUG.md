@@ -52,7 +52,7 @@ Using VS Code
 * The log files can be "cleared" without restartin the server e.g. `truncate -s 0 nodes/hub/hub.log`
 * In Preferences there is an option "Files: Readonly From Permissions" which will respect file system permissions - this is useful for respecting logs as read only
 * It does support multi-line regex `(\s+)services: \[([\s\S\n]+?)\]`
-
+* Running on a remote machine in a Docker container with a mount for the /root directory can cause problems for extensions because the disk is too slow. Better to use a location for ~/.vscode-server that is not on the volume. Set remote.SSH.serverInstallPath e.g. `server1 /tmp`
 ### Linux
 
 * Find the process using a port 5000 `netstat -tulnp | grep :5000`
