@@ -30,9 +30,7 @@ const TaskNodeConfigs_async = async function (wsSendTask, T, FSMHolder, CEPMatch
   async function updateTree_async(configFunctions, node, type, wsSendTask, T) {
     utils.logTask(T(), "updateTree_async type:", type);
     const result = await configFunctions.buildTree_async(services["systemConfig"], type); // Get updated tree
-    // Calculate diff and update
-    //const diff = { shared: { [type + "ConfigTree"]: result } };
-    const varName = `shared.config-${node}-${type}`;
+    const varName = `shared.system.config-${node}-${type}`;
     T(varName, result)
     if (T("commandDescription")) {
       T("commandDescription", T("commandDescription") + ", " + varName);

@@ -242,6 +242,12 @@ async function chatPrepare_async(T) {
 
   const maxFunctionDepth = serviceConfig.maxFunctionDepth || 1; 
 
+  let response_format;
+  if (serviceConfig.json) {
+    console.log("Using json response_format");
+    response_format = {"type": "json_object"};
+  }
+
   //console.log("Final prevMessages", prevMessages);
 
   return {
@@ -260,6 +266,7 @@ async function chatPrepare_async(T) {
     serviceConfig,
     functions,
     maxFunctionDepth,
+    response_format,
   };
 }
 

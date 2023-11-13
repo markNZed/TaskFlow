@@ -7,8 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { parentPort } from 'worker_threads';
 
 parentPort.on('message', (message) => {
-  console.log(message.type); // 'greeting'
-  console.log(message.text); // 'Hello, worker!'
+  console.log("Message received on worker: ", message.type, message.text);
   parentPort.postMessage(message.text.toUpperCase());
 });
 

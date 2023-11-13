@@ -1,8 +1,41 @@
 /* ToDo
 -------
-task.language
+Issue with "undefined" references
+
+For the website should be able to use the URL to get structure (could use site map too)
+The Unstructured API seems to support:
+"model_name": null, 
+"xml_keep_tags": false, 
+"skip_infer_table_types": ["pdf", "jpg", "png"], 
+"languages": null, 
+"chunking_strategy": null, 
+"multipage_sections": false, 
+"combine_under_n_chars": 500, 
+"new_after_n_chars": 1500, 
+"max_characters": 1500,
+'hi_res_model_name=chipper'
+
+TaskRAGAdmin
+  Choose a corpus, restart, prepare, upload, delete
+How to add UI elements to existing Task ?
+  Ability to "inject UI" ? Render React 
+  Could have a pre-post component slot that the HoC can insert and pass the parent task down as prop
+  Just create new TaskRAGChat based on TaskChat
+Using Weaviate classification for ?
+Managing secrets https://hub.docker.com/r/hashicorp/vault
+Cloning tasks
+  Run the init phase with the initial configuration, then coordinate update
+    How to know when the init is done, what about early messages etc ?
+      If the task has a state then wait until start state has been run
+        Can detect this on the processor and signla to Hub: initDone
+          Pause the Task until updated (e.g. block UI events - loading page)
+            How does React know the Start is finished - it will see the SM update
+Menu looping - maybe due to tasks updating then bouncing - need to check the date/version ?
+  Can we specify it is read only for certain tasks ? e.g. shared.read
+    It would need to be per environment?
+      task.config.environment.shared.readonly
+In a post config step transfer config.local into config ? Also for family
 Remove duplicates
-Add sections up to token limit e.g. 2k
 
 Need separate threads for data processing - ability to detach a task as a separate process
 Deduplicating chunks should be quite easy
@@ -45,6 +78,7 @@ Version table in accessdb
 With task.node.command we can have parallel commands from different processors
 Review for security holes
   commandArgs.authenticate
+  sharedEntry["system"]
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?

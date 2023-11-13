@@ -130,7 +130,9 @@ const system = [
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-tasks": {},
+      system: {
+        "config-hub-consumer-tasks": {},
+      },
     },
   },
   {
@@ -147,7 +149,9 @@ const system = [
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-users": {},
+      system: {
+        "config-hub-consumer-users": {},
+      },
     },
   },
   {
@@ -163,7 +167,9 @@ const system = [
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-groups": {},
+      system: {
+        "config-hub-consumer-groups": {},
+      },
     },
   },
   {
@@ -180,7 +186,9 @@ const system = [
     parentName: "hub",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-tasktypes": {},
+      system: {
+        "config-hub-consumer-tasktypes": {},
+      },
     },
   },
   {
@@ -204,7 +212,9 @@ const system = [
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-ceptypes": {},
+      system: {
+        "config-hub-consumer-ceptypes": {},
+      }
     },
   },
   {
@@ -221,7 +231,9 @@ const system = [
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-servicetypes": {},
+      system: {
+        "config-hub-consumer-servicetypes": {},
+      },
     },
   },
   {
@@ -238,7 +250,9 @@ const system = [
     parentName: "hub-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-consumer-peratortypes": {},
+      system: {
+        "config-hub-consumer-peratortypes": {},
+      },
     },
   },
   {
@@ -262,7 +276,9 @@ const system = [
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-coprocessor-ceptypes": {},
+      system: {
+        "config-hub-coprocessor-ceptypes": {},
+      },
     },
   },
   {
@@ -279,7 +295,9 @@ const system = [
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-coprocessor-operatortypes": {},
+      system: {
+        "config-hub-coprocessor-operatortypes": {},
+      },
     },
   },
   {
@@ -296,7 +314,9 @@ const system = [
     parentName: "hub-coprocessor",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-hub-coprocessor-servicetypes": {},
+      system: {
+        "config-hub-coprocessor-servicetypes": {},
+      },
     },
   },
   {
@@ -320,7 +340,9 @@ const system = [
     parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-processor-consumer-ceptypes": {},
+      system: {
+        "config-processor-consumer-ceptypes": {},
+      },
     },
   },
   {
@@ -337,7 +359,9 @@ const system = [
     parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-processor-consumer-operatortypes": {},
+      system: {
+        "config-processor-consumer-operatortypes": {},
+      },
     },
   },
   {
@@ -354,7 +378,9 @@ const system = [
     parentName: "processor-consumer",
     type: "TaskNodeConfigEditor",
     shared: {
-      "config-processor-consumer-servicetypes": {},
+      system: {
+        "config-processor-consumer-servicetypes": {},
+      },
     },
   },
 
@@ -372,13 +398,15 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,    
     shared: {
-      "config-hub-consumer-tasks": {},
-      "config-hub-consumer-users": {},
-      "config-hub-consumer-groups": {},
-      "config-hub-consumer-tasktypes": {},
-      "config-hub-consumer-ceptypes": {},
-      "config-hub-consumer-servicetypes": {},
-      "config-hub-consumer-peratortypes": {},
+      system: {
+        "config-hub-consumer-tasks": {},
+        "config-hub-consumer-users": {},
+        "config-hub-consumer-groups": {},
+        "config-hub-consumer-tasktypes": {},
+        "config-hub-consumer-ceptypes": {},
+        "config-hub-consumer-servicetypes": {},
+        "config-hub-consumer-peratortypes": {},
+      },
     },
   },
   {
@@ -395,9 +423,11 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,
     shared: {
-      "config-hub-coprocessor-ceptypes": {},
-      "config-hub-coprocessor-servicetypes": {},
-      "config-hub-coprocessor-operatortypes": {},
+      system: {
+        "config-hub-coprocessor-ceptypes": {},
+        "config-hub-coprocessor-servicetypes": {},
+        "config-hub-coprocessor-operatortypes": {},
+      },
     },
   },
   {
@@ -414,9 +444,11 @@ const system = [
     type: "TaskNodeConfigs",
     menu: false,
     shared: {
-      "config-processor-consumer-ceptypes": {},
-      "config-processor-consumer-servicetypes": {},
-      "config-processor-consumer-operatortypes": {},
+      system: {
+        "config-processor-consumer-ceptypes": {},
+        "config-processor-consumer-servicetypes": {},
+        "config-processor-consumer-operatortypes": {},
+      },
     },
   },
 

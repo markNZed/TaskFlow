@@ -96,7 +96,8 @@ async function operate_async(wsSendTask, task) {
     }
     utils.logTask(T(), "RAG_async Response", task.response);
   } catch (error) {
-    task.error = { message: error.message };
+    console.error(error);
+    task.error = { message: "operate_async" + error.message};
   }
   return task
 }
@@ -217,8 +218,8 @@ const RAG_async = async function (wsSendTask, T) {
     return [filteredResult, filteredResultClose];
   }
 
-  const queryWeaviate_async = async (queryVector) => {
-    //utils.logTask(T(), `Topic ${query} queryVector`, queryVector);
+  const queryWeaviate_async = async (queryVector, limit) => {
+    utils.logTask(T(), `queryWeaviate_async limit`, limit);
     // Query using nearVector - https://weaviate.io/developers/weaviate/api/graphql/search-operators#nearvector
     const response = await weaviateClient.graphql
     .get()
@@ -233,16 +234,26 @@ const RAG_async = async function (wsSendTask, T) {
       vector: queryVector,
       //"distance": T("config.local.maxDistance") || 0.14,
     })
-    .withAutocut(1)
-    .withLimit(T("config.local.maxChunks") || 10)
+    //.withAutocut(1) // Chekc this
+    .withLimit(limit || T("config.local.maxChunks") || 10)
     .do();
-    utils.logTask(T(), "queryWeaviate_async response for className", className, response['data']['Get'][className]);
+    utils.logTask(T(), `queryWeaviate_async ${response['data']['Get'][className].length} responses for className ${className}`);
     let filteredResults = [];
+    const maxDistance = T("config.local.maxDistance") || 0.14;
+    let nearestDistance = 1;
+    let nearestResult;
     for (const obj of response['data']['Get'][className]) {
-      if (obj._additional.distance < (T("config.local.maxDistance") || 0.14)) {
+      utils.logTask(T(), `maxDistance ${maxDistance} response distance ${obj._additional.distance}`);
+      if (obj._additional.distance < nearestDistance) {
+        nearestDistance = obj._additional.distance;
+        // eslint-disable-next-line no-unused-vars
+        nearestResult = obj;
+      }
+      if (obj._additional.distance < maxDistance) {
         filteredResults.push(obj);
       }
     }
+    //utils.logTask(T(), "nearestResult", nearestResult);
     /*
     const resp = await weaviateClient.graphql
       .aggregate()
@@ -303,10 +314,12 @@ const RAG_async = async function (wsSendTask, T) {
           .withLimit(T("config.local.maxChunks") || 10)
           .do();
       }
-    utils.logTask(T(), "queryWeaviateSections_async response for className with sections", sections, response['data']['Get'][className]);
+    utils.logTask(T(), `queryWeaviateSections_async ${response['data']['Get'][className].length} responses for className with sections ${sections}`);
     let filteredResults = [];
-    for (const obj of response['data']['Get'][className]) {
-      if (obj._additional.distance < (T("config.local.maxDistance") || 0.14)) {
+    const maxDistance = T("config.local.maxDistance") || 0.14;
+    for (const obj of response['data']['Get'][className]) {   
+      utils.logTask(T(), `maxDistance ${maxDistance} response distance ${obj._additional.distance}`);
+      if (obj._additional.distance < maxDistance) {
         filteredResults.push(obj);
       }
     }
@@ -315,6 +328,9 @@ const RAG_async = async function (wsSendTask, T) {
 
   async function getMetadata_async(metadata, element) {
     if (!metadata[element.filename]) {
+      if (!element.filename) {
+        console.log("getMetadata_async element missing filename", element);
+      }
       const jsonFileName = path.basename(element.filename).replace(/\.[^/.]+$/, '.json');
       const metadataFilePath = path.join(metadataDir, jsonFileName);
       utils.logTask(T(), "metadataFilePath", metadataFilePath);
@@ -331,9 +347,7 @@ const RAG_async = async function (wsSendTask, T) {
   }
 
   function addReference(metadata, element) {
-    if (metadata.title === undefined) {
-      console.log("WARNING: metadata.title is undefined");
-    }
+    console.log("addReference", metadata.title);
     let prefix = '';
     prefix += `The context below, starting with <BEGIN> and ending with <END> was extacted from <TITLE>"${metadata.title}"</TITLE>`;
     if (metadata.author) {
@@ -380,6 +394,7 @@ const RAG_async = async function (wsSendTask, T) {
   const topic = T("shared.topic");
   const RAGUser = T("shared.RAGUser");
   const cachePrefix = T("config.local.cachePrefix") || 'undefined';
+  let rewriteQueryResult = '';
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
@@ -416,9 +431,8 @@ const RAG_async = async function (wsSendTask, T) {
             queryVector = await embedText_async(close.text);
           }
           response = await queryWeaviate_async(queryVector)
-          utils.logTask(T(), "response:", response);
+          //utils.logTask(T(), "response:", response);
           if (!response.length) {
-            response = await queryWeaviateSections_async([], queryVector);
             nextState = "rewriteQuery";
           } else {
             nextState = "context";
@@ -439,9 +453,19 @@ const RAG_async = async function (wsSendTask, T) {
         prompt += T("config.local.rewritePrompt");
         prompt += "\n" 
         prompt += "Question: " + T("input.query");
+        prompt += `
+        I'd like your response to be a JSON object with each key a concept/definition and each value a brief explanation of how it relates to the user's question. Include definitions that can help clarify the question. For example:
+        
+        {
+          "concept name": "Explanation of how the concept relates to the question",
+          "definition": "clarification of a key term related to the question",
+        }
+        
+        `;
         T("request.prompt", prompt);
         T("request.service.noStreaming", true);
         utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
+        T("request.service.json", true);
         const operatorOutPromise = operatorLLM.operate_async(wsSendTask, T());
         const searchingMessage = T("config.local.searchingMessage");
         const words = searchingMessage.split(" ");
@@ -472,9 +496,59 @@ const RAG_async = async function (wsSendTask, T) {
         const finalResponse = { text: partialText };
         SendIncrementalWs(wsSendTask, finalResponse, T("instanceId"), true);
         T("request.service.noStreaming", false);
-        const query = T("input.query") + "\n" + operatorOut.response.LLM;
-        queryVector = await embedText_async(query);
-        response = await queryWeaviate_async(queryVector);
+        T("request.service.json", undefined);
+
+        // We should have a JSON object, if yes then run query for each concept
+        // Try with all concepts too
+        // Take the single best section match for each
+
+        let parsedObject;
+        try {
+          // Attempt to parse the string as JSON and store the result
+          // Regex to match an object
+          let regex = /\{.*?\}/s;
+          let match = operatorOut.response.LLM.match(regex);
+          if (match) {
+            parsedObject = JSON.parse(match);
+          }
+          utils.logTask(T(), "rewriteQuery successful parsedObject", parsedObject);
+        } catch (error) {
+          utils.logTask(T(), "rewriteQuery failed parsedObject", parsedObject);
+        }
+        let promises = [];
+        if (parsedObject) {
+          const keys = Object.keys(parsedObject);
+          const numberOfConcepts = keys.length;
+          const maxNumberOfChunks = 6;
+          const chunksPerConcept = Math.ceil(maxNumberOfChunks / numberOfConcepts); 
+          for (const key of keys) {
+            const value = parsedObject[key];
+            const query = T("input.query") + "\n" + key + ": " + value;
+            // eslint-disable-next-line no-unused-vars
+            rewriteQueryResult +=  key + ": " + value + "\n";
+            promises.push(
+              embedText_async(query)
+              .then(queryVector => queryWeaviate_async(queryVector, chunksPerConcept))
+            );
+          }
+        }
+        // Add the last query to the promises array
+        const finalQuery = T("input.query") + "\n" + operatorOut.response.LLM;
+        promises.push(
+          embedText_async(finalQuery).then(queryVector => 
+            queryWeaviate_async(queryVector)
+          )
+        );
+        // Execute all promises in parallel
+        // Wait for all promises to resolve
+        const responses = await Promise.all(promises);
+        // Merge all array responses into a single array
+        let combinedResponse = [];
+        responses.forEach(response => {
+          combinedResponse = combinedResponse.concat(response);
+        });
+        utils.logTask(T(), "combinedResponse length", combinedResponse.length);
+        response = combinedResponse;
         nextState = "context";
         break;
       }
@@ -487,6 +561,9 @@ const RAG_async = async function (wsSendTask, T) {
         utils.logTask(T(), "availableTokens", availableTokens);
         let metadata = {};
         const maxSections = 20;
+        // Don't use the rewriteQueryResult as it may be hallucination
+        //context += rewriteQueryResult;
+        //tokens +=utils.stringTokens(context);
         if (response.length) {
           sendIncrementalResponseInBackground();
           let i = 0;

@@ -22,8 +22,8 @@ const tasktypes = [
           ["<BEGIN>", ""],
           ["<END>", ""],
         ],
-        rewritePrompt_EN: `Answer this question or if you do not have enough information then provide a bullet list of concepts that could help clarify this question.`,
-        rewritePrompt_FR: `Répondez à cette requête ou, si vous n'avez pas suffisamment d'informations, fournissez une liste à puces de concepts qui pourraient aider à clarifier cette question:`,
+        rewritePrompt_EN: `Answer this question or if you do not have enough information then provide a JSON list of concepts and definitions that could help clarify this question.`,
+        rewritePrompt_FR: `Répondez à cette requête ou, si vous n'avez pas suffisamment d'informations, fournissez une liste JSON de concepts et définitions qui pourraient aider à clarifier cette question:`,
         contextPrompt_EN: `Use the following pieces of context to answer the question at the end. If you're not sure, just say so. If there are multiple possible answers, summarize them as possible answers.`,
         contextPrompt_FR: `Utilisez les morceaux de contexte suivants pour répondre à la question à la fin. Si le contexte est le message 'NO INFORMATION AVAILABLE', alors ne fournissez pas de réponse et présentez des excuses. Si vous n'êtes pas sûr, dites-le simplement. S'il y a plusieurs réponses possibles, résumez-les comme des réponses possibles.`,
         searchingMessage_EN: `I could not immediately find relevant information to your question, so I am searching for more information. Please wait, this can take some time.`,
@@ -57,10 +57,10 @@ const tasktypes = [
       local: {
         coordinates: false,
         encoding: "utf-8",
-        ocrLanguages: "frm", // French
+        ocrLanguages: "eng", // fra French
         outputFormat: "json",
         includePageBreaks: true,
-        strategy: "hi_res",
+        strategy: "auto",
       },
     },
     state: {
@@ -173,13 +173,20 @@ const tasktypes = [
     environments: ["react", "rxjs-hub-consumer"],
     config: {
       sort: true,
+      shared: {
+        system: {
+          "config-hub-consumer-tasks": "read", // Read only
+        },
+      }
     },
     state: {
       current: "start",
       legal: ["start", "loaded", "ready"],
     },
     shared: {
-      "config-hub-consumer-tasks": {},
+      system: {
+        "config-hub-consumer-tasks": {},
+      },
     },
   },
   {

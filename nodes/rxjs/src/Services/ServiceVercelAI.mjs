@@ -71,6 +71,7 @@ async function openaigpt_async(params) {
     dummyAPI,
     functions,
     maxFunctionDepth,
+    response_format,
     T,
   } = params;
 
@@ -78,7 +79,6 @@ async function openaigpt_async(params) {
     maxResponseTokens,
   } = params;
 
-  const debug = true;
   let response_text_promise = Promise.resolve(["", [], false]);
 
   console.log("openaigpt_async noStreaming",noStreaming);
@@ -243,16 +243,10 @@ async function openaigpt_async(params) {
       }
     }
     message_from("cache", text, noStreaming, instanceId);
-    if (debug) {
-      console.log("Debug: ", cacheKeyText);
-    }
     response_text_promise = Promise.resolve([text, [], false]);
   } else {
     // Need to return a promise
     if (dummyAPI) {
-      if (debug) {
-        console.log("Debug: ", cacheKeyText);
-      }
       const text = "Dummy text ".repeat(10) + new Date().toISOString();
       //const text = "Dummy text ";;
       const words = text.split(" ");
@@ -289,9 +283,13 @@ async function openaigpt_async(params) {
         if (functions) {
           options.functions = functions;
           options.function_call = "auto";
-        }   
+        }
+        if (response_format) {
+          options.response_format = response_format;
+        }
         const TIMEOUT_DURATION = 20000; // 20 seconds, adjust as needed
-        console.log("llmapi.chat.completions.create(options)", options);
+        process.stdout.write("llmapi.chat.completions.create(options)" + JSON.stringify(options, null, 2) + '\n');
+        //console.log("llmapi.chat.completions.create(options)", options);
         let response = await Promise.race([
             llmapi.chat.completions.create(options),
             new Promise((_, reject) => 
@@ -393,7 +391,7 @@ async function openaigpt_async(params) {
               }
             },
             onFinal: async (completion) => {
-              console.log("final messages", messages);
+              //console.log("final messages", messages);
               //console.log("onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {

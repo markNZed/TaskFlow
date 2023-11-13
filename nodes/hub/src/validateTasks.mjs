@@ -38,6 +38,7 @@ export const configSchema = yup.object()
     autoStartpriority: yup.string(),
     family: yup.object(),
     language: yup.string(),
+    environments: yup.array().of(yup.object()),
   }).noUnknown(true);
 
 const tasksSchema = yup.array().of(yup.object()

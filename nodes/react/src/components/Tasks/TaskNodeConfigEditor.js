@@ -44,12 +44,12 @@ const TaskNodeConfigEditor = (props) => {
       setConfigTreeLastUpdatedAt(task.meta.updatedAt.date);
       const targetStore = task.config.local.targetStore;
       console.log("loadTree", targetStore, "from", task.config.local.sharedVariable);
-      setconfigTreeAsObject(task.shared[task.config.local.sharedVariable]);
+      setconfigTreeAsObject(task.shared.system[task.config.local.sharedVariable]);
     }
   }
 
   useEffect(() => {
-    if (task?.config?.local?.sharedVariable && task?.meta?.modified?.shared && task.meta.modified.shared[task.config.local.sharedVariable]) {
+    if (task?.config?.local?.sharedVariable && task?.meta?.modified?.shared?.system && task.meta.modified.shared.system[task.config.local.sharedVariable]) {
       loadTree();
     }
   }, [task]);
@@ -124,7 +124,7 @@ const TaskNodeConfigEditor = (props) => {
     return obj;
   }
 
-  // task.shared."config-hub-consumer-tasks" uses a hash because we cannot merge arrays and delete elements
+  // task.shared.system."config-hub-consumer-tasks" uses a hash because we cannot merge arrays and delete elements
   useEffect(() => {
     if (configTreeAsObject) {
       // Deep copy so we do not mess with configTreeAsObject

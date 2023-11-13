@@ -15,8 +15,8 @@ export function newTask(NODE, state, taskFunctionName) {
     state: {
       current: state,
     },
-    input: {
-      query: "vite",
+    shared: {
+      corpusName: "FLE", //KG
     },
     operators: {
       LLM: {
@@ -28,9 +28,6 @@ export function newTask(NODE, state, taskFunctionName) {
         type: "openaigpt.rag-dataprocessing",
         environments: ["rxjs-processor-consumer"],
       },
-    },
-    shared: {
-      corpusName: "DTF", //KG
     },
   };
 }

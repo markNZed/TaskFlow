@@ -15,9 +15,9 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
   utils.debugTask(T());
 
   let configTreeEvent; 
-  if (T("meta.modified.shared.config-hub-consumer-tasks")) {
+  if (T("meta.modified.shared.system.config-hub-consumer-tasks")) {
     configTreeEvent = true;
-    console.log("configTreeEvent found update to shared.config-hub-consumer-tasks");
+    console.log("configTreeEvent found update to shared.system.config-hub-consumer-tasks");
   }
 
   function deleteNonInitiatorBranches(tasks) {
@@ -140,6 +140,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
         // Then the conversion of the object to JSON will remove the key and deepEqual would see a difference in the number of keys
         // deepEqual was modified to remove undefined keys
         if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
+          console.log("state.tasksTree getObjectDifference", utils.getObjectDifference(newTasksTree, oldTasksTree));
           T("state.tasksTree", newTasksTree);
           T("command", "update");
           T("commandDescription", "Update state.tasksTree due to configTreeEvent so React can see it.");

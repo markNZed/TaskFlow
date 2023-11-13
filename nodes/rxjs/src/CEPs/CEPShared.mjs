@@ -50,7 +50,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       let familyInstanceIds = [];
       // this is a huge security issue as anyone can access the system variables
       // Should prefix these variables e.g. shared.system. and could then limit access
-      if (sharedEntry["system"]) {
+      if (varName === "system") {
         familyId = "system";
       } else {
         familyId = task.familyId;
@@ -67,7 +67,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       if (task.node.command === "init" && sharedEntry[familyId].value) {
         toSync[task.instanceId] = toSync[task.instanceId] || {};
         toSync[task.instanceId][varName] = sharedEntry[familyId].value;
-      } else {
+      // Allows for read only shared variables
+      } else if (task.config?.shared?.[varName] !== "read") {
         if (!utils.deepEqual(sharedEntry[familyId].value, task.shared[varName])) {
           //utils.logTask(task, "CEPShared varName", varName, "diff", utils.js(utils.getObjectDifference(sharedEntry[familyId].value, task.shared[varName])));
           for (const instanceId of familyInstanceIds) {
