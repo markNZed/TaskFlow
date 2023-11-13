@@ -1061,8 +1061,8 @@ const utils = {
         }
       }
     }
-    //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
-    return [authenticated, groupId];
+    console.log("authenticatedGroup_async " + task.id + " " + groupId + " " + tribeName + " " +authenticated);
+    return authenticated;
   },
 
   authenticatedTask_async: async function (task, userId, groupsStore_async, tribesStore_async) {
@@ -1087,7 +1087,7 @@ const utils = {
         }
       }
     }
-    //console.log("Authenticated " + task.id + " " + userId + " " + authenticated);
+    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + authenticated);
     return [authenticated, groupId];
   },
 
