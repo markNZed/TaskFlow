@@ -166,11 +166,11 @@ async function processTemplates_async(task, obj, outputs, familyId) {
   return task;
 }
 
-async function checkUserPermissions_async(task, groupsStore_async, authenticate) {
+async function checkUserPermissions_async(task, tribeName, groupsStore_async, tribesStore_async, authenticate) {
   utils.debugTask(task);
   // Check if the user has permissions
   if (authenticate) {
-    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, groupsStore_async, tribesStore_async);
+    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, tribeName, groupsStore_async, tribesStore_async);
     if (!authenticated) {
       console.error("Task:", utils.js(task));
       throw new Error("Task authentication failed");
@@ -424,7 +424,7 @@ async function taskStart_async(
     ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
     ['connections'].forEach(key => task[key] = task[key] || []);
 
-    task = await checkUserPermissions_async(task, groupsStore_async, authenticate);
+    task = await checkUserPermissions_async(task, initTask?.user?.tribe, groupsStore_async, tribesStore_async, authenticate);
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
 

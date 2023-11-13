@@ -1045,19 +1045,21 @@ const utils = {
     return taskCopy;
   },
 
-  authenticatedGroup_async: async function (task, groupId, tribesStore_async) {
+  authenticatedGroup_async: async function (task, groupId, tribeName, tribesStore_async) {
     let authenticated = false;
-    const tribeName = task.tribe;
     if (tribeName) {
       if (tribeName === "god") {
         authenticated = true;
       } else {
-        let groups = await tribesStore_async.get(tribeName);
-        if (!groups) {
-          console.log("Tribe " + tribeName + " has no groups");
-          authenticated = true;
-        } else if (groups.includes(groupId)) {
-          authenticated = true;
+        let tribe = await tribesStore_async.get(tribeName);
+        if (tribe) {
+          const groups = tribe.groups;
+          if (!groups) {
+            console.log("Tribe " + tribeName + " has no groups");
+            authenticated = true;
+          } else if (groups.includes(groupId)) {
+            authenticated = true;
+          }
         }
       }
     }
@@ -1065,29 +1067,29 @@ const utils = {
     return authenticated;
   },
 
-  authenticatedTask_async: async function (task, userId, groupsStore_async, tribesStore_async) {
+  authenticatedTask_async: async function (task, userId, tribeName, groupsStore_async, tribesStore_async) {
     let authenticated = false;
     let groupId;
     if (task?.permissions) {
-      for (const group_name of task.permissions) {
-        if (group_name === "*") {
+      for (const permissionGroupId of task.permissions) {
+        if (permissionGroupId === "*") {
           authenticated = true;
           break;
         }
-        const groupInTribe = await utils.authenticatedGroup_async(task, groupId, tribesStore_async);
+        const groupInTribe = await utils.authenticatedGroup_async(task, permissionGroupId, tribeName, tribesStore_async);
         if (groupInTribe) {
-          let group = await groupsStore_async.get(group_name);
+          let group = await groupsStore_async.get(permissionGroupId);
           if (!group?.users) {
-            console.log("Group " + group_name + " has no users");
+            console.log("Group " + permissionGroupId + " has no users");
           } else if (group.users.includes(userId)) {
             authenticated = true;
-            groupId = group_name;
+            groupId = permissionGroupId;
             break;
           }
         }
       }
     }
-    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + authenticated);
+    console.log("authenticatedTask_async " + task.id + " " + userId + " " + tribeName + " " + authenticated);
     return [authenticated, groupId];
   },
 
