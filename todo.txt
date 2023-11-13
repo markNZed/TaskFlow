@@ -1,7 +1,6 @@
 /* ToDo
 -------
-remote.SSH.serverInstallPath and to point to a location which was a local disk 
-Groups could be allocated to tribes (so user only sees tribe related tasks)
+Note that adding a domain should also disable the CloudFlare caching
 TaskRAGAdmin
   Choose a corpus, restart, prepare, upload, delete
   Remove elements from cache

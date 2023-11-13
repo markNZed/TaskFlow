@@ -79,9 +79,9 @@ const system = [
   },
 
   {
-    name: "admin",
+    name: "sysadmin",
     parentName: "system",
-    permissions: ['admin'],
+    permissions: ['sysadmin'],
   },
 
   {
@@ -89,9 +89,16 @@ const system = [
     config: {
       label: "RAG",
     },
-    parentName: "admin",
+    parentName: "sysadmin",
   },
   
+
+  {
+    name: "admin",
+    parentName: "system",
+    permissions: ['admin'],
+  },
+
   {
     initiator: true,
     name: "users",
