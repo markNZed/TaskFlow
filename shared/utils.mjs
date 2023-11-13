@@ -1060,7 +1060,7 @@ const utils = {
         }
       }
     }
-    console.log("authenticatedGroup_async " + task.id + " " + groupId + " " + tribe.name + " " +authenticated);
+    //console.log("authenticatedGroup_async " + task.id + " " + groupId + " " + tribe.name + " " +authenticated);
     return authenticated;
   },
 
@@ -1073,7 +1073,7 @@ const utils = {
       for (const permissionGroupId of task.permissions) {
         if (permissionGroupId === "*") {
           authenticated = true;
-          console.log("authenticatedTask_async * " + task.id + " " + userId + " " + groupId  + " " + tribeName + " " + authenticated);
+          //console.log("authenticatedTask_async * " + task.id + " " + userId + " " + groupId  + " " + tribeName + " " + authenticated);
           break;
         }
         let group = await groupsStore_async.get(permissionGroupId);
@@ -1089,7 +1089,7 @@ const utils = {
         }
       }
     }
-    console.log("authenticatedTask_async " + task.id + " " + userId + " " + groupId + " " + tribeName + " " + authenticated);
+    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + groupId + " " + tribeName + " " + authenticated);
     return [authenticated, groupId];
   },
 
