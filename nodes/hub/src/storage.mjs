@@ -85,7 +85,7 @@ const activeNodeTasksStore_async = newKeyV(redisClient, NODE.appAbbrev + "active
 //   Value: {taskId : output}
 const outputStore_async = newKeyV(redisClient, NODE.appAbbrev + "outputs");
 // Schema:
-//   Key: familyId (there is also a "system" entry)
+//   Key: familyId
 //   Value: {shared: task.shared, instanceIds: array of instanceIds}
 const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared");
 const connectionsStore_async = newKeyV(redisClient, NODE.appAbbrev + "connections"); // Shared with Hub

@@ -71,6 +71,8 @@ Enhanced Generation:
       Just remove old messages ?
     Improve prompt for adding of references.
 
+    We can bias the query by adding text and then do a similarity search, this seems likely to find entries where the query and the additional text are matching. This seems an interesting way of collecting a diversity of material to build a better context for the response generation.  
+
 */
 
 async function operate_async(wsSendTask, task) {

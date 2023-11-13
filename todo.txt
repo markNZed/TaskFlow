@@ -1,19 +1,9 @@
 /* ToDo
 -------
-Issue with "undefined" references
+sva tribe ?
+Use vector similarity to classify the nature of question and priooritze response approach
 
 For the website should be able to use the URL to get structure (could use site map too)
-The Unstructured API seems to support:
-"model_name": null, 
-"xml_keep_tags": false, 
-"skip_infer_table_types": ["pdf", "jpg", "png"], 
-"languages": null, 
-"chunking_strategy": null, 
-"multipage_sections": false, 
-"combine_under_n_chars": 500, 
-"new_after_n_chars": 1500, 
-"max_characters": 1500,
-'hi_res_model_name=chipper'
 
 TaskRAGAdmin
   Choose a corpus, restart, prepare, upload, delete

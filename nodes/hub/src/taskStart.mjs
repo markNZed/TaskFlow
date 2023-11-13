@@ -445,17 +445,6 @@ async function taskStart_async(
       utils.logTask(task, "Reinitialising familyId isFirstUserTask", prevTaskFamilyId);
     }
 
-    let isFirstSystemTask = false;
-    if (!prevTask && task.id.startsWith("root.system.")) {
-      isFirstSystemTask = true;
-    }
-
-    // We need a shared familyId so task.shared works between system tasks
-    if (isFirstSystemTask) {
-      task.familyId = "system";
-      utils.logTask(task, "isFirstSystemTask setting familyId to", task.familyId);
-    }
-
     // May be overwritten in processInstanceAsync
     task.node["command"] = "init";
        

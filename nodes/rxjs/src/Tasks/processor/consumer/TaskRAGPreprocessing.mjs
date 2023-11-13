@@ -53,6 +53,22 @@ import cohere from 'cohere-ai';
     Basically use GPT to do the chunking into major sections
 
     For small documents can we use the GPT V to extract the content? Might be worth hooking this in so we can identify pages with diagrams (using Unstructured?) then convert to text with GPT V.
+
+    For the website should be able to use the URL to get structure (could use site map too)
+
+    The Unstructured API seems to support additiona parameters
+    "model_name": null, 
+    "xml_keep_tags": false, 
+    "skip_infer_table_types": ["pdf", "jpg", "png"], 
+    "languages": null, 
+    "chunking_strategy": null, 
+    "multipage_sections": false, 
+    "combine_under_n_chars": 500, 
+    "new_after_n_chars": 1500, 
+    "max_characters": 1500,
+
+    'hi_res_model_name=chipper'
+
 */
 
 // eslint-disable-next-line no-unused-vars
@@ -117,7 +133,12 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
       return item;
     });
+    // Function to create a pause (simple rate limit)
+    const pause = (duration) => new Promise(resolve => setTimeout(resolve, duration));
+
     try {
+      // Pause for 1 second (1000 milliseconds)
+      await pause(1000);
       const response = await openai.embeddings.create({
         model: "text-embedding-ada-002",
         input: inputTextArray,
@@ -125,9 +146,9 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       const embeddings = response.data.map((item) => item.embedding);
       return embeddings;
     } catch (error) {
-      console.error(`ERROR embedTextBatch_async inputTextArray length ${inputTextArray.length}`);
+      console.error(`ERROR embedTextBatch_async inputTextArray length ${inputTextArray.length}`, error); 
       return [];
-    }
+    } 
   }
 
   const searchDirectory_async = async (dirPath) => {
@@ -206,7 +227,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       {
         name: "title",
         dataType: ["text"],
-        tokenization: "field", // required to match on data with symbols
+        tokenization: "field", // required to match on data with symbols 
       },
       {
         name: "mergedSection",
@@ -239,6 +260,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       {
         name: 'sectionCount',
         dataType: ["number"],
+      },
+      {
+        name: 'summary',
+        dataType: ["boolean"],
       }
     ];
     for (const [name, dataType] of Object.entries(ElementMetadata)) {
@@ -620,7 +645,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
 
   // eslint-disable-next-line no-unused-vars
   async function textToMetadata_async(text, tokens) {
-    console.log("textToMetadata_async in length", text.substring(0, 256) + "...");
+    //console.log("textToMetadata_async in length", text.substring(0, 256) + "...");
     console.log("textToMetadata_async in length", text.length, "tokens", tokens);
     /*
     const response = await openai.completions.create({ 
@@ -701,7 +726,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     } catch {
       metadata = {};
     }
-    console.log("textToMetadata_async out", metadata)
+    //console.log("textToMetadata_async out", metadata)
     return metadata;
   }
 
@@ -801,7 +826,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
     ];    
     // Because it gets chopped by console.log
-    process.stdout.write("TOCRegexs_async messages" + utils.js(messages) + '\n');
+    //process.stdout.write("TOCRegexs_async messages" + utils.js(messages) + '\n');
     const response = await openai.chat.completions.create({
       model: 'gpt-4-1106-preview', // Supports response_format
       response_format: {"type": "json_object"},
@@ -810,7 +835,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     });
     const content = response.choices[0].message.content;
     // Because it gets chopped by console.log
-    process.stdout.write("TOCRegexs_async content" + utils.js(content) + '\n');
+    //process.stdout.write("TOCRegexs_async content" + utils.js(content) + '\n');
     const regex = /\{.*\}/s; // match newlines
     const jsonData = content.match(regex); 
     let metadata;
@@ -820,7 +845,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       console.error("TOCRegexs_async", err, content);
       metadata = {};
     }
-    console.log("TOCRegexs_async out", utils.js(metadata))
+    //console.log("TOCRegexs_async out", utils.js(metadata))
     return metadata;
   }
 
@@ -870,7 +895,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     ];
     
     // Because it gets chopped by console.log
-    process.stdout.write("dataToTOC_async messages" + utils.js(messages) + '\n');
+    //process.stdout.write("dataToTOC_async messages" + utils.js(messages) + '\n');
     const response = await openai.chat.completions.create({
       model: 'gpt-4-1106-preview', // Supports response_format
       response_format: {"type": "json_object"},
@@ -879,7 +904,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     });
     const content = response.choices[0].message.content;
     // Because it gets chopped by console.log
-    process.stdout.write("dataToTOC_async content" + utils.js(content) + '\n');
+    //process.stdout.write("dataToTOC_async content" + utils.js(content) + '\n');
     const regex = /\{.*\}/s; // match newlines
     const jsonData = content.match(regex); 
     let metadata;
@@ -889,7 +914,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       console.error("dataToTOC_async", err, content);
       metadata = {};
     }
-    console.log("dataToTOC_async out", utils.js(metadata))
+    //console.log("dataToTOC_async out", utils.js(metadata))
     return metadata;
   }
 
@@ -1216,6 +1241,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
           sectionsMerged += element.text + "\n";
           sectionsMergedToken += elementTokens;// has issues with element.metadata.tokenLength;
         }
+        console.log(`extractTOC_async calling textToTOC_async for ${outputFilePath}`);
         const metadata = await textToTOC_async(sectionsMerged);
         //metadata["sectionsMerged"] = sectionsMerged;
         await fs.promises.writeFile(outputFilePath, JSON.stringify(metadata, null, 2));
@@ -1319,10 +1345,10 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
               outputStream.write(JSON.stringify(batch[j]) + '\n');
             }
 
-            // Log every 100th batch
-            if ((i / batchSize) % 100 === 0) {
+            // Log every 10th batch
+            if ((i / batchSize) % 10 === 0) {
               console.log(`Processing batch ${(i / batchSize) + 1}/${Math.ceil(weaviateData.length / batchSize)} with ${batchSize} elements per batch`);
-            }
+            } 
           }
   
           progressBar.stop();
@@ -1364,7 +1390,13 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       const itemWithoutVector = utils.deepClone(item);
       delete itemWithoutVector.vector;
       // In batch imports Weaviate will overwrite the same id
-      const id = generateUuid5(JSON.stringify(itemWithoutVector))
+      let id;
+      try {
+        id = generateUuid5(JSON.stringify(itemWithoutVector));
+      } catch (error) {
+        console.error("Error generateUuid5:", error, "item:", item);
+        throw new Error(`ingest_async Error generateUuid5`);
+      }
       const obj = {
         class: className,
         properties: itemWithoutVector,
@@ -1383,7 +1415,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         try {
           const batchResult = await batcher.do();
           if (!checkBatchResult(batchResult)) {
-            throw new Error(`Failed to import batch`);
+            throw new Error(`ingest_async failed to import batch`);
           }
           console.log(`Batch of ${batchSize} successfully imported.`);
         } catch (error) {
@@ -1433,7 +1465,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         const nextFilename = path.basename(outputFilePath);
         await deleteNextFile(nextFilename, nextDir);
     } else {
-        console.log(`File already exists in ingested directory: ${outputFilePath}. Skipping ingestion.`);
+        console.log(`File already exists in ingested directory: ${outputFilePath}. Skipping ingestion.`); 
     }
   }
   
@@ -1451,7 +1483,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     if (!metadata[element.filename] && element.filename) {
       const jsonFileName = path.basename(element.filename).replace(/\.[^/.]+$/, '.json');
       const metadataFilePath = path.join(metadataDir, jsonFileName);
-      console.log("metadataFilePath", metadataFilePath);
+      //console.log("metadataFilePath", metadataFilePath);
       let elementMetadata;
       try {
         const metadataContent = await fs.promises.readFile(metadataFilePath, 'utf-8'); // Read the file content as UTF-8 text
@@ -1459,7 +1491,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       } catch (error) {
         elementMetadata = {};
       }
-      console.log("elementMetadata", elementMetadata);
+      //console.log("elementMetadata", elementMetadata);
       metadata[element.filename] = elementMetadata;
       result = elementMetadata;
     } else if (element.filename) {
@@ -1585,7 +1617,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         })
         .do();
     } catch (error) {
-      console.error("Error findDuplicates_async:", error);
+      console.error("Error findDuplicates_async getting nearest:", error, item); 
     }
     const responseElements = response?.data?.Get[className] || []
     let duplicateIds = [];
@@ -1603,7 +1635,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
           .do();
         duplicateIds.push(obj._additional.id);
       } catch (error) {
-        console.error("Error findDuplicates_async:", error);
+        console.error("Error findDuplicates_async deleting:", error);
       }
     }
     if (duplicateIds.length) {
@@ -1667,7 +1699,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
           i++;
           // log every 1000th element
           if (i % 1000 === 0) {
-            console.log(`dataProcessEmbeddings_async addRelatedText_async ${i} items`);
+            console.log(`dataProcessEmbeddings_async addRelatedText_async ${i} items`); 
           }
         }
   
@@ -1717,7 +1749,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         break;
       }
       case "chunk": {
-        await extractTOC_async(unstructuredDir, metadataDir);
+        //await extractTOC_async(unstructuredDir, metadataDir);
         await chunkFiles_async(unstructuredDir, chunkedDir, dataProcessedChunksDir);
         nextState = "extractMetadata";
         break;
@@ -1803,6 +1835,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
         break;
       }
       case "dataProcessEmbeddings": {
+        // Using vectorizedDir because this has the vectors but runs after state ingest because operating on the DB
         await dataProcessEmbeddings_async(ingestedDir, dataProcessedEmbeddingsDir);
         T("state.current", "done");
         T("command", "update");
