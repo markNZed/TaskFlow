@@ -1069,7 +1069,7 @@ const utils = {
     let groupId;
     const tribe = await tribesStore_async.get(tribeName);
     if (task?.permissions) {
-      console.log("task.permissions", task.permissions);
+      //console.log("task.permissions", task.permissions);
       for (const permissionGroupId of task.permissions) {
         if (permissionGroupId === "*") {
           authenticated = true;

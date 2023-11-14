@@ -31,7 +31,7 @@ const TaskRAG = (props) => {
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  const hardModelVersion = "gpt-4-0613";
+  const hardModelVersion = "gpt-4-1106-preview";
   const softModelVersion = "gpt-3.5-turbo-0613";
   const [think, setThink] = useState(softModelVersion);
   const [level, setLevel] = useState('');

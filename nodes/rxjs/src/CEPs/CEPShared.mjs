@@ -13,7 +13,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
     If there is no familyId then match all familyIds
 */
 import { utils } from "#src/utils";
-import { sharedStore_async } from "#src/storage";
+import { sharedStore_async, familyStore_async } from "#src/storage";
 import { commandUpdate_async } from "#src/commandUpdate";
 // eslint-disable-next-line no-unused-vars
 import assert from 'assert';
@@ -42,56 +42,90 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       varNames = Object.keys(task.meta.modified.shared);
     }
     console.log("CEPShared varNames", varNames);
-    for (const varName of varNames) {
-      const sharedEntry = await sharedStore_async.get(varName) || {};
-      utils.logTask(task, "task.shared varName", varName);
-      // Get the list of instances to update
-      let familyId;
-      let familyInstanceIds = [];
-      // this is a huge security issue as anyone can access the system variables
-      // Should prefix these variables e.g. shared.system. and could then limit access
-      if (varName === "system") {
-        familyId = "system";
+    for (const topVarName of varNames) {
+      let prefix = '';
+      let adjustedVarNames;
+      if (topVarName === "system") {
+        prefix = "system";
+        adjustedVarNames = Object.keys(task.shared.system)
+      } else if (topVarName === "family") {
+        prefix = "family";
+        adjustedVarNames = Object.keys(task.shared.family)
       } else {
-        familyId = task.familyId;
+        adjustedVarNames = [ topVarName];
       }
-      //utils.logTask(task, "task.shared familyId", familyId);
-      // Add this instance if it is not already tracked
-      sharedEntry[familyId] = sharedEntry[familyId] || {};
-      sharedEntry[familyId]["instanceIds"] = sharedEntry[familyId]["instanceIds"] || [];
-      if (!sharedEntry[familyId]["instanceIds"].includes(task.instanceId)) {
-        utils.logTask(task, "Adding instanceId", task.instanceId, "to familyId", familyId, "for varName", varName);
-        sharedEntry[familyId]["instanceIds"].push(task.instanceId);
-      }
-      familyInstanceIds = sharedEntry[familyId].instanceIds;
-      if (task.node.command === "init" && sharedEntry[familyId].value) {
-        toSync[task.instanceId] = toSync[task.instanceId] || {};
-        toSync[task.instanceId][varName] = sharedEntry[familyId].value;
-      // Only systme tasks can write system variables
-      } else if (task.id.startsWith("root.user") && familyId === "system") {
-        // Nothing to do
-      // Allows for read only shared variables
-      } else if (task.config?.shared?.[varName] !== "read") {
-        if (!utils.deepEqual(sharedEntry[familyId].value, task.shared[varName])) {
-          //utils.logTask(task, "CEPShared varName", varName, "diff", utils.js(utils.getObjectDifference(sharedEntry[familyId].value, task.shared[varName])));
-          for (const instanceId of familyInstanceIds) {
-            toSync[instanceId] = toSync[instanceId] || {};
-            toSync[instanceId][varName] = task.shared[varName];
+      for (const varName of adjustedVarNames) {
+        const sharedEntry = await sharedStore_async.get(prefix + varName) || {};
+        utils.logTask(task, "task.shared varName", prefix + " " + varName);
+        // Get the list of instances to update
+        let familyId;
+        let familyInstanceIds = [];
+        // this is a huge security issue as anyone can access the system variables
+        // Should prefix these variables e.g. shared.system. and could then limit access
+        let taskValue;
+        if (prefix === "system") {
+          familyId = "system";
+          taskValue = task.shared.system[varName];
+        } else if (prefix === "family") {
+          familyId = task.familyId;
+          taskValue = task.shared.family[varName];
+        } else {
+          familyId = task.familyId;
+          taskValue = task.shared[varName];
+        }
+        //utils.logTask(task, "task.shared familyId", familyId);
+        // Add this instance if it is not already tracked
+        sharedEntry[familyId] = sharedEntry[familyId] || {};
+        if (prefix === "family") {
+          let family = await familyStore_async.get(familyId) || {};
+          familyInstanceIds = Object.values(family);
+        } else {
+          sharedEntry[familyId]["instanceIds"] = sharedEntry[familyId]["instanceIds"] || [];
+          if (!sharedEntry[familyId]["instanceIds"].includes(task.instanceId)) {
+            utils.logTask(task, "Adding instanceId", task.instanceId, "to familyId", familyId, "for varName", varName);
+            sharedEntry[familyId]["instanceIds"].push(task.instanceId);
+          }
+          familyInstanceIds = sharedEntry[familyId].instanceIds;
+        }
+        if (task.node.command === "init" && sharedEntry[familyId].value) {
+          toSync[task.instanceId] = toSync[task.instanceId] || {};
+          if (prefix) {
+            toSync[task.instanceId][prefix] = toSync[task.instanceId][prefix] || {};
+            toSync[task.instanceId][prefix][varName] = sharedEntry[familyId].value;
+          } else {
+            toSync[task.instanceId][varName] = sharedEntry[familyId].value;
+          }
+        // Only systme tasks can write system variables
+        } else if (task.id.startsWith("root.user") && familyId === "system") {
+          // Nothing to do
+        // Allows for read only shared variables
+        } else if (task.config?.shared?.[varName] !== "read") {
+          if (!utils.deepEqual(sharedEntry[familyId].value, taskValue)) {
+            //utils.logTask(task, "CEPShared varName", varName, "diff", utils.js(utils.getObjectDifference(sharedEntry[familyId].value, taskValue)));
+            for (const instanceId of familyInstanceIds) {
+              toSync[instanceId] = toSync[instanceId] || {};
+              if (prefix) {
+                toSync[instanceId][prefix] = toSync[instanceId][prefix] || {};
+                toSync[instanceId][prefix][varName] = taskValue;
+              } else {
+                toSync[instanceId][varName] = taskValue;
+              }
+            }
           }
         }
-      }
-      // The diff used by Task synchronization does not support efficient deleting of array elements
-      //assert.strictEqual(containsArray(task.shared[varName]), false, `Shared variable ${varName} contains array`);
-      //assert(!containsArray(task.shared[varName]));
-      utils.logTask(task, "CEPShared Shared varName", varName, "familyId", familyId); //, "update with:", task.shared[varName]);
-      if (task.node.command === "init") {
-        if (!sharedEntry[familyId].value) {
-          sharedEntry[familyId]["value"] = task.shared[varName];
+        // The diff used by Task synchronization does not support efficient deleting of array elements
+        //assert.strictEqual(containsArray(taskValue), false, `Shared variable ${varName} contains array`);
+        //assert(!containsArray(taskValue));
+        utils.logTask(task, "CEPShared Shared varName", varName, "familyId", familyId); //, "update with:", taskValue);
+        if (task.node.command === "init") {
+          if (!sharedEntry[familyId].value) {
+            sharedEntry[familyId]["value"] = taskValue;
+          }
+        } else {
+          sharedEntry[familyId]["value"] = taskValue;
         }
-      } else {
-        sharedEntry[familyId]["value"] = task.shared[varName];
+        await sharedStore_async.set(prefix + varName, sharedEntry);
       }
-      await sharedStore_async.set(varName, sharedEntry);
     }
     if (task.node.command === "init") {
       task.shared = toSync[task.instanceId];

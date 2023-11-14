@@ -1,7 +1,6 @@
 /* ToDo
 -------
 shared.family (forces all to subscribe)
-mask shared.systme on react?
 Cloning tasks
   Run the init phase with the initial configuration, then coordinate update
     How to know when the init is done, what about early messages etc ?
@@ -74,7 +73,6 @@ When user is removed from group the group is not updated
     Groups could use hierarchy
     Could abstract into a function that operates on both users and groups
     Replace with authorization
-Loading indicator in Taskflow.js
 Use the runtime config to add admin-dtf to permisssion of root.system.
 Option to delete cache responses (also indicate them)
 Add a redirect command so we can redirect user after they are removed (can't redirect from websocket)
