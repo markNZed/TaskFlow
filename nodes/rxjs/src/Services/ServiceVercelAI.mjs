@@ -293,7 +293,7 @@ async function openaigpt_async(params) {
         let response = await Promise.race([
             llmapi.chat.completions.create(options),
             new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('ServiceVercelAI timed out after' + TIMEOUT_DURATION + 'ms')), TIMEOUT_DURATION)
+                setTimeout(() => reject(new Error("ServiceVercelAI timed out after" + TIMEOUT_DURATION + "ms. Please try again.")), TIMEOUT_DURATION)
             )
         ]);
         console.log("llmapi.chat.completions.create responded");
@@ -423,7 +423,7 @@ async function openaigpt_async(params) {
         let text = "ERROR " + err.message;
         if (err instanceof OpenAI.APIError) {
           const { name, status, headers, message } = err;
-          text = `OpenAI.APIError ${name} ${status} ${headers} ${message}`;
+          text = `OpenAI.APIError ${name} ${status} ${headers} ${message}. Please try again.`;
         }
         message_from("API", text, noStreaming, instanceId);
         response_text_promise = Promise.resolve([text, [], true]);
