@@ -110,6 +110,7 @@ function Taskflows(props) {
       // Once the menu is ready it will have set taskflowLeafCount
       // This avoids a glitch of defaulting to 220 and it shrinking to 0 if the menu has only one item
       setDrawWidth(220);
+      setLoading(false);
     }
   }, [globalState]);
 
@@ -126,7 +127,6 @@ function Taskflows(props) {
             if (!taskMenu) {
               setTaskMenu(startTask);
               replaceGlobalState("user", startTask.user);
-              setLoading(false);
             }
           } else if (!taskInstanceIds.includes(startTask.instanceId)) {
             console.log("selectMenu started", startTask.id);
