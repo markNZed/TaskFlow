@@ -57,7 +57,6 @@ const servicetypes = [
     id: A unique dot separated identifier for the task configuration.
     instanceId: A unique identifier for this instance of the task configuration.
     meta.createdAt: An object with date and timezone keys referencing the time the task was created.
-    meta.lastUpdatedAt: An object with date and timezone keys referencing the time the task was last updated.
     meta.parentId: The id of the parent task.
     name: A human-readable name for the task.
     operators: An object containing operator configurations.

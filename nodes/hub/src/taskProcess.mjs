@@ -154,13 +154,13 @@ function checkLockConflict(task, activeTask) {
 function checkAPIRate(task) {
   utils.debugTask(task);
   const maxRequestRate = task?.config?.maxRequestRate ?? 0; 
-  if (maxRequestRate && task?.meta?.lastUpdatedAt) {
-    const lastUpdatedAt = new Date(task.meta.lastUpdatedAt.date);
+  if (maxRequestRate && task.meta.updatedAt) {
     const updatedAt = new Date(task.meta.updatedAt.date);
 
-    if (lastUpdatedAt.getUTCMinutes() !== updatedAt.getUTCMinutes()) {
-      //console.log("checkAPIRate", lastUpdatedAt.getUTCMinutes(), updatedAt.getUTCMinutes())
+    if (task.meta.requestsMinute !== updatedAt.getUTCMinutes()) {
+      //console.log("checkAPIRate", task.meta.requestsMinute, updatedAt.getUTCMinutes())
       task.meta.requestsThisMinute = 0;
+      task.meta.requestsMinute = updatedAt.getUTCMinutes();
     } else {
       task.meta.requestsThisMinute++;
       //console.log("checkAPIRate requestsThisMinute", task.meta.requestsThisMinute);

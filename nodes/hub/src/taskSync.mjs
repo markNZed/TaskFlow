@@ -14,7 +14,6 @@ let broadcastCount = 0;
 const taskSync_async = async (key, value) => {
 
   if (value.meta) {
-    value.meta.lastUpdatedAt = value.meta.updatedAt;
     value.meta.updatedAt = utils.updatedAt();
   }
 

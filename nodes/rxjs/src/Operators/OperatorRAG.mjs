@@ -74,6 +74,8 @@ Enhanced Generation:
     We can bias the query by adding text and then do a similarity search, this seems likely to find entries where the query and the additional text are matching. This seems an interesting way of collecting a diversity of material to build a better context for the response generation.  
 
     If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
+    
+    RAG, when in conversation, use the previous answer as a lookup also to provide further context. Maybe use embedding to identify priciple concepts to lookup. Would help if we had entities extracted.
 
 */
 
