@@ -1,7 +1,5 @@
 /* ToDo
 -------
-When the RAG context requests fails this leads to bad results being cached
-Think harder could use a different strategy - increase the context size and use merged sections
 Cloning tasks
   Run the init phase with the initial configuration, then coordinate update
     How to know when the init is done, what about early messages etc ?

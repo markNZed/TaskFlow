@@ -77,6 +77,8 @@ Enhanced Generation:
 
     RAG, when in conversation, use the previous answer as a lookup also to provide further context. Maybe use embedding to identify priciple concepts to lookup. Would help if we had entities extracted.
 
+    Think harder could use a different strategy - increase the context size and use merged sections
+
 */
 
 async function operate_async(wsSendTask, task) {
@@ -619,7 +621,7 @@ const RAG_async = async function (wsSendTask, T) {
         if (approxTokenCount < availableTokens) {
           // Request chunks that make up the sections
           utils.logTask(T(), "Requesting chunks that make up the sections");
-          if (titles) {
+          if (titles.length) {
             response = await queryWeaviateSections_async(titles, queryVector);
           } else {
             response = null;
