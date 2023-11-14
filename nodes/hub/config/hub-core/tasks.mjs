@@ -467,8 +467,10 @@ const tasks = [
     environments: ["rxjs-hub-consumer", "react"],
     config: {
       label: "My Tasks",
-      rowDetailHeight: 500,
-      pageSize: 100,
+      local: {
+        rowDetailHeight: 500,
+        pageSize: 100,
+      },
     },
     state: {
       current: "start",
