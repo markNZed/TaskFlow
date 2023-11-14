@@ -440,7 +440,9 @@ const tasks = [
   {
     name: "admin",
     parentName: "user",
-    permissions: ['admin'],
+    APPEND_permissions: [
+      'admin'
+    ],
   },
   {
     initiator: true,
@@ -450,6 +452,29 @@ const tasks = [
     },
     parentName: "admin",
     type: "TaskUsers",
+  },
+
+  {
+    name: "account",
+    parentName: "user",
+    APPEND_permissions: [
+      'account'
+    ],
+  },
+  {
+    initiator: true,
+    name: "my-tasks",
+    environments: ["rxjs-hub-consumer", "react"],
+    config: {
+      label: "My Tasks",
+      rowDetailHeight: 500,
+      pageSize: 100,
+    },
+    state: {
+      current: "start",
+    },
+    parentName: "account",
+    type: "TaskMy",
   },
 
 
