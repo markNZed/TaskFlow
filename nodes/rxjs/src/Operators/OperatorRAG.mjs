@@ -605,7 +605,9 @@ const RAG_async = async function (wsSendTask, T) {
               tokens += newTokenLength;
             }
             context += elementContext;
-            titles.push(element.title);
+            if (element.title) {
+              titles.push(element.title);
+            }
             //utils.logTask(T(), "element:", element);
             i++;
             if (i >= maxSections) {
