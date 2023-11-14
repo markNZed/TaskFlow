@@ -204,7 +204,7 @@ const RAG_async = async function (wsSendTask, T) {
     })
     .withNearVector({ 
       vector: queryVector,
-      //"distance": T("config.local.maxDistance") || 0.14,
+      //"distance": T("config.local.maxDistance") || defaultMaxDistance,
     })
     .withLimit(1)
     .do();
@@ -240,14 +240,14 @@ const RAG_async = async function (wsSendTask, T) {
     */
     .withNearVector({ 
       vector: queryVector,
-      //"distance": T("config.local.maxDistance") || 0.14,
+      //"distance": T("config.local.maxDistance") || defaultMaxDistance,
     })
     //.withAutocut(1) // Chekc this
     .withLimit(limit || T("config.local.maxChunks") || 10)
     .do();
     utils.logTask(T(), `queryWeaviate_async ${response['data']['Get'][className].length} responses for className ${className}`);
     let filteredResults = [];
-    const maxDistance = T("config.local.maxDistance") || 0.14;
+    const maxDistance = T("config.local.maxDistance") || defaultMaxDistance;
     let nearestDistance = 1;
     let nearestResult;
     for (const obj of response['data']['Get'][className]) {
@@ -299,7 +299,7 @@ const RAG_async = async function (wsSendTask, T) {
         })
         .withNearVector({ 
           vector: queryVector,
-          //"distance": T("config.local.maxDistance") || 0.14,
+          //"distance": T("config.local.maxDistance") || defaultMaxDistance,
         })
         .withAutocut(2)
         .withLimit(T("config.local.maxChunks") || 10)
@@ -316,7 +316,7 @@ const RAG_async = async function (wsSendTask, T) {
           })
           .withNearVector({ 
             vector: queryVector,
-            //"distance": T("config.local.maxDistance") || 0.14,
+            //"distance": T("config.local.maxDistance") || defaultMaxDistance,
           })
           .withAutocut(2)
           .withLimit(T("config.local.maxChunks") || 10)
@@ -324,7 +324,7 @@ const RAG_async = async function (wsSendTask, T) {
       }
     utils.logTask(T(), `queryWeaviateSections_async ${response['data']['Get'][className].length} responses for className with sections ${sections}`);
     let filteredResults = [];
-    const maxDistance = T("config.local.maxDistance") || 0.14;
+    const maxDistance = T("config.local.maxDistance") || defaultMaxDistance;
     for (const obj of response['data']['Get'][className]) {   
       utils.logTask(T(), `maxDistance ${maxDistance} response distance ${obj._additional.distance}`);
       if (obj._additional.distance < maxDistance) {
@@ -403,6 +403,8 @@ const RAG_async = async function (wsSendTask, T) {
   const RAGUser = T("shared.RAGUser");
   const cachePrefix = T("config.local.cachePrefix") || 'undefined';
   let rewriteQueryResult = '';
+  const defaultMaxDistance = 0.13;
+  let errorMessage;
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
@@ -505,6 +507,11 @@ const RAG_async = async function (wsSendTask, T) {
         SendIncrementalWs(wsSendTask, finalResponse, T("instanceId"), true);
         T("request.service.noStreaming", false);
         T("request.service.json", undefined);
+        if (operatorOut.response.LLMerror) {
+          errorMessage = operatorOut.response.LLM;
+          nextState = "error";
+          break;
+        }
 
         // We should have a JSON object, if yes then run query for each concept
         // Try with all concepts too
@@ -612,7 +619,11 @@ const RAG_async = async function (wsSendTask, T) {
         if (approxTokenCount < availableTokens) {
           // Request chunks that make up the sections
           utils.logTask(T(), "Requesting chunks that make up the sections");
-          response = await queryWeaviateSections_async(titles, queryVector);
+          if (titles) {
+            response = await queryWeaviateSections_async(titles, queryVector);
+          } else {
+            response = null;
+          }
           tokens = approxTokenCount;
           let i = 0;
           if (response) {
@@ -642,11 +653,13 @@ const RAG_async = async function (wsSendTask, T) {
         let addToCache = true;
         T("response.found", true); // Could be used for analytics later
         if (cache) {
+          let text = cache.text;
+          text += "\n [cached response]"
           utils.logTask(T(), "Returning cached response", cache);
-          T("response.result", cache.text);
+          T("response.result", text);
           addToCache = false;
           // Send cache response incrementally too
-          const words = cache.text.split(" ");
+          const words = text.split(" ");
           // call SendIncrementalWs for pairs of word
           let partialText = "";
           for (let i = 0; i < words.length; i += 2) {
@@ -687,7 +700,9 @@ const RAG_async = async function (wsSendTask, T) {
             }
             T("response.result", result);
             if (operatorOut.response.LLMerror) {
-              addToCache = false;
+              errorMessage = operatorOut.response.LLM;
+              nextState = "error";
+              break;
             }
             // Add this query to a DB of failed questions - w already hav eit in MOngo just need to add property
           }
@@ -715,7 +730,9 @@ const RAG_async = async function (wsSendTask, T) {
           const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
           T("response.result", operatorOut.response.LLM);
           if (operatorOut.response.LLMerror) {
-            addToCache = false;
+            errorMessage = operatorOut.response.LLM;
+            nextState = "error";
+            break;
           }
         }
         T("response.query", T("input.query"));
@@ -761,6 +778,11 @@ const RAG_async = async function (wsSendTask, T) {
             utils.logTask(T(), "Stored result in cache for response");
           }
         }
+        break;
+      }
+      case "error": {
+        errorMessage += "\n Please try again.";
+        T("response.result", errorMessage);
         break;
       }
       default:

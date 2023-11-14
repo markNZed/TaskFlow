@@ -29,7 +29,7 @@ async function operate_async(wsSendTask, task) {
       )
     ]);
   } catch (e) {
-    text = 'Timeout due to slow repsonse from LLM, sorry.';
+    text = 'Timeout due to slow response from LLM, sorry.';
     newMessages = [];
     errored = true;
   }

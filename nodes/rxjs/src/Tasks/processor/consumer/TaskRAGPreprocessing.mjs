@@ -1025,7 +1025,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
     let prompt = `We are data processing for a RAG system with many documents. Here is a summary of the document we are analyzing. 
     Summary: ${summary}
     `;
-    prompt += T("config.local.promptGenerateQuestions") || `Generate a JSON array of typical questions that can be fully answered using only the information in the context below. Only include questions that a human studying the related domain might ask. Only include questions that seek practical information for achieving real world goals. Your response must use the JSON schema and you should check that your JSON repsonse will pass validaton against this schema .
+    prompt += T("config.local.promptGenerateQuestions") || `Generate a JSON array of typical questions that can be fully answered using only the information in the context below. Only include questions that a human studying the related domain might ask. Only include questions that seek practical information for achieving real world goals. Your response must use the JSON schema and you should check that your JSON response will pass validaton against this schema .
     JSON schema:
     {
       "$schema": "http://json-schema.org/draft-07/schema#",
