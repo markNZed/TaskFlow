@@ -74,7 +74,7 @@ Enhanced Generation:
     We can bias the query by adding text and then do a similarity search, this seems likely to find entries where the query and the additional text are matching. This seems an interesting way of collecting a diversity of material to build a better context for the response generation.  
 
     If after refining the question the distance of the search results is not improving then abandon trying to refine the question. Show the distance where/how?
-    
+
     RAG, when in conversation, use the previous answer as a lookup also to provide further context. Maybe use embedding to identify priciple concepts to lookup. Would help if we had entities extracted.
 
 */
@@ -231,11 +231,13 @@ const RAG_async = async function (wsSendTask, T) {
     .get()
     .withClassName(className)
     .withFields('title filename page_number tokenLength text _additional {distance certainty}')
+    /*
     .withWhere({
       path: ['mergedSection'],
       operator: 'Equal',
       valueBoolean: true
     })
+    */
     .withNearVector({ 
       vector: queryVector,
       //"distance": T("config.local.maxDistance") || 0.14,
@@ -347,7 +349,7 @@ const RAG_async = async function (wsSendTask, T) {
       } catch (error) {
         elementMetadata = {};
       }
-      utils.logTask(T(), "elementMetadata", elementMetadata);
+      //utils.logTask(T(), "elementMetadata", elementMetadata);
       metadata[element.filename] = elementMetadata;
     }
   }
@@ -436,7 +438,7 @@ const RAG_async = async function (wsSendTask, T) {
           if (close) {
             queryVector = await embedText_async(close.text);
           }
-          response = await queryWeaviate_async(queryVector)
+          response = await queryWeaviate_async(queryVector, 2);
           //utils.logTask(T(), "response:", response);
           if (!response.length) {
             nextState = "rewriteQuery";
@@ -526,7 +528,8 @@ const RAG_async = async function (wsSendTask, T) {
           const keys = Object.keys(parsedObject);
           const numberOfConcepts = keys.length;
           const maxNumberOfChunks = 6;
-          const chunksPerConcept = Math.ceil(maxNumberOfChunks / numberOfConcepts); 
+          let chunksPerConcept = Math.ceil(maxNumberOfChunks / numberOfConcepts); 
+          chunksPerConcept = 1;
           for (const key of keys) {
             const value = parsedObject[key];
             const query = T("input.query") + "\n" + key + ": " + value;
@@ -542,19 +545,21 @@ const RAG_async = async function (wsSendTask, T) {
         const finalQuery = T("input.query") + "\n" + operatorOut.response.LLM;
         promises.push(
           embedText_async(finalQuery).then(queryVector => 
-            queryWeaviate_async(queryVector)
+            queryWeaviate_async(queryVector, 1)
           )
         );
         // Execute all promises in parallel
         // Wait for all promises to resolve
         const responses = await Promise.all(promises);
         // Merge all array responses into a single array
-        let combinedResponse = [];
+        let combinedResponses = [];
         responses.forEach(response => {
-          combinedResponse = combinedResponse.concat(response);
+          combinedResponses = combinedResponses.concat(response);
         });
-        utils.logTask(T(), "combinedResponse length", combinedResponse.length);
-        response = combinedResponse;
+        utils.logTask(T(), "combinedResponses length", combinedResponses.length);
+        combinedResponses.sort((a, b) => a._additional.distance - b._additional.distance);
+        // Order responses
+        response = combinedResponses;
         nextState = "context";
         break;
       }
@@ -574,8 +579,14 @@ const RAG_async = async function (wsSendTask, T) {
           sendIncrementalResponseInBackground();
           let i = 0;
           for (const element of response) {
-            await getMetadata_async(metadata, element);
-            const elementContext = addReference(metadata[element.filename], element);
+            utils.logTask(T(), "context response", element);
+            let elementContext;
+            if (element.filename) {
+              await getMetadata_async(metadata, element);
+              elementContext = addReference(metadata[element.filename], element);
+            } else {
+              elementContext = element.text;
+            }
             const newTokenLength = utils.stringTokens(elementContext);
             if ((tokens + newTokenLength) >= availableTokens) {
               utils.logTask(T(), "Breaking out of context loop tokens:", tokens, "section number:", i);
@@ -719,21 +730,37 @@ const RAG_async = async function (wsSendTask, T) {
         T("response.historyContext", historyContext);
         if (addToCache && !DUMMY_OPENAI) {
           queryVector = await embedText_async(T("response.query"));
-          await weaviateClient.data
-            .creator()
-            .withClassName(className)
-            .withProperties({
-              title: CACHE_ID,
-              text: T("response.result"),
-              tokenLength: utils.stringTokens(T("response.result")),
-              query: T("response.query"),
-              cachePrefix,
-            })
-            .withVector(queryVector)
-            .do();
-          utils.logTask(T(), "Stored result in cache for query", T("response.query"));
+          if (queryVector) {
+            await weaviateClient.data
+              .creator()
+              .withClassName(className)
+              .withProperties({
+                title: CACHE_ID,
+                text: T("response.result"),
+                tokenLength: utils.stringTokens(T("response.result")),
+                query: T("response.query"),
+                cachePrefix,
+              })
+              .withVector(queryVector)
+              .do();
+            utils.logTask(T(), "Stored result in cache for query");
+          }
+          const responseVector = await embedText_async(T("response.result"));
+          if (responseVector) {
+            await weaviateClient.data
+              .creator()
+              .withClassName(className)
+              .withProperties({
+                title: CACHE_ID,
+                text: T("response.result"),
+                tokenLength: utils.stringTokens(T("response.result")),
+                cachePrefix,
+              })
+              .withVector(responseVector)
+              .do();
+            utils.logTask(T(), "Stored result in cache for response");
+          }
         }
-
         break;
       }
       default:

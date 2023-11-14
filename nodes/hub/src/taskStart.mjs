@@ -172,8 +172,7 @@ async function checkUserPermissions_async(task, tribeName, groupsStore_async, tr
   if (authenticate) {
     const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, tribeName, groupsStore_async, tribesStore_async);
     if (!authenticated) {
-      console.error("Task:", utils.js(task));
-      throw new Error("Task authentication failed");
+      console.error("Task authentication failed:", utils.js(task.id));
     } else {
       task.groupId = groupId;
     }
