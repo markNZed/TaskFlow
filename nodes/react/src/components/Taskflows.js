@@ -20,6 +20,7 @@ import DynamicComponent from "./Generic/DynamicComponent";
 import withTask from "../hoc/withTask";
 import { utils } from "../utils/utils.mjs";
 import IFrame from './Generic/IFrame.js'
+import Loading from "./Loading";
 
 // If there is only one agent then do not show side menu
 
@@ -45,6 +46,7 @@ function Taskflows(props) {
   const [drawWidth, setDrawWidth] = useState(0);
   const [counter, setCounter] = useState(0);
   const [taskMenu, setTaskMenu] = useState();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
@@ -124,6 +126,7 @@ function Taskflows(props) {
             if (!taskMenu) {
               setTaskMenu(startTask);
               replaceGlobalState("user", startTask.user);
+              setLoading(false);
             }
           } else if (!taskInstanceIds.includes(startTask.instanceId)) {
             console.log("selectMenu started", startTask.id);
@@ -131,6 +134,7 @@ function Taskflows(props) {
             setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
             setTasksIds((p) => [...p, startTask.id]);
             setTaskInstanceIds((p) => [...p, startTask.instanceId]);
+            setLoading(false);
           }  
         }  
         break;
@@ -241,6 +245,9 @@ function Taskflows(props) {
                   />
                 </div>
               )
+          )}
+          {loading && (
+            <Loading />
           )}
           <div className={`${globalState.user?.interface !== "debug" ? "hide" : ""}`}>
             <ObjectDisplay data={globalState} />
