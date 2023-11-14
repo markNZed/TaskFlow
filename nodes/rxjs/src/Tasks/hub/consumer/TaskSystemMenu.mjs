@@ -110,8 +110,8 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       wf['childrenId'] = wf.meta.childrenId;
       if (sort && wf['childrenId']) {
         wf['childrenId'] = wf['childrenId'].sort((childA, childB) => {
-            const childLabelA = authorised_tasks[childA].config?.label || '';
-            const childLabelB = authorised_tasks[childB].config?.label || '';
+            const childLabelA = authorised_tasks[childA]?.config?.label || '';
+            const childLabelB = authorised_tasks[childB]?.config?.label || '';
             return childLabelA.localeCompare(childLabelB);
         });
       }
