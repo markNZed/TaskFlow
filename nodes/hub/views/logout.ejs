@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %> - Logout</title>
+    <script>
+        function logout() {
+            // Clear the authToken from cookie or localStorage
+            document.cookie = 'authToken=; Max-Age=0; path=/; secure; SameSite=Strict;';
+            // localStorage.removeItem('authToken');
+
+            // Redirect to login page or another page
+            window.location.href = '/login.html';
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #logoutButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button id="logoutButton" onclick="logout()">Logout</button>
+</body>
+</html>

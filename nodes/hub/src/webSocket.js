@@ -213,7 +213,8 @@ function initWebSocketServer(server) {
           decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
           //throw Error("testing");
         } catch (err) {
-          console.log("authToken invalid", err);
+          // We could have a logout command
+          console.log("authToken invalid sending login command", err);
           const taskLogin = {
             meta: {
               updatedAt: utils.updatedAt(),

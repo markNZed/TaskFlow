@@ -128,6 +128,12 @@ app.get('/login.html', (req, res) => {
   console.log("Serving login.html appName",NODE.app.label);
   res.render('login', { appName: NODE.app.label });
 });
+// Route to serve the login.html file when /login.html is accessed
+// Will need to add the route for this to work
+app.get('/logout.html', (req, res) => {
+  console.log("Serving logout.html appName",NODE.app.label);
+  res.render('logout', { appName: NODE.app.label });
+});
 
 app.use("/auth", authRoutes);
 app.use("/login", loginRoutes);
