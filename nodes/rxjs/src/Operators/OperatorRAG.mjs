@@ -226,10 +226,10 @@ const RAG_async = async function (wsSendTask, T) {
     return [filteredResult, filteredResultClose];
   }
 
-  const queryWeaviate_async = async (queryVector, limit) => {
+  const queryWeaviate_async = async (queryVector, limit, ignoreCache) => {
     utils.logTask(T(), `queryWeaviate_async limit`, limit);
     // Query using nearVector - https://weaviate.io/developers/weaviate/api/graphql/search-operators#nearvector
-    const response = await weaviateClient.graphql
+    let weaviateQuery = weaviateClient.graphql
     .get()
     .withClassName(className)
     .withFields('title filename page_number tokenLength text _additional {distance certainty}')
@@ -245,8 +245,18 @@ const RAG_async = async function (wsSendTask, T) {
       //"distance": T("config.local.maxDistance") || defaultMaxDistance,
     })
     //.withAutocut(1) // Chekc this
-    .withLimit(limit || T("config.local.maxChunks") || 10)
-    .do();
+    .withLimit(limit || T("config.local.maxChunks") || 10);
+    
+    if (ignoreCache) {
+      utils.logTask(T(), `queryWeaviate_async ignoreCache`);
+      weaviateQuery.withWhere({
+        path: ['title'],
+        operator: 'NotEqual',
+        valueText: 'TASKFLOW-CACHE',
+      })
+    }
+
+    const response = await weaviateQuery.do();
     utils.logTask(T(), `queryWeaviate_async ${response['data']['Get'][className].length} responses for className ${className}`);
     let filteredResults = [];
     const maxDistance = T("config.local.maxDistance") || defaultMaxDistance;
@@ -442,7 +452,7 @@ const RAG_async = async function (wsSendTask, T) {
           if (close) {
             queryVector = await embedText_async(close.text);
           }
-          response = await queryWeaviate_async(queryVector, 2);
+          response = await queryWeaviate_async(queryVector);
           //utils.logTask(T(), "response:", response);
           if (!response.length) {
             nextState = "rewriteQuery";
@@ -532,13 +542,17 @@ const RAG_async = async function (wsSendTask, T) {
         } catch (error) {
           utils.logTask(T(), "rewriteQuery failed parsedObject", parsedObject);
         }
+        let ignoreCache = false;
+        if (T("config.family.responseCacheDisabled")) {
+          ignoreCache = true;
+        }
         let promises = [];
         if (parsedObject) {
           const keys = Object.keys(parsedObject);
           const numberOfConcepts = keys.length;
           const maxNumberOfChunks = 6;
           let chunksPerConcept = Math.ceil(maxNumberOfChunks / numberOfConcepts); 
-          chunksPerConcept = 1;
+          //chunksPerConcept = 1;
           for (const key of keys) {
             const value = parsedObject[key];
             const query = T("input.query") + "\n" + key + ": " + value;
@@ -546,7 +560,7 @@ const RAG_async = async function (wsSendTask, T) {
             rewriteQueryResult +=  key + ": " + value + "\n";
             promises.push(
               embedText_async(query)
-              .then(queryVector => queryWeaviate_async(queryVector, chunksPerConcept))
+              .then(queryVector => queryWeaviate_async(queryVector, chunksPerConcept, ignoreCache))
             );
           }
         }
@@ -554,7 +568,7 @@ const RAG_async = async function (wsSendTask, T) {
         const finalQuery = T("input.query") + "\n" + operatorOut.response.LLM;
         promises.push(
           embedText_async(finalQuery).then(queryVector => 
-            queryWeaviate_async(queryVector, 1)
+            queryWeaviate_async(queryVector, 2, ignoreCache)
           )
         );
         // Execute all promises in parallel
@@ -766,20 +780,22 @@ const RAG_async = async function (wsSendTask, T) {
               .do();
             utils.logTask(T(), "Stored result in cache for query");
           }
-          const responseVector = await embedText_async(T("response.result"));
-          if (responseVector) {
-            await weaviateClient.data
-              .creator()
-              .withClassName(className)
-              .withProperties({
-                title: CACHE_ID,
-                text: T("response.result"),
-                tokenLength: utils.stringTokens(T("response.result")),
-                cachePrefix,
-              })
-              .withVector(responseVector)
-              .do();
-            utils.logTask(T(), "Stored result in cache for response");
+          if (T("response.found")) {
+            const responseVector = await embedText_async(T("response.result"));
+            if (responseVector) {
+              await weaviateClient.data
+                .creator()
+                .withClassName(className)
+                .withProperties({
+                  title: CACHE_ID,
+                  text: T("response.result"),
+                  tokenLength: utils.stringTokens(T("response.result")),
+                  cachePrefix,
+                })
+                .withVector(responseVector)
+                .do();
+              utils.logTask(T(), "Stored result in cache for response");
+            }
           }
         }
         break;

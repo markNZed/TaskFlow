@@ -22,7 +22,6 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
   let nodeFunctionsInitialized = false;
   try {
     utils.logTask(T(), "nodeTasks_async", T("id"));
-    utils.logTask(T(), "nodeTasks_async node.coprocessing", T("node.coprocessing"));
     const taskFunctionName = `${T("type")}_async`
     if (T("node.command") === "error") {
       utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
@@ -54,8 +53,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
             initOperators = true;
           }
         });
-        console.log("Restore operators", T("operators"));
-        console.log("OperatorsMap.keys", OperatorsMap.keys());
+        //console.log("Restore operators", T("operators"));
+        //console.log("OperatorsMap.keys", OperatorsMap.keys());
       }
       let FSMHolder = await getFSMHolder_async(T(), activeTaskFsm.get(T("instanceId")));
       let services = T("services") || {};
@@ -342,7 +341,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
         utils.debugTask(T(), "sending");
         wsSendTask(T());
       } else {
-        utils.logTask(T(), "nodeTasks_async nothing to do");
+        //utils.logTask(T(), "nodeTasks_async nothing to do");
       }
     }
   } catch (error) {

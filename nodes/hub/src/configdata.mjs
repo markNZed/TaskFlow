@@ -41,9 +41,10 @@ function mergeTasks(tasktypes, task, parentTask) {
       for (const key2 in tasktypes[tasktemplatename]) {
         if (key2 !== "id" && key2 !== "name" && key2 !== "parentName") {
           //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
-          if (["config", "connections", "operators", "ceps", "services", "shared"].includes(key2)) {
+          if (["config", "connections", "operators", "ceps", "services", "shared", "state"].includes(key2)) {
             // ChildTask has priority so it can override default config
             task[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], task[key2])
+          // We need this for the task.type to be overriden, maybe that is the only key to override form tasktypes?
           } else {
             task[key2] =  utils.deepMerge(task[key2], tasktypes[tasktemplatename][key2])
           }

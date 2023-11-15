@@ -205,12 +205,24 @@ function initWebSocketServer(server) {
         return;
       }
 
+      let incomingNode = task?.node;
+
       if (task?.tokens?.authToken) {
         let decoded;
         try {
           decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+          //throw Error("testing");
         } catch (err) {
           console.log("authToken invalid", err);
+          const taskLogin = {
+            meta: {
+              updatedAt: utils.updatedAt(),
+            },
+            node: {command: "login"},
+          };
+          const nodeId = incomingNode.id;
+          WSConnections.set(nodeId, ws);
+          wsSendTask(taskLogin, nodeId);
           return;
         }
         //console.log("authToken found", decoded);
@@ -262,8 +274,6 @@ function initWebSocketServer(server) {
         console.log("No authToken");
         return;
       }
-
-      let incomingNode = task?.node;
 
       if (incomingNode?.id) {
         const nodeId = incomingNode.id;

@@ -1845,6 +1845,22 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
       }
       case "done":
         break;
+      case "deleteCache": {
+        try {
+          await client.batch
+            .objectsBatchDeleter()
+            .withClassName(className)
+            .withWhere({
+              path: ['title'],
+              operator: 'Equal',
+              valueText: 'TASKFLOW-CACHE',
+            })
+            .do();
+        } catch (error) {
+          console.error("Error deleteCache :", error); 
+        }
+        break;
+      }
       case "debug": {
         await extractTOC_async(unstructuredDir, metadataDir);
         await extractRegex_async(metadataDir, metadataDir);
