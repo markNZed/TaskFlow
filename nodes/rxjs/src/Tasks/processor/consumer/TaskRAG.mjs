@@ -34,6 +34,10 @@ const TaskRAG_async = async function (wsSendTask, T, FSMHolder) {
             topicOptions.push({ value: option, label: option });
           }
           T("output.select.config.local.fields.topic.options", topicOptions);
+          if (topicOptions.length === 1) {
+            T("output.select.config.local.fields.topic.hide", true);
+            T("output.select.input.selectedOptions", {topic: topics[0]});
+          }
           T("config.local.topics", topics);
           T("shared.topics", topics);
           T("state.current", "loaded");

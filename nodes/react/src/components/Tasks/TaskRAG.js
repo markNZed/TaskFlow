@@ -72,7 +72,7 @@ const TaskRAG = (props) => {
       const inputTopic = task?.input?.select?.topic || '';
       const inputCachePrefix = `${inputThink}-${inputLevel}-${inputTopic}`;
       const selectedModelVersion = task?.output?.chat?.services?.chat?.modelVersion;
-      if (inputThink !== think) {
+      if (inputThink && inputThink !== think) {
         setThink(inputThink);
         if (inputThink === "thinkharder") {
           if (selectedModelVersion !== hardModelVersion) {
@@ -93,7 +93,7 @@ const TaskRAG = (props) => {
           });
         }
       }
-      if (inputLevel !== level) {
+      if (inputLevel && inputLevel !== level) {
         console.log("setLevel", inputLevel);
         setLevel(inputLevel);
         const RAGUser = initialUser + " The user is a " + inputLevel + " in " + task?.input?.select?.topic + "."; 
@@ -104,7 +104,7 @@ const TaskRAG = (props) => {
           "commandDescription": "Update RAG user level",
         });
       }
-      if (inputTopic !== topic) {
+      if (inputTopic && inputTopic !== topic) {
         console.log("setTopic", inputTopic);
         setTopic(inputTopic);
         modifyTask({ 

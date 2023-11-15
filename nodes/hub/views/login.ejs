@@ -49,6 +49,13 @@
                     alert(error.message);
                 });
             });
+
+            // Logout Functionality
+            document.getElementById('logoutButton').addEventListener('click', function() {
+                // Clear the authToken from cookie or localStorage
+                document.cookie = 'authToken=; Max-Age=0; path=/; secure; SameSite=Strict;';
+                window.location.href = '/';
+            });
         };
     </script>
     <style>
@@ -84,6 +91,10 @@
         h2 {
             text-align: center;
         }
+        /* Style for the logout button */
+        #logoutButton {
+            margin-left: 20px; /* Adjust the space as needed */
+        }
     </style>
 </head>
 <body>
@@ -95,7 +106,8 @@
             <label for="password">Password:</label><br>
             <input type="password" id="password" name="password" required><br><br>
             <div class="submit-container">
-                <input type="submit" value="Submit">
+                <input type="submit" value="Login">
+                <button type="button" id="logoutButton">Logout</button>
             </div>
         </form>
     </div>

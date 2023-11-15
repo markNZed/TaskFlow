@@ -126,6 +126,13 @@ const TaskSelect = (props) => {
     }, 200);
   }, [selectedOptions]);
 
+  // Needs testing but allows for task to set inputs
+  useEffect(() => {
+    if (task?.input?.selectedOptions) {
+      setSelectedOptions(prevState => { return {...prevState, ...task.input.selectedOptions} });
+    }
+  }, [task?.input?.selectedOptions]);
+
   function substituteString(message, task) {
     const pattern = /%([\w.]+)%/g;
     return message.replace(pattern, (_, key) => {
