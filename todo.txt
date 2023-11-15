@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Instead of modelVersion, map to strong, medium, weak
 Ignore or merge blocks under a certain size?
 Add a task that starts tasks for the admin of RAG
 Basic classifier:

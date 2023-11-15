@@ -11,8 +11,8 @@ const servicetypes = [
     name: "openaigpt",
     API: "openaigpt",
     moduleName: "ServiceVercelAI",
-    modelVersion: 'gpt-3.5-turbo-1106',// 16k context window
-    //modelVersion: gpt-4-1106-preview, // GPT4 turbo supports JSON response 
+    //modelVersion: 'gpt-3.5-turbo-1106',// 16k context window, seems to perform poorly compared to gpt-3.5-turbo-0613
+    modelVersion: 'gpt-4-1106-preview', // GPT4 turbo supports JSON response 
     //modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
     //modelVersion: 'gpt-4-0613', // Should understand functions
     //modelVersion: 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)

@@ -226,7 +226,7 @@ const RAG_async = async function (wsSendTask, T) {
     return [filteredResult, filteredResultClose];
   }
 
-  const queryWeaviate_async = async (queryVector, limit, ignoreCache) => {
+  const queryWeaviate_async = async (queryVector, limit) => {
     utils.logTask(T(), `queryWeaviate_async limit`, limit);
     // Query using nearVector - https://weaviate.io/developers/weaviate/api/graphql/search-operators#nearvector
     let weaviateQuery = weaviateClient.graphql
@@ -247,13 +247,15 @@ const RAG_async = async function (wsSendTask, T) {
     //.withAutocut(1) // Chekc this
     .withLimit(limit || T("config.local.maxChunks") || 10);
     
-    if (ignoreCache) {
-      utils.logTask(T(), `queryWeaviate_async ignoreCache`);
+    if (responseCacheDisabled) {
+      utils.logTask(T(), `queryWeaviate_async responseCacheDisabled`);
       weaviateQuery.withWhere({
         path: ['title'],
         operator: 'NotEqual',
         valueText: 'TASKFLOW-CACHE',
       })
+    } else {
+      utils.logTask(T(), `queryWeaviate_async responseCacheDisabled not`);
     }
 
     const response = await weaviateQuery.do();
@@ -417,6 +419,7 @@ const RAG_async = async function (wsSendTask, T) {
   let rewriteQueryResult = '';
   const defaultMaxDistance = 0.13;
   let errorMessage;
+  let responseCacheDisabled = T("config.family.responseCacheDisabled");
 
   while (!T("command") && nextState) {
     T("state.current", nextState);
@@ -487,7 +490,7 @@ const RAG_async = async function (wsSendTask, T) {
         T("request.prompt", prompt);
         T("request.service.noStreaming", true);
         utils.logTask(T(), "operatorLLM prompt tokens", utils.stringTokens(T("request.prompt")));
-        T("request.service.json", true);
+        //T("request.service.json", true);
         const operatorOutPromise = operatorLLM.operate_async(wsSendTask, T());
         const searchingMessage = T("config.local.searchingMessage");
         const words = searchingMessage.split(" ");
@@ -518,7 +521,7 @@ const RAG_async = async function (wsSendTask, T) {
         const finalResponse = { text: partialText };
         SendIncrementalWs(wsSendTask, finalResponse, T("instanceId"), true);
         T("request.service.noStreaming", false);
-        T("request.service.json", undefined);
+        //T("request.service.json", undefined);
         if (operatorOut.response.LLMerror) {
           errorMessage = operatorOut.response.LLM;
           nextState = "error";
@@ -542,10 +545,6 @@ const RAG_async = async function (wsSendTask, T) {
         } catch (error) {
           utils.logTask(T(), "rewriteQuery failed parsedObject", parsedObject);
         }
-        let ignoreCache = false;
-        if (T("config.family.responseCacheDisabled")) {
-          ignoreCache = true;
-        }
         let promises = [];
         if (parsedObject) {
           const keys = Object.keys(parsedObject);
@@ -560,7 +559,7 @@ const RAG_async = async function (wsSendTask, T) {
             rewriteQueryResult +=  key + ": " + value + "\n";
             promises.push(
               embedText_async(query)
-              .then(queryVector => queryWeaviate_async(queryVector, chunksPerConcept, ignoreCache))
+              .then(queryVector => queryWeaviate_async(queryVector, chunksPerConcept, responseCacheDisabled))
             );
           }
         }
@@ -568,7 +567,7 @@ const RAG_async = async function (wsSendTask, T) {
         const finalQuery = T("input.query") + "\n" + operatorOut.response.LLM;
         promises.push(
           embedText_async(finalQuery).then(queryVector => 
-            queryWeaviate_async(queryVector, 2, ignoreCache)
+            queryWeaviate_async(queryVector, 2, responseCacheDisabled)
           )
         );
         // Execute all promises in parallel
