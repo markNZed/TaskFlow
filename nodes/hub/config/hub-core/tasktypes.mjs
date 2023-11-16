@@ -238,8 +238,10 @@ const tasktypes = [
     name: "TaskSystemLogViewer",
     environments: ["react", "rxjs-hub-coprocessor"],
     config: {
-      rowDetailHeight: 500,
-      pageSize: 100,
+      local: {
+        rowDetailHeight: 500,
+        pageSize: 100,
+      },
     },
     state: {
       current: "start",

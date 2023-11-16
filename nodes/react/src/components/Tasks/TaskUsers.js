@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import React, { useState, useEffect, useCallback } from "react";
 import DataGrid, { SelectColumn } from 'react-data-grid';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import PaginationControls from './TaskSystemLogViewer/PaginationControls';
+import PaginationControls from '../Grid/PaginationControls';
 import withTask from "../../hoc/withTask";
 import generatePassword from 'password-generator';
 

@@ -524,6 +524,10 @@ async function taskStart_async(
     task.meta["updatedAt"] = task.meta.updatedAt ?? utils.updatedAt();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
+    
+    if (task.familyId === task.instanceId) {
+      task.meta["founder"] = true;
+    }
 
     // When we join we want to keep the nodes info related to the joined task
     task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/);

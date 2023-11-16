@@ -8,9 +8,9 @@ import React, { useEffect, useState, useMemo, useCallback, useContext } from "re
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
-import DragFilterHeader from './TaskSystemLogViewer/DragFilterHeader';
-import TaskQueryBuilder from './TaskSystemLogViewer/TaskQueryBuilder';
-import PaginationControls from './TaskSystemLogViewer/PaginationControls';
+import DragFilterHeader from '../Grid/DragFilterHeader';
+import TaskQueryBuilder from './Shared/TaskQueryBuilder';
+import PaginationControls from '../Grid/PaginationControls';
 import { createColumns } from './TaskSystemLogViewer/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -58,7 +58,7 @@ const TaskSystemLogViewer = (props) => {
   }
 
   const rowDetailHeight = task.config.rowDetailHeight;
-  const initPageSize = task.config.pageSize;
+  const initPageSize = task.config.local.pageSize;
   const initialColumns = createColumns(rowDetailHeight);
 
   const [searchTerm, setSearchTerm] = useState("");

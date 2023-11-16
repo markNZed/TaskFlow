@@ -56,3 +56,7 @@ Using VS Code
 ### Linux
 
 * Find the process using a port 5000 `netstat -tulnp | grep :5000`
+
+### Forever
+
+* If `forever list` shows a process as `STOPPED` and you want to remove it from the list then run `forever stop PID` which will error but will also remove it from the list.

@@ -1,9 +1,30 @@
 /* ToDo
 -------
+Dedicated err log seem important
+If no ping within X seconds then touch a file to restart the processor ?
+TaskMy
+  Still need to apply mask but will need to do that inside TaskMy.mjs
+  We need a basic key description - could run this on the browser?
+  Total results count is not correct
+  Launch TaskClone
+  Ability to navigate through the history ?
+    Risk of an intermediate state
+      Could specify which states can be restored ? e.g. input for chat
+TaskClone
+  Start from last valid state
+  Run the init phase with the initial configuration, then coordinate update
+    How to know when the init is done, what about early messages etc ?
+      If the task has a state then wait until start state has been run
+        Can detect this on the processor and signal to Hub: initDone
+          Pause the Task until updated (e.g. block UI events - loading page)
+            How does React know the Start is finished - it will see the SM update
+  Restoring of a previous family (so could review conversations)
+    React will try to spawn tasks
+      Allow start to pass an instance ID then restore instead of creating
 Instead of modelVersion, map to strong, medium, weak
 Ignore or merge blocks under a certain size?
 Add a task that starts tasks for the admin of RAG
-Basic classifier:
+Basic query classifications:
   Open vs closed
   Continuation vs new topic * not so good (contextual vs isolated)
   Small talk vs serious talk
@@ -15,24 +36,6 @@ Basic classifier:
   information seeking vs actionforamlity level
   expertise of teh userintent - seeking help, making a complain, casual conversation
   specific vs general
-MyTasks
-Cloning tasks
-  Run the init phase with the initial configuration, then coordinate update
-    How to know when the init is done, what about early messages etc ?
-      If the task has a state then wait until start state has been run
-        Can detect this on the processor and signal to Hub: initDone
-          Pause the Task until updated (e.g. block UI events - loading page)
-            How does React know the Start is finished - it will see the SM update
-Restoring of a previous family (so could review conversations)
-  List all conversations (query MongoDB)
-  Copy of an active conversation
-    Does this imply copying a family set?
-    How to load tasks ? From the UI
-    React will try to spawn tasks
-      Allow start to pass an instance ID then restore instead of creating
-  Ability to navigate through the history ?
-    Risk of an intermediate state
-      Could specify which states can be restored ? e.g. input for chat
 
 Note that adding a domain should also disable the CloudFlare caching
 TaskRAGAdmin

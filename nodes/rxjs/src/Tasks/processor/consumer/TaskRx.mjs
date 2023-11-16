@@ -21,7 +21,7 @@ const TaskRx_async = async function (wsSendTask, T) {
     utils.logTask(T(), "init");
 
     // Prepare the Python script runner
-    const pythonRunner = new PythonRunner();
+    const pythonRunner = PythonRunner.getInstance();
     // Start the runner with a specific Python module
     pythonRunner.start('publish');
 

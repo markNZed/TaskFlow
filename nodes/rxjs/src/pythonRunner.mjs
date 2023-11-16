@@ -3,10 +3,26 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 class PythonRunner {
+
+  static instance = null;
+
   constructor(scriptPath = '/Services/ServicePython.py') {
+    if (PythonRunner.instance) {
+      throw new Error('PythonRunner already initialized');
+    }
+
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     this.scriptPath = currentDir + "/" + scriptPath;
     this.process = null;
+
+    PythonRunner.instance = this;
+  }
+
+  static getInstance(scriptPath) {
+    if (!PythonRunner.instance) {
+      PythonRunner.instance = new PythonRunner(scriptPath);
+    }
+    return PythonRunner.instance;
   }
 
   start(moduleName, args = []) {
@@ -29,20 +45,24 @@ class PythonRunner {
       console.log(`PythonRunner stdout: ${data.toString()}`);
     });
 
-    // Listen for an exit event on the Node.js process.
-    process.on('exit', () => this.terminatePythonProcess("exit"));
-
     // Listen for SIGINT (e.g., Ctrl+C in the terminal).
-    process.on('SIGINT', () => this.terminatePythonProcess("SIGINT"));
+    process.on('SIGINT', () => {
+      this.terminatePythonProcess("SIGINT");
+      process.exit(0); // Exit the process explicitly
+    });
     
-    // Optional: Listen for more signals as per your requirement, for example SIGTERM.
-    process.on('SIGTERM', () => this.terminatePythonProcess("SIGTERM"));
+    // Optional: Listen for more signals as per your requirement, for exampe SIGTERM.
+    process.on('SIGTERM', () => {
+      this.terminatePythonProcess("SIGTERM");
+      process.exit(0); // Exit the process explicitly
+    });
         
   }
 
   stop() {
     if (this.process) {
       this.process.kill();
+      console.log('Python process stopped');
     }
   }
 

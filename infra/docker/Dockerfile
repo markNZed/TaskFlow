@@ -57,6 +57,10 @@ RUN apt-get install -y locales
 # For crawling
 RUN apt-get intall -y lynx
 
+RUN npm install forever -g
+# So we can see react-app-rewired from forever
+RUN npm install -g react-app-rewired
+
 # Instead of the hacks below I deleted node_modules/@tensorflow and ran npm install again
 # RUN cd /app/nodes/rxjs/node_modules/@tensorflow/tfjs-node/deps/lib && \
 #     ln -s libtensorflow.so.2.9.1 libtensorflow.so.2 && \

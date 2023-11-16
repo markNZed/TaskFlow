@@ -7,11 +7,14 @@ import { utils } from "#src/utils";
 import { parseFilter } from 'mongodb-query-parser';
 import { tasksModel } from "#src/CEPs/CEPSystemLog/tasksModel"
 import { formatQuery } from 'react-querybuilder';
+import { outputStore_async } from "#src/storage";
+import natural from 'natural';
+
+const TfIdf = natural.TfIdf;
+const tokenizer = new natural.WordTokenizer();
 
 // eslint-disable-next-line no-unused-vars
 const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
-
-  if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   function transformToMongoSortCriteria(sortDescriptors) {
     const mongoSortCriteria = {};
@@ -22,6 +25,30 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
       });
     }
     return mongoSortCriteria;
+  }
+
+  function filterNonWords(str) {
+    const tokens = tokenizer.tokenize(str);
+    const wordRegex = /^[A-Za-z]+$/; // Regular expression to match words
+    const words = tokens.filter(token => wordRegex.test(token));
+    return words.join(' ');
+  }
+
+  function concatenateLeafStrings(obj) {
+    let result = '';
+    for (const key in obj) {
+        if (typeof obj[key] === 'string') {
+          const words = filterNonWords(obj[key]);
+          // Use a regular expression to test if the string is a word
+          if (words) {
+            result += words + ' '; // Added a space for separation
+          }
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            // If the property is an object, recurse
+            result += concatenateLeafStrings(obj[key]);
+        }
+    }
+    return result;
   }
 
   // Fetch tasks from the DB both sorted and paginated 
@@ -39,13 +66,37 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
       utils.logTask(T(), "fetchTasksAsync", parsedQuery, sortCriteria, skip, pageSize);
       // Concurrent requests
       // .lean() returns a plain Javascript object without metadata
-      const tasksPromise = tasksModel.find(parsedQuery).sort(sortCriteria).skip(skip).limit(pageSize).lean();
+      const userQuery = { ...parsedQuery, 
+        'current.user.id': T("user.id"),
+        'current.node.command': 'init',
+        'current.meta.founder': true,
+        'current.id': { $not: /^root\.system\./ },
+        'current.type': { $ne: 'TaskMy' },
+      };
+      const taskEntriesPromise = tasksModel.find(userQuery).sort(sortCriteria).skip(skip).limit(pageSize).lean();
       const totalPromise = tasksModel.countDocuments(parsedQuery);
-      const [tasks, total] = await Promise.all([tasksPromise, totalPromise]);
-      return { tasks, total };
+      const [taskEntries, total] = await Promise.all([taskEntriesPromise, totalPromise]);
+      // For each task get the familyId, fetch the outputs, run keyword extraction
+      for (let taskEntry of taskEntries) {
+        const task = taskEntry.current;
+        const outputs = await outputStore_async.get(task.familyId);
+        console.log("fetchTasksAsync outputs", task.familyId, utils.js(outputs));
+        const concatenatedString = concatenateLeafStrings(outputs);
+        console.log("fetchTasksAsync concatenatedString", task.familyId, utils.js(concatenatedString));
+        const tfidf = new TfIdf();
+        tfidf.addDocument(concatenatedString);
+        // Extract top 6 terms
+        const topTerms = tfidf.listTerms(0 /* document index */)
+                               .slice(0, 6) // Get only the top 6 terms
+                               .map(term => term.term);
+        taskEntry["topTerms"] = topTerms;
+        console.log('topTerms:', topTerms.join(', '));
+      }
+
+      return { taskEntries, total };
     } catch (err) {
       console.error('Error fetching tasks:', err);
-      return { tasks: [], total: 0 };
+      return { taskEntries: [], total: 0 };
     }
   }
 
@@ -55,14 +106,15 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
     // here we transition to the query state that indicates this node is ready
     case "start":
       T("state.current", "query");
+      T("command", "update");
       break;
     // Process a query
     case "query":
       if (T("request.queryBuilder")) {
-        utils.logTask(T(), "State query " + T("request.queryBuilder") + " with request.page " + T("request.page"));
-        const { tasks, total } = await fetchTasksAsync(T("request.queryBuilder"), T("request.sortColumns"), T("request.page"), T("request.pageSize"))
+        utils.logTask(T(), "State query ", T("request.queryBuilder"), " with request.page", T("request.page"));
+        const { taskEntries, total } = await fetchTasksAsync(T("request.queryBuilder"), T("request.sortColumns"), T("request.page"), T("request.pageSize"))
         utils.logTask(T(), "Returned total", total);
-        T("response.tasks", tasks);
+        T("response.tasks", taskEntries);
         T("response.total", total);
         T("state.current", "response");
         let queryHistory = T("state.queryHistory");

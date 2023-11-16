@@ -57,6 +57,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "start": "HTTPS=false PUBLIC_URL=/ react-app-rewired start",
+    "forever": "HTTPS=false PUBLIC_URL=/ forever start -c \"npm run start\" ./",
     "build": "react-app-rewired build",
     "build:dev": "react-app-rewired build --debug  --devtool source-map",
     "test": "react-app-rewired test",

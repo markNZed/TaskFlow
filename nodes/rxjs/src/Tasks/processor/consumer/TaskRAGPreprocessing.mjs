@@ -92,7 +92,7 @@ const TaskRAGPreprocessing_async = async function (wsSendTask, T, FSMHolder) {
   const PY_CHANNEL = 'channel_from_py';
   const JS_CHANNEL = 'channel_from_js';
   // Prepare the Python script runner
-  const pythonRunner = new PythonRunner();
+  const pythonRunner = PythonRunner.getInstance();
   // Start the runner with a specific Python module
   pythonRunner.start('runSumy');
   const messagingClient = new MessagingClient(NODE.storage.redisUrl);

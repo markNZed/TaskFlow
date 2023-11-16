@@ -8,10 +8,10 @@ import React, { useEffect, useState, useMemo, useCallback, useContext } from "re
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
-import DragFilterHeader from './TaskSystemLogViewer/DragFilterHeader';
-import TaskQueryBuilder from './TaskSystemLogViewer/TaskQueryBuilder';
-import PaginationControls from './TaskSystemLogViewer/PaginationControls';
-import { createColumns } from './TaskSystemLogViewer/createColumns';
+import DragFilterHeader from '../Grid/DragFilterHeader';
+import TaskQueryBuilder from './Shared/TaskQueryBuilder';
+import PaginationControls from '../Grid/PaginationControls';
+import { createColumns } from './TaskMy/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button, Menu, MenuItem, Checkbox } from '@mui/material';
@@ -57,9 +57,18 @@ const TaskMy = (props) => {
     return filters;
   }
 
+  // Custom Formatter component
+  const LinkFormatter = ({ row, column }) => {
+    const handleClick = () => {
+        // Implement your click handling logic here
+        console.log(`Clicked link in row ${row.key} column ${column.key} instanceId ${row.instanceId}`);
+    };
+    return <a href="#" onClick={handleClick}>{row[column.key]}</a>;
+  };
+
   const rowDetailHeight = task.config.rowDetailHeight;
-  const initPageSize = task.config.pageSize;
-  const initialColumns = createColumns(rowDetailHeight);
+  const initPageSize = task.config.local.pageSize;
+  const initialColumns = createColumns(rowDetailHeight, LinkFormatter);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -324,7 +333,7 @@ const TaskMy = (props) => {
 
   return (
     <div style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column'}}>
-      <h2>System Log Viewer</h2>
+      <h2>User Log Viewer</h2>
       <TaskQueryBuilder 
         onQueryComplete={handleQueryComplete} 
         fields={queryFields}

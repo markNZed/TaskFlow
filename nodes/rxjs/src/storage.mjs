@@ -103,6 +103,8 @@ const tasktypesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tasktypes");
 
 const tribesStore_async = newKeyV(redisClient, NODE.appAbbrev + "tribes"); // Shared with Hub
 
+const outputStore_async = newKeyV(redisClient, NODE.appAbbrev + "outputs"); // Shared with Hub
+
 async function getActiveTask_async(instanceId) {
   //const start = Date.now();
   if (await activeTasksStore_async.has(instanceId)) {
@@ -208,4 +210,5 @@ export {
   CEPMatchMap,
   CEPFunctionMap,
   accessDB,
+  outputStore_async,
 };

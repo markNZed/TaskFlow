@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import CellExpander from '../../Grid/CellExpander';
 import ReactJson from '@microlink/react-json-view'
 
-export function createColumns(rowDetailHeight) {
+export function createColumns(rowDetailHeight, LinkFormatter) {
     const columns = [
       {
         key: 'expanded',
@@ -66,20 +66,6 @@ export function createColumns(rowDetailHeight) {
         flex: 1,
       },
       {  
-        name: 'instanceId', 
-        dataPath: "current.instanceId",
-        width: 50,
-        key: "instanceId",
-        flex: 1,
-      },
-      {  
-        name: 'id',
-        dataPath: "current.id",
-        width: 300,
-        key: "taskId",
-        flex: 1,
-      },
-      {  
         name: 'type',
         dataPath: "current.type",
         width: 150,
@@ -87,40 +73,37 @@ export function createColumns(rowDetailHeight) {
         flex: 1,
       },
       {  
-        name: 'nodeId',
-        dataPath: "current.node.initiatingNodeId",
+        name: 'id',
+        dataPath: "current.id",
+        width: 150,
+        key: "taskId",
+        flex: 1,
+        formatter: ({ row }) => {
+          // chop "root.user." from the begining of the id
+          const id = row.current.id;
+          const shortId = id.split('.').slice(2).join('.');
+          return shortId;
+        },
+      },
+      {  
+        name: 'topTerms', 
+        dataPath: "topTerms",
+        width: 300,
+        key: "topTerms",
+        flex: 1,
+        formatter: ({ row }) => {
+          const joined = row.topTerms.join(' ');
+          return joined;
+        },
+      },
+      {  
+        name: 'instanceId', 
+        dataPath: "current.instanceId",
         width: 50,
-        key: "nodeId",
+        key: "instanceId",
         flex: 1,
-      },
-      {  
-        name: 'state',
-        dataPath: "current.state.current",
-        width: 100,
-        key: "state",
-        flex: 1,
-      },
-      {  
-        name: 'command',
-        dataPath: "current.node.command",
-        width: 100,
-        key: "command",
-        flex: 1,
-      },
-      {  
-        name: 'coprocessing',
-        queryDatatype: "boolean",
-        dataPath: "current.node.coprocessed",
-        width: 50,
-        key: "coprocessing",
-        flex: 1,
-      },
-      {  
-        name: 'messageId',
-        dataPath: "current.meta.messageId",
-        width: 100,
-        key: "messageId",
-        flex: 1,
+        // A link that will launch another task, we might need an commandArg to indicate the "founder"
+        formatter: LinkFormatter,
       },
     ];
     return columns;
