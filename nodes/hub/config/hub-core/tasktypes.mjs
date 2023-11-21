@@ -288,6 +288,8 @@ const tasktypes = [
     },
     state: {
       current: "start",
+      legal: ["start", "input", "mentionAddress", "send", "configFunctionRequest", "configFunctionResponse", "receiving", "received"],
+      stable: ["input"],
     },
   },
   {
@@ -303,9 +305,6 @@ const tasktypes = [
         ],    
         useAddress: false,
       },
-    },
-    state: {
-      current: "start",
     },
   },
   {

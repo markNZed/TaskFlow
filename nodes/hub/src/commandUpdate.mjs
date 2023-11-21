@@ -75,6 +75,8 @@ export async function commandUpdate_async(task) {
       activeTask.meta["messageId"] = task.meta.messageId;
       activeTask.meta["prevMessageId"] = task.meta.prevMessageId;
       utils.debugTask(task, "before deepMerge");
+      //utils.debugTask(activeTask, "before deepMerge activeTask");
+      //utils.debugTask(commandArgs.syncTask, "before deepMerge commandArgs.syncTask");
       task = utils.deepMergeNode(activeTask, commandArgs.syncTask, task.node);
       utils.debugTask(task, "after deepMerge");
       task.node.commandArgs["syncTask"] = null;

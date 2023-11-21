@@ -146,6 +146,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }
       // This should cause the App to re-register with the hub
       //replaceGlobalState("hubId", null);
+      window.location.reload(true);
     },
     onerror: (e) => {
       console.log("App webSocket closed with error", e);

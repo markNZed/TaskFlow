@@ -1,26 +1,49 @@
 /* ToDo
 -------
-Dedicated err log seem important
-If no ping within X seconds then touch a file to restart the processor ?
+https://github.com/lxieyang/chrome-extension-boilerplate-react
+TaskClone
+  1) TaskMy and TaskSystemLogViewer should configure a TaskLog
+        Config should select which createColumns.js to load 
+        Different init functions on the hub-consumer side too
+  2) add mode to TaskMy
+  3) listing of stable snapshots
+  4) cloning of stable snapshot
+  Start from last valid state
+    Add to task config list of unstable states or list of stable states
+      task.state.stable task.state.unstable
+        if stable exist then all ohter states are unstable
+          if unstable only then all other states are stable
+            Should be easy to filter  
+              if no table/unstale in the fammily then ignore in DB
+                Start by only listing init
+                  After selecting init show stable states
+                    Select to clone
+                  Need a cancel option to go back to list
+                    Could be a row
+                    Could be an action (need to add action column and use buttons instead of link)  
+                Needs a sort of "mode" in TaskMy      
+      For TaskChat we have state.stable = ["input"]
+  Pause the Task until updated (e.g. block UI events - loading page)
+  Start the task normally for it to init and pause it in the state machine
+    What does it mean to pause rxjs
+    Need to support the stately FSM approach too
+  Code review
+
+Need dev mode that will stop on errors
+Test maintenance page
+Test reload command
+  When a server processor restarts then everythig should reload?
+Dynamic loading of Task Functions would allow for on the fly extensions
+  Easier for debug too (could ignore form nodemon watch)
+Dedicated err log seems important when running with forever
+  Add options to forever for this
+  Five scripts names in forever
 TaskMy
-  Still need to apply mask but will need to do that inside TaskMy.mjs
-  We need a basic key description - could run this on the browser?
-  Total results count is not correct
-  Launch TaskClone
+  Apply mask but will need to do that inside TaskMy.mjs
   Ability to navigate through the history ?
     Risk of an intermediate state
       Could specify which states can be restored ? e.g. input for chat
-TaskClone
-  Start from last valid state
-  Run the init phase with the initial configuration, then coordinate update
-    How to know when the init is done, what about early messages etc ?
-      If the task has a state then wait until start state has been run
-        Can detect this on the processor and signal to Hub: initDone
-          Pause the Task until updated (e.g. block UI events - loading page)
-            How does React know the Start is finished - it will see the SM update
-  Restoring of a previous family (so could review conversations)
-    React will try to spawn tasks
-      Allow start to pass an instance ID then restore instead of creating
+  Launch TaskHistory that would show the family tree
 Instead of modelVersion, map to strong, medium, weak
 Ignore or merge blocks under a certain size?
 Add a task that starts tasks for the admin of RAG
@@ -75,6 +98,8 @@ With task.node.command we can have parallel commands from different processors
 Review for security holes
   commandArgs.authenticate
   sharedEntry["system"]
+  Can use command start with commandArgs.init to set initial values
+    Could/should mask the init task before using it
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?

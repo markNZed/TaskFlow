@@ -11,6 +11,7 @@ import { commandUpdate_async } from "./commandUpdate.mjs";
 import { commandStart_async } from "./commandStart.mjs";
 import { commandInit_async } from "./commandInit.mjs";
 import { commandError_async } from "./commandError.mjs";
+import { commandReload_async } from "./commandReload.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
@@ -159,6 +160,10 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   }
   // Need to restore task.masks for maskOutgoing_async
   task.masks = masks;
+  // The less we leave in the less chance of unimportant conflicts
+  delete task.command;
+  delete task.commandArgs;
+  delete task.commandDescription;
   message["task"] = await maskOutgoing_async(task);
   //utils.logTask(task, "wsSendTask user", task.user);
   utils.debugTask(task, "output");
@@ -195,193 +200,233 @@ function initWebSocketServer(server) {
 
     ws.on("message", async (message) => {
 
-      const j = JSON.parse(message);
+      try {
 
-      let task = j?.task;
-      let userId;
+        const j = JSON.parse(message);
 
-      if (!task) {
-        console.log("No task", message);
-        return;
-      }
+        let task = j?.task;
+        let userId;
 
-      let incomingNode = task?.node;
+        if (!task) {
+          console.log("No task", message);
+          return;
+        }
 
-      if (task?.tokens?.authToken) {
-        let decoded;
-        try {
-          decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
-          //throw Error("testing");
-        } catch (err) {
-          // We could have a logout command
-          console.log("authToken invalid sending login command", err);
-          const taskLogin = {
+        let incomingNode = task?.node;
+
+        if (task?.tokens?.authToken) {
+          let decoded;
+          try {
+            decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+            //throw Error("testing");
+          } catch (err) {
+            // We could have a logout command
+            console.log("authToken invalid sending login command", err);
+            const taskLogin = {
+              meta: {
+                updatedAt: utils.updatedAt(),
+              },
+              node: {command: "login"},
+            };
+            const nodeId = incomingNode.id;
+            WSConnections.set(nodeId, ws);
+            wsSendTask(taskLogin, nodeId);
+            return;
+          }
+          //console.log("authToken found", decoded);
+          userId = decoded.username.toLowerCase();
+          if (MAP_USER && MAP_USER[userId]) {
+            userId = MAP_USER[userId];
+          } else if (task?.user?.id && task.user.id !== userId) {
+            console.log("task.user.id does not match JWT token", task.user.id, userId);
+            return;
+          }
+          const user = await usersStore_async.get(userId);
+          // Check that the user still exists
+          if (!user) {
+            console.log("User not found", userId);
+            return;
+          }
+          // Could also have an option to refresh the JWT based on e.g. data
+          let  tribeName = decoded.hostname;
+          //utils.logTask(task, "Incoming tribe", userId, tribeName);
+          // If the hostname is taskflow then we assume an internal connection
+          if (hostname !== "taskflow") {
+            if (user.tribes.includes("god")) {
+              tribeName = hostname;
+              //utils.logTask(task,"God dropping into tribe", userId, tribeName);
+            } else if (tribeName && hostname !== tribeName) {
+              console.log("Wrong hostname", hostname, tribeName);
+              return;
+            } else if (!tribeName) {
+              utils.logTask(task, "No tribe found so default to world");
+              tribeName = "world";
+            }
+            const tribe = await tribesStore_async.get(tribeName);
+            if (!tribe) {
+              utils.logTask(task, "No tribe found", userId, tribeName);
+              return;
+            }
+            if (user.tribes && !user.tribes.includes(tribeName) && !user.tribes.includes("god")) {
+              utils.logTask(task, "User not in tribe", userId, tribeName);
+              return;
+            }
+            // Allocate user to tribe
+            task["user"] = user;
+            task.user["tribe"] = tribeName;
+            //utils.logTask(task, "Set user tribe", userId, tribeName);
+            NODETribe(tribe);
+            utils.debugTask(task, "set tribe");
+          }
+        } else if (hostname !== "taskflow") {
+          console.log("No authToken");
+          return;
+        }
+
+        if (incomingNode?.id) {
+          const nodeId = incomingNode.id;
+          //console.log("nodeId", nodeId)
+          if (!WSConnections.get(nodeId)) {
+            WSConnections.set(nodeId, ws);
+            ws.data["nodeId"] = nodeId;
+            console.log("Websocket nodeId", nodeId)
+          }
+          if (!activeNodes.has(nodeId) && incomingNode?.command !== "register") {
+            registerTask_async(wsSendTask, nodeId);
+            return;
+          }
+        }
+        if (incomingNode?.command === "configLoad") {
+          // This is a hack because we have not yet merged hub and rxjs
+          // Should be replaced with a service but for now rxjs does not 
+          // have access to the configdata so only hub can reload
+          await reloadOneConfig_async("tasktypes");
+          await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
+          await reloadOneConfig_async("users"); // side effect of initializing groupsStore_async
+          await reloadOneConfig_async("tribes");
+        } else if (incomingNode?.command === "reload") {
+          // We don't rounte this through the coprocessor 
+          task.node.coprocessed = false;
+          try {
+            task = await taskProcess_async(task);
+          } catch {
+            console.error("taskProcess_async error", task);
+            return;
+          }
+          commandReload_async(task);
+        } else if (incomingNode?.command === "ping") {
+          const taskPong = {
             meta: {
               updatedAt: utils.updatedAt(),
             },
-            node: {command: "login"},
+            node: {command: "pong"},
           };
-          const nodeId = incomingNode.id;
-          WSConnections.set(nodeId, ws);
-          wsSendTask(taskLogin, nodeId);
-          return;
-        }
-        //console.log("authToken found", decoded);
-        userId = decoded.username.toLowerCase();
-        if (MAP_USER && MAP_USER[userId]) {
-          userId = MAP_USER[userId];
-        } else if (task?.user?.id && task.user.id !== userId) {
-          console.log("task.user.id does not match JWT token", task.user.id, userId);
-          return;
-        }
-        const user = await usersStore_async.get(userId);
-        // Check that the user still exists
-        if (!user) {
-          console.log("User not found", userId);
-          return;
-        }
-        // Could also have an option to refresh the JWT based on e.g. data
-        let  tribeName = decoded.hostname;
-        utils.logTask(task, "Incoming tribe", userId, tribeName);
-        // If the hostname is taskflow then we assume an internal connection
-        if (hostname !== "taskflow") {
-          if (user.tribes.includes("god")) {
-            tribeName = hostname;
-            utils.logTask(task,"God dropping into tribe", userId, tribeName);
-          } else if (tribeName && hostname !== tribeName) {
-            console.log("Wrong hostname", hostname, tribeName);
-            return;
-          } else if (!tribeName) {
-            utils.logTask(task, "No tribe found so default to world");
-            tribeName = "world";
-          }
-          const tribe = await tribesStore_async.get(tribeName);
-          if (!tribe) {
-            utils.logTask(task, "No tribe found", userId, tribeName);
+          //utils.logTask(taskPong, "Pong " + incomingNode.id);
+          wsSendTask(taskPong, incomingNode.id);
+        } else if (incomingNode?.command === "partial") {
+          try {
+            task = await taskProcess_async(task);
+          } catch {
+            console.error("taskProcess_async error", task);
             return;
           }
-          if (user.tribes && !user.tribes.includes(tribeName) && !user.tribes.includes("god")) {
-            utils.logTask(task, "User not in tribe", userId, tribeName);
-            return;
-          }
-          // Allocate user to tribe
-          task["user"] = task.user || {};
-          task.user["tribe"] = tribeName;
-          utils.logTask(task, "Set user tribe", userId, tribeName);
-          NODETribe(tribe);
-          utils.debugTask(task, "set tribe");
-        }
-      } else if (hostname !== "taskflow") {
-        console.log("No authToken");
-        return;
-      }
-
-      if (incomingNode?.id) {
-        const nodeId = incomingNode.id;
-        //console.log("nodeId", nodeId)
-        if (!WSConnections.get(nodeId)) {
-          WSConnections.set(nodeId, ws);
-          ws.data["nodeId"] = nodeId;
-          console.log("Websocket nodeId", nodeId)
-        }
-        if (!activeNodes.has(nodeId) && incomingNode?.command !== "register") {
-          registerTask_async(wsSendTask, nodeId);
-          return;
-        }
-      }
-      if (incomingNode?.command === "configLoad") {
-        // This is a hack because we have not yet merged hub and rxjs
-        // Should be replaced with a service but for now rxjs does not 
-        // have access to the configdata so only hub can reload
-        await reloadOneConfig_async("tasktypes");
-        await reloadOneConfig_async("tasks"); // side effect of initializing autoStartTasksStore_async
-        await reloadOneConfig_async("users"); // side effect of initializing groupsStore_async
-        await reloadOneConfig_async("tribes");
-      } else if (incomingNode?.command === "ping") {
-        const taskPong = {
-          meta: {
-            updatedAt: utils.updatedAt(),
-          },
-          node: {command: "pong"},
-        };
-        //utils.logTask(taskPong, "Pong " + incomingNode.id);
-        wsSendTask(taskPong, incomingNode.id);
-      } else if (incomingNode?.command === "partial") {
-        try {
-          task = await taskProcess_async(task);
-        } catch {
-          console.error("taskProcess_async error", task);
-          return;
-        }
-        const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
-        let initiatingNodeId = task.node.initiatingNodeId
-        if (activeTaskNodes) {
-          for (const nodeId of activeTaskNodes) {
-            if (nodeId !== initiatingNodeId) {
-              const nodeData = activeNodes.get(nodeId);
-              if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
-                const ws = WSConnections.get(nodeId);
-                if (!ws) {
-                  utils.logTask(task, "Lost websocket for ", nodeId, WSConnections.keys());
-                } else {
-                  //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
-                  wsSendObject(nodeId, {task: task});
+          const activeTaskNodes = await activeTaskNodesStore_async.get(task.instanceId);
+          let initiatingNodeId = task.node.initiatingNodeId
+          if (activeTaskNodes) {
+            for (const nodeId of activeTaskNodes) {
+              if (nodeId !== initiatingNodeId) {
+                const nodeData = activeNodes.get(nodeId);
+                if (nodeData && nodeData.commandsAccepted.includes(task.node.command)) {
+                  const ws = WSConnections.get(nodeId);
+                  if (!ws) {
+                    utils.logTask(task, "Lost websocket for ", nodeId, WSConnections.keys());
+                  } else {
+                    //utils.logTask(task, "Forwarding " + task.node.command + " to " + nodeId + " from " + nodeId)
+                    wsSendObject(nodeId, {task: task});
+                  }
                 }
               }
             }
           }
+        } else if (task) {
+          // Add the user id if it is not set
+          if (!task?.user?.id && userId) {
+            task["user"] = task.user || {}; // user.tribe may be set
+            task.user["id"] = userId;
+          }
+          
+          const processedTask = await taskProcess_async(task);
+
+          // taskProcess_async has sent task to coprocessor
+          if (processedTask === null) {
+            utils.logTask(task, `Null back from taskProcess_async`);
+            return;
+          } else {
+            task = processedTask;
+          }
+
+          const byteSize = Buffer.byteLength(message, 'utf8');
+          utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.node?.sourceNodeId}`);
+
+          let initiatingNodeId = task.node.initiatingNodeId;
+
+          // We start the co-processing from taskSync.mjs so here has passed through coprocessing
+          task.node["coprocessing"] = false;
+          task.node["coprocessed"] = true;
+          task.node.sourceNodeId = initiatingNodeId;
+
+          // Allows us to track where the request came from while coprocessors are in use
+          task.node.sourceNodeId = initiatingNodeId;
+
+          utils.logTask(task, "initiatingNodeId", initiatingNodeId);
+
+          switch (task.node.command) {
+            case "init":
+              commandInit_async(task)
+                .catch((error) => {
+                  console.error("ws commandInit_async error", error);
+                });
+              break;
+            case "start":
+              commandStart_async(task)
+              .catch((error) => {
+                console.error("ws commandStart_async error", error);
+              });
+            break;
+            case "update":
+              commandUpdate_async(task)
+              .catch((error) => {
+                console.error("ws commandUpdate_async error", error);
+              });
+            break;
+            case "error":
+              commandError_async(task)
+              .catch((error) => {
+                console.error("ws commandError_async error", error);
+              });
+            break;
+            case "join":
+              commandJoin_async(task)
+              .catch((error) => {
+                console.error("ws commandJoin_async error", error);
+              });
+            break;
+            case "register":
+              commandRegister_async(task)
+              .catch((error) => {
+                console.error("ws commandRegister_async error", error);
+              });
+            break;
+            default:
+              throw new Error("Unknown command " + task.node.command);
+          }
+        } else {
+          console.error("ws unknown message", message);
+          throw new Error("Unknown message");
         }
-      } else if (task) {
-        // Add the user id if it is not set
-        if (!task?.user?.id && userId) {
-          task["user"] = task.user || {}; // user.tribe may be set
-          task.user["id"] = userId;
-        }
-        
-        task = await taskProcess_async(task);
 
-        // taskProcess_async has sent task to coprocessor
-        if (task === null) {
-          return;
-        }
-
-        const byteSize = Buffer.byteLength(message, 'utf8');
-        utils.logTask(task, `Message size in bytes: ${byteSize} from ${task.node?.sourceNodeId}`);
-
-        let initiatingNodeId = task.node.initiatingNodeId;
-
-        // We start the co-processing from taskSync.mjs so here has passed through coprocessing
-        task.node["coprocessing"] = false;
-        task.node["coprocessed"] = true;
-        task.node.sourceNodeId = initiatingNodeId;
-
-        // Allows us to track where the request came from while coprocessors are in use
-        task.node.sourceNodeId = initiatingNodeId;
-
-        utils.logTask(task, "initiatingNodeId", initiatingNodeId);
-
-        switch (task.node.command) {
-          case "init":
-            commandInit_async(task);
-            break;
-          case "start":
-            commandStart_async(task);
-            break;
-          case "update":
-            commandUpdate_async(task);
-            break;
-          case "error":
-            commandError_async(task);
-            break;
-          case "join":
-            commandJoin_async(task);
-            break;
-          case "register":
-            commandRegister_async(task);
-            break;
-          default:
-            throw new Error("Unknown command " + task.node.command);
-        }
+      } catch (error) {
+        console.error("ws error", error);
       }
 
     });

@@ -49,7 +49,7 @@ const TaskNodeConfigEditor = (props) => {
   }
 
   useEffect(() => {
-    if (task?.config?.local?.sharedVariable && task?.meta?.modified?.shared?.system && task.meta.modified.shared.system[task.config.local.sharedVariable]) {
+    if (task?.config?.local?.sharedVariable && utils.checkModified(task, "shared.system." + task.config.local.sharedVariable)) {
       loadTree();
     }
   }, [task]);

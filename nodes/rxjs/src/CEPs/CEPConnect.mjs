@@ -39,7 +39,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     return null;
   }
 
-  const modifiedConnections = task?.meta?.modified?.connections !== undefined;
+  const modifiedConnections = utils.checkModified(task, "connections");
   const commandArgs = task.node?.commandArgs;
   const SEP = ':';
   // Sync is not coprocessed (maybe it should be but worried about loops)
@@ -292,7 +292,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       const toPath = toSplit[1];
       if ((from.startsWith(SEP) || fromId === task.id) && task?.meta?.connectionsMap && task.meta.connectionsMap[toId]) {
         // Could be undefined in the case of a sync that does not include this path
-        utils.logTask(task, "CEPConnect modified", "fromPath", fromPath, T("meta.modified." + fromPath), "T(fromPath)", T(fromPath));
+        utils.logTask(task, "CEPConnect modified", "fromPath", fromPath, "T(fromPath)", T(fromPath));
         // Could use the meta.modified to detect a change but also need to track if the connection has been initialized in that case
         if (T(fromPath) !== undefined) {
           const toTask = await getActiveTask_async(task.meta.connectionsMap[toId]);

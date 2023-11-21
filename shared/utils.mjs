@@ -1065,6 +1065,7 @@ const utils = {
   },
 
   authenticatedTask_async: async function (task, userId, tribeName, groupsStore_async, tribesStore_async) {
+    utils.debugTask(task);
     let authenticated = false;
     let groupId;
     const tribe = await tribesStore_async.get(tribeName);
@@ -1201,6 +1202,29 @@ const utils = {
     }
   },
 
+  checkModified: function (task, path) {
+    let result = false;
+    if (task?.meta?.modified) {
+      const T = utils.createTaskValueGetter(task);
+      if (T(path) !== undefined) {
+        // split path into dot separated parts
+        const parts = path.split(".");
+        let currentPath = task.meta.modified;
+        for (const p of parts) {
+          console.log("checkModified", p, utils.js(currentPath))
+          currentPath = currentPath[p];
+          if (currentPath === true) {
+            result = true;
+            break;
+          } else if (currentPath === undefined) {
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  },
+
   js: function(obj) {
     return JSON.stringify(obj, null, 2)
   },
@@ -1279,15 +1303,12 @@ const utils = {
     if (task?.node?.initiatingNodeId) {
       //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
     }
-    if (task?.user?.tribe) {
-      logParts.push("user.tribe", task.user.tribe);
+    if (task?.meta?.modified) {
+      logParts.push("task.meta.modified", utils.js(task.meta.modified));
     }
-    /*
-    if (task && task.nodes && Object.values(task.nodes).some(value => value === null)) {
-      console.log("Task:", JSON.stringify(task, null, 2));
-      throw new Error("task.nodes has null");
+    if (commandArgs?.syncTask?.meta?.modified) {
+      logParts.push("commandArgs.syncTask.meta.modified", utils.js(commandArgs.syncTask.meta.modified));
     }
-    */
     /*
     if (command && !commandDescription) {
       console.log(logParts.join(' '));

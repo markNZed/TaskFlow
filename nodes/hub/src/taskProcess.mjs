@@ -23,8 +23,8 @@ function hubAssertions(taskDiff, mergedTask) {
   if (taskDiff?.state?.current && mergedTask?.state?.legal) {
     utils.assertWarning(mergedTask.state.legal.includes(taskDiff.state.current), `unexpected state:${taskDiff.state.current} instanceId:${mergedTask.instanceId}`);
   }
-  const request = mergedTask?.meta?.modified?.request;
-  const response = mergedTask?.meta?.modified?.response;
+  const request = utils.checkModified(mergedTask, "request");
+  const response = utils.checkModified(mergedTask, "response");
   utils.assertWarning(!(!_.isEmpty(request) && !_.isEmpty(response)), `Should have either response or request not both response: ${response} request:${request}`);
 }
 
@@ -306,7 +306,7 @@ async function taskProcess_async(task) {
       utils.logTask(task, "From node:" + incomingNode.id + " command:" + incomingNode.command + " commandDescription:" + incomingNode.commandDescription + " state:" + task?.state?.current);
       checkErrorRate(task);
       if (incomingNode.command === "update") {
-        task = utils.setMetaModified(task);
+        task = utils.setMetaModified(activeTask, task);
         //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
       }
       utils.debugTask(task);

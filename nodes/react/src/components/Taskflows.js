@@ -135,7 +135,7 @@ function Taskflows(props) {
             setTasksIds((p) => [...p, startTask.id]);
             setTaskInstanceIds((p) => [...p, startTask.instanceId]);
             setLoading(false);
-          }  
+          }
         }  
         break;
       default:
@@ -169,8 +169,8 @@ function Taskflows(props) {
   //Tracing
 
   useEffect(() => {
-    console.log("drawWidth ", drawWidth)
-  }, [drawWidth]);
+    //console.log("startTask ", startTask)
+  }, [startTask]);
 
   return (
     <div className="App" style={{maxWidth: globalState.maxWidth}}>

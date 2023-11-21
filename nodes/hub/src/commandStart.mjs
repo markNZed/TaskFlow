@@ -26,8 +26,10 @@ export async function commandStart_async(task) {
     } else {
       initTask = {
         id: commandArgs.id,
-        user: {id: task.user.id},
       };
+    }
+    if (task?.user?.id) {
+      initTask["user"] = { id: task.user.id };
     }
     if (task.node.commandDescription) {
       initTask["commandDescription"] = task.node.commandDescription;
@@ -49,7 +51,8 @@ export async function commandStart_async(task) {
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {
       if (task.node.coprocessed) {
-        taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
+        // Need to await so the try/catch will catch errors
+        await taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
           .then(async (startTask) => {
             await taskSync_async(startTask.instanceId, startTask);
             await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, startTask);
@@ -60,7 +63,8 @@ export async function commandStart_async(task) {
         // Start should not function as an update. Could get out of sync when using task to start another task.
       }
     } else {
-      taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
+      // Need to await so the try/catch will catch errors
+      await taskStart_async(initTask, authenticate, initiatingNodeId, prevInstanceId)
         .then(async (startTask) => {
           await taskSync_async(startTask.instanceId, startTask);
           await utils.nodeActiveTasksStoreSet_async(setActiveTask_async, startTask);

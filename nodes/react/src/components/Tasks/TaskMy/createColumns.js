@@ -97,10 +97,10 @@ export function createColumns(rowDetailHeight, LinkFormatter) {
         },
       },
       {  
-        name: 'instanceId', 
-        dataPath: "current.instanceId",
+        name: 'action', 
+        dataPath: "",
         width: 50,
-        key: "instanceId",
+        key: "action",
         flex: 1,
         // A link that will launch another task, we might need an commandArg to indicate the "founder"
         formatter: LinkFormatter,

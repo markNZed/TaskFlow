@@ -9,6 +9,7 @@ import { mergeMap, Subject } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { hubSocketUrl, NODE, NODETribe } from "../config.mjs";
 import { commandRegister_async } from "./commandRegister.mjs";
+import { commandReload_async } from "./commandReload.mjs";
 import { getActiveTask_async, setActiveTask_async, CEPMatchMap, tribesStore_async } from "./storage.mjs";
 import { nodeTasks_async } from "./nodeTasks.mjs";
 import { utils } from "./utils.mjs";
@@ -205,7 +206,7 @@ const wsSendTask = async function (task) {
   let message = {};
   task = await utils.taskToNode_async(task, NODE.id, getActiveTask_async);
   task.meta = task.meta || {};
-  if (NODE.role !== "coprocessor") {
+  if (task.node.initiatingNodeId === NODE.id) {
     task.meta.prevMessageId = task.meta.messageId;
     task.meta.messageId = utils.nanoid8();
     if (task.node.command && task.node.command !== "ping" && task.node.command !== "partial") {
@@ -313,7 +314,6 @@ const connectWebSocket = () => {
       if (!mergedTask.id) {
         throw new Error("Problem with merging, id is missing")
       }
-      utils.logTask(task, "ws update commandArgs:", commandArgs, " state:" + mergedTask.state?.current + " id:" + mergedTask.id + " instanceId:" + mergedTask.instanceId);
       if (!utils.checkHashDiff(lastTask, mergedTask)) {
         if (mergedTask.node.initiatingNodeId === NODE.id) {
           console.error("Task hash does not match from this node");
@@ -348,6 +348,9 @@ const connectWebSocket = () => {
     } else if (command === "register") {
       utils.logTask(task, "ws register request received")
       commandRegister_async(wsSendTask, task);
+    } else if (command === "reload") {
+      utils.logTask(task, "ws reload request received")
+      commandReload_async(wsSendTask, task);
     } else {
       console.log("Unexpected message command ", command)
     }

@@ -12,6 +12,7 @@ services:
       - APP_NAME=T@skFlow-Dev
       - APP_ABBREV=TFD
       - JWT_SECRET=StillNoJWTToken
+      - RUN_MODE=debug # or forever
     depends_on:
       - mongodb
       - redis-stack-svc

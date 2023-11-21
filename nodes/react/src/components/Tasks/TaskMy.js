@@ -14,7 +14,7 @@ import PaginationControls from '../Grid/PaginationControls';
 import { createColumns } from './TaskMy/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Button, Menu, MenuItem, Checkbox } from '@mui/material';
+import { Button, Menu, MenuItem, Checkbox, TextField } from '@mui/material';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 
 /*
@@ -53,7 +53,7 @@ const TaskMy = (props) => {
         filters[column.key] = '';
       }
     });
-    console.log("initFilters", filters);
+    //console.log("initFilters", filters);
     return filters;
   }
 
@@ -61,12 +61,30 @@ const TaskMy = (props) => {
   const LinkFormatter = ({ row, column }) => {
     const handleClick = () => {
         // Implement your click handling logic here
-        console.log(`Clicked link in row ${row.key} column ${column.key} instanceId ${row.instanceId}`);
+        //console.log(`Clicked link in row ${row.key} column ${column.key} instanceId ${row.instanceId}`, row);
+        modifyTask({ 
+          command: "start",
+          commandArgs: {
+            // root.user.hubTasks.taskclone
+            // I guess we need permissions on the system tasks that we don't want users to launch
+            // Need to create a new family
+            init: {
+              id: "root.system.taskclone",
+              input: {
+                cloneInstanceId: row.instanceId,
+                cloneId: row.taskId,
+                cloneFamilyId: row.current.familyId,
+              }
+            }
+          },
+          "commandDescription": `Clone task ${row.taskId} from instanceId ${row.instanceId}`,
+        });
     };
-    return <a href="#" onClick={handleClick}>{row[column.key]}</a>;
+    return <Button variant="contained" size="small" onClick={handleClick}>Clone</Button>;
+    //return <a href="#" onClick={handleClick}>{row[column.key]}</a>;
   };
 
-  const rowDetailHeight = task.config.rowDetailHeight;
+  const rowDetailHeight = task.config.local.rowDetailHeight;
   const initPageSize = task.config.local.pageSize;
   const initialColumns = createColumns(rowDetailHeight, LinkFormatter);
 
@@ -170,17 +188,21 @@ const TaskMy = (props) => {
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
-
+  
   // Apply filtering to each row
   const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
+    console.log("Row count before filter", rows.length);
+    const result = rows.filter((r) => {
       return Object.keys(filters).every((key) => {
         // Some key values may be undefined so ".includes" would fail
-        if (r[key] !== undefined) {
-          return filters[key] ? r[key].includes(filters[key]) : true;
+        if (r[key] === undefined) {
+          r[key] = '';
         }
+        return filters[key] ? r[key].includes(filters[key]) : true;
       });
     });
+    console.log("Row count after filter", result.length);
+    return result;
   }, [rows, filters]);
 
   // Generate function for sorting rows based on column
@@ -341,7 +363,7 @@ const TaskMy = (props) => {
         queryHistoryPtr={task.state.queryHistoryPtr}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Button variant="outlined" onClick={handleToggleColumnClick} sx={{ width: 'fit-content' }}>
+        <Button variant="contained" size="medium" onClick={handleToggleColumnClick} sx={{ marginLeft: '1rem', width: 'fit-content' }}> 
           Toggle Columns
         </Button>
         <Menu
@@ -356,12 +378,13 @@ const TaskMy = (props) => {
             </MenuItem>
           ))}
         </Menu>
-        <input
+        <TextField
           type="text"
           placeholder="Search in page..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           style={{width: '300px'}}
+          variant="outlined"
         />
       </div>
       <DndProvider backend={HTML5Backend}>

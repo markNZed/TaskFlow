@@ -211,4 +211,5 @@ export {
   CEPFunctionMap,
   accessDB,
   outputStore_async,
+  instancesStore_async,
 };

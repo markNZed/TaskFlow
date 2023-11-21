@@ -16,6 +16,7 @@ import { useGeolocation } from "./useGeolocation";
 import useGlobalStateContext from "./contexts/GlobalStateContext";
 import useRegisterWSFilter from "./hooks/useRegisterWSFilter";
 import useLoginWSFilter from "./hooks/useLoginWSFilter";
+import useReloadWSFilter from "./hooks/useReloadWSFilter";
 import useRegisterTask from "./hooks/useRegisterTask";
 import { appAbbrev } from "./config.mjs";
 import debug from "debug";
@@ -70,7 +71,7 @@ function App({ activeWorkerCount, workerId }) {
     const language = navigator?.language?.toLowerCase() ?? 'en';
     const node = {
       nodeId: nodeId,
-      commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error", "login"],
+      commandsAccepted: ["partial", "update", "init", "join", "pong", "register", "error", "login", "reload"],
       environment: "react",
       language: language,
       type: "processor",
@@ -91,6 +92,12 @@ function App({ activeWorkerCount, workerId }) {
     (loginTask) => {
       // Set the window location to /login.html
       window.location.href = '/login.html';
+    }
+  )
+
+  useReloadWSFilter(
+    (reloadTask) => {
+      window.location.reload(true);
     }
   )
 

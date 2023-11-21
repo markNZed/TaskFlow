@@ -479,6 +479,18 @@ const tasks = [
     type: "TaskMy",
   },
 
+  {
+    name: "taskclone",
+    parentName: "system",
+    environments: ["rxjs-hub-consumer"],
+    state: {
+      current: "start",
+    },
+    type: "TaskClone",
+    permissions: [
+      "*",
+    ]
+  },
 
 ];
 

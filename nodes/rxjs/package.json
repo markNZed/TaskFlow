@@ -13,7 +13,7 @@
   "scripts": {
     "start": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' server",
     "debug": "nodemon --watch ../../config/servicetypes.mjs --watch . --watch .env --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --inspect=${DEBUG_PORT:-0.0.0.0:9231} server.js",
-    "forever": "forever server.js"
+    "forever": "forever -e ${NODE_NAME}-error.log --uid ${NODE_NAME} server.js"
   },
   "dependencies": {
     "@huggingface/inference": "^2.6.4",

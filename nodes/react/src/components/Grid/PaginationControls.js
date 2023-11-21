@@ -22,11 +22,11 @@ function PaginationControls({totalCount, pageSize, page, setPage, rowCount }) {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Button variant="outlined" onClick={handlePreviousPage} disabled={page <= 1}>
+      <Button variant="contained" onClick={handlePreviousPage} disabled={page <= 1}>
         Previous
       </Button>
       <span>{`Page ${page} of ${totalPages}`} with {Math.min(rowCount, pageSize)} of {totalCount} results</span>
-      <Button variant="outlined" onClick={handleNextPage} disabled={page >= totalPages}>
+      <Button variant="contained" onClick={handleNextPage} disabled={page >= totalPages}>
         Next
       </Button>
     </div>

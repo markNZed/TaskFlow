@@ -56,7 +56,7 @@ switch (NODE_NAME) {
       processing: ["batch", "stream"],
       environment: "rxjs-hub-consumer",
       // As a Hub node it needs to deal with "start"
-      commandsAccepted: ["update", "start", "init", "register", "error", "join", "pong"],
+      commandsAccepted: ["update", "start", "init", "register", "error", "join", "pong", "reload"],
       wsPort: 5002,
     }
     break;
@@ -67,7 +67,7 @@ switch (NODE_NAME) {
       role: "coprocessor",
       processing: ["stream"],
       environment: "rxjs-hub-coprocessor",
-      commandsAccepted: ["update", "start", "init", "register", "error", "join"],
+      commandsAccepted: ["update", "start", "init", "register", "error", "join", "reload"],
       wsPort: 5003,
     }
     break;
@@ -77,7 +77,7 @@ switch (NODE_NAME) {
       role: "consumer",
       processing: ["batch"],
       environment: "rxjs-processor-consumer",
-      commandsAccepted: ["update", "init", "register", "error", "join", "pong"],
+      commandsAccepted: ["update", "init", "register", "error", "join", "pong", "reload"],
       wsPort: 5000,
     }
     break;
@@ -115,7 +115,7 @@ NODE["storage"] = {
   weaviateHost: process.env.WEAVIATE_URL || 'weaviate:8080',
   dataDir: "/app/data",
 };
-NODE["sevices"] = {
+NODE["services"] = {
   unstructuredUrl: process.env.UNSTRUCTURED_URL || "http://unstructured:8000/general/v0/general",
 }
 NODE["id"] = nodeId;

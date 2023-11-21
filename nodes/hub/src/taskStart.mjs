@@ -173,6 +173,7 @@ async function checkUserPermissions_async(task, tribeName, groupsStore_async, tr
     const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, tribeName, groupsStore_async, tribesStore_async);
     if (!authenticated) {
       console.error("Task authentication failed:", utils.js(task.id));
+      throw new Error("Task authentication failed");
     } else {
       task.groupId = groupId;
     }
@@ -406,18 +407,31 @@ async function taskStart_async(
     prevInstanceId,
   ) {
 
-    // Could have a TaskEmpty if we do not want to base the task on a task config
+    if (!initTask.id) {
+      console.error("Missing initTask.id ", initTask);
+      throw new Error("Missing initTask.id");
+    }
+
     let task  = await tasksStore_async.get(initTask.id);
+    // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
+    task.instanceId = uuidv4();
+    task = utils.deepMerge(task, initTask);
+
     if (!task) {
       throw new Error("Could not find task with id " + initTask.id)
     }
 
+    let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
+
+    // If we are cloning then transfer this information
+    if (prevTask?.shared?.family?.cloning) {
+      task["shared"] = task.shared || {};
+      task.shared["family"] = task?.shared?.family || {};
+      task.shared.family["cloning"] = true;
+    }
+
     utils.debugTask(task, `initTaskConfig ${nodeId}`);
 
-    // Note that task.instanceId may change below due to task.config.oneFamily or task.config.collaborateGroupId
-    task.instanceId = uuidv4();
-
-    task = utils.deepMerge(task, initTask);
 
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
@@ -425,23 +439,34 @@ async function taskStart_async(
 
     task = await checkUserPermissions_async(task, initTask?.user?.tribe, groupsStore_async, tribesStore_async, authenticate);
 
-    let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
-
     // Is this a user task being launched from a system task ?
     // If so then initialize a new familyId
     let isPrevSystemTask = false;
+    //let isPrevUserTask = false;
     let prevTaskFamilyId;
     if (prevTask) {
       isPrevSystemTask = prevTask.id.startsWith("root.system.");
-      prevTaskFamilyId = prevTask.familyId;
+      //isPrevUserTask = prevTask.id.startsWith("root.user.");
+      // Start a new family for TaskClone (could use the type instead of the id ?)
+      if (task.id === "root.system.taskclone") {
+        prevTaskFamilyId = task.instanceId;
+        utils.logTask(task, "prevTask but root.system.taskclone");
+      } else {
+        prevTaskFamilyId = prevTask.familyId;
+      }
     }
     let isFirstUserTask = false;
     if (isPrevSystemTask && task.id.startsWith("root.user.")) {
       isFirstUserTask = true;
     }
     if (isFirstUserTask) {
-      prevTaskFamilyId = task.instanceId;
-      utils.logTask(task, "Reinitialising familyId isFirstUserTask", prevTaskFamilyId);
+      if (prevTask?.id === "root.system.taskclone") {
+        utils.logTask(task, "isFirstUserTask but root.system.taskclone");
+        prevTaskFamilyId = prevTask.familyId;
+      } else {
+        prevTaskFamilyId = task.instanceId;
+        utils.logTask(task, "Reinitialising familyId isFirstUserTask", prevTaskFamilyId, "prevTask.id", prevTask?.id);
+      }
     }
 
     // May be overwritten in processInstanceAsync
@@ -524,10 +549,7 @@ async function taskStart_async(
     task.meta["updatedAt"] = task.meta.updatedAt ?? utils.updatedAt();
     task.meta["updateCount"] = task.meta.updateCount ?? 0;
     task.meta["broadcastCount"] = task.meta.broadcastCount ?? 0;
-    
-    if (task.familyId === task.instanceId) {
-      task.meta["founder"] = true;
-    }
+    task.meta["founder"] = task.meta.founder ?? isFirstUserTask;
 
     // When we join we want to keep the nodes info related to the joined task
     task = await updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*, instancesStore_async, setActiveTask_async*/);
@@ -555,17 +577,28 @@ async function taskStart_async(
     task = await processTemplates_async(task, task.operations, outputs, task.familyId);
     task = await processTemplates_async(task, task.ceps, outputs, task.familyId);
 
-
     const taskNodes = allocateTaskToNodes(task, nodeId, activeNodes);
 
+    console.log("startTask taskNodes before", utils.js(taskNodes));
+
     await recordTasksAndNodesAsync(task, taskNodes, activeTaskNodesStore_async, activeNodeTasksStore_async);
+
+    if (task.shared?.family?.cloning) {
+      task.shared.family[task.instanceId] = {};
+      task.shared.family[task.instanceId]["nodes"] = {};
+      // For each node we need to track for clone init
+      console.log("startTask taskNodes", taskNodes);
+      taskNodes.forEach(id => {
+        task.shared.family[task.instanceId].nodes[id] = {
+          initialized: false,
+        };
+      });
+    }
 
     // Could mess up the join function ?
     task.meta.hash = utils.taskHash(task);
 
     task.node.origTask = utils.deepClone(task);
-
-    task = utils.setMetaModified(task);
 
     utils.logTask(task, task.node.command, "id:", task.id, "familyId:", task.familyId);
 

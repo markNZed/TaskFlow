@@ -13,6 +13,17 @@ Running on localhost set the port for the React React Processor server in packag
 * Rollback of Task store if fetchTask fails
 * Shared worker for allocating nodeId
 
+## Commands
+* partial
+* update
+* init
+* join
+* pong
+* register
+* error
+* login
+* reload
+
 ## Task Conventions
 * The task is passed to the component i.e. the parent manages the Task state
   * The parent will have an array of Tasks if it instantiates multiple components

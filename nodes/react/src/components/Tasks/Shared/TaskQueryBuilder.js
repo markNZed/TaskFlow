@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { defaultValidator, formatQuery, QueryBuilder } from 'react-querybuilder';
 import 'react-querybuilder/dist/query-builder.css';
 import { QueryBuilderMaterial } from '@react-querybuilder/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { blueGrey } from '@mui/material/colors';
+import { Button } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+
 
 const TaskQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryPtr }) => {
   const [query, setQuery] = useState({
@@ -16,6 +23,14 @@ const TaskQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryP
   const [disablePrev, setDisablePrev] = useState(false);
   const [disableNext, setDisableNext] = useState(true);
   const queryHistoryLength = queryHistory ? queryHistory.length : 0;
+
+  const muiTheme = createTheme({
+    palette: {
+      secondary: {
+        main: blueGrey[500],
+      },
+    },
+  });
   
   // When queryHistoryPtr changes we reset the history
   useEffect(() => {
@@ -86,23 +101,29 @@ const TaskQueryBuilder = ({ fields, onQueryComplete, queryHistory, queryHistoryP
   
   return (
     <div>
-      <QueryBuilderMaterial>
-        <QueryBuilder 
-          fields={fields} 
-          query={query} 
-          onQueryChange={handleQueryChange}
-          validator={defaultValidator}
-        />
-      </QueryBuilderMaterial>
-      <div style={{ marginLeft: '1rem' }}>
-          <pre>{queryHistoryOffset}:{formatQuery(query, 'mongodb')}</pre>
-      </div>
+      <ThemeProvider theme={muiTheme}>
+        <QueryBuilderMaterial>
+          <QueryBuilder 
+            fields={fields} 
+            query={query} 
+            onQueryChange={handleQueryChange}
+            validator={defaultValidator}
+          />
+        </QueryBuilderMaterial>
+      </ThemeProvider>
+      <Box>
+        <Paper elevation={3} sx={{ padding: '1rem', margin: '1rem', overflow: 'auto' }}>
+            <Typography variant="body2" component="pre" style={{ fontFamily: 'monospace' }}>
+                {queryHistoryOffset}:{formatQuery(query, 'mongodb')}
+            </Typography>
+        </Paper>
+      </Box>
       {queryHistory && (
-        <button onClick={handlePreviousQuery} disabled={disablePrev}>&lt;</button>
+        <Button sx={{ marginLeft: '1rem' }} variant="outlined" size="small" onClick={handlePreviousQuery} disabled={disablePrev}>&lt;</Button>
       )}
-      <button onClick={handleSubmit}>Submit Query</button>
+      <Button sx={{ marginLeft: '1rem', marginRight: '1rem' }} variant="contained" onClick={handleSubmit}>Submit Query</Button>
       {queryHistory && (
-        <button onClick={handleNextQuery} disabled={disableNext}>&gt;</button>
+        <Button sx={{ marginLeft: '1rem' }} variant="outlined" size="small" onClick={handleNextQuery} disabled={disableNext}>&gt;</Button>
       )}
     </div>
   );

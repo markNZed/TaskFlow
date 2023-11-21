@@ -54,9 +54,16 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
   // Fetch tasks from the DB both sorted and paginated 
   async function fetchTasksAsync(queryBuilder, sortColumns, page = 1, pageSize) {
     try {
-      const mongoQuery = formatQuery(queryBuilder, 'mongodb');
-      const parsedQuery = parseFilter(mongoQuery);
-      let sortCriteria = transformToMongoSortCriteria(sortColumns);
+      let mongoQuery;
+      let parsedQuery = {};
+      if (queryBuilder) {
+        mongoQuery = formatQuery(queryBuilder, 'mongodb');
+        parsedQuery = parseFilter(mongoQuery);
+      }
+      let sortCriteria;
+      if (sortColumns) {
+        sortCriteria = transformToMongoSortCriteria(sortColumns);
+      }
       // Skip ahead to the page of results being requested
       const skip = (page - 1) * pageSize;
       // Defaul tsort criteria
@@ -74,7 +81,7 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
         'current.type': { $ne: 'TaskMy' },
       };
       const taskEntriesPromise = tasksModel.find(userQuery).sort(sortCriteria).skip(skip).limit(pageSize).lean();
-      const totalPromise = tasksModel.countDocuments(parsedQuery);
+      const totalPromise = tasksModel.countDocuments(userQuery);
       const [taskEntries, total] = await Promise.all([taskEntriesPromise, totalPromise]);
       // For each task get the familyId, fetch the outputs, run keyword extraction
       for (let taskEntry of taskEntries) {
@@ -110,9 +117,13 @@ const TaskMy_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
       break;
     // Process a query
     case "query":
-      if (T("request.queryBuilder")) {
+      if (T("request.queryBuilder") || !T("state.initQuery")) {
+        T("state.initQuery", true);
+        const pageSize = T("request.pageSize") || T("config.local.pageSize");
+        const page = T("request.page") || 1;
+        const query = T("request.queryBuilder");
         utils.logTask(T(), "State query ", T("request.queryBuilder"), " with request.page", T("request.page"));
-        const { taskEntries, total } = await fetchTasksAsync(T("request.queryBuilder"), T("request.sortColumns"), T("request.page"), T("request.pageSize"))
+        const { taskEntries, total } = await fetchTasksAsync(query, T("request.sortColumns"), page, pageSize)
         utils.logTask(T(), "Returned total", total);
         T("response.tasks", taskEntries);
         T("response.total", total);

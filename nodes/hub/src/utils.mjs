@@ -113,6 +113,7 @@ const utils = {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
 
+  // Set values to true to indicate key exists
   findKeys: function(task, ignore, path = '') {
     const newObject = {};
     Object.keys(task).forEach(key => {
@@ -131,14 +132,89 @@ const utils = {
     return newObject;
   },
   
-  setMetaModified: function(task) {
-    const ignore = ["meta", "node", "privacy", "id", "instanceId", "user.id"];
+  // If modified values are set (true) and object has all the keys of activeTask
+  // then we can just set the branch to true (indicating all values below are modified)
+  compressModified: function(activeTask, modified) {
+    if (activeTask === undefined || activeTask === null) {
+      return true;
+    }
+    if (!modified) {
+      return modified;
+    }
+    const activeTaskKeys = Object.keys(activeTask);
+    const modifiedKeys = Object.keys(modified);
+    // Start from the leaves of modified 
+    let leaves = true;
+    let deletedAll = true;
+    if (typeof modified === 'object' && modified !== null) {
+      for (const key of modifiedKeys) {
+        if (typeof modified[key] === 'object') {
+          leaves = false;
+          deletedAll = false;
+          break;
+        } else {
+          if (modified[key] === activeTask[key]) {
+            delete modified[key];
+          } else {
+            deletedAll = false;
+          }
+        }
+      }
+      if (deletedAll) {
+        return false;
+      }
+    }
+    let result = modified;
+    if (leaves) {
+      if (activeTaskKeys.length <= modifiedKeys.length) {
+        result = true;
+      }
+    } else {
+      let allTrue = true;
+      deletedAll = true;
+      for (const key of modifiedKeys) {
+        modified[key] = utils.compressModified(activeTask[key], modified[key]);
+        if (allTrue && modified[key] !== true) {
+          allTrue = false;
+          deletedAll = false;
+        } else if (modified[key] === false) {
+          delete modified[key];
+        } else {
+          deletedAll = false;
+        }
+      }
+      if (allTrue && activeTaskKeys.length <= modifiedKeys.length) {
+        result = true;
+      } else if (deletedAll) {
+        result = false;
+      }
+    }
+    modified = result;
+    return result;
+  },
+
+  // It would be more effective to build task.meta.modified in the compressed form
+  setMetaModified: function(activeTask, task) {
+    const ignore = ["meta", "node", "user", "masks"];
     task.meta = task.meta || {};
     if (task.node?.commandArgs?.syncTask) {
+      if (task.node.commandArgs.syncTask?.meta?.modified) {
+        delete task.node.commandArgs.syncTask.meta.modified;
+      }
       task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};
       task.node.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.node.commandArgs.syncTask, ignore);
+      if (task.node.commandArgs.syncTask.meta.modified) {
+        utils.compressModified(activeTask, task.node.commandArgs.syncTask.meta.modified);
+      }
+    } else {
+      if (task.meta?.modified) {
+        delete task.meta.modified;
+      }
     }
     task.meta["modified"] = utils.findKeys(task, ignore);
+    if (task.meta.modified) {
+      utils.compressModified(activeTask, task.meta.modified);
+    }
     return task;
   },
 

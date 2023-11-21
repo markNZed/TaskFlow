@@ -14,7 +14,7 @@ import PaginationControls from '../Grid/PaginationControls';
 import { createColumns } from './TaskSystemLogViewer/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Button, Menu, MenuItem, Checkbox } from '@mui/material';
+import { Button, Menu, MenuItem, Checkbox, TextField } from '@mui/material';
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 
 /*
@@ -53,11 +53,11 @@ const TaskSystemLogViewer = (props) => {
         filters[column.key] = '';
       }
     });
-    console.log("initFilters", filters);
+    //console.log("initFilters", filters);
     return filters;
   }
 
-  const rowDetailHeight = task.config.rowDetailHeight;
+  const rowDetailHeight = task.config.local.rowDetailHeight;
   const initPageSize = task.config.local.pageSize;
   const initialColumns = createColumns(rowDetailHeight);
 
@@ -164,14 +164,18 @@ const TaskSystemLogViewer = (props) => {
 
   // Apply filtering to each row
   const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
+    console.log("Row count before filter", rows.length);
+    const result = rows.filter((r) => {
       return Object.keys(filters).every((key) => {
         // Some key values may be undefined so ".includes" would fail
-        if (r[key] !== undefined) {
-          return filters[key] ? r[key].includes(filters[key]) : true;
+        if (r[key] === undefined) {
+          r[key] = '';
         }
+        return filters[key] ? r[key].includes(filters[key]) : true;
       });
     });
+    console.log("Row count after filter", result.length);
+    return result;
   }, [rows, filters]);
 
   // Generate function for sorting rows based on column
@@ -332,7 +336,7 @@ const TaskSystemLogViewer = (props) => {
         queryHistoryPtr={task.state.queryHistoryPtr}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Button variant="outlined" onClick={handleToggleColumnClick} sx={{ width: 'fit-content' }}>
+        <Button variant="contained" size="medium" onClick={handleToggleColumnClick} sx={{ marginLeft: '1rem', width: 'fit-content' }}> 
           Toggle Columns
         </Button>
         <Menu
@@ -347,12 +351,13 @@ const TaskSystemLogViewer = (props) => {
             </MenuItem>
           ))}
         </Menu>
-        <input
+        <TextField
           type="text"
           placeholder="Search in page..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           style={{width: '300px'}}
+          variant="outlined"
         />
       </div>
       <DndProvider backend={HTML5Backend}>
@@ -376,7 +381,7 @@ const TaskSystemLogViewer = (props) => {
               }
             }}
             rowKeyGetter={(row) => (row.key)}
-            enableVirtualization={false} // Due to dynamcic row heights
+            enableVirtualization={false} // Due to dynamic row heights
             headerRowHeight={70}
             pageSize={pageSize}
             onPageChange={(newPage) => setPage(newPage)}

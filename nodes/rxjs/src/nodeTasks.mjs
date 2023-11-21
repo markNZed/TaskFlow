@@ -257,32 +257,44 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       }
       //utils.logTask(T(), "nodeTasks_async CEPMatchMap", CEPMatchMap);
     }
-    if ((T("node.command") === "init" || T("node.command") === "join") && nodeFunctionsInitialized) {
-      // Sync these changes
-      // services/operators/ceps should be in a node namespace ?
-      // Could have different nodes with the same service name but different config?
-      const syncTask = {};
-      if (T("services")) {
-        syncTask["services"] = T("services");
+    if ((T("node.command") === "init" || T("node.command") === "join") && (nodeFunctionsInitialized || T("shared.family.cloning")) && !T("commandArgs.sync")) {
+      if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessed"))) {
+        // Sync these changes
+        // services/operators/ceps should be in a node namespace ?
+        // Could have different nodes with the same service name but different config?
+        const syncTask = {};
+        let ST = utils.createTaskValueGetter(syncTask);
+        if (T("services")) {
+          ST("services", T("services"));
+        }
+        if (T("operators")) {
+          ST("operators", T("operators"));
+        }
+        if (T("ceps")) {
+          ST("ceps", T("ceps"));
+        }
+        let commandDescription;
+        if (nodeFunctionsInitialized) {
+          commandDescription = `Sync node functions on ${NODE.name}`
+        }
+        if (T("shared.family.cloning")) {
+          ST("shared.family." + T("instanceId") + ".nodes." + NODE.id + ".initialized", true);
+          commandDescription += ` Sync clone initialized ${NODE.name}`;
+        }
+        // Maybe this is problematic
+        const syncUpdateTask = {
+          command: "update",
+          commandArgs: {
+            sync: true,
+            instanceId: T("instanceId"),
+            syncTask: ST(),
+            messageId: task.meta.messageId,
+          },
+          commandDescription,
+        };
+        // Don't await as we need to get the lock on this task
+        commandUpdate_async(wsSendTask, syncUpdateTask);
       }
-      if (T("operators")) {
-        syncTask["operators"] = T("operators");
-      }
-      if (T("ceps")) {
-        syncTask["ceps"] = T("ceps");
-      }
-      const syncUpdateTask = {
-        command: "update",
-        commandArgs: {
-          sync: true,
-          instanceId: T("instanceId"),
-          syncTask,
-          messageId: task.meta.messageId,
-        },
-        commandDescription: `Sync node functions on ${NODE.name}`,
-      };
-      // Don't await as we need to get the lock on this task
-      commandUpdate_async(wsSendTask, syncUpdateTask);
     }
   } catch (e) {
     console.error(e);
@@ -338,7 +350,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       // Which command should we support here?
       // This is similar to the old do_task
       if (T("command")) {
-        utils.debugTask(T(), "sending");
+        utils.debugTask(T(), "sending", T("command"), T("commandDescription"));
+        utils.logTask(T(), "sending", T("command"), T("commandDescription"));
         wsSendTask(T());
       } else {
         //utils.logTask(T(), "nodeTasks_async nothing to do");

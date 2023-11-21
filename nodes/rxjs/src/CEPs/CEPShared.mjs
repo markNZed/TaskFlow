@@ -13,7 +13,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
     If there is no familyId then match all familyIds
 */
 import { utils } from "#src/utils";
-import { sharedStore_async, familyStore_async } from "#src/storage";
+import { sharedStore_async, familyStore_async, instancesStore_async } from "#src/storage";
 import { commandUpdate_async } from "#src/commandUpdate";
 // eslint-disable-next-line no-unused-vars
 import assert from 'assert';
@@ -28,16 +28,36 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   // So we can see the null values and detect the deleteion of keys in shared
   // The null values get striped out in normal task processing
   const modified = task?.meta?.modified?.shared !== undefined
+  const command = task.node.command;
   const commandArgs = task.node?.commandArgs;
   // Sync is not coprocessed (maybe it should be but worried about loops)
   //console.log("CEPShared modified:", modified, "coprocessing:", task.node.coprocessing, "sync:", commandArgs?.sync, "CEPSource:", commandArgs?.CEPSource);
   if ((task.node.coprocessing && modified)
-      || (commandArgs?.sync && commandArgs?.CEPSource !== "CEPShared" && modified)) {
+      || (commandArgs?.sync && commandArgs?.CEPSource !== "CEPShared" && modified)
+      // For the shared.family we cannot count on meta.modified because it might be added without shared having been set in the init task
+      || (task.node.coprocessing && command === "init")) {
     utils.logTask(task, "CEPShared command:", task.node.command, "commandArgs:", task.node.commandArgs);
     let toSync = {};
-    let varNames;
+    let varNames = [];
     if (task.node.command === "init") {
-      varNames = Object.keys(task.shared);
+      // Need to check if there are family variables to add
+      const family = await familyStore_async.get(task.familyId) || {};
+      let familyInstanceIds = Object.values(family);
+      // filter out the current task from familyInstanceIds
+      familyInstanceIds = familyInstanceIds.filter(id => id !== task.instanceId);
+      if (familyInstanceIds.length > 0) {
+        // Any other instance in the family should have shared.family if it exists
+        const familyTask = await instancesStore_async.get(familyInstanceIds[0]);
+        if (familyTask?.shared?.family) {
+          varNames = varNames.push("family");
+          task["shared"] = task["shared"] || {};
+          task["shared"]["family"] = utils.deepMerge(familyTask.shared.family, task?.shared?.family);
+        }
+      }
+      if (task.shared) {
+        varNames = Object.keys(task.shared);
+      }
+      // We could return from here
     } else {
       varNames = Object.keys(task.meta.modified.shared);
     }
@@ -90,7 +110,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         if (task.node.command === "init" && sharedEntry[familyId].value) {
           toSync[task.instanceId] = toSync[task.instanceId] || {};
           if (prefix) {
-            toSync[task.instanceId][prefix] = toSync[task.instanceId][prefix] || {};
+            toSync[task.instanceId][prefix] = {};
             toSync[task.instanceId][prefix][varName] = sharedEntry[familyId].value;
           } else {
             toSync[task.instanceId][varName] = sharedEntry[familyId].value;
@@ -105,7 +125,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
             for (const instanceId of familyInstanceIds) {
               toSync[instanceId] = toSync[instanceId] || {};
               if (prefix) {
-                toSync[instanceId][prefix] = toSync[instanceId][prefix] || {};
+                toSync[instanceId][prefix] = {};
                 toSync[instanceId][prefix][varName] = taskValue;
               } else {
                 toSync[instanceId][varName] = taskValue;

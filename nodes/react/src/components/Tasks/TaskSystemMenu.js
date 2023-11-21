@@ -50,7 +50,8 @@ function TaskSystemMenu(props) {
         break;
       case "loaded":
         setTasksTree(task.state.tasksTree);
-        replaceGlobalState("tasksTree", task.state.tasksTree); // mergeGlobalState did not delete ?
+        // Trying deepClone here because I thin changes to the global might have been impacting the task.state
+        replaceGlobalState("tasksTree", utils.deepClone(task.state.tasksTree)); // mergeGlobalState did not delete ?
         //console.log("task.state.tasksTree", task.state.tasksTree);
         modifyTask({
           "command": "update",
@@ -62,7 +63,7 @@ function TaskSystemMenu(props) {
         if (!utils.deepEqual(task.state.tasksTree, tasksTree)) {
           //console.log("task.state.tasksTree", task.state.tasksTree);
           setTasksTree(task.state.tasksTree);
-          replaceGlobalState("tasksTree", task.state.tasksTree); // mergeGlobalState did not delete ?
+          replaceGlobalState("tasksTree", utils.deepClone(task.state.tasksTree)); // mergeGlobalState did not delete ?
         }
         break;
       default:

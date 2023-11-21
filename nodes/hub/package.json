@@ -13,7 +13,7 @@
   "scripts": {
     "start": "nodemon --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --ignore 'db' server",
     "debug": "nodemon --watch .env --watch . --ignore 'src/shared/task*Schema.json' --ignore 'src/shared/fsm' --ignore 'db' --trace-warnings --inspect=${DEBUG_PORT:-0.0.0.0:9229} server.js",
-    "forever": "forever server.js"
+    "forever": "forever -e ${NODE_NAME}-error.log --uid ${NODE_NAME} server.js"
   },
   "dependencies": {
     "@keyv/redis": "^2.7.0",

@@ -65,6 +65,9 @@ function withTask(Component) {
       return context;
     };
     const [reinitialize, setReinitialize] = useState(false);
+    const [spawning, setSpawning] = useState(true);
+    const [paused, setPaused] = useState(false);
+
 
     useEffect(() => {
       taskRef.current = props.task;
@@ -284,30 +287,34 @@ function withTask(Component) {
       const spawnTasks = async () => {
         if (!props.task) {return}
         const spawnTask = props.task.config?.spawnTask === false ? false : true;
-        //console.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
+        //utils.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
         if (spawnTask && props.task?.meta?.childrenId && props.task?.meta?.childrenId.length) {
           for (const childId of props.task.meta.childrenId) {
-            console.log("spawnTask", childId);
-            modifyTask({
+            utils.log("spawnTask", childId);
+            const mod = {
               "command": "start",
               "commandArgs": {
                 id: childId,
                 prevInstanceId: props.task.instanceId,
               },
               "commandDescription": `Spawn task ${childId} from ${props.task.id}`,
-            });
+            };
+            modifyTask(mod);
             // Wait for startTaskSentIdRef before continuing the loop
             await new Promise(resolve => {
               const intervalId = setInterval(() => {
-                console.log("Wait for startTaskSentIdRef", startTaskSentIdRef.current, childId);
+                utils.log("Wait for startTaskSentIdRef", startTaskSentIdRef.current, childId);
                 if (startTaskSentIdRef.current === childId) {
                   clearInterval(intervalId);
                   resolve();
                 }
               }, 100); // Check every 100ms (adjust as needed)
             });
-            console.log("Start from withTask", childId)
+            utils.log("Start from withTask", childId)
           }
+          setSpawning(false);
+        } else {
+          setSpawning(false);
         }
       };
       spawnTasks();
@@ -423,6 +430,9 @@ function withTask(Component) {
     const modifyState = (state) => {
       //console.log("modifyState", state, props.task.state.current, props.task.state.last, lastStateRef.current);
       lastStateRef.current = props.task.state.current;
+      if (props.task?.shared?.family?.cloning && !paused) {
+        setPaused(true);
+      }
       if (state && state !== props.task.state.current) {
         stateRef.current = state;
         props.setTask((p) =>
@@ -438,6 +448,20 @@ function withTask(Component) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }
+
+    useEffect(() => {
+      if (props.task?.shared?.family?.cloning) {
+        const initialized = props.task?.shared?.family?.[props.task.instanceId]?.["nodes"]?.[globalState.nodeId]?.initialized;
+        const noFSM = props.task?.state?.current === undefined ? true : false;
+        if ((paused || noFSM) && !spawning && !initialized) {
+          modifyTask({ 
+            ["shared.family." + props.task.instanceId + ".nodes." + globalState.nodeId + ".initialized"]: true,
+            "command": "update",
+            "commandDescription": "Clone is initialized",
+          });
+        }
+      }
+    }, [props.task]);
 
     // Detect changes to the task.state.current that are not caused by modifyState
     // Perhaps state machine would miss the change in this case
@@ -462,6 +486,10 @@ function withTask(Component) {
     const checkIfStateReady = () => {
       const currentState = props?.task?.state?.current;
       if (!currentState) return false;
+
+      if (props.task?.shared?.family?.cloning && props.task?.shared?.family?.[props.task.instanceId]?.paused) {
+        return false;
+      }
 
       // The currentState may be initialized and the stateRef.current and lastStateRef.current have not been initialized
       // Don't initialize lastStateRef.current so we see the initial transition to the start state

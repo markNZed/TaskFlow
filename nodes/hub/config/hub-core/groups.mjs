@@ -14,9 +14,11 @@ const groups = [
       outgoing: {
         '*': true,
       },
+      /*
       incoming: {
         '*': true,
       },
+      */
     },
   },
   {
