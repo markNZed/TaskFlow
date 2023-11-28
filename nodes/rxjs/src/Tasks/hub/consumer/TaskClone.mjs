@@ -8,6 +8,11 @@ import { familyStore_async, instancesStore_async } from "#src/storage";
 // eslint-disable-next-line no-unused-vars
 import { commandUpdate_async } from "#src/commandUpdate";
 import { commandStart_async } from "#src/commandStart";
+import { collection } from "#src/CEPs/CEPSystemLogger/tasksModel"
+
+/*
+  Pause the Task until updated (e.g. block UI events - loading page)
+*/
 
 // eslint-disable-next-line no-unused-vars
 const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
@@ -26,7 +31,7 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
           break;
         }
         case "cloneFounder": {
-          // We should reowrk the API for commandStart_async
+          // We should rework the API for commandStart_async
           let startTask = utils.deepClone(T());
           startTask = utils.deepMerge(startTask, {
             command: "start",
@@ -45,7 +50,7 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
             },
             commandDescription: `Cloning of ${T("input.cloneInstanceId")} into family ${T("familyId")}`,
           });
-          commandStart_async(wsSendTask, startTask);
+          await commandStart_async(wsSendTask, startTask);
           T("state.current", "waitingForFamily");
           T("command", "update");
           T("commandDescription", "Have cloned founder");
@@ -80,16 +85,49 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
           const family = await familyStore_async.get(T("familyId"));
           const prevFamily = await familyStore_async.get(T("input.cloneFamilyId"));
           const promises = [];
+          console.log("initialized family", utils.js(family));
+          console.log("initialized prevFamily", utils.js(prevFamily));
           for (const id in family) {
             if (id === T("id")) continue;
             const prevInstanceId = prevFamily[id];
             if (!prevInstanceId) {
               throw new Error("Cloning via requires prevInstanceId");
             }
-            let prevTask = await instancesStore_async.get(prevInstanceId);
+            let prevTask;
+            if (T("input.cloneContinue")) {
+              console.log("initialized cloneContinue", prevInstanceId);
+              prevTask = await instancesStore_async.get(prevInstanceId);
+            } else {
+              const cloneUpdatedAt = T("input.cloneUpdatedAt");
+              let query = {
+                'current.instanceId': prevInstanceId,
+                'updatedAt.date': { '$lte': new Date(cloneUpdatedAt) },
+                '$expr': {
+                  '$or': [
+                    { '$not': { '$isArray': '$current.state.stable' } }, // if current.state.stable is not an array
+                    {
+                      '$and': [
+                        { '$isArray': '$current.state.stable' }, // Check only if current.state.stable is an array
+                        { '$in': ['$current.state.current', '$current.state.stable'] }
+                      ]
+                    }
+                  ]
+                }
+              };              
+              console.log("initialized query", utils.js(query));
+              // Because of limitation in Mongoose I needed to connect directly to MongoDB
+              // The issue is related with the $in operator and $current.state.stable is not always an array
+              const logTask = await collection.find(query).sort({ 'updatedAt.date': -1 }).limit(1).toArray();
+              //const logTask = await tasksModel.find(query).sort({ 'updatedAt.date': -1 }).limit(1);
+              if (!logTask || logTask.length === 0) {
+                throw new Error("Cloning via requires prevTask");
+              } else {
+                prevTask = logTask[0].current;
+              }
+            }
             const instanceId = family[id];
             let currTask = await instancesStore_async.get(instanceId);
-            prevTask["shared"] = utils.deepMerge(currTask["shared"], prevTask["shared"]);
+            prevTask["shared"] = utils.deepMerge(currTask["shared"], prevTask["shared"]) || {};
             prevTask.shared["family"] = currTask.shared.family; // So we can clone a clone without the prev family
             prevTask["meta"] = utils.deepMerge(currTask["meta"], prevTask["meta"]);
             prevTask.meta["cloneFamilyId"] = prevTask.familyId;

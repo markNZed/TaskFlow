@@ -1090,7 +1090,7 @@ const utils = {
         }
       }
     }
-    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + groupId + " " + tribeName + " " + authenticated);
+    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + tribeName + " " + authenticated);
     return [authenticated, groupId];
   },
 
@@ -1211,7 +1211,30 @@ const utils = {
         const parts = path.split(".");
         let currentPath = task.meta.modified;
         for (const p of parts) {
-          console.log("checkModified", p, utils.js(currentPath))
+          //console.log("checkModified", p, utils.js(currentPath))
+          currentPath = currentPath[p];
+          if (currentPath === true) {
+            result = true;
+            break;
+          } else if (currentPath === undefined) {
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  },
+
+  checkSyncEvents: function (task, path) {
+    let result = false;
+    if (task?.node?.commandArgs?.syncEvents) {
+      const T = utils.createTaskValueGetter(task);
+      if (T(path) !== undefined) {
+        // split path into dot separated parts
+        const parts = path.split(".");
+        let currentPath = task.node.commandArgs.syncEvents;
+        for (const p of parts) {
+          //console.log("checkModified", p, utils.js(currentPath))
           currentPath = currentPath[p];
           if (currentPath === true) {
             result = true;
@@ -1300,14 +1323,8 @@ const utils = {
     if (commandArgs?.CEPSource) {
       //logParts.push("CEPSource", commandArgs.CEPSource);
     }
-    if (task?.node?.initiatingNodeId) {
-      //logParts.push("task.node.initiatingNodeId", task.node.initiatingNodeId);
-    }
-    if (task?.meta?.modified) {
-      logParts.push("task.meta.modified", utils.js(task.meta.modified));
-    }
-    if (commandArgs?.syncTask?.meta?.modified) {
-      logParts.push("commandArgs.syncTask.meta.modified", utils.js(commandArgs.syncTask.meta.modified));
+    if (task.tribe) {
+      logParts.push("task.tribe", task.tribe);
     }
     /*
     if (command && !commandDescription) {

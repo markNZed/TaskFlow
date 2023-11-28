@@ -28,6 +28,8 @@ var OperatorsMap = new Map();
 var CEPMatchMap = new Map();
 var CEPFunctionMap = new Map();
 
+const cronJobsMap = new Map();
+
 const dbPath = `${__dirname}/../../hub/db/access.sqlite3`;
 console.log("accessDB path", dbPath);
 const accessDB = new (verbose().Database)(dbPath);
@@ -212,4 +214,5 @@ export {
   accessDB,
   outputStore_async,
   instancesStore_async,
+  cronJobsMap,
 };

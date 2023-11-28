@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 import { utils } from "../utils/utils.mjs";
 
-function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
+function useInitWSFilter(useGlobalStateContext, tabActive, initialTask, onStart) {
   
   const { globalState } = useGlobalStateContext();
   const [initiatingInstanceId, setInitiatingInstanceId] = useState();
@@ -36,7 +36,8 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
         const parentInstanceId = initiatingInstanceId && (message.task.meta.parentInstanceId === initiatingInstanceId);
         //console.log("initialTask.instanceId", initialTask.instanceId, "globalState.nodeId", globalState.nodeId);
         const processor = initialTask.instanceId ===  globalState.nodeId && (message.task.meta.parentInstanceId === undefined);
-        if (prevInstanceId || parentInstanceId || processor) {
+        const taskflow = initialTask.id === "root.system.taskflow" && (message.task.id === "root.system.taskflow");
+        if (prevInstanceId || parentInstanceId || processor || taskflow) {
           //console.log("initiatingInstanceId && message.task.meta.prevInstanceId === initiatingInstanceId", initiatingInstanceId && message.task.meta.prevInstanceId === initiatingInstanceId)
           // Important to wait so that the task is saved to storage before it is retrieved again
           // We copy it so w can delete it ASAP
@@ -77,7 +78,7 @@ function useInitWSFilter(useGlobalStateContext, initialTask, onStart) {
       webSocketEventEmitter.removeListener("init", handleStart);
       webSocketEventEmitter.removeListener("join", handleStart);
     };
-  }, [initiatingInstanceId]);
+  }, [initiatingInstanceId, tabActive]);
   
 }
 

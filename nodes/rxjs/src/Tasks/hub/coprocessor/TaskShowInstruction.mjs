@@ -11,8 +11,8 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder, CEPM
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
 
   const actions = {
-    "rxjscopro_start": () => {
-      console.log("TaskShowInstruction_async rxjscopro_start");
+    "rxjs_hub_coprocessor_start": () => {
+      console.log("TaskShowInstruction_async rxjs_hub_coprocessor_start");
     },
   };
 

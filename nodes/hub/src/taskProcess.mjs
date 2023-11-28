@@ -68,11 +68,6 @@ async function nodeInHubOut_async(task, activeTask) {
     const user = await usersStore_async.get(task.user.id);
     task.users[task.user.id] = user;
   }
-  // Keep the tribe that was set through websocket
-  if (task?.user?.tribe) {
-    task.users[task.user.id]["tribe"] = task.user.tribe;
-    //utils.logTask(task, "nodeInHubOut_async tribe", task.user.tribe);
-  }
   // Restore the hub from storage
   // So we can keep task specific information local to the hub
   let lastHub;
@@ -293,6 +288,7 @@ async function maskIncoming_async(task) {
 
 async function taskProcess_async(task) {
   try {
+    utils.debugTask(task);
     if (!task.node) {
       throw new Error("Missing task.node in taskProcess_async");
     }
@@ -302,11 +298,15 @@ async function taskProcess_async(task) {
       task.masks = utils.deepClone(activeTask.masks);
       task = await maskIncoming_async(task);
     }
+    utils.debugTask(task, "after maskIncoming_async");
     if (incomingNode.command !== "partial" && task.node.command !== "register") {
       utils.logTask(task, "From node:" + incomingNode.id + " command:" + incomingNode.command + " commandDescription:" + incomingNode.commandDescription + " state:" + task?.state?.current);
       checkErrorRate(task);
       if (incomingNode.command === "update") {
         task = utils.setMetaModified(activeTask, task);
+        if (incomingNode.commandArgs && incomingNode.commandArgs.sync && incomingNode.commandArgs.syncTask) {
+          task = utils.setSyncEvents(activeTask, task);
+        }
         //console.log("taskProcess_async setMetaModified", JSON.stringify(task.meta.modified, null, 2));
       }
       utils.debugTask(task);

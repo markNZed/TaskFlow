@@ -28,25 +28,24 @@ function initTasktypes(tasktypes) {
   return tasktypes;
 }
 
-function mergeTasks(tasktypes, task, parentTask) {
+function mergeTaskTypes(tasktypes, task) {
   // Merge the taskType first so we can take APPEND_ PREPREND_ into account from tasktype
-  //console.log("mergeTasks ", task.id, parentTask.id);
   if (task.type) {
     // Need to deal with a list of components
     const tasktemplatename = task.type;
-    let template = tasktypes[tasktemplatename];
+    let template = utils.deepClone(tasktypes[tasktemplatename]);
     // Copy LOCAL_ keys
     template = copyLocalKeys(template);
     if (template) {
-      for (const key2 in tasktypes[tasktemplatename]) {
+      for (const key2 in template) {
         if (key2 !== "id" && key2 !== "name" && key2 !== "parentName") {
-          //console.log("Adding " + key2, tasktypes[tasktemplatename][key2])
+          //console.log("Adding " + key2, template[key2])
           if (["config", "connections", "operators", "ceps", "services", "shared", "state"].includes(key2)) {
             // ChildTask has priority so it can override default config
-            task[key2] =  utils.deepMerge(tasktypes[tasktemplatename][key2], task[key2])
+            task[key2] =  utils.deepMerge(template[key2], task[key2])
           // We need this for the task.type to be overriden, maybe that is the only key to override form tasktypes?
           } else {
-            task[key2] =  utils.deepMerge(task[key2], tasktypes[tasktemplatename][key2])
+            task[key2] =  utils.deepMerge(task[key2], template[key2])
           }
         }
       }
@@ -54,9 +53,14 @@ function mergeTasks(tasktypes, task, parentTask) {
       console.log("Count not find task template", tasktemplatename)
     }
   }
+}
+
+function mergeTasks(task, parentTask) {
+  // Merge the taskType first so we can take APPEND_ PREPREND_ into account from tasktype
+  //console.log("mergeTasks ", task.id, parentTask.id);
   for (const key in parentTask) {
     if (parentTask[key] !== undefined) {
-      if (["label", "type", "meta", "initiator", "connections"].includes(key)) {
+      if (["label", "type", "meta", "initiator", "connections", "cron", "ceps"].includes(key)) {
         continue;
       }
       if (key === "config" && task.config) {
@@ -155,19 +159,65 @@ function stripAppendKeys(obj) {
   return obj;
 }
 
+function tasksConfigMergeTaskType(tasktypes, tasksConfig) {
+  tasksConfig.forEach(function (task) {
+    mergeTaskTypes(tasktypes, task);
+  });
+}
+
+// This assumes that child tasks are declared before a task uses them as childrenNames
+// Ohterwise it will need to be recursive and resolving names may become problematic.
+// Note this does not allow for loops. Because the child must be declared before using it in childrenNames
+// However we could still start a new ancestor from the Task Function. Anohter option would be a loop option that would just
+// include a childrenId but not extend tasksConfig
+function tasksConfigAddChildren(tasksConfig) {
+  var taskConfigLookup = {};
+  let newTasksConfig = [];
+  tasksConfig.forEach(function (task) {
+    newTasksConfig.push(task);
+    taskConfigLookup[task.name] = utils.deepClone(task);
+    if (task.childrenNames) {
+      for (const childName of task.childrenNames) {
+        if (taskConfigLookup[childName]) {
+          let child = utils.deepClone(taskConfigLookup[childName]);
+          child.parentName = task.name;
+          newTasksConfig.push(child);
+        } else {
+          throw Error("Missing child task " + childName + " for task " + task.name);
+        }
+      }
+    }
+  });
+  return newTasksConfig;
+}
+
+
 // Not that this has huge side-effects
 // Transform tasks array into flattened tasks hash
-function flattenTasks(tasktypes, tasksConfig) {
+function tasksConfigFlatten(tasksConfig) {
   // The default level is named 'root'
   var parent2id = { root: "" };
   var children = {};
   var taskLookup = {};
   let autoStartTasks = {};
+  let lastName;
   tasksConfig.forEach(function (task) {
     // Debug option 
     let debug = false;
     //if (task.name.includes("chatgptzeroshot")) {debug = true;}
     if (debug) {console.log("Taskflow: " + task?.name)}
+
+    // Default the parent name to the previous task in the array
+    if (!task.parentName && lastName) {
+      task.parentName = lastName;
+      console.log("Taskflow: " + task.name + " has no parentName, setting to " + task.parentName);
+    }
+
+    // Default undefined name to task type 
+    if (!task.name && task.type) {
+      task.name = task.type;
+      console.log("Taskflow: " + task.name + " has no name, setting to " + task.type);
+    }
 
     const parentId = parent2id[task.parentName]
     
@@ -214,17 +264,17 @@ function flattenTasks(tasktypes, tasksConfig) {
 
     // Copy LOCAL_ keys
     task = copyLocalKeys(task);
-    
+
     // Copy keys from the parent
     if (taskLookup[parentId]) {
       const parentTaskflow = JSON.parse(JSON.stringify(taskLookup[parentId]));
       stripChildrenPrefix(parentTaskflow);
       stripAppendKeys(parentTaskflow);
-      mergeTasks(tasktypes, task, parentTaskflow);
+      mergeTasks(task, parentTaskflow);
     }
 
     // Process APPEND_, PREPEND_
-    mergeTasks(tasktypes, task, task);
+    mergeTasks(task, task);
 
     // Convert relative task references to absolute
     const nextTask = task?.config?.nextTask;
@@ -242,24 +292,24 @@ function flattenTasks(tasktypes, tasksConfig) {
       }
     }
 
-    if (task?.config?.autoStartEnvironments && !task?.config?.autoStartEnvironment) {
-      task.config["autoStartEnvironment"] = task.config.autoStartEnvironments[0];
+    if (task?.config?.local?.autoStartEnvironments && !task?.config?.local?.autoStartEnvironment) {
+      task.config["autoStartEnvironment"] = task.config.local.autoStartEnvironments[0];
     }
 
     if (!task.environments) {
-      if (task?.config?.autoStartEnvironments) {
-        task.environments = task.config.autoStartEnvironments;
-      } else if (task?.config?.autoStartEnvironment) {
-        task.environments = [task.config.autoStartEnvironment];
+      if (task?.config?.local?.autoStartEnvironments) {
+        task.environments = task.config.local.autoStartEnvironments;
+      } else if (task?.config?.local?.autoStartEnvironment) {
+        task.environments = [task.config.local.autoStartEnvironment];
       }
     }
 
-    if (task?.config?.autoStartEnvironment) {
+    if (task?.config?.local?.autoStartEnvironment) {
       autoStartTasks[task.id] = {
-        startEnvironment: task.config.autoStartEnvironment,
+        startEnvironment: task.config.local.autoStartEnvironment,
         // So we can start a task on a subset of the task.environments (used this for TaskSystemConfig)
-        startEnvironments: task.config.autoStartEnvironments || task.environments,
-        once: task.config.autoStartOnce,
+        startEnvironments: task.config.local.autoStartEnvironments || task.environments,
+        once: task.config.local.autoStartOnce,
       }
       console.log("task.id", task.id, "startEnvironments", autoStartTasks[task.id]["startEnvironments"]);
     }
@@ -272,6 +322,8 @@ function flattenTasks(tasktypes, tasksConfig) {
     } else {
       children[parentId] = [task.id];
     }
+
+    lastName = task.name;
   });
 
   // Replace array of tasks with hash
@@ -288,7 +340,9 @@ function initTasks(tasktypes, tasksConfig) {
   }
   // This has side-effects, modifying tasks in-place
   // Could check that each task has a 'start' task
-  const [flattasks, autoStartTasks] = flattenTasks(tasktypes, tasksConfig);
+  tasksConfigMergeTaskType(tasktypes, tasksConfig);
+  tasksConfig = tasksConfigAddChildren(tasksConfig);
+  const [flattasks, autoStartTasks] = tasksConfigFlatten(tasksConfig);
   //console.log(JSON.stringify(tasks, null, 2))
   // For each task in tasks run fromTask to validate the task
   Object.keys(flattasks).forEach(key => {
@@ -365,7 +419,7 @@ function initGroups(users, groupsConfig, groups) {
 async function dumpConfig(configData, configName) {
   const configDataJson = JSON.stringify(configData, null, 2);
   let prevConfigData;
-  const filePath = `/tmp/taskflow-${configName}.json`;
+  const filePath = `/app/dead/taskflow-${configName}.json`;
   try {
     const data = await fs.readFile(filePath, 'utf8');
     prevConfigData = JSON.parse(data);

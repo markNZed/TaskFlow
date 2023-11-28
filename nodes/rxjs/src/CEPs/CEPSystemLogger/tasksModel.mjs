@@ -19,5 +19,6 @@ const tasksSchema = new mongoose.Schema({
   
   // Mongoose should create a collecton "tasks" in the database "taskflow"
 const tasksModel = mongoConnection.model('tasks', tasksSchema);
+const collection = mongoConnection.db.collection('tasks');
 
-export { tasksModel };
+export { tasksModel, collection };

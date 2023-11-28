@@ -129,7 +129,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
   switch (T("state.current")) {
     case "start": {
       // This will turn init into update
-      const tasksTree = await getAuthorisedTasks_async(T("user.id"), T("user.tribe"), tasksStore_async, groupsStore_async, T("config.sort"));
+      const tasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribe"), tasksStore_async, groupsStore_async, T("config.sort"));
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
@@ -140,18 +140,21 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       break;
     case "ready":
       if (configTreeEvent) {
-        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), T("user.tribe"), tasksStore_async, groupsStore_async, T("config.sort"));
+        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribe"), tasksStore_async, groupsStore_async, T("config.sort"));
         const oldTasksTree = T("state.tasksTree");
         // There was a very nast issue where a key in the tasksTree could be set to undefined in getAuthorisedTasks_async
         // Then the conversion of the object to JSON will remove the key and deepEqual would see a difference in the number of keys
         // deepEqual was modified to remove undefined keys
-        if (!utils.deepEqual(newTasksTree, oldTasksTree)) {
+        const treeSize = newTasksTree ? Object.keys(newTasksTree).length : 0;
+        if (treeSize && !utils.deepEqual(newTasksTree, oldTasksTree)) {
           //console.log("state.tasksTree getObjectDifference", utils.getObjectDifference(newTasksTree, oldTasksTree));
           //console.log("newTasksTree", newTasksTree);
           //console.log("oldTasksTree", oldTasksTree);
           T("state.tasksTree", newTasksTree);
           T("command", "update");
           T("commandDescription", "Update state.tasksTree due to configTreeEvent so React can see it.");
+        } else {
+          utils.logTask(T(), `In state ready but no difference in state.tasksTree ${treeSize}`,);
         }
       }
       break;
@@ -163,7 +166,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
   if (T("state.tasksTree")) {
     utils.logTask(T(), "Length of state.tasksTree", Object.keys(T("state.tasksTree")).length);
   } else {
-    utils.logTask(T(), "No state.tasksTree Length of state.tasksTree 0");
+    utils.logTask(T(), "No state.tasksTree no state.tasksTree");
   }
 
   return T();

@@ -3,6 +3,13 @@ import { CACHE_ENABLE } from "../../config.mjs";
 
 const tasktypes = [
   {
+    name: "TaskCircle",
+    environments: ["react"],
+    state: {
+      current: "start",
+    },
+  },
+  {
     name: "TaskUsers",
     environments: ["react", "rxjs-hub-consumer"],
     state: {
@@ -107,9 +114,6 @@ const tasktypes = [
   },
   {
     name: "Taskflow",
-    config: {
-      LOCAL_autoStartEnvironment: "react",
-    },
     state: {
       current: "start",
     },
@@ -133,14 +137,18 @@ const tasktypes = [
     name: "TaskCEPServiceStub",
     environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjs-hub-coprocessor",
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+      },
     },
   },
   {
     name: "TaskCEPFamilyTree",
     environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjs-hub-coprocessor",
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+      },
     },
   },
   {
@@ -226,17 +234,19 @@ const tasktypes = [
     name: "TaskCEPShared",
     environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjs-hub-coprocessor",
-      autoStartCoprocessor: true,
-      autoStartpriority: "1",
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+        autoStartCoprocessor: true,
+        autoStartpriority: "1",
+      },
     },
     state: {
       current: "start",
     },
   },
   {
-    name: "TaskSystemLogViewer",
-    environments: ["react", "rxjs-hub-coprocessor"],
+    name: "TaskLog",
+    environments: ["react", "rxjs-hub-consumer"],
     config: {
       local: {
         rowDetailHeight: 500,
@@ -272,6 +282,11 @@ const tasktypes = [
         ],
       },
     },
+    services: {
+      chat: {
+        environments: ["rxjs-processor-consumer"],
+      },
+    },
     operators: {
       LLM: {
         type: "LLM",
@@ -296,6 +311,7 @@ const tasktypes = [
     name: "TaskConversation",
     environments: ["react", "rxjs-processor-consumer"],
     config: {
+      spawnTask: true,
       local: {
         welcomeMessage_FR: "Bienvenue ! Comment puis-je vous aider aujourd'hui ?",
         welcomeMessage_EN: "Welcome! How can I assist you today?",

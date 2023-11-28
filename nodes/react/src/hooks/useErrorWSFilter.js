@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { webSocketEventEmitter, messageQueue } from "../contexts/WebSocketContext";
 
-function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
+function useErrorWSFilter(useGlobalStateContext, tabActive, initialTask, onError) {
   
   const { globalState } = useGlobalStateContext();
   const [eventQueue, setEventQueue] = useState([]);
@@ -66,7 +66,7 @@ function useErrorWSFilter(useGlobalStateContext, initialTask, onError) {
       //console.log("useErrorWSFilter useEffect removing handleError instanceId", instanceId);
       webSocketEventEmitter.removeListener("error", handleError);
     };
-  }, [instanceId]);
+  }, [instanceId, tabActive]);
   
 }
 

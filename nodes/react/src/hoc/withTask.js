@@ -25,7 +25,7 @@ function withTask(Component) {
 
   function TaskComponent(props) {
 
-    const { globalState, mergeGlobalState, replaceGlobalState } = useGlobalStateContext();
+    const { globalState, setGlobalStateEntry } = useGlobalStateContext();
     const isMountedRef = useRef();
     const [prevTask, setPrevTask] = useState();
     const [childTask, setChildTask] = useState();
@@ -67,11 +67,30 @@ function withTask(Component) {
     const [reinitialize, setReinitialize] = useState(false);
     const [spawning, setSpawning] = useState(true);
     const [paused, setPaused] = useState(false);
+    const [tabActive, setTabActive] = useState(false);
 
 
     useEffect(() => {
       taskRef.current = props.task;
     }, [props.task]);
+    
+    // Use tabActive to have an event to check queues of messages in WSFilters
+    // Maybe this functionality should be inside the hooks rather than here
+    useEffect(() => {
+      const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+              console.log('Tab is now active');
+              setTabActive(true);
+          } else {
+              console.log('Tab is now inactive');
+              setTabActive(false);
+          }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }, []);
 
     // In HOC create a syncTask function
     function syncTask(syncTask, description) {
@@ -88,7 +107,7 @@ function withTask(Component) {
 
     useEffect(() => {
       if (props.task?.config?.fsm?.devTools && !globalState.xStateDevTools) {
-        replaceGlobalState("xStateDevTools", true);
+        setGlobalStateEntry("xStateDevTools", true);
       }
     }, [props.task?.config?.fsm?.devTools]);  
 
@@ -167,7 +186,7 @@ function withTask(Component) {
       if (!fsmSend) {
         await fsmSendReady;
       }
-      //console.log("fsmSend.func", event)
+      console.log("fsmSend.func", event)
       fsmSend.func(event);
     };
 
@@ -194,7 +213,7 @@ function withTask(Component) {
     useEffect(() => {
       const useAddress = props.task?.config?.local?.useAddress;
       if (useAddress && useAddress !== globalState?.useAddress) {
-        mergeGlobalState({useAddress});
+        setGlobalStateEntry("useAddress", useAddress);
       }
     }, [props.task]);
 
@@ -312,10 +331,10 @@ function withTask(Component) {
             });
             utils.log("Start from withTask", childId)
           }
-          setSpawning(false);
-        } else {
-          setSpawning(false);
         }
+        setSpawning(false);
+        setReinitialize(false);
+        utils.log("spawnTask config", spawnTask);
       };
       spawnTasks();
     }, [reinitialize]);
@@ -336,7 +355,7 @@ function withTask(Component) {
       }
     }, [startTaskReturned]);
 
-    useUpdateWSFilter(isMountedRef, props.task,
+    useUpdateWSFilter(isMountedRef, tabActive, props.task,
       async (updateDiff) => {
         console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
@@ -395,7 +414,7 @@ function withTask(Component) {
       }
     )
 
-    useInitWSFilter(useGlobalStateContext, props.task, 
+    useInitWSFilter(useGlobalStateContext, tabActive, props.task, 
       (newTask) => {
         // In the case of an init we cannot have a pending command
         // A join may have that state (could clean that up in the Hub)
@@ -405,14 +424,14 @@ function withTask(Component) {
         if (newTask.meta.prevInstanceId === undefined) {
           console.log("useInitWSFilter prevInstanceId undefined", props.task.id, "with", newTask.id);
           props.setTask(newTask);
-          setReinitialize(true);
+          setReinitialize(true); // how is this set back to false ?
         } else {
           setStartTaskReturned(newTask);
         }
       }
     )
 
-    useErrorWSFilter(useGlobalStateContext, props.task,
+    useErrorWSFilter(useGlobalStateContext, tabActive, props.task,
       (errorTask) => {
         console.log("useErrorWSFilter", errorTask.id, errorTask.error, errorTask);
         modifyTask({"commandPending": null}); // In case this is an error in response to an update
@@ -747,6 +766,7 @@ function withTask(Component) {
       useShareFsm,
       childTasks,
       setChildTasksTask,
+      reinitialize,
     };
 
     // This is a way of ensuring that the fsm is loaded before useMachine is called on it

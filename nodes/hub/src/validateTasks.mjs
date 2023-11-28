@@ -32,10 +32,6 @@ export const configSchema = yup.object()
     fsm: yup.object(),
     debug: yup.object(),
     background: yup.boolean(),
-    autoStartEnvironment: yup.string(),
-    autoStartEnvironments: yup.array().of(yup.string()),
-    autoStartCoprocessor: yup.boolean(),
-    autoStartpriority: yup.string(),
     family: yup.object(),
     language: yup.string(),
     environments: yup.array().of(yup.object()),
@@ -43,14 +39,12 @@ export const configSchema = yup.object()
 
 const tasksSchema = yup.array().of(yup.object()
   .shape({
-    name: yup.string().required().test('root-if-no-parent', 'Must have a parentName or be named "root"', function(value) {
-      const { parentName } = this.parent;
-      return parentName || value === 'root';
-    }),
+    name: yup.string(),
     environments: yup.array().of(yup.string()),
     type: yup.string(),
     menu: yup.boolean(),
     parentName: yup.string(),
+    childrenNames: yup.array().of(yup.string()),
     permissions: yup.array().of(yup.string()),
     config: configSchema,
     initiator: yup.boolean(),
@@ -69,6 +63,8 @@ const tasksSchema = yup.array().of(yup.object()
         const serviceSchema = yup.object({
           API: yup.string(),
           modelVersion: yup.string(),
+          modelStrength: yup.string(),
+          modelStrengthMap: yup.object(),
           type: yup.string(),
           forget: yup.boolean(),
           prompt: yup.string(),
@@ -99,6 +95,7 @@ const tasksSchema = yup.array().of(yup.object()
     operators: yup.object(),
     connections: yup.array().of(yup.array()),
     masks: yup.object(),
+    cron: yup.object(),
   })
   .noUnknown(true)
 );

@@ -4,18 +4,18 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
-import { tasksModel } from "./CEPSystemLog/tasksModel.mjs"
+import { tasksModel } from "./CEPSystemLogger/tasksModel.mjs"
 
 // eslint-disable-next-line no-unused-vars
 async function cep_async(wsSendTask, CEPInstanceId, task, args) {
-  // We do not want to log the TaskCEPSystemLog or TaskSystemLogViewer because this is noise in debugging other tasks
-  if (task.type !== "TaskCEPSystemLog" && task.type !== "TaskSystemLogViewer") {
+  // We do not want to log the TaskCEPSystemLogger or TaskLog because this is noise in debugging other tasks
+  if (task.id !== "root.system.systemlogger" && task.id !== "root.system.tasks.log") {
     // We will log twice when coprocessing but this is necessary to debug coprocessing
     await updateTaskWithHistory(task);
-    utils.logTask(task, "CEPSystemLog Logged");
+    utils.logTask(task, "CEPSystemLogger Logged");
   } else {
     // Should log even when there is no instanceId - not sure what to do for index in that case
-    utils.logTask(task, "CEPSystemLog Skipped logging because task type", task.type);
+    utils.logTask(task, "CEPSystemLogger Skipped logging because task type", task.type);
   }
 }
 
@@ -55,7 +55,7 @@ function stripTask(task) {
   return taskCopy;
 }
 
-export const CEPSystemLog = {
+export const CEPSystemLogger = {
   cep_async,
 } 
 

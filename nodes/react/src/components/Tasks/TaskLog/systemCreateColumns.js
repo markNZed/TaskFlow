@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import CellExpander from '../../Grid/CellExpander';
 import ReactJson from '@microlink/react-json-view'
 
-export function createColumns(rowDetailHeight) {
+export function createColumns(rowDetailHeight, actionFormatter, mode) {
     const columns = [
       {
         key: 'expanded',

@@ -49,20 +49,20 @@ export function GlobalStateProvider({ children }) {
     //console.log("mergeGlobalState" )
   };
 
-  const replaceGlobalState = (key, value) => {
+  const setGlobalStateEntry = (key, value) => {
     if (value === undefined) {
-      console.warning("replaceGlobalState: value is undefined");
+      console.warning("setGlobalStateEntry: value is undefined");
     }
     setGlobalState((prevState) => ({
       ...prevState,
       [key]: value,
     }));
-    //console.log("replaceGlobalState ", key, value )
+    //console.log("setGlobalStateEntry ", key, value )
   };
 
   return (
     <GlobalStateContext.Provider
-      value={{ globalState, mergeGlobalState, replaceGlobalState }}
+      value={{ globalState, mergeGlobalState, setGlobalStateEntry }}
     >
       {children}
     </GlobalStateContext.Provider>

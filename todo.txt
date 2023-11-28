@@ -1,33 +1,40 @@
 /* ToDo
 -------
+task.tribe -> task.tribeId ?
+Circle switching is broken ?
+  Seemed to be an issue with the collaborate feature - maybe the instanceId but unclear why
+Will need to manage the cron jobs at some point
+  Perhaps this could also use the grid component
+TaskInterview
+  Can template reference task e.g. '.config' special case when starting with single '.'
+    Needs testing
+  With FSM events generated on one processor are not seen on others ?
+    Just the state update? Yes but we could sync events (rxjs is doing this now)
+  How to start step with the model asking a question 
+    Config the task to immediately send a predefined prompt? 
+  shared.family.questionnaire
+  What controls the timing?
+    Include current time in each message
+      Could update the current time in the system prompt
+      User could caus delays
+      set timer per section and add that info to system prompt ?
+  Where are the responses integrated into the questionnaire?
+    A task that explains to the user what is happening and introduces the next selection
+Electron seems like a good way to leverage the current node/react code and provide a desktop app
+  For a desktop processor e.g. could run this to get access to user's CPU etc
+  Unsure if this supports mobile: https://capacitor-community.github.io/electron/ (electron by itself does not)
 https://github.com/lxieyang/chrome-extension-boilerplate-react
-TaskClone
-  1) TaskMy and TaskSystemLogViewer should configure a TaskLog
-        Config should select which createColumns.js to load 
-        Different init functions on the hub-consumer side too
-  2) add mode to TaskMy
-  3) listing of stable snapshots
-  4) cloning of stable snapshot
-  Start from last valid state
-    Add to task config list of unstable states or list of stable states
-      task.state.stable task.state.unstable
-        if stable exist then all ohter states are unstable
-          if unstable only then all other states are stable
-            Should be easy to filter  
-              if no table/unstale in the fammily then ignore in DB
-                Start by only listing init
-                  After selecting init show stable states
-                    Select to clone
-                  Need a cancel option to go back to list
-                    Could be a row
-                    Could be an action (need to add action column and use buttons instead of link)  
-                Needs a sort of "mode" in TaskMy      
-      For TaskChat we have state.stable = ["input"]
-  Pause the Task until updated (e.g. block UI events - loading page)
-  Start the task normally for it to init and pause it in the state machine
-    What does it mean to pause rxjs
-    Need to support the stately FSM approach too
-  Code review
+  This is how we could access user content for scraping
+After taskConfigs are converted into tasks then do we move config.local into config?
+TaskAlerts
+  Like a message queue so a user can see taks that are awaiting action
+    events
+    applications
+  Autostart like menu
+When a task is not connected to React how do we report errors
+  Need a background TaskError on React for this ?
+    hub-consumer can check and send if not handled by React
+Reload does not update services
 
 Need dev mode that will stop on errors
 Test maintenance page
@@ -38,13 +45,12 @@ Dynamic loading of Task Functions would allow for on the fly extensions
 Dedicated err log seems important when running with forever
   Add options to forever for this
   Five scripts names in forever
-TaskMy
-  Apply mask but will need to do that inside TaskMy.mjs
+TaskLog
+  Apply mask but will need to do that inside TaskLog.mjs
   Ability to navigate through the history ?
     Risk of an intermediate state
       Could specify which states can be restored ? e.g. input for chat
   Launch TaskHistory that would show the family tree
-Instead of modelVersion, map to strong, medium, weak
 Ignore or merge blocks under a certain size?
 Add a task that starts tasks for the admin of RAG
 Basic query classifications:
@@ -82,8 +88,6 @@ OpenAI features: JSON mode, parallel function calls
 Cookie could encode array of tribes
   Problem if user is not unique
     Should just enforce unique users
-Support for children 
-  Use tasktypes instead
 config.local -> config.self ?    
 Version table in accessdb
   version.current
@@ -100,6 +104,7 @@ Review for security holes
   sharedEntry["system"]
   Can use command start with commandArgs.init to set initial values
     Could/should mask the init task before using it
+  regex on cep ?
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?
@@ -266,22 +271,6 @@ In Firefox mobile need to move the Toolbar to the Top so it does not hide conten
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service
-  
-Demo of copying a task
-  Copy of TaskChat
-    System task that starts a conversation 
-      During start provide commandArgs with copyId
-        Could intercept with CEP so TaskConversation is unchanged
-          TaskCopy
-            Does it need to be specific to TaskConversation ?
-              config would map id to particular instanceId for copying
-                only copy the TaskChat
-                  TaskCopy could be configured for particular child (conversation)
-                    Point to familyId so TaskCopy can find the Tasks to copy?
-    Review taskStart to identify what must be replaced in the copy
-      set commandArgs.copyInstanceId and then copy task to initTask 
-      children/parent (as per pasteBranch_async)
-      familyId
 tasksStore_async -> taskconfigsStore_async
   tasks.mjs -> taskconfigs.mjs
 Test Docker setup
@@ -461,10 +450,6 @@ Deleting of tasks for CEP
 
 https://en.wikipedia.org/wiki/Shared-nothing_architecture
   One alternative architecture is shared everything
-Task that monitors a collaborative discussion and via another route allows interaction with any one of the persona
-  Requires making a temporary copy of the task - could have it as a child then create a holder and copy the relevant data across
-  Does not require extending the server ?
-    Security flaw for now - a user can "fake" another task (but need the familyId)
 Notion of an input pipeline and output pipeline, managed by Processor
   task.config.inputPipeline = [...]
   task.config.outputPipeline = [...]
@@ -566,16 +551,10 @@ How to have a task deal with compound react components
          * -> list of components that are active all the time
     state1 -> list of active components
     state2 -> list of active components
-Consider how we would add a radio select box to a component
-  Add the component and a config option to display or not
-  Dynamic mapping of config to the input
-  Standard way of mapping this to response. Make these available as variable in next Task (or state?)
-  Could have an inject command from Hub
-    Modify the parent task.meta.children and modify the child task.parent etc. then 
-      Modify parent should then start new child that can be configured to start previous child as its child
 Option to IGNORE config options from parents
   Avoids inheriting info that is not used.
   Can just set to null to achieve this?
+  LOCAL_ in the parent
 
 Backlog
 -------

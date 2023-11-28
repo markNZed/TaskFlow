@@ -33,7 +33,7 @@ function TaskSystemMenu(props) {
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
   const [mobileViewOpen, setMobileViewOpen] = useState(false);
   const [drawWidth, setDrawWidth] = useState(220);
   const [tasksTree, setTasksTree] = useState([]);
@@ -51,19 +51,19 @@ function TaskSystemMenu(props) {
       case "loaded":
         setTasksTree(task.state.tasksTree);
         // Trying deepClone here because I thin changes to the global might have been impacting the task.state
-        replaceGlobalState("tasksTree", utils.deepClone(task.state.tasksTree)); // mergeGlobalState did not delete ?
+        setGlobalStateEntry("tasksTree", utils.deepClone(task.state.tasksTree));
         //console.log("task.state.tasksTree", task.state.tasksTree);
         modifyTask({
           "command": "update",
           "state.current" : "ready",
-          "commandDescription": "Transition state to loaded ater setting global tasksTree",
+          "commandDescription": "Transition state to ready ater setting global tasksTree",
         });
         break;
       case "ready":
         if (!utils.deepEqual(task.state.tasksTree, tasksTree)) {
           //console.log("task.state.tasksTree", task.state.tasksTree);
           setTasksTree(task.state.tasksTree);
-          replaceGlobalState("tasksTree", utils.deepClone(task.state.tasksTree)); // mergeGlobalState did not delete ?
+          setGlobalStateEntry("tasksTree", utils.deepClone(task.state.tasksTree));
         }
         break;
       default:

@@ -35,7 +35,7 @@ function App({ activeWorkerCount, workerId }) {
   const nodeIdRef = useRef(null);
   const [enableGeolocation, setEnableGeolocation] = useState(false);
   const { address } = useGeolocation(enableGeolocation);
-  const { globalState, mergeGlobalState, replaceGlobalState } =  useGlobalStateContext();
+  const { globalState, mergeGlobalState, setGlobalStateEntry } =  useGlobalStateContext();
   const storageRef = useRef(null);
   // So Taskflows.js can use the withTask pattern
   // Need to provide an empty object not null
@@ -44,7 +44,7 @@ function App({ activeWorkerCount, workerId }) {
   useEffect(() => {
     if (workerId) {
       if (globalState.workerId !== workerId) {
-        replaceGlobalState("workerId", workerId);
+        setGlobalStateEntry("workerId", workerId);
       }
       if (globalState.nodeId === undefined) {
         let id = localStorage.getItem('nodeId' + workerId);
@@ -83,7 +83,7 @@ function App({ activeWorkerCount, workerId }) {
       commandDescription: `Request ${nodeId} to register`,
       node,
     })
-    replaceGlobalState("node", node);
+    setGlobalStateEntry("node", node);
     // The initial task takes on the nodeId so it can process autostart tasks sent by the hub
     setTask({...task, instanceId: nodeId});
   };
@@ -125,7 +125,7 @@ function App({ activeWorkerCount, workerId }) {
 
   useEffect(() => {
     if (enableGeolocation && address && globalState?.address !== address) {
-      replaceGlobalState("address", address);
+      setGlobalStateEntry("address", address);
     }
   }, [address, enableGeolocation]);
 

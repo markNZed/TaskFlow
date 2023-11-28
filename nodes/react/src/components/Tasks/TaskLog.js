@@ -4,14 +4,13 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState, useMemo, useCallback, useContext } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import withTask from "../../hoc/withTask";
 import 'react-data-grid/lib/styles.css';
 import DataGrid from 'react-data-grid';
 import DragFilterHeader from '../Grid/DragFilterHeader';
 import TaskQueryBuilder from './Shared/TaskQueryBuilder';
 import PaginationControls from '../Grid/PaginationControls';
-import { createColumns } from './TaskMy/createColumns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button, Menu, MenuItem, Checkbox, TextField } from '@mui/material';
@@ -33,10 +32,9 @@ Ideas:
   Being able to view through time - like "playing" the log
   React-Flow
   Testing
-  Could react-querybuilder use the Task JSON schema
 */
 
-const TaskMy = (props) => {
+const TaskLog = (props) => {
 
   const {
     log,
@@ -45,77 +43,159 @@ const TaskMy = (props) => {
     transition,
   } = props;
 
-  // Setup the initial filters dynamically based on initialColumns
   function initFilters(columns) {
     const filters = {};
-    columns.forEach(column => {
-      if (!columns.disableFilter) {
-        filters[column.key] = '';
-      }
-    });
+    if (columns) {
+      columns.forEach(column => {
+        if (!columns.disableFilter) {
+          filters[column.key] = '';
+        }
+      });
+    }
     //console.log("initFilters", filters);
     return filters;
   }
 
-  // Custom Formatter component
-  const LinkFormatter = ({ row, column }) => {
-    const handleClick = () => {
-        // Implement your click handling logic here
-        //console.log(`Clicked link in row ${row.key} column ${column.key} instanceId ${row.instanceId}`, row);
-        modifyTask({ 
-          command: "start",
-          commandArgs: {
-            // root.user.hubTasks.taskclone
-            // I guess we need permissions on the system tasks that we don't want users to launch
-            // Need to create a new family
-            init: {
-              id: "root.system.taskclone",
-              input: {
-                cloneInstanceId: row.instanceId,
-                cloneId: row.taskId,
-                cloneFamilyId: row.current.familyId,
-              }
+  // Custom Formatter component, for different actions/buttons
+  const actionFormatter = ({cell, mode}) => {
+    //console.log("actionFormatter", cell, mode);
+    const row = cell.row;
+
+    // Click handler for clone action
+    const handleClickClone = () => {
+      modifyTask({ 
+        command: "start",
+        commandArgs: {
+          init: {
+            id: "root.system.taskclone",
+            input: {
+              cloneInstanceId: task.input.cloneInstanceId,
+              cloneId: task.input.cloneId,
+              cloneFamilyId: task.input.cloneFamilyId,
+              cloneUpdatedAt: row.updatedAt,
             }
-          },
-          "commandDescription": `Clone task ${row.taskId} from instanceId ${row.instanceId}`,
-        });
+          }
+        },
+        "commandDescription": `Clone task ${row.taskId} from instanceId ${row.current.instanceId}`,
+      });
     };
-    return <Button variant="contained" size="small" onClick={handleClick}>Clone</Button>;
-    //return <a href="#" onClick={handleClick}>{row[column.key]}</a>;
+
+    // Click handler for restart action
+    const handleClickContinue = () => {
+      // Implement restart logic here
+      modifyTask({ 
+        command: "start",
+        commandArgs: {
+          init: {
+            id: "root.system.taskclone",
+            input: {
+              cloneInstanceId: row.current.instanceId,
+              cloneId: row.taskId,
+              cloneFamilyId: row.current.familyId,
+              cloneContinue: true, // take the latest
+            }
+          }
+        },
+        "commandDescription": `Continue task ${row.taskId} from instanceId ${row.current.instanceId}`,
+      });
+    };
+
+    // Click handler for back action
+    // eslint-disable-next-line no-unused-vars
+    const handleClickBack = () => {
+      // Switch the mode back to selectFounder and reload
+    };
+
+    // Click handler for select action
+    const handleClickSelect = () => {
+      console.log("handleClickSelect", row);
+      // Need to refresh the query using the familyId of the current row
+      // change the mode to selectState
+      modifyTask({
+        "request.mode": "selectState",
+        "state.autoQuery": false,
+        "request.queryBuilder": {},
+        "input.cloneInstanceId": row.current.instanceId,
+        "input.cloneId": row.taskId,
+        "input.cloneFamilyId": row.current.familyId,
+        "command": "update",
+        "commandDescription": `Switch from selectFounder to selectState for ${row.current.familyId}`,
+      });
+    };
+
+    switch (mode) {
+      case "selectFounder":
+        return (
+          <>
+            <Button variant="contained" size="small" onClick={handleClickSelect} style={{ marginRight: '10px' }}>History</Button>
+            <Button variant="contained" size="small" onClick={handleClickContinue}>Continue</Button>
+          </>
+        )
+      case "selectState":
+        return (
+          <>
+            <Button variant="contained" size="small" onClick={handleClickClone}>Clone</Button>
+            {/* <Button variant="contained" size="small" onClick={handleClickBack}>Back</Button> */}
+          </>
+        );
+      default:
+        return null;
+    }
   };
+
+  const [createColumnsFn, setCreateColumnsFn] = useState(null);
+  
+  // Dynamic loading of the column definitions
+  useEffect(() => {
+    const createColumnsFileName = task.config.local.createColumns + "CreateColumns.js";
+    import('./TaskLog/' + createColumnsFileName)
+      .then((module) => {
+        console.log("module ", createColumnsFileName);
+        setCreateColumnsFn(() => module.createColumns);
+        return module.createColumns;
+      })
+      .then((createColumns) => {
+        const initialColumns = createColumns(rowDetailHeight, actionFormatter, task.config.local.mode);
+        //console.log("initialColumns", initialColumns);
+        setColumns(initialColumns);
+        const initFiltersOut = initFilters(initialColumns);
+        //console.log("initFiltersOut", initFiltersOut);
+        setFilters(initFiltersOut);
+      })
+      .catch((error) => {
+        console.error(`Failed to import ${createColumnsFileName}:`, error);
+      });
+  }, []);
 
   const rowDetailHeight = task.config.local.rowDetailHeight;
   const initPageSize = task.config.local.pageSize;
-  const initialColumns = createColumns(rowDetailHeight, LinkFormatter);
+  const [mode, setMode] = useState(task.config.local.mode);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [data, setData] = useState([]);
   const [rows, setRows] = useState([]);
   const [sortedRows, setSortedRows] = useState([]); 
-  const [columns, setColumns] = useState(initialColumns);
+  const [columns, setColumns] = useState([]);
   const [sortColumns, setSortColumns] = useState([]);
   const [hiddenColumns, setHiddenColumns] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const onSortColumnsChange = useCallback((sortColumns) => {
     setSortColumns(sortColumns.slice(-1));
   }, []);
-  const [filters, setFilters] = useState(initFilters(initialColumns));
+  const [filters, setFilters] = useState({});
   const [page, setPage] = useState(1);
   const [prevPage, setPrevPage] = useState(1);
   const [pageSize, setPageSize] = useState(initPageSize); // entries per page
   const [totalCount, setTotalCount] = useState(0);
-  // Need the context becausee we don't want to pass filters and setFilters as props 
-  // That would create a rendering loop when calling setFilters
-  const FilterContext = React.createContext();
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
 
   useEffect(() => {
     if (globalState.lastSelectedTaskId && globalState.lastSelectedTaskId === task.id) {
-      replaceGlobalState("maxWidth", "100%");
+      setGlobalStateEntry("maxWidth", "100%");
     }
   }, [globalState.lastSelectedTaskId]);
 
@@ -129,9 +209,8 @@ const TaskMy = (props) => {
   }, [searchTerm]);
 
   // Build the correct data structure for react-data-grid 
-  // The mapping comes from initialColumns except when processing e.g. command
   const transformedData = useMemo(() => {
-    if (!task.response.tasks) return [];
+    if (!task.response.tasks || !columns) return [];
     return task.response.tasks.map(t => {
       const transformedFields = {
         expanderType: 'MASTER',
@@ -139,7 +218,7 @@ const TaskMy = (props) => {
         key: t._id,
         current: t.current,
       };
-      initialColumns.forEach(col => {
+      columns.forEach(col => {
         if (col.dataPath) {
           const value = col.dataPath.split('.').reduce((acc, prop) => acc && acc[prop], t);
           transformedFields[col.key] = value;
@@ -153,7 +232,7 @@ const TaskMy = (props) => {
       //console.log("transformedFields", transformedFields);
       return transformedFields;
     });
-  }, [task.response.tasks]);
+  }, [task.response.tasks, columns]);
 
   // Task state machine
   useEffect(() => {
@@ -164,22 +243,37 @@ const TaskMy = (props) => {
       case "start":
         break;
       case "query":
-        if (task.input.query) {
+        if (task.input?.query) {
           // Transfer the input into a request and update the task
           // Also clear down the input
           modifyTask({ 
             "input.query": null,
             "request": task.input.query,
+            "response": {}, // Need to clear out old repsonses in case new response is smaller (diff would not replace old data)
             "command": "update",
             "commandDescription": "Transition to query state with query request",
           });
         }
         break;
       case "response":
-        setData(transformedData);
-        console.log("transformedData", transformedData);
-        setTotalCount(task.response.total)
-        nextState = "query";
+        if (createColumnsFn) {
+          if (mode !== task.config.local.mode) {
+            setMode(task.config.local.mode);
+          }
+          const localInitialColumns = createColumnsFn(rowDetailHeight, actionFormatter, task.config.local.mode);
+          console.log("mode change", mode, localInitialColumns);
+          //console.log("localInitialColumns", localInitialColumns);
+          setColumns(localInitialColumns);
+          const initFiltersOut = initFilters(localInitialColumns);
+          //console.log("initFiltersOut", initFiltersOut);
+          setFilters(initFiltersOut);
+          setData(transformedData);
+          //console.log("transformedData", transformedData);
+          setTotalCount(task.response.total)
+          nextState = "query";
+        } else {
+          console.log("waiting for createColumnsFn");
+        }
         break;
       default:
         console.log("ERROR unknown state : " + task.state.current);
@@ -187,11 +281,11 @@ const TaskMy = (props) => {
     // Manage state.current
     props.modifyState(nextState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task]);
+  }, [task, createColumnsFn]);
   
   // Apply filtering to each row
   const filteredRows = useMemo(() => {
-    console.log("Row count before filter", rows.length);
+    console.log("Row count before filter", rows.length, filters);
     const result = rows.filter((r) => {
       return Object.keys(filters).every((key) => {
         // Some key values may be undefined so ".includes" would fail
@@ -239,8 +333,6 @@ const TaskMy = (props) => {
     setSortedRows(newSortedRows);
   }, [filteredRows, sortColumns]);
 
-  const visibleColumns = columns.filter(column => !hiddenColumns.includes(column.key));
-
   const handleToggleColumnClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -261,7 +353,6 @@ const TaskMy = (props) => {
 
   // Create a component so we can useContext inside it
   function HeaderRendererComponent({ handleColumnsReorder, ...props }) {
-    const filters = useContext(FilterContext);
     return (
       <DragFilterHeader
         {...props}
@@ -273,23 +364,28 @@ const TaskMy = (props) => {
   }
 
   const draggableColumns = useMemo(() => {
-    function handleColumnsReorder(sourceKey, targetKey) {
-      const sourceColumnIndex = columns.findIndex((c) => c.key === sourceKey);
-      const targetColumnIndex = columns.findIndex((c) => c.key === targetKey);
-      const reorderedColumns = [...columns];
-      reorderedColumns.splice(
-        targetColumnIndex,
-        0,
-        reorderedColumns.splice(sourceColumnIndex, 1)[0]
-      );
-      setColumns(reorderedColumns);
+    if (columns && filters) {
+      function handleColumnsReorder(sourceKey, targetKey) {
+        const sourceColumnIndex = columns.findIndex((c) => c.key === sourceKey);
+        const targetColumnIndex = columns.findIndex((c) => c.key === targetKey);
+        const reorderedColumns = [...columns];
+        reorderedColumns.splice(
+          targetColumnIndex,
+          0,
+          reorderedColumns.splice(sourceColumnIndex, 1)[0]
+        );
+        setColumns(reorderedColumns);
+      }
+      const visibleColumns = columns.filter(column => !hiddenColumns.includes(column.key));
+      return visibleColumns.map((c) => {
+        return { ...c, 
+          headerRenderer: (headerProps) => <HeaderRendererComponent {...headerProps} handleColumnsReorder={handleColumnsReorder} setFilters={setFilters} />
+        };
+      });
+    } else {
+      return [];
     }
-    return visibleColumns.map((c) => {
-      return { ...c, 
-        headerRenderer: (headerProps) => <HeaderRendererComponent {...headerProps} handleColumnsReorder={handleColumnsReorder} setFilters={setFilters} />
-      };
-    });
-  }, [visibleColumns]);
+  }, [columns, hiddenColumns]);
 
   // Filter visible rows based on global search term
   useEffect(() => {
@@ -339,23 +435,24 @@ const TaskMy = (props) => {
 
   // Build the query fields for TaskQueryBuilder from initialColumns
   const queryFields = useMemo(() => {
-    return initialColumns
-      .filter(col => col.dataPath)
-      .map(col => {
-        const field = {
-          name: col.dataPath,
-          label: col.name,
-        };
-        if (col.queryDatatype) {
-          field.datatype = col.queryDatatype;
-        }
-        return field;
-      });
-  }, [initialColumns]);
+    if (columns) {
+      return columns
+        .filter(col => col.dataPath)
+        .map(col => {
+          const field = {
+            name: col.dataPath,
+            label: col.name,
+          };
+          if (col.queryDatatype) {
+            field.datatype = col.queryDatatype;
+          }
+          return field;
+        });
+    }
+  }, [columns]);
 
   return (
     <div style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column'}}>
-      <h2>User Log Viewer</h2>
       <TaskQueryBuilder 
         onQueryComplete={handleQueryComplete} 
         fields={queryFields}
@@ -371,7 +468,7 @@ const TaskMy = (props) => {
           open={Boolean(anchorEl)}
           onClose={handleToggleColumnClose}
         >
-          {columns.map(column => (
+          {columns && columns.map(column => (
             <MenuItem key={column.key} onClick={() => toggleColumn(column.key)}>
               <Checkbox checked={!hiddenColumns.includes(column.key)} />
               {column.name}
@@ -388,39 +485,37 @@ const TaskMy = (props) => {
         />
       </div>
       <DndProvider backend={HTML5Backend}>
-        <FilterContext.Provider value={filters}>
-          <PaginationControls totalCount={totalCount} pageSize={pageSize} page={page} setPage={setPage} rowCount={sortedRows.length} />
-          <DataGrid 
-            columns={draggableColumns}
-            sortColumns={sortColumns}
-            onSortColumnsChange={onSortColumnsChange}
-            rows={sortedRows}
-            onRowsChange={onRowsChange}
-            defaultColumnOptions={{
-              sortable: true,
-              resizable: true
-            }}
-            rowHeight={(prop) => { 
-              if (prop.row.expanderType === 'DETAIL') {
-                return rowDetailHeight;
-              } else { 
-                return 30; 
-              }
-            }}
-            rowKeyGetter={(row) => (row.key)}
-            enableVirtualization={false} // Due to dynamcic row heights
-            headerRowHeight={70}
-            pageSize={pageSize}
-            onPageChange={(newPage) => setPage(newPage)}
-            onPageSizeChange={(newSize) => setPageSize(newSize)}
-            className="fill-grid"
-          />
-          <PaginationControls totalCount={totalCount} pageSize={pageSize} page={page} setPage={setPage} rowCount={sortedRows.length} />
-        </FilterContext.Provider>
+        <PaginationControls totalCount={totalCount} pageSize={pageSize} page={page} setPage={setPage} rowCount={sortedRows.length} />
+        <DataGrid 
+          columns={draggableColumns}
+          sortColumns={sortColumns}
+          onSortColumnsChange={onSortColumnsChange}
+          rows={sortedRows}
+          onRowsChange={onRowsChange}
+          defaultColumnOptions={{
+            sortable: true,
+            resizable: true
+          }}
+          rowHeight={(prop) => { 
+            if (prop.row.expanderType === 'DETAIL') {
+              return rowDetailHeight;
+            } else { 
+              return 30; 
+            }
+          }}
+          rowKeyGetter={(row) => (row.key)}
+          enableVirtualization={false} // Due to dynamcic row heights
+          headerRowHeight={70}
+          pageSize={pageSize}
+          onPageChange={(newPage) => setPage(newPage)}
+          onPageSizeChange={(newSize) => setPageSize(newSize)}
+          className="fill-grid"
+        />
+        <PaginationControls totalCount={totalCount} pageSize={pageSize} page={page} setPage={setPage} rowCount={sortedRows.length} />
       </DndProvider>
     </div>
   );
 
 };
 
-export default withTask(TaskMy);
+export default withTask(TaskLog);

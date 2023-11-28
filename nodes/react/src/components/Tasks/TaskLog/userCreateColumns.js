@@ -7,7 +7,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import CellExpander from '../../Grid/CellExpander';
 import ReactJson from '@microlink/react-json-view'
 
-export function createColumns(rowDetailHeight, LinkFormatter) {
+export function createColumns(rowDetailHeight, actionFormatter, mode) {
     const columns = [
       {
         key: 'expanded',
@@ -99,11 +99,11 @@ export function createColumns(rowDetailHeight, LinkFormatter) {
       {  
         name: 'action', 
         dataPath: "",
-        width: 50,
+        //width: 100, // How can this size automatically?
         key: "action",
         flex: 1,
         // A link that will launch another task, we might need an commandArg to indicate the "founder"
-        formatter: LinkFormatter,
+        formatter: (cell) => actionFormatter({cell, mode}),
       },
     ];
     return columns;

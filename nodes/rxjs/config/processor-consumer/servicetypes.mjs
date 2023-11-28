@@ -11,12 +11,6 @@ const servicetypes = [
     name: "openaigpt",
     API: "openaigpt",
     moduleName: "ServiceVercelAI",
-    //modelVersion: 'gpt-3.5-turbo-1106',// 16k context window, seems to perform poorly compared to gpt-3.5-turbo-0613
-    modelVersion: 'gpt-4-1106-preview', // GPT4 turbo supports JSON response 
-    //modelVersion: 'gpt-3.5-turbo-0613', // claimed to be more steerable 
-    //modelVersion: 'gpt-4-0613', // Should understand functions
-    //modelVersion: 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)
-    //modelVersion: 'gpt-3.5-turbo-16k', // large prompt
     temperature: 1.0, // range of 0-2
     maxTokens: 4000,
     maxResponseTokens: 1000, // Leave space for context
@@ -32,6 +26,18 @@ const servicetypes = [
     systemMessageTemplate: "",
     cacheKeySeed: "",
     maxFunctionDepth: 1,
+    // 'gpt-3.5-turbo-1106',// 16k context window, seems to perform poorly compared to gpt-3.5-turbo-0613
+    // 'gpt-4-1106-preview', // GPT4 turbo supports JSON response 
+    // 'gpt-3.5-turbo-0613', // claimed to be more steerable 
+    // 'gpt-4-0613', // Should understand functions
+    // 'gpt-3.5-turbo-instruct', // a completion model (single-turn tasks)
+    // 'gpt-3.5-turbo-16k', // large prompt
+    modelStrengthMap: {
+      "high": "gpt-4",
+      "medium": "gpt-4-1106-preview",
+      "low": "gpt-3.5-turbo",
+    },
+    modelStrength: "medium",
   },
   {
     name: "configchat",

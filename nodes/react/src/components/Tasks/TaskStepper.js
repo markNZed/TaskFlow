@@ -62,7 +62,12 @@ function TaskStepper(props) {
     if (props.transition()) { log(`${componentName} State Machine State ${task.state.current}`) }
     switch (task.state.current) {
       case "start":
-        const startTaskId = props.task.meta.childrenId[0];
+        let startTaskId;
+        if (props.task.config?.local?.startTask) {
+          startTaskId = props.task.id + "." + props.task.config.local.startTask;
+        } else {
+          startTaskId = props.task.meta.childrenId[0];
+        }
         modifyTask({
           "command": "start",
           "commandArgs": {
@@ -198,7 +203,7 @@ function TaskStepper(props) {
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, config: {nextTask: metaNextTask}, instanceId }, idx) => (
+        ({ name, label, config: {nextTask: localNextTask}, instanceId }, idx) => (
           <Accordion
             key={name}
             expanded={isExpanded(name)}
@@ -233,8 +238,9 @@ function TaskStepper(props) {
                     Back
                   </Button>
                 )}
-              {!/\.stop$/.test(metaNextTask) &&
-                tasks[tasksIdx].name === name && (
+              {!/\.stop$/.test(localNextTask) &&
+                tasks[tasksIdx].name === name && 
+                tasks[tasksIdx]?.output?.loading !== true && (
                   <Button
                     onClick={() =>
                       setStepperNavigation({task: tasks[tasksIdx], direction: "forward"})

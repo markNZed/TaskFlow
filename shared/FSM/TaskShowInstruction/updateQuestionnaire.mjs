@@ -4,14 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-// To be able to load the JSON without fetching it via a web request from the browser we use new import feature
-// That requires using the assert keyword which is not yet supported by ESLint
-// Also need to modify babble to support assertsion  @babel/plugin-syntax-import-assertions with changes to config-overrides.js
-// Also changed ESlint parser to support assertions at the root of the project:
-//   npm i -D @babel/eslint-parser @babel/plugin-syntax-import-assertions
-//   See .eslintrc.js sections for parser and parserOptions
-import fsmJson from './default.json' assert { type: 'json' };
-
 /* eslint-plugin-xstate-include */
 
 // State name should represent what can happen (i.e. actions) in that state
@@ -21,6 +13,26 @@ import fsmJson from './default.json' assert { type: 'json' };
 // choose: for conditional actions 
 // eslint-disable-next-line no-unused-vars
 export function getFSM(initialTask) {
-  return fsmJson;
-}
-
+  return {
+    "states": {
+      "start": {
+        "entry": ["rxjs_processor_consumer_start", "rxjs_hub_consumer_start", "rxjs_hub_coprocessor_start", "react_start_loading"],
+        "always": {
+          "target": "displayInstruction",
+          "cond": "react_instructionCached"
+        }
+      },
+      "displayInstruction": {
+        "entry": ["react_displayInstruction", "rxjs_processor_consumer_fill"],
+      },
+      "waitingForFill": {
+      },
+      "filled": {
+        "entry": "react_stop_loading",
+      },
+      "finish": {
+        "entry": "react_finish"
+      }
+    }
+  }
+}  

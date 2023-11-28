@@ -6,7 +6,7 @@ import { utils } from "../utils/utils.mjs";
 // loses the state, so can't remember the task
 
 // We pass in isMountedRef so the update does not get overwritten by Task initializations
-function useUpdateWSFilter(isMountedRef, initialTask, onUpdate) {
+function useUpdateWSFilter(isMountedRef, tabActive, initialTask, onUpdate) {
 
   //console.log("------------ useUpdateWSFilter ---------------", initialTask);
 
@@ -70,7 +70,7 @@ function useUpdateWSFilter(isMountedRef, initialTask, onUpdate) {
       //console.log("useUpdateWSFilter useEffect removing handleUpdate instanceId", instanceId);
       webSocketEventEmitter.removeListener("update", handleUpdate);
     };
-  }, [instanceId, onUpdate]);
+  }, [instanceId, onUpdate, tabActive]);
   
 }
 

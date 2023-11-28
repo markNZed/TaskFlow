@@ -20,10 +20,10 @@ const system = [
     type: "TaskCEPShared",
   },
   {
-    name: "systemlog",
+    name: "systemlogger",
     ceps: {
-      systemlog: {
-        type: "systemlog",
+      systemlogger: {
+        type: "systemlogger",
         isRegex: true,
         match: ".*instance.*",
         environments: ["rxjs-hub-coprocessor"],
@@ -33,12 +33,36 @@ const system = [
     parentName: "system",
     environments: ["rxjs-hub-coprocessor"],
     config: {
-      autoStartEnvironment: "rxjs-hub-coprocessor",
-      autoStartCoprocessor: true,
-      autoStartpriority: "0",
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+        autoStartCoprocessor: true,
+        autoStartpriority: "0",
+      }
     },
     type: "TaskCEP",
-  }, 
+  },
+  {
+    name: "system-cron",
+    ceps: {
+      CEPCron: {
+        type: "CEPCron",
+        isRegex: true,
+        match: ".*instance.*",
+        environments: ["rxjs-hub-coprocessor"],
+        isSingleton: true,
+      }
+    },
+    parentName: "system",
+    environments: ["rxjs-hub-coprocessor"],
+    config: {
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+        autoStartCoprocessor: true,
+        autoStartpriority: "1",
+      }
+    },
+    type: "TaskCEP",
+  },
 
   {
     name: "taskflow",
@@ -48,6 +72,7 @@ const system = [
     config: {
       local: {
         menuId: "root.system.taskflow.menu",
+        autoStartEnvironment: "react",
       },
     },
   },
@@ -366,7 +391,9 @@ const system = [
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "rxjs-hub-consumer",
+      local: {
+        autoStartEnvironment: "rxjs-hub-consumer",
+      },
     },
     parentName: "configs",
     type: "TaskNodeConfigs",
@@ -391,7 +418,9 @@ const system = [
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "rxjs-hub-coprocessor",
+      local: {
+        autoStartEnvironment: "rxjs-hub-coprocessor",
+      },
     },
     parentName: "configs",
     type: "TaskNodeConfigs",
@@ -412,7 +441,9 @@ const system = [
       debug: {
         debugTask: false,
       },
-      autoStartEnvironment: "rxjs-processor-consumer",
+      local: {
+        autoStartEnvironment: "rxjs-processor-consumer",
+      },
     },
     parentName: "configs",
     type: "TaskNodeConfigs",
@@ -439,14 +470,16 @@ const system = [
     parentName: "system",
     environments: ["rxjs-hub-consumer"],
     config: {
-      autoStartEnvironment: "rxjs-hub-consumer",
-      autoStartCoprocessor: true,
+      local: {
+        autoStartEnvironment: "rxjs-hub-consumer",
+        autoStartCoprocessor: true,
+      },
     },
     type: "TaskCEP",
   },
 
   {
-    name: "systasks",
+    name: "tasks",
     parentName: "system",
     config: {
       label: "Tasks",
@@ -458,7 +491,7 @@ const system = [
     config: {
       label: "Reload",
     },
-    parentName: "systasks",
+    parentName: "tasks",
     environments: ["rxjs-hub-consumer"],
     type: "TaskConfigReload",
     state: {
@@ -472,16 +505,21 @@ const system = [
       label: "Restart", 
     },
     type: "TaskSystemRestart",
-    parentName: "systasks",
+    parentName: "tasks",
   },
   {
     initiator: true,
-    name: "systemlogviewer",
+    name: "log",
     config: {
       label: "Log",
+      local: {
+        createColumns: "system",
+        autoQuery: true,
+        pageSize: 10,
+      },
     },
-    parentName: "systasks",
-    type: "TaskSystemLogViewer",
+    parentName: "tasks",
+    type: "TaskLog",
   },
   {
     initiator: true,
@@ -496,10 +534,10 @@ const system = [
     config: {
       label: "Edit",
       debug: {
-        debugTask: true,
+        //debugTask: true,
       },
     },
-    parentName: "systasks",
+    parentName: "tasks",
     type: "TaskEdit",
   },
   

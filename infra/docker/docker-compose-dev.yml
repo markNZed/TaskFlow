@@ -87,10 +87,33 @@ services:
     networks:
       - web-proxy
 
+  neo4j:
+    image: neo4j:latest
+    restart: on-failure:1
+    ports:
+      - 127.0.0.1:7474:7474
+      - 127.0.0.1:7687:7687
+    volumes:
+      - neo4j-data/conf:/conf
+      - neo4j-data/data:/data
+      - neo4j-data/import:/import
+      - neo4j-data/logs:/logs
+      - neo4j-data/plugins:/plugins
+    environment: 
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_PLUGINS='["graph-data-science"]'
+      - NEO4J_AUTH=none
+    networks:
+      - web-proxy
+      
 volumes:
   mongodb-data:
   redis-data:
   weaviate-data:
+  neo4j-data:
 
 networks:
     web-proxy:

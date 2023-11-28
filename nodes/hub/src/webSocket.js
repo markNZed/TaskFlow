@@ -95,6 +95,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
     user = utils.deepClone(task.users[task.user.id]);
   }
+  let tribe = task.tribe;
   let message = {}
   // We can only have an activeTask for an update command
   if (currentNode.command === "update") {
@@ -151,7 +152,11 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
     }
     task["user"] = user;
     //delete task.users;
+    if (!task?.user?.id) {
+      utils.logTask(task, "wsSendTask no user", task);
+    }
   }
+  task.tribe = tribe;
   task.meta = task.meta || {};
   if (currentNode.command !== "pong" && currentNode.command !== "partial") {
     //utils.logTask(task, "wsSendTask sourceNodeId " + currentNode.sourceNodeId)
@@ -273,8 +278,9 @@ function initWebSocketServer(server) {
             }
             // Allocate user to tribe
             task["user"] = user;
-            task.user["tribe"] = tribeName;
-            //utils.logTask(task, "Set user tribe", userId, tribeName);
+            task.tribe = tribeName;
+            // This seems very dodgy - should not be setting NODE?
+            // Should set in task.node ?
             NODETribe(tribe);
             utils.debugTask(task, "set tribe");
           }
@@ -351,7 +357,7 @@ function initWebSocketServer(server) {
         } else if (task) {
           // Add the user id if it is not set
           if (!task?.user?.id && userId) {
-            task["user"] = task.user || {}; // user.tribe may be set
+            task["user"] = task.user || {};
             task.user["id"] = userId;
           }
           
@@ -427,7 +433,7 @@ function initWebSocketServer(server) {
 
       } catch (error) {
         console.error("ws error", error);
-      }
+      } 
 
     });
 

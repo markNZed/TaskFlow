@@ -93,46 +93,98 @@ async function checkUserGroup_async(groupId, userId) {
   }
 }
 
-function isAllCaps(str) {
-  return /^[A-Z\s]+$/.test(str);
-}
-
 async function processTemplateArrays_async(obj, task, outputs, familyId) {
-  // Do substitution on arrays of strings and return a string
+  // Define regex patterns and their associated case identifiers
+  const regexPatterns = [
+    { regex: /^([^\s.]+).*?\.([^\s.]+)$/, caseId: 'dotNotation' },
+    { regex: /^(USER|SHARED)\.([^\s]+)$/, caseId: 'userOrShared' },
+    { regex: /^\.(\.+)([^\s]+)$/, caseId: 'relativePath' },
+    { regex: /.*\.(output)\.([^\s]+)$/, caseId: 'outputPath' },
+    { regex: /^\.([^\s]+)$/, caseId: 'local' },
+    { regex: /^(\.+)(.*)\.output\./, caseId: 'complexOutputPath' }
+  ];
+
   if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
-    const user = await usersStore_async.get(task.user.id);
     return obj.reduce(function (acc, curr) {
-      // Substitute variables with previous outputs
-      const regex = /^([^\s.]+).*?\.([^\s.]+)$/;
-      const matches = regex.exec(curr);
-      //utils.logTask(task, "curr ", curr, " matches", matches)
-      if (matches && !isAllCaps(matches[1])) {
-        const path = curr.split('.');
-        let outputPath;
-        if (path[0] === "root") {
-          outputPath = curr.replace(/\.[^.]+$/, '');
-        } else {
-          outputPath = task.meta.parentId + "." + matches[1] + ".output";
-        }
-        if (outputs[outputPath] === undefined) {
-          throw new Error("outputStore " + familyId + " " + outputPath + " does not exist")
-        }
-        if (outputs[outputPath][matches[2]] === undefined) {
-          throw new Error("outputStore " + familyId + " " + outputPath + " output " + matches[2] + " does not exist in " + JSON.stringify(outputs[matches[1]]))
-        }
-        //utils.logTask(task, "Here ", outputPath, matches[2], outputs[outputPath][matches[2]])
-        return acc.concat(outputs[outputPath][matches[2]]);
-      } else {
-        const regex = /^(USER)\.([^\s.]+)$/;
+      let matchFound = false;
+      let result = '';
+      for (const { regex, caseId } of regexPatterns) {
         const matches = regex.exec(curr);
         if (matches) {
-          // Substitute variables with user data
-          return acc.concat(user[matches[2]])
-        } else {
-          return acc.concat(curr);
+          console.log("processTemplateArrays_async matches", caseId, matches);
+          switch (caseId) {
+            case 'dotNotation': {
+              // Dot notation substitution
+              const path = curr.split('.');
+              let outputPath;
+              if (path[0] === "root") {
+                outputPath = curr.replace(/\.[^.]+$/, '');
+              } else {
+                outputPath = task.meta.parentId + "." + matches[1] + ".output";
+              }
+              if (outputs[outputPath] === undefined) {
+                throw new Error("outputStore " + familyId + " " + outputPath + " does not exist");
+              }
+              result = outputs[outputPath][matches[2]];
+              break;
+            }
+            case 'userOrShared': {
+              // USER or SHARED substitution
+              const T = utils.createTaskValueGetter(task);
+              if (matches[1] === "USER") {
+                result = T("user." + matches[2]);
+              } else { // matches[1] === "SHARED"
+                result = T("shared." + matches[2]);
+              }
+              break;
+            }
+            case 'relativePath': {
+              // Relative path substitution
+              const relativeDistance = matches[1].length;
+              const pathParts = task.meta.parentId.split('.');
+              const relativePath = pathParts.splice(-relativeDistance, relativeDistance);
+              const relativeId = relativePath.join('.');
+              result = relativeId + "." + matches[2];
+              break;
+            }
+            case 'outputPath': {
+              // Output path substitution
+              result = outputs[matches[0]][matches[2]];
+              break;
+            }
+            case 'local': {
+              // relative to current task
+              const T = utils.createTaskValueGetter(task);
+              result = T(matches[1]);
+              break;
+            }
+            case 'complexOutputPath': {
+              // Calculate the relativeId based on the current task metadata
+              const relativeLevels = matches[1].length;
+              const pathSegments = task.meta.parentId.split('.');
+              const reducedPath = pathSegments.slice(0, -relativeLevels).join('.');
+              let complexOutputPath;
+              if (matches[2] === '') {
+                complexOutputPath = reducedPath + ".output";
+              } else {
+                complexOutputPath = reducedPath + "." + matches[2] + ".output";
+              }
+              result = outputs[complexOutputPath][matches[2]];
+              break;
+            }
+          }
+          matchFound = true;
+          break; // Stop iterating once a match is found
         }
       }
+
+      if (!matchFound) {
+        result = curr; // If no match, keep the current string as is
+      }
+
+      return acc.concat(result);
     }, []).join("");
+
   } else {
     for (const key in obj) {
       if (Array.isArray(obj[key])) {
@@ -142,7 +194,8 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
       }
     }
   }
-  return obj
+
+  return obj;
 }
 
 async function processTemplates_async(task, obj, outputs, familyId) {
@@ -231,7 +284,6 @@ async function updateTaskAndPrevTaskAsync(task, prevTask, nodeId, activeNodes/*,
       }
       task.users = prevTask.users || {}; // Could be empty in the case of error task
       task.users[task.user.id] = task.users[task.user.id] || {};
-      task.users[task.user.id]["tribe"] = prevTask.user.tribe;
       task.state.address = prevTask.state?.address ?? task.state.address;
       task.state.lastAddress = prevTask.state?.lastAddress ?? task.state.lastAddress;
     } else {
@@ -314,7 +366,7 @@ function allocateTaskToNodes(task, nodeId, activeNodes) {
   utils.logTask(task, "task.environments", task.environments);
 
   // If the task only runs on coprocessor
-  if (task.config.autoStartCoprocessor) {
+  if (task.config?.local?.autoStartCoprocessor) {
     return [];
   }
   // Allocate the task to nodes that supports the environment(s) requested
@@ -437,7 +489,7 @@ async function taskStart_async(
     ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
     ['connections'].forEach(key => task[key] = task[key] || []);
 
-    task = await checkUserPermissions_async(task, initTask?.user?.tribe, groupsStore_async, tribesStore_async, authenticate);
+    task = await checkUserPermissions_async(task, task.tribe, groupsStore_async, tribesStore_async, authenticate);
 
     // Is this a user task being launched from a system task ?
     // If so then initialize a new familyId
@@ -559,11 +611,13 @@ async function taskStart_async(
       //console.log("Starting with user", task.user, initTask);  
       user = utils.deepMerge(user, task.user);
     }
+    task.user = user;
     if (task.users[task.user.id]) {
       task.users[task.user.id] = utils.deepMerge(task.users[task.user.id], user);
     } else {
       task.users[task.user.id] = user;
     }
+    console.log("startTask tribe", task.tribe);
     
     // This is only for task.config 
     task = await supportMultipleLanguages_async(task, usersStore_async);

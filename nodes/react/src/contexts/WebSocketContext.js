@@ -30,7 +30,7 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   const logPingPong = false;
 
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();
   // To get a cookie
   const authToken = Cookies.get('authToken');
@@ -39,6 +39,32 @@ export function WebSocketProvider({ children, socketUrl }) {
   // There is also the listener for partial results
   // So this would allow for about 4 * 25 concurrent tasks
   webSocketEventEmitter.setMaxListeners(100);
+
+  function pingSocketReload(socketUrl, retryCount = 0, maxRetries = 5, retryDelay = 1000) {
+    const socket = new WebSocket(socketUrl);
+    socket.onopen = function(event) {
+        console.log("Connection established with the WebSocket server.");
+        // If the connection is successful, reload the window
+        // This should cause the App to re-register with the hub
+        window.location.reload(true);
+    };
+    socket.onerror = function(error) {
+        console.log("Failed to connect with the WebSocket server: ", error);
+        retryCount++;
+        if (retryCount <= maxRetries) {
+            // Calculate exponential backoff time
+            const backoffTime = retryDelay * Math.pow(2, retryCount - 1);
+            console.log(`Retrying connection in ${backoffTime} ms`);
+            setTimeout(() => pingSocketReload(socketUrl, retryCount, maxRetries, retryDelay), backoffTime);
+        } else {
+            console.log("Max retries reached. Not attempting further connections.");
+        }
+    };
+    socket.onclose = function(event) {
+        console.log("Connection with the WebSocket server closed.");
+        // Handle the closure of the connection if necessary
+    };
+  }
 
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
@@ -70,7 +96,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   }
 
   const { sendJsonMessage, getWebSocket } = useWebSocket(socketUrl, {
-    reconnectAttempts: 15,
+    reconnectAttempts: 5,
     //reconnectInterval: 500,
     //attemptNumber will be 0 the first time it attempts to reconnect, so this equation results in a reconnect pattern of 1 second, 2 seconds, 4 seconds, 8 seconds, and then caps at 10 seconds until the maximum number of attempts is reachedW
     reconnectInterval: (attemptNumber) =>
@@ -81,11 +107,6 @@ export function WebSocketProvider({ children, socketUrl }) {
     onOpen: (e) => {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
-      if (!globalState.hubId) {
-        // This should cause the App to re-register with the hub
-        // Reassigning the same value will create an event 
-        replaceGlobalState("hubId", null);
-      }
       wsSendTask(utils.taskPing());
       const intervalId = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -136,6 +157,7 @@ export function WebSocketProvider({ children, socketUrl }) {
         console.log("App webSocket unexpected message", message);
       }
     },
+
     onClose: (e) => {
       console.log(
         `App webSocket closed with code ${e.code} and reason '${e.reason}' and error ${e}`
@@ -144,13 +166,16 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (ws.pingIntervalId) {
         clearInterval(ws.pingIntervalId);
       }
-      // This should cause the App to re-register with the hub
-      //replaceGlobalState("hubId", null);
-      window.location.reload(true);
     },
+
     onerror: (e) => {
       console.log("App webSocket closed with error", e);
     },
+
+    onReconnectStop: (e) => {
+      pingSocketReload(socketUrl);
+    },
+
     // This makes a huge improvement to performance because it disables the state update inside useWebSocket and avoids re-rendering
     filter: (message) => {
       return false

@@ -134,7 +134,7 @@ const utils = {
   
   // If modified values are set (true) and object has all the keys of activeTask
   // then we can just set the branch to true (indicating all values below are modified)
-  compressModified: function(activeTask, modified) {
+  compactModified: function(activeTask, modified, compare = true, depth = 0) {
     if (activeTask === undefined || activeTask === null) {
       return true;
     }
@@ -153,7 +153,7 @@ const utils = {
           deletedAll = false;
           break;
         } else {
-          if (modified[key] === activeTask[key]) {
+          if (compare && modified[key] === activeTask[key]) {
             delete modified[key];
           } else {
             deletedAll = false;
@@ -173,7 +173,7 @@ const utils = {
       let allTrue = true;
       deletedAll = true;
       for (const key of modifiedKeys) {
-        modified[key] = utils.compressModified(activeTask[key], modified[key]);
+        modified[key] = utils.compactModified(activeTask[key], modified[key], compare, depth + 1);
         if (allTrue && modified[key] !== true) {
           allTrue = false;
           deletedAll = false;
@@ -204,7 +204,7 @@ const utils = {
       task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};
       task.node.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.node.commandArgs.syncTask, ignore);
       if (task.node.commandArgs.syncTask.meta.modified) {
-        utils.compressModified(activeTask, task.node.commandArgs.syncTask.meta.modified);
+        utils.compactModified(activeTask, task.node.commandArgs.syncTask.meta.modified);
       }
     } else {
       if (task.meta?.modified) {
@@ -213,7 +213,18 @@ const utils = {
     }
     task.meta["modified"] = utils.findKeys(task, ignore);
     if (task.meta.modified) {
-      utils.compressModified(activeTask, task.meta.modified);
+      utils.compactModified(activeTask, task.meta.modified);
+    }
+    return task;
+  },
+
+  setSyncEvents: function(activeTask, task) {
+    const ignore = ["meta"];
+    task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};
+    task.node.commandArgs.syncEvents = utils.findKeys(task.node.commandArgs.syncTask, ignore);
+    if (task.node.commandArgs.syncEvents) {
+      const compare = false;
+      utils.compactModified(activeTask, task.node.commandArgs.syncEvents, compare);
     }
     return task;
   },

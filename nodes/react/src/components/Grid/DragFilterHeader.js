@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useDrag, useDrop, useContext } from 'react-dnd';
+import React, { useEffect, useState, useContext } from "react";
+import { useDrag, useDrop } from 'react-dnd';
 import { headerRenderer } from 'react-data-grid';
 
-function DragFilterHeader({ setFilters, ...props }) {
+function DragFilterHeader(props) {
 
-  const { onColumnsReorder, onSort, column, filters } = props;
-  const [debouncedFilterInput, setDebouncedFilterInput] = useState(filters[column.key]);
-  const [filterInput, setFilterInput] = useState(filters[column.key]);
-  const useFilter = column.disableFilter ? false : true;
+  const { onColumnsReorder, onSort, column, filters, setFilters} = props;
+  const [debouncedFilterInput, setDebouncedFilterInput] = useState();
+  const [filterInput, setFilterInput] = useState();
+  const filterActive = column.disableFilter ? false : true;
 
   const [{ isDragging }, drag] = useDrag({
     type: 'COLUMN_DRAG',
@@ -29,7 +29,11 @@ function DragFilterHeader({ setFilters, ...props }) {
   });
 
   useEffect(() => {
-    if (debouncedFilterInput !== filters[column.key]) {
+    setFilterInput(filters[column.key]);
+  }, [filters]);
+
+  useEffect(() => {
+    if (filters && debouncedFilterInput !== filters[column.key]) {
       setFilters({
         ...filters,
         [column.key]: debouncedFilterInput,
@@ -40,6 +44,9 @@ function DragFilterHeader({ setFilters, ...props }) {
   // The debounce time is long because when filters is set then the parent will re-render
   // causing this component to unmount and we lose focus
   useEffect(() => {
+    if (filterInput === undefined) {
+      return;
+    }
     const timeoutId = setTimeout(() => {
       setDebouncedFilterInput(filterInput);
     }, 1000); // Delay in ms
@@ -60,7 +67,7 @@ function DragFilterHeader({ setFilters, ...props }) {
     }
   }
 
-  return useFilter ? (
+  return filterActive ? (
     <div
       ref={ref => {
         drag(ref);
@@ -81,7 +88,7 @@ function DragFilterHeader({ setFilters, ...props }) {
       <div>
         <input
           style={filterStyles}
-          value={filterInput}
+          value={filterInput || ''}
           onChange={(e) => setFilterInput(e.target.value) }
           onKeyDown={inputStopPropagation}
         />

@@ -22,6 +22,9 @@
             }
           ]
         },
+        "childrenNames": {
+          "type": "array"
+        },
         "command": {
           "type": ["null", "string"]
         },
@@ -33,6 +36,9 @@
         },
         "connections": {
           "type": "array"
+        },
+        "cron": {
+          "type": "object"
         },
         "error": {
           "anyOf": [
@@ -95,7 +101,10 @@
         },
         "tokens": {
           "type": "object"
-        },     
+        },
+        "tribe": {
+          "type": "string"
+        },    
         "type": {
           "type": "string"
         },

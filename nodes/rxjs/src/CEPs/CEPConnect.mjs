@@ -18,7 +18,7 @@ import { commandUpdate_async } from "#src/commandUpdate";
 // eslint-disable-next-line no-unused-vars
 async function cep_async(wsSendTask, CEPInstanceId, task, args) {
 
-  // If regex is empty then this wil lreturn the task instanceId
+  // If regex is empty then this will return the task instanceId
   function getInstanceIdFromFamily(family, regex) {
     console.log("getInstanceIdFromFamily regex", regex);
     if (regex === '') {

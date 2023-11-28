@@ -3,6 +3,7 @@ services:
   taskflow-react:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
+    restart: unless-stopped
     volumes:
       - ../../nodes/react:/app/nodes/react
       - ../../shared:/app/shared
@@ -17,6 +18,7 @@ services:
   taskflow-processor-consumer:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
+    restart: unless-stopped
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
@@ -29,6 +31,7 @@ services:
       - taskflow-hub
   taskflow-hub-consumer:
     image: taskflow-prod:latest
+    restart: unless-stopped
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
@@ -41,6 +44,7 @@ services:
       - taskflow-hub
   taskflow-hub-coprocessor:
     image: taskflow-prod:latest
+    restart: unless-stopped
     volumes:
       - ../../nodes/rxjs:/app/nodes/rxjs
       - ../../shared:/app/shared
@@ -54,6 +58,7 @@ services:
   taskflow-hub:
     #image: localhost:5000/taskflow-prod:latest
     image: taskflow-prod:latest
+    restart: unless-stopped
     volumes:
       - ../../nodes/hub:/app/nodes/hub
       - ../../shared:/app/shared
@@ -67,6 +72,7 @@ services:
     image: mongodb/mongodb-community-server:latest
     ports:
       - "127.0.0.1:27017:27017"
+    restart: unless-stopped
     environment:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
@@ -78,6 +84,7 @@ services:
     image: redis/redis-stack:latest
     # use REDIS_ARGS for redis-stack-server instead of command arguments
     # Writes to disk every 10 minutes if at least 1 change.
+    restart: unless-stopped
     environment:
       - REDIS_ARGS=--save 600 1
     volumes:
@@ -95,7 +102,7 @@ services:
     image: semitechnologies/weaviate:1.21.2
     volumes:
     - weaviate-data:/var/lib/weaviate
-    restart: on-failure:0
+    restart: unless-stopped
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
@@ -107,6 +114,28 @@ services:
       - web-proxy
   unstructured:
     image: downloads.unstructured.io/unstructured-io/unstructured:latest
+    restart: unless-stopped
+    networks:
+      - web-proxy
+  neo4j:
+    image: neo4j:latest
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:7474:7474
+      - 127.0.0.1:7687:7687
+    volumes:
+      - neo4j-data/conf:/conf
+      - neo4j-data/data:/data
+      - neo4j-data/import:/import
+      - neo4j-data/logs:/logs
+      - neo4j-data/plugins:/plugins
+    environment: 
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_PLUGINS='["graph-data-science"]'
+      - NEO4J_AUTH=none
     networks:
       - web-proxy
 
@@ -114,6 +143,7 @@ volumes:
   mongodb-data:
   redis-data:
   weaviate-data:
+  neo4j-data:
 
 networks:
   web-proxy:

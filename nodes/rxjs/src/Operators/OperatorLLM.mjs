@@ -95,7 +95,7 @@ async function chatPrepare_async(T) {
   if (T("request.service")) {
     serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));
   }
-  const modelVersion = serviceConfig.modelVersion;
+  const modelVersion = serviceConfig.modelVersion || serviceConfig.modelStrengthMap[serviceConfig.modelStrength];
   const temperature = serviceConfig.temperature;
   const maxTokens = serviceConfig.maxTokens;
   const maxResponseTokens = serviceConfig.maxResponseTokens;

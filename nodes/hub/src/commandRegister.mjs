@@ -14,6 +14,7 @@ dotenv.config();
 // We need to authenticate the nodeId
 // Could just be a shared secret in the body
 
+// This is the request from the Hub to tell the Processor to register
 export async function registerTask_async(wsSendTask, nodeId) {
   // Need to register again
   const taskRegister = {
@@ -43,7 +44,7 @@ export async function commandRegister_async(task) {
     let node = task.nodes[initiatingNodeId];
     node["userId"] = task?.user?.id;
     node["nodeId"] = initiatingNodeId;
-    node["tribe"] = task?.user?.tribe;
+    node["tribe"] = task.tribe;
     await register(node);
   } catch (error) {
     const msg = `Error commandRegister_async task ${task.id}: ${error.message}`;
@@ -150,9 +151,9 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       //console.log("allEnvironmentsAvailable");
       const initTask = {
         id: taskId,
+        tribe,
         user: {
           id: userId,
-          tribe,
         },
       }
       let task = {id: "autoStart"};
@@ -168,7 +169,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       task.node["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
       task["nodes"] = {};
       task.nodes[nodeId] = activeNodes.get(nodeId);
-      console.log("Autostarting task ", taskId, environment, userId, tribe);
+      console.log("Autostarting task", taskId, environment, userId, tribe);
       utils.debugTask(task, `Autostarting task ${taskId}`);
       commandStart_async(task);
       if (autoStartTask.once) {

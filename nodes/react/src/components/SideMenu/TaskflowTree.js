@@ -11,7 +11,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
 
 function TaskflowTree({ onClose }) {
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
 
   const [expanded, setExpanded] = useState([]);
   const [expandedAll, setExpandedAll] = useState(false);
@@ -34,7 +34,7 @@ function TaskflowTree({ onClose }) {
   };
 
   function handleSelectNode(e, node) {
-    replaceGlobalState("selectedTaskId", node.id);
+    setGlobalStateEntry("selectedTaskId", node.id);
     onClose(e);
   }
 
@@ -64,9 +64,9 @@ function TaskflowTree({ onClose }) {
       //const subtreeLeafCount = countSubtreeLeafNodes('root');
       // This code will run after the component mounts and renders
       const [leafCount, singleId] = countSubtreeLeafNodes();
-      replaceGlobalState("taskflowLeafCount", leafCount);
+      setGlobalStateEntry("taskflowLeafCount", leafCount);
       if (singleId) {
-        replaceGlobalState("selectedTaskId", singleId);
+        setGlobalStateEntry("selectedTaskId", singleId);
       }
     }
   });

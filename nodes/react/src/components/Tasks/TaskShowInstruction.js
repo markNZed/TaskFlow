@@ -11,6 +11,7 @@ import withTask from "../../hoc/withTask";
 import { utils } from "../../utils/utils.mjs";
 import { xutils } from "../../shared/FSM/xutils";
 import Fsm from "../Fsm";
+import Loading from "../Loading";
 
 /* 
 To use the XState FSM
@@ -42,6 +43,7 @@ const TaskShowInstruction = (props) => {
 
   const [instructionText, setInstructionText] = useState("");
   const { fsmSend, fsmState } = props.useShareFsm();
+  const [loading, setLoading] = useState(false);
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
@@ -56,6 +58,14 @@ const TaskShowInstruction = (props) => {
           "output.instruction": task.response.text,
         });
       }
+    },
+    react_start_loading: () => {
+      setLoading(true);
+      modifyTask({ "output.loading": true });
+    },
+    react_stop_loading: () => {
+      setLoading(false);
+      modifyTask({ "output.loading": false });
     },
     // We return to the "start" state so the FSM will start from there if remounted
     react_finish: () => modifyTask({ "state.done": true, "state.current": "start" }),
@@ -97,7 +107,7 @@ const TaskShowInstruction = (props) => {
         case 'init':
           break;
         default:
-          console.log("FSM ERROR unknown state : " + fsmState.value);
+          console.log("FSM WARNING unknown state : " + fsmState.value);
       }
   }, [fsmState, task]);
 
@@ -127,6 +137,9 @@ const TaskShowInstruction = (props) => {
               dangerouslySetInnerHTML={{ __html: utils.replaceNewlinesWithParagraphs(line) }}
             />
           ))}
+          {loading && (
+            <Loading containerStyle={{height: null}} message={task.config.local.loadingMessage}/>
+          )}
         </Paper>
       </div>
       <Fsm {...props} actions={actions} guards={guards} />

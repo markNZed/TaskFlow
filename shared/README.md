@@ -49,7 +49,7 @@ The task.operators.OperatorNAME.seed sets the cache seed in the Operator, it is 
 
 `task.id` is referring to the configuration `id`. It is a dot separated path of the parent Tasks (the configuration is inherited). There are two principle categories of tasks: system tasks and user tasks. System Tasks have an id starting with `root.system.` and user tasks have an id starting with `root.user.` 
 
-Tasks can be configured to start automatically with the `task.config` parameters `autoStartEnvironment`, `autoStartOnce`, `autoStartCoprocessor`. An example of this is the TaskCEPSystemLog task type which starts once on the Hub Coprocessor.
+Tasks can be configured to start automatically with the `task.config` parameters `autoStartEnvironment`, `autoStartOnce`, `autoStartCoprocessor`. An example of this is the TaskCEPSystemLogger task type which starts once on the Hub Coprocessor.
 
 `task.hash` can be used on the Processor to validate the task storage is in sync with the Hub. The utility function taskHash applies a hash on a JSON string of a recursivley key ordered partial Task object. This is reproducible in other programming languages by replicating the key ordering method, the JSON string representation, and the hash function. Only the Hub generates the hash and only the Processors optionally check the hash i.e., a Processor could ignore the hash. Because the update and sync send diffs based on local storage the hash can highlight issues that may otherwise be harder to find.
 

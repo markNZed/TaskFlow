@@ -1,8 +1,8 @@
 // This is an array because we use the same structure as other configdata
 const ceptypes = [
     {
-        name: "systemlog",
-        moduleName: "CEPSystemLog",
+        name: "systemlogger",
+        moduleName: "CEPSystemLogger",
     },
     {
         name: "familytree",
@@ -19,6 +19,9 @@ const ceptypes = [
     {
         name: "monitorInstance",
         moduleName: "CEPMonitorInstance",
+    },
+    {
+        name: "CEPCron",
     },
 ];
 

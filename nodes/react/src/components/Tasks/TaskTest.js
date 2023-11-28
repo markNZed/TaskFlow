@@ -45,7 +45,7 @@ function TaskTest(props) {
   }, []);
   */
 
-  const { replaceGlobalState } =  useGlobalStateContext();
+  const { setGlobalStateEntry } =  useGlobalStateContext();
 
   // We pass a ref to the task so we do not lose the task state when React sets it
   const [state, send, service] = useMachine(FSMachine, {

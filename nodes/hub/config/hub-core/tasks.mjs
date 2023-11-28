@@ -49,7 +49,7 @@ const tasks = [
         config: true,
         //id: true, can't mask id 
         type: true,
-        user: true, 
+        user: true,
         fsm: true,
         permissions: true,
       },
@@ -361,8 +361,8 @@ const tasks = [
     type: "TaskCEPHelloWorld",
     parentName: "user",
     config: {
-      autoStartEnvironment: "rxjs-hub-consumer",
       local: {
+        autoStartEnvironment: "rxjs-hub-consumer",
         targetTaskId: "root.user.helloworld",
         CEPSecret: "helloworld",
       }
@@ -394,7 +394,9 @@ const tasks = [
     environments: ["rxjs-processor-consumer"],
     config: {
       label: "RxPy",
-      autoStartEnvironment: "rxjs-processor-consumer",
+      local: {
+        autoStartEnvironment: "rxjs-processor-consumer",
+      },
     },
   },
 
@@ -422,7 +424,6 @@ const tasks = [
     },
     services: {
       chat: {
-        modelVersion: "gpt-4",
         forget: true,
         maxResponseTokens: 4000,
         maxTokens: 4000,
@@ -463,20 +464,18 @@ const tasks = [
   },
   {
     initiator: true,
-    name: "my-tasks",
-    environments: ["rxjs-hub-consumer", "react"],
+    name: "tasklog",
     config: {
-      label: "My Tasks",
+      label: "Log",
       local: {
-        rowDetailHeight: 500,
-        pageSize: 100,
+        addTopTerms: true,
+        mode: 'selectFounder',
+        autoQuery: true,
+        createColumns: "user",
       },
     },
-    state: {
-      current: "start",
-    },
     parentName: "account",
-    type: "TaskMy",
+    type: "TaskLog",
   },
 
   {

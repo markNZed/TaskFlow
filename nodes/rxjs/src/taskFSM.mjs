@@ -6,6 +6,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { createMachine, interpret } from 'xstate';
 import { utils } from "./utils.mjs";
 import { xutils } from './shared/FSM/xutils.mjs';
+import { commandUpdate_async } from "#src/commandUpdate";
 
 export const getFSMHolder_async  = async (task, activeFsm) => {
   const FSMHolder = {
@@ -81,7 +82,20 @@ export function updateStates(T, FSMHolder) {
   }
 }
 
-export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep = false) {
+export async function updateEvent_async(wsSendTask, T, fsmEvent) {
+  let syncUpdateTask = {
+    command: "update",
+    commandArgs: {
+      sync: true,
+      instanceId: T("instanceId"),
+      fsmEvent: fsmEvent, 
+    },
+    commandDescription: `Sending event`,
+  };
+  commandUpdate_async(wsSendTask, syncUpdateTask);
+}
+
+export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep = true) {
 
   let fsm = FSMHolder.fsm;
   let machine = FSMHolder.machine;
@@ -93,10 +107,10 @@ export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep 
     const allGuards = stateNodes.reduce((acc, stateName) => {
       const stateConfig = machine.states[stateName];
       if (stateConfig.on) {
-        for (const eventName in stateConfig.on) {
-          const transitions = Array.isArray(stateConfig.on[eventName])
-            ? stateConfig.on[eventName]
-            : [stateConfig.on[eventName]];
+        for (const fsmEvent in stateConfig.on) {
+          const transitions = Array.isArray(stateConfig.on[fsmEvent])
+            ? stateConfig.on[fsmEvent]
+            : [stateConfig.on[fsmEvent]];
           for (const transition of transitions) {
             if (transition.cond) {
               const guardName = (typeof transition.cond === 'object') ? transition.cond.name : transition.cond;
@@ -114,21 +128,25 @@ export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep 
       })
       .onTransition((state) => {
         console.log("FSM transition", state.value, "scheduled actions:", state.actions);
+        if (singleStep && state.value !== T("state.current")) {
+          fsm.stop();
+        }
       });
     FSMHolder.send = fsm.send; // So we can use send from within actions
     // fsm.start(T("state.current")); // Does not pick up the entry action
     fsm.start();
     FSMHolder.fsm = fsm;
+    // Check if we have a pending event
+    if (T("node.commandArgs.fsmEvent")) {
+      console.log("Pending event", T("node.commandArgs.fsmEvent"));
+      fsm.send(T("node.commandArgs.fsmEvent"));
+    }
   } else {
     const fsmState = fsm.getSnapshot().value;
     if (fsmState && fsmState !== T("state.current")) {
       fsm.send("GOTO" + T("state.current"));
     }
     FSMHolder.send = fsm.send;
-  }
-
-  if (singleStep) {
-    fsm.stop();
   }
 
   // waitFor is a one-time operation that resolves when a specific condition is met.

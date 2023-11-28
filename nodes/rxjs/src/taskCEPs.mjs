@@ -36,6 +36,7 @@ function CEPCreate(CEPMatchMap, task, match, config) {
     throw Error("CEPCreate name is undefined/null");
   }
   const args = config.args;
+  const filter = config.filter; // intended for filtering tasks for match
   const CEPFunc = CEPget(name);
   if (match === undefined) {
     throw Error("CEPCreate match is undefined");
@@ -58,6 +59,7 @@ function CEPCreate(CEPMatchMap, task, match, config) {
   } else if (!config.isSingleton && !config.isRegex) {
     match = task.familyId + "-" + match;
   }
+  // maybe we should still prefix the fammilyId here except for system tasks
   if (config.isRegex) {
     match = "regex:" + match;
   }
@@ -65,13 +67,13 @@ function CEPCreate(CEPMatchMap, task, match, config) {
   if (!funcMap) {
     // If not, create a new Map for match
     funcMap = new Map();
-    funcMap.set(entryId, [task.instanceId, CEPFunc, name, args]); // Will need to clean this up from memory
+    funcMap.set(entryId, [task.instanceId, CEPFunc, name, args, filter]); // Will need to clean this up from memory
     CEPMatchMap.set(match, funcMap); 
   } else {
     // Only add the function if there isn't already an entry for this entryId
     // Want to avoid adding system CEP every time the node registers
     if (!funcMap.has(entryId)) {
-      funcMap.set(entryId, [task.instanceId, CEPFunc, name, args]);
+      funcMap.set(entryId, [task.instanceId, CEPFunc, name, args, filter]);
       CEPMatchMap.set(match, funcMap);
     }
   }

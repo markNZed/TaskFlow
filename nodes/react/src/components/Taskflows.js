@@ -32,9 +32,10 @@ function Taskflows(props) {
     useTasksState,
     startTaskError,
     startTask,
+    reinitialize,
   } = props;
 
-  const { globalState, replaceGlobalState } = useGlobalStateContext();
+  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
   const [tasks, setTasks] = useTasksState([]);
   // We maintain a list of tasksIds so we can quickly find the relevant task
   // if it has been previousyl created in tasks
@@ -47,6 +48,8 @@ function Taskflows(props) {
   const [counter, setCounter] = useState(0);
   const [taskMenu, setTaskMenu] = useState();
   const [loading, setLoading] = useState(true);
+
+  props.onDidMount();
 
   useEffect(() => {
     const selectedTaskId = globalState.selectedTaskId
@@ -87,10 +90,10 @@ function Taskflows(props) {
         setTasksIdx(index);
       }
       setTitle(globalState.tasksTree[selectedTaskId].label);
-      replaceGlobalState("selectedTaskId", null);
-      replaceGlobalState("lastSelectedTaskId", selectedTaskId);
-      replaceGlobalState("maxWidth", globalState.maxWidthDefault);
-      replaceGlobalState("xStateDevTools", false);
+      setGlobalStateEntry("selectedTaskId", null);
+      setGlobalStateEntry("lastSelectedTaskId", selectedTaskId);
+      setGlobalStateEntry("maxWidth", globalState.maxWidthDefault);
+      setGlobalStateEntry("xStateDevTools", false);
     }
     // If we only have one start task
     const taskflowLeafCount = globalState?.taskflowLeafCount;
@@ -126,7 +129,7 @@ function Taskflows(props) {
           if (startTask.id === task?.config?.local?.menuId) {
             if (!taskMenu) {
               setTaskMenu(startTask);
-              replaceGlobalState("user", startTask.user);
+              setGlobalStateEntry("user", startTask.user);
             }
           } else if (!taskInstanceIds.includes(startTask.instanceId)) {
             console.log("selectMenu started", startTask.id);
@@ -171,6 +174,15 @@ function Taskflows(props) {
   useEffect(() => {
     //console.log("startTask ", startTask)
   }, [startTask]);
+
+  useEffect(() => {
+    // Flushing all this is very close to simply reloading the page
+    setTaskMenu(null);
+    setTasksIdx(0);
+    setTasks([]);
+    setTasksIds([]);
+    setTaskInstanceIds([]);
+  }, [reinitialize]);
 
   return (
     <div className="App" style={{maxWidth: globalState.maxWidth}}>

@@ -172,11 +172,13 @@ function r(name) {
 const typeMap = {
     "TaskConverter": o([
         { json: "ceps", js: "ceps", typ: u(undefined, u(r("CepsEnum"), m("any"))) },
+        { json: "childrenNames", js: "childrenNames", typ: u(undefined, a("any")) },
         { json: "command", js: "command", typ: u(undefined, u(null, "")) },
         { json: "commandArgs", js: "commandArgs", typ: u(undefined, u(m("any"), null)) },
         { json: "commandDescription", js: "commandDescription", typ: u(undefined, "") },
         { json: "config", js: "config", typ: u(undefined, m("any")) },
         { json: "connections", js: "connections", typ: u(undefined, a("any")) },
+        { json: "cron", js: "cron", typ: u(undefined, m("any")) },
         { json: "error", js: "error", typ: u(undefined, u(m("any"), null)) },
         { json: "familyId", js: "familyId", typ: u(undefined, "") },
         { json: "fsm", js: "fsm", typ: u(undefined, m("any")) },
@@ -199,6 +201,7 @@ const typeMap = {
         { json: "shared", js: "shared", typ: u(undefined, m("any")) },
         { json: "state", js: "state", typ: u(undefined, r("State")) },
         { json: "tokens", js: "tokens", typ: u(undefined, m("any")) },
+        { json: "tribe", js: "tribe", typ: u(undefined, "") },
         { json: "type", js: "type", typ: u(undefined, "") },
         { json: "user", js: "user", typ: u(undefined, m("any")) },
         { json: "users", js: "users", typ: u(undefined, m("any")) },

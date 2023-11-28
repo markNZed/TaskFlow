@@ -34,11 +34,16 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       let initServices = false;
       if (T("services")) {
         Object.keys(T("services")).map(async (key) => {
-          const module = ServicesMap.get(T(`services.${key}.moduleName`));
-          if (module) {
-            T(`services.${key}.module`, module);
-          } else {
+          // Allows for changing the service on the fly
+          if (T(`services.${key}.id`) !== T(`services.${key}.type`)) {
             initServices = true;
+          } else {
+            const module = ServicesMap.get(T(`services.${key}.moduleName`));
+            if (module) {
+              T(`services.${key}.module`, module);
+            } else {
+              initServices = true;
+            }
           }
         });
         //console.log("Restore services", T("services"));
@@ -46,11 +51,16 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       let initOperators = false;
       if (T("operators")) {
         Object.keys(T("operators")).map(async (key) => {
-          const module = OperatorsMap.get(T(`operators.${key}.moduleName`));
-          if (module) {
-            T(`operators.${key}.module`, module);
-          } else {
+          // Allows for changing the operator on the fly
+          if (T(`operators.${key}.id`) !== T(`operators.${key}.type`)) {
             initOperators = true;
+          } else {
+            const module = OperatorsMap.get(T(`operators.${key}.moduleName`));
+            if (module) {
+              T(`operators.${key}.module`, module);
+            } else {
+              initOperators = true;
+            }
           }
         });
         //console.log("Restore operators", T("operators"));
@@ -83,12 +93,15 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
             }
             // Only try to load a service if it is expected to be on this node
             if (environments.includes(NODE.environment)) {
-              const type = servicesConfig[key].type || key; // default to using the key as the type;
+              if (!servicesConfig[key].type) {
+                servicesConfig[key].type = key; // default to using the key as the type;
+              }
+              const type = servicesConfig[key].type; 
               //console.log("type", type);
               if (await serviceTypes_async.has(type)) {
                 services[key] = await serviceTypes_async.get(type);
                 if (Object.keys(servicesConfig[key]).length) {
-                  services[key] = utils.deepMerge(services[key], servicesConfig[key]);
+                  services[key] = utils.deepMerge(servicesConfig[key], services[key]);
                 }
                 //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                 const serviceName = services[key]["moduleName"] || key;
@@ -96,6 +109,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                   services[key]["module"] = await importService_async(serviceName);
                   ServicesMap.set(serviceName, services[key]["module"]);
                   nodeFunctionsInitialized = true;
+                  //console.log("nodeFunctionsInitialized services", services);
                 } else {
                   throw new Error(`Service ${serviceName} not found for ${T("id")} config: ${JSON.stringify(servicesConfig)}`);
                 }
@@ -138,11 +152,14 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
             if (environments) {
               // Only try to load an operator if it is expected to be on this node
               if (environments.includes(NODE.environment)) {
-                const type = operatorsConfig[key].type || key; // default to using the key as the type
+                if (!operatorsConfig[key].type) {
+                  operatorsConfig[key].type = key; // default to using the key as the type
+                }
+                const type = operatorsConfig[key].type;
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
                   if (Object.keys(operatorsConfig[key]).length) {
-                    operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
+                    operators[key] = utils.deepMerge(operatorsConfig[key], operators[key]);
                   }
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"] || key;
@@ -150,7 +167,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                     operators[key]["module"] = await importOperator_async(operatorName);
                     OperatorsMap.set(operatorName, operators[key]["module"]);
                     nodeFunctionsInitialized = true;
-                    //console.log("operators", operators);
+                    //console.log("nodeFunctionsInitialized operators", operators);
                   } else {
                     throw new Error(`Operator ${operatorName} of type ${type} not found for ${T("id")} config: ${JSON.stringify(operatorsConfig)}`);
                   }
@@ -225,7 +242,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                       // The default function is cep_async
                       CEPregister(moduleName, ceps[key].module.cep_async);
                       nodeFunctionsInitialized = true;
-                      //console.log("T ceps:", T("ceps"));
+                      //console.log("nodeFunctionsInitialized T ceps:", T("ceps"));
                     } else {
                       throw new Error(`Cep ${moduleName} not found for ${T("id")} config: ${JSON.stringify(cepsConfig)}`);
                     }
@@ -257,7 +274,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       }
       //utils.logTask(T(), "nodeTasks_async CEPMatchMap", CEPMatchMap);
     }
-    if ((T("node.command") === "init" || T("node.command") === "join") && (nodeFunctionsInitialized || T("shared.family.cloning")) && !T("commandArgs.sync")) {
+    const cloneInitialized = T("shared.family.cloning") && (T("node.command") === "init" || T("node.command") === "join") && !T("commandArgs.sync");
+    if (nodeFunctionsInitialized || cloneInitialized) {
       if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessed"))) {
         // Sync these changes
         // services/operators/ceps should be in a node namespace ?
@@ -277,7 +295,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
         if (nodeFunctionsInitialized) {
           commandDescription = `Sync node functions on ${NODE.name}`
         }
-        if (T("shared.family.cloning")) {
+        if (cloneInitialized) {
           ST("shared.family." + T("instanceId") + ".nodes." + NODE.id + ".initialized", true);
           commandDescription += ` Sync clone initialized ${NODE.name}`;
         }
