@@ -49,7 +49,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       if (fs.existsSync(path)) {
         runtimeData = JSON.parse(await readFile(path, 'utf8'));
       }
-      for (const group of user.groups) {
+      for (const group of user.groupIds) {
         const TFgroup = await groupsStore_async.get(group);
         if (TFgroup && !TFgroup.userIds.includes(user.id)) {
           TFgroup.userIds.push(user.id);
@@ -64,7 +64,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
 
     const deleteRuntimeUsers_async = async (username) => {
       const user = await usersStore_async.get(username);
-      for (const id of user.groups) {
+      for (const id of user.groupIds) {
         let group = await groupsStore_async.get(id);
         if (group) {
           group.userIds = group.userIds.filter((u) => u !== username);
@@ -90,7 +90,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       if (fs.existsSync(path)) {
         runtimeData = JSON.parse(await readFile(path, 'utf8'));
       }
-      for (const groupId of user.groups) {
+      for (const groupId of user.groupIds) {
         const TFgroup = await groupsStore_async.get(groupId);
         if (TFgroup && !TFgroup.userIds.includes(user.id)) {
           TFgroup.userIds = TFgroup.userIds.filter((u) => u !== username);
@@ -109,7 +109,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
     switch (T("state.current")) {
         case "start": {
           // permissions is the list of possible groups
-          T("user.groups");
+          T("user.groupIds");
           break;
         }
         case "reactRequest": {

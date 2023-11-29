@@ -57,7 +57,7 @@ async function maskOutgoing_async(task) {
       }
     }
     const devGroupId = "dev";
-    if (task.user?.groups && task.user?.groups.includes(devGroupId)) {
+    if (task.user?.groupIds && task.user?.groupIds.includes(devGroupId)) {
       let group = await groupsStore_async.get(devGroupId);
       if (group?.unmask?.outgoing) {
         utils.deleteKeysBasedOnMask(mask, group.unmask.outgoing);

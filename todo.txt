@@ -1,7 +1,7 @@
 /* ToDo
 -------
-When updating prod will need to modify users, tribes in nodes/hub/db/config/runtime
-user.groups -> user.groupIds
+task.permissions -> task.groupIds ?
+When updating prod will need to modify users, tribes, groups in nodes/hub/db/config/runtime
 Circle switching is broken ?
   Seemed to be an issue with the collaborate feature - maybe the instanceId but unclear why
 Will need to manage the cron jobs at some point

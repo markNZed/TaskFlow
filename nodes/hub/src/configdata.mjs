@@ -393,12 +393,12 @@ function initGroups(users, groupsConfig, groups) {
             "Could not find user " + id + " expected in group " + groupKey
           );
         } else {
-          if (users[id]["groups"]) {
-            if (!users[id]["groups"].includes(groupKey)) {
-              users[id]["groups"].push(groupKey);
+          if (users[id]["groupIds"]) {
+            if (!users[id]["groupIds"].includes(groupKey)) {
+              users[id]["groupIds"].push(groupKey);
             }
           } else {
-            users[id]["groups"] = [groupKey];
+            users[id]["groupIds"] = [groupKey];
           }
         }
       });

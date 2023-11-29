@@ -192,13 +192,13 @@ const TaskUsers = (props) => {
 
   const handleCheckboxChange = (permission) => {
     let newGroups;
-    if (user?.groups?.includes(permission)) {
-      newGroups = user.groups.filter((group) => group !== permission);
+    if (user?.groupIds?.includes(permission)) {
+      newGroups = user.groupIds.filter((group) => group !== permission);
     } else {
-      newGroups = [...user.groups, permission];
+      newGroups = [...user.groupIds, permission];
     }
 
-    // Update the user.groups with the selection
+    // Update the user.groupIds with the selection
     setUser({ ...user, groups: newGroups });
   };
 
@@ -219,7 +219,7 @@ const TaskUsers = (props) => {
     if (selectedRows.size === 1) {
       const name = Array.from(selectedRows)[0];
       const user = users.find(u => u.name === name);
-      user["groups"] = user.groups || [];
+      user["groupIds"] = user.groupIds || [];
       setUser(user);
       //console.log("user", user);
       setPassword(""); // Don't prefill password for security
@@ -290,11 +290,11 @@ const TaskUsers = (props) => {
           <Button onClick={generateEasyPassword}>Generate Password</Button>
           Assign user groups:
           <div style={{ display: 'flex' }}>
-            {task.user?.groups?.map((group, index) => (
+            {task.user?.groupIds?.map((group, index) => (
               <label key={index} style={{ marginRight: '10px' }}>
                 <input
                   type="checkbox"
-                  checked={user?.groups?.includes(group)}
+                  checked={user?.groupIds?.includes(group)}
                   onChange={() => handleCheckboxChange(group)}
                 />
                 {group}
