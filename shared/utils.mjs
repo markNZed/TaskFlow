@@ -1078,9 +1078,9 @@ const utils = {
           break;
         }
         let group = await groupsStore_async.get(permissionGroupId);
-        if (!group?.users) {
+        if (!group?.userIds) {
           console.log("Group " + permissionGroupId + " has no users");
-        } else if (group.users.includes(userId)) {
+        } else if (group.userIds.includes(userId)) {
           const groupInTribe = await utils.authenticatedGroup_async(task, permissionGroupId, tribe);
           if (groupInTribe) {
             authenticated = true;

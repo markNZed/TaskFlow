@@ -2,14 +2,14 @@ const groups = [
   {
     name: "testgroup",
     label: "First Test Group",
-    users: [
+    userIds: [
       "test@testing.com"
     ],
   },
   {
     name: "dev",
     label: "Developer",
-    users: ["developer1"],
+    userIds: ["developer1"],
     unmask: {
       outgoing: {
         '*': true,
@@ -24,21 +24,21 @@ const groups = [
   {
     name: "admin",
     label: 'Admin',
-    users: [
+    userIds: [
         "test@testing.com",
     ],
   },
   {
     name: "account",
     label: 'User Account',
-    users: [
+    userIds: [
         'mark.hampton@ieee.org', 
     ],
   },
   {
     name: "sysadmin",
     label: 'System Admin',
-    users: [
+    userIds: [
       "test@testing.com", 
     ],
   },

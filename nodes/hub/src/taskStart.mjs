@@ -82,10 +82,10 @@ async function processInstanceAsync(task, instanceId, mode, nodeId) {
 
 async function checkUserGroup_async(groupId, userId) {
   const group = await groupsStore_async.get(groupId);
-  if (!group?.users) {
+  if (!group?.userIds) {
     throw new Error("No users in group " + groupId);
   }
-  if (!group?.users.includes(userId)) {
+  if (!group?.userIds.includes(userId)) {
     throw new Error(`User ${userId} not in group ${groupId}`);
   } else {
     console.log("User in group", groupId, userId);

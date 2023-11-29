@@ -51,12 +51,12 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       }
       for (const group of user.groups) {
         const TFgroup = await groupsStore_async.get(group);
-        if (TFgroup && !TFgroup.users.includes(user.id)) {
-          TFgroup.users.push(user.id);
+        if (TFgroup && !TFgroup.userIds.includes(user.id)) {
+          TFgroup.userIds.push(user.id);
           await groupsStore_async.set(group, TFgroup);
           // Update the config
           runtimeData[group] = runtimeData[group] || {};
-          runtimeData[group]["users"] = TFgroup.users;
+          runtimeData[group]["userIds"] = TFgroup.userIds;
         }
       }
       await writeFile(path, JSON.stringify(runtimeData, null, 2));
@@ -67,7 +67,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       for (const id of user.groups) {
         let group = await groupsStore_async.get(id);
         if (group) {
-          group.users = group.users.filter((u) => u !== username);
+          group.userIds = group.userIds.filter((u) => u !== username);
           await groupsStore_async.set(id, group);
         }
       }
@@ -92,13 +92,13 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
       }
       for (const groupId of user.groups) {
         const TFgroup = await groupsStore_async.get(groupId);
-        if (TFgroup && !TFgroup.users.includes(user.id)) {
-          TFgroup.users = TFgroup.users.filter((u) => u !== username);
+        if (TFgroup && !TFgroup.userIds.includes(user.id)) {
+          TFgroup.userIds = TFgroup.userIds.filter((u) => u !== username);
           await groupsStore_async.set(groupId, TFgroup);
           // Update the config
           runtimeData[groupId] = runtimeData[groupId] || {};
-          runtimeData[groupId]["users"] = TFgroup.users;
-          if (TFgroup.users.length === 0) {
+          runtimeData[groupId]["userIds"] = TFgroup.userIds;
+          if (TFgroup.userIds.length === 0) {
             delete runtimeData[groupId];
           }
         }

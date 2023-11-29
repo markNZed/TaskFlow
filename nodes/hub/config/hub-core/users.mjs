@@ -5,7 +5,7 @@ const users = [
       profile: "A student",
       interface: "simple",
       language: "en",
-      tribes: ["world"],
+      tribeIds: ["world"],
     },
     {
       name: "developer1",
@@ -13,7 +13,7 @@ const users = [
       profile: "A developer",
       interface: "dev",
       language: "en",
-      tribes: ["god"],
+      tribeIds: ["god"],
     },
   ];
   export { users };

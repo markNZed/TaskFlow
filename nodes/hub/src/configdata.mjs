@@ -363,7 +363,7 @@ function initUsers(users) {
       if (groups[userKey] === undefined) {
         const group = {
           name: userKey,
-          users: [userKey],
+          userIds: [userKey],
         }
         groups[userKey] = group;
       }
@@ -385,8 +385,8 @@ function initGroups(users, groupsConfig, groups) {
   for (const groupKey in groups) {
     if (groups[groupKey]) {
       const group = groups[groupKey];
-      assert(group["users"], "Group " + groupKey + " has no users");
-      group.users.forEach(function (id) {
+      assert(group["userIds"], "Group " + groupKey + " has no users");
+      group.userIds.forEach(function (id) {
         // Groups may have users that do not exist
         if (users[id] === undefined) {
           console.log(
