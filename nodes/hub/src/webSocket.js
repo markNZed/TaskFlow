@@ -95,7 +95,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   if (task.user && task.users && task.user.id && task.users[task.user.id]) {
     user = utils.deepClone(task.users[task.user.id]);
   }
-  let tribe = task.tribe;
+  let tribeId = task.tribeId;
   let message = {}
   // We can only have an activeTask for an update command
   if (currentNode.command === "update") {
@@ -156,7 +156,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
       utils.logTask(task, "wsSendTask no user", task);
     }
   }
-  task.tribe = tribe;
+  task.tribeId = tribeId;
   task.meta = task.meta || {};
   if (currentNode.command !== "pong" && currentNode.command !== "partial") {
     //utils.logTask(task, "wsSendTask sourceNodeId " + currentNode.sourceNodeId)
@@ -253,32 +253,32 @@ function initWebSocketServer(server) {
             return;
           }
           // Could also have an option to refresh the JWT based on e.g. data
-          let  tribeName = decoded.hostname;
-          //utils.logTask(task, "Incoming tribe", userId, tribeName);
+          let  tribeId = decoded.hostname;
+          //utils.logTask(task, "Incoming tribe", userId, tribeId);
           // If the hostname is taskflow then we assume an internal connection
           if (hostname !== "taskflow") {
-            if (user.tribes.includes("god")) {
-              tribeName = hostname;
-              //utils.logTask(task,"God dropping into tribe", userId, tribeName);
-            } else if (tribeName && hostname !== tribeName) {
-              console.log("Wrong hostname", hostname, tribeName);
+            if (user.tribeIds.includes("god")) {
+              tribeId = hostname;
+              //utils.logTask(task,"God dropping into tribe", userId, tribeId);
+            } else if (tribeId && hostname !== tribeId) {
+              console.log("Wrong hostname", hostname, tribeId);
               return;
-            } else if (!tribeName) {
+            } else if (!tribeId) {
               utils.logTask(task, "No tribe found so default to world");
-              tribeName = "world";
+              tribeId = "world";
             }
-            const tribe = await tribesStore_async.get(tribeName);
+            const tribe = await tribesStore_async.get(tribeId);
             if (!tribe) {
-              utils.logTask(task, "No tribe found", userId, tribeName);
+              utils.logTask(task, "No tribe found", userId, tribeId);
               return;
             }
-            if (user.tribes && !user.tribes.includes(tribeName) && !user.tribes.includes("god")) {
-              utils.logTask(task, "User not in tribe", userId, tribeName);
+            if (user.tribeIds && !user.tribeIds.includes(tribeId) && !user.tribeIds.includes("god")) {
+              utils.logTask(task, "User not in tribe", userId, tribeId);
               return;
             }
             // Allocate user to tribe
             task["user"] = user;
-            task.tribe = tribeName;
+            task.tribeId = tribeId;
             // This seems very dodgy - should not be setting NODE?
             // Should set in task.node ?
             NODETribe(tribe);

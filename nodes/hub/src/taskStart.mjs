@@ -489,7 +489,7 @@ async function taskStart_async(
     ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});
     ['connections'].forEach(key => task[key] = task[key] || []);
 
-    task = await checkUserPermissions_async(task, task.tribe, groupsStore_async, tribesStore_async, authenticate);
+    task = await checkUserPermissions_async(task, task.tribeId, groupsStore_async, tribesStore_async, authenticate);
 
     // Is this a user task being launched from a system task ?
     // If so then initialize a new familyId
@@ -617,7 +617,7 @@ async function taskStart_async(
     } else {
       task.users[task.user.id] = user;
     }
-    console.log("startTask tribe", task.tribe);
+    console.log("startTask tribe", task.tribeId);
     
     // This is only for task.config 
     task = await supportMultipleLanguages_async(task, usersStore_async);

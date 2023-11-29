@@ -91,21 +91,21 @@ app.use(async (req, res, next) => {
     // nginx upgrades the HTTP request to a websocket request
     // We are then using the origin header to find the tribe, we would need to modify
     // the websocket to allow for a tribe to be passed (maybe using URL query param also)
-    const searchParamTribe = url.searchParams.get("tribe");
-    const tribeName = searchParamTribe || host;
-    const tribe = await tribesStore_async.get(tribeName);
-    console.log("Server found host", host, "searchParam", url.searchParams.get("tribe"), "tribeName", tribeName);
+    const searchParamTribe = url.searchParams.get("tribeId");
+    const tribeId = searchParamTribe || host;
+    const tribe = await tribesStore_async.get(tribeId);
+    console.log("Server found host", host, "searchParam", url.searchParams.get("tribeId"), "tribeId", tribeId);
     // Allows us to override NODE settings based on Tribe
     if (tribe) {
       if (tribe.NODE) {
         NODETribe(tribe);
-        req.tribeName = tribeName;
+        req.tribeId = tribeId;
         //console.log("Server found tribe", tribe);
       } else {
         console.log("Server could not find tribe.NODE for", tribe);
       }
     } else {
-      console.log("Server could not find tribe", tribeName);
+      console.log("Server could not find tribe", tribeId);
     }
   }
   next();

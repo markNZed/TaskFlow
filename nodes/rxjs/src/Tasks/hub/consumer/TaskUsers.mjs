@@ -113,7 +113,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
           break;
         }
         case "reactRequest": {
-          const tribe = T("tribe");
+          const tribe = T("tribeId");
           utils.logTask(T(), "action", T("input.action"), utils.js(T("input")));
           const page = T("input.page") || 1;
           const limit = T("input.limit") || 10;
@@ -127,7 +127,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
                 throw new Error("User not found." + utils.js(user));
               }
               const username = user.name;
-              user["tribes"] = [T("tribe")];
+              user["tribeIds"] = [T("tribeId")];
               const password = T("input.password");
               // Check if the user already exists
               const count = await getRowCount_async(username, tribe);
@@ -152,7 +152,7 @@ const TaskUsers_async = async function (wsSendTask, T, FSMHolder) {
               const username = T("input.user.name").toLowerCase();
               const TFuser = await usersStore_async.get(username);
               if (TFuser) {
-                if (tribe && !TFuser.tribes.includes(tribe)) {
+                if (tribe && !TFuser.tribeIds.includes(tribe)) {
                   T("response.user", TFuser);
                 } else {
                   T("error", { message: "User not found." });

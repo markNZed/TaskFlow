@@ -44,7 +44,7 @@ export async function commandRegister_async(task) {
     let node = task.nodes[initiatingNodeId];
     node["userId"] = task?.user?.id;
     node["nodeId"] = initiatingNodeId;
-    node["tribe"] = task.tribe;
+    node["tribeId"] = task.tribeId;
     await register(node);
   } catch (error) {
     const msg = `Error commandRegister_async task ${task.id}: ${error.message}`;

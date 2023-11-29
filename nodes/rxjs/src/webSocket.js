@@ -151,7 +151,7 @@ taskSubject
           }
         }
       }
-      utils.debugTask(task, "after CEP");
+      utils.debugTask(task, "after CEP", task?.services?.chat?.API);
       if (NODE.role === "coprocessor") {
         //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessed", task.node.coprocessed);
         if (task.node.coprocessed) {
@@ -285,8 +285,8 @@ const connectWebSocket = () => {
            }
         }
       }
-      if (task?.tribe) {
-        const tribeName = task.tribe;
+      if (task?.tribeId) {
+        const tribeName = task.tribeId;
         const tribe = await tribesStore_async.get(tribeName);
         if (tribe) {
           //console.log("Set tribe", tribeName);

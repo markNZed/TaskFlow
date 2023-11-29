@@ -42,7 +42,7 @@ export async function commandStart_async(task) {
     if (commandArgs.prevInstanceId) {
       initTask.meta["prevInstanceId"] = commandArgs.prevInstanceId;
     }
-    initTask["tribe"] = initTask.tribe || task.tribe;
+    initTask["tribeId"] = initTask.tribeId || task.tribeId;
     //utils.logTask(task, "commandStart_async coprocessed:", task.node.coprocessed, "initTask", initTask);
     const prevInstanceId = commandArgs.prevInstanceId || task.instanceId;
     if (NODE.haveCoprocessor) {

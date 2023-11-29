@@ -1252,7 +1252,8 @@ const utils = {
     return JSON.stringify(obj, null, 2)
   },
 
-  debugTask: async function(task, context = "") {
+  debugTask: async function(task, ...args) {
+    let context = args.join(',') || '';
     if (task === undefined) {
       throw new Error("Task undefined in debugTask");
     }

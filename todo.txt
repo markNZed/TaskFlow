@@ -1,6 +1,6 @@
 /* ToDo
 -------
-task.tribe -> task.tribeId ?
+group.users -> group.userIds
 Circle switching is broken ?
   Seemed to be an issue with the collaborate feature - maybe the instanceId but unclear why
 Will need to manage the cron jobs at some point
@@ -31,20 +31,21 @@ TaskAlerts
     events
     applications
   Autostart like menu
+  instanceId tied to userId for alert storage
+    Another option would be to use a queue service 
 When a task is not connected to React how do we report errors
   Need a background TaskError on React for this ?
     hub-consumer can check and send if not handled by React
-Reload does not update services
 
 Need dev mode that will stop on errors
 Test maintenance page
 Test reload command
-  When a server processor restarts then everythig should reload?
+  When a processor restarts then everythig should reload?
+    e.g. services
 Dynamic loading of Task Functions would allow for on the fly extensions
-  Easier for debug too (could ignore form nodemon watch)
+  Easier for debug too (could ignore from nodemon watch)
 Dedicated err log seems important when running with forever
   Add options to forever for this
-  Five scripts names in forever
 TaskLog
   Apply mask but will need to do that inside TaskLog.mjs
   Ability to navigate through the history ?
@@ -70,25 +71,18 @@ Note that adding a domain should also disable the CloudFlare caching
 TaskRAGAdmin
   Choose a corpus, restart, prepare, upload, delete
   Remove elements from cache
-How to add UI elements to existing Task ?
-  Could have a pre-post component slot that the HoC can insert and pass the parent task down as prop
-    task down task.inputs (writable) and task.outputs (readable)
-  Just create new TaskRAGChat based on TaskChat
 Managing secrets https://hub.docker.com/r/hashicorp/vault
 In a post config step transfer config.local into config ?
 Need separate threads for data processing - ability to detach a task as a separate process
   Task could launch worker_threads
   Multiple processors could share a queue
-Cron to allow TaskStatus
-  TaskSystemCron where we can register cron jobs
-  https://github.com/harrisiirak/cron-parser
-  It could send an update command with args indicating it is a cron job
+Cron to implement TaskStatus
 Share the caching of services/operators across tasks (will make copy easier)
 OpenAI features: JSON mode, parallel function calls 
 Cookie could encode array of tribes
   Problem if user is not unique
     Should just enforce unique users
-config.local -> config.self ?    
+config.local -> config.private ?    
 Version table in accessdb
   version.current
   Create a new table with new schema, copy data into it, delete old table, rename new table (all in a transaction)
@@ -105,6 +99,7 @@ Review for security holes
   Can use command start with commandArgs.init to set initial values
     Could/should mask the init task before using it
   regex on cep ?
+  TaskLog shows full task
 When registering the Hub should provide the app info : 
   appAbbrev is used in the Node id of React for storage
     could connect after registering ?

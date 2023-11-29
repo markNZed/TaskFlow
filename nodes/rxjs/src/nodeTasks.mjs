@@ -101,7 +101,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
               if (await serviceTypes_async.has(type)) {
                 services[key] = await serviceTypes_async.get(type);
                 if (Object.keys(servicesConfig[key]).length) {
-                  services[key] = utils.deepMerge(servicesConfig[key], services[key]);
+                  services[key] = utils.deepMerge(services[key], servicesConfig[key]);
                 }
                 //console.log("services[key]", key, JSON.stringify(services[key], null, 2));
                 const serviceName = services[key]["moduleName"] || key;
@@ -159,7 +159,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                 if (await operatorTypes_async.has(type)) {
                   operators[key] = await operatorTypes_async.get(type);
                   if (Object.keys(operatorsConfig[key]).length) {
-                    operators[key] = utils.deepMerge(operatorsConfig[key], operators[key]);
+                    operators[key] = utils.deepMerge(operators[key], operatorsConfig[key]);
                   }
                   //console.log("operators[key]", key, JSON.stringify(operators[key], null, 2));
                   const operatorName = operators[key]["moduleName"] || key;
@@ -224,6 +224,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
               }
               delete cepsConfig["*"];
             }
+            let cepsInitialized = false;
             const promises = Object.keys(cepsConfig).map(async (key) => {
               // Dynamically import taskCeps
               const environments = cepsConfig[key].environments;
@@ -234,6 +235,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                   //console.log("type", type);
                   if (await cepTypes_async.has(type)) {
                     ceps[key] = await cepTypes_async.get(type);
+                    // We override the cepTypes_async with the values in T("ceps")
                     ceps[key] = utils.deepMerge(ceps[key], cepsConfig[key]);
                     //console.log("ceps[key]", key, JSON.stringify(ceps[key], null, 2));
                     const moduleName = ceps[key]["moduleName"] || key;
@@ -242,6 +244,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
                       // The default function is cep_async
                       CEPregister(moduleName, ceps[key].module.cep_async);
                       nodeFunctionsInitialized = true;
+                      cepsInitialized = true;
                       //console.log("nodeFunctionsInitialized T ceps:", T("ceps"));
                     } else {
                       throw new Error(`Cep ${moduleName} not found for ${T("id")} config: ${JSON.stringify(cepsConfig)}`);
@@ -256,15 +259,17 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
             });
             // Wait for all the promises to resolve
             await Promise.all(promises);
-            T("ceps", ceps);
-            console.log("init ceps", T("ceps"));
-            CEPsMap.set(T("instanceId"), T("ceps"));
+            if (cepsInitialized) {
+              T("ceps", ceps);
+              console.log("init ceps", T("ceps"));
+              CEPsMap.set(T("instanceId"), T("ceps"));
+            }
           }
           for (const key in T("ceps")) {
             if (T(`ceps.${key}`)) {
               const CEPenvironments = T(`ceps.${key}.environments`);
               if (!CEPenvironments || CEPenvironments.includes(NODE.environment)) {
-                //console.log("ceps", key, T(`ceps.${key}`));
+                console.log("CEPCreate", key);
                 const match = T(`ceps.${key}.match`);
                 CEPCreate(CEPMatchMap, T(), match, T(`ceps.${key}`));
               }

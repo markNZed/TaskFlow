@@ -16,11 +16,11 @@ const hashPassword = async (password) => {
 };
 
 // Function to insert a new user
-const insertUser = async (username, password, tribe) => {
+const insertUser = async (username, password, tribeId) => {
   const db = new sqlite3.Database('db/access.sqlite3');
   const passwordHash = await hashPassword(password);
 
-  db.run(`INSERT INTO users (username, password_hash, tribe) VALUES (?, ?, ?)`, [username, passwordHash, tribe], function(err) {
+  db.run(`INSERT INTO users (username, password_hash, tribe) VALUES (?, ?, ?)`, [username, passwordHash, tribeId], function(err) {
     if (err) {
       console.error(err.message);
     } else {
@@ -33,11 +33,11 @@ const insertUser = async (username, password, tribe) => {
 
 rl.question('Enter username: ', (username) => {
   rl.question('Enter password: ', (password) => {
-    rl.question('Enter tribe (world): ', (tribe) => {
-      if (!tribe) {
-        tribe = 'world';
+    rl.question('Enter tribe (world): ', (tribeId) => {
+      if (!tribeId) {
+        tribeId = 'world';
       }
-      insertUser(username, password, tribe);
+      insertUser(username, password, tribeId);
     });
   });
 });

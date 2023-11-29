@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useCallback, useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import withTask from "../../hoc/withTask";
 import SideMenu from "../SideMenu/SideMenu";
 import useGlobalStateContext from "../../contexts/GlobalStateContext";
@@ -56,7 +56,7 @@ function TaskSystemMenu(props) {
         modifyTask({
           "command": "update",
           "state.current" : "ready",
-          "commandDescription": "Transition state to ready ater setting global tasksTree",
+          "commandDescription": "Transition state to ready after setting global tasksTree",
         });
         break;
       case "ready":
