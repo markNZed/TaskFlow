@@ -349,6 +349,9 @@ const tasktypes = [
     state: {
       current: "start",
     },
+    shared: {
+      stepper: {},
+    },
   },
   {
     name: "TaskGrid",

@@ -246,6 +246,9 @@ const TaskLog = (props) => {
         if (task.input?.query) {
           // Transfer the input into a request and update the task
           // Also clear down the input
+          setPage(1);
+          setSortColumns([]);
+          setPageSize(initPageSize);
           modifyTask({ 
             "input.query": null,
             "request": task.input.query,

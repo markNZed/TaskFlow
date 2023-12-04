@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import withTask from "../../hoc/withTask";
@@ -12,6 +12,7 @@ import { utils } from "../../utils/utils.mjs";
 import { xutils } from "../../shared/FSM/xutils";
 import Fsm from "../Fsm";
 import Loading from "../Loading";
+import usePartialWSFilter from "../../hooks/usePartialWSFilter";
 
 /* 
 To use the XState FSM
@@ -44,6 +45,66 @@ const TaskShowInstruction = (props) => {
   const [instructionText, setInstructionText] = useState("");
   const { fsmSend, fsmState } = props.useShareFsm();
   const [loading, setLoading] = useState(false);
+  const [responseText, setResponseText] = useState("");
+  const [finalResponseText, setFinalResponseText] = useState();
+  const responseTextRef = useRef("");
+  const [socketResponses, setSocketResponses] = useState([]);
+
+    // This is asynchronous to the rendering so there may be conflicts where
+  // state is updated during rendering and this impacts the parent
+  // Probably needs to be moved outside of the component maybe into Redux
+  useEffect(() => {
+    const processResponses = () => {
+      setSocketResponses((prevResponses) => {
+        for (const response of prevResponses) {
+          const text = response.partial.text;
+          const mode = response.partial.mode;
+          switch (mode) {
+            case 'delta':
+              responseTextRef.current += text;
+              if (finalResponseText) {
+                setFinalResponseText(null);
+              }
+              break;
+            case 'partial':
+            case 'final':
+              responseTextRef.current = text;
+              setResponseText(text);
+              setFinalResponseText(text);
+              break;
+            default:
+              console.log("WARNING unknown mode : " + mode);
+          }
+        }
+        //console.log(`${componentName} processResponses responseTextRef.current:`, responseTextRef.current);
+        setResponseText(responseTextRef.current);
+        return []; // Clear the processed responses
+      });
+    };
+    if (socketResponses.length > 0) {
+      processResponses();
+    }
+  }, [socketResponses]);
+
+  // I guess the websocket can cause events during rendering
+  // Putting this in the HoC causes a warning about setting state during rendering
+  usePartialWSFilter(task,
+    (partialTask) => {
+      //console.log(`${componentName} usePartialWSFilter partialTask`, partialTask.response);
+      setSocketResponses((prevResponses) => [...prevResponses, partialTask.response]);
+    }
+  )
+
+  useEffect(() => {
+    setInstructionText(responseText);
+  }, [responseText]);
+
+  useEffect(() => {
+    // Needed to separate this out as getting warign about depth of updates in React
+    modifyTask({
+      "output.instruction": finalResponseText,
+    });
+  }, [finalResponseText]);
 
   // The general wisdom is not to have side-effects in actions when working with React
   // But a point of actions is to allow for side-effects!
@@ -101,6 +162,8 @@ const TaskShowInstruction = (props) => {
           if (instructionText !== task.output.instruction) {
             fsmSend("NEW_INSTRUCTION");
           }
+          break;
+        case 'filled':
           break;
         case 'finish':
           break;

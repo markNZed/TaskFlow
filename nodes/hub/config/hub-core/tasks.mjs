@@ -63,7 +63,7 @@ const tasks = [
           }
         },
         incoming: {
-          meta: true,
+          //meta: true, we want meta.messageId which is set by the React processor. unmask option ?
         },
       }
     }

@@ -60,7 +60,7 @@ function mergeTasks(task, parentTask) {
   //console.log("mergeTasks ", task.id, parentTask.id);
   for (const key in parentTask) {
     if (parentTask[key] !== undefined) {
-      if (["label", "type", "meta", "initiator", "connections", "cron", "ceps"].includes(key)) {
+      if (["label", "type", "meta", "initiator", "connections", "cron", "ceps", "shared"].includes(key)) {
         continue;
       }
       if (key === "config" && task.config) {

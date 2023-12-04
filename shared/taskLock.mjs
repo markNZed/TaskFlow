@@ -4,6 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { Mutex } from 'async-mutex';
+import { utils } from "./utils.mjs";
 
 const mutexes = new Map();
 const releases = new Map();
@@ -21,11 +22,11 @@ export async function taskLock(key, description = "") {
     throw new Error("No key provided " + key);
   }
   const mutex = getMutex(key);
-  console.log(`Requesting lock ${key} ${description}`);
+  console.log(`${utils.timeNow()} Requesting lock ${key} ${description}`);
   const requestTime = Date.now();
   const release = await mutex.acquire();
   const duration = Date.now() - requestTime;
-  console.log(`Got lock ${key} after ${duration} ${description}`);
+  console.log(`${utils.timeNow()}Got lock ${key} after ${duration} ${description}`);
   releases.set(key, release); // Store the release function by key
   lockTimes.set(key, Date.now());
   return release;
@@ -37,7 +38,7 @@ export function taskRelease(key, description = "") {
     release();
     releases.delete(key); // Remove the release function after releasing the lock
     const duration = Date.now() - lockTimes.get(key);
-    console.log(`Released lock ${key} after ${duration} ${description}`);
+    console.log(`${utils.timeNow()} Released lock ${key} after ${duration} ${description}`);
   } else {
     // We expect most tasks will not be locked so no need to warn
     //console.warn(`No lock found for key: ${key}`);
@@ -50,9 +51,9 @@ export function lockOrError(key, description = "") {
     throw new Error(`Cannot acquire lock for key: ${key}. Already locked. ${description}`);
   }
   const release = mutex.acquire();
-  console.log(`Locked ${description} by id: ${key}`);
+  console.log(`${utils.timeNow()}Locked ${description} by id: ${key}`);
   return function releaseLock() {
     release.then((r) => r());
-    console.log(`Released lock ${description} with id: ${key}`);
+    console.log(`${utils.timeNow()}Released lock ${description} with id: ${key}`);
   };
 }

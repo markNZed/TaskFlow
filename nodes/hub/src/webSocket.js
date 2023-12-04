@@ -365,7 +365,7 @@ function initWebSocketServer(server) {
 
           // taskProcess_async has sent task to coprocessor
           if (processedTask === null) {
-            utils.logTask(task, `Null back from taskProcess_async`);
+            utils.logTask(task, `Null back from taskProcess_async has sent task to coprocessor`);
             return;
           } else {
             task = processedTask;

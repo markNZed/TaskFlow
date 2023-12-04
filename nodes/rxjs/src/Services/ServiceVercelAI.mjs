@@ -81,14 +81,14 @@ async function openaigpt_async(params) {
 
   let response_text_promise = Promise.resolve(["", [], false]);
 
-  console.log("openaigpt_async noStreaming",noStreaming);
+  utils.logTask(T(), "openaigpt_async noStreaming",noStreaming);
 
   // Need to build messages from systemMessage, messages, prompt
 
   function buildMessages(systemMessage, prevMessages, prompt) {
-    //console.log("buildMessages systemMessage", systemMessage);
-    //console.log("buildMessages prevMessages", prevMessages);
-    //console.log("buildMessages prompt", prompt);
+    //utils.logTask(T(), "buildMessages systemMessage", systemMessage);
+    //utils.logTask(T(), "buildMessages prevMessages", prevMessages);
+    //utils.logTask(T(), "buildMessages prompt", prompt);
     let messages = [];
     if (systemMessage) {
       const systemMessageElement = {
@@ -97,9 +97,9 @@ async function openaigpt_async(params) {
       }
       messages.push(systemMessageElement);
     }
-    //console.log("buildMessages after systemMessage messages", messages);
+    //utils.logTask(T(), "buildMessages after systemMessage messages", messages);
     messages = [...messages, ...prevMessages];
-    //console.log("buildMessages after prevMessages messages", messages);
+    //utils.logTask(T(), "buildMessages after prevMessages messages", messages);
     if (prompt) {
       const promptElement = {
         role: "user",
@@ -107,14 +107,14 @@ async function openaigpt_async(params) {
       }
       messages.push(promptElement);
     }
-    //console.log("buildMessages after prompt messages", messages);
+    //utils.logTask(T(), "buildMessages after prompt messages", messages);
     const mappedMessages = messages.map((message) => ({
       role: message.role,
       content: message.content, // mapping text -> content
       function_call: message.function_call,
       name: message.name,
     }));
-    //console.log("buildMessages mappedMessages", mappedMessages);
+    //utils.logTask(T(), "buildMessages mappedMessages", mappedMessages);
     return mappedMessages;
   }
 
@@ -126,7 +126,7 @@ async function openaigpt_async(params) {
     // messages, functions, functions_call
     const tokenCountEstimate = promptTokensEstimate({messages, functions});
     let availableTokens = maxTokens - tokenCountEstimate;
-    console.log("Tokens maxTokens " + maxTokens + " availableTokens " + availableTokens + " maxResponseTokens " + maxResponseTokens);
+    utils.logTask(T(), "Tokens maxTokens " + maxTokens + " availableTokens " + availableTokens + " maxResponseTokens " + maxResponseTokens);
     availableTokens = availableTokens < maxResponseTokens ? availableTokens : maxResponseTokens;
     return availableTokens;
   }
@@ -192,21 +192,22 @@ async function openaigpt_async(params) {
       prompt,
       messagesText,
       cacheKeySeed,
+      response_format,
     ]
       .join("-")
       .replace(/\s+/g, "-");
-    //console.log("cacheKeyText ", cacheKeyText);
+    //utils.logTask(T(), "cacheKeyText ", cacheKeyText);
     computedCacheKey = utils.djb2Hash(cacheKeyText);
-    console.log("computedCacheKey " + computedCacheKey);
+    utils.logTask(T(), "computedCacheKey " + computedCacheKey);
     cachedValue = await cacheStore_async.get(computedCacheKey);
-    //console.log("cachedValue ", cachedValue);
+    //utils.logTask(T(), "cachedValue ", cachedValue);
   }
 
   // Message can be sent from one of multiple sources
   function message_from(source, text, noStreaming, instanceId) {
     // Don't add ... when response is fully displayed
     const shortText = text ? text.slice(0, 80) : "";
-    console.log("Response from " + source + " : " + shortText + " ...");
+    utils.logTask(T(), "Response from " + source + " : " + shortText + " ...");
     const response = {partial: {text: text, mode: "final" }};
     const partialTask = {
       instanceId: instanceId, 
@@ -219,6 +220,23 @@ async function openaigpt_async(params) {
       wsSendTask(partialTask);
     }
   }
+
+  let options = {
+    model: modelVersion,
+    //model: "mistral", // When experimenting with LiteLLM as a proxy to ollama running mistral
+    stream: true,
+    // messages, maybe need to do this explicitly if using sendExtraMessageFields
+    // https://github.com/vercel/ai/issues/551
+    messages: messages
+  };
+  if (functions) {
+    options.functions = functions;
+    options.function_call = "auto";
+  }
+  if (response_format) {
+    options.response_format = response_format;
+  }
+  process.stdout.write("options:" + JSON.stringify(options, null, 2) + '\n');
 
   if (cachedValue && cachedValue !== undefined && cachedValue !== null) {
     let text = cachedValue;
@@ -270,33 +288,17 @@ async function openaigpt_async(params) {
       let newMessages = [];
       let functionDepth = 0;
       let errored = false;
-      //console.log("messages", messages);
+      //utils.logTask(T(), "messages", messages);
       try {
-        let options = {
-          model: modelVersion,
-          //model: "mistral", // When experimenting with LiteLLM as a proxy to ollama running mistral
-          stream: true,
-          // messages, maybe need to do this explicitly if using sendExtraMessageFields
-          // https://github.com/vercel/ai/issues/551
-          messages: messages
-        };
-        if (functions) {
-          options.functions = functions;
-          options.function_call = "auto";
-        }
-        if (response_format) {
-          options.response_format = response_format;
-        }
         const TIMEOUT_DURATION = 20000; // 20 seconds, adjust as needed
-        process.stdout.write("llmapi.chat.completions.create(options)" + JSON.stringify(options, null, 2) + '\n');
-        //console.log("llmapi.chat.completions.create(options)", options);
+        //utils.logTask(T(), "llmapi.chat.completions.create(options)", options);
         let response = await Promise.race([
             llmapi.chat.completions.create(options),
             new Promise((_, reject) => 
                 setTimeout(() => reject(new Error("ServiceVercelAI timed out after" + TIMEOUT_DURATION + "ms. Please try again.")), TIMEOUT_DURATION)
             )
         ]);
-        console.log("llmapi.chat.completions.create responded");
+        utils.logTask(T(), "llmapi.chat.completions.create responded");
         // eslint-disable-next-line no-unused-vars
         response_text_promise = new Promise((resolve, reject) => {
           // eslint-disable-next-line no-unused-vars
@@ -307,7 +309,7 @@ async function openaigpt_async(params) {
               { name, arguments: args },
               createFunctionCallMessages,
             ) => {
-              console.log("experimental_onFunctionCall", functionDepth, name, args);
+              utils.logTask(T(), "experimental_onFunctionCall", functionDepth, name, args);
               functionDepth++;
               // if you skip the function call and return nothing, the `function_call`
               // message will be sent to the client for it to handle
@@ -351,7 +353,7 @@ async function openaigpt_async(params) {
                     T("commandArgs", {lockBypass: true});
                     T("commandDescription", `Request action ${name}`);
                     const updatedTask = await wsSendTask(T(), "configFunctionResponse");
-                    //console.log(`${name} updatedTask`, updatedTask);
+                    //utils.logTask(T(), `${name} updatedTask`, updatedTask);
                     newMessages = createFunctionCallMessages(updatedTask?.response?.functionResult);
                   } catch (error) {
                     console.error(`An error occurred while processing ${name}:`, error);
@@ -361,9 +363,9 @@ async function openaigpt_async(params) {
                   break;
                 }
               }
-              //console.log("newMessages", newMessages);
+              //utils.logTask(T(), "newMessages", newMessages);
               // Should check the token limits here
-              console.log("Extending newMessages", newMessages);
+              utils.logTask(T(), "Extending newMessages", newMessages);
               let functionMessages = [...messages, ...newMessages];
               currentMaxResponse = computeMaxResponseTokens(maxTokens, maxResponseTokens, currentMaxResponse, messages, functions)
               if (currentMaxResponse < minimalTokens) {
@@ -383,7 +385,7 @@ async function openaigpt_async(params) {
             onToken: async (token) => {
               // This callback is called for each token in the stream
               // You can use this to debug the stream or save the tokens to your database
-              //console.log("onToken:", token);
+              //utils.logTask(T(), "onToken:", token);
               if (!noStreaming) {
                 partialText += token;
                 const partialResponse = { delta: token, text: partialText };
@@ -391,12 +393,12 @@ async function openaigpt_async(params) {
               }
             },
             onFinal: async (completion) => {
-              //console.log("final messages", messages);
-              //console.log("onFinal", completion);
+              //utils.logTask(T(), "final messages", messages);
+              //utils.logTask(T(), "onFinal", completion);
               message_from("API", completion, noStreaming, instanceId);
               if (useCache) {
                 cacheStore_async.set(computedCacheKey, completion);
-                console.log("cache stored key ", computedCacheKey);
+                utils.logTask(T(), "cache stored key ", computedCacheKey);
               }
               resolve([completion, newMessages, errored]);
             },
@@ -404,7 +406,7 @@ async function openaigpt_async(params) {
             onCompletion: async (completion) => {
               // This callback is called after each response from the model (e.g. function call)
               // If we pass a callback into this service form the task then it could return messages as they complete
-              console.log("onCompletion", completion);
+              utils.logTask(T(), "onCompletion", completion);
             }
           })
           // This is a way to pull from the stream so the callbacks to OpenAIStream get called
@@ -430,7 +432,7 @@ async function openaigpt_async(params) {
       }
     }
   }
-  console.log("response_text_promise", response_text_promise);
+  utils.logTask(T(), "response_text_promise", response_text_promise);
   return response_text_promise;
 }
 

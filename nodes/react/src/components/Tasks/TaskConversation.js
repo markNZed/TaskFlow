@@ -40,9 +40,18 @@ const TaskConversation = (props) => {
   const [chatResponse, setChatResponse] = useState({});
   const [LLMResponseContent, setLLMResponseContent] = useState({});
   const chatSectionRef = useRef();
+  const [waitForUpdate, setWaitForUpdate] = useState(false);
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
+
+  // Each time this component is mounted then we reset the task state
+  useEffect(() => {
+    console.log("TaskConversation mounted", task);
+    modifyTask({ 
+      "state.done": false,
+    });
+  }, []);
 
   // There is a loop from the childTask.output.msgs to childTask.input.msgs
   // This potentiallly allows msgs to be controlled by TaskConversation e.g. user could edit previous messages
@@ -123,6 +132,7 @@ const TaskConversation = (props) => {
         applyRegex(combinedMsgs);
         setMsgs(combinedMsgs);
       }
+      console.log("msgsHistory", task.output.msgsHistory);
     }
   }, [childTask?.output]);
  
@@ -133,6 +143,27 @@ const TaskConversation = (props) => {
     } 
   // For some reason I need to add childTask for this to work, unsure why
   }, [task.output.msgsHistory, hasScrolled, childTask]);
+
+  useEffect(() => {
+    if (task.input?.exit && !task?.state?.done && !waitForUpdate) {
+      // We immediately exit, this is used by the stepper
+      // Need to wait for the update to take effect before setting done true
+      // We should use a FSM 
+      // Could use something like update count here? FSM is the right way
+      setWaitForUpdate(true);
+      modifyTask({
+        command: "update", // So we can access the outputs assocaited with this task from other tasks
+        commandDescription: "Updating after asked to exit",
+      });
+    } 
+    if (waitForUpdate) {
+      modifyTask({
+        "state.done": true,
+      });
+      setWaitForUpdate(false);
+    }
+  // For some reason I need to add childTask for this to work, unsure why
+  }, [task]);
 
   const handleScroll = () => {
     const chatContainer = chatContainerRef.current;
@@ -180,6 +211,11 @@ const TaskConversation = (props) => {
       >
         { task.output.msgsHistory && task.output.msgsHistory.length > 0 &&
           task.output.msgsHistory.map((msg, index) => {
+            // Skip the first two messages if hideInitialPrompt is true
+            // This works well with TaskChat config.loca.prompt being set 
+            if (task.config.local.hideInitialPrompt && index < 2) {
+              return null;
+            }
             //console.log("msg", msg);
             // Use components here so we can avoid re-rendering if nothing changes
             return (

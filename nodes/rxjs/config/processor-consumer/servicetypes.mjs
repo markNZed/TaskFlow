@@ -1,3 +1,5 @@
+import { CACHE_ENABLE } from "../../config.mjs";
+
 const currentDate = new Date().toISOString().split("T")[0];
 
 // This is an array because we use the same structure as other configdata
@@ -21,9 +23,10 @@ const servicetypes = [
     forget: false,
     dummyAPI: false,
     prompt: "",
-    useCache: true,
+    useCache: CACHE_ENABLE,
     noStreaming: false,
     systemMessageTemplate: "",
+    newSystemMessageTemplate: "",
     cacheKeySeed: "",
     maxFunctionDepth: 1,
     // 'gpt-3.5-turbo-1106',// 16k context window, seems to perform poorly compared to gpt-3.5-turbo-0613
@@ -38,6 +41,7 @@ const servicetypes = [
       "low": "gpt-3.5-turbo",
     },
     modelStrength: "medium",
+    json: false,
   },
   {
     name: "configchat",

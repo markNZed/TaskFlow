@@ -1,31 +1,37 @@
 /* ToDo
 -------
-task.permissions -> task.groupIds ?
+TaskInterview
+  What controls the timing?
+    Include current time in each message
+      Could update the current time in the system prompt - append
+        Need a preSystemPrompt and postSystemPrompt
+      Set timer per section and add that info to system prompt ?
+  What to do with next button during interview ? Do we show it?
+    Hide next until use has sent at least one response - can disable maybe?
+  With FSM events generated on one processor are not seen on others
+    Just the state update? Yes but we could sync events (rxjs is doing this now)
+  There is a lot of details rlated to the Interview in TaskShowInstruction
+The Redis wrapper providing an iterator is VERY slow - why?
+Could send family updates to Procesor and then it splits this into Task updates
+Fix Missing lastTask for update 
+React is not expecting external sync with GOTO
+Page number reset during new Log search - test
+Should init task.shared before completing templates (template should run during init on copro)
+In a family we can have multiple instances of the same task when used in a FSM style
+  TaskStepper should be OK now
+  But what about CEPConnections?
+It is not really in the spirit of an FSM to use events like GOTOdisplayInstruction
+operator needs a generic interface where we pass the name of the operator e.g. operate("LLM") which will find the right function
+configdata should check that services specify environments
+Does shared from parent get copied to child in config?
+Move all FLE tasks into fle.mjs
+Create separate cron demo - test it
 When updating prod will need to modify users, tribes, groups in nodes/hub/db/config/runtime
 Circle switching is broken ?
   Seemed to be an issue with the collaborate feature - maybe the instanceId but unclear why
-Will need to manage the cron jobs at some point
+Will need UI to manage cron jobs
   Perhaps this could also use the grid component
-TaskInterview
-  Can template reference task e.g. '.config' special case when starting with single '.'
-    Needs testing
-  With FSM events generated on one processor are not seen on others ?
-    Just the state update? Yes but we could sync events (rxjs is doing this now)
-  How to start step with the model asking a question 
-    Config the task to immediately send a predefined prompt? 
-  shared.family.questionnaire
-  What controls the timing?
-    Include current time in each message
-      Could update the current time in the system prompt
-      User could caus delays
-      set timer per section and add that info to system prompt ?
-  Where are the responses integrated into the questionnaire?
-    A task that explains to the user what is happening and introduces the next selection
-Electron seems like a good way to leverage the current node/react code and provide a desktop app
-  For a desktop processor e.g. could run this to get access to user's CPU etc
-  Unsure if this supports mobile: https://capacitor-community.github.io/electron/ (electron by itself does not)
-https://github.com/lxieyang/chrome-extension-boilerplate-react
-  This is how we could access user content for scraping
+  Could generalize TaskLog to TaskGrid
 After taskConfigs are converted into tasks then do we move config.local into config?
 TaskAlerts
   Like a message queue so a user can see taks that are awaiting action
@@ -37,6 +43,7 @@ TaskAlerts
 When a task is not connected to React how do we report errors
   Need a background TaskError on React for this ?
     hub-consumer can check and send if not handled by React
+task.permissions -> task.groupIds ? Probably yes
 
 Need dev mode that will stop on errors
 Test maintenance page
@@ -699,6 +706,11 @@ Architecture
   Ideally we want the same code for Task storage on Hub/React/NodeJs
     https://github.com/jaredwray/keyv/issues/868 V5 is intended to add browser support, also metadata
   https://react.minchat.io/ is one option for chat components
+  Electron seems like a good way to leverage the current node/react code and provide a desktop app
+    For a desktop processor e.g. could run this to get access to user's CPU etc
+    Unsure if this supports mobile: https://capacitor-community.github.io/electron/ (electron by itself does not)
+  https://github.com/lxieyang/chrome-extension-boilerplate-react
+    This is how we could access user content for scraping
 
 Issues
 ------
@@ -771,7 +783,6 @@ Comparison with similar systems
     LMQL is a programming language for language model interaction
   https://github.com/Stevenic/alphawave
     State-of-the-art response repair logic.
-
 
 Test Plan
 ---------

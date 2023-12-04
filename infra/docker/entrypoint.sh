@@ -11,14 +11,14 @@ screen -S app -d -m -t hub-core bash
 screen -S app -p hub-core -X stuff "cd /app/nodes/hub\n"
 screen -S app -p hub-core -X stuff "npm install\n"
 screen -S app -p hub-core -X stuff "touch hub-core.log && chmod 444 hub-core.log\n"
-screen -S app -p hub-core -X stuff "truncate -s 0 hub-core.log; NODE_NAME=hub-core npm run $RUN_MODE 2>&1 | tee -a hub-core.log\n"
+screen -S app -p hub-core -X stuff "truncate -s 0 hub-core.log; NODE_NAME=hub-core DEBUG_PORT=0.0.0.0:9229 npm run $RUN_MODE 2>&1 | tee -a hub-core.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t hub-consumer bash
 screen -S app -p hub-consumer -X stuff "cd /app/nodes/rxjs\n"
 screen -S app -p hub-consumer -X stuff "npm install && touch /tmp/rxjs_npm_install_done\n"
 screen -S app -p hub-consumer -X stuff "touch hub-consumer.log && chmod 444 hub-consumer.log\n"
-screen -S app -p hub-consumer -X stuff "truncate -s 0 hub-consumer.log; NODE_NAME=hub-consumer npm run $RUN_MODE 2>&1 | tee -a hub-consumer.log\n"
+screen -S app -p hub-consumer -X stuff "truncate -s 0 hub-consumer.log; NODE_NAME=hub-consumer DEBUG_PORT=0.0.0.0:9231 npm run $RUN_MODE 2>&1 | tee -a hub-consumer.log\n"
 
 # create a new window within the "app" screen
 screen -S app -X screen -t hub-coprocessor bash

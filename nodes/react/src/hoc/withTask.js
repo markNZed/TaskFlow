@@ -68,7 +68,7 @@ function withTask(Component) {
     const [spawning, setSpawning] = useState(true);
     const [paused, setPaused] = useState(false);
     const [tabActive, setTabActive] = useState(false);
-
+    const initSpawnTasks = useRef();
 
     useEffect(() => {
       taskRef.current = props.task;
@@ -305,11 +305,12 @@ function withTask(Component) {
     useEffect(() => {
       const spawnTasks = async () => {
         if (!props.task) {return}
+        initSpawnTasks.current = true;
         const spawnTask = props.task.config?.spawnTask === false ? false : true;
         //utils.log("spawnTask", spawnTask, props.task?.meta?.childrenId)
         if (spawnTask && props.task?.meta?.childrenId && props.task?.meta?.childrenId.length) {
           for (const childId of props.task.meta.childrenId) {
-            utils.log("spawnTask", childId);
+            utils.log(`Task ${props.task.id} spawnTask`, childId);
             const mod = {
               "command": "start",
               "commandArgs": {
@@ -329,14 +330,16 @@ function withTask(Component) {
                 }
               }, 100); // Check every 100ms (adjust as needed)
             });
-            utils.log("Start from withTask", childId)
+            utils.log(`Task ${props.task.id} spawnTask resolved`, childId)
           }
         }
         setSpawning(false);
         setReinitialize(false);
-        utils.log("spawnTask config", spawnTask);
+        utils.log(`Task ${props.task.id} spawnTask config`, spawnTask);
       };
-      spawnTasks();
+      if (!initSpawnTasks.current || reinitialize) {
+        spawnTasks();
+      }
     }, [reinitialize]);
 
     useEffect(() => {
@@ -357,7 +360,7 @@ function withTask(Component) {
 
     useUpdateWSFilter(isMountedRef, tabActive, props.task,
       async (updateDiff) => {
-        console.log("useUpdateWSFilter updateDiff", updateDiff);
+        //console.log("useUpdateWSFilter updateDiff", updateDiff);
         const lastTask = await globalState.storageRef.current.get(props.task.instanceId);
         //console.log("lastTask", utils.deepClone(lastTask));
         //console.log("useUpdateWSFilter globalState.storageRef.current.get", lastTask.meta.hash, lastTask);
@@ -391,26 +394,26 @@ function withTask(Component) {
         const thisProcessorHasLock = updateDiff.meta.locked === globalState.nodeId;
         if (updateDiff?.node?.commandArgs && updateDiff.node.commandArgs.sync) {
           modifyTask(updateDiff);
-          console.log("useUpdateWSFilter SYNC");
+          //console.log("useUpdateWSFilter SYNC");
         } else if (thisProcessorIsSource) {
           // Just update task.meta & task.node (for the node.origTask)
           // But the CEP could modify this task
           const currentMeta = utils.deepMerge(props.task.meta, updateDiff.meta);
           const currentProcessor = utils.deepMerge(props.task.node, updateDiff.node);
           modifyTask({"meta": currentMeta, "node": currentProcessor});
-          console.log("useUpdateWSFilter from this node");
+          //console.log("useUpdateWSFilter from this node");
         } else if (thisProcessorHasLock) {
           // We do not want to use lastTask.input because it may overwrite changes on the inputs coming from outside the Task.
           delete updateDiff.input
           modifyTask(updateDiff);
-          console.log("useUpdateWSFilter has lock ", props.task.id);
+          //console.log("useUpdateWSFilter has lock ", props.task.id);
         } else {
           // This is no longer replacing the task so we can keep local changes during collaboration
           modifyTask(updateDiff);
           //props.setTask(updatedTask);
-          console.log("useUpdateWSFilter", props.task.id, updatedTask);
+          //console.log("useUpdateWSFilter", props.task.id, updatedTask);
         }
-        console.log(`Storage update messageId:${updateDiff.meta.messageId} isSource:` + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, "updateDiff, updatedTask", updateDiff, updatedTask);
+        console.log(`Storage update messageId:${updateDiff.meta.messageId} isSource:` + thisProcessorIsSource + " hasLock:" + thisProcessorHasLock, " id: " + props.task.id, updatedTask.node.commandDescription, "updateDiff", updateDiff, "updatedTask", updatedTask);
       }
     )
 
@@ -463,7 +466,7 @@ function withTask(Component) {
             })
           )
         );
-      } else if (props.task.state.current !== props.task.state.last) {
+      } else if (props.task?.state && props.task.state.current !== props.task.state.last) {
         props.setTask(p => ({...p, state: {...p.state, last: p.state.current}}))
       }
     }

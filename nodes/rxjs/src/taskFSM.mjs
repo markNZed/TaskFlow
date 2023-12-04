@@ -7,6 +7,7 @@ import { createMachine, interpret } from 'xstate';
 import { utils } from "./utils.mjs";
 import { xutils } from './shared/FSM/xutils.mjs';
 import { commandUpdate_async } from "#src/commandUpdate";
+import { NODE } from "#root/config";
 
 export const getFSMHolder_async  = async (task, activeFsm) => {
   const FSMHolder = {
@@ -19,7 +20,7 @@ export const getFSMHolder_async  = async (task, activeFsm) => {
   } else {
     const fsmConfig = await loadFSMModule_async(task);
     if (fsmConfig && task.config?.fsm?.useMachine) {
-      //console.log("Before creating machine", fsmConfig);
+      //utils.logTask(task, "Before creating machine", fsmConfig);
       FSMHolder.machine = createMachine(fsmConfig);
     }
   }
@@ -30,18 +31,18 @@ const loadFSMModule_async = async (task) => {
   let importPath;
   let name;
   if (task?.fsm) {
-    //console.log("loadFSMModule_async returning task.fsm");
+    //utils.logTask(task, "loadFSMModule_async returning task.fsm");
     return task.fsm;
   } else if (task?.config?.fsm?.name) {
     importPath = `${task.type}/${task.config.fsm.name}.mjs`;
     name = task.config.fsm.name;
-    console.log("loadFSMModule_async name", task.config.fsm.name);
+    utils.logTask(task, "loadFSMModule_async name", task.config.fsm.name);
   } else if (task.type) {
     importPath = `${task.type}/default.mjs`;
     name = 'default';
-    console.log(`loadFSMModule_async ${task.type}/default.mjs`);
+    utils.logTask(task, `loadFSMModule_async ${task.type}/default.mjs`);
   } else {
-    console.log("No FSM");
+    utils.logTask(task, "No FSM");
     return null;
   }
   try {
@@ -64,7 +65,7 @@ const loadFSMModule_async = async (task) => {
     return fsmConfig;
   } catch (error) {
     if (error.message.includes("Cannot find module")) {
-      console.log(`No FSM at ${'./shared/FSM/' + importPath}`);
+      utils.logTask(task, `No FSM at ${'./shared/FSM/' + importPath}`);
     } else {
       console.error(`Failed to load FSM at ${'./shared/FSM/' + importPath}`, error);
       throw error;
@@ -74,11 +75,22 @@ const loadFSMModule_async = async (task) => {
 
 export function updateStates(T, FSMHolder) {
   const fsmState = FSMHolder.fsm.getSnapshot().value;
-  if (fsmState && fsmState !== T("state.current")) {
-    console.log("updateStates from", T("state.current"), "to", fsmState);
+  utils.logTask(T(), `updateStates ${T("state.current")} ${fsmState}`);
+  const externalFSMEvent = T("node.commandArgs.fsmEvent");
+  const goto = "GOTO" + fsmState;
+  utils.logTask(T(), `Check externalFSMEvent ${externalFSMEvent} goto ${goto} sourceNodeId ${T("node.sourceNodeId")} NODE.id ${NODE.id}`);
+  if (externalFSMEvent ===  goto && T("node.sourceNodeId") === NODE.id) {
+    utils.logTask(T(), "Not updating state because this node sent the update");
+    return;
+    // How do we update the state here without sending a global update?
+    // Only need to do this if there has been a change to task beyond the state ?
+  }
+  const current = T("state.current");
+  if (fsmState && fsmState !== current) {
     T("state.last", T("state.current"));
     T("state.current", fsmState);
     T("command", "update");
+    T("commandDescription", `updateStates from ${current} to ${fsmState}`);
   }
 }
 
@@ -121,27 +133,38 @@ export function initiateFsm(T, FSMHolder, actions = {}, guards = {}, singleStep 
       }
       return acc;
     }, {});
+    machine.config["initial"] = machine["initial"] || T("state.current");
+    const fsmEvent = T("node.commandArgs.fsmEvent");
+    if (fsmEvent && fsmEvent.startsWith("GOTO")) {
+      const initial = fsmEvent.substring(4);
+      machine.config["initial"] = initial;
+      T("node.commandArgs.fsmEvent", null);
+      utils.logTask(T(), "Initialize FSM with fsmEvent GOTO " + initial);
+    }
+    utils.logTask(T(), "Forced initial state to " + machine["initial"]);
     const extendedMachine = machine.withConfig({ actions, guards: allGuards });
     fsm = interpret(extendedMachine)
       .onEvent((event) => {
-        console.log('Event sent:', event.type);
+        utils.logTask(T(), 'Event sent:', event.type);
       })
       .onTransition((state) => {
-        console.log("FSM transition", state.value, "scheduled actions:", state.actions);
+        utils.logTask(T(), "FSM transition", state.value, "scheduled actions:", state.actions);
         if (singleStep && state.value !== T("state.current")) {
           fsm.stop();
         }
       });
     FSMHolder.send = fsm.send; // So we can use send from within actions
     // fsm.start(T("state.current")); // Does not pick up the entry action
+    // This means the FSM will start in the start state and re-execute entry actions there?
     fsm.start();
     FSMHolder.fsm = fsm;
     // Check if we have a pending event
     if (T("node.commandArgs.fsmEvent")) {
-      console.log("Pending event", T("node.commandArgs.fsmEvent"));
+      utils.logTask(T(), "Pending event", T("node.commandArgs.fsmEvent"));
       fsm.send(T("node.commandArgs.fsmEvent"));
     }
   } else {
+    // fsm is already running
     const fsmState = fsm.getSnapshot().value;
     if (fsmState && fsmState !== T("state.current")) {
       fsm.send("GOTO" + T("state.current"));

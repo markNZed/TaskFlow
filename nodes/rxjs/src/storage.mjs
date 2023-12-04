@@ -89,6 +89,8 @@ const serviceTypes_async = newKeyV(redisClient, keyvPrefix + "serviceTypes");
 
 const operatorTypes_async = newKeyV(redisClient, keyvPrefix + "operatorTypes");
 
+const dataStore_async = newKeyV(redisClient, keyvPrefix + "data");
+
 const sharedStore_async = newKeyV(redisClient, NODE.appAbbrev + "shared"); // Shared with Hub
 
 const connectionsStore_async = newKeyV(redisClient, NODE.appAbbrev + "connections"); // Shared with Hub
@@ -143,6 +145,7 @@ if (NODE.storage.emptyAllDB) {
     cepTypes_async.clear(),
     serviceTypes_async.clear(),
     operatorTypes_async.clear(),
+    dataStore_async.clear(),
   ];
   if (NODE.role !== "coprocessor") {
     toClear.push(activeTasksStore_async.clear());
@@ -215,4 +218,5 @@ export {
   outputStore_async,
   instancesStore_async,
   cronJobsMap,
+  dataStore_async,
 };

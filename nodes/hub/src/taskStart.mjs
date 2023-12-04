@@ -96,14 +96,13 @@ async function checkUserGroup_async(groupId, userId) {
 async function processTemplateArrays_async(obj, task, outputs, familyId) {
   // Define regex patterns and their associated case identifiers
   const regexPatterns = [
+    { regex: /^(USER|SHARED|MODEL)\.([^\s]+)$/, caseId: 'userOrShared' },
     { regex: /^([^\s.]+).*?\.([^\s.]+)$/, caseId: 'dotNotation' },
-    { regex: /^(USER|SHARED)\.([^\s]+)$/, caseId: 'userOrShared' },
     { regex: /^\.(\.+)([^\s]+)$/, caseId: 'relativePath' },
     { regex: /.*\.(output)\.([^\s]+)$/, caseId: 'outputPath' },
     { regex: /^\.([^\s]+)$/, caseId: 'local' },
     { regex: /^(\.+)(.*)\.output\./, caseId: 'complexOutputPath' }
   ];
-
   if (Array.isArray(obj) && obj.every(item => typeof item === 'string')) {
     return obj.reduce(function (acc, curr) {
       let matchFound = false;
@@ -118,7 +117,7 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
               const path = curr.split('.');
               let outputPath;
               if (path[0] === "root") {
-                outputPath = curr.replace(/\.[^.]+$/, '');
+                outputPath = curr.replace(/\.[^.]+$/, ''); // strip the last dot part
               } else {
                 outputPath = task.meta.parentId + "." + matches[1] + ".output";
               }
@@ -133,18 +132,23 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
               const T = utils.createTaskValueGetter(task);
               if (matches[1] === "USER") {
                 result = T("user." + matches[2]);
-              } else { // matches[1] === "SHARED"
+              } else if (matches[1] === "SHARED") {
                 result = T("shared." + matches[2]);
+              } else {
+                result = curr; // Allows for templating in the services etc
               }
               break;
             }
             case 'relativePath': {
               // Relative path substitution
               const relativeDistance = matches[1].length;
-              const pathParts = task.meta.parentId.split('.');
-              const relativePath = pathParts.splice(-relativeDistance, relativeDistance);
-              const relativeId = relativePath.join('.');
-              result = relativeId + "." + matches[2];
+              const pathParts = task.id.split('.');
+              pathParts.splice(-relativeDistance, relativeDistance);
+              const relativeId = pathParts.join('.');
+              const absPath = relativeId + "." + matches[2];
+              let splitString = absPath.split(".output.");
+              const outputPath = splitString[0]  + ".output";
+              result = outputs[outputPath][splitString[1]];
               break;
             }
             case 'outputPath': {
@@ -174,17 +178,18 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
             }
           }
           matchFound = true;
+          console.log("processTemplateArrays_async result:", result);
           break; // Stop iterating once a match is found
         }
       }
-
       if (!matchFound) {
         result = curr; // If no match, keep the current string as is
       }
-
+      if (typeof result === 'object') {
+        result = JSON.stringify(result);
+      }
       return acc.concat(result);
     }, []).join("");
-
   } else {
     for (const key in obj) {
       if (Array.isArray(obj[key])) {
@@ -194,7 +199,6 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
       }
     }
   }
-
   return obj;
 }
 
@@ -219,11 +223,15 @@ async function processTemplates_async(task, obj, outputs, familyId) {
   return task;
 }
 
-async function checkUserPermissions_async(task, tribeName, groupsStore_async, tribesStore_async, authenticate) {
+async function checkUserPermissions_async(task, tribeId, groupsStore_async, tribesStore_async, authenticate) {
   utils.debugTask(task);
+  const tribe = await tribesStore_async.get(tribeId);
+  const user = await usersStore_async.get(task.user.id) || {}; // Could be empty in an autostart task on Hub
+  const userGroupIds = user.groupIds || []; // Could be empty if the user has not groups
+  const userGroupIdsInTribe = await utils.filterGroupIdsInTribe_async(userGroupIds, tribe);
   // Check if the user has permissions
   if (authenticate) {
-    const [authenticated, groupId] = await utils.authenticatedTask_async(task, task.user.id, tribeName, groupsStore_async, tribesStore_async);
+    const [authenticated, groupId] = await utils.authenticatedTask_async(task.id, task.permissions, userGroupIdsInTribe);
     if (!authenticated) {
       console.error("Task authentication failed:", utils.js(task.id));
       throw new Error("Task authentication failed");
@@ -475,15 +483,18 @@ async function taskStart_async(
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
 
+    // Should not allow transfer from rot.systme to root.user ?
+    if (prevTask?.shared?.family) {
+      console.log("taskStart_async found family");
+      task["shared"] = task.shared || {};
+      task.shared["family"] = prevTask.shared.family || {};
+    }
     // If we are cloning then transfer this information
     if (prevTask?.shared?.family?.cloning) {
-      task["shared"] = task.shared || {};
-      task.shared["family"] = task?.shared?.family || {};
       task.shared.family["cloning"] = true;
     }
 
     utils.debugTask(task, `initTaskConfig ${nodeId}`);
-
 
     // The task template may not have initialized some top level objects 
     ['config', 'input', 'masks', 'meta', 'output', 'privacy', 'node', 'nodes', 'request', 'response', 'state', 'user', 'users'].forEach(key => task[key] = task[key] || {});

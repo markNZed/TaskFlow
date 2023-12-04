@@ -219,20 +219,28 @@ async function reloadOneConfig_async(type) {
         usersStore_async.set(key, value).catch(err => console.log('usersStore_async set error:', err));
       }
       break;
-    case "tasks":
+    case "tasks": {
       await tasksStore_async.clear();
+      let taskPermissions = {};
       for (const [key, value] of Object.entries(data)) {
         tasksStore_async.set(key, value).catch(err => console.log('tasksStore_async set error:', err));
+        taskPermissions[key] = value.permissions;
       }
+      // This special entry needs to be kept in sync and it avoids needing to iterate over all the tasks to get the permissions for menu building
+      tasksStore_async.set("taskPermissions", taskPermissions);
+      let autoStartIds = [];
       if (!loadedAutoStartTasksStore) {
         const data = await loadOneConfig_async("autoStartTasks");
         loadedAutoStartTasksStore = true;
         // We do not reload the autoStartTasks - this should require a restart of the app
         for (const [key, value] of Object.entries(data)) {
           autoStartTasksStore_async.set(key, value).catch(err => console.log('autoStartTasksStore_async set error:', err));
+          autoStartIds.push(key);
         }
+        autoStartTasksStore_async.set("autoStartIds", autoStartIds);
       }
       break;
+    }
     case "tasktypes":
       await tasktypesStore_async.clear();
       for (const [key, value] of Object.entries(data)) {

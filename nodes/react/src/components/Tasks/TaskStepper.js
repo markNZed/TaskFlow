@@ -36,22 +36,14 @@ function TaskStepper(props) {
   const [tasks, setTasks] = props.useTasksState([]);
   const [keys, setKeys] = useState([]);
   const [tasksIdx, setTasksIdx] = useState(0);
-  const [prevTaskName, setPrevTaskName] = useState();
+  const [prevTaskInstanceId, setPrevTaskInstanceId] = useState();
   const [expanded, setExpanded] = useState([]);
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
-  const [stepDone, setStepDone] = useState();
+  const [lastUpdateCount, setLastUpdateCount] = useState();
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
-
-  // Rather than making the state machine sensitive to tasks we create an event
-  useEffect(() => {
-    if (tasks.length && tasks[tasksIdx].state?.done !== stepDone) {
-      setStepDone(tasks[tasksIdx].state.done);
-    }
-    window.stepperTasks = tasks; // For debug
-  }, [tasksIdx, tasks]);
       
   // Task state machine
   useEffect(() => {
@@ -82,18 +74,27 @@ function TaskStepper(props) {
           nextState = "error";
         } else if (startTask) {
           setTasks([startTask]);
-          setPrevTaskName(startTask.name);
+          setPrevTaskInstanceId(startTask.instanceId);
           setKeys([startTask.instanceId + tasksIdx]);
-          setExpanded([startTask.name])
+          setExpanded([startTask.instanceId])
           nextState = "navigate";
         }
         break;
       case "navigate":
         if (stepperNavigation.task) {
+          // This is a way to wait for the update to complete before proceeding
           if (stepperNavigation.direction === "forward") {
+            setLastUpdateCount(task.meta.updateCount || 0);
             props.modifyChildTask({"input.exit": true});
             setStepperNavigation({task: null, direction: null})
-            nextState = "waitForDone";
+            modifyTask({
+              "shared.stepper.prevInstanceId": tasks[tasksIdx].instanceId,
+              "shared.stepper.currInstanceId": null,
+              "shared.stepper.count": tasksIdx + 1,
+              command: "update",
+              commandDescription: "Stepper is moving to next so update prev",
+            });
+            nextState = "waitForUpdate"; 
           } else if (stepperNavigation.direction === "back") {
             setTasksIdx(tasks.length - 2);
             // Removing the task from the array
@@ -106,32 +107,40 @@ function TaskStepper(props) {
               return newKeys;
             });
             setStepperNavigation({task: null, direction: null})
+            let prevInstanceId;
+            if (newIdx !== 0 && tasks[newIdx]) {
+              prevInstanceId = tasks[newIdx - 1].instanceId;
+            } else if (task?.shared?.stepper?.prevInstanceId) {
+              prevInstanceId = null;
+            }
+            modifyTask({
+              "shared.stepper.prevInstanceId": prevInstanceId,
+              "shared.stepper.currInstanceId": tasks[newIdx].instanceId,
+              "shared.stepper.count": newIdx,
+              command: "update",
+              commandDescription: "Stepper moving back so update curr & prev",
+            });
             nextState = "navigate";
           }
-        }                 
+        }
+        break;
+      case "waitForUpdate":
+        if (task.meta.updateCount > lastUpdateCount) {
+          nextState = "waitForDone"; // Don't do this immediately as the update will clash with the start command in waitForDone
+        }
         break;
       case "waitForDone":
-        if (stepDone) {
-          // The stepper requests a new Task
-          // will set startTask or startTaskError
-          modifyTask({
-            "command": "start",
-            "commandArgs": {
-              id: tasks[tasksIdx].config.nextTask,
-              prevInstanceId: task.instanceId,
-            },
-          });
-          /*
-          const modifiedTask = utils.deepMerge(tasks[tasksIdx], utils.setNestedProperties({ 
-            "state.done": false, 
-          }));
-          setTasksTask((p) => {
-            return modifiedTask;
-          }, tasksIdx);
-          setKeys(p => [...p, tasks[tasksIdx].instanceId + tasksIdx]);
-          */
-          nextState = "waitForNext";
-        }
+        // The stepper requests a new Task
+        // will set startTask or startTaskError
+        modifyTask({
+          "command": "start",
+          "commandArgs": {
+            id: tasks[tasksIdx].config.nextTask,
+            prevInstanceId: task.instanceId,
+            commandDescription: "Stepper next task",
+          },
+        });
+        nextState = "waitForNext";
         break;
       case "waitForNext":
         if (startTaskError) {
@@ -141,10 +150,17 @@ function TaskStepper(props) {
         // But I'm not sure how to automate that
         } else if (startTask && startTask.id !== tasks[tasksIdx].id) {
           console.log("TaskStepper nextTask", startTask);
-          setTasksIdx(tasks.length);
+          const newIdx = tasks.length
+          setTasksIdx(newIdx);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
           setKeys(p => [...p, startTask.instanceId]);
           nextState = "navigate";
+          modifyTask({
+            "shared.stepper.currInstanceId": startTask.instanceId,
+            "shared.stepper.count": newIdx,
+            command: "update",
+            commandDescription: "Stepper loaded new task so update currInstanceId",
+          });
         }
         break;
       case "error":
@@ -156,19 +172,19 @@ function TaskStepper(props) {
     // Manage state.current
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, startTask, startTaskError, stepperNavigation, stepDone]);
+  }, [task, startTask, startTaskError, stepperNavigation]);
 
   // Close previous task and open next task in stepper
   useEffect(() => {
     if (tasks.length > 0) {
-      if (tasks[tasksIdx].name !== prevTaskName) {
-        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].name]);
-        if (prevTaskName) {
+      if (tasks[tasksIdx].instanceId !== prevTaskInstanceId) {
+        setExpanded((prevExpanded) => [...prevExpanded, tasks[tasksIdx].instanceId]);
+        if (prevTaskInstanceId) {
           setExpanded((prevExpanded) =>
-            prevExpanded.filter((p) => p !== prevTaskName)
+            prevExpanded.filter((p) => p !== prevTaskInstanceId)
           );
         }
-        setPrevTaskName(tasks[tasksIdx].name);
+        setPrevTaskInstanceId(tasks[tasksIdx].instanceId);
       }
     }
   }, [tasksIdx]);
@@ -195,19 +211,19 @@ function TaskStepper(props) {
         modalInfo={modalInfo}
       />
       <Stepper activeStep={tasksIdx}>
-        {tasks.map(({ name, label }) => (
-          <Step key={`task-${name}`}>
+        {tasks.map(({ instanceId, label }) => (
+          <Step key={`task-${instanceId}`}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
       {/* nextTask is also a local state */}
       {tasks.map(
-        ({ name, label, config: {nextTask: localNextTask}, instanceId }, idx) => (
+        ({ label, config: {nextTask: localNextTask}, instanceId }, idx) => (
           <Accordion
-            key={name}
-            expanded={isExpanded(name)}
-            onChange={handleChange(name)}
+            key={instanceId}
+            expanded={isExpanded(instanceId)}
+            onChange={handleChange(instanceId)}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{label}</Typography>
@@ -227,7 +243,7 @@ function TaskStepper(props) {
             </AccordionDetails>
             <div>
               {tasksIdx !== 0 &&
-                tasks[tasksIdx].name === name && (
+                tasks[tasksIdx].instanceId === instanceId && (
                   <Button
                     onClick={() => 
                       setStepperNavigation({task: tasks[tasksIdx], direction: "back"})
@@ -237,9 +253,10 @@ function TaskStepper(props) {
                   >
                     Back
                   </Button>
-                )}
+                )
+              }
               {!/\.stop$/.test(localNextTask) &&
-                tasks[tasksIdx].name === name && 
+                tasks[tasksIdx].instanceId === instanceId && 
                 tasks[tasksIdx]?.output?.loading !== true && (
                   <Button
                     onClick={() =>
@@ -250,7 +267,8 @@ function TaskStepper(props) {
                   >
                     Next
                   </Button>
-                )}
+                )
+              }
             </div>
           </Accordion>
         )

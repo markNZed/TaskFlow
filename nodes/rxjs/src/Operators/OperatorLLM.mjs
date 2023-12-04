@@ -13,9 +13,11 @@ dotenv.config(); // For process.env.OPENAI_API_KEY
 async function operate_async(wsSendTask, task) {
   const taskCopy = utils.deepClone(task);
   const T = utils.createTaskValueGetter(taskCopy);
+  console.log("Using LLM", T("operators.LLM"));
   const chatServiceName = T("operators.LLM.chatServiceName") || "chat"; 
   const service = T(`services.${chatServiceName}.module`);
-  let params = await chatPrepare_async(T);
+  console.log("Using service", service);
+  let params = await chatPrepare_async(T, chatServiceName);
   params["wsSendTask"] = wsSendTask;
   params["T"] = T;
   const functionName = params.serviceConfig.API + "_async";
@@ -81,7 +83,7 @@ function checkOperatorCache (T, operatorName) {
 // Prepare the parameters for the chat API request
 // Nothing specific to a partiuclar chat API
 // Also using serviceTypes
-async function chatPrepare_async(T) {
+async function chatPrepare_async(T, chatServiceName) {
 
   const instanceId = T("instanceId");
   let systemMessage = "";
@@ -91,7 +93,7 @@ async function chatPrepare_async(T) {
   let noStreaming = false;
 
   //console.log("prompt " + prompt);
-  let serviceConfig = T("services.chat");
+  let serviceConfig = T("services." + chatServiceName);
   if (T("request.service")) {
     serviceConfig = utils.deepMerge(serviceConfig, T("request.service"));
   }
@@ -202,20 +204,42 @@ async function chatPrepare_async(T) {
 
   // Replace MODEL variables in systemMessageTemplate
   if (serviceConfig.systemMessageTemplate) {
-    let systemMessageTemplate = serviceConfig.systemMessageTemplate;
-    console.log("systemMessageTemplate ", systemMessageTemplate);
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Using replace with a callback function
-    let systemMessages = systemMessageTemplate.map((template) => {
-      return template.replace(regex, (match, p1, p2) => {
-        if (!serviceConfig[p2]) {
-          throw new Error(`serviceConfig ${p2} does not exist`);
-        }
-        return serviceConfig[p2];
-      });
+    systemMessage = serviceConfig.systemMessageTemplate.replace(regex, (match, p1, p2) => {
+      if (!serviceConfig[p2]) {
+        throw new Error(`serviceConfig ${p2} does not exist`);
+      }
+      return serviceConfig[p2];
     });
-    systemMessage = systemMessages.join(); 
     console.log("Sytem message from systemMessageTemplate " + T("id") + " " + systemMessage);
+  }
+
+  // We use newSystemMessageTemplate to override systemMessage when we want to include
+  // MODEL.systemMessage in newSystemMessageTemplate
+  if (serviceConfig.newSystemMessageTemplate) {
+    const regex = /(MODEL)\.([^\s.]+)/g;
+    // Find each instance of regex in the array of strings serviceConfig.newSystemMessageTemplate
+    let matches = [];
+    serviceConfig.newSystemMessageTemplate.forEach(template => {
+      let match;
+      regex.lastIndex = 0; // Reset regex state for each new string
+      while ((match = regex.exec(template)) !== null) {
+        matches.push(match[0]);
+      }
+    });
+    console.log("newSystemMessageTemplate matches", matches)
+    let updatedMessage = serviceConfig.newSystemMessage;
+    matches.forEach(match => {
+      let secondMatch = match.match(regex);
+      if (secondMatch && secondMatch[2]) {
+        // Replace the match in the serviceConfig.newSystemMessage
+        updatedMessage = updatedMessage.replace(match, secondMatch[2]);
+        console.log("newSystemMessage match", match, secondMatch[2])
+      }
+    });
+    systemMessage = updatedMessage;
+    console.log("Sytem message from newSystemMessage " + T("id") + " " + systemMessage);
   }
 
   //console.log("messages before map of id", messages);
@@ -242,6 +266,7 @@ async function chatPrepare_async(T) {
 
   const maxFunctionDepth = serviceConfig.maxFunctionDepth || 1; 
 
+  // Probably better just to config a service for JSN unless all models can support this
   let response_format;
   if (serviceConfig.json) {
     console.log("Using json response_format");

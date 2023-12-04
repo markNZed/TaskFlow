@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-import { tasksStore_async, groupsStore_async, tribesStore_async } from "#src/storage";
+import { tasksStore_async, usersStore_async, tribesStore_async } from "#src/storage";
 import { utils } from "#src/utils";
 
 // eslint-disable-next-line no-unused-vars
@@ -17,7 +17,7 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
   let configTreeEvent; 
   if (utils.checkModified(T(), "shared.system.config-hub-consumer-tasks")) {
     configTreeEvent = true;
-    console.log("configTreeEvent found update to shared.system.config-hub-consumer-tasks");
+    utils.logTask(T(), "configTreeEvent found update to shared.system.config-hub-consumer-tasks");
   }
 
   function deleteNonInitiatorBranches(tasks) {
@@ -62,21 +62,43 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
     Object.keys(tasks).forEach(taskKey => recursiveDelete(taskKey, tasks));
   }
 
-  async function getAuthorisedTasks_async(userId, tribeName, tasksStore_async, groupsStore_async, sort = false) {
-    console.log("getAuthorisedTasks_async", userId, tribeName);
+  async function getAuthorisedTasks_async(userId, tribeId, tasksStore_async, sort = false) {
+    //utils.logTask(T(), "getAuthorisedTasks_async", userId, tribeId);
     let authorised_tasks = {};
     let tasksTree = {};
-    for await (const [key, value] of tasksStore_async.iterator()) {
-      // eslint-disable-next-line no-unused-vars
-      const [authenticated, groupId] = await utils.authenticatedTask_async(value, userId, tribeName, groupsStore_async, tribesStore_async);
-      if (authenticated) {
-        authorised_tasks[key] = value;
-        //console.log("task key authorised", key);
-      } else {
-        //console.log("task key not authorised", key);
-      }
+    // This is particularly slow - many seconds
+    const [tribe, user] = await Promise.all([
+      tribesStore_async.get(tribeId),
+      usersStore_async.get(userId)
+    ]);
+    const userGroupIds = user.groupIds;
+    const userGroupIdsInTribe = await utils.filterGroupIdsInTribe_async(userGroupIds, tribe);
+    //utils.logTask(T(), "getAuthorisedTasks_async userGroupIds", userGroupIds, "userGroupIdsInTribe", userGroupIdsInTribe);
+    let taskPromises = [];
+    // The iterator is slow
+    // Could store in a single hash instead of individual entries then no need to iterate
+    // Could have a "permissions" store that only has that info (task.permissions) in a Map
+    // Need to keep it in sync with  tasksStore_async (and initialize) 
+    const taskPermissionsString = await tasksStore_async.get("taskPermissions");
+    const taskPermissions = taskPermissionsString;
+    for (const [key, value] of Object.entries(taskPermissions)) {
+      const taskPromise = utils.authenticatedTask_async(key, value, userGroupIdsInTribe)
+        // eslint-disable-next-line no-unused-vars
+        .then(async ([authenticated, groupId]) => {
+          if (authenticated) {
+            authorised_tasks[key] = await tasksStore_async.get(key);
+            //utils.logTask(T(), "getAuthorisedTasks_async authorised_tasks", Object.keys(authorised_tasks).length);
+          }
+        });
+  
+      taskPromises.push(taskPromise);
     }
+    // Wait for all tasks to be processed
+    //utils.logTask(T(), "getAuthorisedTasks_async authorised_tasks promises done");
+    await Promise.all(taskPromises);
+    //utils.logTask(T(), "getAuthorisedTasks_async authorised_tasks", Object.keys(authorised_tasks).length);
     deleteNonInitiatorBranches(authorised_tasks);
+    taskPromises = [];
     // If a taskflow is authorized then the path to that taskflow is authorized
     for (const key in authorised_tasks) {
       let id = authorised_tasks[key].id
@@ -87,11 +109,16 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       }
       for (const path of result) {
         if (!authorised_tasks[path]) {
-          authorised_tasks[path] = await tasksStore_async.get(path);
+          // Create a promise for each task and store it
+          const taskPromise = tasksStore_async.get(path).then(task => {
+            authorised_tasks[path] = task;
+          });
+          taskPromises.push(taskPromise);
         }
-      }    
+      }
+      await Promise.all(taskPromises);
     }
-    //console.log("authorised_tasks ", authorised_tasks)
+    //utils.logTask(T(), "getAuthorisedTasks_async paths", Object.keys(authorised_tasks).length);
     let keys = Object.keys(authorised_tasks);
     if (sort) {
         keys = keys.sort((keyA, keyB) => {
@@ -123,13 +150,14 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
         "menu",
       ]);
     }
+    //utils.logTask(T(), "getAuthorisedTasks_async done tasksTree", Object.keys(tasksTree).length);
     return tasksTree;
   }
 
   switch (T("state.current")) {
     case "start": {
       // This will turn init into update
-      const tasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribeId"), tasksStore_async, groupsStore_async, T("config.sort"));
+      const tasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribeId"), tasksStore_async, T("config.sort"));
       T("state.tasksTree", tasksTree);
       T("state.current", "loaded");
       T("command", "update");
@@ -140,16 +168,16 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       break;
     case "ready":
       if (configTreeEvent) {
-        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribeId"), tasksStore_async, groupsStore_async, T("config.sort"));
+        const newTasksTree = await getAuthorisedTasks_async(T("user.id"), T("tribeId"), tasksStore_async, T("config.sort"));
         const oldTasksTree = T("state.tasksTree");
         // There was a very nast issue where a key in the tasksTree could be set to undefined in getAuthorisedTasks_async
         // Then the conversion of the object to JSON will remove the key and deepEqual would see a difference in the number of keys
         // deepEqual was modified to remove undefined keys
         const treeSize = newTasksTree ? Object.keys(newTasksTree).length : 0;
         if (treeSize && !utils.deepEqual(newTasksTree, oldTasksTree)) {
-          //console.log("state.tasksTree getObjectDifference", utils.getObjectDifference(newTasksTree, oldTasksTree));
-          //console.log("newTasksTree", newTasksTree);
-          //console.log("oldTasksTree", oldTasksTree);
+          //utils.logTask(T(), "state.tasksTree getObjectDifference", utils.getObjectDifference(newTasksTree, oldTasksTree));
+          //utils.logTask(T(), "newTasksTree", newTasksTree);
+          //utils.logTask(T(), "oldTasksTree", oldTasksTree);
           T("state.tasksTree", newTasksTree);
           T("command", "update");
           T("commandDescription", "Update state.tasksTree due to configTreeEvent so React can see it.");

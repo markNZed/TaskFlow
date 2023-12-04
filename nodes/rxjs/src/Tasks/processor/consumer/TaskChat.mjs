@@ -80,6 +80,21 @@ const TaskChat_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
   const operatorLLM = T("operators")["LLM"].module;
 
   switch (T("state.current")) {
+    case "start": {
+      // Note this condidtional will fall through into the send state when true
+      if (T("config.local.prompt")) {
+        console.log("Initiating with a prompt from config.local.prompt", T("config.local.prompt"));
+        const msgs = T("input.msgs") || [];
+        T({ 
+          "output.LLMResponse": {role: "assistant", content: "", user: "assistant", id: uuidv4()},
+          "output.msgs": [...msgs, {role: "user", content: T("config.local.prompt"), user: T("user.label"), id: uuidv4()}],
+          "request.prompt": T("config.local.prompt"),
+        });
+      } else {
+        break;
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     case "mentionAddress":
     case "send": { // create code block to avoid linting issue with declaring const in the block
       T("state.current", "receiving");

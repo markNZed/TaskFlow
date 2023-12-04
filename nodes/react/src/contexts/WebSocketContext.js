@@ -30,7 +30,7 @@ export function WebSocketProvider({ children, socketUrl }) {
 
   const logPingPong = false;
 
-  const { globalState, setGlobalStateEntry } = useGlobalStateContext();
+  const { globalState } = useGlobalStateContext();
   const sendJsonMessagePlusRef = useRef();
   // To get a cookie
   const authToken = Cookies.get('authToken');
@@ -69,7 +69,7 @@ export function WebSocketProvider({ children, socketUrl }) {
   // update this useEffect, need to do this so sendJsonMessagePlus takes the updated value of globalState
   sendJsonMessagePlusRef.current = function (m) {
     if (m.task?.node?.command !== "ping") {
-      console.log("sendJsonMessagePlusRef ", m.task);
+      console.log("sendJsonMessagePlusRef ", m.task?.meta?.messageId);
       //console.log("Sending " + socketUrl + " " + JSON.stringify(m))
     }
     if (m.task?.node?.command === "ping" && logPingPong) {
@@ -99,11 +99,14 @@ export function WebSocketProvider({ children, socketUrl }) {
     reconnectAttempts: 5,
     //reconnectInterval: 500,
     //attemptNumber will be 0 the first time it attempts to reconnect, so this equation results in a reconnect pattern of 1 second, 2 seconds, 4 seconds, 8 seconds, and then caps at 10 seconds until the maximum number of attempts is reachedW
-    reconnectInterval: (attemptNumber) =>
-      Math.min(Math.pow(2, attemptNumber) * 1000, 10000),
+    reconnectInterval: (attemptNumber) => {
+      Math.min(Math.pow(2, attemptNumber) * 1000, 10000);
+    },
+
     shouldReconnect: (closeEvent) => {
       return true;
     },
+
     onOpen: (e) => {
       console.log("App webSocket connection established.");
       let ws = getWebSocket();
@@ -118,6 +121,7 @@ export function WebSocketProvider({ children, socketUrl }) {
       }, 30 * 1000); // 30 seconds
       ws.pingIntervalId = intervalId;
     },
+
     onMessage: (e) => {
       if (e.data instanceof Blob) {
         console.log("e.data is a Blob");
@@ -138,8 +142,8 @@ export function WebSocketProvider({ children, socketUrl }) {
       if (command !== "pong") {
         //console.log("App webSocket command:", command, "commandArgs:", commandArgs, "task:", message.task);
         if (command !== "partial") {
-          console.log("App webSocket (except pong & partial) command:", command, "commandArgs:", commandArgs, 
-          "commandDescription:", task.node.commandDescription, "state:", task?.state?.current, "task:", utils.deepClone(task));
+          console.log("App webSocket (except pong & partial) command:", command);
+          //console.log("App webSocket (except pong & partial) command:", command, "commandDescription:", task.node.commandDescription, "commandArgs:", commandArgs, "state:", task?.state?.current, "task:", utils.deepClone(task));
         }
         //Could structure as messageQueue[command][messageQueueIdx]
         // Need to include this here because we have cleared message.task.command by here

@@ -721,7 +721,7 @@ const utils = {
 
   // This is having side-effects on task
   nodeActiveTasksStoreSet_async: async function(setActiveTask_async, task) {
-    console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task?.state?.current);
+    //console.log("nodeActiveTasksStoreSet_async", task.id, "state:",task?.state?.current);
     task.meta = task.meta || {};
     delete task.node.origTask; // delete so we do not have an old copy in origTask
     task.node["origTask"] = utils.deepClone(task); // deep copy to avoid self-reference
@@ -1045,7 +1045,7 @@ const utils = {
     return taskCopy;
   },
 
-  authenticatedGroup_async: async function (task, groupId, tribe) {
+  authenticatedGroup_async: async function (groupId, tribe) {
     let authenticated = false;
     if (tribe) {
       if (tribe.name === "god") {
@@ -1060,37 +1060,41 @@ const utils = {
         }
       }
     }
-    //console.log("authenticatedGroup_async " + task.id + " " + groupId + " " + tribe.name + " " +authenticated);
+    //console.log("authenticatedGroup_async " + groupId + " " + tribe.name + " " +authenticated);
     return authenticated;
   },
 
-  authenticatedTask_async: async function (task, userId, tribeName, groupsStore_async, tribesStore_async) {
-    utils.debugTask(task);
+  filterGroupIdsInTribe_async: async function(userGroupIds, tribe) {
+    // Use map to apply the async function to each element, creating an array of promises
+    const checkGroupPromises = userGroupIds.map(groupId => utils.authenticatedGroup_async(groupId, tribe));
+    // Use Promise.all to wait for all promises to resolve
+    const checkResults = await Promise.all(checkGroupPromises);
+    // Filter the original array based on the results
+    const filteredUserGroupIds = userGroupIds.filter((_, index) => checkResults[index]);
+    return filteredUserGroupIds;
+  },
+
+  authenticatedTask_async: async function (taskID, taskPermissions, userGroupIdsInTribe) {
+    //utils.debugTask(taskPermissions);
     let authenticated = false;
     let groupId;
-    const tribe = await tribesStore_async.get(tribeName);
-    if (task?.permissions) {
-      //console.log("task.permissions", task.permissions);
-      for (const permissionGroupId of task.permissions) {
+    if (taskPermissions) {
+      //console.log("task.permissions", taskPermissions);
+      for (const permissionGroupId of taskPermissions) {
         if (permissionGroupId === "*") {
           authenticated = true;
-          //console.log("authenticatedTask_async * " + task.id + " " + userId + " " + groupId  + " " + tribeName + " " + authenticated);
+          //console.log("authenticatedTask_async * " + taskID + " " + userId + " " + groupId  + " " + tribeId + " " + authenticated);
+          groupId = '*';
           break;
         }
-        let group = await groupsStore_async.get(permissionGroupId);
-        if (!group?.userIds) {
-          console.log("Group " + permissionGroupId + " has no users");
-        } else if (group.userIds.includes(userId)) {
-          const groupInTribe = await utils.authenticatedGroup_async(task, permissionGroupId, tribe);
-          if (groupInTribe) {
-            authenticated = true;
-            groupId = permissionGroupId;
-            break;
-          }
+        if (userGroupIdsInTribe.includes(permissionGroupId)) {
+          authenticated = true;
+          groupId = permissionGroupId;
+          break;
         }
       }
     }
-    //console.log("authenticatedTask_async " + task.id + " " + userId + " " + tribeName + " " + authenticated);
+    //console.log("authenticatedTask_async " + taskID + " " + userId + " " + tribeId + " " + authenticated);
     return [authenticated, groupId];
   },
 

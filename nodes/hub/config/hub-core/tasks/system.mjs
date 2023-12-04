@@ -515,7 +515,6 @@ const system = [
       local: {
         createColumns: "system",
         autoQuery: true,
-        pageSize: 10,
       },
     },
     parentName: "tasks",
@@ -539,6 +538,32 @@ const system = [
     },
     parentName: "tasks",
     type: "TaskEdit",
+  },
+
+  {
+    name: "system-cron",
+    parentName: "tasks",
+    type: "TaskCEP",
+    initiator: true,
+    config: {
+      label: "Cron",
+      debug: {
+        //debugTask: true,
+      },
+    },
+    // Every minute sync this task and set request.increment to true
+    cron: {
+      "testing": {
+        cronTime: '0 */1 * * * *',
+        start: true,
+        syncTask: {
+          request: {
+            increment: true
+          }
+        }
+      }
+    },
+    environments: ["rxjs-hub-coprocessor"],
   },
   
 ];

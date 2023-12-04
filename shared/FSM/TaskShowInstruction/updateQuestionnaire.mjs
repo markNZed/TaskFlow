@@ -16,19 +16,15 @@ export function getFSM(initialTask) {
   return {
     "states": {
       "start": {
-        "entry": ["rxjs_processor_consumer_start", "rxjs_hub_consumer_start", "rxjs_hub_coprocessor_start", "react_start_loading"],
-        "always": {
-          "target": "displayInstruction",
-          "cond": "react_instructionCached"
-        }
+        "entry": ["rxjs_processor_consumer_fill", "react_start_loading"],
       },
       "displayInstruction": {
-        "entry": ["react_displayInstruction", "rxjs_processor_consumer_fill"],
+        "entry": ["react_displayInstruction"],
       },
       "waitingForFill": {
       },
       "filled": {
-        "entry": "react_stop_loading",
+        "entry": ["react_stop_loading", "react_displayInstruction"],
       },
       "finish": {
         "entry": "react_finish"

@@ -10,24 +10,85 @@ import path from 'path';
 import { NODE } from "#root/config";
 import { commandStart_async } from "#src/commandStart";
 import { utils } from "#src/utils";
+import { commandUpdate_async } from "#src/commandUpdate";
+import { dataStore_async } from "#src/storage";
+
+/*
+
+At the start of the process we could allow the user to upload any relevant documents e.g. CV
+
+*/
 
 // eslint-disable-next-line no-unused-vars
 const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
 
-    if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
-
+    // Save changes to shared.family.questionnaire to disk
     const riDir = path.join(NODE.storage.dataDir, "RI");
     const userDir = path.join(riDir, "users", T("user.id"));
     const questionnaireFileName = "questionnaire.mjs";
+    const questionnairePath = path.join(userDir, questionnaireFileName);
+
+    if (utils.checkSyncEvents(T(), "shared.family.questionnaire")) {
+      const modPath = path.join(userDir, "questionnaireMod.mjs");
+      const dataString = "export const questionnaire = " + utils.js(T("shared.family.questionnaire"));
+      fs.writeFile(modPath, dataString, 'utf8', (err) => {
+        if (err) {
+          console.error(err);
+        }
+        utils.logTask(T(), `TaskInterview_async file ${modPath} has been written`);
+      });
+    }
+
+    // This is a hack to set shared.family.interviewStep so it can be used in TaskChat template
+    // If we had a templating language with operations we could do this in the template
+    if (utils.checkSyncEvents(T(), "shared.stepper.count")) {
+      utils.logTask(T(), `shared.stepper.count ${T("shared.stepper.count")}`);
+      const modPath = path.join(userDir, "fullConversation.mjs");
+      const fullConversation = await dataStore_async.get(T("familyId") + "fullConversation");
+      if (fullConversation) {
+        fs.writeFile(modPath, utils.js(fullConversation), 'utf8', (err) => {
+          if (err) {
+            console.error(err);
+          }
+          utils.logTask(T(), `TaskInterview_async file ${modPath} has been written`);
+        });
+      }
+      const questionnaire = T("shared.family.questionnaire");
+      if (!questionnaire) return;
+      const order = T("shared.family.questionnaire")["order"]
+      if (!order) return;
+      const interviewStep = T("shared.family.questionnaire")["order"][T("shared.stepper.count")]
+      if (interviewStep && interviewStep !== T("shared.family.interviewStep")) {
+        T("commandDescription", "Updating the interviewStep");
+        T("commandArgs", {
+          instanceId: T("instanceId"), 
+          sync: true, 
+          syncTask: {
+            shared: {
+              family: {
+                interviewStep
+              }
+            }
+          },
+        });
+        commandUpdate_async(wsSendTask, T()).then(() => {
+          utils.logTask(T(), `Setting shared.family.interviewStep`);
+        });
+      }
+    }
+
+    if (T("node.commandArgs.sync")) {
+      utils.logTask(T(), "TaskInterview_async node.commandArgs", utils.js(T("node.commandArgs")));
+      return null
+    } // Ignore sync operations
 
     switch (T("state.current")) {
       case "start": {
-        const questionnairePath = path.join(userDir, questionnaireFileName);
-        console.log("TaskInterview_async", userDir);
+        utils.logTask(T(), "TaskInterview_async", userDir);
         if (!fs.existsSync(questionnairePath)) {
-          console.log("Questionnaire does not exist");
+          utils.logTask(T(), "Questionnaire does not exist");
           if (!fs.existsSync(userDir)) {
-            console.log("Creating directory: " + userDir);
+            utils.logTask(T(), "Creating directory: " + userDir);
             fs.mkdirSync(userDir, { recursive: true }, (err) => {
               if (err) throw err;
             });
@@ -37,7 +98,7 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
         }
         const module = await import(questionnairePath);
         const questionnaire = module.questionnaire;
-        //console.log("questionnaire", utils.js(module));
+        //utils.logTask(T(), "questionnaire", utils.js(module));
         T("shared.family.questionnaire", questionnaire);
         T("state.current", "spawn");
         T("command", "update");
@@ -62,7 +123,7 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
             });
             /*
             if (childId.endsWith(".cep")) {
-              console.log("Found CEP");
+              utils.logTask(T(), "Found CEP");
               startTask = utils.deepMerge(startTask, {
                 commandArgs: {
                   init : {
@@ -97,7 +158,7 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
         break;
       }
       default:
-        console.log("WARNING unknown state : " + T("state.current"));
+        utils.logTask(T(), "WARNING unknown state : " + T("state.current"));
         return null;
     }
   

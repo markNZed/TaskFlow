@@ -14,7 +14,7 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "RxJS Consumer",
+            "name": "RxJS Processor Consumer",
             "address": "localhost",
             "port": 9230,
             "localRoot": "/app/nodes/rxjs",
@@ -23,7 +23,7 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "RxJS Processsor",
+            "name": "RxJS Hub Consumer",
             "address": "localhost",
             "port": 9231,
             "localRoot": "/app/nodes/rxjs",

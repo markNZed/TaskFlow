@@ -30,13 +30,15 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
   const modified = task?.meta?.modified?.shared !== undefined
   const command = task.node.command;
   const commandArgs = task.node?.commandArgs;
+  const coprocessing = task.node.coprocessing || false;
   // Sync is not coprocessed (maybe it should be but worried about loops)
-  //console.log("CEPShared modified:", modified, "coprocessing:", task.node.coprocessing, "sync:", commandArgs?.sync, "CEPSource:", commandArgs?.CEPSource);
-  if ((task.node.coprocessing && modified)
+  // The start command is an interesting case as to whehter wew cant to run CEP, maybe a specail option to allow CEP to run on start request
+  // Because the task is just sending a command and we should not act on the content of the task sending the command
+  if ((coprocessing && modified && command !== "start")
       || (commandArgs?.sync && commandArgs?.CEPSource !== "CEPShared" && modified)
       // For the shared.family we cannot count on meta.modified because it might be added without shared having been set in the init task
-      || (task.node.coprocessing && command === "init")) {
-    utils.logTask(task, "CEPShared command:", task.node.command, "commandArgs:", task.node.commandArgs);
+      || (coprocessing && command === "init")) {
+    utils.logTask(task, "CEPShared modified:", modified, "coprocessing", coprocessing, "command:", task.node.command, "commandArgs:", task.node.commandArgs);
     let toSync = {};
     let varNames = [];
     if (task.node.command === "init") {
@@ -148,7 +150,9 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       }
     }
     if (task.node.command === "init") {
-      task.shared = toSync[task.instanceId];
+      // The deepMerge allows us to copy from prevTask into shared.family and keep that here
+      // Probably does not matter because it should be initialized anyway
+      task.shared = utils.deepMerge(task.shared, toSync[task.instanceId]);
       utils.logTask(task, "CEPShared init", task.shared);
     } else {
       const instanceIds = Object.keys(toSync);
@@ -171,7 +175,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
             // Use sync, the update risks conflicts 
             //syncUpdate: true, // Ask the Hub to convert the sync into a normal update
           },
-          commandDescription: "Updating shared:" + Object.keys(toSync[instanceId]),
+          commandDescription: "Updating shared:" + Object.keys(toSync[instanceId]).join(', '),
         };
         // Create a new Promise for each instance and push it to the promises array
         promises.push(
@@ -180,8 +184,8 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           })
         );
       }
-      // Wait for all promises to resolve
-      await Promise.all(promises);
+      // Don't wait for all promises to resolve as this could create a deadlock with two instance using CEPShared
+      Promise.all(promises);
     }
   } else {
     //console.log("CEPShared skipping task.node.coprocessing", task.node.coprocessing, "task?.meta?.modified?.shared!==undefined", task?.meta?.modified?.shared !== undefined);

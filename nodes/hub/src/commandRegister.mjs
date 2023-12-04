@@ -32,7 +32,7 @@ export async function registerTask_async(wsSendTask, nodeId) {
       },
     },
   };
-  console.log("registerTask_async request for registering " + nodeId)
+  console.log(`registerTask_async sending request to ${nodeId}`);
   wsSendTask(taskRegister, nodeId);
 }
 
@@ -54,7 +54,7 @@ export async function commandRegister_async(task) {
 }
 
 async function register({ nodeId, environment, commandsAccepted, language, type, role, processing, userId, tribe }) {
-  console.log("register");
+  //console.log(utils.timeNow(), "register");
 
   if (commandsAccepted === undefined) {
     commandsAccepted = ["partial", "update", "init", "join", "pong", "register", "error"];
@@ -67,7 +67,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
     throw new Error("environment must be a string");
   }
 
-  console.log("nodeId " + nodeId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted) + " environment " + JSON.stringify(environment) + " language " + language);
+  console.log(utils.timeNow(), "register nodeId " + nodeId + " registered with commandsAccepted " + JSON.stringify(commandsAccepted) + " environment " + JSON.stringify(environment) + " language " + language);
     
   if (role === "coprocessor") {
     NODE["haveCoprocessor"] = true;
@@ -101,10 +101,16 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
     return;
   }
 
+  //console.log(utils.timeNow(), "register sortedAutoStartTasksArray starting");
+
+  // This is very slow probably due to iterator
   const autoStartTasksArray = [];
-  for await (const [taskId, autoStartTask] of autoStartTasksStore_async.iterator()) {
-    autoStartTasksArray.push([taskId, autoStartTask]);
+  
+  const autoStartIds = await autoStartTasksStore_async.get("autoStartIds");
+  for (const taskId of autoStartIds) {
+    autoStartTasksArray.push([taskId, await autoStartTasksStore_async.get(taskId)]);
   }
+  //console.log(utils.timeNow(), "register sortedAutoStartTasksArray built");
   // Sort the autoStartTasksArray by .autoStartpriority property
   const sortedAutoStartTasksArray = autoStartTasksArray.sort((a, b) => {
     const autoStartTaskA = a[1];
@@ -115,7 +121,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
     // Alphanumeric Compare using localeCompare
     return autoStartTaskB.autoStartpriority.localeCompare(autoStartTaskA.autoStartpriority, undefined, {numeric: true});
   });
-  //console.log("sortedAutoStartTasksArray", sortedAutoStartTasksArray);
+  //console.log(utils.timeNow(), "register sortedAutoStartTasksArray prioritized");
   // eslint-disable-next-line no-unused-vars
   for (let [taskId, autoStartTask] of sortedAutoStartTasksArray) {
     const autoStartEnvironment = autoStartTask.startEnvironment;
@@ -127,16 +133,16 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
     // Load the task after getting the lock so we can see any updates
     autoStartTask = await autoStartTasksStore_async.get(taskId)
     countAutoStartTasks++;
-    console.log(`Checking autostart ${environment} for task`, taskId, "started", autoStartTask.started);
+    console.log(utils.timeNow(), `register checking autostart ${environment} for task`, taskId, "started", autoStartTask.started);
     let startEnvironments = autoStartTask.startEnvironments || [];
     if (activeEnvironments.includes(autoStartEnvironment)) {
-      //console.log("startEnvironments", startEnvironments);
+      //console.log(utils.timeNow(), "register startEnvironments", startEnvironments);
       // get the environment for this task
       let allEnvironmentsAvailable = startEnvironments.every(
         env => activeEnvironments.includes(env)
       );
       if (!allEnvironmentsAvailable) {
-        console.log(`Checking autostart !allEnvironmentsAvailable`);
+        console.log(utils.timeNow(), `register checking autostart !allEnvironmentsAvailable`);
         continue;
       }
       // If we have already started the task then we should only restart it if the particular
@@ -145,7 +151,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       // Then when the coprocessor starts allEnvironmentsAvailable will be true
       // We want to start the task once in that case not every time any node is registered.
       if (autoStartTask.started && autoStartEnvironment !== environment) {
-        console.log(`Checking autostart autoStartTask.started && autoStartEnvironment !== environment`);
+        console.log(utils.timeNow(), `register checking autostart autoStartTask.started && autoStartEnvironment !== environment`);
         continue;
       }
       //console.log("allEnvironmentsAvailable");
@@ -169,7 +175,7 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
       task.node["initiatingNodeId"] = nodeId; // So the task will start on the node that is registering 
       task["nodes"] = {};
       task.nodes[nodeId] = activeNodes.get(nodeId);
-      console.log("Autostarting task", taskId, environment, userId, tribe);
+      console.log(utils.timeNow(), "register autostarting task", taskId, environment, userId, tribe);
       utils.debugTask(task, `Autostarting task ${taskId}`);
       commandStart_async(task);
       if (autoStartTask.once) {
@@ -180,11 +186,11 @@ async function register({ nodeId, environment, commandsAccepted, language, type,
         await autoStartTasksStore_async.set(taskId, newAutoStartTask);
       }
     } else {
-      //console.log("Not autostarting task autoStartEnvironment", autoStartEnvironment, "not in", activeEnvironments);
+      //console.log(utils.timeNow(), "register not autostarting task autoStartEnvironment", autoStartEnvironment, "not in", activeEnvironments);
     }
     taskRelease(taskId);
   }
-  console.log(countAutoStartTasks + " autostart tasks");
+  console.log(utils.timeNow(), "register", countAutoStartTasks + " autostart tasks");
 
 }
 

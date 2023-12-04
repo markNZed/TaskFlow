@@ -137,20 +137,28 @@ taskSubject
           // This needs a new filter filed in allCEPFuncs
           // There may be something to be gained by running this before the regex (although that could be cached eventually)
           // Instead of just building regexKeys we could also extract the filters
-          utils.logTask(task, `Running CEP ${moduleName} with args:`, args);
           // We have not performed utils.removeNullKeys(task);
           if (CEPCoprocessor) {
             // await so that CEP can modify the task during coprocessing
             // If a Task wants to update itself then it should not use a sync command but return the udpated value
+            const CEPSync = task.node?.commandArgs?.sync && task.node?.commandArgs?.CEPSource;
+            const CEPSystemLogger = moduleName === "CEPSystemLogger";
+            if (CEPSync && !CEPSystemLogger) {
+              utils.logTask(task, `Skipping CEP ${moduleName} on sync because CEPSource`);
+              continue; // Skip Sync except logging, could have an option for CEP on CEP
+            }
+            utils.logTask(task, `Running CEP ${moduleName} with args:`, args);
             await func(wsSendTask, CEPInstanceId, task, args);
             task.node.CEPExecuted.push(moduleName);
           } else {
             // We do not await so we do not hang waiting for the lock when a Task sends a sync to itself
+            utils.logTask(task, `Running CEP ${moduleName} with args:`, args);
             func(wsSendTask, CEPInstanceId, task, args);
             task.node.CEPExecuted.push(moduleName);
           }
         }
       }
+      utils.logTask(task, "after CEP");
       utils.debugTask(task, "after CEP", task?.services?.chat?.API);
       if (NODE.role === "coprocessor") {
         //utils.logTask(task, "taskSubject task.node.coprocessing", task.node.coprocessing, "task.node.coprocessed", task.node.coprocessed);
@@ -286,10 +294,10 @@ const connectWebSocket = () => {
         }
       }
       if (task?.tribeId) {
-        const tribeName = task.tribeId;
-        const tribe = await tribesStore_async.get(tribeName);
+        const tribeId = task.tribeId;
+        const tribe = await tribesStore_async.get(tribeId);
         if (tribe) {
-          //console.log("Set tribe", tribeName);
+          //console.log("Set tribe", tribeId);
           NODETribe(tribe);
         }
       }
@@ -308,10 +316,13 @@ const connectWebSocket = () => {
     }
     if (command === "update") {
       let lastTask = await getActiveTask_async(task.instanceId);
-      // If coprocessor then we are getting lastTask from the Hub.
-      // A hack is to "convert" the hub task into a node task
+      // A sync can be generated before we have seen the init
+      // Maybe when instance is added to the family but has not yet been sent for init
+      // Maybe familyStore_async should be updated later
       if (!lastTask) {
-        utils.logTask(task, "Missing lastTask for update", JSON.stringify(task, null, 2));
+        console.error(task, "WARNING: Missing lastTask for update");
+        // Need to free up the lock!
+        taskRelease(task.instanceId, "Releasing lock because missing lastTask for update");
         return;
         //throw new Error("Missing lastTask for update");
       }

@@ -182,6 +182,7 @@ const TaskChat = (props) => {
     //console.log("msgs before SM", msgs);
     switch (task.state.current) {
       case "start": {
+        // The advantage of describing a state here is visibility in the code and also potentially in logs/commands etc
         describe("Demo of describing a state");
         modifyTask({
           "output.sending": false,
@@ -263,13 +264,14 @@ const TaskChat = (props) => {
             // Need to update to store output.msgs
             let outputPromptResponse = task.output.LLMResponse;
             outputPromptResponse.content = task.response.LLMResponse;
+            const outputMsgs = task.output.msgs || [];
             modifyTask({
               "output.LLMResponse": null,
               // If we use msgs instead of task.output.msgs then we can miss the last user prompt
               // It can take time for the output that includes the user prompt to go to
               // TaskConversation and come back as task.input
               // Here we simply append to the current output so avoiding that issue
-              "output.msgs": [ ...task.output.msgs, outputPromptResponse ],
+              "output.msgs": [ ...outputMsgs, outputPromptResponse ],
               "commandArgs": { "unlock": true },
               "command": "update",
               "state.current": "input",
