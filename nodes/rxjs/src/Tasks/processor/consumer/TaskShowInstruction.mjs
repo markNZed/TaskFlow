@@ -63,7 +63,9 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     const operatorJSON = TC("operators")["LLM"].module;
     TC("operators.LLM.chatServiceName", "json");
     delete questionnaire.order;
-    TC("request.prompt", `A JSON object is presented bwtween the <BEGIN> and <END> tags, the JSN object represents a questionnaire we are incrementally completing during an interview process.\n<BEGIN>${utils.js(questionnaire)}<END>\n Based on the following conversation between the next <BEGIN> and <END> tags, generate a new JSON object with new answers using only information from the conversation. If an answer does not change or cannot be provided then exclude it from your output\n<BEGIN>${prevConversation}<END>\n`);
+    let prompt = T("config.local.promptQuestionnaireReview");
+    prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
+    TC("request.prompt", prompt);
     // We should disable the streaming so it does not interfere with the next requset
     TC("request.stream", false);
     operatorJSON.operate_async(wsSendTask, TC())
@@ -124,7 +126,14 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     if (prevReview) {
       prevReview = `The previous review is presented between following <BEGIN> and <END> tag:\n<BEGIN>${prevReview}<END>\n.`;
     }
-    T("request.prompt", `You are engaged in an interview process with ${T("user.label")}. You just completed the ${prevInterviewStep} section of the questionnaire. The result from that interaction is presented between following <BEGIN> and <END> tag:\n<BEGIN>${prevConversation}<END>\nThe current current state of the questionnaire is presented between the following <BEGIN> and <END> tags:\n<BEGIN>${utils.js(filteredQuestionnaire)}<END>\n${prevReview}Review the current results and provide a brief feedback to the interviewee as part of the ongoing interview process, tell them about the next section of the interview which will focus on ${nextSection}. Request the user to click the next button when they are ready to continue.`);
+    // config.local.promptQuestionnaireReview
+    prompt = T("config.local.promptQuestionnaireReview");
+    prompt = prompt.replace('%PREV_INTERVIEW_STEP%', prevInterviewStep);
+    prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
+    prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
+    prompt = prompt.replace('%PREV_REVIEW%', prevReview);
+    prompt = prompt.replace('%NEXT_SECTION%', nextSection);
+    T("request.prompt", prompt);
     const chatOut = await operatorLLM.operate_async(wsSendTask, T());
     dataStore_async.set(T("familyId") + "prevReview", chatOut.response.LLM);
     // Store the output of the previous review step using familyId
@@ -150,7 +159,10 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   // eslint-disable-next-line no-unused-vars
   async function LLMIntroduction(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep) {
     utils.logTask(T(), "LLMIntroduction filteredQuestionnaire", utils.js(filteredQuestionnaire));
-    T("request.prompt", "You are engaged in an interview process with " + T("user.label") + ". Here is the pre-filled questionnaire, explain briefly to " + T("user.label") + " what you know about them. In the next step you will be continuing the interview process. " + utils.js(filteredQuestionnaire));
+    // config.local.promptIntroduction
+    let prompt = T("config.local.promptIntroduction");
+    prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
+    T("request.prompt", prompt);
     const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
     dataStore_async.set(T("familyId") + "prevReview", operatorOut.response.LLM);
     // Sync the final response
@@ -174,7 +186,9 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
 
   // eslint-disable-next-line no-unused-vars
   async function LLMConclusion(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep) {
-    T("request.prompt", "You are engaged in an interview process with " + T("user.label") + ". Here is the result of the interview questionnaire, explain to " + T("user.label") + " your conclusions and conclude the interview process. " + utils.js(questionnaire));
+    // config.local.promptConclusion
+    let prompt = T("config.local.promptConclusion");
+    T("request.prompt", prompt);
     const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
     dataStore_async.set(T("familyId") + "prevReview", operatorOut.response.LLM);
     // Sync the final response

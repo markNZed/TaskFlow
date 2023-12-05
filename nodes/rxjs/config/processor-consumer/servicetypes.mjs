@@ -19,6 +19,8 @@ const servicetypes = [
     prePrompt: "",
     postPrompt: "",
     systemMessage:"",
+    preSystemMessage: "",
+    postSystemMessage: "",
     messages: [],
     forget: false,
     dummyAPI: false,

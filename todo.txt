@@ -6,11 +6,20 @@ TaskInterview
       Could update the current time in the system prompt - append
         Need a preSystemPrompt and postSystemPrompt
       Set timer per section and add that info to system prompt ?
+        postSystemMessage
+          Need to set that in TaskChat
+            Could do that with a CEP or a connection 
+              CEP is perhpas better as it will focus on the active task
   What to do with next button during interview ? Do we show it?
     Hide next until use has sent at least one response - can disable maybe?
+    In general disable the button once the user has clicked it in the stepper (until eixt)
   With FSM events generated on one processor are not seen on others
     Just the state update? Yes but we could sync events (rxjs is doing this now)
   There is a lot of details rlated to the Interview in TaskShowInstruction
+    Copy and specialise into TaskInterviewStep then simplify TaskShowInstruction
+  Need a way of taking task sout of active list after done ? 
+    But this also needs to support restoring them if we have the "back"
+  Add French version of prompts
 The Redis wrapper providing an iterator is VERY slow - why?
 Could send family updates to Procesor and then it splits this into Task updates
 Fix Missing lastTask for update 
@@ -34,7 +43,7 @@ Will need UI to manage cron jobs
   Could generalize TaskLog to TaskGrid
 After taskConfigs are converted into tasks then do we move config.local into config?
 TaskAlerts
-  Like a message queue so a user can see taks that are awaiting action
+  Like a message queue so a user can see tasks that are awaiting action
     events
     applications
   Autostart like menu
@@ -711,6 +720,7 @@ Architecture
     Unsure if this supports mobile: https://capacitor-community.github.io/electron/ (electron by itself does not)
   https://github.com/lxieyang/chrome-extension-boilerplate-react
     This is how we could access user content for scraping
+  systemd might provide inspiration for startup management
 
 Issues
 ------

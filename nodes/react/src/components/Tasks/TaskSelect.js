@@ -41,7 +41,7 @@ const TaskSelect = (props) => {
 
     switch (task.state.current) {
       case "start":
-        if (Object.keys(task.output.selected).length > 0) {
+        if (task.output?.selected && Object.keys(task.output.selected).length > 0) {
           setSelectedOptions(task.output.selected);
         } else {
           // Create and empty array for each entry

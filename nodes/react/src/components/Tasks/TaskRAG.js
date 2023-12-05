@@ -112,7 +112,7 @@ const TaskRAG = (props) => {
           "output.select.config.local.fields.level.hide": false,
           "output.config.local.cachePrefix": inputCachePrefix,
           "commandDescription": "Unhide the level checkboxes and set topic",
-          "shared.topic": topic,
+          "shared.topic": inputTopic,
         });
       }
     }

@@ -242,6 +242,16 @@ async function chatPrepare_async(T, chatServiceName) {
     console.log("Sytem message from newSystemMessage " + T("id") + " " + systemMessage);
   }
 
+  if (typeof serviceConfig?.preSystemMessage !== "undefined" && serviceConfig.preSystemMessage !== "") {
+    systemMessage = serviceConfig.preSystemMessage + systemMessage;
+    console.log("Prepend preSystemMessage " + serviceConfig.preSystemMessage);
+  }
+
+  if (typeof serviceConfig?.postSystemMessage !== "undefined" && serviceConfig.postSystemMessage !== "") {
+    systemMessage = systemMessage + serviceConfig.postSystemMessage;
+    console.log("Postpend postSystemMessage " + serviceConfig.postSystemMessage);
+  }
+
   //console.log("messages before map of id", messages);
   // The index starts at 1 so we do not have an id === 0 as this seemed to cause issues in ChatGPTAPI
   const prevMessages = messages.map((message, index) => ({

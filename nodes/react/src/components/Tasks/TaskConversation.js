@@ -91,7 +91,7 @@ const TaskConversation = (props) => {
 
   useEffect(() => {
     if (childTask) {
-      const childMsgs = childTask.output?.msgs || [];
+      const childMsgs = utils.deepClone(childTask.output?.msgs) || []; // deepClone because we may .shift below
       const LLMResponse = childTask.output?.LLMResponse;
       if (LLMResponse) {
         if (LLMResponse.content !== LLMResponseContent || Object.keys(chatResponse).length === 0) {
@@ -104,9 +104,11 @@ const TaskConversation = (props) => {
         console.log("Clear chatResponse and use childMsgs", childMsgs);
       }
       let welcomeMessage = [];
-      //console.log("newMsgArray", newMsgArray);
-      // The welcome message is not included as part of the Task msgs sent to the LLM
-      if (task.config?.local?.welcomeMessage && task.config.local.welcomeMessage !== "") {
+      if (task.config?.local?.hideInitialPrompt) {
+        // Ignore the first prompt and we will also not add the welcomeMessage
+        childMsgs.shift();
+      } else if (task.config?.local?.welcomeMessage && task.config.local.welcomeMessage !== "") {
+        // The welcome message is not included as part of the Task msgs sent to the LLM
         welcomeMessage.push({ role: "assistant", content: task.config.local.welcomeMessage, user: "assistant", id: "welcome" });
       }
       // deep copy because we may modify with regexProcessMessages
@@ -211,11 +213,6 @@ const TaskConversation = (props) => {
       >
         { task.output.msgsHistory && task.output.msgsHistory.length > 0 &&
           task.output.msgsHistory.map((msg, index) => {
-            // Skip the first two messages if hideInitialPrompt is true
-            // This works well with TaskChat config.loca.prompt being set 
-            if (task.config.local.hideInitialPrompt && index < 2) {
-              return null;
-            }
             //console.log("msg", msg);
             // Use components here so we can avoid re-rendering if nothing changes
             return (

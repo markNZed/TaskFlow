@@ -53,7 +53,7 @@ const tasktypes = [
     type: "TaskChat",
     shared: {
       corpusName: '',
-      user: '',
+      RAGUser: '',
       topic: '',
     },
   },
