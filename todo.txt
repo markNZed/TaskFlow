@@ -1,47 +1,47 @@
 /* ToDo
 -------
+When updating prod will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
 TaskInterview
-  What controls the timing?
-    Include current time in each message
-      Could update the current time in the system prompt - append
-        Need a preSystemPrompt and postSystemPrompt
-      Set timer per section and add that info to system prompt ?
-        postSystemMessage
-          Need to set that in TaskChat
-            Could do that with a CEP or a connection 
-              CEP is perhpas better as it will focus on the active task
-  What to do with next button during interview ? Do we show it?
-    Hide next until use has sent at least one response - can disable maybe?
-    In general disable the button once the user has clicked it in the stepper (until eixt)
-  With FSM events generated on one processor are not seen on others
-    Just the state update? Yes but we could sync events (rxjs is doing this now)
-  There is a lot of details rlated to the Interview in TaskShowInstruction
-    Copy and specialise into TaskInterviewStep then simplify TaskShowInstruction
-  Need a way of taking task sout of active list after done ? 
-    But this also needs to support restoring them if we have the "back"
+  There is a lot of details related to the Interview in TaskShowInstruction
+    Copy and specialize into TaskInterviewStep then simplify TaskShowInstruction
   Add French version of prompts
+  Option to download the full conversation and questionnaire at the end
+  Back button
+    Removed for now
+    If the questionnaire and conversation it will not be reverted. But maybe that is OK.
+    At the moment it is broken. First test on Exercises.
+    This requires restoring a done task on the hub ?
+      maybe that happens auto-magically when the hub received the update?
+  It is not really in the spirit of an FSM to use events like GOTOdisplayInstruction
+    When possible create events with meaningful names about what happened and add as gaurd for SM transition
+Documentation needs to be able to "inject" text from links to be readable and DRY.
+  Requires a CMS or templating
+  Maybe a Markdown extension can do this if VSCode can be extended to keep things in sync
+  Could use TF for the Documentation
+    Store raw "config" in git and a generated version for static viewing
+  Could integrate chat/RAG into the documentation
+Create a dataTemplates dir under version control for templates etc
+  Could use this as a demo of the interview process
 The Redis wrapper providing an iterator is VERY slow - why?
-Could send family updates to Procesor and then it splits this into Task updates
+Could send family updates to Processor and then it splits this into Task updates
 Fix Missing lastTask for update 
 React is not expecting external sync with GOTO
 Page number reset during new Log search - test
 Should init task.shared before completing templates (template should run during init on copro)
 In a family we can have multiple instances of the same task when used in a FSM style
-  TaskStepper should be OK now
   But what about CEPConnections?
-It is not really in the spirit of an FSM to use events like GOTOdisplayInstruction
+    It uses name to make connections but it expects one Task ?
 operator needs a generic interface where we pass the name of the operator e.g. operate("LLM") which will find the right function
 configdata should check that services specify environments
-Does shared from parent get copied to child in config?
 Move all FLE tasks into fle.mjs
-Create separate cron demo - test it
-When updating prod will need to modify users, tribes, groups in nodes/hub/db/config/runtime
+Test cron demo Task
 Circle switching is broken ?
   Seemed to be an issue with the collaborate feature - maybe the instanceId but unclear why
 Will need UI to manage cron jobs
   Perhaps this could also use the grid component
   Could generalize TaskLog to TaskGrid
 After taskConfigs are converted into tasks then do we move config.local into config?
+  config.local -> config.private ?   
 TaskAlerts
   Like a message queue so a user can see tasks that are awaiting action
     events
@@ -53,16 +53,12 @@ When a task is not connected to React how do we report errors
   Need a background TaskError on React for this ?
     hub-consumer can check and send if not handled by React
 task.permissions -> task.groupIds ? Probably yes
-
-Need dev mode that will stop on errors
 Test maintenance page
 Test reload command
-  When a processor restarts then everythig should reload?
+  When a processor restarts then everything should reload?
     e.g. services
 Dynamic loading of Task Functions would allow for on the fly extensions
   Easier for debug too (could ignore from nodemon watch)
-Dedicated err log seems important when running with forever
-  Add options to forever for this
 TaskLog
   Apply mask but will need to do that inside TaskLog.mjs
   Ability to navigate through the history ?
@@ -79,17 +75,16 @@ Basic query classifications:
   urgency
   complexity
   fact vs opinion
-  personalvs impersonal
-  information seeking vs actionforamlity level
-  expertise of teh userintent - seeking help, making a complain, casual conversation
+  personal vs impersonal
+  information seeking vs actionformality level
+  userintent - seeking help, making a complaint, casual conversation
   specific vs general
 
-Note that adding a domain should also disable the CloudFlare caching
-TaskRAGAdmin
+Note that when adding a sub-domain should also disable the CloudFlare caching
+Create TaskRAGAdmin
   Choose a corpus, restart, prepare, upload, delete
   Remove elements from cache
 Managing secrets https://hub.docker.com/r/hashicorp/vault
-In a post config step transfer config.local into config ?
 Need separate threads for data processing - ability to detach a task as a separate process
   Task could launch worker_threads
   Multiple processors could share a queue
@@ -98,8 +93,7 @@ Share the caching of services/operators across tasks (will make copy easier)
 OpenAI features: JSON mode, parallel function calls 
 Cookie could encode array of tribes
   Problem if user is not unique
-    Should just enforce unique users
-config.local -> config.private ?    
+    Should just enforce unique users 
 Version table in accessdb
   version.current
   Create a new table with new schema, copy data into it, delete old table, rename new table (all in a transaction)
@@ -213,10 +207,10 @@ Notebook for analysing data
   The execute task would run the notebook and just get back the task (maybe using REST API or just launch)
   The edit task would run the current task in browser but would need a mechanism to send the task back to the server at the end.  
 Use a function to update task then we can trace this
- T(task, "input.test")
- T(task, "input.test", "new value")
- Or we create a function instead of task and pass that
-Replace throw with devThrow 
+  T(task, "input.test")
+  T(task, "input.test", "new value")
+  Or we create a function instead of task and pass that
+Replace throw with devThrow - better to have options in a catch for dev?
 Task object are getting very big ?
   Storing origTask for node on hub ?
 Why is CEPConnect SEP of : not working?
@@ -224,7 +218,7 @@ Why is CEPConnect SEP of : not working?
 https://cookbook.openai.com/examples/clustering clustering 
   Could experiment with ART for hierarchical clustering
     Create up to N categories
-     If the input mathcs with a category but id more distant than the most distant category pair then create a new category and merge the closest two categories.
+     If the input matches with a category but id more distant than the most distant category pair then create a new category and merge the closest two categories.
      Could reduce N but on what basis ?
 Completion end point gpt-3.5-turbo-instruct is compatible with the "old" style API
 Styles of data processing
@@ -243,7 +237,7 @@ Refactoring
     On the hub commandUpdate processes an update task
       processUpdate ?
     On rxjs commandUpdate generates an update task
-  Should disintguish between requesting to register and register
+  Should distinguish between requesting to register and register
     Or does the hub register with the nodes and then inverse
     So not really a request it is just that the node responds by also Registering
   Unique to the hub:
@@ -276,21 +270,15 @@ Document sync behavior
     We do not use the hashDiff for sync
   sync will not run task function so menu will not be updated
     Created an option syncUpdate that applies a normal update
-FSM is remounted in previous state
-  So unmount in the state we want to restart from - not ideal
-  Could have "state.initial" that would allow for control over this when reloading a Task
 In Firefox mobile need to move the Toolbar to the Top so it does not hide content at the bottom of the page 
 TaskRx could be an example of a task only on processor-consumer
   Add command protocol
   PythonRunner should be a Service
 tasksStore_async -> taskconfigsStore_async
   tasks.mjs -> taskconfigs.mjs
-Test Docker setup
 Random Client is broken
 Check Demo of collaborative chat
-Keep both autoStartEnvironments and autoStartEnvironments ?
 Major features to implement before further refactoring
-  Running Python scripts
   Debug support per Task
     Explore more about import debug from "debug"; 
   TaskCreateTask
@@ -307,7 +295,6 @@ Major features to implement before further refactoring
                 Write out new modules from Processor ?
                 Eval of code in the config
                 Introspection
-Masking at least for React seems important
 If CEP then fsm -> FSM
 Much of "services.chat" should be in "operators.LLM" ?
   At least that which is used in OperatorLLM.mjs
@@ -332,6 +319,7 @@ The stepper sets the state to exit - it should not act directly on the state, us
 TaskChat name must be "start" ? 
 Need to clean up when tasks stop e.g rxjs-processor-consumer activeTaskFsm
 Automatic Response Repair
+  This is less of an issue with OpenAI's JSON mode
   https://community.openai.com/t/functions-half-a-solution-to-getting-structured-responses-from-gpt/282096
   The key points are
     the api you call with the json provided by ai must be written in a way that does a full validation of the input and return as json a payload that state exactly what is wrong and what action the ai should take to fix it .
@@ -346,12 +334,8 @@ Add the user object only if it has changed
   If the task is collaborative then the user should be associated with task.node?
     Then would not need to send all the time
       Could have multple users on the the same processor collaborating
-Switch from hub/processor to node
-  Add support for multiple hubs (i.e. bridge)
-    Will allow fro bridge between TF & MTF
-  Tasks dedicated to processor is another reason to have a single "node"
-  Move to task.node ?
-  One the hub we copy task.node into task.nodes then setup task.node
+Add support for multiple hubs (i.e. bridge)
+  Will allow for bridge between TF & MTF
 Menu should not have shared.configTreeHubconsumerTasks on React
   Could store processor specific info in task.node
     But it is using task.shared
@@ -402,7 +386,6 @@ How can we detect errors in the console?
   window.addEventListener('unhandledrejection'
   Can also override console.log console.error (before they are used)
     Could create a window.log that meta can access as a feature of the React Processor
-Could configure CEP to run during or after coprocessing
 Registering could/should be a task
   use the nodeId as an instanceId
 How do we drive the input of another task without UI ?
@@ -488,24 +471,19 @@ Dynamic task configuration
 RxJS V7 Processor
   Experiment with CEP that starts a task e.g. TaskPopup (or maybe an option to TaskShowInstruction)
 A scheduler should be able to provide a cron like feature
-  TaskCron
-    Or can any task do this just by waiting ?
-    Seems nice to be able to have  CEP that "wakes" up
-    Maybe a JS library can help e.g. an array of cron times
-    Maintain an array of jobs and calculate the wait time in a loop for the next wakeup
   TaskCount
     Like a cron but based on the number of interactions
       When task entry X reaches Y then send request A to task B
 After experimenting with RxJS processor we may want to use a similar approach in React Processor
   Run RxJS in on the Shared Worker
     Eventually use this instead of lifting state
-nextTaskTemplate which allows for re-ordering flow
+nextTaskTemplate which allows for re-ordering flow (mayeb this is the wrong name, should be nextTaskMap?)
   replaced with XState? Could pull out this functionality? (the exercises use it I think)
 Add schemas for task.config.local as per tasktypes.mjs and use this to check tasks in configdata
   Schema for tasktype to document options
 The React Processor provides a parent-child relationship for interaction. How to provide this on Node JS Processor?
   Should enforce the use of taskUpdate instead of driving children
-    Could remove the idea of a child task from React
+    Could remove the idea of a child task from React (or add this to NOde?)
 Should the servicetype be copied into task.config.services?
   The servicetype is on the Processor while config is on the Hub
 Should the Processor also implement rate limiting?
@@ -515,8 +493,8 @@ If a task is no longer in an environment then shut it down
   Would require something like a delete command sent to nodes
 Need to run CEP on local processor to get real-time behavior
   No rush to implement this
+  Could also implement task.connections on processor with this
 The cache is not going to allow a conversation if it matches and the key is not including the messages
-In templating maybe we should support "task." syntax
 Tests will allow for better code generation
 Requests from other tasks via: task.node.task.request
   See notes
@@ -537,8 +515,6 @@ Demo of collaborative chat would be good.
   In default config assign a random user label so we can demo multiparty chat
 Add function to remove last paragraph
   Interesting to explore how that might be generalized
-Privacy - should be implemented on the Hub
-  Hub and Processors secure communication, then identification is managed on the hub.
 Embedding functions in the template?
   Where/how to manage variables? 
     Lookup only the required tasks not the whole thread.
@@ -578,17 +554,12 @@ Backlog
 
   Refactoring
   -----------
-  children -> meta.children (used for tree)
-  Align usage of utils
 
   Features
   --------
     High Priority
     -------------
     Possible next feature: remembering the system messages for Vierge
-    Simplify multiple configuration files for the NodeJS Processor
-    Use a route for configuring: user, session, taskflow, task
-    Create a new route for the Client side user defaults. Manage in a global state. Send on all requests.
     Msgs could be loaded from the NodeJS Processor. Similar to stepper - both have history.
     Utility filters e.g. remove outer quotes, an ordered list (use a standard templating library - ejs)
     When user interacts reset the counter to try to establish websocket on client
@@ -603,17 +574,10 @@ Backlog
       Something like react-markdown with the gfm plugin for things like tables but you will need to do some extra work to get the code blocks styled exactly how you are wanting
     Time in oneFamily messages should be aligned with browser timezone (needs to be filled in by Hub?)
     Logout option (could just be a route)
-    Sending diff to Hub from Processor during update
-    JWT connection between Hub and Processors (currently rely on Cloudflare)
-    Move to TypeScript
-    Way for tasks to register websocket event handlers
+    JWT connection between Hub and Processors
     Multiple language support 'i18next-http-middleware for NodeJS Processor and react-i18next for React Processor
     Defensive programming + logging
-    Websocket for tasks (so NodeJS Processor can drive) just send incremental info for the task
     Replace globalState with Redux
-    When sending task instance only send diff (React Processor keeps NodeJS Processor copy, NodeJS Processor keeps React Processor copy)
-    Add task type validation to websocket
-    Only display menu option if leaf is a real task
     Check '.' is not used in keys or it breaks setNestedProperties (test if the JSON schema is now doing this)
 
   Tasks
@@ -644,20 +608,17 @@ Notes/Idea
     Windows accessibility APIs, such as UI Automation or MSAA (Microsoft Active Accessibility)
   Things will be integrated into existing clients (e.g. email)
   Educate the users to make use of the system
-  Writing the Hub and a generic Porcessor in Rust
+  Writing the Node in Rust
   No easy way to do this with React in the functional style
     In the future we could build components on the fly
-  Could have a task.family entry which allows for broadcast and config
   Hub could look after converting "family" command into instance command
   Task search feature could be a micro-service provided by the Hub?
     For example user can search personal history
-  Tools T@skFLow could leverage:
+  Tools T@skFlow could leverage:
     https://github.com/PrefectHQ/marvin 
       a batteries-included library for building AI-powered software. 
       Marvin's job is to integrate AI directly into your codebase by making it look and feel like any other function.
-  Swagger for the API ?
   Refactoring with jscodeshift, see example in config repository
-  Should a task that requests to start a Task also be updated by the Hub?
   A GraphQL based API into the Task family may be a useful abstraction that can be offloaded to a Coprocessor
   Stately Studio
     We will be building visual tooling for not just managing actor logic (state machines & statecharts) but also visualization of entire actor systems (architecture diagrams) and the communication between actors (sequence diagrams). This will be a huge step forward for visually understanding and debugging complex systems, and we’re excited to share more about this in the future.
@@ -688,6 +649,9 @@ Architecture
   Could add middleware that tasks can use to modify input/output (similar to LangChain)
     Currently in the TaskFunction but should be easy to factor out when that makes sense
       Could allow for a chain of Operators/Services/CEP
+      Issue with injecting a Task is that the id levels move
+        Some sort of "wrapper" that maintains the id but has a task "insisde it - we can do that now I guess
+          It would replace a current task in the config and have upto 3 children in -> origTask -> out
   How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Processor provide the environment?)
     "child process execution" with child_process library
     RabbitMQ for message passing good for a local service but do we need high speed, probably not.
@@ -696,7 +660,9 @@ Architecture
   Keep server on rxjs-processor-consumer processor - yes but for debug/admin/metrics etc
     Performance, utilization etc, a Processor Object for this (instead of Task)
     The debug features can be shared between nodes e.g. just connect to keyv with activeTasks
+    What about file uploads etc
   Re-architect the react Processor to make use of the Service Worker API
+    Not sure this is supported e.g. on Chrome mobile
     Should have React Hub
     Progressive Web Apps https://developer.chrome.com/docs/workbox/
     ServiceWorker will intercept any HTTP request from a client except WebSocket upgrade requests
@@ -725,6 +691,7 @@ Architecture
 Issues
 ------
   Tasks run with full NodeJS Processor rights. They should be sandboxed on the NodeJS Processor.
+    Deno to replace Node 
     TaskFunction could run in a docker container
     Each TaskFunction could be a user on Linux
         User could run in a restricted environment e.g. firejail, bubblewrap

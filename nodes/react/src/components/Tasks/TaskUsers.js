@@ -199,7 +199,7 @@ const TaskUsers = (props) => {
     }
 
     // Update the user.groupIds with the selection
-    setUser({ ...user, groups: newGroups });
+    setUser({ ...user, groupIds: newGroups });
   };
 
   // Handlers for dialog actions
@@ -209,7 +209,7 @@ const TaskUsers = (props) => {
     setUser({
       name: "",
       label: "",
-      groups: [],
+      groupIds: [],
       profile: "",
     });
     generateEasyPassword(); // Generate a new password when opening the dialog
@@ -288,7 +288,7 @@ const TaskUsers = (props) => {
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button onClick={generateEasyPassword}>Generate Password</Button>
-          Assign user groups:
+          Assign user groupIds:
           <div style={{ display: 'flex' }}>
             {task.user?.groupIds?.map((group, index) => (
               <label key={index} style={{ marginRight: '10px' }}>

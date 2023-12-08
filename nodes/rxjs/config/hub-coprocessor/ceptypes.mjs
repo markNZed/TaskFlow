@@ -23,6 +23,9 @@ const ceptypes = [
     {
         name: "CEPCron",
     },
+    {
+        name: "CEPStopwatch",
+    },
 ];
 
 export { ceptypes }

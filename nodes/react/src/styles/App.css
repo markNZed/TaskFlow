@@ -77,6 +77,11 @@ pre {
   font-size: 25px;
 }
 
+.disabledButton {
+  background-color: #ccc;
+  color: #666;
+}
+
 #chat-container {
   display: flex;
   /*   height: 95vh;  */

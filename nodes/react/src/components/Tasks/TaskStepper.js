@@ -41,9 +41,32 @@ function TaskStepper(props) {
   const [modalInfo, setModalInfo] = useState({title: null, description: null});
   const [stepperNavigation, setStepperNavigation] = useState({task: null, direction: null});
   const [lastUpdateCount, setLastUpdateCount] = useState();
+  const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(false);
+  const [taskNextButtonDisabled, setTaskNextButtonDisabled] = useState(false);
+  const [stepDone, setStepDone] = useState();
+
 
   // onDidMount so any initial conditions can be established before updates arrive
   props.onDidMount();
+
+  useEffect(() => {
+    if (!tasks.length) return;
+    if (tasks[tasksIdx].state?.done !== stepDone) {
+      setStepDone(tasks[tasksIdx].state.done);
+    }
+    if (tasks[tasksIdx].output?.disableNextStep) {
+      if (!taskNextButtonDisabled) {
+        log("disableNextStep true");
+        setIsNextButtonDisabled(true);
+        setTaskNextButtonDisabled(true);
+      }
+    } else if (taskNextButtonDisabled && isNextButtonDisabled) {
+      log("disableNextStep false");
+      setIsNextButtonDisabled(false);
+      setTaskNextButtonDisabled(false);
+    }
+    //window.stepperTasks = tasks; // For debug
+  }, [tasksIdx, tasks]);
       
   // Task state machine
   useEffect(() => {
@@ -92,9 +115,9 @@ function TaskStepper(props) {
               "shared.stepper.currInstanceId": null,
               "shared.stepper.count": tasksIdx + 1,
               command: "update",
-              commandDescription: "Stepper is moving to next so update prev",
+              commandDescription: "Stepper is moving to next so update shared.stepper.prevInstanceId",
             });
-            nextState = "waitForUpdate"; 
+            nextState = "waitForDone"; 
           } else if (stepperNavigation.direction === "back") {
             setTasksIdx(tasks.length - 2);
             // Removing the task from the array
@@ -121,26 +144,29 @@ function TaskStepper(props) {
               commandDescription: "Stepper moving back so update curr & prev",
             });
             nextState = "navigate";
-          }
-        }
-        break;
-      case "waitForUpdate":
-        if (task.meta.updateCount > lastUpdateCount) {
-          nextState = "waitForDone"; // Don't do this immediately as the update will clash with the start command in waitForDone
+          } 
+        } else if (isNextButtonDisabled && !tasks[tasksIdx].output?.disableNextStep) {
+          // taskNextButtonDisabled is also controlling isNextButtonDisabled
+          // Should probably have a separate state machine for setIsNextButtonDisabled
+          setIsNextButtonDisabled(false);
         }
         break;
       case "waitForDone":
-        // The stepper requests a new Task
-        // will set startTask or startTaskError
-        modifyTask({
-          "command": "start",
-          "commandArgs": {
-            id: tasks[tasksIdx].config.nextTask,
-            prevInstanceId: task.instanceId,
-            commandDescription: "Stepper next task",
-          },
-        });
-        nextState = "waitForNext";
+        // In theory there could be conflict with the command start overriding teh previous command update
+        // but it will take time for stepDone to be set so by then the update command will have been sent
+        if (stepDone) {
+          // The stepper requests a new Task
+          // will set startTask or startTaskError
+          modifyTask({
+            "command": "start",
+            "commandArgs": {
+              id: tasks[tasksIdx].config.nextTask,
+              prevInstanceId: task.instanceId,
+              commandDescription: "Stepper next task",
+            },
+          });
+          nextState = "waitForNext";
+        }
         break;
       case "waitForNext":
         if (startTaskError) {
@@ -242,7 +268,7 @@ function TaskStepper(props) {
               )}
             </AccordionDetails>
             <div>
-              {tasksIdx !== 0 &&
+              {tasksIdx !== 0 && !task.config?.local?.disableBackButton &&
                 tasks[tasksIdx].instanceId === instanceId && (
                   <Button
                     onClick={() => 
@@ -255,13 +281,16 @@ function TaskStepper(props) {
                   </Button>
                 )
               }
-              {!/\.stop$/.test(localNextTask) &&
+              {!/\.stop$/.test(localNextTask) && !/^stop$/.test(localNextTask) &&
                 tasks[tasksIdx].instanceId === instanceId && 
                 tasks[tasksIdx]?.output?.loading !== true && (
                   <Button
-                    onClick={() =>
-                      setStepperNavigation({task: tasks[tasksIdx], direction: "forward"})
-                    }
+                    onClick={() => {
+                      setStepperNavigation({task: tasks[tasksIdx], direction: "forward"});
+                      setIsNextButtonDisabled(true);
+                    }}
+                    disabled={isNextButtonDisabled}
+                    className={isNextButtonDisabled ? "disabledButton" : ""}
                     variant="contained"
                     color="primary"
                   >

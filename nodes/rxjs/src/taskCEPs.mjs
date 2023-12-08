@@ -39,7 +39,8 @@ function CEPCreate(CEPMatchMap, task, match, config) {
   const filter = config.filter; // intended for filtering tasks for match
   const CEPFunc = CEPget(name);
   if (match === undefined) {
-    throw Error("CEPCreate match is undefined");
+    match = "instance-" + task.instanceId; // Should be instanceId- not instance-
+    console.log("CEPCreate match is undefined so using instanceId", task.instanceId);
   }
   // Check if the Map has an entry for match
   let entryId = task.instanceId;

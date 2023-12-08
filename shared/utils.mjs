@@ -1325,8 +1325,8 @@ const utils = {
     if (commandArgs?.sync) {
       //logParts.push("commandArgs.syncTask", commandArgs.syncTask);
     }
-    if (commandArgs?.CEPSource) {
-      //logParts.push("CEPSource", commandArgs.CEPSource);
+    if (task?.config?.nextTask) {
+      logParts.push("config.nextTask", task.config?.nextTask);
     }
     if (task.tribe) {
       logParts.push("task.tribe", task.tribe);

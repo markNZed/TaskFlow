@@ -55,7 +55,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     }
   }
 
-  // This houls support adding a new cron job and also modifying an existing cron job
+  // This should support adding a new cron job and also modifying an existing cron job
   if (task.node.command === "update" && task.meta.modified.cron) {
     // Each cron job has a name
     for (const [key, value] of Object.entries(task.cron)) {

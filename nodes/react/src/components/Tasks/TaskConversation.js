@@ -146,12 +146,26 @@ const TaskConversation = (props) => {
   // For some reason I need to add childTask for this to work, unsure why
   }, [task.output.msgsHistory, hasScrolled, childTask]);
 
+  // Added to allow use as a step from inside the stepper
   useEffect(() => {
+    if (task.config?.local?.disableNextStep) {
+      if ((!task.output?.msgsHistory || task.output.msgsHistory.length < 3)) {
+        if (!task.output?.disableNextStep) {
+          console.log("Disable next");
+          modifyTask({
+            "output.disableNextStep": true,
+          });
+        }
+      } else if (task.output.disableNextStep) {
+        console.log("Enable next");
+        modifyTask({
+          "output.disableNextStep": false,
+        });
+      }
+    }
     if (task.input?.exit && !task?.state?.done && !waitForUpdate) {
-      // We immediately exit, this is used by the stepper
       // Need to wait for the update to take effect before setting done true
       // We should use a FSM 
-      // Could use something like update count here? FSM is the right way
       setWaitForUpdate(true);
       modifyTask({
         command: "update", // So we can access the outputs assocaited with this task from other tasks
@@ -164,7 +178,6 @@ const TaskConversation = (props) => {
       });
       setWaitForUpdate(false);
     }
-  // For some reason I need to add childTask for this to work, unsure why
   }, [task]);
 
   const handleScroll = () => {

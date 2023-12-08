@@ -42,22 +42,27 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
     // This is a hack to set shared.family.interviewStep so it can be used in TaskChat template
     // If we had a templating language with operations we could do this in the template
     if (utils.checkSyncEvents(T(), "shared.stepper.count")) {
-      utils.logTask(T(), `shared.stepper.count ${T("shared.stepper.count")}`);
+      const stepperCount = T("shared.stepper.count")
+      const questionnaireOffset = T("config.family.questionnaireOffset") || 0;
+      let questionnaireIdx = Math.ceil((stepperCount - questionnaireOffset) / 2) - 1;
+      if (questionnaireIdx < 0) questionnaireIdx = 0;
+      utils.logTask(T(), `questionnaireIdx ${questionnaireIdx}`);
       const modPath = path.join(userDir, "fullConversation.mjs");
       const fullConversation = await dataStore_async.get(T("familyId") + "fullConversation");
       if (fullConversation) {
-        fs.writeFile(modPath, utils.js(fullConversation), 'utf8', (err) => {
+        fs.appendFile(modPath, utils.js(fullConversation), 'utf8', (err) => {
           if (err) {
             console.error(err);
           }
-          utils.logTask(T(), `TaskInterview_async file ${modPath} has been written`);
+          utils.logTask(T(), `TaskInterview_async file ${modPath} has been appended`);
         });
       }
       const questionnaire = T("shared.family.questionnaire");
       if (!questionnaire) return;
       const order = T("shared.family.questionnaire")["order"]
       if (!order) return;
-      const interviewStep = T("shared.family.questionnaire")["order"][T("shared.stepper.count")]
+      const interviewStep = T("shared.family.questionnaire")["order"][questionnaireIdx]
+      const interviewStepDuration = T("shared.family.questionnaire")[interviewStep]["interviewStepDuration"]
       if (interviewStep && interviewStep !== T("shared.family.interviewStep")) {
         T("commandDescription", "Updating the interviewStep");
         T("commandArgs", {
@@ -66,7 +71,8 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
           syncTask: {
             shared: {
               family: {
-                interviewStep
+                interviewStep,
+                interviewStepDuration
               }
             }
           },

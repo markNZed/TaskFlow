@@ -20,6 +20,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
   let T = utils.createTaskValueGetter(task);
   utils.debugTask(T(), "input");
   let nodeFunctionsInitialized = false;
+  const syncNodeFunctions = T("node.commandArgs.syncNodeFunctions");
   try {
     utils.logTask(T(), "nodeTasks_async", T("id"));
     const taskFunctionName = `${T("type")}_async`
@@ -29,6 +30,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       utils.logTask(T(), "RxJS start so skipping Task Fuction id:" + T("id"));
     } else if (!T("environments").includes(NODE.environment)) {
       utils.logTask(T(), "Task is not configured to run on this node");
+    } else if (syncNodeFunctions) {
+      utils.logTask(T(), "Sync node functions so skip running Task on this update");
     // If this node is not a hub-coprocessor or hub-consumer then it must use this environment
     } else if (await taskFunctionExists_async(taskFunctionName)) {
       let initServices = false;
@@ -292,8 +295,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       //utils.logTask(T(), "nodeTasks_async CEPMatchMap", CEPMatchMap);
     }
     const cloneInitialized = T("shared.family.cloning") && (T("node.command") === "init" || T("node.command") === "join") && !T("commandArgs.sync");
-    const syncNodeFunctions = T("node.commandArgs.syncNodeFunctions");
-    if (!syncNodeFunctions && (nodeFunctionsInitialized || cloneInitialized)) {
+    if (nodeFunctionsInitialized || cloneInitialized) {
       if (NODE.role !== "coprocessor" || (NODE.role === "coprocessor" && !T("node.coprocessed"))) {
         // Sync these changes
         // services/operators/ceps should be in a node namespace ?
@@ -335,6 +337,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
     }
   } catch (e) {
     console.error(e);
+    console.error(T());
     // Strictly we should not be updating the task object in the node
     // Could set updatedTask.node.command = "error" ?
     T("error", {message: e.message});

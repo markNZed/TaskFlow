@@ -96,7 +96,7 @@ taskSubject
           //utils.logTask(task, "CEP userIdSourceFuncsMap ", [...userIdSourceFuncsMapArray]);      
         }
         let CEPSecretSourceFuncsMapArray = [];
-        if (task.config?.local?.CEPSecret) {
+        if (task.config?.local?.CEPSecret) { // CEPSecret should be in the task.ceps ?
           const CEPsecret = task.config?.local?.CEPSecret;
           //utils.logTask(task, "CEP looking for CEPSecret-" + CEPsecret);
           CEPSecretSourceFuncsMapArray = findCEP(regexKeys, "CEPSecret-" + CEPsecret) || new Map();

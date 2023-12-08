@@ -148,12 +148,22 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
               const absPath = relativeId + "." + matches[2];
               let splitString = absPath.split(".output.");
               const outputPath = splitString[0]  + ".output";
-              result = outputs[outputPath][splitString[1]];
+              if (outputs[outputPath]) {
+                result = outputs[outputPath][splitString[1]];
+              } else {
+                utils.logTask(task, "WARNING: Could not find relativePath", outputPath, splitString[1])
+                result = curr;
+              }
               break;
             }
             case 'outputPath': {
               // Output path substitution
-              result = outputs[matches[0]][matches[2]];
+              if (outputs[matches[0]]) {
+                result = outputs[matches[0]][matches[2]];
+              } else {
+                utils.logTask(task, "WARNING: Could not find outputPath", matches[0], matches[2]);
+                result = curr;
+              }
               break;
             }
             case 'local': {

@@ -32,7 +32,7 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   const operatorLLM = T("operators")?.["LLM"]?.module;
 
   // eslint-disable-next-line no-unused-vars
-  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep) {
+  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep) {
     const prevInstanceId = T("shared.stepper.prevInstanceId");
     const prevTask = await instancesStore_async.get(prevInstanceId);
     // TaskConversation is not loggin updates to the output - maybe it should upon exiting?
@@ -43,16 +43,16 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     if (msgs) {
       for (const msg of msgs) {
         if (msg.role === 'user') {
-          prevConversation += T("user.label") + ": " + msg.content;
+          prevConversation += T("user.label") + ": " + msg.content + " ";
         } 
         if (msg.role === 'assistant') {
-          prevConversation += T("config.family.assistantName") + ": " + msg.content;
+          prevConversation += T("config.family.assistantName") + ": " + msg.content + " ";
         }
       }
       fullConversation.push(...msgs);
     }
     dataStore_async.set(T("familyId") + "fullConversation", fullConversation);
-    const nextSection = questionnaire[nextInterviewStep].intentions.join(' ');
+    const nextSectionIntentions = questionnaire[nextInterviewStep].intentions.join(' ');
     // We also need to process the responses and fill the questionnaire.
     // Use the JSON features - select the right service for this
 
@@ -63,7 +63,7 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     const operatorJSON = TC("operators")["LLM"].module;
     TC("operators.LLM.chatServiceName", "json");
     delete questionnaire.order;
-    let prompt = T("config.local.promptQuestionnaireReview");
+    let prompt = T("config.local.promptQuestionnaireUpdate");
     prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
     TC("request.prompt", prompt);
     // We should disable the streaming so it does not interfere with the next requset
@@ -126,13 +126,13 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     if (prevReview) {
       prevReview = `The previous review is presented between following <BEGIN> and <END> tag:\n<BEGIN>${prevReview}<END>\n.`;
     }
-    // config.local.promptQuestionnaireReview
     prompt = T("config.local.promptQuestionnaireReview");
     prompt = prompt.replace('%PREV_INTERVIEW_STEP%', prevInterviewStep);
     prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
     prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
     prompt = prompt.replace('%PREV_REVIEW%', prevReview);
-    prompt = prompt.replace('%NEXT_SECTION%', nextSection);
+    prompt = prompt.replace('%NEXT_SECTION%', nextInterviewStep);
+    prompt = prompt.replace('%NEXT_SECTION_INTENTIONS%', nextSectionIntentions);
     T("request.prompt", prompt);
     const chatOut = await operatorLLM.operate_async(wsSendTask, T());
     dataStore_async.set(T("familyId") + "prevReview", chatOut.response.LLM);
@@ -148,6 +148,12 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
         },
       },
     });
+    /*
+    if (nextInterviewStep === "Conclusion") {
+      utils.logTask(T(), `Forcing nextTask to conclusion`);
+      T("commandArgs.syncTask.config.nextTask", "conclusion");
+    }
+    */
     commandUpdate_async(wsSendTask, T()).then(() => {
       utils.logTask(T(), `Setting output.instruction`);
     });
@@ -157,10 +163,9 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   }
   
   // eslint-disable-next-line no-unused-vars
-  async function LLMIntroduction(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep) {
+  async function LLMIntroduction(questionnaire, filteredQuestionnaire) {
     utils.logTask(T(), "LLMIntroduction filteredQuestionnaire", utils.js(filteredQuestionnaire));
-    // config.local.promptIntroduction
-    let prompt = T("config.local.promptIntroduction");
+    let prompt = T("config.local.promptIntroduction") || '';
     prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
     T("request.prompt", prompt);
     const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
@@ -185,8 +190,8 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   }
 
   // eslint-disable-next-line no-unused-vars
-  async function LLMConclusion(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep) {
-    // config.local.promptConclusion
+  async function LLMConclusion(questionnaire, filteredQuestionnaire) {
+    utils.logTask(T(), "LLMConclusion");
     let prompt = T("config.local.promptConclusion");
     T("request.prompt", prompt);
     const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
@@ -199,7 +204,10 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
       syncTask: {
         output:{
           instruction: operatorOut.response.LLM
-        }
+        },
+        config: {
+          nextTask: "stop",
+        },
       },
     });
     commandUpdate_async(wsSendTask, T()).then(() => {
@@ -246,43 +254,43 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
         // eslint-disable-next-line no-unused-vars
         const questionnaire = utils.deepClone(T("shared.family.questionnaire"));
         const filteredQuestionnaire = filterAnsweredQuestions(questionnaire);
-        const interviewPhase = T("config.local.interviewPhase");
         const order = questionnaire.order;
         const stepperCount = T("shared.stepper.count");
-        // Check if the next entry in order is "Conclusion"
-        let conclude;
-        if (stepperCount && order[stepperCount + 1] === "Conclusion") {
-          conclude = true;
-        }
+        // Because there are two steps per questionnaire section
+        const questionnaireOffset = T("config.family.questionnaireOffset") || 0;
+        let questionnaireIdx = Math.ceil((stepperCount - questionnaireOffset) / 2) - 1;
         let prevInterviewStep;
-        if (stepperCount > 0) {
-          prevInterviewStep = order[stepperCount - 1];
-        }
-        const currInterviewStep = order[stepperCount];
         let nextInterviewStep;
-        if (stepperCount < order.length - 1) {
-          nextInterviewStep = order[stepperCount + 1];
+        let currInterviewStep;
+        if (T("config.local.interviewStep")) {
+          currInterviewStep = T("config.local.interviewStep");
+        } else if (questionnaireIdx < 0) {
+          nextInterviewStep = order[0];
+        } else {
+          if (questionnaireIdx > 0) {
+            prevInterviewStep = order[questionnaireIdx - 1];
+          }
+          currInterviewStep = order[questionnaireIdx];
+          if (questionnaireIdx < order.length - 1) {
+            nextInterviewStep = order[questionnaireIdx + 1];
+          }
         }
-        utils.logTask(T(), "rxjs_processor_consumer_fill interviewPhase", interviewPhase, "order", order, "stepperCount", stepperCount, "conclude", conclude, "prevInterviewStep", prevInterviewStep, "currInterviewStep", currInterviewStep, "nextInterviewStep", nextInterviewStep);
-        switch (interviewPhase) {
-          case "introduction":
-            LLMIntroduction(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep);
+        // We can replace the review with the conclusion
+        if (nextInterviewStep === "Conclusion") {
+          currInterviewStep = "Conclusion";
+        }
+        utils.logTask(T(), "rxjs_processor_consumer_fill stepperCount", stepperCount, "questionnaireIdx", questionnaireIdx, "questionnaireOffset", questionnaireOffset, "prevInterviewStep", prevInterviewStep, "currInterviewStep", currInterviewStep, "nextInterviewStep", nextInterviewStep, "config.local.interviewStep", T("config.local.interviewStep"));
+        switch (currInterviewStep) {
+          case "Introduction":
+            LLMIntroduction(questionnaire, filteredQuestionnaire);
             break;
-          case "review":
-            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep);
-            if (conclude) {
-              const nextTask = T("config.nextTask");
-              const parts = nextTask.split('.');
-              parts[parts.length - 1] = "conclusion";
-              const modifiedInterviewStep = parts.join('.');
-              T("config.nextTask", modifiedInterviewStep);
-            }
-            break;
-          case "conclusion":
-            LLMConclusion(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep, nextInterviewStep);
+          case "Conclusion":
+            LLMConclusion(questionnaire, filteredQuestionnaire);
+            //T("config.nextTask", "stop"); This did not work from here, I moved it into LLMConclusion where a sync update is made
             break;
           default:
-            throw new Error(`Unknown interviewPhase ${interviewPhase}`);
+            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep);
+            break;
         }
         FSMHolder.send('GOTOdisplayInstruction');
       } else {
