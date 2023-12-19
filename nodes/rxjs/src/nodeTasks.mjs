@@ -209,6 +209,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
         });
       } else {
         utils.logTask(T(), `Processing ${T("type")} in state ${T("state.current")}`);
+        // Even if we return null from taskFunction, if it modified T() then this will be seen 
         const updatedTask = await taskFunction(wsSendTask, T, FSMHolder, CEPMatchMap);
         if (updatedTask) {
           T = utils.createTaskValueGetter(updatedTask);
@@ -352,6 +353,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
   }
   try {
     if (T("commandArgs.sync")) {
+      utils.logTask(T(), "commandArgs.sync set");
       const command = T("command");
       const commandArgs = T("commandArgs");
       const commandDescription = T("commandDescription");
@@ -392,6 +394,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       if (T("command")) {
         utils.debugTask(T(), "sending", T("command"), T("commandDescription"));
         utils.logTask(T(), "sending", T("command"), T("commandDescription"));
+        T("node.initiatingNodeId", NODE.id);
         wsSendTask(T());
       } else {
         //utils.logTask(T(), "nodeTasks_async nothing to do");

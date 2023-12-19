@@ -1,19 +1,41 @@
 /* ToDo
 -------
-When updating prod will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
+When updating server2 will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
 TaskInterview
-  There is a lot of details related to the Interview in TaskShowInstruction
-    Copy and specialize into TaskInterviewStep then simplify TaskShowInstruction
+  Limit the size of the review response
+  Make it complimentary to the previous review response maybe with interview.output.lastReview
+  Add the summaries into the conversation too - rename to interactionHistory
+    Test conclusion again
+  Test that the conversation is recorded correctly with Chrome
+  If the questionnaire is not pre-filled then skip the first chat
+    Should do this from TaskInterview but unclear how
+      Could try to override the nextTask of the active step
+  Copy and specialize into TaskInterviewStep then simplify TaskShowInstruction
   Add French version of prompts
   Option to download the full conversation and questionnaire at the end
+    Requires HTTP server ?
   Back button
     Removed for now
-    If the questionnaire and conversation it will not be reverted. But maybe that is OK.
+    The questionnaire and conversation will not be reverted. But maybe that is OK.
     At the moment it is broken. First test on Exercises.
     This requires restoring a done task on the hub ?
       maybe that happens auto-magically when the hub received the update?
   It is not really in the spirit of an FSM to use events like GOTOdisplayInstruction
     When possible create events with meaningful names about what happened and add as gaurd for SM transition
+Cloning is broken because of change to familyStore_async.get returning instanceId
+  Need to match the hierarchy/order
+    Needs testing (eventually with Stepper and Interview Task)
+How to restore state of a family with things like stepper ?
+  Stepper needs to be designed to restore tasks?
+  Stepper state could keep the list of tasks that have been loaded
+    Then load steps from state if it is set
+      Allows for "restoring" the stepper.
+        Important if we want to continue complex sequences (or jump as in cloning)
+Use 3.5 for dev because faster?
+Eventually we could send family update to Processor and then it splits this into Task updates
+Fix Missing lastTask for update
+  When sync happens before init is complete
+    CEPShared should sync on processing not coprocessing ?
 Documentation needs to be able to "inject" text from links to be readable and DRY.
   Requires a CMS or templating
   Maybe a Markdown extension can do this if VSCode can be extended to keep things in sync

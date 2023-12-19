@@ -220,23 +220,24 @@ async function chatPrepare_async(T, chatServiceName) {
   if (serviceConfig.newSystemMessageTemplate) {
     const regex = /(MODEL)\.([^\s.]+)/g;
     // Find each instance of regex in the array of strings serviceConfig.newSystemMessageTemplate
-    let matches = [];
-    serviceConfig.newSystemMessageTemplate.forEach(template => {
+    let replacements = [];
+    serviceConfig.newSystemMessageTemplate.forEach(templateEntry => {
       let match;
       regex.lastIndex = 0; // Reset regex state for each new string
-      while ((match = regex.exec(template)) !== null) {
-        matches.push(match[0]);
+      // The regex has /g so we will loop over each match, without /g it would create an infinite loop
+      while ((match = regex.exec(templateEntry)) !== null) {
+        replacements.push([match[0], match[2]]);
       }
     });
-    utils.logTask(T(), "newSystemMessageTemplate matches", matches)
+    utils.logTask(T(), "newSystemMessageTemplate replacements", replacements)
     let updatedMessage = serviceConfig.newSystemMessage;
-    matches.forEach(match => {
-      let secondMatch = match.match(regex);
-      if (secondMatch && secondMatch[2]) {
-        // Replace the match in the serviceConfig.newSystemMessage
-        updatedMessage = updatedMessage.replace(match, secondMatch[2]);
-        utils.logTask(T(), "newSystemMessage match", match, secondMatch[2])
-      }
+    replacements.forEach(stringtoVar => {
+      updatedMessage = updatedMessage.replace(stringtoVar[0], () => {
+        if (!serviceConfig[stringtoVar[1]]) {
+          throw new Error(`serviceConfig ${stringtoVar[1]} does not exist`);
+        }
+        return serviceConfig[stringtoVar[1]];
+      });
     });
     systemMessage = updatedMessage;
     utils.logTask(T(), "Sytem message from newSystemMessage " + T("id") + " " + systemMessage);

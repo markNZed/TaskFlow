@@ -29,6 +29,8 @@ Task Function
   Fetches a instruction from the RxJS Processor Consumer that is hard coded in the task
   
 ToDo:
+  There is a problem when streaming a result that this can generate lots of NEW_INSTRUCTION events
+  Maybe add a state for when an instruction is being streamed
   
 */
 
@@ -100,7 +102,7 @@ const TaskShowInstruction = (props) => {
   }, [responseText]);
 
   useEffect(() => {
-    // Needed to separate this out as getting warign about depth of updates in React
+    // Needed to separate this out as getting warning about depth of updates in React
     modifyTask({
       "output.instruction": finalResponseText,
     });
@@ -160,6 +162,7 @@ const TaskShowInstruction = (props) => {
           break;
         case 'displayInstruction':
           if (instructionText !== task.output.instruction) {
+            console.log(`NEW_INSTRUCTION because ${instructionText} !== ${task.output.instruction}`);
             fsmSend("NEW_INSTRUCTION");
           }
           break;

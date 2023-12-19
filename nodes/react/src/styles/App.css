@@ -131,7 +131,7 @@ pre {
   margin-top: inherit;
   /*max-height: 100vh;*/
   /* max-width: 80%; */
-
+  min-height: 300px;
 }
 
 .wrapper {

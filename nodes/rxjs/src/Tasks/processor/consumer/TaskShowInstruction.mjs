@@ -32,13 +32,12 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   const operatorLLM = T("operators")?.["LLM"]?.module;
 
   // eslint-disable-next-line no-unused-vars
-  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep) {
+  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep) {
     const prevInstanceId = T("shared.stepper.prevInstanceId");
     const prevTask = await instancesStore_async.get(prevInstanceId);
-    // TaskConversation is not loggin updates to the output - maybe it should upon exiting?
+    // TaskConversation is not logging updates to the output - maybe it should upon exiting?
     const msgs = prevTask?.output?.msgsHistory;
     utils.logTask(T(), "prevInstanceId:", prevInstanceId, "msgs:", utils.js(msgs));
-    let fullConversation = await dataStore_async.get(T("familyId") + "fullConversation") || [];
     let prevConversation = '';
     if (msgs) {
       for (const msg of msgs) {
@@ -49,10 +48,7 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
           prevConversation += T("config.family.assistantName") + ": " + msg.content + " ";
         }
       }
-      fullConversation.push(...msgs);
     }
-    dataStore_async.set(T("familyId") + "fullConversation", fullConversation);
-    const nextSectionIntentions = questionnaire[nextInterviewStep].intentions.join(' ');
     // We also need to process the responses and fill the questionnaire.
     // Use the JSON features - select the right service for this
 
@@ -63,8 +59,17 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     const operatorJSON = TC("operators")["LLM"].module;
     TC("operators.LLM.chatServiceName", "json");
     delete questionnaire.order;
-    let prompt = T("config.local.promptQuestionnaireUpdate");
+    // A simpler questionnaire structure to make JSON generation easier
+    let simpleQuestionnaire = {};
+    for (const section in questionnaire) {
+      simpleQuestionnaire[section] = {};
+      for (const question in questionnaire[section]['questions']) {
+        simpleQuestionnaire[section][question] = questionnaire[section]['questions'][question];
+      }
+    }
+    let prompt = TC("config.local.promptQuestionnaireUpdate") || '';
     prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
+    prompt = prompt.replace('%QUESTIONNAIRE%', JSON.stringify(simpleQuestionnaire));
     TC("request.prompt", prompt);
     // We should disable the streaming so it does not interfere with the next requset
     TC("request.stream", false);
@@ -72,42 +77,34 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
       .then((jsonOut) => {
         utils.logTask(TC(), "jsonOut", jsonOut.response.LLM);
         let changes;
-        let syncTask = {};
         try {
           changes = JSON.parse(jsonOut.response.LLM);
         } catch (e) {
           utils.logTask(TC(), "Error parsing jsonOut.response.LLM", e);
         }
+        let newAnswers;
         if (changes &&  typeof changes === 'object') {
           utils.logTask(TC(), "LLMSectionReview have changes");
           // Only modify sections in the original questionnaire
-          let newAnswers;
-          for (const key in changes) {
-            if (key in TC("shared.family.questionnaire")) {
+          for (const changeSection in changes) {
+            if (changeSection in TC("shared.family.questionnaire")) {
               // We expect each question to have a key
-              const changeSection = changes[key];
-              for (const qkey in changeSection["questions"]) {
-                utils.logTask(TC(), `LLMSectionReview ${key} ${qkey}`);
-                const qPath = "shared.family.questionnaire" + "." + key + ".questions." + qkey;
-                const origQuestion = TC(qPath)
-                if (changes[key]["questions"][qkey]["answer"] && origQuestion) {
+              utils.logTask(TC(), `LLMSectionReview change to section ${changeSection}`);
+              for (const qkey in changes[changeSection]) {
+                const qPath = "shared.family.questionnaire" + "." + changeSection + ".questions." + qkey;
+                const origQuestion = TC(qPath);
+                if (changes[changeSection][qkey]["answer"] && origQuestion) {
                   const oldAnswer = TC(qPath + ".answer");
-                  utils.logTask(TC(), `LLMSectionReview Old answer before update: ${oldAnswer}`);
-                  TC(qPath + ".answer", changes[key]["questions"][qkey]["answer"]);
-                  utils.logTask(TC(), `LLMSectionReview Updated questionnaire ${key} ${qkey} Old answer: ${oldAnswer} New answer: ${changes[key]["questions"][qkey]["answer"]}`);
-                  newAnswers = true;
+                  const newAnswer = changes[changeSection][qkey]["answer"];
+                  if (oldAnswer !== newAnswer) {
+                    utils.logTask(TC(), `LLMSectionReview Old answer before update: ${oldAnswer}`);
+                    TC(qPath + ".answer", changes[changeSection][qkey]["answer"]);
+                    utils.logTask(TC(), `LLMSectionReview Updated questionnaire ${changeSection} ${qkey} Old answer: ${oldAnswer} New answer: ${changes[changeSection][qkey]["answer"]}`);
+                    newAnswers = true;
+                  }
                 }
               }
             }
-          }
-          if (newAnswers) {
-            syncTask = {
-              shared:{
-                family: {
-                  questionnaire: TC("shared.family.questionnaire")
-                },
-              },
-            };
           }
         }
         TC("commandDescription", "LLMSectionReview review updated questionnaire");
@@ -115,8 +112,18 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
           fsmEvent: 'GOTOfilled',
           instanceId: TC("instanceId"), 
           sync: true, 
-          syncTask,
         });
+        // Only send syncTask is we have new answers
+        if (newAnswers) {
+          const syncTask = {
+            shared: {
+              family: {
+                questionnaire: TC("shared.family.questionnaire"),
+              }
+            },
+          };
+          TC("commandArgs.syncTask", syncTask);
+        }
         commandUpdate_async(wsSendTask, TC()).then(() => {
           utils.logTask(TC(), `Setting shared.family.questionnaire`);
         });
@@ -126,12 +133,13 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     if (prevReview) {
       prevReview = `The previous review is presented between following <BEGIN> and <END> tag:\n<BEGIN>${prevReview}<END>\n.`;
     }
+    const nextSectionIntentions = questionnaire[currInterviewStep].intentions.join(' ');
     prompt = T("config.local.promptQuestionnaireReview");
     prompt = prompt.replace('%PREV_INTERVIEW_STEP%', prevInterviewStep);
     prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
     prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
     prompt = prompt.replace('%PREV_REVIEW%', prevReview);
-    prompt = prompt.replace('%NEXT_SECTION%', nextInterviewStep);
+    prompt = prompt.replace('%NEXT_SECTION%', currInterviewStep);
     prompt = prompt.replace('%NEXT_SECTION_INTENTIONS%', nextSectionIntentions);
     T("request.prompt", prompt);
     const chatOut = await operatorLLM.operate_async(wsSendTask, T());
@@ -145,6 +153,12 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
       syncTask: {
         output:{
           instruction: chatOut.response.LLM,
+        },
+        shared: {
+          family: {
+            interviewStep: T("shared.family.interviewStep"),
+            interviewStepDuration: T("shared.family.interviewStepDuration"),
+          },
         },
       },
     });
@@ -163,28 +177,34 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   }
   
   // eslint-disable-next-line no-unused-vars
-  async function LLMIntroduction(questionnaire, filteredQuestionnaire) {
-    utils.logTask(T(), "LLMIntroduction filteredQuestionnaire", utils.js(filteredQuestionnaire));
-    let prompt = T("config.local.promptIntroduction") || '';
+  async function LLMQuestionnaireSummary(questionnaire, filteredQuestionnaire) {
+    utils.logTask(T(), "LLMQuestionnaireSummary filteredQuestionnaire", utils.js(filteredQuestionnaire));
+    let prompt = T("config.local.promptQuestionnaireSummary") || '';
     prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
     T("request.prompt", prompt);
     const operatorOut = await operatorLLM.operate_async(wsSendTask, T());
     dataStore_async.set(T("familyId") + "prevReview", operatorOut.response.LLM);
     // Sync the final response
-    T("commandDescription", "LLMIntroduction");
+    T("commandDescription", "LLMQuestionnaireSummary");
     T("commandArgs", {
       instanceId: T("instanceId"), 
       sync: true, 
       syncTask: {
         output:{
           instruction: operatorOut.response.LLM
-        }
+        },
+        shared: {
+          family: {
+            interviewStep: T("shared.family.interviewStep"),
+            interviewStepDuration: T("shared.family.interviewStepDuration"),
+          },
+        },
       },
     });
     commandUpdate_async(wsSendTask, T()).then(() => {
       utils.logTask(T(), `Setting output.instruction`);
     });
-    utils.logTask(T(), "Done LLMIntroduction");
+    utils.logTask(T(), "Done LLMQuestionnaireSummary");
     // Because this is async we need to send FSM event by update
     updateEvent_async(wsSendTask, T, 'GOTOfilled');
   }
@@ -207,6 +227,12 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
         },
         config: {
           nextTask: "stop",
+        },
+        shared: {
+          family: {
+            interviewStep: T("shared.family.interviewStep"),
+            interviewStepDuration: T("shared.family.interviewStepDuration"),
+          },
         },
       },
     });
@@ -243,6 +269,17 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     }, {});
   }
 
+  function sectionAnswered(questionnaire, section) {
+    let result = true;
+    for (const qkey in questionnaire[section]["questions"]) {
+      if (!questionnaire[section]["questions"][qkey].answer) {
+        result = false;
+        break;
+      }
+    }
+    return result;
+  }
+
   // actions are intended to be "fire and forget"
   const actions = {
     rxjs_processor_consumer_start: () => {
@@ -256,40 +293,54 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
         const filteredQuestionnaire = filterAnsweredQuestions(questionnaire);
         const order = questionnaire.order;
         const stepperCount = T("shared.stepper.count");
-        // Because there are two steps per questionnaire section
-        const questionnaireOffset = T("config.family.questionnaireOffset") || 0;
-        let questionnaireIdx = Math.ceil((stepperCount - questionnaireOffset) / 2) - 1;
         let prevInterviewStep;
-        let nextInterviewStep;
         let currInterviewStep;
         if (T("config.local.interviewStep")) {
           currInterviewStep = T("config.local.interviewStep");
-        } else if (questionnaireIdx < 0) {
-          nextInterviewStep = order[0];
+          T("shared.family.interviewStep", currInterviewStep);
         } else {
+          const lastInterviewStep = T("shared.family.interviewStep");
+          let questionnaireIdx;
+          if (order.includes(lastInterviewStep)) {
+            questionnaireIdx = order.indexOf(lastInterviewStep) + 1;
+          } else {
+            questionnaireIdx = 0;
+          }
           if (questionnaireIdx > 0) {
             prevInterviewStep = order[questionnaireIdx - 1];
           }
-          currInterviewStep = order[questionnaireIdx];
-          if (questionnaireIdx < order.length - 1) {
-            nextInterviewStep = order[questionnaireIdx + 1];
+          // Skip sections with all questions answered
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            currInterviewStep = order[questionnaireIdx];
+            if (!sectionAnswered(questionnaire, currInterviewStep)) {
+              break;
+            }
+            if (currInterviewStep === "Conclusion") {
+              break;
+            }
+            questionnaireIdx += 1;
           }
+          T("shared.family.interviewStep", currInterviewStep);
+          let interviewStepDuration = questionnaire[currInterviewStep]["interviewStepDuration"];
+          if (!interviewStepDuration && T("shared.family.interviewStepDuration")) {
+            interviewStepDuration = T("shared.family.interviewStepDuration");
+          }
+          T("shared.family.interviewStepDuration", interviewStepDuration);
         }
-        // We can replace the review with the conclusion
-        if (nextInterviewStep === "Conclusion") {
-          currInterviewStep = "Conclusion";
-        }
-        utils.logTask(T(), "rxjs_processor_consumer_fill stepperCount", stepperCount, "questionnaireIdx", questionnaireIdx, "questionnaireOffset", questionnaireOffset, "prevInterviewStep", prevInterviewStep, "currInterviewStep", currInterviewStep, "nextInterviewStep", nextInterviewStep, "config.local.interviewStep", T("config.local.interviewStep"));
+        // To have the changes to shared.family sent we add this to the syncTask in the functions called below
+        // This avoids another update call but not ideal
+        utils.logTask(T(), "rxjs_processor_consumer_fill stepperCount", stepperCount, "prevInterviewStep", prevInterviewStep, "currInterviewStep", currInterviewStep, "config.local.interviewStep", T("config.local.interviewStep"));
         switch (currInterviewStep) {
-          case "Introduction":
-            LLMIntroduction(questionnaire, filteredQuestionnaire);
+          case "QuestionnaireSummary":
+            LLMQuestionnaireSummary(questionnaire, filteredQuestionnaire);
             break;
           case "Conclusion":
             LLMConclusion(questionnaire, filteredQuestionnaire);
             //T("config.nextTask", "stop"); This did not work from here, I moved it into LLMConclusion where a sync update is made
             break;
           default:
-            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep);
+            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep);
             break;
         }
         FSMHolder.send('GOTOdisplayInstruction');

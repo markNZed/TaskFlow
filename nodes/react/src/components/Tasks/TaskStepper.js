@@ -53,6 +53,7 @@ function TaskStepper(props) {
     if (!tasks.length) return;
     if (tasks[tasksIdx].state?.done !== stepDone) {
       setStepDone(tasks[tasksIdx].state.done);
+      log("setStepDone");
     }
     if (tasks[tasksIdx].output?.disableNextStep) {
       if (!taskNextButtonDisabled) {
@@ -101,6 +102,13 @@ function TaskStepper(props) {
           setKeys([startTask.instanceId + tasksIdx]);
           setExpanded([startTask.instanceId])
           nextState = "navigate";
+          modifyTask({
+            "shared.stepper.currInstanceId": startTask.instanceId,
+            "shared.stepper.currId": startTask.id,
+            "shared.stepper.count": 0,
+            command: "update",
+            commandDescription: "Stepper loaded first task so update currInstanceId, currId, count",
+          });
         }
         break;
       case "navigate":
@@ -112,10 +120,12 @@ function TaskStepper(props) {
             setStepperNavigation({task: null, direction: null})
             modifyTask({
               "shared.stepper.prevInstanceId": tasks[tasksIdx].instanceId,
+              "shared.stepper.prevId": tasks[tasksIdx].id,
               "shared.stepper.currInstanceId": null,
+              "shared.stepper.currId": null,
               "shared.stepper.count": tasksIdx + 1,
               command: "update",
-              commandDescription: "Stepper is moving to next so update shared.stepper.prevInstanceId",
+              commandDescription: "Stepper is moving to next so update prevInstanceId, prevId, currInstanceId, currId, count",
             });
             nextState = "waitForDone"; 
           } else if (stepperNavigation.direction === "back") {
@@ -131,17 +141,22 @@ function TaskStepper(props) {
             });
             setStepperNavigation({task: null, direction: null})
             let prevInstanceId;
+            let prevId;
             if (newIdx !== 0 && tasks[newIdx]) {
               prevInstanceId = tasks[newIdx - 1].instanceId;
+              prevId = tasks[newIdx - 1].id;
             } else if (task?.shared?.stepper?.prevInstanceId) {
               prevInstanceId = null;
+              prevId = null;
             }
             modifyTask({
               "shared.stepper.prevInstanceId": prevInstanceId,
+              "shared.stepper.prevId": prevId,
               "shared.stepper.currInstanceId": tasks[newIdx].instanceId,
+              "shared.stepper.currId": tasks[newIdx].id,
               "shared.stepper.count": newIdx,
               command: "update",
-              commandDescription: "Stepper moving back so update curr & prev",
+              commandDescription: "Stepper moving back so update prevInstanceId, prevId, currInstanceId, currId, count",
             });
             nextState = "navigate";
           } 
@@ -152,9 +167,10 @@ function TaskStepper(props) {
         }
         break;
       case "waitForDone":
+        log("waitForDone", stepDone, task.command);
         // In theory there could be conflict with the command start overriding teh previous command update
         // but it will take time for stepDone to be set so by then the update command will have been sent
-        if (stepDone) {
+        if (stepDone && !task.command) {
           // The stepper requests a new Task
           // will set startTask or startTaskError
           modifyTask({
@@ -183,9 +199,10 @@ function TaskStepper(props) {
           nextState = "navigate";
           modifyTask({
             "shared.stepper.currInstanceId": startTask.instanceId,
+            "shared.stepper.currId": startTask.id,
             "shared.stepper.count": newIdx,
             command: "update",
-            commandDescription: "Stepper loaded new task so update currInstanceId",
+            commandDescription: "Stepper loaded new task so update currInstanceId, currId, count",
           });
         }
         break;
@@ -198,7 +215,7 @@ function TaskStepper(props) {
     // Manage state.current
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, startTask, startTaskError, stepperNavigation]);
+  }, [task, stepDone, startTask, startTaskError, stepperNavigation]);
 
   // Close previous task and open next task in stepper
   useEffect(() => {

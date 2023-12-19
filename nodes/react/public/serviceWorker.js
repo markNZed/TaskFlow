@@ -15,12 +15,13 @@ if ( 'function' === typeof importScripts) {
     // self.__WB_MANIFEST is undefined
     //workbox.precaching.precacheAndRoute(self.__WB_MANIFEST);
 
-
+    /*
     self.addEventListener('fetch', onFetch); // Add fetch event listener
   
     function onFetch(event) {
       console.log('Intercepted fetch event:', event.request.url);
       event.respondWith(fetch(event.request));
     }
+    */
       
 }

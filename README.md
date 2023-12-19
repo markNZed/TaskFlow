@@ -6,7 +6,7 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 T@skFlow combines software, AI models, and human interaction in a unique way. A software developer creates a Task's functionality, a Task may be distributed over many Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow. T@skFlow adopts a hub-and-spoke architecture.
 
-![T@skFlow Diagram](Task.drawio.svg)  *<small>[editable](https://app.diagrams.net/)</small>
+![T@skFlow Diagram](Task.drawio.svg)  *`<small>`[editable](https://app.diagrams.net/)`</small>`
 
 The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
@@ -21,6 +21,7 @@ The purpose of T@skFlow is to explore new ways of building and interacting with 
 ## Task
 
 Tasks consist of:
+
 * **Task Definition** that conform to a generic Task schema
   * A Task may reference data not provided by T@skFLow
 * **Task Function** available in one or more Environment(s)
@@ -33,7 +34,7 @@ For example, a chat application could include a Task to receive user input and r
 
 The concept of **Task Instance** refers to a particular object conforming to the Task Definition.
 
-The concept of **Task Context** refers to the complete data and functionality used by the Task, this may extend beyond the Task Function and Task Data. 
+The concept of **Task Context** refers to the complete data and functionality used by the Task, this may extend beyond the Task Function and Task Data.
 
 A Task Function may be distributed across multiple Environments, intra-task communication uses the task object (in particular `task.request` and `task.response`). The Task Function sends commands to the Processor using `task.command` and `task.commandArgs` Only Task Functions write to `task.command`
 
@@ -60,8 +61,8 @@ A Node is of type:
 A Node adopts a role of:
 
 * **Core** the entry point for Tasks
-* **Coprocessor** processing at the Node with shared memory (Redis) 
-* **Consumer** processing Tasks received at the Node 
+* **Coprocessor** processing at the Node with shared memory (Redis)
+* **Consumer** processing Tasks received at the Node
 
 Roles could be performed by separate processes (or servers) to enable horizontal scaling.
 
@@ -93,7 +94,7 @@ Services and Operators do not maintain a state (except handles to resources for 
 
 #### Services
 
-A service provides a native (e.g. Javascript) API to functionality shared across Tasks in the Environment. A Processor provides services that provide a functionality in the native style of the environment i.e. services are not restricted by a Task Definition. 
+A service provides a native (e.g. Javascript) API to functionality shared across Tasks in the Environment. A Processor provides services that provide a functionality in the native style of the environment i.e. services are not restricted by a Task Definition.
 
 #### Operators
 
@@ -114,7 +115,7 @@ Tasks are processed by Processors, currently the Processors implemented in T@skF
 
 The Processors communicate with the Hub using websocket. A Processor may be composed of multiple Nodes.
 
-The React Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components. 
+The React Processor (user interface) provides a kernel for evaluating Task functions and generic web functionality (e.g., current user location). User input may change Task state and start new Tasks. The React Processor runs in a web browser using the React Javascript library with Material UI (MUI) user interface components.
 
 The RxJS Processor provides a kernel for evaluating Task functions. Tasks are asynchronous. Tasks may run on the RxJS Processor without user interaction. The RxJS Processor uses Node, Express, and RxJS.
 
@@ -147,17 +148,20 @@ To learn more about the Task object, see the [README.md](shared/README.md) in th
 For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
 
 T@skFlow will play nicely with other libraries such as:
+
 * [LangChain](https://langchain.com/) (e.g., use LangChain features from within a Task function on the RxJS Processor)
 * [LlamaIndex](https://pypi.org/project/gpt-index/) (from within a Task function on the RxJS Processor)
 
 ## Creating a New Task
 
 Imagine a new task that will be called TaskNew:
+
 * Create React Processor/src/components/Tasks/TaskNew.js (copy an existing Task)
 * Create RxJS Processor/src/Tasks/TaskNew.mjs (copy and existing TaskFunction)
 * Add information about the new Task to nodes/hub/config/tasktypes.mjs
 
 You will need to include TaskNew in a sequence of tasks (or it could be standalone):
+
 * Add it to nodes/hub/config/tasks.mjs
 
 ### Task Patterns
@@ -169,18 +173,19 @@ Available in the `task.output` object of the previous Task Instance.
 # Authentication
 
 With a proxy T@skFlow provides a simple authentication mechanism:
+
 * The proxy should generate a sub-request to /auth that is a routed to the Hub for authentication
-* The proxy needs to allow unauthenticated access to /login.html and /login 
+* The proxy needs to allow unauthenticated access to /login.html and /login
 * The proxy should redirect to /login.html if the /auth fails (returns HTTP error 401)
 * The user enters credentials at /login.html which posts a request for a JWT token at /login and stores the token in a cookie
 * The /auth path checks the cookie for the JWT token, the token contains the user id which will correspond to `task.user.id`
-* The Hub checks task.tokens.authToken to authenticate websocket messages 
+* The Hub checks task.tokens.authToken to authenticate websocket messages
 
-One advantage of this approach is that the React client is only served after authentication. The username and password hash are stored in nodes/hub/db/accessDB.sqlite3 other information about the user is stored in usersStore_async. The password_hash storage is separated from the user data so authentication can be independent of T@skFlow internal data structure. 
+One advantage of this approach is that the React client is only served after authentication. The username and password hash are stored in nodes/hub/db/accessDB.sqlite3 other information about the user is stored in usersStore_async. The password_hash storage is separated from the user data so authentication can be independent of T@skFlow internal data structure.
 
 # Configuration
 
-The primary configuration of Taskflow uses Javascript objects. These objects are read by the script/dumpOneConfig.js which imports Javascript modules from the CONFIG_DIR and writes JSON configuration files to the db/config directory. This is a result of the development history: setting a javascript object in a module was an easy way to configure the early system, the flexibility of using Javascript allowed for "programming" the configuration (e.g. a tree structure with inheritance). To reload the primary configuraton without restarting T@skFlow the configuration modules need to be reloaded which is not obvous in nodejs, this is why a script is usd to dump the configuration in JSON format that can be reloaded without restarting the app.
+The primary configuration of Taskflow uses Javascript objects. These objects are read by the script/dumpOneConfig.js which imports Javascript modules from the CONFIG_DIR and writes JSON configuration files to the db/config directory. This is a result of the development history: setting a javascript object in a module was an easy way to configure the early system, the flexibility of using Javascript allowed for "programming" the configuration (e.g. a tree structure with inheritance). To reload the primary configuraton without restarting T@skFlow the configuration modules need to be reloaded which is not obvous in nodejs, this is why a script is used to dump the configuration in JSON format that can be reloaded without restarting the app.
 
 # Coding Guidelines
 

@@ -110,7 +110,7 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
       for (const { regex, caseId } of regexPatterns) {
         const matches = regex.exec(curr);
         if (matches) {
-          console.log("processTemplateArrays_async matches", caseId, matches);
+          //console.log("processTemplateArrays_async matches", caseId, matches);
           switch (caseId) {
             case 'dotNotation': {
               // Dot notation substitution
@@ -188,7 +188,7 @@ async function processTemplateArrays_async(obj, task, outputs, familyId) {
             }
           }
           matchFound = true;
-          console.log("processTemplateArrays_async result:", result);
+          //console.log("processTemplateArrays_async result:", result);
           break; // Stop iterating once a match is found
         }
       }
@@ -258,13 +258,13 @@ async function updateFamilyStoreAsync(task, familyStore_async) {
   if (task.familyId) {
     // If task.instanceId already exists then do nothing otherwise add instance to family
     let family = await familyStore_async.get(task.familyId) || {};
-    const instanceIds = Object.values(family);
+    const instanceIds = Object.keys(family);
     if (!instanceIds) {
-      family[task.id] = task.instanceId;
+      family[task.instanceId] = task.id;
       await familyStore_async.set(task.familyId, family);
       utils.logTask(task, "Initiating family " + task.familyId + " with instanceId: " + task.instanceId);
     } else if (!instanceIds.includes(task.instanceId)) {
-      family[task.id] = task.instanceId;
+      family[task.instanceId] = task.id;
       await familyStore_async.set(task.familyId, family);
       utils.logTask(task, "Adding to family " + task.familyId + " instanceId: " + task.instanceId);
     } else {
@@ -493,7 +493,7 @@ async function taskStart_async(
 
     let prevTask = prevInstanceId ? await instancesStore_async.get(prevInstanceId) : undefined;
 
-    // Should not allow transfer from rot.systme to root.user ?
+    // Should not allow transfer from rot.system to root.user ?
     if (prevTask?.shared?.family) {
       console.log("taskStart_async found family");
       task["shared"] = task.shared || {};
@@ -545,11 +545,18 @@ async function taskStart_async(
     // May be overwritten in processInstanceAsync
     task.node["command"] = "init";
        
+    // Rename to oneInstance?
+    // If task id is reused then we need unique instanceId if they exist at same time
+    // For example the interview process uses Task as FSM
     if (task.config.oneFamily) {
       // '.' is not used in keys or it breaks setNestedProperties
       // Maybe this could be added to schema
       task["instanceId"] = (task.id + "-" + task.user.id).replace(/\./g, '-');
-      task.familyId = task.instanceId;
+      if (prevTask?.config?.oneFamily) {
+        task.familyId = prevTask.familyId;
+      } else {
+        task.familyId = task.instanceId;
+      }
       task = await processInstanceAsync(task, task.instanceId, "oneFamily", nodeId);
     }
 

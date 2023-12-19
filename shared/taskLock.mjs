@@ -26,7 +26,7 @@ export async function taskLock(key, description = "") {
   const requestTime = Date.now();
   const release = await mutex.acquire();
   const duration = Date.now() - requestTime;
-  console.log(`${utils.timeNow()}Got lock ${key} after ${duration} ${description}`);
+  console.log(`${utils.timeNow()} Got lock ${key} after ${duration} ${description}`);
   releases.set(key, release); // Store the release function by key
   lockTimes.set(key, Date.now());
   return release;
@@ -51,9 +51,9 @@ export function lockOrError(key, description = "") {
     throw new Error(`Cannot acquire lock for key: ${key}. Already locked. ${description}`);
   }
   const release = mutex.acquire();
-  console.log(`${utils.timeNow()}Locked ${description} by id: ${key}`);
+  console.log(`${utils.timeNow()} Locked ${description} by id: ${key}`);
   return function releaseLock() {
     release.then((r) => r());
-    console.log(`${utils.timeNow()}Released lock ${description} with id: ${key}`);
+    console.log(`${utils.timeNow()} Released lock ${description} with id: ${key}`);
   };
 }

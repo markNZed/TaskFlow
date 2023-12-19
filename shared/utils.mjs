@@ -750,6 +750,7 @@ const utils = {
     delete taskCopy.users;
     delete taskCopy.permissions;
     delete taskCopy.meta;
+    delete taskCopy.connections; // Could be injected and not synced yet
     // The node may have copied the commands or not
     delete taskCopy.command;
     delete taskCopy.commandArgs;

@@ -85,7 +85,13 @@ app.use(async (req, res, next) => {
   //console.log("req.headers",req.headers, );
   const referer = req?.headers?.referer;
   if (referer) {
-    const url = new URL(referer);
+    let url;
+    try {
+      url = new URL(referer);
+    } catch (e) {
+      console.log("Server could not parse referer", referer);
+      return next();
+    }
     const host = url.host;
     // This is not yet implemented on the websocket
     // nginx upgrades the HTTP request to a websocket request

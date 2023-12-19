@@ -20,19 +20,20 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
 
   // If regex is empty then this will return the task instanceId
   function getInstanceIdFromFamily(family, regex) {
+    //getInstanceIdFromFamily regex interview
     console.log("getInstanceIdFromFamily regex", regex);
     if (regex === '') {
       return task.instanceId;
     }
     // Create a new regular expression based on the connection string
     const pattern = new RegExp(regex + "$", "i"); // 'i' for case-insensitive search
-    const sortedIds = Object.keys(family).sort((a, b) => a.length - b.length);
+    const sortedInstanceIds = Object.keys(family).sort((a, b) => family[a].length - family[b].length);
     // Iterate through Ids of the object
-    for (let id of sortedIds) {
+    for (let instanceId of sortedInstanceIds) {
       // Check if id matches the regex pattern
-      if (pattern.test(id)) {
-        utils.logTask(task,"CEPConnect pattern", pattern, "id", id, "instanceId", family[id]);
-        return family[id]; // Return the corresponding value
+      if (pattern.test(family[instanceId])) {
+        utils.logTask(task,"CEPConnect pattern", pattern, "instanceId", instanceId, "id", family[instanceId]);
+        return instanceId; // Return the corresponding value
       }
     }
     // Return null if no match is found
@@ -53,7 +54,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     // Arrays to allow for connection to multiple. Or connections could be an array
 
     let family = await familyStore_async.get(task.familyId) || {};
-    let connectLater = await connectionsStore_async.get(family) || [];
+    let connectLater = await connectionsStore_async.get(task.familyId) || [];
     //console.log("family", utils.js(family), connectLater);
 
     let instancesToEstablish = {};
@@ -221,7 +222,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           updatedConnectLater.push(connection);
         }
       }
-      await connectionsStore_async.set(family, updatedConnectLater);
+      await connectionsStore_async.set(task.familyId, updatedConnectLater);
     }
 
     const promises = [];

@@ -221,12 +221,15 @@ const wsSendTask = async function (task) {
   let message = {};
   task = await utils.taskToNode_async(task, NODE.id, getActiveTask_async);
   task.meta = task.meta || {};
-  if (task.node.initiatingNodeId === NODE.id) {
+  if (task.node.initiatingNodeId === NODE.id && 
+    task.node.command && 
+    task.node.command !== "ping" && 
+    task.node.command !== "partial"
+  ) {
     task.meta.prevMessageId = task.meta.messageId;
-    task.meta.messageId = utils.nanoid8();
-    if (task.node.command && task.node.command !== "ping" && task.node.command !== "partial") {
-      utils.logTask(task,"New messageId:", task.meta.messageId);
-    }
+    const newMessageId = utils.nanoid8();
+    utils.logTask(task,"New messageId:", newMessageId, task.node?.commandDescription);
+    task.meta.messageId = newMessageId;
   }
   task["tokens"] = task.tokens || {};
   task.tokens["app"] = NODE.app.token;

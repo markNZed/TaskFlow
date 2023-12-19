@@ -303,7 +303,9 @@ const TaskChat = (props) => {
   useEffect(() => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
+    // Added 5px to avoid the scrollbar appearing/disappearing with multiple lines of input 
+    // The exact amount required may not be 5px
+    textarea.style.height = textarea.scrollHeight + 5 + "px";
     textarea.placeholder = task?.config?.local?.promptPlaceholder;
   }, [task?.input?.promptText, task?.config?.local?.promptPlaceholder]);
 

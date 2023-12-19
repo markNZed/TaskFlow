@@ -182,12 +182,12 @@ const TaskConversation = (props) => {
 
   const handleScroll = () => {
     const chatContainer = chatContainerRef.current;
-    if (chatContainer.clientHeight + chatContainer.scrollTop >= chatContainer.scrollHeight - 200) {
+    if (chatContainer.clientHeight + chatContainer.scrollTop >= chatContainer.scrollHeight - 200 && hasScrolled) {
       setHasScrolled(false);
-      //console.log("setHasScrolled false");
-    } else {
+      console.log("setHasScrolled false");
+    } else if (!hasScrolled) {
       setHasScrolled(true);
-      //console.log("setHasScrolled true");
+      console.log("setHasScrolled true");
     }
   };
 
@@ -200,7 +200,7 @@ const TaskConversation = (props) => {
     //console.log("Updating chatInputRect", chatInputRect);
   // Added childTask so we update these values after chatInputRef has been rendered
   // This is a bit of a hack to avoid explicitly detecting the rendering of the chat component.
-  // For exmaple it could use a callback.
+  // For example it could use a callback.
   }, [childTask]);
 
   useEffect(() => {

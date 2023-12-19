@@ -24,7 +24,7 @@ export async function commandUpdate_async(wsSendTask, task) {
       console.error("Missing syncInstanceId", task);
       throw new Error("Missing syncInstanceId");
     }
-    // Dont release lock here as we need o wait for the update to be returned by the Hub
+    // Dont release lock here as we need to wait for the update to be returned by the Hub
     await taskLock(syncInstanceId, "commandUpdate_async " + commandDescription);
     mergedTask["instanceId"] = syncInstanceId;
     mergedTask["command"] = "update";

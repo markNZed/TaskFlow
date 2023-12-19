@@ -83,20 +83,97 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
         case "initialized": {
           // Once all the family has initialized (and paused) we can update each with the cloned state and then play them
           const family = await familyStore_async.get(T("familyId"));
+          let familyTree = {};
+          let familyInstances = {};
+          for (const instanceId in family) {
+            const id = family[instanceId];
+            if (id === T("id")) continue; // Skip the cloning Task
+            const instance = await instancesStore_async.get(instanceId);
+            familyInstances[instanceId] = instance;
+            familyTree[instance.meta.parentInstanceId] = familyTree[instance.meta.parentInstanceId] || [];
+            familyTree[instance.meta.parentInstanceId].push(instanceId);
+          }
+          // Iterate over each array in familyTree and sort them by instance.id
+          for (const parentInstanceId in familyTree) {
+            const instancesArray = familyTree[parentInstanceId];
+            // Use the sort method with a custom comparison function
+            instancesArray.sort((a, b) => {
+              const idA = family[a];
+              const idB = family[b];
+              return idA.localeCompare(idB);
+            });
+          }
+          const familyTreeKeys = Object.keys(familyTree);
+          // Sort the array of parent instance IDs based on entry.id
+          familyTreeKeys.sort((a, b) => {
+            const idA = family[a];
+            const idB = family[b];
+            return idA.localeCompare(idB);
+          });
+          let orderedFamilyInstanceIds = [];
+          for (const instanceId of prevFamilyTreeKeys) {
+            orderedFamilyInstanceIds.push(instanceId);
+            if (familyTree[instanceId]) {
+              orderedFamilyInstanceIds.push(...familyTree[instanceId]);
+            }
+          }
+
+          // Ordered list of all instances
           const prevFamily = await familyStore_async.get(T("input.cloneFamilyId"));
+          let prevFamilyTree = {};
+          let prevFamilyInstances = {};
+          for (const instanceId in prevFamily) {
+            const instance = await instancesStore_async.get(instanceId);
+            prevFamilyInstances[instanceId] = instance;
+            if (prevFamily.includes(instance.meta.parentInstanceId)) {
+              prevFamilyTree[instance.meta.parentInstanceId] = prevFamilyTree[instance.meta.parentInstanceId] || [];
+              prevFamilyTree[instance.meta.parentInstanceId].push(instanceId);
+            }
+          }
+          // Iterate over each array in familyTree and sort them by instance.id
+          for (const parentInstanceId in prevFamilyTree) {
+            const instancesArray = prevFamilyTree[parentInstanceId];
+            // Use the sort method with a custom comparison function
+            instancesArray.sort((a, b) => {
+              const idA = family[a];
+              const idB = family[b];
+              return idA.localeCompare(idB);
+            });
+          }
+          const prevFamilyTreeKeys = Object.keys(familyTree);
+          // Sort the array of parent instance IDs based on entry.id
+          prevFamilyTreeKeys.sort((a, b) => {
+            const idA = family[a];
+            const idB = family[b];
+            return idA.localeCompare(idB);
+          });
+          let orderedPrevFamilyInstanceIds = [];
+          for (const instanceId of prevFamilyTreeKeys) {
+            orderedPrevFamilyInstanceIds.push(instanceId);
+            if (familyTree[instanceId]) {
+              orderedPrevFamilyInstanceIds.push(...familyTree[instanceId]);
+            }
+          }
+
+          // Check we have a matching number of entries
+          if (orderedFamilyInstanceIds.length !== orderedPrevFamilyInstanceIds.length) {
+            throw new Error("Cloning via requires matching familyCount");
+          }
+
           const promises = [];
           console.log("initialized family", utils.js(family));
           console.log("initialized prevFamily", utils.js(prevFamily));
-          for (const id in family) {
-            if (id === T("id")) continue;
-            const prevInstanceId = prevFamily[id];
+          for (let index = 0; index < orderedFamilyInstanceIds.length; index++) {
+            const instanceId = orderedFamilyInstanceIds[index];
+            // This assumes one instance of each id which is not always valid
+            const prevInstanceId = orderedPrevFamilyInstanceIds[index];
             if (!prevInstanceId) {
               throw new Error("Cloning via requires prevInstanceId");
             }
             let prevTask;
             if (T("input.cloneContinue")) {
               console.log("initialized cloneContinue", prevInstanceId);
-              prevTask = await instancesStore_async.get(prevInstanceId);
+              prevTask = prevFamilyInstances[prevInstanceId];
             } else {
               const cloneUpdatedAt = T("input.cloneUpdatedAt");
               let query = {
@@ -125,8 +202,11 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
                 prevTask = logTask[0].current;
               }
             }
-            const instanceId = family[id];
-            let currTask = await instancesStore_async.get(instanceId);
+            let currTask = familyInstances[instanceId];
+            if (currTask.id !== prevTask.id) {
+              throw new Error(`Cloning via requires matching task.id ${currTask.id} ${prevTask.id}`);
+            }
+            currTask = utils.deepMerge(currTask, prevTask);
             prevTask["shared"] = utils.deepMerge(currTask["shared"], prevTask["shared"]) || {};
             prevTask.shared["family"] = currTask.shared.family; // So we can clone a clone without the prev family
             prevTask["meta"] = utils.deepMerge(currTask["meta"], prevTask["meta"]);
