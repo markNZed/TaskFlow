@@ -337,8 +337,8 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       }
     }
   } catch (e) {
-    console.error(e);
-    console.error(T());
+    console.log("Error in nodeTasks_async error:", e);
+    console.log("Error in nodeTasks_async task:", T());
     // Strictly we should not be updating the task object in the node
     // Could set updatedTask.node.command = "error" ?
     T("error", {message: e.message});
@@ -349,7 +349,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
   if (T("error") && T("node.command") !== "error") {
     // It is not natural to set the command to update when we have an error command
     T("command", "update");
-    console.error("Task error: ", T("error"))
+    console.log("Task error: ", T("error"))
   }
   try {
     if (T("commandArgs.sync")) {

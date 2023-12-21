@@ -75,7 +75,6 @@ const TaskLLMIO = (props) => {
             case 'partial':
             case 'final':
               responseTextRef.current = text;
-              setResponseText(text);
               break;
             default:
               console.log("WARNING unknown mode : " + mode);
@@ -142,6 +141,7 @@ const TaskLLMIO = (props) => {
       case "received":
         nextState = nextConfigState;
         setResponseText(task.output.LLMtext);
+        //console.log("setResponseText", task.output.LLMtext)
         if (nextConfigState === "input") {
           setShowUserInput(true);
         }
@@ -172,9 +172,10 @@ const TaskLLMIO = (props) => {
   }, [task]);
 
   useEffect(() => {
+    //console.log("task.output.LLMtext", task.output.LLMtext, task);
     if (task?.input?.exit) {
       if (task.state.current === "input") {
-        modifyTask({ 
+        modifyTask({
           "command": "update", 
           "output.userInput": userInput,
           "commandDescription": "Transition state to stop and set output.userInput",
@@ -197,6 +198,7 @@ const TaskLLMIO = (props) => {
   }, [userInput, responseText]);
 
   useEffect(() => {
+    //console.log("responseText", responseText);
     const rect = responseTextRectRef.current?.getBoundingClientRect()
     // Avoid decreasing so it does not jitter
     if (rect?.top >= paraTopRef.current && rect.height > 100) {

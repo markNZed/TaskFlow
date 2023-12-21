@@ -163,9 +163,7 @@ export function WebSocketProvider({ children, socketUrl }) {
     },
 
     onClose: (e) => {
-      console.log(
-        `App webSocket closed with code ${e.code} and reason '${e.reason}' and error ${e}`
-      );
+      console.log(`App webSocket closed with code ${e.code} and reason '${e.reason}' and error`, utils.js(e));
       let ws = getWebSocket();
       if (ws.pingIntervalId) {
         clearInterval(ws.pingIntervalId);

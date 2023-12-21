@@ -44,6 +44,7 @@ function TaskStepper(props) {
   const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(false);
   const [taskNextButtonDisabled, setTaskNextButtonDisabled] = useState(false);
   const [stepDone, setStepDone] = useState();
+  const [lastStartInstanceId, setLastStartInstanceId] = useState();
 
 
   // onDidMount so any initial conditions can be established before updates arrive
@@ -145,7 +146,7 @@ function TaskStepper(props) {
             if (newIdx !== 0 && tasks[newIdx]) {
               prevInstanceId = tasks[newIdx - 1].instanceId;
               prevId = tasks[newIdx - 1].id;
-            } else if (task?.shared?.stepper?.prevInstanceId) {
+            } else {
               prevInstanceId = null;
               prevId = null;
             }
@@ -190,8 +191,10 @@ function TaskStepper(props) {
         // Need to check that this is the start task we are expecting as we may have 
         // previously started another task. It would be better to clear this down.
         // But I'm not sure how to automate that
-        } else if (startTask && startTask.id !== tasks[tasksIdx].id) {
-          console.log("TaskStepper nextTask", startTask);
+        // Wait for a start task that is not the current task (if we start a task with the same id)
+        } else if (startTask && startTask.instanceId !== tasks[tasksIdx].instanceId && startTask.instanceId !== lastStartInstanceId) {
+          setLastStartInstanceId(startTask.instanceId);
+          log("TaskStepper nextTask", startTask);
           const newIdx = tasks.length
           setTasksIdx(newIdx);
           setTasks((prevVisitedTasks) => [...prevVisitedTasks, startTask]);
@@ -210,9 +213,10 @@ function TaskStepper(props) {
         setModalInfo({title: "Error", description: "An error occurred"});
         break;
       default:
-        console.log(`${componentName} State Machine unknown state:`, task.state.current);
+        log(`${componentName} State Machine unknown state:`, task.state.current);
     }
     // Manage state.current
+    // Maybe this should delay for  0 so all events settle before the transition
     props.modifyState(nextState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, stepDone, startTask, startTaskError, stepperNavigation]);
