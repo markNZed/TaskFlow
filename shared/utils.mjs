@@ -1239,7 +1239,7 @@ const utils = {
         const parts = path.split(".");
         let currentPath = task.node.commandArgs.syncEvents;
         for (const p of parts) {
-          //console.log("checkModified", p, utils.js(currentPath))
+          //console.log("checkSyncEvents", p, utils.js(currentPath))
           currentPath = currentPath[p];
           if (currentPath === true) {
             result = true;
@@ -1248,8 +1248,13 @@ const utils = {
             break;
           }
         }
+        // our path is not reaching to the leaves so we return true beacuse some part of the object has changed
+        if (typeof currentPath === 'object') {
+          result = true;
+        }
       }
     }
+    console.log("checkSyncEvents", path, result);
     return result;
   },
 

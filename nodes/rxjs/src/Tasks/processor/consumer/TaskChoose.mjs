@@ -6,6 +6,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as tf from "@tensorflow/tfjs-node";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const model = await use.load();
 
@@ -18,6 +20,38 @@ const cosineSimilarity = (tensor1, tensor2) => {
 const TaskChoose_async = async function (wsSendTask, T, FSMHolder, CEPMatchMap) {
 
   if (T("node.commandArgs.sync")) {return null} // Ignore sync operations
+
+  // Two approaches to choosing the next task
+  // By function or by LLM
+  // config.local.withFunction
+  //   TaskIntetrviewChoose that exports choose
+
+  if (T("config.local.withFunction")) {
+    try {
+      // Ensure that the config value is a valid string
+      const functionName = T("config.local.withFunction");
+      if (typeof functionName !== 'string' || functionName.trim() === '') {
+        throw new Error("Invalid function name in config");
+      }
+      // Construct the module path
+      let currDir = path.dirname(fileURLToPath(import.meta.url));
+      const modulePath = currDir + "/" + functionName + ".mjs";
+      console.log("Attempting to import module from:", modulePath);
+      // Attempt to import the module
+      const module = await import(modulePath);
+      // Check if the module has the 'choose' function
+      const chooseFn = module["choose"];
+      if (typeof chooseFn === 'function') {
+        return chooseFn(T);
+      } else {
+        throw new Error(`'choose' function not found in the module: ${functionName}`);
+      }
+    } catch (error) {
+      // Handle any errors that occur during import
+      console.error("Error during dynamic import:", error.message);
+      T("error", {message: `Dynamic import failed: ${error.message}`});
+    }
+  }
   
   const operators = T("operators");
   const operatorLLM = operators["LLM"].module;

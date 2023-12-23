@@ -32,9 +32,15 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
   const operatorLLM = T("operators")?.["LLM"]?.module;
 
   // eslint-disable-next-line no-unused-vars
-  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep) {
+  async function LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep) {
     const prevInstanceId = T("shared.stepper.prevInstanceId");
+    if (!prevInstanceId) {
+      throw new Error("No prevInstanceId");
+    }
     const prevTask = await instancesStore_async.get(prevInstanceId);
+    if (!prevInstanceId) {
+      throw new Error("No prevTask " + prevInstanceId);
+    }
     // TaskConversation is not logging updates to the output - maybe it should upon exiting?
     const msgs = prevTask?.output?.msgsHistory;
     utils.logTask(T(), "prevInstanceId:", prevInstanceId, "msgs:", utils.js(msgs));
@@ -133,13 +139,13 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
     if (prevReview) {
       prevReview = `The previous review is presented between following <BEGIN> and <END> tag:\n<BEGIN>${prevReview}<END>\n.`;
     }
-    const nextSectionIntentions = questionnaire[currInterviewStep].intentions.join(' ');
+    const nextSectionIntentions = questionnaire[nextInterviewStep].intentions.join(' ');
     prompt = T("config.local.promptQuestionnaireReview");
     prompt = prompt.replace('%PREV_INTERVIEW_STEP%', prevInterviewStep);
     prompt = prompt.replace('%PREV_CONVERSATION%', prevConversation);
     prompt = prompt.replace('%FILTERED_QUESTIONNAIRE%', utils.js(filteredQuestionnaire));
     prompt = prompt.replace('%PREV_REVIEW%', prevReview);
-    prompt = prompt.replace('%NEXT_SECTION%', currInterviewStep);
+    prompt = prompt.replace('%NEXT_SECTION%', nextInterviewStep);
     prompt = prompt.replace('%NEXT_SECTION_INTENTIONS%', nextSectionIntentions);
     T("request.prompt", prompt);
     const chatOut = await operatorLLM.operate_async(wsSendTask, T());
@@ -294,13 +300,20 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
         const order = questionnaire.order;
         const stepperCount = T("shared.stepper.count");
         let prevInterviewStep;
+        let nextInterviewStep;
         let currInterviewStep;
+        let questionnaireIdx;
         if (T("config.local.interviewStep")) {
           currInterviewStep = T("config.local.interviewStep");
-          T("shared.family.interviewStep", currInterviewStep);
+          nextInterviewStep = T("config.local.nextInterviewStep");
+          prevInterviewStep = T("config.local.prevInterviewStep");
+          if (order.includes(nextInterviewStep)) {
+            questionnaireIdx = order.indexOf(nextInterviewStep);
+          } else {
+            questionnaireIdx = 0;
+          }
         } else {
           const lastInterviewStep = T("shared.family.interviewStep");
-          let questionnaireIdx;
           if (order.includes(lastInterviewStep)) {
             questionnaireIdx = order.indexOf(lastInterviewStep) + 1;
           } else {
@@ -309,41 +322,52 @@ const TaskShowInstruction_async = async function (wsSendTask, T, FSMHolder) {
           if (questionnaireIdx > 0) {
             prevInterviewStep = order[questionnaireIdx - 1];
           }
-          // Skip sections with all questions answered
-          // eslint-disable-next-line no-constant-condition
-          while (true) {
-            currInterviewStep = order[questionnaireIdx];
-            if (!sectionAnswered(questionnaire, currInterviewStep)) {
-              break;
-            }
-            if (currInterviewStep === "Conclusion") {
-              break;
-            }
-            questionnaireIdx += 1;
-          }
-          T("shared.family.interviewStep", currInterviewStep);
-          let interviewStepDuration = questionnaire[currInterviewStep]["interviewStepDuration"];
-          if (!interviewStepDuration && T("shared.family.interviewStepDuration")) {
-            interviewStepDuration = T("shared.family.interviewStepDuration");
-          }
-          T("shared.family.interviewStepDuration", interviewStepDuration);
         }
+        // Skip sections with all questions answered
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          nextInterviewStep = order[questionnaireIdx];
+          if (!sectionAnswered(questionnaire, nextInterviewStep)) {
+            utils.logTask(T(), `rxjs_processor_consumer_fill !sectionAnswered ${nextInterviewStep}`);
+            break;
+          }
+          if (nextInterviewStep === "Conclusion") {
+            currInterviewStep = "Conclusion";
+            break;
+          }
+          questionnaireIdx += 1;
+        }
+        T("shared.family.interviewStep", nextInterviewStep);
+        let interviewStepDuration = questionnaire[nextInterviewStep]["interviewStepDuration"];
+        if (!interviewStepDuration && T("shared.family.interviewStepDuration")) {
+          interviewStepDuration = T("shared.family.interviewStepDuration");
+        }
+        T("shared.family.interviewStepDuration", interviewStepDuration);
         // To have the changes to shared.family sent we add this to the syncTask in the functions called below
         // This avoids another update call but not ideal
-        utils.logTask(T(), "rxjs_processor_consumer_fill stepperCount", stepperCount, "prevInterviewStep", prevInterviewStep, "currInterviewStep", currInterviewStep, "config.local.interviewStep", T("config.local.interviewStep"));
+        utils.logTask(T(), "rxjs_processor_consumer_fill stepperCount", stepperCount, "prevInterviewStep", prevInterviewStep, "nextInterviewStep", nextInterviewStep, "config.local.interviewStep", T("config.local.interviewStep"));
         switch (currInterviewStep) {
+          // Include Introduction so config.local.interviewStep is set
+          case "Introduction":
+            T("output.instruction", T("config.local.instruction"));
+            T("commandDescription", "Introduction setting shared.family.interviewStep and output.instruction");
+            T("command", "update");
+            FSMHolder.send('GOTOfilled');
+            break;
           case "QuestionnaireSummary":
             LLMQuestionnaireSummary(questionnaire, filteredQuestionnaire);
+            FSMHolder.send('GOTOdisplayInstruction');
             break;
           case "Conclusion":
             LLMConclusion(questionnaire, filteredQuestionnaire);
             //T("config.nextTask", "stop"); This did not work from here, I moved it into LLMConclusion where a sync update is made
+            FSMHolder.send('GOTOdisplayInstruction');
             break;
           default:
-            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, currInterviewStep);
+            LLMSectionReview(questionnaire, filteredQuestionnaire, prevInterviewStep, nextInterviewStep);
+            FSMHolder.send('GOTOdisplayInstruction');
             break;
         }
-        FSMHolder.send('GOTOdisplayInstruction');
       } else {
         throw new Error("No questionnaire");
       }

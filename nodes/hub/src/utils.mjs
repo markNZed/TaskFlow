@@ -193,7 +193,7 @@ const utils = {
     return result;
   },
 
-  // It would be more effective to build task.meta.modified in the compressed form
+  // It would be more effective to build task.meta.modified in the compact form
   setMetaModified: function(activeTask, task) {
     const ignore = ["meta", "node", "user", "masks"];
     task.meta = task.meta || {};
@@ -205,6 +205,7 @@ const utils = {
       task.node.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.node.commandArgs.syncTask, ignore);
       if (task.node.commandArgs.syncTask.meta.modified) {
         utils.compactModified(activeTask, task.node.commandArgs.syncTask.meta.modified);
+        //utils.logTask(task, "task.node.commandArgs.syncTask.meta.modified", utils.js(task.node.commandArgs.syncTask.meta.modified));
       }
     } else {
       if (task.meta?.modified) {
@@ -214,6 +215,7 @@ const utils = {
     task.meta["modified"] = utils.findKeys(task, ignore);
     if (task.meta.modified) {
       utils.compactModified(activeTask, task.meta.modified);
+      //utils.logTask(task, "task.meta.modified", utils.js(task.meta.modified));
     }
     return task;
   },

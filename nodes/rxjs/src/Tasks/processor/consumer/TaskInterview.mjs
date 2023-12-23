@@ -28,34 +28,65 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
     const questionnaireFileName = "questionnaire.mjs";
     const questionnairePath = path.join(userDir, questionnaireFileName);
 
+    if (utils.checkSyncEvents(T(), "shared.family.questionnaire")) {
+      //utils.logTask(T(), `TaskInterview_async found shared.family.questionnaire`);
+      const modPath = path.join(userDir, "questionnaire.mjs");
+      const dataString = "export const questionnaire = " + utils.js(T("shared.family.questionnaire"));
+      fs.writeFile(modPath, dataString, 'utf8', (err) => {
+        if (err) {
+          console.error(err);
+        }
+        utils.logTask(T(), `TaskInterview_async file ${modPath} has been written`);
+      });
+    }
+
     if (utils.checkSyncEvents(T(), "input.msgs") && T("input.msgs") && T("input.msgs").length > 0) {
       const lastMsgs = T("state.lastMsgs");
       let conversation = [];
       let update = false;
       utils.logTask(T(), `TaskInterview_async lastMsgs: ${utils.js(lastMsgs)}`);
       if (lastMsgs) {
-        for (let index = 0; index < T("input.msgs").length; index++) {
-          const msg = T("input.msgs")[index];
-          if (!utils.deepEqual(msg, lastMsgs[index])) {
-            conversation.push(msg);
-            utils.logTask(T(), `TaskInterview_async adding msg to conversation. lastMsgs: ${utils.js(lastMsgs[index])}, msg: ${utils.js(msg)}`);
+        if (typeof T("input.msgs") === 'string') {
+          if (!utils.deepEqual(T("input.msgs"), lastMsgs[0])) {
+            utils.logTask(T(), `TaskInterview_async adding msg string to conversation ${T("input.msgs")}`);
+            conversation = [T("input.msgs")];
             update = true;
+          }
+        } else {
+          for (let index = 0; index < T("input.msgs").length; index++) {
+            const msg = T("input.msgs")[index];
+            if (!utils.deepEqual(msg, lastMsgs[index])) {
+              conversation.push(msg);
+              utils.logTask(T(), `TaskInterview_async adding msg to conversation. lastMsgs: ${utils.js(lastMsgs[index])}, msg: ${utils.js(msg)}`);
+              update = true;
+            }
           }
         }
       } else {
         utils.logTask(T(), "TaskInterview_async adding input.msgs to conversation", utils.js(T("input.msgs")));
-        conversation = T("input.msgs");
+        if (typeof T("input.msgs") === 'string') {
+          conversation = [T("input.msgs")];
+        } else {
+          conversation = T("input.msgs");
+        }
         update = true;
       }
       if (update) {
         T("command", "update");
         T("commandDescription", `Updating conversation`);
+        const msgsClone = utils.deepClone(T("input.msgs"));
+        let newLastMsgs;
+        if (typeof T("input.msgs") === 'string') {
+          newLastMsgs = [msgsClone]
+        } else {
+          newLastMsgs = msgsClone;
+        }
         T("commandArgs", {
           instanceId: T("instanceId"), 
           sync: true, 
           syncTask: {
             state: {
-              lastMsgs: utils.deepClone(T("input.msgs"))
+              lastMsgs: newLastMsgs
             },
           },
         });
@@ -69,42 +100,6 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
           }
           utils.logTask(T(), `TaskInterview_async file ${modPath} has been appended`);
         });
-      }
-    }
-
-    if (utils.checkSyncEvents(T(), "shared.family.questionnaire")) {
-      const modPath = path.join(userDir, "questionnaire.mjs");
-      const dataString = "export const questionnaire = " + utils.js(T("shared.family.questionnaire"));
-      fs.writeFile(modPath, dataString, 'utf8', (err) => {
-        if (err) {
-          console.error(err);
-        }
-        utils.logTask(T(), `TaskInterview_async file ${modPath} has been written`);
-      });
-    }
-
-    function questionAnswered(questionnaire) {
-      for (const skey in questionnaire) {
-        if (questionnaire[skey]["questions"]) {
-          for (const qkey in questionnaire[skey]["questions"]) {
-            if (questionnaire[skey]["questions"][qkey].answer) {
-              return true;
-            }
-          }
-        }
-      }
-      return false;
-    }
-
-    if (utils.checkSyncEvents(T(), "shared.stepper.currId")) {
-      utils.logTask(T(), `shared.stepper.currId ${T("shared.stepper.currId")}`);
-      if (T("shared.stepper.currId").endsWith(".overview")) {
-        // Check if the questionnaire is empty
-        const questionnaire = T("shared.family.questionnaire");
-        if (!questionAnswered(questionnaire)) {
-          // Skip QuestionnaireSummary
-          utils.logTask(T(), `Should skip the QuestionnaireSummary`);
-        }
       }
     }
 

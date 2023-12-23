@@ -1,15 +1,22 @@
 /* ToDo
 -------
+Need to send logs from browser for debug if can't access browser
+We can't modify start task on coprocessor (task is missing some things etc)
 When updating server2 will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
 TaskInterview
+  task.shared.stepper may update too late when being used during init
+  Detect the user saying they have nothing more to do.
+    Prompt that tells it to call a function to go to next
+      The function could set an output that connects to the stepper next input
+        Where is the function specified ?
+          Pass the task on to pre and post operators
+            task.operators.preprocess = []
+              Then config can easily extend a Task
   Limit the size of the review response
   Make it complimentary to the previous review response maybe with interview.output.lastReview
   Add the summaries into the conversation too - rename to interactionHistory
     Test conclusion again
   Test that the conversation is recorded correctly with Chrome
-  If the questionnaire is not pre-filled then skip the first chat
-    Should do this from TaskInterview but unclear how
-      Could try to override the nextTask of the active step
   Copy and specialize into TaskInterviewStep then simplify TaskShowInstruction
   Add French version of prompts
   Option to download the full conversation and questionnaire at the end

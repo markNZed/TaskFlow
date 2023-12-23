@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 import { utils } from "#src/utils";
-import { CEPregister,CEPCreate } from "#src/taskCEPs";
+import { CEPregister, CEPCreate } from "#src/taskCEPs";
 
 // Demonstration of establishing a CEP that functions across Task families using a secret
 // Demonstration of registering a CEP function that is defiend inside a task from within a task

@@ -2,7 +2,7 @@
 
 ## What is Relational Intelligence?
 
-Relational Intelligence is commonly understood as the ability to understand, navigate, and manage the dynamics of interpersonal relationships effectively. This multifaceted skill is vital in both personal and professional spheres, influencing how we interact with others, build networks, lead teams, and maintain healthy relationships.
+Relational Intelligence is commonly understood as the ability to understand, navigate, and manage the dynamics of interpersonal relationships effectively. This multifaceted skill is vital in both personal and professional spheres, influencing how we interact with others, build networks, lead teams, and maintain healthy relationships. This overview introduces a new definition of relational intelligence as a direction for artificial intelligence research adn development.
 
 ## Key Aspects of Relational Intelligence
 
@@ -74,9 +74,7 @@ Relational Intelligence is not just a technological construct; it's a recognitio
 
 1.**Complex Systems vs. Algorithmic Models** : AI operates primarily on algorithmic models and data-driven processes, aiming to replicate or simulate human cognitive functions. In contrast, RI is about engaging with the complex, unpredictable, and often non-linear nature of human interactions and relationships, which cannot be fully encapsulated by artificial models.
 
-
 2.**Collaborative Dynamics in Human-Machine Systems** : RI focuses on the synergistic potential of human-machine systems. It's about creating frameworks where technology supports and enhances human capabilities, recognizing the unique attributes that humans bring to these interactions. This collaboration goes beyond the scope of artificial systems, which are limited to predefined algorithms and data sets.
-
 
 3.**Ethical and Value-Oriented Approach** : RI is guided by an ethical compass that prioritizes human well-being, societal development, and the enrichment of human experiences. This orientation is fundamentally different from the objective, data-centric approach of AI, emphasizing a more humane and value-driven interaction between humans and technology.
 
@@ -86,9 +84,7 @@ When  developing technology based on RI principles, it is crucial to move away f
 
 1.**Emphasizing Human-Centric Values** : RI-based technology development should emphasize human-centric values, focusing on enhancing and complementing human interactions rather than replicating them. This approach ensures that technology serves to enrich human experiences in a meaningful way.
 
-
 2.**Acknowledging the Unpredictability of Human Dynamics** : Human relationships and social dynamics are characterized by a level of unpredictability and emotional depth that cannot be artificially reproduced. RI-based technology acknowledges and respects this unpredictability, aiming to work alongside it rather than attempting to control or simulate it.
-
 
 3.**Fostering Ethical and Collaborative Development** : The development of RI technology involves an ethical and collaborative process, taking into account the diverse needs and perspectives of individuals and communities. This approach fosters technology that is responsive, adaptable, and aligned with human values.
 

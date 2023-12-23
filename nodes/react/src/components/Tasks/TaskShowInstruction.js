@@ -193,6 +193,7 @@ const TaskShowInstruction = (props) => {
             overflow: "auto",
             textAlign: "justify",
             padding: "16px",
+            //width: "100vw",
           }}
         >
           {instructionText && instructionText.split("\\n").map((line, index) => (

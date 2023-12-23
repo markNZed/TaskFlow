@@ -6,7 +6,7 @@ T@skFlow is a distributed Task framework for leveraging AI. It is under developm
 
 T@skFlow combines software, AI models, and human interaction in a unique way. A software developer creates a Task's functionality, a Task may be distributed over many Processors, a Task may monitor a set of Tasks, and a set of Tasks may be a workflow. T@skFlow adopts a hub-and-spoke architecture.
 
-![T@skFlow Diagram](Task.drawio.svg)  *`<small>`[editable](https://app.diagrams.net/)`</small>`
+![T@skFlow Diagram](Task.drawio.svg)  *`<small>`[editable](https://app.diagrams.net/) `</small>`
 
 The functionality of Tasks can be shared without sharing proprietary/private configuration information such as the sequencing of Tasks and the content of prompts.
 
@@ -144,8 +144,6 @@ To learn more about the RxJS Processor, see the [README.md](nodes/rxjs/README.md
 To learn more about the React Processor, see the [README.md](nodes/react/README.md) in the React Processor directory.
 
 To learn more about the Task object, see the [README.md](shared/README.md) in the shared directory.
-
-For suggestion on debugging issues see [DEBUG.md](DEBUG.md).
 
 T@skFlow will play nicely with other libraries such as:
 

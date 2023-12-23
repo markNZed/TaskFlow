@@ -40,6 +40,12 @@ function App({ activeWorkerCount, workerId }) {
   // So Taskflows.js can use the withTask pattern
   // Need to provide an empty object not null
   const [task, setTask] = useState({});
+  const [taskflowsKey, setTaskflowsKey] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const forceReloadTaskflows = () => {
+    setTaskflowsKey(prevKey => prevKey + 1);
+  };
 
   useEffect(() => {
     if (workerId) {
@@ -86,6 +92,7 @@ function App({ activeWorkerCount, workerId }) {
     setGlobalStateEntry("node", node);
     // The initial task takes on the nodeId so it can process autostart tasks sent by the hub
     setTask({...task, instanceId: nodeId});
+    setLoading(false);
   };
 
   useLoginWSFilter(
@@ -106,12 +113,13 @@ function App({ activeWorkerCount, workerId }) {
       console.log("registerTask", registerTask, nodeIdRef.current);
       const appLabel = registerTask.node.commandArgs?.appLabel;
       document.title = appLabel || "Default Title";
-      mergeGlobalState({ 
+      mergeGlobalState({
         hubId: registerTask.node.commandArgs.hubId,
         appName: registerTask.node.commandArgs?.appName,
         appLabel: appLabel,
-        appAbbrev: registerTask.node.commandArgs?.appAbbrev
+        appAbbrev: registerTask.node.commandArgs?.appAbbrev,
       });
+      forceReloadTaskflows();
       registerProcessor(nodeIdRef.current);
     }
   )
@@ -150,7 +158,7 @@ function App({ activeWorkerCount, workerId }) {
 
   return (
     <Routes>
-      <Route exact path="/" element={globalState.hubId ? <Taskflows task={task} setTask={setTask} /> : <Loading />} />
+      <Route exact path="/" element={loading ? <Loading /> : <Taskflows key={taskflowsKey} task={task} setTask={setTask} /> } />
       <Route exact path="/db" element={<IndexedDBViewer workerId={workerId} nodeId={nodeId}/>} />
       <Route exact path="*" element={<NotFound />} />
     </Routes>

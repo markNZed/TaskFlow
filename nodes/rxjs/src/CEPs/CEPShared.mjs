@@ -84,10 +84,10 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
     } else {
       // Strip unmodifed from sharedClone
       // Walk sharedClone
-      utils.logTask(task, "CEPShared sharedClone modified", utils.js(task.meta.modified.shared));
-      utils.logTask(task, "CEPShared sharedClone before", utils.js(sharedClone));
+      //utils.logTask(task, "CEPShared sharedClone modified", utils.js(task.meta.modified.shared));
+      //utils.logTask(task, "CEPShared sharedClone before", utils.js(sharedClone));
       stripUnmodified(sharedClone, task.meta.modified.shared);
-      utils.logTask(task, "CEPShared sharedClone after", utils.js(sharedClone));
+      //utils.logTask(task, "CEPShared sharedClone after", utils.js(sharedClone));
       topVarNames = Object.keys(task.meta.modified.shared);
     }
     
@@ -137,7 +137,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           }
           familyInstanceIds = sharedEntry[familyId].instanceIds;
         }
-        if (task.node.command === "init" && sharedEntry[familyId].value) {
+        if (task.node.command === "init" && sharedEntry[familyId].value !== undefined) {
           toSync[task.instanceId] = toSync[task.instanceId] || {};
           if (prefix) {
             toSync[task.instanceId][prefix] = {};
@@ -169,7 +169,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
         //assert(!containsArray(taskValue));
         utils.logTask(task, "CEPShared Shared varName", varName, "familyId", familyId); //, "update with:", taskValue);
         if (task.node.command === "init") {
-          if (!sharedEntry[familyId].value) {
+          if (sharedEntry[familyId].value === undefined) {
             sharedEntry[familyId]["value"] = taskValue;
             utils.logTask(task, varName, "did init itself", taskValue);
           } else {

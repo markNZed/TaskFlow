@@ -28,7 +28,7 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
       utils.logTask(T(), "RxJS error so skipping Task Fuction id:" + T("id"));
     } else if (T("node.command") === "start") {
       utils.logTask(T(), "RxJS start so skipping Task Fuction id:" + T("id"));
-    } else if (!T("environments").includes(NODE.environment)) {
+    } else if (!T("environments") || !T("environments").includes(NODE.environment)) {
       utils.logTask(T(), "Task is not configured to run on this node");
     } else if (syncNodeFunctions) {
       utils.logTask(T(), "Sync node functions so skip running Task on this update");
