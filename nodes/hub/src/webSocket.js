@@ -170,7 +170,7 @@ const wsSendTask = async function (taskIn, nodeId, activeTask) {
   delete task.commandArgs;
   delete task.commandDescription;
   message["task"] = await maskOutgoing_async(task);
-  //utils.logTask(task, "wsSendTask user", task.user);
+  //utils.logTask(task, "wsSendTask modified", utils.js(task.meta.modified));
   utils.debugTask(task, "output");
   wsSendObject(nodeId, message);
 }

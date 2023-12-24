@@ -272,9 +272,39 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
 
   //utils.logTask(task, "CEPConnect modifiedOutput", modifiedOutput);
 
+  function isModified(T, fromPath, modified) {
+    let result = false;
+    if (modified === true) {
+      return true;
+    }
+    if (!modified) {
+      return false;
+    }
+    if (T(fromPath) !== undefined) {
+      // split path into dot separated parts
+      const parts = fromPath.split(".");
+      let currentPath = modified;
+      for (const p of parts) {
+        //console.log("checkSyncEvents", p, utils.js(currentPath))
+        currentPath = currentPath[p];
+        if (currentPath === true) {
+          result = true;
+          break;
+        } else if (currentPath === undefined) {
+          break;
+        }
+      }
+      // our path is not reaching to the leaves so we return true beacuse some part of the object has changed
+      if (typeof currentPath === 'object') {
+        result = true;
+      }
+    }
+    utils.logTask(task, `CEPConnect isModified fromPath: ${fromPath} modified: ${utils.js(modified)} ${result}`);
+    return result;
+  }
+
   // Update any connections
   if (task.connections && task.connections.length > 0) {
-
     const T = utils.createTaskValueGetter(task);
     const taskConnections = task.connections || [];
     let instancesToUpdate = {};
@@ -282,12 +312,16 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       const from = connection[0];
       const to = connection[1];
       if (from === null) {
-        // Has been move dinto connectLater
+        // Has been moved into connectLater
         continue;
       }
       const fromSplit = from.split(SEP)
       const fromId = fromSplit[0];
       const fromPath = fromSplit[1];
+      // Check if we are modifying the value (otherwise we do not update connection)
+      if (!isModified(T, fromPath, task.meta.modified)) {
+        continue;
+      }
       const toSplit = to.split(SEP)
       const toId = toSplit[0];
       const toPath = toSplit[1];
@@ -299,10 +333,11 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
           const toTask = await getActiveTask_async(task.meta.connectionsMap[toId]);
           if (toTask && toTask.instanceId) {
             const Tto = utils.createTaskValueGetter(toTask);
-            // LOG HERE
             const deepEqual = utils.deepEqual(T(fromPath), Tto(toPath));
             utils.logTask(task, "CEPConnect deepEqual", deepEqual);
             if (!deepEqual) {
+              //utils.logTask(task, "CEPConnect !deepEqual T(fromPath)", T(fromPath));
+              //utils.logTask(task, "CEPConnect !deepEqual Tto(toPath)", Tto(toPath));
               const Tupdate = utils.createTaskValueGetter({});
               Tupdate(toPath, T(fromPath));
               console.log("CEPConnect Tto(instanceId)", Tto("instanceId"), "Tupdate", Tupdate());

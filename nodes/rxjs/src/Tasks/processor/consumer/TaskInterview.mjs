@@ -40,7 +40,7 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
       });
     }
 
-    if (utils.checkSyncEvents(T(), "input.msgs") && T("input.msgs") && T("input.msgs").length > 0) {
+    if (utils.checkSyncEvents(T(), "input.msgs") && T("input.msgs")) {
       const lastMsgs = T("state.lastMsgs");
       let conversation = [];
       let update = false;
@@ -57,7 +57,7 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
             const msg = T("input.msgs")[index];
             if (!utils.deepEqual(msg, lastMsgs[index])) {
               conversation.push(msg);
-              utils.logTask(T(), `TaskInterview_async adding msg to conversation. lastMsgs: ${utils.js(lastMsgs[index])}, msg: ${utils.js(msg)}`);
+              //utils.logTask(T(), `TaskInterview_async adding msg to conversation index: ${index} lastMsgs: ${utils.js(lastMsgs[index])}, msg: ${utils.js(msg)}`);
               update = true;
             }
           }
@@ -72,8 +72,8 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
         update = true;
       }
       if (update) {
-        T("command", "update");
-        T("commandDescription", `Updating conversation`);
+        // Here we modify command and it will also be picked up in nodeTasks
+        // So create a new Task to pass to commandUpdate_async
         const msgsClone = utils.deepClone(T("input.msgs"));
         let newLastMsgs;
         if (typeof T("input.msgs") === 'string') {
@@ -81,17 +81,21 @@ const TaskInterview_async = async function (wsSendTask, T, FSMHolder) {
         } else {
           newLastMsgs = msgsClone;
         }
-        T("commandArgs", {
-          instanceId: T("instanceId"), 
-          sync: true, 
-          syncTask: {
-            state: {
-              lastMsgs: newLastMsgs
+        let updateTask = {
+          command: "update",
+          commandDescription: `Updating lastMsgs`,
+          commandArgs: {
+            instanceId: T("instanceId"), 
+            sync: true, 
+            syncTask: {
+              state: {
+                lastMsgs: newLastMsgs,
+              },
             },
-          },
-        });
-        commandUpdate_async(wsSendTask, T()).then(() => {
-          utils.logTask(T(), `Setting state.lastMsgs`);
+          }
+        };
+        commandUpdate_async(wsSendTask, updateTask).then(() => {
+          utils.logTask(T(), `Setting newLastMsgs`, utils.js(newLastMsgs));
         });
         const modPath = path.join(userDir, "fullConversation.mjs");
         fs.appendFile(modPath, utils.js(conversation), 'utf8', (err) => {

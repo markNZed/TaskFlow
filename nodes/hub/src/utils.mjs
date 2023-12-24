@@ -197,25 +197,27 @@ const utils = {
   setMetaModified: function(activeTask, task) {
     const ignore = ["meta", "node", "user", "masks"];
     task.meta = task.meta || {};
+    if (task.meta?.modified) {
+      delete task.meta.modified;
+    }
     if (task.node?.commandArgs?.syncTask) {
       if (task.node.commandArgs.syncTask?.meta?.modified) {
         delete task.node.commandArgs.syncTask.meta.modified;
       }
       task.node.commandArgs.syncTask["meta"] = task.node.commandArgs.syncTask.meta || {};
+      //utils.logTask(task, "setMetaModified task.node.commandArgs.syncTask", utils.js(task.node.commandArgs.syncTask));
       task.node.commandArgs.syncTask.meta["modified"] = utils.findKeys(task.node.commandArgs.syncTask, ignore);
+      //utils.logTask(task, "setMetaModified task.node.commandArgs.syncTask.meta.modified", utils.js(task.node.commandArgs.syncTask.meta.modified));
       if (task.node.commandArgs.syncTask.meta.modified) {
         utils.compactModified(activeTask, task.node.commandArgs.syncTask.meta.modified);
-        //utils.logTask(task, "task.node.commandArgs.syncTask.meta.modified", utils.js(task.node.commandArgs.syncTask.meta.modified));
+        //utils.logTask(task, "setMetaModified compactModified task.node.commandArgs.syncTask.meta.modified", utils.js(task.node.commandArgs.syncTask.meta.modified));
       }
     } else {
-      if (task.meta?.modified) {
-        delete task.meta.modified;
+      task.meta["modified"] = utils.findKeys(task, ignore);
+      if (task.meta.modified) {
+        utils.compactModified(activeTask, task.meta.modified);
+        //utils.logTask(task, "task.meta.modified", utils.js(task.meta.modified));
       }
-    }
-    task.meta["modified"] = utils.findKeys(task, ignore);
-    if (task.meta.modified) {
-      utils.compactModified(activeTask, task.meta.modified);
-      //utils.logTask(task, "task.meta.modified", utils.js(task.meta.modified));
     }
     return task;
   },

@@ -262,7 +262,7 @@ const TaskClone_async = async function (wsSendTask, T, FSMHolder) {
     }
   }
 
-  return null;
+  return T();
 };
   
 export { TaskClone_async };

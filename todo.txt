@@ -4,6 +4,13 @@ Need to send logs from browser for debug if can't access browser
 We can't modify start task on coprocessor (task is missing some things etc)
 When updating server2 will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
 TaskInterview
+  Connection from multiple tasks to one seems to cause issues
+    Probably because there are shared tasks too
+  Stepper is not using done on the hub. TaskChoose is using it
+    TaskSHowInstruction probably does not send an update with state.done
+    Stepper is starting next task
+  Shared will create an event on done task then CEPConnect will run
+    CEPConnect should be checking for modified? 
   task.shared.stepper may update too late when being used during init
   Detect the user saying they have nothing more to do.
     Prompt that tells it to call a function to go to next

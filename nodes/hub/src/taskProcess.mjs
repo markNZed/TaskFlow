@@ -293,6 +293,7 @@ async function taskProcess_async(task) {
       throw new Error("Missing task.node in taskProcess_async");
     }
     let activeTask = await getActiveTask_async(task.instanceId);
+    const activeTaskDone = activeTask?.state?.done;
     const incomingNode = task.node;
     if (activeTask?.masks) {
       task.masks = utils.deepClone(activeTask.masks);
@@ -328,6 +329,9 @@ async function taskProcess_async(task) {
       }
     }
     task = await nodeInHubOut_async(task, activeTask);
+    if (activeTaskDone && task?.state?.done) {
+      utils.logTask(task, "Accessing done task");
+    }
     // Update the node information
     if (activeTask && Object.keys(activeTask).length !== 0) {
       activeTask.nodes = task.nodes;

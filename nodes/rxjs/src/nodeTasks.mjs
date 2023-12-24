@@ -213,6 +213,12 @@ export async function nodeTasks_async(wsSendTask, task, CEPMatchMap) {
         const updatedTask = await taskFunction(wsSendTask, T, FSMHolder, CEPMatchMap);
         if (updatedTask) {
           T = utils.createTaskValueGetter(updatedTask);
+        } else if (updatedTask === null) {
+          // ignore any command that might have been set inside the taskFunction
+          if (T("command")) {
+            utils.logTask(T(), `Ignoring ${T("command")} because null returned from taskFunction`);
+            T("command", null);
+          }
         }
       }
       utils.logTask(T(), `Finished ${T("type")} in state ${T("state.current")}`);

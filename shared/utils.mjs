@@ -203,6 +203,14 @@ const utils = {
     const node = utils.deepClone(nodeIn);
     let result = utils.deepMerge(prevState, update);
     result.node = node;
+    // Avoid accumulating modified
+    // This may not the ideal place to so this
+    if (prevState?.meta?.modified) {
+      delete result.meta.modified;
+    }
+    if (update?.meta?.modified) {
+      result.meta.modified = update.meta.modified;
+    }
     return result;
   },
 

@@ -31,7 +31,7 @@ function stripUnmodified(shared, modified) {
     if (modified[key] === undefined) {
       delete shared[key];
     } else if (modified[key] === true) {
-      // mothing more to do
+      // nothing more to do
     } else {
       stripUnmodified(shared[key], modified[key]);
     }
@@ -88,7 +88,7 @@ async function cep_async(wsSendTask, CEPInstanceId, task, args) {
       //utils.logTask(task, "CEPShared sharedClone before", utils.js(sharedClone));
       stripUnmodified(sharedClone, task.meta.modified.shared);
       //utils.logTask(task, "CEPShared sharedClone after", utils.js(sharedClone));
-      topVarNames = Object.keys(task.meta.modified.shared);
+      topVarNames = Object.keys(sharedClone);
     }
     
     for (const topVarName of topVarNames) {

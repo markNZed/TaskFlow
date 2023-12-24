@@ -130,7 +130,7 @@ const TaskShowInstruction = (props) => {
       setLoading(false);
       modifyTask({ "output.loading": false });
     },
-    // We return to the "start" state so the FSM will start from there if remounted
+    // We set "start" state so the FSM will start from there if remounted
     react_finish: () => modifyTask({ "state.done": true, "state.current": "start" }),
   });
   

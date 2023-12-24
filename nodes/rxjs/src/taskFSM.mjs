@@ -79,18 +79,18 @@ export function updateStates(T, FSMHolder) {
   const externalFSMEvent = T("node.commandArgs.fsmEvent");
   const goto = "GOTO" + fsmState;
   utils.logTask(T(), `Check externalFSMEvent ${externalFSMEvent} goto ${goto} sourceNodeId ${T("node.sourceNodeId")} NODE.id ${NODE.id}`);
-  if (externalFSMEvent ===  goto && T("node.sourceNodeId") === NODE.id) {
-    utils.logTask(T(), "Not updating state because this node sent the update");
-    return;
-    // How do we update the state here without sending a global update?
-    // Only need to do this if there has been a change to task beyond the state ?
-  }
   const current = T("state.current");
   if (fsmState && fsmState !== current) {
     T("state.last", T("state.current"));
     T("state.current", fsmState);
-    T("command", "update");
-    T("commandDescription", `updateStates from ${current} to ${fsmState}`);
+    if (externalFSMEvent ===  goto) {
+      utils.logTask(T(), "Not updating state because set by external FSMEvent");
+      // How do we update the state here without sending a global update?
+      // Only need to do this if there has been a change to task beyond the state ?
+    } else {
+      T("command", "update");
+      T("commandDescription", `updateStates from ${current} to ${fsmState}`);  
+    }
   }
 }
 
