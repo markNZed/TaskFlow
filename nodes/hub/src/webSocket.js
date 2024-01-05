@@ -15,7 +15,7 @@ import { commandReload_async } from "./commandReload.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
-import { JWT_SECRET, MAP_USER, NODETribe } from "../config.mjs";
+import { JWT_SECRET, MAP_USER, NODETribe, DEFAULT_USER } from "../config.mjs";
 import jwt from 'jsonwebtoken';
 
 /**
@@ -219,7 +219,11 @@ function initWebSocketServer(server) {
 
         let incomingNode = task?.node;
 
-        if (task?.tokens?.authToken) {
+        if (!JWT_SECRET) {
+          // Do not authenticate, assume this is just running the dev demo
+          userId = DEFAULT_USER;
+          console.log("No JWT_SECRET so setting user to", DEFAULT_USER);
+        } else if (task?.tokens?.authToken) {
           let decoded;
           try {
             decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);

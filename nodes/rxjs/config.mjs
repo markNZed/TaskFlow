@@ -36,6 +36,11 @@ if (process.env.OPENAI_API_KEY === "") {
 }
 console.log("DUMMY_OPENAI " + DUMMY_OPENAI);
 
+let CONFIG_DIR = "../config";
+if (process.env.CONFIG_DIR !== undefined) {
+  CONFIG_DIR = process.env.CONFIG_DIR;
+}
+
 const NODE_NAME = process.env.NODE_NAME || "hub-consumer";
 
 /* 
@@ -98,7 +103,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["configDir"] = CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["app"] = {
   label: appLabel,
   name: appName,

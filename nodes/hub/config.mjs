@@ -35,6 +35,11 @@ if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
 }
 
+let CONFIG_DIR = "../config";
+if (process.env.CONFIG_DIR !== undefined) {
+  CONFIG_DIR = process.env.CONFIG_DIR;
+}
+
 let NODE;
 
 switch (NODE_NAME) {
@@ -64,7 +69,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["configDir"] = CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["dumpConfigs"] = DUMP_CONFIGS;
 NODE["allowedOrigins"] = ALLOWED_ORIGINS;
 NODE["hubNodeEnvironments"] = ["rxjs-hub-coprocessor", "rxjs-hub-consumer"];
@@ -90,7 +95,7 @@ NODE["mode"] = NODE_ENV;
 
 console.log({NODE});
 
-const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
+const JWT_SECRET = process.env.JWT_SECRET; // If undefined then we will not use auth token
 
 function NODETribe(tribe) {
   //console.log("NODETribe", tribe);

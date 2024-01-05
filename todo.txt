@@ -1,5 +1,6 @@
 /* ToDo
 -------
+No tasks being dispalyed maybe because user is not in a group with tasks?
 Need to send logs from browser for debug if can't access browser
 We can't modify start task on coprocessor (task is missing some things etc)
 When updating server2 will need to modify users, tribes, groups in nodes/hub/db/config/runtime for renaming of groupIds etc
