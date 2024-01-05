@@ -1,7 +1,7 @@
-The following is for development where the RxJS Processor and React Processor directories are mounted in the Docker container.
+The following is for development where the Nodes run in a Docker container.
 
 * `git clone https://github.com/markNZed/taskflow.git`
-* `cd taskflow/infra/docker`
+* `cd TaskFlow/infra/docker`
 * Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable or leave it empty (T@skFlow will then use a "dummy" API)
 * `docker-compose build`
 * `docker network create taskflow`
@@ -49,7 +49,7 @@ Overview of the ports:
 * 9232 RxJS Hub Coprocessor node debug
 * 27017 MongoDB (in mongodb container)
 
-## Dev
+## Mark's Dev
 This assumes T@skFlow is running behind a proxy on a docker network:
 
 <br> `docker-compose -f docker-compose-dev.yml build`
