@@ -83,13 +83,13 @@ app.use(async (req, res, next) => {
   // Using host not origin because origin may not be set by client and host is set by proxy
   // This is primarily for the login.html route 
   //console.log("req.headers",req.headers, );
-  const referer = req?.headers?.referer;
-  if (referer) {
+  const origin = req.headers.origin;
+  if (origin) {
     let url;
     try {
-      url = new URL(referer);
+      url = new URL(origin);
     } catch (e) {
-      console.log("Server could not parse referer", referer);
+      console.log("Server could not parse origin", origin);
       return next();
     }
     const host = url.host;

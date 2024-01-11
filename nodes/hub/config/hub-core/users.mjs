@@ -1,7 +1,7 @@
 const users = [
     {
-      name: "test@testing.com",
-      label: 'Test',
+      name: "demoUser",
+      label: 'Demo',
       profile: "A student",
       interface: "simple",
       language: "en",

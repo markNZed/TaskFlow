@@ -1069,11 +1069,14 @@ const utils = {
         }
       }
     }
-    //console.log("authenticatedGroup_async " + groupId + " " + tribe.name + " " +authenticated);
+    //console.log("authenticatedGroup_async " + groupId + " " + tribe?.name + " " + authenticated);
     return authenticated;
   },
 
   filterGroupIdsInTribe_async: async function(userGroupIds, tribe) {
+    if (!userGroupIds) {
+      return [];
+    }
     // Use map to apply the async function to each element, creating an array of promises
     const checkGroupPromises = userGroupIds.map(groupId => utils.authenticatedGroup_async(groupId, tribe));
     // Use Promise.all to wait for all promises to resolve
@@ -1103,7 +1106,7 @@ const utils = {
         }
       }
     }
-    //console.log("authenticatedTask_async " + taskID + " " + userId + " " + tribeId + " " + authenticated);
+    //console.log("authenticatedTask_async taskID:" + taskID + " taskPermissions:" + taskPermissions + " userGroupIdsInTribe:" + userGroupIdsInTribe + " authenticated:" + authenticated);
     return [authenticated, groupId];
   },
 

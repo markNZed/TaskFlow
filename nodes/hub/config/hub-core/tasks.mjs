@@ -77,13 +77,14 @@ const tasks = [
     name: "system",
     parentName: "root",
     menu: true,
-    permissions: ['sysadmin'],
+    APPEND_permissions: ['sysadmin'],
   },
   ...taskSet.system,
 
   {
     name: "conversation",
     parentName: "user",
+    APPEND_permissions: ['testgroup'],
   },
   {
     config: {

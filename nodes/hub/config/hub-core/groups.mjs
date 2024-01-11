@@ -3,7 +3,7 @@ const groups = [
     name: "testgroup",
     label: "First Test Group",
     userIds: [
-      "test@testing.com"
+      "demoUser"
     ],
   },
   {
@@ -25,7 +25,7 @@ const groups = [
     name: "admin",
     label: 'Admin',
     userIds: [
-        "test@testing.com",
+        "demoUser",
     ],
   },
   {
@@ -39,7 +39,7 @@ const groups = [
     name: "sysadmin",
     label: 'System Admin',
     userIds: [
-      "test@testing.com", 
+      "demoUser", 
     ],
   },
 ];

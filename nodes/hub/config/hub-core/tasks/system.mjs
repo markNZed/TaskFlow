@@ -80,7 +80,7 @@ const system = [
     name: "menu",
     parentName: "taskflow",
     type: "TaskSystemMenu",
-    permissions: [
+    APPEND_permissions: [
       "*",
     ]
   },
@@ -541,17 +541,29 @@ const system = [
   },
 
   {
-    name: "system-cron",
-    parentName: "tasks",
-    type: "TaskCEP",
+    name: "system-cron-demo",
     initiator: true,
     config: {
       label: "Cron",
+      local: {
+        instruction: "This started a cron task",
+      },
+    },
+    parentName: "tasks",
+    type: "TaskShowInstruction",
+  },
+  {
+    name: "system-cron",
+    parentName: "system-cron-demo",
+    type: "TaskCEP",
+    config: {
       debug: {
         //debugTask: true,
       },
     },
     // Every minute sync this task and set request.increment to true
+    // But this is only running on rxjs-hub-coprocessor that is dealing with CEP
+    // Maybe this should not be TaskCEP -could be TaskInstruction ?
     cron: {
       "testing": {
         cronTime: '0 */1 * * * *',

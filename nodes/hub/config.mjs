@@ -19,7 +19,7 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "http://localhost:3000";
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
-const DEFAULT_USER = "test@testing.com";
+const DEMO_USER = "demoUser";
 // For teting we can map one user to any ohter user e.g.
 // MAP_USER_JSON={ "dev@email.com" : "user@email.org" }
 let MAP_USER = {};
@@ -106,4 +106,4 @@ function NODETribe(tribe) {
   }
 }
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET, NODETribe };
+export { DEMO_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET, NODETribe };

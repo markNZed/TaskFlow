@@ -15,7 +15,7 @@ import { commandReload_async } from "./commandReload.mjs";
 import { taskProcess_async } from "./taskProcess.mjs";
 import { commandJoin_async } from "./commandJoin.mjs";
 import { commandRegister_async, registerTask_async } from "./commandRegister.mjs";
-import { JWT_SECRET, MAP_USER, NODETribe, DEFAULT_USER } from "../config.mjs";
+import { JWT_SECRET, MAP_USER, NODETribe, DEMO_USER } from "../config.mjs";
 import jwt from 'jsonwebtoken';
 
 /**
@@ -219,31 +219,36 @@ function initWebSocketServer(server) {
 
         let incomingNode = task?.node;
 
-        if (!JWT_SECRET) {
-          // Do not authenticate, assume this is just running the dev demo
-          userId = DEFAULT_USER;
-          console.log("No JWT_SECRET so setting user to", DEFAULT_USER);
-        } else if (task?.tokens?.authToken) {
+        if (task?.tokens?.authToken || !JWT_SECRET) {
           let decoded;
-          try {
-            decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
-            //throw Error("testing");
-          } catch (err) {
-            // We could have a logout command
-            console.log("authToken invalid sending login command", err);
-            const taskLogin = {
-              meta: {
-                updatedAt: utils.updatedAt(),
-              },
-              node: {command: "login"},
-            };
-            const nodeId = incomingNode.id;
-            WSConnections.set(nodeId, ws);
-            wsSendTask(taskLogin, nodeId);
-            return;
+          if (JWT_SECRET) {
+            try {
+              decoded = jwt.verify(task?.tokens?.authToken, JWT_SECRET);
+              //throw Error("testing");
+            } catch (err) {
+              // We could have a logout command
+              console.log("authToken invalid sending login command", err);
+              const taskLogin = {
+                meta: {
+                  updatedAt: utils.updatedAt(),
+                },
+                node: {command: "login"},
+              };
+              const nodeId = incomingNode.id;
+              WSConnections.set(nodeId, ws);
+              wsSendTask(taskLogin, nodeId);
+              return;
+            }
+          } else {
+            hostname = "world";
+            decoded = {
+              username: DEMO_USER,
+              hostname,
+            }
+            //console.log("No JWT_SECRET so setting decoded:", decoded, "hostname:", hostname);
           }
           //console.log("authToken found", decoded);
-          userId = decoded.username.toLowerCase();
+          userId = decoded.username;
           if (MAP_USER && MAP_USER[userId]) {
             userId = MAP_USER[userId];
           } else if (task?.user?.id && task.user.id !== userId) {
