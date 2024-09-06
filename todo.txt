@@ -1,5 +1,6 @@
 /* ToDo
 -------
+Should build in "blue/green deployment"
 The cron menu is initiating a TaskCEP so nothing runs on React.
   Should wrap it with a simple message
 Sometimes on startup the useEffect for updates is not being created for the menu task
@@ -727,6 +728,18 @@ Architecture
     This is how we could access user content for scraping
   systemd might provide inspiration for startup management
 
+3rd Party Services
+------------------
+https://docs.apify.com/api/v2 Web scraping
+https://fetchfoxai.com/ AI scraping 
+https://axiom.ai/ AI scraping 
+https://owntracks.org OwnTracks allows you to keep track of your own location. 
+  https://apps.garmin.com/en-US/apps/d8bcd6d2-d7b8-456b-ae01-ba45bbe202cb#0 (owntracks compatible)
+https://milvus.io/ open source vector database designed for AI applications
+ajv (Another JSON Schema Validator) is one of the most popular and informative JSON Schema validators for Node.js.
+https://cloud.google.com/document-ai could compare with Unstructured 
+
+
 Issues
 ------
   Tasks run with full NodeJS Processor rights. They should be sandboxed on the NodeJS Processor.
@@ -799,6 +812,8 @@ Comparison with similar systems
     LMQL is a programming language for language model interaction
   https://github.com/Stevenic/alphawave
     State-of-the-art response repair logic.
+  https://neo4j.com/blog/introducing-genai-stack-developers/
+    GenAI Stack: Neo4J, Docker, LangChain, and Ollama 
 
 Test Plan
 ---------

@@ -2,7 +2,10 @@ The following is for development where the Nodes run in a Docker container.
 
 * `git clone https://github.com/markNZed/taskflow.git`
 * `cd TaskFlow/infra/docker`
-* Add your OPENAI_API_KEY to docker-compose.yml file or set that environment variable or leave it empty (T@skFlow will then use a "dummy" API)
+* To set the OPENAI_API_KEY
+  * Add to docker-compose.yml
+  * Or set that environment variable
+  * Or leave it empty (T@skFlow will then use a "dummy" API).
 * `docker-compose build`
 * `docker network create taskflow`
 * `docker-compose up -d`
@@ -11,18 +14,22 @@ The following is for development where the Nodes run in a Docker container.
 * WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome
 
 To interact with the servers:
+
 * `docker exec -it $(docker ps -qf "name=docker_taskflow-demo") /bin/bash`
 * Connect to the screen window manager to view the server instances `screen -r`
 * There are 5 screen windows, use `Ctrl-c 0` to switch to the first one
 
 To interact with mongodb inside the mongodb container:
+
 * `docker exec -it $(docker ps -qf "name=docker_mongodb") /bin/bash`
 * `mongosh -u user` (the default password is "pass")
 
 To interact with mongodb from another container's shell:
+
 * `mongosh -u user --host mongodb` (the default password is "pass")
 
 To interact with redis from another container:
+
 * `redis-cli -h redis-stack-svc`
 * Run commands in the redis-cli shell e.g. `redis-stack-svc:6379> info`
 
@@ -50,17 +57,18 @@ Overview of the ports:
 * 27017 MongoDB (in mongodb container)
 
 ## Mark's Dev
+
 This assumes T@skFlow is running behind a proxy on a docker network:
 
-<br> `docker-compose -f docker-compose-dev.yml build`
-<br> `docker-compose -f docker-compose-dev.yml up -d`
+`docker-compose -f docker-compose-dev.yml build`
+`docker-compose -f docker-compose-dev.yml up -d`
 
 Because we are running a meta version there are two screen sessions:
 `screen -rd meta` and `screen -rd app`
 
 SetupVSCode debugging in .vscode/launch.json
 
-<br>`docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash`
+`docker exec -it $(docker ps -qf "name=docker_taskflow_1") /bin/bash`
 
 * `mongosh -u user --host mongodb`
 * `use taskflow`
@@ -79,12 +87,13 @@ The meta version resides in `/meta`
 The code for the meta version needs to be modified at `shared/config.mjs` to give a unique DB prefix
 
 ## Prod
-Eventually this will capture how to deploy T@skFlow in a "production" environment. 
+
+Eventually this will capture how to deploy T@skFlow in a "production" environment.
 
 Assumes there is a reverse proxy server, to listen on a single port and forward requests to different ports based on the URL path.
 
-<br> docker-compose -f docker-compose-prod.yml build
-<br> docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod
+`docker-compose -f docker-compose-prod.yml build 
+docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod`
 
 If using Cloudflare remember to purge the cache after updating!
 
