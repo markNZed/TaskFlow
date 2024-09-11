@@ -80,7 +80,7 @@ services:
       - 127.0.0.1:7687:7687
     volumes:
       #- neo4j-data/conf:/conf
-      - neo4j-data/data:/data
+      - neo4j-data-data:/data
       #- neo4j-data/import:/import
       #- neo4j-data/logs:/logs
       #- neo4j-data/plugins:/plugins
@@ -98,11 +98,7 @@ volumes:
   mongodb-data:
   redis-data:
   weaviate-data:
-  neo4j-data-conf:
   neo4j-data-data:
-  neo4j-data-import:
-  neo4j-data-logs:
-  neo4j-data-plugins:
 
 networks:
     taskflow:
