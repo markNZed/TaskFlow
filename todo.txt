@@ -686,7 +686,7 @@ Architecture
     Currently in the TaskFunction but should be easy to factor out when that makes sense
       Could allow for a chain of Operators/Services/CEP
       Issue with injecting a Task is that the id levels move
-        Some sort of "wrapper" that maintains the id but has a task "insisde it - we can do that now I guess
+        Some sort of "wrapper" that maintains the id but has a task "inside it - we can do that now I guess
           It would replace a current task in the config and have upto 3 children in -> origTask -> out
   How to call out to Python from the Task function (better to create a Python Task and have the NodeJS Processor provide the environment?)
     "child process execution" with child_process library
