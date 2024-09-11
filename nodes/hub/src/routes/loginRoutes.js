@@ -9,7 +9,10 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   const { username, password: submittedPassword } = req.body;
-  const  origin = req.get('origin');
+  const origin = req.get('origin');
+  if (!origin) {
+    return res.status(401).json({ message: "Empty origin" });
+  }
   const url = new URL(origin);
   const hostname = url.hostname;
 

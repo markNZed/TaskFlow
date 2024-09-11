@@ -12,7 +12,8 @@ const DynamicComponent = ({ is, useDefaultPath = true, ...rest }) => {
   let Component;
 
   if (!is) {
-    console.log("Warning: DynamicComponent ", rest);
+    console.log("Warning: DynamicComponent is undefined", rest);
+    return "";
   }
 
   try {

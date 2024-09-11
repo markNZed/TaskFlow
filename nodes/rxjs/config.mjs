@@ -9,7 +9,7 @@ import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTY_ALL_DB } from
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true }); // override so we can set OPENAI_API_KEY from .env 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -35,6 +35,11 @@ if (process.env.OPENAI_API_KEY === "") {
   DUMMY_OPENAI = true;
 }
 console.log("DUMMY_OPENAI " + DUMMY_OPENAI);
+
+let CONFIG_DIR = "../config";
+if (process.env.CONFIG_DIR !== undefined) {
+  CONFIG_DIR = process.env.CONFIG_DIR;
+}
 
 const NODE_NAME = process.env.NODE_NAME || "hub-consumer";
 
@@ -98,7 +103,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["configDir"] = CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["app"] = {
   label: appLabel,
   name: appName,

@@ -151,8 +151,7 @@ function stripAppendKeys(obj) {
         stripChildrenPrefix(obj[key]);
       }
       if (key.startsWith("APPEND_")) {
-        const keyToAppend = key.slice(9);
-        delete obj[keyToAppend];
+        delete obj[key];
       }
     }
   }
@@ -396,9 +395,11 @@ function initGroups(users, groupsConfig, groups) {
           if (users[id]["groupIds"]) {
             if (!users[id]["groupIds"].includes(groupKey)) {
               users[id]["groupIds"].push(groupKey);
+              console.log(`initGroups user id ${id} adding ${groupKey}`);
             }
           } else {
             users[id]["groupIds"] = [groupKey];
+            console.log(`initGroups user id ${id} empty adding ${groupKey}`);
           }
         }
       });

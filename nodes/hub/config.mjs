@@ -19,7 +19,7 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "http://localhost:3000";
 const CACHE_ENABLE = process.env.CACHE_ENABLE === "true" || true;
 console.log("CACHE_ENABLE " + CACHE_ENABLE);
 
-const DEFAULT_USER = "test@testing.com";
+const DEMO_USER = "demoUser";
 // For teting we can map one user to any ohter user e.g.
 // MAP_USER_JSON={ "dev@email.com" : "user@email.org" }
 let MAP_USER = {};
@@ -33,6 +33,11 @@ const DUMP_CONFIGS = process.env.DUMP_CONFIGS || false;
 let NODE_NAME = "hub-core";
 if (process.env.NODE_NAME !== undefined) {
   NODE_NAME = process.env.NODE_NAME;
+}
+
+let CONFIG_DIR = "../config";
+if (process.env.CONFIG_DIR !== undefined) {
+  CONFIG_DIR = process.env.CONFIG_DIR;
 }
 
 let NODE;
@@ -64,7 +69,7 @@ try {
 }
 
 NODE["name"] = NODE_NAME;
-NODE["configDir"] = process.env.CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
+NODE["configDir"] = CONFIG_DIR + "/" + NODE.name || path.join(__dirname, './config/' + NODE.name);
 NODE["dumpConfigs"] = DUMP_CONFIGS;
 NODE["allowedOrigins"] = ALLOWED_ORIGINS;
 NODE["hubNodeEnvironments"] = ["rxjs-hub-coprocessor", "rxjs-hub-consumer"];
@@ -90,7 +95,7 @@ NODE["mode"] = NODE_ENV;
 
 console.log({NODE});
 
-const JWT_SECRET = process.env.JWT_SECRET || "nojwtsecret";
+const JWT_SECRET = process.env.JWT_SECRET; // If undefined then we will not use auth token
 
 function NODETribe(tribe) {
   //console.log("NODETribe", tribe);
@@ -101,4 +106,4 @@ function NODETribe(tribe) {
   }
 }
 
-export { DEFAULT_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET, NODETribe };
+export { DEMO_USER, CACHE_ENABLE, MAP_USER, NODE, JWT_SECRET, NODETribe };

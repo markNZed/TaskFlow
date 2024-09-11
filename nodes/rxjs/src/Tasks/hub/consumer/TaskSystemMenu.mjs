@@ -71,14 +71,14 @@ const TaskSystemMenu_async = async function (wsSendTask, T, FSMHolder, CEPMatchM
       tribesStore_async.get(tribeId),
       usersStore_async.get(userId)
     ]);
-    const userGroupIds = user.groupIds;
+    const userGroupIds = user?.groupIds;
     const userGroupIdsInTribe = await utils.filterGroupIdsInTribe_async(userGroupIds, tribe);
     //utils.logTask(T(), "getAuthorisedTasks_async userGroupIds", userGroupIds, "userGroupIdsInTribe", userGroupIdsInTribe);
     let taskPromises = [];
     // The iterator is slow
     // Could store in a single hash instead of individual entries then no need to iterate
     // Could have a "permissions" store that only has that info (task.permissions) in a Map
-    // Need to keep it in sync with  tasksStore_async (and initialize) 
+    // Need to keep it in sync with tasksStore_async (and initialize) 
     const taskPermissionsString = await tasksStore_async.get("taskPermissions");
     const taskPermissions = taskPermissionsString;
     for (const [key, value] of Object.entries(taskPermissions)) {

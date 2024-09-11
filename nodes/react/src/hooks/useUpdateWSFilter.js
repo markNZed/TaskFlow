@@ -10,7 +10,7 @@ function useUpdateWSFilter(isMountedRef, tabActive, initialTask, onUpdate) {
 
   //console.log("------------ useUpdateWSFilter ---------------", initialTask);
 
-  const [instanceId, setInstanceId] = useState();
+  const [instanceId, setInstanceId] = useState(initialTask?.instanceId);
   const processingRef = useRef(false);
 
   // No need for a local queue if we use messageQueue
@@ -19,7 +19,7 @@ function useUpdateWSFilter(isMountedRef, tabActive, initialTask, onUpdate) {
     if (processingRef.current) {return}
     // messageQueue is an object not an array so we can delete from the object during iteration
     const keys = Object.keys(messageQueue);
-    // sort the keyys so we process the oldest first
+    // sort the keys so we process the oldest first
     keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     //console.log("useUpdateWSFilter handleUpdate initialTask.instanceId", initialTask.instanceId, "keys", keys);
     for (let key of keys) {
@@ -44,7 +44,7 @@ function useUpdateWSFilter(isMountedRef, tabActive, initialTask, onUpdate) {
 
   // Create instanceId from initialTask so we can have webSocketEventEmitter sensitive to
   // just this (not initialTask)
-  // Set the instance after isMountedRef and senstive to onUpdate so we get an event
+  // Set the instance after isMountedRef and sensitive to onUpdate so we get an event
   useEffect(() => {
     if (initialTask?.instanceId !== instanceId && isMountedRef.current) {
       setInstanceId(initialTask.instanceId);
@@ -54,7 +54,7 @@ function useUpdateWSFilter(isMountedRef, tabActive, initialTask, onUpdate) {
   // This being sensitive to task seems overkill
   // Can the task be passed in as a parameter to onUpdate?
   useEffect(() => {
-    //console.log("useUpdateWSFilter useEffect", webSocketEventEmitter, isMountedRef.current, instanceId);
+    //console.log("useUpdateWSFilter useEffect", instanceId, webSocketEventEmitter, isMountedRef.current);
     if (!webSocketEventEmitter || !isMountedRef.current || !instanceId) {
       return;
     }

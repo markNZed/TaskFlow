@@ -173,7 +173,7 @@ function Taskflows(props) {
   //Tracing
 
   useEffect(() => {
-    //console.log("startTask ", startTask)
+    //console.log("startTask ", startTask, task?.state?.current, task?.config?.local?.menuId);
   }, [startTask]);
 
   useEffect(() => {

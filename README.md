@@ -185,6 +185,12 @@ One advantage of this approach is that the React client is only served after aut
 
 The primary configuration of Taskflow uses Javascript objects. These objects are read by the script/dumpOneConfig.js which imports Javascript modules from the CONFIG_DIR and writes JSON configuration files to the db/config directory. This is a result of the development history: setting a javascript object in a module was an easy way to configure the early system, the flexibility of using Javascript allowed for "programming" the configuration (e.g. a tree structure with inheritance). To reload the primary configuraton without restarting T@skFlow the configuration modules need to be reloaded which is not obvous in nodejs, this is why a script is used to dump the configuration in JSON format that can be reloaded without restarting the app.
 
+## Git
+
+The `OpenPGP Encryption` VS Code extension is used to encrypt files. The naming convension is to use .gpg. so we can still have the unencrypted file extension. A git hook is provided to avoid committing these files in unencrypted format and to enable this hook the following command needs to be run in the git repo:
+
+`git config core.hooksPath .githooks`
+
 # Coding Guidelines
 
 Code is currently formatted using Prettier defaults.

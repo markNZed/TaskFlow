@@ -2,7 +2,7 @@ FROM node:18-buster-slim
 
 # Set bash as the default shell
 SHELL ["/bin/bash", "-c"]
-ENV SHELL /bin/bash
+ENV SHELL=/bin/bash
 RUN chsh -s /bin/bash
 
 RUN apt-get update && \
@@ -55,7 +55,7 @@ RUN apt-get install -y locales
 # Also added "export LANG=en_US.UTF-8" to ~/.bashrc
 
 # For crawling
-RUN apt-get intall -y lynx
+RUN apt-get install -y lynx
 
 RUN npm install forever -g
 # So we can see react-app-rewired from forever
