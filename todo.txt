@@ -1,6 +1,5 @@
 /* ToDo
 -------
-Should build in "blue/green deployment"
 The cron menu is initiating a TaskCEP so nothing runs on React.
   Should wrap it with a simple message
 Sometimes on startup the useEffect for updates is not being created for the menu task

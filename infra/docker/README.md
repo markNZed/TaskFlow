@@ -3,21 +3,24 @@ The following is for development where the Nodes run in a Docker container.
 * `git clone https://github.com/markNZed/taskflow.git`
 * `cd TaskFlow/infra/docker`
 * To set the OPENAI_API_KEY
-  * Add to docker-compose.yml
-  * Or set that environment variable
-  * Or leave it empty (T@skFlow will then use a "dummy" API).
+  * Add it to a .env file in this directory e.g.
+    * OPENAI_API_KEY=your-api-key
+  * Or leave it empty (T@skFlow will then use a "dummy" API)
+  * Or set it in nodes/rxjs/.env
 * `docker-compose build`
 * `docker network create taskflow`
-* `docker-compose up -d`
+* To share the directory permissions we seet USER_ID and GROUP_ID before running docker-compose:
+  * `USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up -d`
 * Access the React Processor at http://localhost:3000
 * NOTE: It can take many minutes for the npm install to complete
 * WARNING: There have been issues with Firefox and insecure websocket on localhost, if Firefox does not work, restart Firefox or try Chrome
 
 To interact with the servers:
 
-* `docker exec -it $(docker ps -qf "name=docker_taskflow-demo") /bin/bash`
+* If using docker-compose V2 then the name will be `docker-taskflow-demo` in V1 `docker_taskflow-demo`
+* `docker exec -it $(docker ps -qf "name=docker-taskflow-demo") /bin/bash`
 * Connect to the screen window manager to view the server instances `screen -r`
-* There are 5 screen windows, use `Ctrl-c 0` to switch to the first one
+* There are 6 screen windows, use `Ctrl-c 0` to switch to the first one
 
 To interact with mongodb inside the mongodb container:
 
@@ -92,8 +95,7 @@ Eventually this will capture how to deploy T@skFlow in a "production" environmen
 
 Assumes there is a reverse proxy server, to listen on a single port and forward requests to different ports based on the URL path.
 
-`docker-compose -f docker-compose-prod.yml build 
-docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod`
+`docker-compose -f docker-compose-prod.yml build  docker stack deploy -c docker-stack-compose-taskflow.yml taskflow-prod`
 
 If using Cloudflare remember to purge the cache after updating!
 

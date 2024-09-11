@@ -6,11 +6,12 @@ services:
       dockerfile: Dockerfile
     image: taskflow:latest
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY
     depends_on:
       - mongodb
       - redis-stack-svc
-    volumes: 
+    user: "${USER_ID}:${GROUP_ID}"
+    volumes:
       - ../..:/app
     ports:
       - "127.0.0.1:3000:3000" # React

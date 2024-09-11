@@ -9,7 +9,7 @@ import { appLabel, appName, appAbbrev, REDIS_URL, MONGO_URL, EMPTY_ALL_DB } from
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true }); // override so we can set OPENAI_API_KEY from .env 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
