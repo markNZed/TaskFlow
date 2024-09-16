@@ -1,5 +1,27 @@
 /* ToDo
 -------
+
+Track https://reflectionai.ai/
+
+AI Coding Assistants:
+  https://www.getbind.co
+  https://www.anthropic.com/news/projects
+  CODY from sourcegraph
+  Cursor AI, Cody (VSCode), Galileo AI, Claude AI, and ChatGPT/Perplexity
+  Codeium
+
+AI Interfaces:
+  Jan.ai typingmind.com
+  BoltAI 
+  https://chatboxai.app/
+  https://openwebui.com/
+  https://www.librechat.ai/
+
+  
+
+
+
+
 The cron menu is initiating a TaskCEP so nothing runs on React.
   Should wrap it with a simple message
 Sometimes on startup the useEffect for updates is not being created for the menu task
@@ -583,6 +605,10 @@ Option to IGNORE config options from parents
   Can just set to null to achieve this?
   LOCAL_ in the parent
 
+Task
+----
+
+
 Backlog
 -------
 
@@ -673,7 +699,7 @@ Notes/Idea
       REMOVE_TRANSITION(machineId, sourceState, eventName): Removes a transition from a state.
       UPDATE_STATE(machineId, stateName, newStateBehavior): Updates the behavior of a state. This could involve adding or removing transitions, or updating effects.
       GET_STATE(machineId, stateName): Retrieves the configuration of a state.
-  https://github.com/Starcounter-Jack/JSON-Patch could replace the diff method for sending Tasks JSON Patch is defined by RFC 6902
+  https://github.com/Starcounter-Jack/JSON-Patch could replace the diff method for sending Tasks JSON Patch is defined by RFC 6902S
 
 Architecture
 ------------

@@ -40,6 +40,14 @@ RUN apt-get update && \
 # Install Nodemon, ESLint, Prettier, and Jest
 RUN yarn global add nodemon eslint prettier jest
 
+RUN apt install unzip && \
+    apt install -y openssl libssl-dev && \
+    wget https://github.com/AGWA/git-crypt/archive/refs/heads/master.zip && \
+    unzip master.zip && \
+    cd git-crypt-master && \
+    make && \
+    make install
+
 WORKDIR /app
 
 RUN npm update -g

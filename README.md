@@ -187,9 +187,7 @@ The primary configuration of Taskflow uses Javascript objects. These objects are
 
 ## Git
 
-The `OpenPGP Encryption` VS Code extension is used to encrypt files. The naming convension is to use .gpg. so we can still have the unencrypted file extension. A git hook is provided to avoid committing these files in unencrypted format and to enable this hook the following command needs to be run in the git repo:
-
-`git config core.hooksPath .githooks`
+https://github.com/AGWA/git-crypt is used to encrypt files with extension `.gpg.md`
 
 # Coding Guidelines
 
