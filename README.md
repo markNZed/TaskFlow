@@ -188,6 +188,7 @@ The primary configuration of Taskflow uses Javascript objects. These objects are
 ## Git
 
 https://github.com/AGWA/git-crypt is used to encrypt files with extension `.gpg.md`
+The docker container is using an older gpg 2.2 and the default behavior of gpg has changed to use AEAD (Authenticated Encryption with Associated Data), which is not supported in GPG 2.2 To allow for `git-crypt unlock` in the container I needed to modify the prefs of the gpg key so it would not use AEAD on a machine running GPG 2.4 This is another reason to stay within the container even for file editing.
 
 # Coding Guidelines
 
