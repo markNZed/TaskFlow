@@ -16,6 +16,7 @@ AI Interfaces:
   https://chatboxai.app/
   https://openwebui.com/
   https://www.librechat.ai/
+  https://notebooklm.google.com
 
   
 
